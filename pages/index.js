@@ -2,9 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
 
 /* ═══════════════════════════════════════════════════════
-   VocabSpark v6 — AI 词汇导师
-   流程：猜 → 教 → 光谱 → 下一词（每5词复习）
-   新增：预加载 · 并行请求 · 音效 · 动画 · 进度恢复 · 计时
+   VocabSpark v7 — AI 词汇导师
+   v7 变更：🔊 按钮位置修复 · 引号规范 · 存储迁移 · 设置 Modal · 免责声明
    ═══════════════════════════════════════════════════════ */
 
 var C = {
@@ -57,7 +56,7 @@ var buildGuessPrompt = (word, learned) => {
 
 var buildTeachPrompt = (word, learned) => {
   var ctx = learned.length > 0 ? "\n学生之前学过：" + learned.join(", ") + "。请在\"连\"环节与这些词建立联系。" : "";
-  return "单词：" + word + ctx + "\n\n请依次执行 3 个环节。给英文单词、短语和例句时加上 [🔊]。\n\n【教 · Teach】\n从以下方法中挑最适合的 3 种，每种 2-4 句话：\n1. 词根词缀解剖 🧩\n2. 趣味谐音/联想 🧠（仅在巧妙时用）\n3. 画面感记忆 🖼️（用学生画像场景）\n4. 近义词找茬 🔍\n5. 词义光谱法 📶\n6. 词源故事 📖\n\n【连 · Connect】\n与学过的词建立联系。\n\n【练 · Apply】\n- 2 个高频搭配 [🔊]\n- 2 个情景造句 [🔊]（结合学生画像不同爱好/场景）\n\n要求：400-500字，朋友聊天语气，释义用中文，例句用英文，多换行。";
+  return "单词：" + word + ctx + "\n\n请依次执行 3 个环节。\n\n重要格式规则：[🔊] 标记只能放在完整英文例句的最末尾（紧跟在句号/感叹号之后），绝对不要插在句子中间或单词后面。\n\n【教 · Teach】\n从以下方法中挑最适合的 3 种，每种 2-4 句话：\n1. 词根词缀解剖 🧩\n2. 趣味谐音/联想 🧠（仅在巧妙时用）\n3. 画面感记忆 🖼️（用学生画像场景）\n4. 近义词找茬 🔍\n5. 词义光谱法 📶\n6. 词源故事 📖\n\n【连 · Connect】\n与学过的词建立联系。\n\n【练 · Apply】\n- 2 个高频搭配，格式：搭配词组 [🔊]\n- 2 个情景造句，格式：完整英文句。 [🔊]（中文翻译）\n每个造句需结合学生画像不同爱好/场景。\n\n要求：400-500字，朋友聊天语气，释义用中文，例句用英文，多换行。统一用直引号\"\"，不要用花引号或反引号。";
 };
 
 var buildSpectrumPrompt = (word) => {
@@ -140,17 +139,34 @@ var parseFile = async (file) => {
 
 var shuffle = (a) => { a = [...a]; for (var i = a.length-1; i > 0; i--) { var j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
 
+var Disclaimer = () => (
+  <div style={{ textAlign:"center", fontSize:12, color:C.textSec, padding:"10px 0 4px", lineHeight:1.7, borderTop:"1px solid "+C.border, marginTop:8 }}>
+    VocabSpark 专注于理解与记忆 · 拼写练习推荐搭配<strong>百词斩</strong>等工具
+  </div>
+);
+
 var PRESETS = {
   "SSAT 高频 50 词": "aberration\nabhor\nabstain\nadmonish\narduous\naudacious\nbenevolent\ncandid\ncapricious\ncompel\ncontempt\ncunning\ndaunt\ndiligent\ndiscern\neloquent\nempathy\nenigma\nfervent\nfrugal\ngregarious\nhaughty\nimplore\nincessant\njubilant\nlethargy\nlucid\nmalice\nmollify\nnovice\nobstinate\nopulent\npacify\npragmatic\nprudent\nrebuke\nresilient\nsagacious\nserene\ntaciturn\ntenacious\ntrivial\nunanimous\nvehement\nvenerate\nvolatile\nwary\nzealous\nambiguous\nbenign",
   "SSAT 情感词": "elated\nmelancholy\nindignant\napprehensive\ncontrite\njubilant\ndespondent\nexuberant\nserene\nvexed",
   "SSAT 动作词": "implore\nadmonish\ncompel\nrebuke\nmollify\npacify\nvenerate\nabhor\ndiscern\nrelinquish",
 };
 
-/* ─── Storage: localStorage (replaces Claude Artifact window.storage) ─── */
-var SKEY = "vocabspark_release_2";
+/* ─── Storage: localStorage ─── */
+var SKEY = "vocabspark_v1";         // permanent key — never change this
+var SKEY_OLD = "vocabspark_release_2"; // migration source
 var loadSave = async () => {
   try {
     if (typeof window === "undefined") return null;
+    // Migrate from old key if present
+    var oldRaw = localStorage.getItem(SKEY_OLD);
+    if (oldRaw) {
+      try {
+        var oldData = JSON.parse(oldRaw);
+        var migrated = { schemaVersion: 1, completedWords: [], ...oldData };
+        localStorage.setItem(SKEY, JSON.stringify(migrated));
+        localStorage.removeItem(SKEY_OLD);
+      } catch(e) {}
+    }
     var r = localStorage.getItem(SKEY);
     return r ? JSON.parse(r) : null;
   } catch(e) { return null; }
@@ -158,7 +174,7 @@ var loadSave = async () => {
 var doSave = async (d) => {
   try {
     if (typeof window === "undefined") return;
-    localStorage.setItem(SKEY, JSON.stringify(d));
+    localStorage.setItem(SKEY, JSON.stringify({ schemaVersion: 1, completedWords: [], ...d }));
   } catch(e) {}
 };
 
@@ -202,13 +218,17 @@ var cleanForSpeak = (text) => {
 
 var RL = ({ text }) => {
   var parts = text.split(/(\[🔊\])/g);
-  return <span>{parts.map((part, i) => {
+  return <span style={{display:"flex",alignItems:"flex-end",flexWrap:"wrap",gap:2}}>{parts.map((part, i) => {
     if (part === "[🔊]") {
       var prev = parts.slice(0, i).join("");
       var speakText = cleanForSpeak(prev);
       return speakText.length > 3 ? <SpeakBtn key={i} text={speakText} size={24} /> : null;
     }
-    var html = part.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>");
+    // Bug 5: normalize backtick quotes + bold/italic
+    var html = part
+      .replace(/`(.+?)`/g, "<em>$1</em>")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>");
     return <span key={i} dangerouslySetInnerHTML={{ __html: html }} />;
   })}</span>;
 };
@@ -217,9 +237,9 @@ var Md = ({ text }) => {
   if (!text) return null;
   return text.split("\n").map((line, i) => {
     if (line.trim() === "---") return <hr key={i} style={{ border:"none", height:1, background:C.border, margin:"14px 0" }} />;
-    if (line.startsWith("### ")) return <div key={i} style={{ fontWeight:700, fontSize:15, margin:"14px 0 6px", color:C.teal }}><RL text={line.slice(4)} /></div>;
-    if (line.startsWith("## ")) return <div key={i} style={{ fontWeight:700, fontSize:17, margin:"18px 0 8px", color:C.accent }}><RL text={line.slice(3)} /></div>;
-    return line.trim() ? <p key={i} style={{ margin:"5px 0", lineHeight:1.85, fontSize:15 }}><RL text={line} /></p> : <div key={i} style={{ height:6 }} />;
+    if (line.startsWith("### ")) return <div key={i} style={{ fontWeight:700, fontSize:15, margin:"14px 0 6px", color:C.teal, display:"flex", alignItems:"flex-end", gap:4 }}><RL text={line.slice(4)} /></div>;
+    if (line.startsWith("## ")) return <div key={i} style={{ fontWeight:700, fontSize:17, margin:"18px 0 8px", color:C.accent, display:"flex", alignItems:"flex-end", gap:4 }}><RL text={line.slice(3)} /></div>;
+    return line.trim() ? <div key={i} style={{ margin:"5px 0", lineHeight:1.85, fontSize:15, display:"flex", alignItems:"flex-end", gap:4 }}><RL text={line} /></div> : <div key={i} style={{ height:6 }} />;
   });
 };
 
@@ -229,6 +249,7 @@ export default function App() {
   var [showWelcome, setShowWelcome] = useState(true);
   var [showTipJar, setShowTipJar] = useState(false);
   var [tipDismissed, setTipDismissed] = useState(false);
+  var [showSettings, setShowSettings] = useState(false);
   var [profile, setProfile] = useState("");
   var [wordInput, setWordInput] = useState("");
   var [wordList, setWordList] = useState([]);
@@ -526,6 +547,13 @@ export default function App() {
     var newLearned = [...learned, currentWord];
     setLearned(newLearned);
     var nextIdx = idx + 1;
+    // Persist completed word permanently (survives session resets)
+    loadSave().then(function(d) {
+      var existing = d?.completedWords || [];
+      if (!existing.includes(currentWord)) {
+        doSave({ ...(d||{}), completedWords: [...existing, currentWord] });
+      }
+    });
     saveSession(wordList, nextIdx, newLearned);
 
     if (newLearned.length > 0 && newLearned.length % 10 === 0) {
@@ -637,6 +665,7 @@ export default function App() {
               </p>
             </div>
             <button onClick={() => setShowWelcome(false)} style={{ ...S.bigBtn, marginTop:4 }}>👍 我知道了，开始设置</button>
+            <Disclaimer />
           </div>
         </div>
       )}
@@ -684,6 +713,7 @@ export default function App() {
       )}
       {error && <div style={S.error}>{error}</div>}
       <button style={S.bigBtn} onClick={() => startLearning(0)}>✨ 开始学习</button>
+      <Disclaimer />
 
       <div style={{ textAlign:"center", padding:"24px 0 8px", fontSize:13, lineHeight:1.8, color:C.textSec }}>
         <div>Made with ❤️ by Willow 的爸爸</div>
@@ -713,7 +743,45 @@ export default function App() {
         <button style={S.backBtn} onClick={() => setScreen("setup")}>←</button>
         <div style={S.progressWrap}><div style={S.progressTrack}><div style={{...S.progressFill, width:progress+"%"}} /></div><span style={S.progressText}>{Math.min(idx+1,wordList.length)}/{wordList.length}</span></div>
         <div style={S.xpBadge}>{"⚡"+stats.xp}</div>
+        <button style={S.settingsBtn} onClick={() => setShowSettings(true)} title="设置">⚙️</button>
       </div>
+
+      {/* ── SETTINGS MODAL ── */}
+      {showSettings && (
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",zIndex:999,display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"60px 16px 16px",overflowY:"auto"}}>
+          <div style={{background:C.card,borderRadius:16,width:"100%",maxWidth:600,boxShadow:"0 20px 60px rgba(0,0,0,0.2)",fontFamily:FONT}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"20px 20px 0"}}>
+              <h3 style={{fontSize:18,fontWeight:700,margin:0}}>⚙️ 设置</h3>
+              <button onClick={() => setShowSettings(false)} style={{background:"transparent",border:"none",fontSize:22,cursor:"pointer",color:C.textSec,padding:"0 4px"}}>×</button>
+            </div>
+            <div style={{display:"flex",borderBottom:"1px solid "+C.border,margin:"16px 20px 0"}}>
+              <button style={setupTab==="profile"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("profile")}>👤 学生画像</button>
+              <button style={setupTab==="words"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("words")}>📝 词汇</button>
+            </div>
+            <div style={{padding:"16px 20px 20px"}}>
+              {setupTab === "profile" && (
+                <div>
+                  <div style={S.setupHint}>{profileLocked ? "✅ 画像已保存" : "👨‍👩‍👧 信息越丰富，AI 讲解越贴近生活！"}</div>
+                  {profileLocked ? (
+                    <div><div style={S.profilePrev}>{profile.slice(0,250)}{profile.length>250?"...":""}</div><button style={S.smallBtn} onClick={() => setProfileLocked(false)}>✏️ 编辑</button></div>
+                  ) : (
+                    <div><textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={10} placeholder={"基本信息：年级、城市\n爱好：网球、烘焙...\n常去地方：Irvine Spectrum..."} /><button style={S.tealBtn} onClick={() => { setProfileLocked(true); loadSave().then(d => doSave({...(d||{}), profile, stats})); }}>💾 保存</button></div>
+                  )}
+                </div>
+              )}
+              {setupTab === "words" && (
+                <div>
+                  <div style={S.setupHint}>修改词汇列表后，点「重新开始」从第一个词开始学习。</div>
+                  <div style={S.presetRow}>{Object.keys(PRESETS).map(n => <button key={n} style={S.presetBtn} onClick={() => setWordInput(PRESETS[n])}>{n}</button>)}</div>
+                  <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={8} placeholder="arduous\nbenevolent" />
+                  <div style={{fontSize:13,color:C.textSec,margin:"6px 0 12px"}}>{wordInput.trim() ? "共 "+wordInput.trim().split(/[\n,，、]+/).filter(w=>w.trim()).length+" 个词" : ""}</div>
+                  <button style={S.primaryBtn} onClick={() => { setShowSettings(false); startLearning(0); }}>✨ 重新开始</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {phase !== "review" && phase !== "done" && phase !== "batch_loading" && phase !== "cloze" && (
         <div style={S.wordHeader}>
@@ -744,7 +812,7 @@ export default function App() {
         <div style={{...S.card, animation: shakeWrong ? "shake 0.4s ease" : bounceCorrect ? "bounce 0.5s ease" : "fadeUp 0.3s ease-out"}}>
           <div style={S.tag}>🎯 猜一猜</div>
           {!guessData ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}><div>{loadingTip||"🧠 AI 老师正在备课..."}</div><div style={{fontSize:12,color:C.textSec,marginTop:6}}>正在为你生成专属学习内容，首次会稍慢，之后越来越快 ✨</div></div></div> : <>
-            <div style={S.contextBox}>{guessData.context}<SpeakBtn text={guessData.context.replace(/_+/g, currentWord)} size={26} /></div>
+            <div style={S.contextBox}><span style={{flex:1}}>{guessData.context}</span><SpeakBtn text={guessData.context.replace(/_+/g, currentWord)} size={26} /></div>
             {guessData.options ? <div style={S.optionGrid}>{Object.entries(guessData.options).map(([k,v]) => {
               var sel=selectedOption===k, ok=guessSubmitted&&k===guessData.answer, bad=guessSubmitted&&sel&&k!==guessData.answer;
               var bg=C.bg, bdr=C.border, clr=C.text;
@@ -887,6 +955,7 @@ export default function App() {
         </div>;
       })()}
 
+      <Disclaimer />
       <div style={{ textAlign:"center", padding:"24px 0 8px", fontSize:13, lineHeight:1.8, color:C.textSec }}>
         <div>Made with ❤️ by Willow 的爸爸</div>
         <div style={{ fontStyle:"italic" }}>献给 Willow 和她的朋友们，加油！</div>
@@ -943,6 +1012,7 @@ var S = {
   progressFill:{height:"100%",background:C.accent,borderRadius:3,transition:"width 0.4s ease"},
   progressText:{fontSize:13,color:C.textSec,fontWeight:600},
   xpBadge:{padding:"4px 10px",background:C.goldLight,borderRadius:12,fontSize:13,fontWeight:700,color:C.gold},
+  settingsBtn:{padding:"5px 8px",background:"transparent",border:"1px solid "+C.border,borderRadius:8,fontSize:18,cursor:"pointer",color:C.textSec,lineHeight:1},
   wordHeader:{background:C.card,borderRadius:14,border:"1px solid "+C.border,padding:"18px 20px 14px",marginBottom:10,boxShadow:C.shadow,animation:"fadeUp 0.3s ease-out",display:"flex",justifyContent:"space-between",alignItems:"center"},
   wordTitle:{fontSize:30,fontWeight:700,margin:0},
   phoneticText:{fontSize:16,color:C.textSec,fontWeight:400,fontStyle:"italic"},
