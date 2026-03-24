@@ -469,9 +469,22 @@ export default function App() {
     setUser(null); userRef.current = null;
   };
 
+  var PHOTO_LIMIT = 5;
+
   var handlePhotoUpload = async function(e) {
     var file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
+    if (!userRef.current) {
+      alert('📷 照片上传功能需要注册账号\n\n注册免费，还可解锁每日无限学习 🎉');
+      if (photoRef.current) photoRef.current.value = '';
+      return;
+    }
+    var existingPhotos = (profile.match(/📷 /g) || []).length;
+    if (existingPhotos >= PHOTO_LIMIT) {
+      alert('最多上传 ' + PHOTO_LIMIT + ' 张照片\n\n如需更换，请先在文本框中删除旧的照片描述（以 📷 开头的行）');
+      if (photoRef.current) photoRef.current.value = '';
+      return;
+    }
     setPhotoLoading(true);
     try {
       var base64 = await new Promise(function(resolve, reject) {
@@ -986,7 +999,7 @@ export default function App() {
               <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={12} placeholder={"像写日记一样告诉 AI 你的世界 🌍\n\n例如：\n• 我今天和 Emily 打了一场超刺激的网球！\n• 最近在追《鬼灭之刃》，超喜欢炭治郎\n• 上周去了 Irvine Spectrum，吃了抹茶冰淇淋\n• 我不喜欢香菜，一点都不行 😂\n• 偶像是 Taylor Swift，已经刷了 100 遍 Eras Tour\n\n写越多，AI 越了解你，学单词越有趣！"} />
               <div style={{display:"flex",alignItems:"center",gap:8,margin:"8px 0 12px"}}>
                 <button onClick={function() { photoRef.current?.click(); }} disabled={photoLoading} style={{background:C.tealLight,border:"1px solid "+C.teal+"55",borderRadius:8,padding:"6px 14px",fontSize:13,color:C.teal,cursor:photoLoading?"not-allowed":"pointer",fontFamily:FONT,fontWeight:500,opacity:photoLoading?0.7:1}}>
-                  {photoLoading ? "🔍 AI 正在看照片..." : "📷 上传照片让 AI 认识你"}
+                  {photoLoading ? "🔍 AI 正在看照片..." : user ? "📷 上传照片（" + Math.max(0, PHOTO_LIMIT - (profile.match(/📷 /g)||[]).length) + "/" + PHOTO_LIMIT + " 剩余）" : "📷 上传照片（需注册）"}
                 </button>
                 <span style={{fontSize:12,color:C.textSec}}>AI 会描述照片内容加入画像</span>
                 <input ref={photoRef} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhotoUpload} />
@@ -1151,7 +1164,7 @@ export default function App() {
                       <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={10} placeholder={"今天最开心的事：\n最近在追的动画：\n上周去了哪里：\n偶像是谁：\n..."} />
                       <div style={{display:"flex",alignItems:"center",gap:8,margin:"6px 0 10px"}}>
                         <button onClick={function() { photoRef.current?.click(); }} disabled={photoLoading} style={{background:C.tealLight,border:"1px solid "+C.teal+"55",borderRadius:8,padding:"5px 12px",fontSize:12,color:C.teal,cursor:photoLoading?"not-allowed":"pointer",fontFamily:FONT,opacity:photoLoading?0.7:1}}>
-                          {photoLoading ? "🔍 分析中..." : "📷 上传照片"}
+                          {photoLoading ? "🔍 分析中..." : user ? "📷 上传照片（" + Math.max(0, PHOTO_LIMIT - (profile.match(/📷 /g)||[]).length) + "/" + PHOTO_LIMIT + "）" : "📷 上传照片（需注册）"}
                         </button>
                         <span style={{fontSize:11,color:C.textSec}}>AI 自动描述加入画像</span>
                         <input ref={photoRef} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhotoUpload} />
