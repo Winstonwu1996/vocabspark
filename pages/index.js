@@ -36,6 +36,73 @@ var PROFILE_TEXTAREA_PLACEHOLDER =
   "• Willow 的偶像是 Taylor Swift，已经刷了 100 遍 Eras Tour\n\n" +
   "写越多，AI 越了解你，学单词越有趣！";
 
+/** 缩小边长并转 JPEG base64，避免请求体过大（Next 默认 1MB）及加速上传 */
+var compressImageToJpegBase64 = function(file, maxEdge) {
+  maxEdge = maxEdge || 1280;
+  return new Promise(function(resolve, reject) {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      reject(new Error("仅在浏览器内可用"));
+      return;
+    }
+    var url = URL.createObjectURL(file);
+    var img = new window.Image();
+    img.onload = function() {
+      URL.revokeObjectURL(url);
+      try {
+        var w = img.naturalWidth || img.width;
+        var h = img.naturalHeight || img.height;
+        if (!w || !h) {
+          reject(new Error("无法读取图片"));
+          return;
+        }
+        var scale = Math.min(1, maxEdge / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * scale));
+        var ch = Math.max(1, Math.round(h * scale));
+        var canvas = document.createElement("canvas");
+        canvas.width = cw;
+        canvas.height = ch;
+        var ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("无法处理图片"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, cw, ch);
+        var dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+        var idx = dataUrl.indexOf(",");
+        if (idx < 0) {
+          reject(new Error("压缩失败"));
+          return;
+        }
+        resolve(dataUrl.slice(idx + 1));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    img.onerror = function() {
+      URL.revokeObjectURL(url);
+      reject(new Error("HEIC_OR_UNSUPPORTED"));
+    };
+    img.src = url;
+  });
+};
+
+var fileToBase64Raw = function(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var r = ev.target.result;
+      if (typeof r !== "string") {
+        reject(new Error("读取失败"));
+        return;
+      }
+      var i = r.indexOf(",");
+      resolve(i >= 0 ? r.slice(i + 1) : r);
+    };
+    reader.onerror = function() { reject(new Error("读取失败")); };
+    reader.readAsDataURL(file);
+  });
+};
+
 /* ─── Sound Effects (Web Audio API, zero dependencies) ─── */
 var audioCtx = null;
 var getAudioCtx = () => { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; };
@@ -454,6 +521,11 @@ export default function App() {
   var [batchProgress, setBatchProgress] = useState(0);
   var [batchTotal, setBatchTotal] = useState(0);
   var [batchTip, setBatchTip] = useState("");
+  var [batchUiPct, setBatchUiPct] = useState(0);
+  var batchProgressR = useRef(0);
+  var batchTotalR = useRef(0);
+  batchProgressR.current = batchProgress;
+  batchTotalR.current = batchTotal;
 
   var contentEndRef = useRef(null);
   var topRef = useRef(null);
@@ -461,6 +533,24 @@ export default function App() {
   var [photoLoading, setPhotoLoading] = useState(false);
 
   useEffect(function() { if (typeof window !== "undefined") window.speechSynthesis?.getVoices(); }, []);
+  useEffect(function() {
+    if (phase !== "batch_loading") {
+      setBatchUiPct(0);
+      return;
+    }
+    setBatchUiPct(0);
+    var id = setInterval(function() {
+      var tot = batchTotalR.current;
+      var prog = batchProgressR.current;
+      var real = tot > 0 ? Math.round((100 * prog) / tot) : 0;
+      setBatchUiPct(function(d) {
+        if (real > 0) return Math.max(d, real);
+        if (d < 7) return Math.min(7, d + 0.42);
+        return d;
+      });
+    }, 200);
+    return function() { clearInterval(id); };
+  }, [phase]);
   useEffect(function() { if (topRef.current) topRef.current.scrollIntoView({ behavior:"smooth", block:"start" }); }, [phase, idx]);
   useEffect(function() { if (guessSubmitted || reviewSubmitted || clozeSubmitted) setTimeout(function() { if (contentEndRef.current) contentEndRef.current.scrollIntoView({ behavior:"smooth", block:"end" }); }, 200); }, [guessSubmitted, reviewSubmitted, clozeSubmitted]);
 
@@ -563,24 +653,44 @@ export default function App() {
     }
     setPhotoLoading(true);
     try {
-      var base64 = await new Promise(function(resolve, reject) {
-        var reader = new FileReader();
-        reader.onload = function(ev) { resolve(ev.target.result.split(',')[1]); };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      var base64;
+      var mimeOut = "image/jpeg";
+      try {
+        base64 = await compressImageToJpegBase64(file, 1280);
+      } catch (compErr) {
+        if (file.size > 3.5 * 1024 * 1024) {
+          alert("图片体积较大，或苹果「实况/HEIC」格式浏览器无法直接处理。\n\n请：导出为 JPG/PNG，或截图后再上传。");
+          return;
+        }
+        base64 = await fileToBase64Raw(file);
+        mimeOut = file.type && file.type.startsWith("image/") ? file.type : "image/jpeg";
+      }
       var resp = await fetch('/api/describe-photo', {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({imageBase64: base64, mimeType: file.type})
+        method: 'POST', headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64, mimeType: mimeOut }),
       });
-      var data = await resp.json();
+      var data;
+      try {
+        data = await resp.json();
+      } catch (jsonErr) {
+        throw new Error("服务器响应异常 (HTTP " + resp.status + ")");
+      }
+      if (!resp.ok || data.error) {
+        throw new Error(typeof data.error === "string" ? data.error : "上传失败 HTTP " + resp.status);
+      }
       if (data.description) {
         setProfile(function(prev) {
-          return prev + (prev && !prev.endsWith('\n') ? '\n' : '') + '📷 ' + data.description;
+          return prev + (prev && !prev.endsWith("\n") ? "\n" : "") + "📷 " + data.description;
         });
+      } else {
+        throw new Error("未收到描述，请换一张照片重试");
       }
-    } catch(err) { alert('照片处理失败：' + err.message); }
-    finally { setPhotoLoading(false); if (photoRef.current) photoRef.current.value = ''; }
+    } catch (err) {
+      alert("照片处理失败：" + err.message);
+    } finally {
+      setPhotoLoading(false);
+      if (photoRef.current) photoRef.current.value = "";
+    }
   };
 
   // ── Auth state listener ──
@@ -731,7 +841,7 @@ export default function App() {
     await new Promise(function(resolve) {
       if (tasks.length === 0) { resolve(); return; }
       function next() {
-        while (running < 5 && taskIdx < tasks.length) {
+        while (running < 6 && taskIdx < tasks.length) {
           running++;
           var t = tasks[taskIdx++];
           t().finally(function() {
@@ -1320,9 +1430,9 @@ export default function App() {
           <h3 style={{fontSize:18, fontWeight:700, margin:"0 0 8px"}}>正在准备第 {Math.floor(idx/5)+1} 组学习内容</h3>
           <p style={{fontSize:14, color:C.textSec, marginBottom:20, lineHeight:1.6}}>{batchTip}</p>
           <div style={{background:C.border, borderRadius:8, height:12, overflow:"hidden", marginBottom:12}}>
-            <div style={{height:"100%", background:"linear-gradient(90deg, "+C.accent+", "+C.gold+")", borderRadius:8, transition:"width 0.3s ease", width: (batchTotal > 0 ? Math.round(batchProgress/batchTotal*100) : 0)+"%"}} />
+            <div style={{height:"100%", background:"linear-gradient(90deg, "+C.accent+", "+C.gold+")", borderRadius:8, transition:"width 0.35s ease", width: batchUiPct + "%"}} />
           </div>
-          <div style={{fontSize:13, color:C.textSec}}>{batchTotal > 0 ? Math.round(batchProgress/batchTotal*100) : 0}%</div>
+          <div style={{fontSize:13, color:C.textSec}}>{batchUiPct}%</div>
         </div>
       )}
 
