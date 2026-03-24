@@ -335,6 +335,7 @@ export default function App() {
   var [loadingTip, setLoadingTip] = useState("");
   var [phaseDir, setPhaseDir] = useState(1);
   var [showConfetti, setShowConfetti] = useState(false);
+  var [showShare, setShowShare] = useState(false);
 
   var [stats, setStats] = useState({ correct:0, total:0, streak:0, bestStreak:0, xp:0 });
   var [wordTimings, setWordTimings] = useState({});
@@ -812,7 +813,10 @@ export default function App() {
         <div>Made with ❤️ by Willow 的爸爸</div>
         <div style={{ fontStyle:"italic" }}>献给 Willow 和她的朋友们，加油！</div>
         <div style={{ marginTop:6, fontSize:12 }}>问题反馈：<a href="mailto:Winstonwu1996@icloud.com" style={{ color:C.accent, textDecoration:"none" }}>Winstonwu1996@icloud.com</a> ✉️</div>
-        <div style={{ marginTop:4, fontSize:12 }}><a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a></div>
+        <div style={{ marginTop:4, fontSize:12, display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap", alignItems:"center" }}>
+          <a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a>
+          <button onClick={()=>setShowShare(true)} style={{ background:"transparent", border:"none", color:C.accent, fontFamily:FONT, fontSize:12, fontWeight:600, cursor:"pointer", padding:0 }}>🔗 推荐给朋友</button>
+        </div>
       </div>
 
       </div>
@@ -1065,6 +1069,7 @@ export default function App() {
             <div style={{marginBottom:8}}>☕ 如果 VocabSpark 帮到了你，考虑请开发者喝杯咖啡？</div>
             <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
               <button onClick={()=>window.open("https://buymeacoffee.com/winstonwu1996","_blank")} style={{padding:"8px 20px",background:C.gold,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:14,fontWeight:600,cursor:"pointer"}}>☕ 支持一下</button>
+              <button onClick={()=>setShowShare(true)} style={{padding:"8px 20px",background:C.accent,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:14,fontWeight:600,cursor:"pointer"}}>🔗 推荐给朋友</button>
               <button onClick={()=>{setTipDismissed(true);loadSave().then(d=>doSave({...(d||{}),tipDismissed:true}));}} style={{padding:"8px 16px",background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer"}}>下次再说</button>
             </div>
           </div>}
@@ -1072,6 +1077,41 @@ export default function App() {
           <button style={{...S.primaryBtn,marginTop:20}} onClick={() => { saveSession([],0,[]); setScreen("setup"); }}>← 回到主页</button>
         </div>;
       })()}
+
+      {/* ── SHARE MODAL ── */}
+      {showShare && (
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setShowShare(false)}>
+          <div style={{background:C.card,borderRadius:20,padding:"28px 24px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:36,marginBottom:6}}>📤</div>
+            <h3 style={{fontSize:18,fontWeight:700,margin:"0 0 4px"}}>推荐给朋友</h3>
+            <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,margin:"0 0 18px"}}>觉得好用？让身边的华人朋友也试试~</p>
+
+            {/* QR Code — desktop 扫码，手机长按保存 */}
+            <div style={{background:C.bg,borderRadius:12,padding:14,marginBottom:14,display:"inline-block"}}>
+              <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fvocabspark.vercel.app&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="QR Code" style={{display:"block",borderRadius:6}} />
+            </div>
+            <div style={{fontSize:12,color:C.textSec,marginBottom:16}}>📱 手机扫码 / 长按保存发朋友圈</div>
+
+            {/* 邀请文案 */}
+            <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>
+              {"发现一个免费 AI 英语词汇 App，专为华人孩子设计！AI 用孩子自己的生活场景讲单词，我家娃超喜欢 🎉\n👉 vocabspark.vercel.app"}
+            </div>
+
+            {/* 按钮区 */}
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {typeof navigator !== "undefined" && navigator.share && (
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{
+                  try { await navigator.share({ title:"VocabSpark — AI 英语词汇导师", text:"发现一个免费 AI 英语词汇 App，专为华人孩子设计！👉 vocabspark.vercel.app", url:"https://vocabspark.vercel.app" }); } catch(e){}
+                }}>📱 分享到微信 / 其他 App</button>
+              )}
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{
+                navigator.clipboard?.writeText("发现一个免费 AI 英语词汇 App，专为华人孩子设计！AI 用孩子自己的生活场景讲单词，我家娃超喜欢 🎉 vocabspark.vercel.app").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接"));
+              }}>📋 复制邀请文案</button>
+              <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>setShowShare(false)}>关闭</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showConfetti && (
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"}}>
@@ -1092,7 +1132,10 @@ export default function App() {
         <div>Made with ❤️ by Willow 的爸爸</div>
         <div style={{ fontStyle:"italic" }}>献给 Willow 和她的朋友们，加油！</div>
         <div style={{ marginTop:6, fontSize:12 }}>问题反馈：<a href="mailto:Winstonwu1996@icloud.com" style={{ color:C.accent, textDecoration:"none" }}>Winstonwu1996@icloud.com</a> ✉️</div>
-        <div style={{ marginTop:4, fontSize:12 }}><a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a></div>
+        <div style={{ marginTop:4, fontSize:12, display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap", alignItems:"center" }}>
+          <a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a>
+          <button onClick={()=>setShowShare(true)} style={{ background:"transparent", border:"none", color:C.accent, fontFamily:FONT, fontSize:12, fontWeight:600, cursor:"pointer", padding:0 }}>🔗 推荐给朋友</button>
+        </div>
       </div>
 
       <div ref={contentEndRef} />
