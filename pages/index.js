@@ -1213,8 +1213,8 @@ export default function App() {
       <Disclaimer />
 
       <div style={{ textAlign:"center", padding:"24px 0 8px", fontSize:13, lineHeight:1.8, color:C.textSec }}>
-        <div>Made with ❤️ by Willow 的爸爸</div>
-        <div style={{ fontStyle:"italic" }}>献给 Willow 和她的朋友们，加油！</div>
+        <div>Made with ❤️ by Willow's 👨 · 中国爸爸</div>
+        <div style={{ fontStyle:"italic" }}>献给 Willow 和所有征战复杂单词的孩子们，加油！</div>
         <div style={{ marginTop:6, fontSize:12 }}>问题反馈：<a href="mailto:Winstonwu1996@icloud.com" style={{ color:C.accent, textDecoration:"none" }}>Winstonwu1996@icloud.com</a> ✉️</div>
         <div style={{ marginTop:4, fontSize:12, display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap", alignItems:"center" }}>
           <a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a>
@@ -1712,8 +1712,8 @@ export default function App() {
 
       <Disclaimer />
       <div style={{ textAlign:"center", padding:"24px 0 8px", fontSize:13, lineHeight:1.8, color:C.textSec }}>
-        <div>Made with ❤️ by Willow 的爸爸</div>
-        <div style={{ fontStyle:"italic" }}>献给 Willow 和她的朋友们，加油！</div>
+        <div>Made with ❤️ by Willow's 👨 · 中国爸爸</div>
+        <div style={{ fontStyle:"italic" }}>献给 Willow 和所有征战复杂单词的孩子们，加油！</div>
         <div style={{ marginTop:6, fontSize:12 }}>问题反馈：<a href="mailto:Winstonwu1996@icloud.com" style={{ color:C.accent, textDecoration:"none" }}>Winstonwu1996@icloud.com</a> ✉️</div>
         <div style={{ marginTop:4, fontSize:12, display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap", alignItems:"center" }}>
           <a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a>
