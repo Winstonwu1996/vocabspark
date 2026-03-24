@@ -174,21 +174,66 @@ var _speakFallback = (text) => {
   window.speechSynthesis.speak(u);
 };
 
+/** Google TTS 代理有单段长度限制；按空格切分后顺序播放，避免长句在约 200 字处被截断 */
+var splitTtsChunks = function(s, maxLen) {
+  maxLen = maxLen || 220;
+  var chunks = [];
+  var rest = s.trim();
+  while (rest.length > maxLen) {
+    var slice = rest.slice(0, maxLen);
+    var cut = slice.lastIndexOf(" ");
+    if (cut < Math.floor(maxLen * 0.4)) cut = maxLen;
+    chunks.push(rest.slice(0, cut).trim());
+    rest = rest.slice(cut).trim();
+  }
+  if (rest) chunks.push(rest);
+  return chunks;
+};
+
+var speakSeq = 0;
+var lastSpeakAudio = null;
+
 var speak = async (text) => {
   if (typeof window === "undefined") return;
   var clean = text.replace(/[🔊\[\]]/g, "").trim();
   if (!clean) return;
-  if (audioCache[clean]) { try { audioCache[clean].currentTime = 0; audioCache[clean].play(); return; } catch(e) {} }
+  speakSeq++;
+  var mySeq = speakSeq;
+  if (lastSpeakAudio) {
+    try {
+      lastSpeakAudio.pause();
+      lastSpeakAudio.currentTime = 0;
+    } catch (e) {}
+    lastSpeakAudio = null;
+  }
+  var chunks = splitTtsChunks(clean, 220);
   try {
-    var r = await fetch("/api/tts?text=" + encodeURIComponent(clean));
-    if (!r.ok) throw new Error("tts " + r.status);
-    var blob = await r.blob();
-    var url = URL.createObjectURL(blob);
-    var audio = new Audio(url);
-    audioCache[clean] = audio;
-    audio.play();
-  } catch(e) {
-    _speakFallback(clean);
+    for (var i = 0; i < chunks.length; i++) {
+      if (mySeq !== speakSeq) return;
+      var ch = chunks[i];
+      var audio;
+      if (audioCache[ch]) {
+        audio = audioCache[ch];
+        audio.currentTime = 0;
+      } else {
+        var r = await fetch("/api/tts?text=" + encodeURIComponent(ch));
+        if (!r.ok) throw new Error("tts " + r.status);
+        var blob = await r.blob();
+        var blobUrl = URL.createObjectURL(blob);
+        audio = new Audio(blobUrl);
+        audioCache[ch] = audio;
+      }
+      lastSpeakAudio = audio;
+      await new Promise(function(resolve, reject) {
+        audio.onended = function() { resolve(); };
+        audio.onerror = function() { reject(new Error("audio")); };
+        audio.play().catch(reject);
+      });
+    }
+  } catch (e) {
+    if (mySeq === speakSeq) _speakFallback(clean);
+  } finally {
+    if (mySeq === speakSeq) lastSpeakAudio = null;
   }
 };
 
