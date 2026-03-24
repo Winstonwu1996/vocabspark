@@ -155,32 +155,39 @@ var SpeakWordBtn = ({ text, size }) => {
   return <button onClick={() => speakWord(text)} title={"朗读单词: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
 };
 
-var BrandSparkIcon = () => (
-  <div
-    aria-hidden
-    style={{
-      width: 56,
-      height: 56,
-      borderRadius: 16,
-      background: "linear-gradient(145deg, " + C.accent + " 0%, " + C.gold + " 100%)",
-      boxShadow: "0 10px 28px rgba(212, 93, 60, 0.32), inset 0 1px 0 rgba(255,255,255,0.25)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      margin: "0 auto 14px",
-    }}
-  >
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path
-        d="M13 2L4 14.5h6.5L11 22l8.5-12.5H13L13 2z"
-        fill="#fff"
-        stroke="#fff"
-        strokeWidth="0.6"
-        strokeLinejoin="round"
-      />
-    </svg>
-  </div>
-);
+var BrandSparkIcon = ({ size, marginBottom }) => {
+  var box = size != null ? size : 56;
+  var radius = Math.max(12, Math.round(box * 0.286));
+  var icon = Math.round(box * 0.5);
+  var mb = marginBottom != null ? marginBottom : 14;
+  var mbStr = typeof mb === "number" ? mb + "px" : mb;
+  return (
+    <div
+      aria-hidden
+      style={{
+        width: box,
+        height: box,
+        borderRadius: radius,
+        background: "linear-gradient(145deg, " + C.accent + " 0%, " + C.gold + " 100%)",
+        boxShadow: "0 10px 28px rgba(212, 93, 60, 0.32), inset 0 1px 0 rgba(255,255,255,0.25)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        margin: "0 auto " + mbStr,
+      }}
+    >
+      <svg width={icon} height={icon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+        <path
+          d="M13 2L4 14.5h6.5L11 22l8.5-12.5H13L13 2z"
+          fill="#fff"
+          stroke="#fff"
+          strokeWidth="0.6"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
+  );
+};
 
 var AppHeroHeader = ({ stats }) => {
   var pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
@@ -1004,18 +1011,21 @@ export default function App() {
       <div style={S.container}>
 
       {showWelcome && (
-        <div style={{ position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.5)", zIndex:999, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
-          <div style={{ background:C.card, borderRadius:16, padding:"32px 28px", maxWidth:480, width:"100%", boxShadow:"0 20px 60px rgba(0,0,0,0.2)" }}>
-            <div style={{ fontSize:40, textAlign:"center", marginBottom:12 }}>📚</div>
-            <h2 style={{ fontSize:22, fontWeight:700, textAlign:"center", margin:"0 0 16px", fontFamily:FONT }}>Welcome to VocabSpark!</h2>
-            <div style={{ fontSize:14, lineHeight:1.8, color:C.text, fontFamily:FONT }}>
-              <p style={{ margin:"0 0 12px" }}>VocabSpark 是一款 AI 驱动的英语词汇学习工具，通过<strong>猜测→讲解→光谱排序→复习</strong>的互动流程帮助孩子高效记忆单词。</p>
-              <p style={{ margin:"0 0 12px", padding:"10px 14px", background:C.tealLight, borderRadius:8, fontSize:13 }}>
-                <strong>开始前请先设置「学生画像」：</strong><br/>
-                填写孩子的年级、爱好、常去的地方等信息。AI 会用这些信息定制专属的讲解场景和例句，信息越丰富效果越好。
+        <div style={{ position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.55)", zIndex:999, display:"flex", alignItems:"center", justifyContent:"center", padding:20, fontFamily:FONT }}>
+          <div style={{ background:C.card, borderRadius:20, padding:"32px 28px", maxWidth:480, width:"100%", boxShadow:"0 20px 60px rgba(0,0,0,0.25)", animation:"fadeUp 0.25s ease-out" }}>
+            <BrandSparkIcon size={52} marginBottom={10} />
+            <h2 style={{ fontSize:26, fontWeight:800, textAlign:"center", margin:"0 0 6px", letterSpacing:"-0.03em", lineHeight:1.1, color:C.text }}>
+              欢迎使用 <span style={{ color:C.text }}>Vocab</span><span style={{ color:C.accent }}>Spark</span>
+            </h2>
+            <p style={{ fontSize:13, color:C.textSec, fontStyle:"italic", textAlign:"center", margin:"0 0 18px", letterSpacing:"0.02em" }}>The AI that truly knows your child.</p>
+            <div style={{ fontSize:14, lineHeight:1.85, color:C.text }}>
+              <p style={{ margin:"0 0 12px" }}><strong>VocabSpark</strong> 是 AI 驱动的英语词汇学习工具，通过<strong>猜 → 讲 → 光谱排序 → 复习</strong>帮孩子把单词记牢。</p>
+              <p style={{ margin:0, padding:"12px 14px", background:C.tealLight, borderRadius:12, fontSize:13, lineHeight:1.75, border:"1px solid rgba(42,122,110,0.12)" }}>
+                <strong>开始前请先设置「学生画像」</strong><br/>
+                填写年级、爱好、常去的地方等。AI 会据此定制讲解和例句；也可以稍后用「照片日记」补充，越具体越有趣。
               </p>
             </div>
-            <button onClick={() => setShowWelcome(false)} style={{ ...S.bigBtn, marginTop:4 }}>👍 我知道了，开始设置</button>
+            <button onClick={() => setShowWelcome(false)} style={{ ...S.bigBtn, marginTop:16, width:"100%" }}>👍 我知道了，开始设置</button>
             <Disclaimer />
           </div>
         </div>
@@ -1306,7 +1316,7 @@ export default function App() {
 
       {phase === "batch_loading" && (
         <div style={{...S.card, textAlign:"center", padding:"40px 24px"}}>
-          <div style={{fontSize:40, marginBottom:16}}>📚</div>
+          <BrandSparkIcon size={48} marginBottom={16} />
           <h3 style={{fontSize:18, fontWeight:700, margin:"0 0 8px"}}>正在准备第 {Math.floor(idx/5)+1} 组学习内容</h3>
           <p style={{fontSize:14, color:C.textSec, marginBottom:20, lineHeight:1.6}}>{batchTip}</p>
           <div style={{background:C.border, borderRadius:8, height:12, overflow:"hidden", marginBottom:12}}>
