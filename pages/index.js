@@ -141,6 +141,55 @@ var SpeakWordBtn = ({ text, size }) => {
   return <button onClick={() => speakWord(text)} title={"朗读单词: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
 };
 
+var BrandSparkIcon = () => (
+  <div
+    aria-hidden
+    style={{
+      width: 56,
+      height: 56,
+      borderRadius: 16,
+      background: "linear-gradient(145deg, " + C.accent + " 0%, " + C.gold + " 100%)",
+      boxShadow: "0 10px 28px rgba(212, 93, 60, 0.32), inset 0 1px 0 rgba(255,255,255,0.25)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      margin: "0 auto 14px",
+    }}
+  >
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path
+        d="M13 2L4 14.5h6.5L11 22l8.5-12.5H13L13 2z"
+        fill="#fff"
+        stroke="#fff"
+        strokeWidth="0.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  </div>
+);
+
+var AppHeroHeader = ({ stats }) => {
+  var pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+  return (
+    <div style={{ ...S.header, padding: "32px 12px 24px" }}>
+      <BrandSparkIcon />
+      <h1 style={S.heroTitle}>
+        <span style={{ color: C.text }}>Vocab</span>
+        <span style={{ color: C.accent }}>Spark</span>
+      </h1>
+      <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
+      <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
+      {stats.xp > 0 && (
+        <div style={S.heroStatRow}>
+          <span style={S.heroStatPillGold}>{"⚡ " + stats.xp + " XP"}</span>
+          <span style={S.heroStatPillAccent}>{"🔥 最佳连对 " + stats.bestStreak}</span>
+          <span style={S.heroStatPillGreen}>{"✅ " + pct + "%"}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
 /* ─── API Calls (server-side proxy, key hidden) ─── */
 var callAPI = async (sys, msg) => {
   const response = await fetch("/api/chat", {
@@ -958,13 +1007,7 @@ export default function App() {
         </div>
       )}
 
-      <div style={S.header}>
-        <span style={{ fontSize:44 }}>📚</span>
-        <h1 style={S.heroTitle}>VocabSpark</h1>
-        <p style={S.heroSub}>AI 词汇导师 · 猜→教→练，过目不忘</p>
-        <p style={{fontSize:13,color:C.textSec,fontStyle:"italic",margin:"-4px 0 4px",fontFamily:FONT,letterSpacing:"0.01em"}}>The AI that truly knows you.</p>
-        {stats.xp > 0 && <div style={S.statsBadge}>{"⚡ "+stats.xp+" XP · 🔥 最佳连对 "+stats.bestStreak+" · ✅ "+(stats.total>0?Math.round(stats.correct/stats.total*100):0)+"%"}</div>}
-      </div>
+      <AppHeroHeader stats={stats} />
 
       {hasSession && (
         <div style={{ ...S.card, background: C.tealLight, borderColor: C.teal, marginBottom: 14 }}>
@@ -1571,10 +1614,14 @@ var globalCSS = [
 var S = {
   root:{background:C.bg,minHeight:"100vh",fontFamily:FONT,color:C.text},
   container:{maxWidth:660,margin:"0 auto",padding:"12px 16px 60px"},
-  header:{textAlign:"center",padding:"28px 0 20px"},
-  heroTitle:{fontSize:30,fontWeight:700,margin:"10px 0 2px",letterSpacing:"-0.02em"},
-  heroSub:{fontSize:14,color:C.textSec,margin:0},
-  statsBadge:{display:"inline-block",marginTop:12,padding:"6px 16px",background:C.goldLight,borderRadius:20,fontSize:13,fontWeight:600,color:C.gold},
+  header:{textAlign:"center"},
+  heroTitle:{fontSize:34,fontWeight:800,margin:"0 0 10px",letterSpacing:"-0.03em",lineHeight:1.05},
+  heroTaglineCn:{fontSize:15,fontWeight:500,color:C.text,margin:0,lineHeight:1.5,maxWidth:360,marginLeft:"auto",marginRight:"auto"},
+  heroTaglineEn:{fontSize:13,color:C.textSec,fontStyle:"italic",margin:"10px 0 0",fontFamily:FONT,letterSpacing:"0.02em"},
+  heroStatRow:{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:8,marginTop:18},
+  heroStatPillGold:{padding:"7px 14px",background:C.goldLight,borderRadius:999,fontSize:13,fontWeight:700,color:"#9a7209",border:"1px solid rgba(230,168,23,0.35)",fontFamily:FONT},
+  heroStatPillAccent:{padding:"7px 14px",background:C.accentLight,borderRadius:999,fontSize:13,fontWeight:700,color:C.accent,border:"1px solid rgba(212,93,60,0.28)",fontFamily:FONT},
+  heroStatPillGreen:{padding:"7px 14px",background:C.greenLight,borderRadius:999,fontSize:13,fontWeight:700,color:C.green,border:"1px solid rgba(34,160,107,0.28)",fontFamily:FONT},
   tabBar:{display:"flex",marginBottom:0,background:C.card,borderRadius:"12px 12px 0 0",border:"1px solid "+C.border,borderBottom:"none",overflow:"hidden"},
   tab:{flex:1,padding:"13px 16px",background:"transparent",border:"none",borderBottom:"2px solid transparent",fontFamily:FONT,fontSize:14,fontWeight:600,color:C.textSec,cursor:"pointer"},
   tabActive:{flex:1,padding:"13px 16px",background:"transparent",border:"none",borderBottom:"2px solid "+C.accent,fontFamily:FONT,fontSize:14,fontWeight:600,color:C.accent,cursor:"pointer"},
