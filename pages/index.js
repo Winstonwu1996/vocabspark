@@ -2,8 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
 
 /* ═══════════════════════════════════════════════════════
-   VocabSpark v7 — AI 词汇导师
-   v7 变更：🔊 按钮位置修复 · 引号规范 · 存储迁移 · 设置 Modal · 免责声明
+   VocabSpark v8 — AI 词汇导师
+   v8 变更：预加载优化 · TTS 升级(真人录音+神经语音) · 进度里程碑 · 滑入动画 · 答案填入 · 庆祝效果
    ═══════════════════════════════════════════════════════ */
 
 var C = {
@@ -71,22 +71,68 @@ var buildClozePrompt = (words) => {
   return "学生刚学完10个词：" + words.join(", ") + "\n\n请写一篇120-150词的英文小短文（故事/日记/场景描述），深度结合学生画像的生活场景。短文中自然嵌入这10个词中的5个，将这5个词替换为 _____(1), _____(2) 等编号空格。\n\n在短文后给出5个填空题，每题3个选项（从10个词中选）。\n\nIMPORTANT: 直接输出JSON：\n" + '{"title":"短文标题","passage":"短文正文，含_____(1)等空格","questions":[{"id":1,"blank":"_____(1)","options":["词1","词2","词3"],"answer":"正确词","explanation":"为什么选这个词"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
 };
 
-/* ─── Helpers ─── */
-var speak = (text) => {
+/* ─── TTS: server proxy (Google Neural) → speechSynthesis fallback ─── */
+var audioCache = {};     // sentence text → Audio object (server TTS)
+var dictAudioCache = {}; // word → Audio object (Free Dictionary API, real human recording)
+
+var _speakFallback = (text) => {
   if (typeof window === "undefined") return;
   window.speechSynthesis.cancel();
-  var u = new SpeechSynthesisUtterance(text.replace(/[🔊\[\]]/g, "").trim());
+  var u = new SpeechSynthesisUtterance(text);
   u.lang = "en-US"; u.rate = 0.82;
   var voices = window.speechSynthesis.getVoices();
-  var pref = voices.find(v => v.lang === "en-US" && /samantha|karen|victoria/i.test(v.name))
+  var pref = voices.find(v => /Google US English Female|Microsoft Aria Online|Microsoft Jenny Online|Samantha|Karen|Victoria/i.test(v.name))
     || voices.find(v => v.lang.startsWith("en-US")) || voices.find(v => v.lang.startsWith("en"));
   if (pref) u.voice = pref;
   window.speechSynthesis.speak(u);
 };
 
+var speak = async (text) => {
+  if (typeof window === "undefined") return;
+  var clean = text.replace(/[🔊\[\]]/g, "").trim();
+  if (!clean) return;
+  if (audioCache[clean]) { try { audioCache[clean].currentTime = 0; audioCache[clean].play(); return; } catch(e) {} }
+  try {
+    var r = await fetch("/api/tts?text=" + encodeURIComponent(clean));
+    if (!r.ok) throw new Error("tts " + r.status);
+    var blob = await r.blob();
+    var url = URL.createObjectURL(blob);
+    var audio = new Audio(url);
+    audioCache[clean] = audio;
+    audio.play();
+  } catch(e) {
+    _speakFallback(clean);
+  }
+};
+
+var speakWord = async (word) => {
+  if (typeof window === "undefined") return;
+  var w = word.replace(/[🔊\[\]]/g, "").trim().toLowerCase();
+  if (!w) return;
+  if (dictAudioCache[w]) { try { dictAudioCache[w].currentTime = 0; dictAudioCache[w].play(); return; } catch(e) {} }
+  try {
+    var r = await fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(w));
+    var data = await r.json();
+    var audioUrl = data?.[0]?.phonetics?.find(p => p.audio)?.audio;
+    if (audioUrl) {
+      if (audioUrl.startsWith("//")) audioUrl = "https:" + audioUrl;
+      var audio = new Audio(audioUrl);
+      dictAudioCache[w] = audio;
+      audio.play();
+      return;
+    }
+  } catch(e) {}
+  await speak(w);
+};
+
 var SpeakBtn = ({ text, size }) => {
   var s = size || 28;
   return <button onClick={() => speak(text)} title={"播放: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
+};
+
+var SpeakWordBtn = ({ text, size }) => {
+  var s = size || 38;
+  return <button onClick={() => speakWord(text)} title={"朗读单词: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
 };
 
 /* ─── API Calls (server-side proxy, key hidden) ─── */
@@ -287,6 +333,8 @@ export default function App() {
   var [clozeSubmitted, setClozeSubmitted] = useState(false);
 
   var [loadingTip, setLoadingTip] = useState("");
+  var [phaseDir, setPhaseDir] = useState(1);
+  var [showConfetti, setShowConfetti] = useState(false);
 
   var [stats, setStats] = useState({ correct:0, total:0, streak:0, bestStreak:0, xp:0 });
   var [wordTimings, setWordTimings] = useState({});
@@ -360,7 +408,7 @@ export default function App() {
     return tips[Math.floor(Math.random() * tips.length)];
   };
 
-  /* ─── BATCH LOAD: concurrency-limited (max 3) with real progress ─── */
+  /* ─── BATCH LOAD: concurrency-limited (max 5) with real progress ─── */
   var loadBatch = async function(startIdx, lrn, words) {
     var wl = words || wordList;
     var endIdx = Math.min(startIdx + 5, wl.length);
@@ -371,6 +419,37 @@ export default function App() {
     setBatchProgress(0);
     setPhase("batch_loading");
     setBatchTip(makeBatchTip(0, batchWords[0], total));
+
+    // ── Phase B: fire review/cloze pre-fetch independently (doesn't affect progress bar) ──
+    var endMilestone = lrn.length + batchWords.length;
+    var willCloze  = endMilestone % 10 === 0;
+    var willReview = endMilestone % 5 === 0 && !willCloze;
+    if (willReview && !dataCache.current["_review_" + endMilestone]) {
+      callAPIFast(sysP, buildReviewPrompt(batchWords))
+        .then(function(raw) { dataCache.current["_review_" + endMilestone] = tryJSON(raw) || null; })
+        .catch(function() {});
+    }
+    if (willCloze && !dataCache.current["_cloze_" + endMilestone]) {
+      callAPIFast(sysP, buildClozePrompt([...lrn.slice(-5), ...batchWords]))
+        .then(function(raw) { dataCache.current["_cloze_" + endMilestone] = tryJSON(raw) || null; })
+        .catch(function() {});
+    }
+
+    // ── Word audio pre-fetch: Free Dictionary API (fire and forget) ──
+    batchWords.forEach(function(word) {
+      var w = word.toLowerCase();
+      if (dictAudioCache[w]) return;
+      fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(w))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var audioUrl = data?.[0]?.phonetics?.find(function(p) { return p.audio; })?.audio;
+          if (audioUrl) {
+            if (audioUrl.startsWith("//")) audioUrl = "https:" + audioUrl;
+            dictAudioCache[w] = new Audio(audioUrl);
+          }
+        })
+        .catch(function() {});
+    });
 
     var tasks = [];
     var completed = 0;
@@ -409,7 +488,7 @@ export default function App() {
     await new Promise(function(resolve) {
       if (tasks.length === 0) { resolve(); return; }
       function next() {
-        while (running < 3 && taskIdx < tasks.length) {
+        while (running < 5 && taskIdx < tasks.length) {
           running++;
           var t = tasks[taskIdx++];
           t().finally(function() {
@@ -456,7 +535,7 @@ export default function App() {
     }
     if (d?.teach) setTeachContent(d.teach);
     if (d?.spectrum?.spectrum_words) setSpectrumData(d.spectrum);
-    setPhase("guess");
+    setPhaseDir(1); setPhase("guess");
   };
 
   var submitGuess = function() {
@@ -469,12 +548,12 @@ export default function App() {
 
     save({ ...stats, total: stats.total+1, correct: stats.correct+(correct?1:0), streak: correct ? stats.streak+1 : 0, bestStreak: correct ? Math.max(stats.bestStreak, stats.streak+1) : stats.bestStreak, xp: stats.xp+(correct?15:5) });
 
-    setTimeout(function() { setPhase("teach"); }, 800);
+    setTimeout(function() { setPhaseDir(1); setPhase("teach"); }, 800);
   };
 
   var skipGuess = function() {
     save({ ...stats, total: stats.total+1, streak: 0, xp: stats.xp+3 });
-    setPhase("teach");
+    setPhaseDir(1); setPhase("teach");
   };
 
   var handleFile = async (e) => {
@@ -510,7 +589,7 @@ export default function App() {
     if (spectrumData?.spectrum_words) {
       setSpecPool(shuffle(spectrumData.spectrum_words));
       setSpecSlots([null,null,null]); setSpecStatus("idle");
-      setPhase("spectrum");
+      setPhaseDir(1); setPhase("spectrum");
     } else {
       goNextWord();
     }
@@ -557,34 +636,44 @@ export default function App() {
     saveSession(wordList, nextIdx, newLearned);
 
     if (newLearned.length > 0 && newLearned.length % 10 === 0) {
-      setLoading(true); setLoadingTip("📝 正在生成阅读理解短文...");
+      // Phase B: instant if pre-fetched during batch loading
+      var cachedCloze = dataCache.current["_cloze_" + newLearned.length];
+      if (cachedCloze?.questions) {
+        setClozeData(cachedCloze); setClozeAnswers({}); setClozeSubmitted(false); setPhase("cloze"); return;
+      }
+      // Phase A: switch phase immediately so spinner shows, then fetch
+      setPhase("cloze"); setLoadingTip("📝 正在生成阅读理解短文...");
       try {
         var raw = await callAPIFast(sysP, buildClozePrompt(newLearned.slice(-10)));
         var parsed = tryJSON(raw);
         if (parsed?.questions) {
-          setClozeData(parsed); setClozeAnswers({}); setClozeSubmitted(false); setPhase("cloze");
+          setClozeData(parsed); setClozeAnswers({}); setClozeSubmitted(false);
         } else {
           if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
           else { sfx.complete(); setPhase("done"); }
         }
       } catch (e) { setError(e.message); }
-      finally { setLoading(false); }
       return;
     }
 
     if (newLearned.length > 0 && newLearned.length % 5 === 0) {
-      setLoading(true); setLoadingTip("🎮 设计互动复习挑战中...");
+      // Phase B: instant if pre-fetched during batch loading
+      var cachedReview = dataCache.current["_review_" + newLearned.length];
+      if (cachedReview?.questions) {
+        setReviewData(cachedReview); setReviewAnswers({}); setReviewSubmitted(false); setPhase("review"); return;
+      }
+      // Phase A: switch phase immediately so spinner shows, then fetch
+      setPhase("review"); setLoadingTip("🎮 设计互动复习挑战中...");
       try {
         var raw = await callAPIFast(sysP, buildReviewPrompt(newLearned.slice(-5)));
         var parsed = tryJSON(raw);
         if (parsed?.questions) {
-          setReviewData(parsed); setPhase("review");
+          setReviewData(parsed); setReviewAnswers({}); setReviewSubmitted(false);
         } else {
           if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
           else { sfx.complete(); setPhase("done"); }
         }
       } catch (e) { setError(e.message); }
-      finally { setLoading(false); }
       return;
     }
 
@@ -602,6 +691,10 @@ export default function App() {
     reviewData?.questions?.forEach(q => { if (reviewAnswers[q.id] === q.answer) c++; });
     if (c >= 4) sfx.correct(); else if (c >= 2) sfx.click(); else sfx.wrong();
     save({ ...stats, xp: stats.xp + c*10 });
+    if (c === reviewData?.questions?.length) {
+      setShowConfetti(true);
+      setTimeout(function() { setShowConfetti(false); }, 2600);
+    }
   };
 
   var afterReview = async function() {
@@ -741,7 +834,18 @@ export default function App() {
       <div ref={topRef} />
       <div style={S.topBar}>
         <button style={S.backBtn} onClick={() => setScreen("setup")}>←</button>
-        <div style={S.progressWrap}><div style={S.progressTrack}><div style={{...S.progressFill, width:progress+"%"}} /></div><span style={S.progressText}>{Math.min(idx+1,wordList.length)}/{wordList.length}</span></div>
+        <div style={S.progressWrap}>
+          <div style={{...S.progressTrack, position:"relative", overflow:"visible"}}>
+            <div style={{...S.progressFill, width:progress+"%"}} />
+            {wordList.map(function(_,i) {
+              if ((i+1) % 5 !== 0 || i+1 >= wordList.length) return null;
+              var isCloze = (i+1) % 10 === 0;
+              var pos = ((i+1) / wordList.length) * 100;
+              return <div key={i} style={{position:"absolute",top:"50%",left:pos+"%",transform:"translate(-50%,-50%)",width:8,height:8,borderRadius:"50%",background:isCloze?C.teal:C.purple,border:"1.5px solid "+C.card,zIndex:1}} />;
+            })}
+          </div>
+          <span style={S.progressText}>{Math.min(idx+1,wordList.length)}/{wordList.length}</span>
+        </div>
         <div style={S.xpBadge}>{"⚡"+stats.xp}</div>
         <button style={S.settingsBtn} onClick={() => setShowSettings(true)} title="设置">⚙️</button>
       </div>
@@ -784,13 +888,13 @@ export default function App() {
       )}
 
       {phase !== "review" && phase !== "done" && phase !== "batch_loading" && phase !== "cloze" && (
-        <div style={S.wordHeader}>
+        <div style={{...S.wordHeader, boxShadow: stats.streak >= 5 ? "0 0 0 2px "+C.gold+", 0 0 18px "+C.gold+"55" : C.shadow, border: stats.streak >= 5 ? "1px solid "+C.gold : "1px solid "+C.border, animation: stats.streak >= 5 ? "glowPulse 2s ease-in-out infinite" : "fadeUp 0.3s ease-out"}}>
           <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
             <h2 style={S.wordTitle}>{currentWord}</h2>
             {phonetic && <span style={S.phoneticText}>{phonetic}</span>}
-            <SpeakBtn text={currentWord} size={38} />
+            <SpeakWordBtn text={currentWord} size={38} />
           </div>
-          {stats.streak > 0 && <div style={S.streakBadge}>{"🔥 "+stats.streak}</div>}
+          {stats.streak > 0 && <div style={S.streakBadge}>{stats.streak >= 5 ? "🔥×"+stats.streak : "🔥 "+stats.streak}</div>}
         </div>
       )}
 
@@ -809,10 +913,24 @@ export default function App() {
       )}
 
       {phase === "guess" && (
-        <div style={{...S.card, animation: shakeWrong ? "shake 0.4s ease" : bounceCorrect ? "bounce 0.5s ease" : "fadeUp 0.3s ease-out"}}>
+        <div style={{...S.card, animation: shakeWrong ? "shake 0.4s ease" : bounceCorrect ? "bounce 0.5s ease" : phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
           <div style={S.tag}>🎯 猜一猜</div>
           {!guessData ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}><div>{loadingTip||"🧠 AI 老师正在备课..."}</div><div style={{fontSize:12,color:C.textSec,marginTop:6}}>正在为你生成专属学习内容，首次会稍慢，之后越来越快 ✨</div></div></div> : <>
-            <div style={S.contextBox}><span style={{flex:1}}>{guessData.context}</span><SpeakBtn text={guessData.context.replace(/_+/g, currentWord)} size={26} /></div>
+            <div style={S.contextBox}>
+              <span style={{flex:1,lineHeight:1.8}}>
+                {guessData.context.replace(/_+/g, "\x00").split("\x00").map(function(seg, i, arr) {
+                  if (i === arr.length - 1) return <span key={i}>{seg}</span>;
+                  var isCorrect = selectedOption === guessData.answer;
+                  return [
+                    <span key={"t"+i}>{seg}</span>,
+                    guessSubmitted
+                      ? <span key={"f"+i} style={{fontWeight:700, color: isCorrect ? C.green : C.red, display:"inline-block", animation:"fillIn 0.4s ease-out", padding:"0 2px", borderRadius:4, background: isCorrect ? C.greenLight : C.redLight}}>{guessData.answer}</span>
+                      : <span key={"b"+i} style={{letterSpacing:3, color:C.textSec, fontWeight:700}}>___</span>
+                  ];
+                })}
+              </span>
+              <SpeakBtn text={guessData.context.replace(/_+/g, currentWord)} size={26} />
+            </div>
             {guessData.options ? <div style={S.optionGrid}>{Object.entries(guessData.options).map(([k,v]) => {
               var sel=selectedOption===k, ok=guessSubmitted&&k===guessData.answer, bad=guessSubmitted&&sel&&k!==guessData.answer;
               var bg=C.bg, bdr=C.border, clr=C.text;
@@ -829,7 +947,7 @@ export default function App() {
         </div>
       )}
 
-      {phase === "teach" && <div style={S.card}>
+      {phase === "teach" && <div style={{...S.card, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
         <div style={{...S.tag,background:C.tealLight,color:C.teal}}>📖 学习笔记</div>
         {!teachContent ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}>{loadingTip||"📖 正在用你的生活场景编写专属讲解..."}</div></div> : <>
           <div style={{marginBottom:20}}><Md text={teachContent} /></div>
@@ -837,7 +955,7 @@ export default function App() {
         </>}
       </div>}
 
-      {phase === "spectrum" && spectrumData && <div style={S.specCard}>
+      {phase === "spectrum" && spectrumData && <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
         <div style={S.specTag}>🎮 词义光谱挑战</div>
         <div style={S.specHint}>按程度【从弱到强】排列！</div>
         {spectrumData.scenario && <div style={S.specScenario}>{spectrumData.scenario}</div>}
@@ -859,7 +977,7 @@ export default function App() {
         </div>}
       </div>}
 
-      {phase === "review" && <div style={S.card}>
+      {phase === "review" && <div style={{...S.card, animation:"slideInRight 0.28s ease-out"}}>
         <div style={{...S.tag,background:C.purpleLight,color:C.purple}}>🏆 复习关卡</div>
         {!reviewData?.questions ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}>{loadingTip||"🎮 设计互动复习挑战中..."}</div></div> : <>
           <div style={{fontWeight:600,fontSize:17,marginBottom:4}}>{reviewData.title}</div>
@@ -882,7 +1000,7 @@ export default function App() {
         </>}
       </div>}
 
-      {phase === "cloze" && <div style={S.card}>
+      {phase === "cloze" && <div style={{...S.card, animation:"slideInRight 0.28s ease-out"}}>
         <div style={{...S.tag,background:C.goldLight,color:C.gold}}>📝 阅读填空挑战</div>
         {!clozeData?.questions ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}>{loadingTip||"📝 正在生成阅读理解短文..."}</div></div> : <>
           <div style={{fontWeight:600,fontSize:17,marginBottom:8}}>{clozeData.title}</div>
@@ -955,6 +1073,20 @@ export default function App() {
         </div>;
       })()}
 
+      {showConfetti && (
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"}}>
+          {Array.from({length:24}).map(function(_,i) {
+            var colors = [C.gold, C.accent, C.teal, C.purple, C.green, "#ff6b6b", "#ffd93d", "#6bcb77"];
+            var col = colors[i % colors.length];
+            var left = (Math.sin(i * 137.5 * Math.PI / 180) * 0.5 + 0.5) * 100;
+            var delay = (i % 8) * 0.12;
+            var dur = 1.8 + (i % 5) * 0.2;
+            var size = 8 + (i % 4) * 4;
+            return <div key={i} style={{position:"absolute",top:"-20px",left:left+"%",width:size,height:size,background:col,borderRadius:i%3===0?"50%":"2px",animation:"confettiFall "+dur+"s "+delay+"s ease-in forwards",transform:"rotate("+(i*53)+"deg)"}} />;
+          })}
+        </div>
+      )}
+
       <Disclaimer />
       <div style={{ textAlign:"center", padding:"24px 0 8px", fontSize:13, lineHeight:1.8, color:C.textSec }}>
         <div>Made with ❤️ by Willow 的爸爸</div>
@@ -974,8 +1106,12 @@ export default function App() {
 var globalCSS = [
   "@keyframes spin { to { transform: rotate(360deg); } }",
   "@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }",
+  "@keyframes slideInRight { from { opacity:0; transform:translateX(36px); } to { opacity:1; transform:translateX(0); } }",
   "@keyframes shake { 0%,100% { transform:translateX(0); } 20% { transform:translateX(-8px); } 40% { transform:translateX(8px); } 60% { transform:translateX(-5px); } 80% { transform:translateX(5px); } }",
   "@keyframes bounce { 0% { transform:scale(1); } 30% { transform:scale(1.04); } 60% { transform:scale(0.98); } 100% { transform:scale(1); } }",
+  "@keyframes fillIn { from { opacity:0; transform:scale(1.15); } to { opacity:1; transform:scale(1); } }",
+  "@keyframes glowPulse { 0%,100% { box-shadow:0 0 0 2px " + C.gold + ", 0 0 18px " + C.gold + "44; } 50% { box-shadow:0 0 0 3px " + C.gold + ", 0 0 28px " + C.gold + "77; } }",
+  "@keyframes confettiFall { 0% { transform:translateY(0) rotate(0deg); opacity:1; } 100% { transform:translateY(105vh) rotate(720deg); opacity:0; } }",
   "textarea:focus { border-color: " + C.accent + " !important; outline: none; }",
   "button:hover:not(:disabled) { filter: brightness(0.96); }",
   "button:disabled { opacity: 0.45; cursor: not-allowed !important; }",
@@ -1008,7 +1144,7 @@ var S = {
   topBar:{display:"flex",alignItems:"center",gap:10,padding:"6px 0 14px"},
   backBtn:{padding:"5px 12px",background:"transparent",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:16,color:C.textSec,cursor:"pointer"},
   progressWrap:{flex:1,display:"flex",alignItems:"center",gap:8},
-  progressTrack:{flex:1,height:6,background:C.border,borderRadius:3,overflow:"hidden"},
+  progressTrack:{flex:1,height:6,background:C.border,borderRadius:3},
   progressFill:{height:"100%",background:C.accent,borderRadius:3,transition:"width 0.4s ease"},
   progressText:{fontSize:13,color:C.textSec,fontWeight:600},
   xpBadge:{padding:"4px 10px",background:C.goldLight,borderRadius:12,fontSize:13,fontWeight:700,color:C.gold},
