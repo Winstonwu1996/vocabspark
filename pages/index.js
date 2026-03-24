@@ -867,7 +867,7 @@ export default function App() {
 
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); saveSession(wordList, nextIdx, newLearned); return; }
 
-    if (newLearned.length === 10 && !tipDismissed) { setShowTipJar(true); }
+    if (userRef.current && newLearned.length === 10 && !tipDismissed) { setShowTipJar(true); }
 
     setIdx(nextIdx);
     applyWordData(wordList[nextIdx]);
@@ -904,7 +904,7 @@ export default function App() {
   var afterCloze = async function() {
     var nextIdx = idx + 1;
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); return; }
-    if (learned.length >= 10 && !tipDismissed) { setShowTipJar(true); }
+    if (userRef.current && learned.length >= 10 && !tipDismissed) { setShowTipJar(true); }
     await loadBatch(nextIdx, learned);
     setIdx(nextIdx);
     applyWordData(wordList[nextIdx]);
