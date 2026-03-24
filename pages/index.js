@@ -522,8 +522,11 @@ export default function App() {
   var [batchTotal, setBatchTotal] = useState(0);
   var [batchTip, setBatchTip] = useState("");
   var [batchUiPct, setBatchUiPct] = useState(0);
+  var [smoothLessonPct, setSmoothLessonPct] = useState(0);
   var batchProgressR = useRef(0);
   var batchTotalR = useRef(0);
+  var lessonProgressTargetRef = useRef(0);
+  var batchLoadStartRef = useRef(0);
   batchProgressR.current = batchProgress;
   batchTotalR.current = batchTotal;
 
@@ -538,17 +541,22 @@ export default function App() {
       setBatchUiPct(0);
       return;
     }
+    batchLoadStartRef.current = typeof performance !== "undefined" ? performance.now() : 0;
     setBatchUiPct(0);
     var id = setInterval(function() {
       var tot = batchTotalR.current;
       var prog = batchProgressR.current;
-      var real = tot > 0 ? Math.round((100 * prog) / tot) : 0;
+      var real = tot > 0 ? (100 * prog) / tot : 0;
+      var elapsed = (typeof performance !== "undefined" ? performance.now() : 0) - batchLoadStartRef.current;
+      var fakeCap = Math.min(7, elapsed / 420);
+      var target = tot <= 0 ? 0 : (real > 0 ? Math.max(real, fakeCap) : fakeCap);
       setBatchUiPct(function(d) {
-        if (real > 0) return Math.max(d, real);
-        if (d < 7) return Math.min(7, d + 0.42);
-        return d;
+        var next = d + (target - d) * 0.14;
+        if (Math.abs(target - next) < 0.35) next = target;
+        if (next > 100) next = 100;
+        return next;
       });
-    }, 200);
+    }, 48);
     return function() { clearInterval(id); };
   }, [phase]);
   useEffect(function() { if (topRef.current) topRef.current.scrollIntoView({ behavior:"smooth", block:"start" }); }, [phase, idx]);
@@ -1091,6 +1099,23 @@ export default function App() {
   };
 
   var progress = wordList.length > 0 ? ((idx + (["teach","spectrum","done"].includes(phase) ? 1 : 0)) / wordList.length) * 100 : 0;
+  lessonProgressTargetRef.current = progress;
+
+  useEffect(function() {
+    if (screen !== "learning") {
+      setSmoothLessonPct(0);
+      return;
+    }
+    var id = setInterval(function() {
+      var t = lessonProgressTargetRef.current;
+      setSmoothLessonPct(function(s) {
+        var next = s + (t - s) * 0.12;
+        if (Math.abs(t - next) < 0.35) next = t;
+        return next;
+      });
+    }, 72);
+    return function() { clearInterval(id); };
+  }, [screen, progress]);
 
   var getTimingStats = () => {
     var entries = Object.entries(wordTimings).filter(([_,v]) => v.duration);
@@ -1307,7 +1332,7 @@ export default function App() {
         <button style={S.backBtn} onClick={() => setScreen("setup")}>←</button>
         <div style={S.progressWrap}>
           <div style={{...S.progressTrack, position:"relative", overflow:"visible"}}>
-            <div style={{...S.progressFill, width:progress+"%"}} />
+            <div style={{...S.progressFill, width: smoothLessonPct + "%", transition: "none"}} />
             {wordList.map(function(_,i) {
               if ((i+1) % 5 !== 0 || i+1 >= wordList.length) return null;
               var isCloze = (i+1) % 10 === 0;
@@ -1428,11 +1453,16 @@ export default function App() {
         <div style={{...S.card, textAlign:"center", padding:"40px 24px"}}>
           <BrandSparkIcon size={48} marginBottom={16} />
           <h3 style={{fontSize:18, fontWeight:700, margin:"0 0 8px"}}>正在准备第 {Math.floor(idx/5)+1} 组学习内容</h3>
+          {Math.floor(idx / 5) === 0 && (
+            <p style={{fontSize:13, color:C.textSec, margin:"0 0 12px", lineHeight:1.65, padding:"10px 14px", background:C.tealLight, borderRadius:10, border:"1px solid rgba(42,122,110,0.12)"}}>
+              💡 首次加载会稍慢一些，AI 正在根据学生画像量身定制内容，请耐心稍等片刻～
+            </p>
+          )}
           <p style={{fontSize:14, color:C.textSec, marginBottom:20, lineHeight:1.6}}>{batchTip}</p>
           <div style={{background:C.border, borderRadius:8, height:12, overflow:"hidden", marginBottom:12}}>
-            <div style={{height:"100%", background:"linear-gradient(90deg, "+C.accent+", "+C.gold+")", borderRadius:8, transition:"width 0.35s ease", width: batchUiPct + "%"}} />
+            <div style={{height:"100%", background:"linear-gradient(90deg, "+C.accent+", "+C.gold+")", borderRadius:8, transition:"none", width: batchUiPct + "%"}} />
           </div>
-          <div style={{fontSize:13, color:C.textSec}}>{batchUiPct}%</div>
+          <div style={{fontSize:13, color:C.textSec}}>{Math.min(100, Math.round(batchUiPct))}%</div>
         </div>
       )}
 
