@@ -194,6 +194,29 @@ var Disclaimer = () => (
   </div>
 );
 
+function PrivacyNotice() {
+  var [open, setOpen] = useState(false);
+  return (
+    <div style={{textAlign:"center",padding:"6px 0 10px",fontSize:11,color:C.textSec,fontFamily:FONT}}>
+      <button onClick={function(){setOpen(function(v){return !v;});}} style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:11,cursor:"pointer",textDecoration:"underline",padding:0}}>
+        🔒 隐私声明
+      </button>
+      {open && (
+        <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:12,padding:"16px 18px",marginTop:8,textAlign:"left",lineHeight:1.9,maxWidth:480,margin:"8px auto 0",fontSize:12}}>
+          <div style={{fontWeight:700,marginBottom:8,fontSize:13}}>🔒 数据隐私承诺</div>
+          <p style={{margin:"0 0 8px"}}>您在「学生画像」中填写的文字及上传的照片，<strong>仅用于</strong>由 AI 生成个性化学习内容（例句、讲解、记忆场景），不作任何其他用途。</p>
+          <div style={{color:C.textSec}}>
+            • 所有数据在传输和存储过程中均采用 HTTPS 加密保护<br/>
+            • 您的原始信息不会被开发者读取、分析，或以任何形式向第三方披露<br/>
+            • AI 内容生成通过 DeepSeek 及 Google AI API 接口完成，相关数据处理遵守各服务商隐私政策<br/>
+            • 您可随时要求删除账户及全部数据，请发邮件至 <a href="mailto:Winstonwu1996@icloud.com" style={{color:C.accent,textDecoration:"none"}}>Winstonwu1996@icloud.com</a>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 var PRESETS = {
   "SSAT 高频 50 词": "aberration\nabhor\nabstain\nadmonish\narduous\naudacious\nbenevolent\ncandid\ncapricious\ncompel\ncontempt\ncunning\ndaunt\ndiligent\ndiscern\neloquent\nempathy\nenigma\nfervent\nfrugal\ngregarious\nhaughty\nimplore\nincessant\njubilant\nlethargy\nlucid\nmalice\nmollify\nnovice\nobstinate\nopulent\npacify\npragmatic\nprudent\nrebuke\nresilient\nsagacious\nserene\ntaciturn\ntenacious\ntrivial\nunanimous\nvehement\nvenerate\nvolatile\nwary\nzealous\nambiguous\nbenign",
   "SSAT 情感词": "elated\nmelancholy\nindignant\napprehensive\ncontrite\njubilant\ndespondent\nexuberant\nserene\nvexed",
@@ -361,6 +384,8 @@ export default function App() {
 
   var contentEndRef = useRef(null);
   var topRef = useRef(null);
+  var photoRef = useRef(null);
+  var [photoLoading, setPhotoLoading] = useState(false);
 
   useEffect(function() { if (typeof window !== "undefined") window.speechSynthesis?.getVoices(); }, []);
   useEffect(function() { if (topRef.current) topRef.current.scrollIntoView({ behavior:"smooth", block:"start" }); }, [phase, idx]);
@@ -442,6 +467,31 @@ export default function App() {
   var handleLogout = async function() {
     await supabase.auth.signOut();
     setUser(null); userRef.current = null;
+  };
+
+  var handlePhotoUpload = async function(e) {
+    var file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    setPhotoLoading(true);
+    try {
+      var base64 = await new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function(ev) { resolve(ev.target.result.split(',')[1]); };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      var resp = await fetch('/api/describe-photo', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({imageBase64: base64, mimeType: file.type})
+      });
+      var data = await resp.json();
+      if (data.description) {
+        setProfile(function(prev) {
+          return prev + (prev && !prev.endsWith('\n') ? '\n' : '') + '📷 ' + data.description;
+        });
+      }
+    } catch(err) { alert('照片处理失败：' + err.message); }
+    finally { setPhotoLoading(false); if (photoRef.current) photoRef.current.value = ''; }
   };
 
   // ── Auth state listener ──
@@ -893,6 +943,7 @@ export default function App() {
         <span style={{ fontSize:44 }}>📚</span>
         <h1 style={S.heroTitle}>VocabSpark</h1>
         <p style={S.heroSub}>AI 词汇导师 · 猜→教→练，过目不忘</p>
+        <p style={{fontSize:13,color:C.textSec,fontStyle:"italic",margin:"-4px 0 4px",fontFamily:FONT,letterSpacing:"0.01em"}}>The AI that truly knows you.</p>
         {stats.xp > 0 && <div style={S.statsBadge}>{"⚡ "+stats.xp+" XP · 🔥 最佳连对 "+stats.bestStreak+" · ✅ "+(stats.total>0?Math.round(stats.correct/stats.total*100):0)+"%"}</div>}
       </div>
 
@@ -922,11 +973,26 @@ export default function App() {
       </div>
       {setupTab === "profile" && (
         <div style={S.setupCard}>
-          <div style={S.setupHint}>{profileLocked ? "✅ 画像已保存" : "👨‍👩‍👧 家长填写孩子信息，设置得越丰富，AI 讲解越贴近生活，记忆越深刻！"}</div>
+          <div style={S.setupHint}>{profileLocked ? "✅ 画像已保存" : "🌟 把这里想象成孩子的秘密日记——告诉 AI 她的世界，越真实越有趣，AI 造的句子会让她惊喜！"}</div>
           {profileLocked ? (
             <div><div style={S.profilePrev}>{profile.slice(0,250)}{profile.length>250?"...":""}</div><button style={S.smallBtn} onClick={() => setProfileLocked(false)}>✏️ 编辑</button></div>
           ) : (
-            <div><textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={12} placeholder={"请填写以下信息（越详细越好）：\n\n• 基本信息：年级、城市\n• 好朋友的名字：如 Emily, Lucas\n• 老师的名字：如 Mr. Johnson\n• 偶像是谁：如 Taylor Swift, 大谷翔平\n• 喜欢的动画/电影：如 鬼灭之刃、哈利波特\n• 兴趣爱好：如 打网球、游泳、烘焙、弹钢琴\n• 喜欢的食物：如 抹茶冰淇淋、寿司\n• 讨厌的食物：如 苦瓜、香菜\n• 常去的地方：如 Irvine Spectrum、大华超市"} /><button style={S.tealBtn} onClick={() => { setProfileLocked(true); loadSave().then(d => doSave({...(d||{}), profile, stats})); }}>💾 保存</button></div>
+            <div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
+                {["💬 今天最开心的事","🎬 最近在追的剧/动画","🌟 最近认识的新朋友","📍 上周末去了哪里","😋 最近特别想吃什么","🎵 最近单曲循环的歌","😤 最近让你烦心的事","🐾 有没有喜欢的宠物"].map(function(p) {
+                  return <button key={p} onClick={function() { setProfile(function(prev) { return prev + (prev && !prev.endsWith('\n') ? '\n' : '') + p + '：'; }); }} style={{background:C.accentLight,border:"1px solid "+C.accent+"44",borderRadius:20,padding:"4px 12px",fontSize:12,color:C.accent,cursor:"pointer",fontFamily:FONT,fontWeight:500}}>{p}</button>;
+                })}
+              </div>
+              <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={12} placeholder={"像写日记一样告诉 AI 你的世界 🌍\n\n例如：\n• 我今天和 Emily 打了一场超刺激的网球！\n• 最近在追《鬼灭之刃》，超喜欢炭治郎\n• 上周去了 Irvine Spectrum，吃了抹茶冰淇淋\n• 我不喜欢香菜，一点都不行 😂\n• 偶像是 Taylor Swift，已经刷了 100 遍 Eras Tour\n\n写越多，AI 越了解你，学单词越有趣！"} />
+              <div style={{display:"flex",alignItems:"center",gap:8,margin:"8px 0 12px"}}>
+                <button onClick={function() { photoRef.current?.click(); }} disabled={photoLoading} style={{background:C.tealLight,border:"1px solid "+C.teal+"55",borderRadius:8,padding:"6px 14px",fontSize:13,color:C.teal,cursor:photoLoading?"not-allowed":"pointer",fontFamily:FONT,fontWeight:500,opacity:photoLoading?0.7:1}}>
+                  {photoLoading ? "🔍 AI 正在看照片..." : "📷 上传照片让 AI 认识你"}
+                </button>
+                <span style={{fontSize:12,color:C.textSec}}>AI 会描述照片内容加入画像</span>
+                <input ref={photoRef} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhotoUpload} />
+              </div>
+              <button style={S.tealBtn} onClick={() => { setProfileLocked(true); loadSave().then(d => doSave({...(d||{}), profile, stats})); }}>💾 保存画像</button>
+            </div>
           )}
         </div>
       )}
@@ -956,6 +1022,7 @@ export default function App() {
           <button onClick={()=>setShowShare(true)} style={{ background:"transparent", border:"none", color:C.accent, fontFamily:FONT, fontSize:12, fontWeight:600, cursor:"pointer", padding:0 }}>🔗 推荐给朋友</button>
         </div>
       </div>
+      <PrivacyNotice />
 
       </div>
 
@@ -976,7 +1043,7 @@ export default function App() {
                 <div style={{fontSize:13,fontWeight:600,marginBottom:6,color:C.text}}>邮箱地址</div>
                 <input type="email" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') handleLoginEmail(); }} placeholder="your@email.com" style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:14,outline:"none",marginBottom:12,boxSizing:"border-box"}} />
                 <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading?0.6:1}} onClick={handleLoginEmail} disabled={loginLoading||!loginEmail.trim()}>{loginLoading ? "发送中..." : "✉️ 发送登录链接"}</button>
-                <div style={{fontSize:12,color:C.textSec,textAlign:"center",marginTop:12,lineHeight:1.6}}>无需密码 · 点击邮件中的链接即可登录<br/>注册即表示同意服务条款</div>
+                <div style={{fontSize:12,color:C.textSec,textAlign:"center",marginTop:12,lineHeight:1.6}}>无需密码 · 点击邮件中的链接即可登录<br/>🔒 您的画像信息仅用于 AI 生成学习内容，不会被读取或共享</div>
                 <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",width:"100%",marginTop:12,padding:"4px 0"}} onClick={()=>{setShowLogin(false);setLoginEmail('');}}>暂时不用</button>
               </>
             ) : (
@@ -1071,11 +1138,26 @@ export default function App() {
             <div style={{padding:"16px 20px 20px"}}>
               {setupTab === "profile" && (
                 <div>
-                  <div style={S.setupHint}>{profileLocked ? "✅ 画像已保存" : "👨‍👩‍👧 信息越丰富，AI 讲解越贴近生活！"}</div>
+                  <div style={S.setupHint}>{profileLocked ? "✅ 画像已保存" : "🌟 像写日记一样告诉 AI 你的世界，信息越真实越有趣！"}</div>
                   {profileLocked ? (
                     <div><div style={S.profilePrev}>{profile.slice(0,250)}{profile.length>250?"...":""}</div><button style={S.smallBtn} onClick={() => setProfileLocked(false)}>✏️ 编辑</button></div>
                   ) : (
-                    <div><textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={10} placeholder={"基本信息：年级、城市\n爱好：网球、烘焙...\n常去地方：Irvine Spectrum..."} /><button style={S.tealBtn} onClick={() => { setProfileLocked(true); loadSave().then(d => doSave({...(d||{}), profile, stats})); }}>💾 保存</button></div>
+                    <div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:8}}>
+                        {["💬 今天最开心的事","🎬 最近追的剧","📍 上周末去了哪里","😋 最近想吃什么","🎵 最近单曲循环"].map(function(p) {
+                          return <button key={p} onClick={function() { setProfile(function(prev) { return prev + (prev && !prev.endsWith('\n') ? '\n' : '') + p + '：'; }); }} style={{background:C.accentLight,border:"1px solid "+C.accent+"44",borderRadius:20,padding:"3px 10px",fontSize:11,color:C.accent,cursor:"pointer",fontFamily:FONT}}>{p}</button>;
+                        })}
+                      </div>
+                      <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={10} placeholder={"今天最开心的事：\n最近在追的动画：\n上周去了哪里：\n偶像是谁：\n..."} />
+                      <div style={{display:"flex",alignItems:"center",gap:8,margin:"6px 0 10px"}}>
+                        <button onClick={function() { photoRef.current?.click(); }} disabled={photoLoading} style={{background:C.tealLight,border:"1px solid "+C.teal+"55",borderRadius:8,padding:"5px 12px",fontSize:12,color:C.teal,cursor:photoLoading?"not-allowed":"pointer",fontFamily:FONT,opacity:photoLoading?0.7:1}}>
+                          {photoLoading ? "🔍 分析中..." : "📷 上传照片"}
+                        </button>
+                        <span style={{fontSize:11,color:C.textSec}}>AI 自动描述加入画像</span>
+                        <input ref={photoRef} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhotoUpload} />
+                      </div>
+                      <button style={S.tealBtn} onClick={() => { setProfileLocked(true); loadSave().then(d => doSave({...(d||{}), profile, stats})); }}>💾 保存</button>
+                    </div>
                   )}
                 </div>
               )}
@@ -1436,6 +1518,7 @@ export default function App() {
           <button onClick={()=>setShowShare(true)} style={{ background:"transparent", border:"none", color:C.accent, fontFamily:FONT, fontSize:12, fontWeight:600, cursor:"pointer", padding:0 }}>🔗 推荐给朋友</button>
         </div>
       </div>
+      <PrivacyNotice />
 
       <div ref={contentEndRef} />
       </div>
