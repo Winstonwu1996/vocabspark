@@ -19,6 +19,8 @@ var C = {
 var FONT = "'DM Sans','Noto Sans SC',sans-serif";
 var DAILY_LIMIT = 10;
 var DAILY_KEY = 'vocabspark_daily';
+var PHOTO_LIMIT = 5;
+var PROFILE_MAX = 1000;
 
 /* ─── Sound Effects (Web Audio API, zero dependencies) ─── */
 var audioCtx = null;
@@ -49,7 +51,8 @@ var sfx = {
 
 /* ─── Prompt Builders ─── */
 var buildSys = (profile) => {
-  return "你是一个幽默、有耐心且精通中英双语的词汇导师。风格像一个很酷的大姐姐——会用梗、会吐槽、偶尔抖机灵，但绝不油腻。\n\n【学生画像】\n" + profile + "\n\n你必须深度利用上面的学生画像。每一个例句、每一个画面、每一个比喻，都必须和这个学生的具体爱好、常去的地方、日常生活紧密关联。让学生觉得\"这说的就是我的生活\"。";
+  var p = (profile || '').slice(0, PROFILE_MAX);
+  return "你是一个幽默、有耐心且精通中英双语的词汇导师。风格像一个很酷的大姐姐——会用梗、会吐槽、偶尔抖机灵，但绝不油腻。\n\n【学生画像】\n" + p + "\n\n你必须深度利用上面的学生画像。每一个例句、每一个画面、每一个比喻，都必须和这个学生的具体爱好、常去的地方、日常生活紧密关联。让学生觉得\"这说的就是我的生活\"。";
 };
 
 var buildGuessPrompt = (word, learned) => {
@@ -469,8 +472,6 @@ export default function App() {
     setUser(null); userRef.current = null;
   };
 
-  var PHOTO_LIMIT = 5;
-
   var handlePhotoUpload = async function(e) {
     var file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
@@ -482,6 +483,11 @@ export default function App() {
     var existingPhotos = (profile.match(/📷 /g) || []).length;
     if (existingPhotos >= PHOTO_LIMIT) {
       alert('最多上传 ' + PHOTO_LIMIT + ' 张照片\n\n如需更换，请先在文本框中删除旧的照片描述（以 📷 开头的行）');
+      if (photoRef.current) photoRef.current.value = '';
+      return;
+    }
+    if (profile.length >= PROFILE_MAX - 60) {
+      alert('画像已接近上限（' + PROFILE_MAX + ' 字），请先精简现有内容再添加照片');
       if (photoRef.current) photoRef.current.value = '';
       return;
     }
@@ -997,14 +1003,17 @@ export default function App() {
                 })}
               </div>
               <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={12} placeholder={"像写日记一样告诉 AI 你的世界 🌍\n\n例如：\n• 我今天和 Emily 打了一场超刺激的网球！\n• 最近在追《鬼灭之刃》，超喜欢炭治郎\n• 上周去了 Irvine Spectrum，吃了抹茶冰淇淋\n• 我不喜欢香菜，一点都不行 😂\n• 偶像是 Taylor Swift，已经刷了 100 遍 Eras Tour\n\n写越多，AI 越了解你，学单词越有趣！"} />
-              <div style={{display:"flex",alignItems:"center",gap:8,margin:"8px 0 12px"}}>
+              <div style={{display:"flex",justifyContent:"flex-end",fontSize:12,marginTop:3,marginBottom:4,color:profile.length>PROFILE_MAX?C.red:profile.length>800?C.gold:C.textSec}}>
+                {profile.length} / {PROFILE_MAX} 字{profile.length>PROFILE_MAX?" · 已超出上限，请精简":profile.length>800?" · 建议精简":""}
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:8,margin:"4px 0 12px"}}>
                 <button onClick={function() { photoRef.current?.click(); }} disabled={photoLoading} style={{background:C.tealLight,border:"1px solid "+C.teal+"55",borderRadius:8,padding:"6px 14px",fontSize:13,color:C.teal,cursor:photoLoading?"not-allowed":"pointer",fontFamily:FONT,fontWeight:500,opacity:photoLoading?0.7:1}}>
                   {photoLoading ? "🔍 AI 正在看照片..." : user ? "📷 上传照片（" + Math.max(0, PHOTO_LIMIT - (profile.match(/📷 /g)||[]).length) + "/" + PHOTO_LIMIT + " 剩余）" : "📷 上传照片（需注册）"}
                 </button>
                 <span style={{fontSize:12,color:C.textSec}}>AI 会描述照片内容加入画像</span>
                 <input ref={photoRef} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhotoUpload} />
               </div>
-              <button style={S.tealBtn} onClick={() => { setProfileLocked(true); loadSave().then(d => doSave({...(d||{}), profile, stats})); }}>💾 保存画像</button>
+              <button style={{...S.tealBtn,opacity:profile.length>PROFILE_MAX?0.45:1,cursor:profile.length>PROFILE_MAX?"not-allowed":"pointer"}} disabled={profile.length>PROFILE_MAX} onClick={() => { setProfileLocked(true); loadSave().then(d => doSave({...(d||{}), profile, stats})); }}>💾 保存画像</button>
             </div>
           )}
         </div>
@@ -1162,14 +1171,17 @@ export default function App() {
                         })}
                       </div>
                       <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={10} placeholder={"今天最开心的事：\n最近在追的动画：\n上周去了哪里：\n偶像是谁：\n..."} />
-                      <div style={{display:"flex",alignItems:"center",gap:8,margin:"6px 0 10px"}}>
+                      <div style={{display:"flex",justifyContent:"flex-end",fontSize:11,marginTop:3,marginBottom:4,color:profile.length>PROFILE_MAX?C.red:profile.length>800?C.gold:C.textSec}}>
+                        {profile.length} / {PROFILE_MAX} 字{profile.length>PROFILE_MAX?" · 超出上限":profile.length>800?" · 建议精简":""}
+                      </div>
+                      <div style={{display:"flex",alignItems:"center",gap:8,margin:"4px 0 10px"}}>
                         <button onClick={function() { photoRef.current?.click(); }} disabled={photoLoading} style={{background:C.tealLight,border:"1px solid "+C.teal+"55",borderRadius:8,padding:"5px 12px",fontSize:12,color:C.teal,cursor:photoLoading?"not-allowed":"pointer",fontFamily:FONT,opacity:photoLoading?0.7:1}}>
                           {photoLoading ? "🔍 分析中..." : user ? "📷 上传照片（" + Math.max(0, PHOTO_LIMIT - (profile.match(/📷 /g)||[]).length) + "/" + PHOTO_LIMIT + "）" : "📷 上传照片（需注册）"}
                         </button>
                         <span style={{fontSize:11,color:C.textSec}}>AI 自动描述加入画像</span>
                         <input ref={photoRef} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhotoUpload} />
                       </div>
-                      <button style={S.tealBtn} onClick={() => { setProfileLocked(true); loadSave().then(d => doSave({...(d||{}), profile, stats})); }}>💾 保存</button>
+                      <button style={{...S.tealBtn,opacity:profile.length>PROFILE_MAX?0.45:1,cursor:profile.length>PROFILE_MAX?"not-allowed":"pointer"}} disabled={profile.length>PROFILE_MAX} onClick={() => { setProfileLocked(true); loadSave().then(d => doSave({...(d||{}), profile, stats})); }}>💾 保存</button>
                     </div>
                   )}
                 </div>
