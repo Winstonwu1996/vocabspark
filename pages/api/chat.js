@@ -1,0 +1,103 @@
+const PROVIDERS = [
+  {
+    name: "deepseek",
+    url: "https://api.deepseek.com/v1/chat/completions",
+    apiKey: () => process.env.DEEPSEEK_API_KEY,
+    model: "deepseek-chat",
+  },
+  {
+    name: "gemini",
+    url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    apiKey: () => process.env.GOOGLE_AI_API_KEY,
+    model: "gemini-2.5-flash-lite",
+  },
+];
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function callProvider(provider, system, message, maxTokens) {
+  const response = await fetch(provider.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${provider.apiKey()}`,
+    },
+    body: JSON.stringify({
+      model: provider.model,
+      max_tokens: maxTokens,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: message },
+      ],
+    }),
+    signal: AbortSignal.timeout(25000), // 25s timeout, Vercel limit is 30s
+  });
+
+  if (response.status === 429) {
+    const err = new Error("rate_limited");
+    err.status = 429;
+    throw err;
+  }
+
+  if (!response.ok) {
+    const body = await response.text();
+    const err = new Error(`${provider.name} error ${response.status}: ${body}`);
+    err.status = response.status;
+    throw err;
+  }
+
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content || "";
+  return text;
+}
+
+async function callWithRetry(provider, system, message, maxTokens) {
+  // For 429 errors, retry up to 2 times with exponential backoff (1s, 2s)
+  for (let attempt = 0; attempt <= 2; attempt++) {
+    try {
+      return await callProvider(provider, system, message, maxTokens);
+    } catch (err) {
+      if (err.status === 429 && attempt < 2) {
+        await sleep(1000 * Math.pow(2, attempt)); // 1s, 2s
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const { system, message, maxTokens } = req.body;
+
+  if (!system || !message) {
+    return res.status(400).json({ error: "Missing system or message" });
+  }
+
+  const tokens = maxTokens || 2000;
+  const errors = [];
+
+  for (const provider of PROVIDERS) {
+    if (!provider.apiKey()) {
+      errors.push(`${provider.name}: API key not configured`);
+      continue;
+    }
+
+    try {
+      const text = await callWithRetry(provider, system, message, tokens);
+      res.setHeader("X-Provider", provider.name);
+      return res.status(200).json({ text });
+    } catch (err) {
+      console.error(`[${provider.name}] failed:`, err.message);
+      errors.push(`${provider.name}: ${err.message}`);
+    }
+  }
+
+  return res.status(500).json({
+    error: "All providers failed",
+    details: errors,
+  });
+}
