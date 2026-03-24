@@ -21,6 +21,20 @@ var DAILY_LIMIT = 10;
 var DAILY_KEY = 'vocabspark_daily';
 var PHOTO_LIMIT = 5;
 var PROFILE_MAX = 1000;
+var PROFILE_TEXTAREA_PLACEHOLDER =
+  "像写日记一样告诉 AI 你的世界 🌍\n\n" +
+  "先写几句基本情况（把名字换成孩子的即可）：\n" +
+  "• 年级、所在城市 / 学校简称\n" +
+  "• 好朋友的名字（例：Emily）\n" +
+  "• 教练或老师的称呼（例：网球教练 Ms. Lee、英语老师 Mr. Johnson）\n" +
+  "• 常一起打球、写作业或排练的伙伴\n\n" +
+  "例如（把 Willow 换成孩子的名字）：\n" +
+  "• Willow 今天和 Emily 打了一场超刺激的网球！\n" +
+  "• Willow 最近在追《鬼灭之刃》，超喜欢炭治郎\n" +
+  "• 上周末 Willow 去了 Irvine Spectrum，吃了抹茶冰淇淋\n" +
+  "• Willow 不喜欢香菜，一点都不行 😂\n" +
+  "• Willow 的偶像是 Taylor Swift，已经刷了 100 遍 Eras Tour\n\n" +
+  "写越多，AI 越了解你，学单词越有趣！";
 
 /* ─── Sound Effects (Web Audio API, zero dependencies) ─── */
 var audioCtx = null;
@@ -1045,7 +1059,7 @@ export default function App() {
                   return <button key={p} onClick={function() { setProfile(function(prev) { return prev + (prev && !prev.endsWith('\n') ? '\n' : '') + p + '：'; }); }} style={{background:C.accentLight,border:"1px solid "+C.accent+"44",borderRadius:20,padding:"4px 12px",fontSize:12,color:C.accent,cursor:"pointer",fontFamily:FONT,fontWeight:500}}>{p}</button>;
                 })}
               </div>
-              <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={12} placeholder={"像写日记一样告诉 AI 你的世界 🌍\n\n例如：\n• 我今天和 Emily 打了一场超刺激的网球！\n• 最近在追《鬼灭之刃》，超喜欢炭治郎\n• 上周去了 Irvine Spectrum，吃了抹茶冰淇淋\n• 我不喜欢香菜，一点都不行 😂\n• 偶像是 Taylor Swift，已经刷了 100 遍 Eras Tour\n\n写越多，AI 越了解你，学单词越有趣！"} />
+              <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={12} placeholder={PROFILE_TEXTAREA_PLACEHOLDER} />
               <div style={{display:"flex",justifyContent:"flex-end",fontSize:12,marginTop:3,marginBottom:4,color:profile.length>PROFILE_MAX?C.red:profile.length>800?C.gold:C.textSec}}>
                 {profile.length} / {PROFILE_MAX} 字{profile.length>PROFILE_MAX?" · 已超出上限，请精简":profile.length>800?" · 建议精简":""}
               </div>
@@ -1213,7 +1227,7 @@ export default function App() {
                           return <button key={p} onClick={function() { setProfile(function(prev) { return prev + (prev && !prev.endsWith('\n') ? '\n' : '') + p + '：'; }); }} style={{background:C.accentLight,border:"1px solid "+C.accent+"44",borderRadius:20,padding:"3px 10px",fontSize:11,color:C.accent,cursor:"pointer",fontFamily:FONT}}>{p}</button>;
                         })}
                       </div>
-                      <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={10} placeholder={"今天最开心的事：\n最近在追的动画：\n上周去了哪里：\n偶像是谁：\n..."} />
+                      <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={12} placeholder={PROFILE_TEXTAREA_PLACEHOLDER} />
                       <div style={{display:"flex",justifyContent:"flex-end",fontSize:11,marginTop:3,marginBottom:4,color:profile.length>PROFILE_MAX?C.red:profile.length>800?C.gold:C.textSec}}>
                         {profile.length} / {PROFILE_MAX} 字{profile.length>PROFILE_MAX?" · 超出上限":profile.length>800?" · 建议精简":""}
                       </div>
