@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
+import { supabase } from '../lib/supabase';
 
 /* ═══════════════════════════════════════════════════════
    VocabSpark v8 — AI 词汇导师
@@ -16,6 +17,8 @@ var C = {
   shadow: "0 2px 12px rgba(44,36,32,0.06)",
 };
 var FONT = "'DM Sans','Noto Sans SC',sans-serif";
+var DAILY_LIMIT = 10;
+var DAILY_KEY = 'vocabspark_daily';
 
 /* ─── Sound Effects (Web Audio API, zero dependencies) ─── */
 var audioCtx = null;
@@ -337,6 +340,16 @@ export default function App() {
   var [showConfetti, setShowConfetti] = useState(false);
   var [showShare, setShowShare] = useState(false);
 
+  // ── Auth & Daily Limit ──
+  var [user, setUser] = useState(null);
+  var userRef = useRef(null);
+  var [showLogin, setShowLogin] = useState(false);
+  var [loginEmail, setLoginEmail] = useState('');
+  var [loginSent, setLoginSent] = useState(false);
+  var [loginLoading, setLoginLoading] = useState(false);
+  var [todayCount, setTodayCount] = useState(0);
+  var [showLimitModal, setShowLimitModal] = useState(false);
+
   var [stats, setStats] = useState({ correct:0, total:0, streak:0, bestStreak:0, xp:0 });
   var [wordTimings, setWordTimings] = useState({});
   var [wordStart, setWordStart] = useState(null);
@@ -370,11 +383,101 @@ export default function App() {
     }).catch(function() {});
   }, []);
 
+  // ── Daily count helpers ──
+  var getDailyState = function() {
+    try {
+      var today = new Date().toISOString().slice(0,10);
+      var stored = JSON.parse(localStorage.getItem(DAILY_KEY) || '{}');
+      return stored.date === today ? stored : {count:0, date:today};
+    } catch(e) { return {count:0, date:''}; }
+  };
+
+  var incrementDailyCount = function() {
+    try {
+      var today = new Date().toISOString().slice(0,10);
+      var curr = getDailyState();
+      var next = {date:today, count:(curr.date===today ? curr.count : 0)+1};
+      localStorage.setItem(DAILY_KEY, JSON.stringify(next));
+      setTodayCount(next.count);
+      return next.count;
+    } catch(e) { return 0; }
+  };
+
+  // ── Cloud sync helpers ──
+  var syncToCloud = async function(data) {
+    var u = userRef.current;
+    if (!u) return;
+    try {
+      await supabase.from('user_progress').upsert(
+        {user_id: u.id, progress_data: data, updated_at: new Date().toISOString()},
+        {onConflict: 'user_id'}
+      );
+    } catch(e) { console.warn('sync error', e); }
+  };
+
+  var loadFromCloud = async function(userId) {
+    try {
+      var {data} = await supabase
+        .from('user_progress').select('progress_data')
+        .eq('user_id', userId).single();
+      return data?.progress_data || null;
+    } catch(e) { return null; }
+  };
+
+  // ── Auth actions ──
+  var handleLoginEmail = async function() {
+    if (!loginEmail.trim()) return;
+    setLoginLoading(true);
+    try {
+      var {error} = await supabase.auth.signInWithOtp({
+        email: loginEmail.trim(),
+        options: {emailRedirectTo: 'https://vocabspark.vercel.app'}
+      });
+      if (error) throw error;
+      setLoginSent(true);
+    } catch(e) { alert('发送失败：' + e.message); }
+    finally { setLoginLoading(false); }
+  };
+
+  var handleLogout = async function() {
+    await supabase.auth.signOut();
+    setUser(null); userRef.current = null;
+  };
+
+  // ── Auth state listener ──
+  useEffect(function() {
+    setTodayCount(getDailyState().count);
+    var {data: {subscription}} = supabase.auth.onAuthStateChange(async function(event, session) {
+      var u = session?.user || null;
+      setUser(u); userRef.current = u;
+      if (u && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+        var cloudData = await loadFromCloud(u.id);
+        if (cloudData) {
+          var localData = await loadSave();
+          if ((cloudData?.stats?.xp||0) >= (localData?.stats?.xp||0)) {
+            await doSave(cloudData);
+            if (cloudData.stats) setStats(function(s) { return {...s, ...cloudData.stats}; });
+          } else {
+            await syncToCloud(localData);
+          }
+        } else {
+          var localData = await loadSave();
+          if (localData) await syncToCloud(localData);
+        }
+      }
+    });
+    return function() { subscription.unsubscribe(); };
+  }, []);
+
   var sysP = buildSys(profile);
 
   var save = function(s, session) {
     setStats(s);
-    loadSave().then(function(d) { doSave({...(d||{}), profile, stats: s, session: session || d?.session}); });
+    loadSave().then(function(d) {
+      var data = {...(d||{}), profile, stats: s, session: session || d?.session};
+      doSave(data);
+      syncToCloud(data);
+    });
   };
 
   var saveSession = function(wl, i, lrn) {
@@ -621,6 +724,12 @@ export default function App() {
   };
 
   var goNextWord = async function() {
+    // Check daily limit for guests
+    if (!userRef.current) {
+      var ds = getDailyState();
+      if (ds.count >= DAILY_LIMIT) { setShowLimitModal(true); return; }
+      incrementDailyCount();
+    }
     if (wordStart) {
       setWordTimings(function(prev) { return { ...prev, [currentWord]: { start: wordStart, end: Date.now(), duration: Date.now() - wordStart } }; });
     }
@@ -778,6 +887,19 @@ export default function App() {
         </div>
       )}
 
+      {/* Account status banner */}
+      {user ? (
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:C.tealLight,border:"1px solid "+C.teal,borderRadius:10,padding:"10px 16px",marginBottom:12,fontSize:13}}>
+          <div><span style={{color:C.teal,fontWeight:700}}>✅ 已登录</span><span style={{color:C.textSec,marginLeft:8}}>{user.email}</span><span style={{color:C.teal,marginLeft:8,fontSize:12}}>· 无限学习已解锁</span></div>
+          <button onClick={handleLogout} style={{background:"transparent",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",fontFamily:FONT}}>退出</button>
+        </div>
+      ) : (
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:C.goldLight,border:"1px solid "+C.gold,borderRadius:10,padding:"10px 16px",marginBottom:12,fontSize:13,flexWrap:"wrap",gap:8}}>
+          <div style={{lineHeight:1.6}}>🎁 <strong>免费推广期</strong>：注册即可每日无限学习 &amp; 跨设备同步<br/><span style={{fontSize:12,color:C.textSec}}>今日已学：{todayCount} / {DAILY_LIMIT} 词（免费额度）</span></div>
+          <button onClick={() => setShowLogin(true)} style={{background:C.accent,color:"#fff",border:"none",borderRadius:8,padding:"7px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT,whiteSpace:"nowrap"}}>免费注册</button>
+        </div>
+      )}
+
       <div style={S.tabBar}>
         <button style={setupTab==="profile"?S.tabActive:S.tab} onClick={() => setSetupTab("profile")}>👤 学生画像</button>
         <button style={setupTab==="words"?S.tabActive:S.tab} onClick={() => setSetupTab("words")}>📝 词汇</button>
@@ -836,6 +958,12 @@ export default function App() {
       </Head>
       <div style={S.container}>
       <div ref={topRef} />
+      {/* Daily limit banner for guests */}
+      {!user && todayCount > 0 && (
+        <div onClick={() => setShowLogin(true)} style={{fontSize:12,textAlign:"center",padding:"5px 12px",cursor:"pointer",borderRadius:8,margin:"4px 0",background: todayCount>=DAILY_LIMIT ? C.redLight : todayCount>=7 ? C.goldLight : C.accentLight,color: todayCount>=DAILY_LIMIT ? C.red : todayCount>=7 ? C.gold : C.accent,fontFamily:FONT,fontWeight:600}}>
+          {todayCount>=DAILY_LIMIT ? "今日免费额度已用完（"+DAILY_LIMIT+"/"+DAILY_LIMIT+"）· 注册解锁无限学习 →" : "今日已学 "+todayCount+" / "+DAILY_LIMIT+" 词 · 注册后每日无限学习 →"}
+        </div>
+      )}
       <div style={S.topBar}>
         <button style={S.backBtn} onClick={() => setScreen("setup")}>←</button>
         <div style={S.progressWrap}>
@@ -865,6 +993,7 @@ export default function App() {
             <div style={{display:"flex",borderBottom:"1px solid "+C.border,margin:"16px 20px 0"}}>
               <button style={setupTab==="profile"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("profile")}>👤 学生画像</button>
               <button style={setupTab==="words"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("words")}>📝 词汇</button>
+              <button style={setupTab==="account"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("account")}>🔑 账号</button>
             </div>
             <div style={{padding:"16px 20px 20px"}}>
               {setupTab === "profile" && (
@@ -884,6 +1013,40 @@ export default function App() {
                   <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={8} placeholder="arduous\nbenevolent" />
                   <div style={{fontSize:13,color:C.textSec,margin:"6px 0 12px"}}>{wordInput.trim() ? "共 "+wordInput.trim().split(/[\n,，、]+/).filter(w=>w.trim()).length+" 个词" : ""}</div>
                   <button style={S.primaryBtn} onClick={() => { setShowSettings(false); startLearning(0); }}>✨ 重新开始</button>
+                </div>
+              )}
+              {setupTab === "account" && (
+                <div>
+                  {user ? (
+                    <div>
+                      <div style={{background:C.tealLight,border:"1px solid "+C.teal,borderRadius:12,padding:"16px 18px",marginBottom:16}}>
+                        <div style={{fontWeight:700,fontSize:15,marginBottom:4,color:C.teal}}>✅ 已登录</div>
+                        <div style={{fontSize:13,color:C.textSec,marginBottom:12}}>{user.email}</div>
+                        <div style={{fontSize:13,color:C.text,lineHeight:1.9}}>
+                          🎉 <strong>免费推广期</strong> · 每日无限学习<br/>
+                          ☁️ 学习进度自动云端同步<br/>
+                          📱 跨设备继续学习
+                        </div>
+                      </div>
+                      <button style={{...S.primaryBtn,background:C.textSec}} onClick={handleLogout}>退出登录</button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{background:C.goldLight,border:"1px solid "+C.gold,borderRadius:12,padding:"16px 18px",marginBottom:16}}>
+                        <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>🎁 免费推广期</div>
+                        <div style={{fontSize:13,color:C.text,lineHeight:1.9,marginBottom:12}}>
+                          注册账号，现在完全免费：<br/>
+                          ✅ 每日<strong>无限</strong>学习（免费版每日 {DAILY_LIMIT} 词）<br/>
+                          ☁️ 学习进度云端同步，换手机不丢<br/>
+                          📊 完整学习历史记录
+                        </div>
+                        <div style={{background:C.bg,borderRadius:8,padding:"8px 12px",fontSize:13,color:C.textSec}}>
+                          今日已学：{todayCount} / {DAILY_LIMIT} 词（免费额度）
+                        </div>
+                      </div>
+                      <button style={S.primaryBtn} onClick={() => { setShowSettings(false); setShowLogin(true); }}>免费注册 / 登录</button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1077,6 +1240,69 @@ export default function App() {
           <button style={{...S.primaryBtn,marginTop:20}} onClick={() => { saveSession([],0,[]); setScreen("setup"); }}>← 回到主页</button>
         </div>;
       })()}
+
+      {/* ── LOGIN MODAL ── */}
+      {showLogin && (
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{ if(!loginLoading){setShowLogin(false);setLoginSent(false);setLoginEmail('');} }}>
+          <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
+            {!loginSent ? (
+              <>
+                <div style={{fontSize:36,textAlign:"center",marginBottom:8}}>🔑</div>
+                <h3 style={{fontSize:19,fontWeight:700,textAlign:"center",margin:"0 0 4px"}}>免费注册 / 登录</h3>
+                <p style={{fontSize:13,color:C.textSec,textAlign:"center",lineHeight:1.6,margin:"0 0 20px"}}>推广期免费 · 注册即可每日无限学习 &amp; 跨设备同步</p>
+                <div style={{background:C.tealLight,borderRadius:10,padding:"12px 14px",marginBottom:20,fontSize:13,lineHeight:1.9,color:C.text}}>
+                  ✅ 每日无限学习（免费版 {DAILY_LIMIT} 词/天）<br/>
+                  ☁️ 进度云端同步，换手机不丢<br/>
+                  📊 完整学习历史记录
+                </div>
+                <div style={{fontSize:13,fontWeight:600,marginBottom:6,color:C.text}}>邮箱地址</div>
+                <input
+                  type="email" value={loginEmail}
+                  onChange={e=>setLoginEmail(e.target.value)}
+                  onKeyDown={e=>{ if(e.key==='Enter') handleLoginEmail(); }}
+                  placeholder="your@email.com"
+                  style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:14,outline:"none",marginBottom:12,boxSizing:"border-box"}}
+                />
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading?0.6:1}} onClick={handleLoginEmail} disabled={loginLoading||!loginEmail.trim()}>
+                  {loginLoading ? "发送中..." : "✉️ 发送登录链接"}
+                </button>
+                <div style={{fontSize:12,color:C.textSec,textAlign:"center",marginTop:12,lineHeight:1.6}}>
+                  无需密码 · 点击邮件中的链接即可登录<br/>
+                  注册即表示同意服务条款
+                </div>
+                <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",width:"100%",marginTop:12,padding:"4px 0"}} onClick={()=>{setShowLogin(false);setLoginEmail('');}}>暂时不用</button>
+              </>
+            ) : (
+              <>
+                <div style={{fontSize:48,textAlign:"center",marginBottom:12}}>📬</div>
+                <h3 style={{fontSize:18,fontWeight:700,textAlign:"center",margin:"0 0 8px"}}>邮件已发送！</h3>
+                <p style={{fontSize:14,color:C.textSec,textAlign:"center",lineHeight:1.7,margin:"0 0 20px"}}>请检查 <strong>{loginEmail}</strong> 的收件箱，点击邮件中的登录链接即可完成登录。</p>
+                <div style={{background:C.goldLight,borderRadius:10,padding:"10px 14px",fontSize:13,color:C.textSec,marginBottom:16}}>没收到？请检查垃圾邮件文件夹，或稍等 1-2 分钟后重试。</div>
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={()=>{setShowLogin(false);setLoginSent(false);setLoginEmail('');}}>好的，关闭</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── DAILY LIMIT MODAL ── */}
+      {showLimitModal && (
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setShowLimitModal(false)}>
+          <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:360,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:48,marginBottom:8}}>🌟</div>
+            <h3 style={{fontSize:19,fontWeight:700,margin:"0 0 8px"}}>今天表现很棒！</h3>
+            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 20px"}}>已完成今日免费额度（{DAILY_LIMIT} 个词）<br/>注册账号，每日无限继续学习 🚀</p>
+            <div style={{background:C.goldLight,borderRadius:10,padding:"12px 14px",marginBottom:20,fontSize:13,lineHeight:1.9,textAlign:"left"}}>
+              🎁 <strong>免费推广期限时优惠</strong><br/>
+              ✅ 每日无限学习<br/>
+              ☁️ 进度同步，换手机不丢<br/>
+              📊 学习历史记录
+            </div>
+            <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",marginBottom:10}} onClick={()=>{setShowLimitModal(false);setShowLogin(true);}}>🔑 免费注册，继续学习</button>
+            <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>setShowLimitModal(false)}>明天再来</button>
+          </div>
+        </div>
+      )}
 
       {/* ── SHARE MODAL ── */}
       {showShare && (
