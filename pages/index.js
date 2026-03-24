@@ -662,15 +662,24 @@ export default function App() {
 
   var handleFile = async (e) => {
     var file = e.target.files?.[0]; if (!file) return;
-    if (/\.(xlsx|xls)$/i.test(file.name)) {
-      setError("暂不支持 .xlsx 文件。请在 Excel 中另存为 CSV 格式后上传，或直接复制粘贴单词到下方输入框。");
-      return;
-    }
     setFileLabel(file.name);
     try {
-      var words = await parseFile(file);
-      if (!words.length) setError("未能提取词汇，请确认文件每行一个英文单词。");
-      else { setWordInput(words.join("\n")); setError(""); setSetupTab("words"); }
+      var words = [];
+      if (/\.(xlsx|xls)$/i.test(file.name)) {
+        var XLSX = (await import('xlsx')).default;
+        var buf = await file.arrayBuffer();
+        var wb = XLSX.read(buf, {type:'buffer'});
+        var ws = wb.Sheets[wb.SheetNames[0]];
+        var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+        words = rows.flat()
+          .map(function(c) { return String(c).trim().toLowerCase(); })
+          .filter(function(w) { return /^[a-z][a-z\s'\-]{0,30}$/.test(w); });
+        if (!words.length) { setError("未能从 Excel 提取英文单词。请确认表格中有一列英文单词，或将文件另存为 CSV 后上传。"); return; }
+      } else {
+        words = await parseFile(file);
+        if (!words.length) { setError("未能提取词汇，请确认文件每行一个英文单词。"); return; }
+      }
+      setWordInput(words.join("\n")); setError(""); setSetupTab("words");
     } catch (err) { setError("文件解析失败: " + err.message); }
     if (fileRef.current) fileRef.current.value = "";
   };
@@ -849,6 +858,13 @@ export default function App() {
       <Head>
         <title>VocabSpark — AI 词汇导师</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="AI 驱动的英语词汇学习工具，专为华裔孩子设计。用孩子自己的生活场景讲单词，过目不忘 🎉" />
+        <meta property="og:title" content="VocabSpark — AI 英语词汇导师" />
+        <meta property="og:description" content="AI 用孩子自己的生活场景讲单词，猜→教→练，过目不忘。免费试用！" />
+        <meta property="og:url" content="https://vocabspark.vercel.app" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://vocabspark.vercel.app/og-cover.png" />
+        <meta name="twitter:card" content="summary_large_image" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
@@ -895,7 +911,7 @@ export default function App() {
         </div>
       ) : (
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:C.goldLight,border:"1px solid "+C.gold,borderRadius:10,padding:"10px 16px",marginBottom:12,fontSize:13,flexWrap:"wrap",gap:8}}>
-          <div style={{lineHeight:1.6}}>🎁 <strong>免费推广期</strong>：注册即可每日无限学习 &amp; 跨设备同步<br/><span style={{fontSize:12,color:C.textSec}}>今日已学：{todayCount} / {DAILY_LIMIT} 词（免费额度）</span></div>
+          <div style={{lineHeight:1.6}}>🎁 <strong>推广期</strong>：注册即可每日无限学习 &amp; 跨设备同步<br/><span style={{fontSize:12,color:C.textSec}}>非注册用户每日上限 {DAILY_LIMIT} 词，今日已学 {todayCount} 词</span></div>
           <button onClick={() => setShowLogin(true)} style={{background:C.accent,color:"#fff",border:"none",borderRadius:8,padding:"7px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT,whiteSpace:"nowrap"}}>免费注册</button>
         </div>
       )}
@@ -919,8 +935,8 @@ export default function App() {
           <div style={S.setupHint}>上传 CSV/TXT 文件、选预设，或手动输入（每行一个单词）<br/><span style={{color:C.accent}}>💡 Excel 用户：选中单词列 → 复制 → 粘贴到下方输入框即可</span></div>
           <div style={S.uploadRow}>
             <button style={S.uploadBtn} onClick={() => fileRef.current?.click()}>📁 上传</button>
-            <span style={{fontSize:13,color:C.textSec}}>{fileLabel||".csv .txt（Excel 请先另存为 CSV）"}</span>
-            <input ref={fileRef} type="file" accept=".csv,.tsv,.txt" style={{display:"none"}} onChange={handleFile} />
+            <span style={{fontSize:13,color:C.textSec}}>{fileLabel||".xlsx .csv .txt 均支持"}</span>
+            <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" style={{display:"none"}} onChange={handleFile} />
           </div>
           <div style={S.presetRow}>{Object.keys(PRESETS).map(n => <button key={n} style={S.presetBtn} onClick={() => setWordInput(PRESETS[n])}>{n}</button>)}</div>
           <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={6} placeholder="arduous\nbenevolent" />
@@ -942,6 +958,63 @@ export default function App() {
       </div>
 
       </div>
+
+      {/* ── LOGIN MODAL (setup screen) ── */}
+      {showLogin && (
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{ if(!loginLoading){setShowLogin(false);setLoginSent(false);setLoginEmail('');} }}>
+          <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
+            {!loginSent ? (
+              <>
+                <div style={{fontSize:36,textAlign:"center",marginBottom:8}}>🔑</div>
+                <h3 style={{fontSize:19,fontWeight:700,textAlign:"center",margin:"0 0 4px"}}>免费注册 / 登录</h3>
+                <p style={{fontSize:13,color:C.textSec,textAlign:"center",lineHeight:1.6,margin:"0 0 20px"}}>推广期免费 · 注册即可每日无限学习 &amp; 跨设备同步</p>
+                <div style={{background:C.tealLight,borderRadius:10,padding:"12px 14px",marginBottom:20,fontSize:13,lineHeight:1.9,color:C.text}}>
+                  ✅ 每日无限学习（非注册用户 {DAILY_LIMIT} 词/天）<br/>
+                  ☁️ 进度云端同步，换手机不丢<br/>
+                  📊 完整学习历史记录
+                </div>
+                <div style={{fontSize:13,fontWeight:600,marginBottom:6,color:C.text}}>邮箱地址</div>
+                <input type="email" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') handleLoginEmail(); }} placeholder="your@email.com" style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:14,outline:"none",marginBottom:12,boxSizing:"border-box"}} />
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading?0.6:1}} onClick={handleLoginEmail} disabled={loginLoading||!loginEmail.trim()}>{loginLoading ? "发送中..." : "✉️ 发送登录链接"}</button>
+                <div style={{fontSize:12,color:C.textSec,textAlign:"center",marginTop:12,lineHeight:1.6}}>无需密码 · 点击邮件中的链接即可登录<br/>注册即表示同意服务条款</div>
+                <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",width:"100%",marginTop:12,padding:"4px 0"}} onClick={()=>{setShowLogin(false);setLoginEmail('');}}>暂时不用</button>
+              </>
+            ) : (
+              <>
+                <div style={{fontSize:48,textAlign:"center",marginBottom:12}}>📬</div>
+                <h3 style={{fontSize:18,fontWeight:700,textAlign:"center",margin:"0 0 8px"}}>邮件已发送！</h3>
+                <p style={{fontSize:14,color:C.textSec,textAlign:"center",lineHeight:1.7,margin:"0 0 20px"}}>请检查 <strong>{loginEmail}</strong> 的收件箱，点击邮件中的登录链接即可完成登录。</p>
+                <div style={{background:C.goldLight,borderRadius:10,padding:"10px 14px",fontSize:13,color:C.textSec,marginBottom:16}}>没收到？请检查垃圾邮件文件夹，或稍等 1-2 分钟后重试。</div>
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={()=>{setShowLogin(false);setLoginSent(false);setLoginEmail('');}}>好的，关闭</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── SHARE MODAL (setup screen) ── */}
+      {showShare && (
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setShowShare(false)}>
+          <div style={{background:C.card,borderRadius:20,padding:"28px 24px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:36,marginBottom:6}}>📤</div>
+            <h3 style={{fontSize:18,fontWeight:700,margin:"0 0 4px"}}>推荐给朋友</h3>
+            <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,margin:"0 0 18px"}}>觉得好用？让身边的华人朋友也试试~</p>
+            <div style={{background:C.bg,borderRadius:12,padding:14,marginBottom:14,display:"inline-block"}}>
+              <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fvocabspark.vercel.app&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="QR Code" style={{display:"block",borderRadius:6}} />
+            </div>
+            <div style={{fontSize:12,color:C.textSec,marginBottom:16}}>📱 手机扫码 / 长按保存发朋友圈</div>
+            <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>{"发现一个免费 AI 英语词汇 App，专为华人孩子设计！AI 用孩子自己的生活场景讲单词，我家娃超喜欢 🎉\n👉 vocabspark.vercel.app"}</div>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {typeof navigator !== "undefined" && navigator.share && (
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{ try { await navigator.share({ title:"VocabSpark — AI 英语词汇导师", text:"发现一个免费 AI 英语词汇 App，专为华人孩子设计！AI 用孩子自己的生活场景讲单词，我家娃超喜欢 🎉", url:"https://vocabspark.vercel.app" }); } catch(e){} }}>📱 分享到微信 / 其他 App</button>
+              )}
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{ navigator.clipboard?.writeText("发现一个免费 AI 英语词汇 App，专为华人孩子设计！AI 用孩子自己的生活场景讲单词，我家娃超喜欢 🎉 vocabspark.vercel.app").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接")); }}>📋 复制邀请文案</button>
+              <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>setShowShare(false)}>关闭</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{globalCSS}</style>
     </div>
   );}
@@ -961,7 +1034,7 @@ export default function App() {
       {/* Daily limit banner for guests */}
       {!user && todayCount > 0 && (
         <div onClick={() => setShowLogin(true)} style={{fontSize:12,textAlign:"center",padding:"5px 12px",cursor:"pointer",borderRadius:8,margin:"4px 0",background: todayCount>=DAILY_LIMIT ? C.redLight : todayCount>=7 ? C.goldLight : C.accentLight,color: todayCount>=DAILY_LIMIT ? C.red : todayCount>=7 ? C.gold : C.accent,fontFamily:FONT,fontWeight:600}}>
-          {todayCount>=DAILY_LIMIT ? "今日免费额度已用完（"+DAILY_LIMIT+"/"+DAILY_LIMIT+"）· 注册解锁无限学习 →" : "今日已学 "+todayCount+" / "+DAILY_LIMIT+" 词 · 注册后每日无限学习 →"}
+          {todayCount>=DAILY_LIMIT ? "非注册用户今日 "+DAILY_LIMIT+" 词已学完 · 注册后无限继续 →" : "今日已学 "+todayCount+" / "+DAILY_LIMIT+" 词（非注册用户上限）· 注册后无限学习 →"}
         </div>
       )}
       <div style={S.topBar}>
@@ -1023,7 +1096,7 @@ export default function App() {
                         <div style={{fontWeight:700,fontSize:15,marginBottom:4,color:C.teal}}>✅ 已登录</div>
                         <div style={{fontSize:13,color:C.textSec,marginBottom:12}}>{user.email}</div>
                         <div style={{fontSize:13,color:C.text,lineHeight:1.9}}>
-                          🎉 <strong>免费推广期</strong> · 每日无限学习<br/>
+                          🎉 <strong>推广期</strong> · 每日无限学习<br/>
                           ☁️ 学习进度自动云端同步<br/>
                           📱 跨设备继续学习
                         </div>
@@ -1033,7 +1106,7 @@ export default function App() {
                   ) : (
                     <div>
                       <div style={{background:C.goldLight,border:"1px solid "+C.gold,borderRadius:12,padding:"16px 18px",marginBottom:16}}>
-                        <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>🎁 免费推广期</div>
+                        <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>🎁 推广期福利</div>
                         <div style={{fontSize:13,color:C.text,lineHeight:1.9,marginBottom:12}}>
                           注册账号，现在完全免费：<br/>
                           ✅ 每日<strong>无限</strong>学习（免费版每日 {DAILY_LIMIT} 词）<br/>
@@ -1041,7 +1114,7 @@ export default function App() {
                           📊 完整学习历史记录
                         </div>
                         <div style={{background:C.bg,borderRadius:8,padding:"8px 12px",fontSize:13,color:C.textSec}}>
-                          今日已学：{todayCount} / {DAILY_LIMIT} 词（免费额度）
+                          非注册用户每日上限 {DAILY_LIMIT} 词，今日已学 {todayCount} 词
                         </div>
                       </div>
                       <button style={S.primaryBtn} onClick={() => { setShowSettings(false); setShowLogin(true); }}>免费注册 / 登录</button>
@@ -1291,9 +1364,9 @@ export default function App() {
           <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:360,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
             <div style={{fontSize:48,marginBottom:8}}>🌟</div>
             <h3 style={{fontSize:19,fontWeight:700,margin:"0 0 8px"}}>今天表现很棒！</h3>
-            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 20px"}}>已完成今日免费额度（{DAILY_LIMIT} 个词）<br/>注册账号，每日无限继续学习 🚀</p>
+            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 20px"}}>今日 {DAILY_LIMIT} 词（非注册用户上限）已学完<br/>注册账号，每日无限继续学习 🚀</p>
             <div style={{background:C.goldLight,borderRadius:10,padding:"12px 14px",marginBottom:20,fontSize:13,lineHeight:1.9,textAlign:"left"}}>
-              🎁 <strong>免费推广期限时优惠</strong><br/>
+              🎁 <strong>推广期福利</strong><br/>
               ✅ 每日无限学习<br/>
               ☁️ 进度同步，换手机不丢<br/>
               📊 学习历史记录
