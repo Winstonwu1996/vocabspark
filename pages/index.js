@@ -931,7 +931,17 @@ export default function App() {
               }
               tryResolveEarlyStart(word);
             }
-          }).catch(function() {});
+          }).catch(function() {
+            if (word === firstWord && !dataCache.current[word].guess) {
+              dataCache.current[word].guess = {
+                context: "We ___ this word in a sentence.",
+                options: { A: word, B: "learn", C: "quick", D: "study" },
+                answer: "A"
+              };
+              dataCache.current[word].guessRaw = "fallback-guess";
+              tryResolveEarlyStart(word);
+            }
+          });
         });
         tasks.push(function() {
           return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
@@ -945,7 +955,12 @@ export default function App() {
               }
               tryResolveEarlyStart(word);
             }
-          }).catch(function() {});
+          }).catch(function() {
+            if (word === firstWord && !dataCache.current[word].teach) {
+              dataCache.current[word].teach = "## 快速讲解\n\n- 这个词的 AI 讲解暂时超时了。\n- 先进入学习，后台会继续补全内容。";
+              tryResolveEarlyStart(word);
+            }
+          });
         });
         callAPIFast(sysP, buildSpectrumPrompt(word), { preferredProviders: preferred }).then(function(raw) {
           dataCache.current[word].spectrum = raw ? tryJSON(raw) : null;
@@ -954,6 +969,26 @@ export default function App() {
     }
 
     tryResolveEarlyStart(firstWord);
+
+    if (!firstCached) {
+      setTimeout(function() {
+        if (earlyStartResolved) return;
+        if (!dataCache.current[firstWord]) dataCache.current[firstWord] = { guess: null, guessRaw: null, teach: null, spectrum: null };
+        if (!dataCache.current[firstWord].guess) {
+          dataCache.current[firstWord].guess = {
+            context: "We ___ this word in a sentence.",
+            options: { A: firstWord, B: "learn", C: "quick", D: "study" },
+            answer: "A"
+          };
+          dataCache.current[firstWord].guessRaw = "timeout-fallback-guess";
+        }
+        if (!dataCache.current[firstWord].teach) {
+          dataCache.current[firstWord].teach = "## 快速讲解\n\n- 首词加载超时，先进入学习。\n- 后台会继续备课并补全后续内容。";
+        }
+        setBatchTip("⏱ 首词加载超时，已自动进入学习，后台继续备课...");
+        tryResolveEarlyStart(firstWord);
+      }, 20000);
+    }
 
     var totalTasks = tasks.length;
     setBatchProgress(completed);
