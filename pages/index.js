@@ -908,17 +908,20 @@ export default function App() {
   var loadBatch = async function(startIdx, lrn, words, opts) {
     opts = opts || {};
     var silent = !!opts.silent;
+    var minBlockingMs = Number(opts.minBlockingMs || 30000);
     var wl = words || wordList;
     var endIdx = Math.min(startIdx + 5, wl.length);
     var batchWords = wl.slice(startIdx, endIdx);
     var total = batchWords.length;
     if (total === 0) return null;
 
+    var loadStartedAt = Date.now();
+
     var guessesReady = batchWords.every(function(w) { return !!dataCache.current[w]?.guess; });
     if (guessesReady) {
       if (!silent) {
-        setBatchTotal(total);
-        setBatchProgress(total);
+        setBatchTotal(100);
+        setBatchProgress(100);
         setBatchTip("✅ 本章节猜题内容已就绪");
       }
       return { batchWords: batchWords, cached: true };
@@ -928,7 +931,7 @@ export default function App() {
       setError("");
       setLoading(true);
       setPhase("batch_loading");
-      setBatchTotal(total);
+      setBatchTotal(100);
       setBatchProgress(0);
       setBatchTip("🎯 正在准备本章猜题内容...");
     }
@@ -940,11 +943,32 @@ export default function App() {
         dataCache.current[w].guess = raw ? validateGuessPayload(tryJSON(raw)) : null;
         dataCache.current[w].guessRaw = raw || "";
         if (!silent) {
-          setBatchProgress(function(prev) { return Math.min(total, prev + 1); });
+          var milestone = Math.min(70, Math.round(((i + 1) / Math.max(1, total)) * 70));
+          setBatchProgress(function(prev) { return Math.max(prev, milestone); });
           setBatchTip(makeBatchTip(i, w, total));
         }
       });
     }));
+
+    if (!silent) {
+      var elapsed = Date.now() - loadStartedAt;
+      var remain = Math.max(0, minBlockingMs - elapsed);
+      if (remain > 0) {
+        var startProg = 70;
+        var p = startProg;
+        var smoothTimer = setInterval(function() {
+          p += 1;
+          if (p > 99) p = 99;
+          setBatchProgress(function(prev) { return Math.max(prev, p); });
+          if (p >= 99) {
+            clearInterval(smoothTimer);
+          }
+        }, Math.max(80, Math.floor(remain / 30)));
+        await new Promise(function(r) { setTimeout(r, remain); });
+        clearInterval(smoothTimer);
+      }
+      setBatchProgress(100);
+    }
 
     // Phase2: background warmup for teach+spectrum (non-blocking)
     var phase2Cap = 5;
