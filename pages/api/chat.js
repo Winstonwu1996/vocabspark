@@ -1,23 +1,47 @@
-const PROVIDERS = [
-  {
-    name: "deepseek",
-    url: "https://api.deepseek.com/v1/chat/completions",
-    apiKey: () => process.env.DEEPSEEK_API_KEY,
-    model: "deepseek-chat",
-  },
-  {
-    name: "gemini",
-    url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-    apiKey: () => process.env.GOOGLE_AI_API_KEY,
-    model: "gemini-2.5-flash-lite",
-  },
-];
+let providerStartCursor = 0;
+
+const buildProviders = () => {
+  const providers = [];
+
+  if (process.env.DEEPSEEK_API_KEY) {
+    providers.push({
+      name: "deepseek-a",
+      family: "deepseek",
+      url: "https://api.deepseek.com/v1/chat/completions",
+      apiKey: () => process.env.DEEPSEEK_API_KEY,
+      model: "deepseek-chat",
+    });
+  }
+
+  if (process.env.DEEPSEEK_API_KEY_2) {
+    providers.push({
+      name: "deepseek-b",
+      family: "deepseek",
+      url: "https://api.deepseek.com/v1/chat/completions",
+      apiKey: () => process.env.DEEPSEEK_API_KEY_2,
+      model: "deepseek-chat",
+    });
+  }
+
+  if (process.env.GOOGLE_AI_API_KEY) {
+    providers.push({
+      name: "gemini",
+      family: "gemini",
+      url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+      apiKey: () => process.env.GOOGLE_AI_API_KEY,
+      model: "gemini-2.5-flash-lite",
+    });
+  }
+
+  return providers;
+};
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Soft pacing per provider to reduce burst spikes and smooth tail latency.
 const providerPacing = {
-  deepseek: { nextAt: 0, gapMs: 180 },
+  "deepseek-a": { nextAt: 0, gapMs: 180 },
+  "deepseek-b": { nextAt: 0, gapMs: 180 },
   gemini: { nextAt: 0, gapMs: 350 },
 };
 
@@ -96,17 +120,32 @@ export default async function handler(req, res) {
 
   const tokens = maxTokens || 2000;
   const errors = [];
+  const providers = buildProviders();
+  if (!providers.length) {
+    return res.status(500).json({ error: "No provider API keys configured" });
+  }
 
-  for (const provider of PROVIDERS) {
-    if (!provider.apiKey()) {
-      errors.push(`${provider.name}: API key not configured`);
-      continue;
-    }
+  const deepseekProviders = providers.filter((p) => p.family === "deepseek");
+  const fallbackProviders = providers.filter((p) => p.family !== "deepseek");
 
+  let orderedProviders;
+  if (deepseekProviders.length > 0) {
+    const start = providerStartCursor % deepseekProviders.length;
+    providerStartCursor = (providerStartCursor + 1) % deepseekProviders.length;
+    orderedProviders = deepseekProviders
+      .slice(start)
+      .concat(deepseekProviders.slice(0, start))
+      .concat(fallbackProviders);
+  } else {
+    orderedProviders = providers;
+  }
+
+  for (const provider of orderedProviders) {
     try {
       const t0 = Date.now();
       const text = await callWithRetry(provider, system, message, tokens);
       res.setHeader("X-Provider", provider.name);
+      res.setHeader("X-Provider-Family", provider.family || provider.name);
       res.setHeader("X-Provider-Latency-Ms", String(Date.now() - t0));
       return res.status(200).json({ text });
     } catch (err) {
