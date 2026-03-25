@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V2-C</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V2-D</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -424,6 +424,7 @@ var PRESETS = {
 /* ─── Storage: localStorage ─── */
 var SKEY = "vocabspark_v1";         // permanent key — never change this
 var SKEY_OLD = "vocabspark_release_2"; // migration source
+var CONC_KEY = "vocabspark_concurrency_cap_v1";
 var loadSave = async () => {
   try {
     if (typeof window === "undefined") return null;
@@ -874,6 +875,14 @@ export default function App() {
     var completed = 0;
     var tipWordIdx = 0;
     var shardProviders = ["deepseek-a", "deepseek-b"]; // A/B split for 5-word pack
+    var batchStartedAtMs = Date.now();
+    var dynamicCap = 3;
+    try {
+      if (typeof window !== "undefined") {
+        var savedCap = Number(localStorage.getItem(CONC_KEY) || "3");
+        dynamicCap = Math.max(2, Math.min(4, savedCap || 3));
+      }
+    } catch (e) {}
     for (var i = 0; i < batchWords.length; i++) {
       var w = batchWords[i];
       if (dataCache.current[w]) { completed += 2; continue; }
@@ -908,7 +917,7 @@ export default function App() {
     await new Promise(function(resolve) {
       if (tasks.length === 0) { resolve(); return; }
       function next() {
-        while (running < 3 && taskIdx < tasks.length) {
+        while (running < dynamicCap && taskIdx < tasks.length) {
           running++;
           var t = tasks[taskIdx++];
           t().finally(function() {
@@ -934,6 +943,19 @@ export default function App() {
 
     setBatchProgress(totalTasks);
     setBatchTip("✅ " + total + " 个词全部就绪，开始学习！");
+
+    // Adaptive concurrency tuning by real batch wall time (single-key safe defaults: 2~4)
+    try {
+      if (typeof window !== "undefined") {
+        var elapsedMs = Date.now() - batchStartedAtMs;
+        var currentCap = dynamicCap;
+        var nextCap = currentCap;
+        if (elapsedMs > 45000) nextCap = Math.max(2, currentCap - 1);
+        else if (elapsedMs < 20000) nextCap = Math.min(4, currentCap + 1);
+        localStorage.setItem(CONC_KEY, String(nextCap));
+      }
+    } catch (e) {}
+
     await new Promise(function(r) { setTimeout(r, 400); });
   };
 
