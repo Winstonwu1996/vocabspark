@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V3</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V3.1-Stream</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -836,8 +836,9 @@ export default function App() {
     var batchWords = wl.slice(startIdx, endIdx);
     var total = batchWords.length;
     if (total === 0) return;
-    var earlyStartThreshold = Math.max(0, Math.min(total, Number(opts.startThresholdWords || 0)));
-    var enableEarlyStart = earlyStartThreshold > 0;
+    // Streaming mode: start as soon as first word is ready
+    var enableStreaming = true;
+    var streamStartThreshold = 1; // Always start after 1 word ready
     setBatchTotal(total * 2);
     setBatchProgress(0);
     setPhase("batch_loading");
@@ -882,12 +883,12 @@ export default function App() {
     var readyWordSet = new Set();
     var earlyStartResolved = false;
     var resolveEarlyStart = null;
-    var earlyStartPromise = enableEarlyStart ? new Promise(function(r) { resolveEarlyStart = r; }) : null;
+    var earlyStartPromise = enableStreaming ? new Promise(function(r) { resolveEarlyStart = r; }) : null;
     var tryResolveEarlyStart = function() {
-      if (!enableEarlyStart || earlyStartResolved) return;
-      if (readyWordSet.size >= earlyStartThreshold) {
+      if (!enableStreaming || earlyStartResolved) return;
+      if (readyWordSet.size >= streamStartThreshold) {
         earlyStartResolved = true;
-        setBatchTip("✅ 前" + earlyStartThreshold + "个词已就绪，先开始学习，后台继续备课...");
+        setBatchTip("✅ 第1个词已就绪，立即开始学习！后台继续准备其余词汇...");
         if (resolveEarlyStart) resolveEarlyStart();
       }
     };
@@ -985,7 +986,7 @@ export default function App() {
       } catch (e) {}
     };
 
-    if (enableEarlyStart) {
+    if (enableStreaming) {
       runAllPromise.then(function() { finalizeBatch(); }).catch(function() {});
       await earlyStartPromise;
       return;
@@ -1069,7 +1070,7 @@ export default function App() {
     dataCache.current = {};
     setScreen("learning");
     saveSession(words, startIdx, startLearned);
-    await loadBatch(startIdx, startLearned, words, { startThresholdWords: 2 });
+    await loadBatch(startIdx, startLearned, words, { streaming: true });
     applyWordData(words[startIdx]);
   };
 
@@ -1202,7 +1203,7 @@ export default function App() {
   var afterReview = async function() {
     var nextIdx = idx + 1;
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); return; }
-    await loadBatch(nextIdx, learned, undefined, { startThresholdWords: 2 });
+    await loadBatch(nextIdx, learned, undefined, { streaming: true });
     setIdx(nextIdx);
     applyWordData(wordList[nextIdx]);
   };
@@ -1219,7 +1220,7 @@ export default function App() {
     var nextIdx = idx + 1;
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); return; }
     if (userRef.current && learned.length >= 10 && !tipDismissed) { setShowTipJar(true); }
-    await loadBatch(nextIdx, learned, undefined, { startThresholdWords: 2 });
+    await loadBatch(nextIdx, learned, undefined, { streaming: true });
     setIdx(nextIdx);
     applyWordData(wordList[nextIdx]);
   };
@@ -1297,7 +1298,7 @@ export default function App() {
       {hasSession && (
         <div style={{ ...S.card, background: C.tealLight, borderColor: C.teal, marginBottom: 14 }}>
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8, color: C.teal }}>📌 上次学到第 {idx+1} 个词（共 {wordList.length} 个）</div>
-          <button style={{ ...S.primaryBtn, background: C.teal }} onClick={async function() { setScreen("learning"); await loadBatch(idx, learned, undefined, { startThresholdWords: 2 }); applyWordData(wordList[idx]); }}>继续学习 →</button>
+          <button style={{ ...S.primaryBtn, background: C.teal }} onClick={async function() { setScreen("learning"); await loadBatch(idx, learned, undefined, { streaming: true }); applyWordData(wordList[idx]); }}>继续学习 →</button>
         </div>
       )}
 
@@ -1573,7 +1574,7 @@ export default function App() {
         </div>
       )}
 
-      {error && <div style={S.error}>{error}<button onClick={() => {setError("");loadBatch(idx, learned, undefined, { startThresholdWords: 2 }).then(function() { applyWordData(currentWord); });}} style={S.retryBtn}>🔄 重试</button></div>}
+      {error && <div style={S.error}>{error}<button onClick={() => {setError("");loadBatch(idx, learned, undefined, { streaming: true }).then(function() { applyWordData(currentWord); });}} style={S.retryBtn}>🔄 重试</button></div>}
 
       {phase === "batch_loading" && (
         <div style={{...S.card, textAlign:"center", padding:"40px 24px"}}>
