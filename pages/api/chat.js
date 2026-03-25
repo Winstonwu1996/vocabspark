@@ -15,6 +15,22 @@ const PROVIDERS = [
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Soft pacing per provider to reduce burst spikes and smooth tail latency.
+const providerPacing = {
+  deepseek: { nextAt: 0, gapMs: 180 },
+  gemini: { nextAt: 0, gapMs: 350 },
+};
+
+async function applyProviderPacing(providerName) {
+  const slot = providerPacing[providerName];
+  if (!slot) return;
+  const now = Date.now();
+  if (slot.nextAt > now) {
+    await sleep(slot.nextAt - now);
+  }
+  slot.nextAt = Date.now() + slot.gapMs;
+}
+
 async function callProvider(provider, system, message, maxTokens) {
   const response = await fetch(provider.url, {
     method: "POST",
@@ -55,6 +71,7 @@ async function callWithRetry(provider, system, message, maxTokens) {
   // For 429 errors, retry up to 2 times with exponential backoff (1s, 2s)
   for (let attempt = 0; attempt <= 2; attempt++) {
     try {
+      await applyProviderPacing(provider.name);
       return await callProvider(provider, system, message, maxTokens);
     } catch (err) {
       if (err.status === 429 && attempt < 2) {
@@ -87,8 +104,10 @@ export default async function handler(req, res) {
     }
 
     try {
+      const t0 = Date.now();
       const text = await callWithRetry(provider, system, message, tokens);
       res.setHeader("X-Provider", provider.name);
+      res.setHeader("X-Provider-Latency-Ms", String(Date.now() - t0));
       return res.status(200).json({ text });
     } catch (err) {
       console.error(`[${provider.name}] failed:`, err.message);

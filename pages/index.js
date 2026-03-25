@@ -328,7 +328,7 @@ var callAPI = async (sys, msg) => {
   const response = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ system: sys, message: msg, maxTokens: 2000 }),
+    body: JSON.stringify({ system: sys, message: msg, maxTokens: 1200 }),
   });
   const data = await response.json();
   if (data.error) throw new Error(data.error);
@@ -894,7 +894,7 @@ export default function App() {
     await new Promise(function(resolve) {
       if (tasks.length === 0) { resolve(); return; }
       function next() {
-        while (running < 6 && taskIdx < tasks.length) {
+        while (running < 3 && taskIdx < tasks.length) {
           running++;
           var t = tasks[taskIdx++];
           t().finally(function() {
@@ -1073,7 +1073,11 @@ export default function App() {
           if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
           else { sfx.complete(); setPhase("done"); }
         }
-      } catch (e) { setError(e.message); }
+      } catch (e) {
+        setError(e.message || "阅读挑战生成失败，已自动继续学习");
+        if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
+        else { sfx.complete(); setPhase("done"); }
+      }
       return;
     }
 
@@ -1094,7 +1098,11 @@ export default function App() {
           if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
           else { sfx.complete(); setPhase("done"); }
         }
-      } catch (e) { setError(e.message); }
+      } catch (e) {
+        setError(e.message || "复习关卡生成失败，已自动继续学习");
+        if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
+        else { sfx.complete(); setPhase("done"); }
+      }
       return;
     }
 
