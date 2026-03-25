@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V4.2-PHASE</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V4.2.1</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -543,6 +543,7 @@ export default function App() {
   var [bounceCorrect, setBounceCorrect] = useState(false);
 
   var [teachContent, setTeachContent] = useState("");
+  var [teachLoadFailed, setTeachLoadFailed] = useState(false);
   var [spectrumData, setSpectrumData] = useState(null);
   var [specSlots, setSpecSlots] = useState([null,null,null]);
   var [specPool, setSpecPool] = useState([]);
@@ -973,16 +974,19 @@ export default function App() {
     // Phase2: background warmup for teach+spectrum (non-blocking)
     var phase2Cap = 5;
     var queue = [];
+    // priority: current/earlier words' teach first, then spectrum
     batchWords.forEach(function(w, i) {
       var wLrn = [].concat(lrn || [], batchWords.slice(0, i));
       queue.push(function() {
-        return callWithRetry(sysP, buildTeachPrompt(w, wLrn), { maxTokens: 2000, timeoutMs: 18000 }).then(function(raw) {
+        return callWithRetry(sysP, buildTeachPrompt(w, wLrn), { maxTokens: 2000, timeoutMs: 30000 }).then(function(raw) {
           if (!dataCache.current[w]) dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
           if (raw) dataCache.current[w].teach = addSpeakMarkers(raw);
         });
       });
+    });
+    batchWords.forEach(function(w) {
       queue.push(function() {
-        return callWithRetry(sysP, buildSpectrumPrompt(w), { maxTokens: 1500, timeoutMs: 15000 }).then(function(raw) {
+        return callWithRetry(sysP, buildSpectrumPrompt(w), { maxTokens: 1500, timeoutMs: 18000 }).then(function(raw) {
           if (!dataCache.current[w]) dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
           if (raw) dataCache.current[w].spectrum = validateSpectrumPayload(tryJSON(raw));
         });
@@ -1020,7 +1024,7 @@ export default function App() {
   var applyWordData = function(word) {
     var d = dataCache.current[word];
     setGuessData(null); setSelectedOption(""); setGuessSubmitted(false);
-    setShowHint(false); setTeachContent(""); setSpectrumData(null);
+    setShowHint(false); setTeachContent(""); setTeachLoadFailed(false); setSpectrumData(null);
     setSpecSlots([null,null,null]); setSpecPool([]); setSpecStatus("idle");
     setReviewData(null); setReviewAnswers({}); setReviewSubmitted(false); setPhonetic("");
     setClozeData(null); setClozeAnswers({}); setClozeSubmitted(false);
@@ -1040,6 +1044,7 @@ export default function App() {
 
   var goToTeachWithFallback = function() {
     var c = dataCache.current[currentWord];
+    setTeachLoadFailed(false);
     if (c?.teach) {
       setTeachContent(c.teach);
       if (c?.spectrum?.spectrum_words) setSpectrumData(c.spectrum);
@@ -1047,6 +1052,9 @@ export default function App() {
       return;
     }
 
+    // enter teach page first; keep loading state until teach ready
+    setTeachContent("");
+    setPhaseDir(1); setPhase("teach");
     setLoading(true);
     setLoadingTip("📖 正在编写专属讲解...");
     var waited = 0;
@@ -1058,16 +1066,20 @@ export default function App() {
         setLoading(false);
         setTeachContent(cc.teach);
         if (cc?.spectrum?.spectrum_words) setSpectrumData(cc.spectrum);
-        setPhaseDir(1); setPhase("teach");
-      } else if (waited >= 10000) {
+        setTeachLoadFailed(false);
+      } else if (waited >= 30000) {
         clearInterval(timer);
-        callWithRetry(sysP, buildTeachPrompt(currentWord, learned), { maxTokens: 2000, timeoutMs: 18000 }).then(function(raw) {
-          var t = raw ? addSpeakMarkers(raw) : "加载失败，请重试。";
-          if (!dataCache.current[currentWord]) dataCache.current[currentWord] = { guess: null, guessRaw: null, teach: null, spectrum: null };
-          dataCache.current[currentWord].teach = t;
+        callWithRetry(sysP, buildTeachPrompt(currentWord, learned), { maxTokens: 2000, timeoutMs: 30000 }).then(function(raw) {
+          if (raw) {
+            var t = addSpeakMarkers(raw);
+            if (!dataCache.current[currentWord]) dataCache.current[currentWord] = { guess: null, guessRaw: null, teach: null, spectrum: null };
+            dataCache.current[currentWord].teach = t;
+            setTeachContent(t);
+            setTeachLoadFailed(false);
+          } else {
+            setTeachLoadFailed(true);
+          }
           setLoading(false);
-          setTeachContent(t);
-          setPhaseDir(1); setPhase("teach");
         });
       }
     }, 500);
@@ -1692,7 +1704,7 @@ export default function App() {
 
       {phase === "teach" && <div style={{...S.card, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
         <div style={{...S.tag,background:C.tealLight,color:C.teal}}>📖 学习笔记</div>
-        {!teachContent ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}>{loadingTip||"📖 正在用你的生活场景编写专属讲解..."}</div></div> : <>
+        {!teachContent ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}>{loadingTip||"📖 正在用你的生活场景编写专属讲解..."}{teachLoadFailed ? <div style={{marginTop:10}}><button style={S.retryBtn} onClick={goToTeachWithFallback}>🔄 重试讲解</button></div> : null}</div></div> : <>
           <div style={{marginBottom:20}}><Md text={teachContent} /></div>
           <button style={S.primaryBtn} onClick={teachToSpectrum} disabled={loading}>{spectrumData?"🎮 词义光谱挑战 →":"→ 下一个词"}</button>
         </>}
