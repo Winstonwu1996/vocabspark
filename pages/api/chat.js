@@ -375,9 +375,12 @@ async function compileChapter(words, learned = [], profile = {}) {
 }
 
 function tryParseJSON(text) {
+  // Remove markdown code block if present
+  const cleanedText = text.replace(/```json\n([\s\S]*?)\n```/, '$1').trim();
   try {
-    return JSON.parse(text);
-  } catch {
+    return JSON.parse(cleanedText);
+  } catch (e) {
+    console.error("JSON parse error for text:", cleanedText.substring(0, 500), "Error:", e);
     return null;
   }
 }
