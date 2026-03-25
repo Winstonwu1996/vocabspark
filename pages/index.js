@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V4-CHAPTER</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V4.2-PHASE</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -333,7 +333,7 @@ var callAPI = async (sys, msg, opts) => {
     body: JSON.stringify({
       system: sys,
       message: msg,
-      maxTokens: 1200,
+      maxTokens: opts.maxTokens || 1200,
       preferredProviders: opts.preferredProviders || undefined,
     }),
   });
@@ -350,7 +350,7 @@ var callAPIFast = async (sys, msg, opts) => {
     body: JSON.stringify({
       system: sys,
       message: msg,
-      maxTokens: 1500,
+      maxTokens: opts.maxTokens || 1500,
       preferredProviders: opts.preferredProviders || undefined,
     }),
   });
@@ -825,6 +825,36 @@ export default function App() {
     return tips[Math.floor(Math.random() * tips.length)];
   };
 
+  var validateGuessPayload = function(obj) {
+    if (!obj?.context || !obj?.options) return null;
+    if (!["A","B","C","D"].includes(obj.answer)) obj.answer = Object.keys(obj.options || {})[0] || "A";
+    if (!obj.hint) obj.hint = "";
+    if (!obj.phonetic) obj.phonetic = "";
+    return obj;
+  };
+
+  var validateSpectrumPayload = function(obj) {
+    if (!Array.isArray(obj?.spectrum_words) || obj.spectrum_words.length !== 3) return null;
+    if (!obj.scenario) obj.scenario = "";
+    if (!obj.decoded) obj.decoded = "";
+    return obj;
+  };
+
+  var callWithRetry = async function(sys, msg, opts, retries) {
+    opts = opts || {};
+    retries = retries || 0;
+    var TIMEOUT = opts.timeoutMs || 15000;
+    try {
+      return await Promise.race([
+        callAPI(sys, msg, opts),
+        new Promise(function(_, reject) { setTimeout(function() { reject(new Error("timeout")); }, TIMEOUT); }),
+      ]);
+    } catch (e) {
+      if (retries < 2) return callWithRetry(sys, msg, opts, retries + 1);
+      return null;
+    }
+  };
+
   var makeChapterKey = function(startIdx, wl) {
     var list = wl || wordList;
     return String(startIdx) + "::" + list.slice(startIdx, Math.min(startIdx + 5, list.length)).join("|");
@@ -874,78 +904,93 @@ export default function App() {
     });
   };
 
-  /* ─── CHAPTER LOAD: one request compiles 5 words + chapter gate ─── */
-  var loadBatch = async function(startIdx, lrn, words) {
+  /* ─── BATCH LOAD V4.2: Phase1 guess blocking + Phase2 background teach/spectrum ─── */
+  var loadBatch = async function(startIdx, lrn, words, opts) {
+    opts = opts || {};
+    var silent = !!opts.silent;
     var wl = words || wordList;
     var endIdx = Math.min(startIdx + 5, wl.length);
     var batchWords = wl.slice(startIdx, endIdx);
     var total = batchWords.length;
     if (total === 0) return null;
 
-    var chapterKey = makeChapterKey(startIdx, wl);
-    var cachedChapter = chapterCache.current[chapterKey];
-    if (cachedChapter) {
-      cacheChapterPayload(startIdx, cachedChapter, wl);
-      setBatchTotal(total);
-      setBatchProgress(total);
-      setBatchTip("✅ 本章节已缓存，立即开始学习");
-      preloadWordAudio(batchWords);
-      return cachedChapter;
+    var guessesReady = batchWords.every(function(w) { return !!dataCache.current[w]?.guess; });
+    if (guessesReady) {
+      if (!silent) {
+        setBatchTotal(total);
+        setBatchProgress(total);
+        setBatchTip("✅ 本章节猜题内容已就绪");
+      }
+      return { batchWords: batchWords, cached: true };
     }
 
-    setError("");
-    setLoading(true);
-    setPhase("batch_loading");
-    setBatchTotal(100);
-    setBatchProgress(0);
-    setBatchTip("🧠 正在一次性编译本章 5 个词的完整内容...");
-    setLoadingTip("🧠 AI 老师正在准备本章 5 个词的完整课件...");
-
-    var loadStartedAt = Date.now();
-    var progressTimer = setInterval(function() {
-      var elapsed = Date.now() - loadStartedAt;
-      var target = Math.min(92, Math.max(3, Math.floor(elapsed / 380)));
-      setBatchProgress(function(prev) {
-        if (prev >= target) return prev;
-        return prev + Math.max(1, Math.floor((target - prev) * 0.22));
-      });
-    }, 120);
-
-    try {
-      var response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: "chapter_v4",
-          profile: profile,
-          chapterWords: batchWords,
-          learned: lrn,
-        }),
-      });
-      var payload = await response.json();
-      if (!response.ok || payload.error) {
-        throw new Error(payload.error || "章节生成失败");
-      }
-      if (!payload?.words || payload.words.length !== total) {
-        throw new Error("章节内容不完整，请重试");
-      }
-
-      cacheChapterPayload(startIdx, payload, wl);
-      preloadWordAudio(batchWords);
-      setBatchProgress(100);
-      setBatchTip("✅ 本章 5 词已全部就绪，开始学习");
-      setBatchTotal(total);
-      setBatchProgress(total);
-      return payload;
-    } catch (e) {
+    if (!silent) {
+      setError("");
+      setLoading(true);
+      setPhase("batch_loading");
       setBatchTotal(total);
       setBatchProgress(0);
-      setBatchTip("❌ 本章生成失败，可重试恢复");
-      throw e;
-    } finally {
-      clearInterval(progressTimer);
+      setBatchTip("🎯 正在准备本章猜题内容...");
+    }
+
+    await Promise.all(batchWords.map(function(w, i) {
+      var wLrn = [].concat(lrn || [], batchWords.slice(0, i));
+      return callWithRetry(sysP, buildGuessPrompt(w, wLrn), { maxTokens: 1500, timeoutMs: 15000 }).then(function(raw) {
+        if (!dataCache.current[w]) dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
+        dataCache.current[w].guess = raw ? validateGuessPayload(tryJSON(raw)) : null;
+        dataCache.current[w].guessRaw = raw || "";
+        if (!silent) {
+          setBatchProgress(function(prev) { return Math.min(total, prev + 1); });
+          setBatchTip(makeBatchTip(i, w, total));
+        }
+      });
+    }));
+
+    // Phase2: background warmup for teach+spectrum (non-blocking)
+    var phase2Cap = 5;
+    var queue = [];
+    batchWords.forEach(function(w, i) {
+      var wLrn = [].concat(lrn || [], batchWords.slice(0, i));
+      queue.push(function() {
+        return callWithRetry(sysP, buildTeachPrompt(w, wLrn), { maxTokens: 2000, timeoutMs: 18000 }).then(function(raw) {
+          if (!dataCache.current[w]) dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
+          if (raw) dataCache.current[w].teach = addSpeakMarkers(raw);
+        });
+      });
+      queue.push(function() {
+        return callWithRetry(sysP, buildSpectrumPrompt(w), { maxTokens: 1500, timeoutMs: 15000 }).then(function(raw) {
+          if (!dataCache.current[w]) dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
+          if (raw) dataCache.current[w].spectrum = validateSpectrumPayload(tryJSON(raw));
+        });
+      });
+    });
+
+    (async function runPhase2() {
+      var idx2 = 0;
+      var running = 0;
+      await new Promise(function(resolve) {
+        function next() {
+          while (running < phase2Cap && idx2 < queue.length) {
+            running++;
+            var fn = queue[idx2++];
+            fn().catch(function() {}).finally(function() {
+              running--;
+              if (idx2 >= queue.length && running === 0) resolve();
+              else next();
+            });
+          }
+          if (idx2 >= queue.length && running === 0) resolve();
+        }
+        next();
+      });
+    })();
+
+    preloadWordAudio(batchWords);
+    if (!silent) {
+      setBatchTip("✅ 猜题已就绪，进入学习！讲解与光谱正在后台预热");
       setLoading(false);
     }
+    return { batchWords: batchWords };
   };
 
   var applyWordData = function(word) {
@@ -969,6 +1014,41 @@ export default function App() {
     setPhaseDir(1); setPhase("guess");
   };
 
+  var goToTeachWithFallback = function() {
+    var c = dataCache.current[currentWord];
+    if (c?.teach) {
+      setTeachContent(c.teach);
+      if (c?.spectrum?.spectrum_words) setSpectrumData(c.spectrum);
+      setPhaseDir(1); setPhase("teach");
+      return;
+    }
+
+    setLoading(true);
+    setLoadingTip("📖 正在编写专属讲解...");
+    var waited = 0;
+    var timer = setInterval(function() {
+      waited += 500;
+      var cc = dataCache.current[currentWord];
+      if (cc?.teach) {
+        clearInterval(timer);
+        setLoading(false);
+        setTeachContent(cc.teach);
+        if (cc?.spectrum?.spectrum_words) setSpectrumData(cc.spectrum);
+        setPhaseDir(1); setPhase("teach");
+      } else if (waited >= 10000) {
+        clearInterval(timer);
+        callWithRetry(sysP, buildTeachPrompt(currentWord, learned), { maxTokens: 2000, timeoutMs: 18000 }).then(function(raw) {
+          var t = raw ? addSpeakMarkers(raw) : "加载失败，请重试。";
+          if (!dataCache.current[currentWord]) dataCache.current[currentWord] = { guess: null, guessRaw: null, teach: null, spectrum: null };
+          dataCache.current[currentWord].teach = t;
+          setLoading(false);
+          setTeachContent(t);
+          setPhaseDir(1); setPhase("teach");
+        });
+      }
+    }, 500);
+  };
+
   var submitGuess = function() {
     if (!selectedOption) return;
     setGuessSubmitted(true);
@@ -979,12 +1059,12 @@ export default function App() {
 
     save({ ...stats, total: stats.total+1, correct: stats.correct+(correct?1:0), streak: correct ? stats.streak+1 : 0, bestStreak: correct ? Math.max(stats.bestStreak, stats.streak+1) : stats.bestStreak, xp: stats.xp+(correct?15:5) });
 
-    setTimeout(function() { setPhaseDir(1); setPhase("teach"); }, 800);
+    setTimeout(function() { goToTeachWithFallback(); }, 800);
   };
 
   var skipGuess = function() {
     save({ ...stats, total: stats.total+1, streak: 0, xp: stats.xp+3 });
-    setPhaseDir(1); setPhase("teach");
+    goToTeachWithFallback();
   };
 
   var handleFile = async (e) => {
@@ -1088,24 +1168,36 @@ export default function App() {
 
     if (newLearned.length > 0 && newLearned.length % 10 === 0) {
       var cachedCloze = dataCache.current["_cloze_" + newLearned.length];
-      if (cachedCloze?.questions) {
-        setClozeData(cachedCloze); setClozeAnswers({}); setClozeSubmitted(false); setPhase("cloze"); return;
+      if (!cachedCloze?.questions) {
+        var clozeRaw = await callWithRetry(sysP, buildClozePrompt(newLearned.slice(-10)), { maxTokens: 1800, timeoutMs: 18000 });
+        cachedCloze = clozeRaw ? tryJSON(clozeRaw) : null;
+        if (cachedCloze?.questions) dataCache.current["_cloze_" + newLearned.length] = cachedCloze;
       }
-      setError("本章阅读挑战未准备完成，可重试本章");
-      if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
-      else { sfx.complete(); setPhase("done"); }
-      return;
+      if (!cachedCloze?.questions) {
+        setError("本章阅读挑战加载失败，可重试");
+        if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
+        else { sfx.complete(); setPhase("done"); }
+        return;
+      }
+      if (nextIdx < wordList.length) { loadBatch(nextIdx, newLearned, undefined, { silent: true }).catch(function() {}); }
+      setClozeData(cachedCloze); setClozeAnswers({}); setClozeSubmitted(false); setPhase("cloze"); return;
     }
 
     if (newLearned.length > 0 && newLearned.length % 5 === 0) {
       var cachedReview = dataCache.current["_review_" + newLearned.length];
-      if (cachedReview?.questions) {
-        setReviewData(cachedReview); setReviewAnswers({}); setReviewSubmitted(false); setPhase("review"); return;
+      if (!cachedReview?.questions) {
+        var reviewRaw = await callWithRetry(sysP, buildReviewPrompt(newLearned.slice(-5)), { maxTokens: 1600, timeoutMs: 15000 });
+        cachedReview = reviewRaw ? tryJSON(reviewRaw) : null;
+        if (cachedReview?.questions) dataCache.current["_review_" + newLearned.length] = cachedReview;
       }
-      setError("本章复习关卡未准备完成，可重试本章");
-      if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
-      else { sfx.complete(); setPhase("done"); }
-      return;
+      if (!cachedReview?.questions) {
+        setError("本章复习关卡加载失败，可重试");
+        if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
+        else { sfx.complete(); setPhase("done"); }
+        return;
+      }
+      if (nextIdx < wordList.length) { loadBatch(nextIdx, newLearned, undefined, { silent: true }).catch(function() {}); }
+      setReviewData(cachedReview); setReviewAnswers({}); setReviewSubmitted(false); setPhase("review"); return;
     }
 
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); saveSession(wordList, nextIdx, newLearned); return; }
