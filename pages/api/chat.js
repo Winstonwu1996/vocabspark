@@ -1,445 +1,359 @@
-let providerStartCursor = 0;
+// VocabSpark V5-Factory API
+// Two-stage commit: compile chapter → validate → publish
 
-const buildProviders = () => {
-  const providers = [];
+const SYSTEM_PROMPT = `你是一位顶级语言学习专家和教学设计师。`;
 
-  if (process.env.DEEPSEEK_API_KEY) {
-    providers.push({
-      name: "deepseek-a",
-      family: "deepseek",
-      url: "https://api.deepseek.com/v1/chat/completions",
-      apiKey: () => process.env.DEEPSEEK_API_KEY,
-      model: "deepseek-chat",
-    });
-  }
-
-  if (process.env.DEEPSEEK_API_KEY_2) {
-    providers.push({
-      name: "deepseek-b",
-      family: "deepseek",
-      url: "https://api.deepseek.com/v1/chat/completions",
-      apiKey: () => process.env.DEEPSEEK_API_KEY_2,
-      model: "deepseek-chat",
-    });
-  }
-
-  if (process.env.GOOGLE_AI_API_KEY) {
-    providers.push({
-      name: "gemini",
-      family: "gemini",
-      url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-      apiKey: () => process.env.GOOGLE_AI_API_KEY,
-      model: "gemini-2.5-flash-lite",
-    });
-  }
-
-  return providers;
+const providers = {
+  "deepseek-a": {
+    url: "https://api.deepseek.com/chat/completions",
+    key: process.env.DEEPSEEK_API_KEY,
+    model: "deepseek-chat",
+  },
+  "deepseek-b": {
+    url: "https://api.deepseek.com/chat/completions", 
+    key: process.env.DEEPSEEK_API_KEY_2,
+    model: "deepseek-chat",
+  },
+  "gemini": {
+    url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent",
+    key: process.env.GEMINI_API_KEY,
+    model: "gemini-1.5-flash",
+  },
 };
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-const providerPacing = {
-  "deepseek-a": { nextAt: 0, gapMs: 180 },
-  "deepseek-b": { nextAt: 0, gapMs: 180 },
-  gemini: { nextAt: 0, gapMs: 350 },
-};
-
-async function applyProviderPacing(providerName) {
-  const slot = providerPacing[providerName];
-  if (!slot) return;
-  const now = Date.now();
-  if (slot.nextAt > now) {
-    await sleep(slot.nextAt - now);
-  }
-  slot.nextAt = Date.now() + slot.gapMs;
-}
-
-function tryJSON(text) {
-  try {
-    const c = String(text || "").replace(/```\w*\s*/g, "").replace(/```/g, "").trim();
-    try {
-      return JSON.parse(c);
-    } catch (e) {}
-    const start = c.indexOf("{");
-    const end = c.lastIndexOf("}");
-    if (start !== -1 && end > start) {
-      let jsonStr = c.substring(start, end + 1);
-      jsonStr = jsonStr.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]");
-      try {
-        return JSON.parse(jsonStr);
-      } catch (e) {}
-      jsonStr = jsonStr.replace(/\n/g, "\\n").replace(/\r/g, "");
-      try {
-        return JSON.parse(jsonStr);
-      } catch (e) {}
-    }
-    return null;
-  } catch (e) {
-    return null;
-  }
-}
-
-function addSpeakMarkers(text) {
-  if (!text) return text;
-  return text
-    .split("\n")
-    .map((line) => {
-      if (line.includes("[🔊]")) return line;
-      let clean = line.replace(/\*\*/g, "").replace(/\*/g, "").trim();
-      clean = clean.replace(/^[\d]+\.\s*/, "").replace(/^[-–—*•]\s*/, "");
-      clean = clean.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}]/gu, "").trim();
-      const enOnly = clean
-        .replace(/（[^）]*）/g, "")
-        .replace(/\([^)]*\)/g, "")
-        .replace(/[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef，。、；：""''！？]+/g, "")
-        .trim();
-      const endsEn = /[.!?;]$/.test(enOnly);
-      const engWords = (enOnly.match(/[A-Za-z]{2,}/g) || []).length;
-      const engChars = (enOnly.match(/[A-Za-z]/g) || []).length;
-      const total = enOnly.replace(/[\s.,;:!?'"()\-—–;]/g, "").length;
-      const ratio = total > 0 ? engChars / total : 0;
-      if (endsEn && engWords >= 3 && ratio >= 0.6) {
-        return line + " [🔊]";
+// Global concurrency control
+const globalLimiter = {
+  active: 0,
+  max: 4,
+  queue: [],
+  
+  async acquire() {
+    return new Promise((resolve) => {
+      if (this.active < this.max) {
+        this.active++;
+        resolve();
+      } else {
+        this.queue.push(resolve);
       }
-      return line;
-    })
-    .join("\n");
+    });
+  },
+  
+  release() {
+    this.active--;
+    if (this.queue.length > 0) {
+      this.active++;
+      const next = this.queue.shift();
+      next();
+    }
+  }
+};
+
+async function callProvider(provider, system, message, maxTokens = 2000, timeoutMs = 20000) {
+  const config = providers[provider];
+  if (!config) throw new Error(`Unknown provider: ${provider}`);
+
+  const startTime = Date.now();
+  
+  try {
+    await globalLimiter.acquire();
+    
+    let response;
+    if (provider === "gemini") {
+      response = await fetch(config.url + `?key=${config.key}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(timeoutMs),
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `${system}\n\n${message}` }] }],
+          generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 }
+        }),
+      });
+    } else {
+      response = await fetch(config.url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${config.key}`,
+        },
+        signal: AbortSignal.timeout(timeoutMs),
+        body: JSON.stringify({
+          model: config.model,
+          max_tokens: maxTokens,
+          temperature: 0.7,
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: message },
+          ],
+        }),
+      });
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const latency = Date.now() - startTime;
+    
+    let text;
+    if (provider === "gemini") {
+      text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    } else {
+      text = data.choices?.[0]?.message?.content || "";
+    }
+
+    return { text, latency, provider };
+    
+  } finally {
+    globalLimiter.release();
+  }
 }
 
-function buildSys(profile) {
-  const p = String(profile || "").slice(0, 1000);
-  return "你是一个幽默、有耐心且精通中英双语的词汇导师。风格像一个很酷的大姐姐——会用梗、会吐槽、偶尔抖机灵，但绝不油腻。\n\n【学生画像】\n" + p + "\n\n你必须深度利用上面的学生画像。每一个例句、每一个画面、每一个比喻，都必须和这个学生的具体爱好、常去的地方、日常生活紧密关联。让学生觉得\"这说的就是我的生活\"。";
+async function requestWithBudget(system, message, maxTokens, totalBudgetMs = 25000) {
+  const startTime = Date.now();
+  const providerOrder = ["deepseek-a", "deepseek-b", "gemini"];
+  
+  for (const provider of providerOrder) {
+    const elapsed = Date.now() - startTime;
+    const remaining = totalBudgetMs - elapsed;
+    
+    if (remaining < 5000) break; // Not enough budget for another attempt
+    
+    try {
+      console.log(`[${provider}] attempting with ${remaining}ms budget remaining`);
+      const result = await callProvider(provider, system, message, maxTokens, Math.min(remaining - 1000, 20000));
+      console.log(`[${provider}] success in ${result.latency}ms`);
+      return result;
+    } catch (error) {
+      console.error(`[${provider}] failed: ${error.message}`);
+      continue;
+    }
+  }
+  
+  throw new Error(`All providers failed within ${totalBudgetMs}ms budget`);
 }
 
+// Prompt builders
 function buildGuessPrompt(word, learned) {
-  const ctx = learned.length > 0 ? "\n学生之前学过：" + learned.join(", ") : "";
-  return "单词：" + word + ctx + "\n\n请执行 Step 1（猜）：\n\n1. 给出这个单词的IPA音标\n2. 给出一个生动的英文语境句（1-2句），用 _____ 代替目标单词，深度使用学生画像中的具体场景。\n3. 给出 4 个中文选项（A/B/C/D），其中只有 1 个是正确含义。\n\nIMPORTANT: 直接输出JSON，不要任何前导文字：\n" + '{"phonetic":"/音标/","context":"语境句","options":{"A":"选项A","B":"选项B","C":"选项C","D":"选项D"},"answer":"字母","hint":"提示"}';
+  const context = learned.length > 0 ? `已学词汇：${learned.join(", ")}` : "";
+  return `${context}\n\n为「${word}」设计英语理解猜测题。创造一个生活场景句子，单词用下划线遮盖，给4个选项（A-D），确保有一个明显正确答案。\n\n直接输出JSON：\n{"question":"句子_____遮盖","options":["A选项","B选项","C选项","D选项"],"answer":"B","explanation":"为什么选B"}`;
 }
 
 function buildTeachPrompt(word, learned) {
-  const ctx = learned.length > 0 ? "\n学生之前学过：" + learned.join(", ") + "。请在\"连\"环节与这些词建立联系。" : "";
-  return "单词：" + word + ctx + "\n\n请依次执行 3 个环节。\n\n重要格式规则：[🔊] 标记只能放在完整英文例句的最末尾（紧跟在句号/感叹号之后），绝对不要插在句子中间或单词后面。\n\n【教 · Teach】\n从以下方法中挑最适合的 3 种，每种 2-4 句话：\n1. 词根词缀解剖 🧩\n2. 趣味谐音/联想 🧠（仅在巧妙时用）\n3. 画面感记忆 🖼️（用学生画像场景）\n4. 近义词找茬 🔍\n5. 词义光谱法 📶\n6. 词源故事 📖\n\n【连 · Connect】\n与学过的词建立联系。\n\n【练 · Apply】\n- 2 个高频搭配，格式：搭配词组 [🔊]\n- 2 个情景造句，格式：完整英文句。 [🔊]（中文翻译）\n每个造句需结合学生画像不同爱好/场景。\n\n要求：400-500字，朋友聊天语气，释义用中文，例句用英文，多换行。统一用直引号\"\"，不要用花引号或反引号。";
+  const context = learned.length > 0 ? `已学词汇：${learned.join(", ")}` : "";
+  return `${context}\n\n为「${word}」写专业教学内容。包含：词汇解析、记忆技巧、使用场景。语言生动、有趣，适合中国学生。300-500字。`;
 }
 
 function buildSpectrumPrompt(word) {
-  return "单词：" + word + "\n\n设计\"词义光谱排序\"游戏。找2个含义相近但程度不同的常见词，组成从弱到强的3词光谱。写2-3句沉浸式场景描述（用学生画像场景），及排序正确后的解读。\n\nIMPORTANT: 直接输出JSON：\n" + '{"spectrum_words":["弱","中","强(目标词)"],"scenario":"场景","decoded":"解读"}';
+  return `为单词「${word}」设计词义光谱排序游戏。找2个含义相近但程度不同的常见词，组成从弱到强的3词光谱。写2-3句沉浸式场景描述，及排序正确后的解读。\n\n直接输出JSON：\n{"spectrum_words":["弱","中","强(目标词)"],"scenario":"场景","decoded":"解读"}`;
 }
 
 function buildReviewPrompt(words) {
-  return "学生刚学完5个词：" + words.join(", ") + "\n\n设计互动复习关卡。直接输出JSON：\n" + '{"type":"fill_blank","title":"标题","intro":"场景描述","questions":[{"id":1,"sentence":"含_____的句","options":["词1","词2","词3"],"answer":"答案","explanation":"解释"},{"id":2,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":3,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":4,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":5,"sentence":"...","options":["..."],"answer":"...","explanation":"..."}]}' + "\n\n每题对应一个词，options含正确答案和2个干扰词，场景结合学生画像。";
+  return `基于已学单词：${words.join(", ")}\n\n设计5题选择复习。每题4选项，测试词汇掌握。\n\n直接输出JSON：\n{"questions":[{"question":"题目","options":["A","B","C","D"],"answer":"B"}]}`;
 }
 
 function buildClozePrompt(words) {
-  return "学生刚学完10个词：" + words.join(", ") + "\n\n请写一篇120-150词的英文小短文（故事/日记/场景描述），深度结合学生画像的生活场景。短文中自然嵌入这10个词中的5个，将这5个词替换为 _____(1), _____(2) 等编号空格。\n\n在短文后给出5个填空题，每题3个选项（从10个词中选）。\n\nIMPORTANT: 直接输出JSON：\n" + '{"title":"短文标题","passage":"短文正文，含_____(1)等空格","questions":[{"id":1,"blank":"_____(1)","options":["词1","词2","词3"],"answer":"正确词","explanation":"为什么选这个词"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
+  return `基于已学单词：${words.join(", ")}\n\n创作一段150字短文，包含这些词汇的运用，然后设计3个完形填空。\n\n直接输出JSON：\n{"passage":"短文内容","questions":[{"blank":"题目","options":["A","B","C","D"],"answer":"B"}]}`;
 }
 
-function buildChapterPrompt(words, learned) {
-  const learnedCtx = Array.isArray(learned) && learned.length ? ("\n学生之前学过：" + learned.join(", ")) : "";
-  return [
-    "目标：一次性生成本章节 5 个词的完整学习包，必须是纯 JSON。",
-    "章节词汇：" + words.join(", ") + learnedCtx,
-    "要求：每个词都要包含完整字段 guess/teach/spectrum，质量不能降级。",
-    "guess 必须含：phonetic/context/options(A-D)/answer/hint。",
-    "teach 必须是中文讲解+英文例句，长度至少 220 字。",
-    "spectrum 必须含 3 个递进词，且包含目标词本身。",
-    "此外按规则返回 chapter 关卡：若(learned.length+words.length)%10==0 返回 cloze；若%5==0 返回 review；否则两者为 null。",
-    "IMPORTANT: 仅输出 JSON，不要 markdown，不要解释。",
-    '{"mode":"chapter_v4","words":[{"word":"单词","guess":{"phonetic":"/音标/","context":"语境句","options":{"A":"","B":"","C":"","D":""},"answer":"A","hint":"提示"},"teach":"讲解全文","spectrum":{"spectrum_words":["弱","中","强"],"scenario":"场景","decoded":"解读"}}],"review":null,"cloze":null}'
-  ].join("\n\n");
+// Validation functions
+function validateGuessPayload(obj) {
+  if (!obj || typeof obj !== 'object') return null;
+  if (!obj.question || !Array.isArray(obj.options) || obj.options.length !== 4) return null;
+  if (!obj.answer || !["A","B","C","D"].includes(obj.answer)) return null;
+  return obj;
 }
 
-async function callProvider(provider, system, message, maxTokens, timeoutMs) {
-  const response = await fetch(provider.url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${provider.apiKey()}`,
-    },
-    body: JSON.stringify({
-      model: provider.model,
-      max_tokens: maxTokens,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: message },
-      ],
-    }),
-    signal: AbortSignal.timeout(timeoutMs),
-  });
-
-  if (response.status === 429) {
-    const err = new Error("rate_limited");
-    err.status = 429;
-    throw err;
-  }
-
-  if (!response.ok) {
-    const body = await response.text();
-    const err = new Error(`${provider.name} error ${response.status}: ${body}`);
-    err.status = response.status;
-    throw err;
-  }
-
-  const data = await response.json();
-  const text = data.choices?.[0]?.message?.content || "";
-  return text;
+function validateSpectrumPayload(obj) {
+  if (!obj || typeof obj !== 'object') return null;
+  if (!Array.isArray(obj.spectrum_words) || obj.spectrum_words.length !== 3) return null;
+  if (!obj.scenario || !obj.decoded) return null;
+  return obj;
 }
 
-async function callWithRetry(provider, system, message, maxTokens, timeoutMs) {
-  for (let attempt = 0; attempt <= 2; attempt++) {
-    try {
-      await applyProviderPacing(provider.name);
-      return await callProvider(provider, system, message, maxTokens, timeoutMs);
-    } catch (err) {
-      if (err.status === 429 && attempt < 2) {
-        await sleep(1000 * Math.pow(2, attempt));
-        continue;
-      }
-      throw err;
-    }
-  }
-}
-
-function buildOrderedProviders(preferredProviders) {
-  const providers = buildProviders();
-  const deepseekProviders = providers.filter((p) => p.family === "deepseek");
-  const fallbackProviders = providers.filter((p) => p.family !== "deepseek");
-
-  let orderedProviders;
-  if (deepseekProviders.length > 0) {
-    const start = providerStartCursor % deepseekProviders.length;
-    providerStartCursor = (providerStartCursor + 1) % deepseekProviders.length;
-    orderedProviders = deepseekProviders
-      .slice(start)
-      .concat(deepseekProviders.slice(0, start))
-      .concat(fallbackProviders);
-  } else {
-    orderedProviders = providers;
-  }
-
-  if (Array.isArray(preferredProviders) && preferredProviders.length > 0) {
-    const prefSet = new Set(preferredProviders);
-    const preferred = orderedProviders.filter((p) => prefSet.has(p.name));
-    const rest = orderedProviders.filter((p) => !prefSet.has(p.name));
-    orderedProviders = preferred.concat(rest);
-  }
-
-  return orderedProviders;
-}
-
-async function requestText({ system, message, maxTokens, timeoutMs, preferredProviders }) {
-  const orderedProviders = buildOrderedProviders(preferredProviders);
-  const errors = [];
-
-  for (const provider of orderedProviders) {
-    try {
-      const startedAt = Date.now();
-      const text = await callWithRetry(provider, system, message, maxTokens, timeoutMs);
-      return {
-        text,
-        provider: provider.name,
-        providerFamily: provider.family || provider.name,
-        latencyMs: Date.now() - startedAt,
-      };
-    } catch (err) {
-      console.error(`[${provider.name}] failed:`, err.message);
-      errors.push(`${provider.name}: ${err.message}`);
-    }
-  }
-
-  const error = new Error("All providers failed");
-  error.details = errors;
-  throw error;
-}
-
-function validateGuess(guess) {
-  return !!(guess && guess.context && guess.options && guess.answer);
-}
-
-function validateSpectrum(spectrum, word) {
-  return !!(
-    spectrum &&
-    Array.isArray(spectrum.spectrum_words) &&
-    spectrum.spectrum_words.length === 3 &&
-    spectrum.spectrum_words.some((item) => String(item || "").toLowerCase().includes(String(word || "").toLowerCase()))
-  );
-}
-
-function validateReview(review) {
-  return !!(review && Array.isArray(review.questions) && review.questions.length === 5);
-}
-
-function validateCloze(cloze) {
-  return !!(cloze && Array.isArray(cloze.questions) && cloze.questions.length === 5 && cloze.passage);
-}
-
-async function compileWordPack({ word, learned, system, timeoutMs, providerHint }) {
-  const preferredProviders = providerHint ? [providerHint] : undefined;
-  const [guessResult, teachResult, spectrumResult] = await Promise.all([
-    requestText({ system, message: buildGuessPrompt(word, learned), maxTokens: 1500, timeoutMs, preferredProviders }),
-    requestText({ system, message: buildTeachPrompt(word, learned), maxTokens: 1200, timeoutMs: Math.max(timeoutMs, 20000), preferredProviders }),
-    requestText({ system, message: buildSpectrumPrompt(word), maxTokens: 900, timeoutMs, preferredProviders }),
-  ]);
-
-  const guess = tryJSON(guessResult.text);
-  const spectrum = tryJSON(spectrumResult.text);
-  const teach = addSpeakMarkers(teachResult.text || "");
-
-  if (!validateGuess(guess)) {
-    throw new Error(`Invalid guess payload for ${word}`);
-  }
-  if (!teach || teach.length < 80) {
-    throw new Error(`Invalid teach payload for ${word}`);
-  }
-  if (!validateSpectrum(spectrum, word)) {
-    throw new Error(`Invalid spectrum payload for ${word}`);
-  }
-
-  return {
-    word,
-    guess,
-    teach,
-    spectrum,
-    providers: {
-      guess: guessResult.provider,
-      teach: teachResult.provider,
-      spectrum: spectrumResult.provider,
-    },
+// Chapter compilation engine
+async function compileChapter(words, learned = [], profile = {}) {
+  const startTime = Date.now();
+  const chapterMetrics = {
+    startTime,
+    words: words.length,
+    tasks: words.length * 2, // guess + teach for each word
+    failures: [],
+    retries: 0,
   };
-}
-
-async function compileChapter(body) {
-  const chapterWords = Array.isArray(body.chapterWords) ? body.chapterWords.map((item) => String(item || "").trim().toLowerCase()).filter(Boolean) : [];
-  const learned = Array.isArray(body.learned) ? body.learned.map((item) => String(item || "").trim().toLowerCase()).filter(Boolean) : [];
-  const profile = String(body.profile || "");
-
-  if (!profile.trim()) {
-    const err = new Error("Missing profile");
-    err.status = 400;
-    throw err;
-  }
-  if (!chapterWords.length || chapterWords.length > 5) {
-    const err = new Error("chapterWords must contain 1 to 5 words");
-    err.status = 400;
-    throw err;
-  }
-
-  const timeoutMs = Math.max(Number(process.env.CHAT_PROVIDER_TIMEOUT_MS || 15000), 35000);
-  const system = buildSys(profile);
-
-  const chapterResult = await requestText({
-    system,
-    message: buildChapterPrompt(chapterWords, learned),
-    maxTokens: 7000,
-    timeoutMs,
-    preferredProviders: ["deepseek-a", "deepseek-b", "gemini"],
-  });
-
-  const parsed = tryJSON(chapterResult.text);
-  if (!parsed || !Array.isArray(parsed.words) || parsed.words.length !== chapterWords.length) {
-    throw new Error("Invalid chapter payload");
-  }
-
-  const wordPacks = parsed.words.map((entry, index) => {
-    const word = String(entry?.word || chapterWords[index]).trim().toLowerCase();
-    const guess = entry?.guess;
-    const teach = addSpeakMarkers(String(entry?.teach || ""));
-    const spectrum = entry?.spectrum;
-
-    if (!validateGuess(guess)) {
-      throw new Error(`Invalid guess payload for ${word}`);
-    }
-    if (!teach || teach.length < 80) {
-      throw new Error(`Invalid teach payload for ${word}`);
-    }
-    if (!validateSpectrum(spectrum, word)) {
-      throw new Error(`Invalid spectrum payload for ${word}`);
-    }
-
-    return {
-      word,
-      guess,
-      teach,
-      spectrum,
-      providers: {
-        guess: chapterResult.provider,
-        teach: chapterResult.provider,
-        spectrum: chapterResult.provider,
-      },
-    };
-  });
-
-  const chapterLearnedCount = learned.length + chapterWords.length;
-  let review = parsed.review || null;
-  let cloze = parsed.cloze || null;
-
-  if (chapterLearnedCount % 10 === 0) {
-    if (!validateCloze(cloze)) {
-      throw new Error("Invalid cloze payload for chapter");
-    }
-    review = null;
-  } else if (chapterLearnedCount % 5 === 0) {
-    if (!validateReview(review)) {
-      throw new Error("Invalid review payload for chapter");
-    }
-    cloze = null;
-  } else {
-    review = null;
-    cloze = null;
-  }
-
-  return {
-    mode: "chapter_v4",
-    chapterWords,
-    learnedCountBefore: learned.length,
-    learnedCountAfter: chapterLearnedCount,
-    words: wordPacks,
-    review,
-    cloze,
-    chapterProvider: chapterResult.provider,
-    chapterLatencyMs: chapterResult.latencyMs,
-  };
-}
-
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const { system, message, maxTokens, preferredProviders, mode } = req.body || {};
-  const providers = buildProviders();
-  if (!providers.length) {
-    return res.status(500).json({ error: "No provider API keys configured" });
-  }
-
+  
+  console.log(`Starting chapter compilation: ${words.length} words`);
+  
   try {
-    if (mode === "chapter_v4") {
-      const payload = await compileChapter(req.body || {});
-      res.setHeader("X-Chapter-Mode", "v4");
-      return res.status(200).json(payload);
+    // Stage 1: Compile core content (guess + teach) with controlled concurrency
+    const corePromises = [];
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const wordLearned = [...learned, ...words.slice(0, i)];
+      
+      // Guess task
+      corePromises.push(
+        requestWithBudget(SYSTEM_PROMPT, buildGuessPrompt(word, wordLearned), 1500, 25000)
+          .then(result => ({ word, type: 'guess', ...result }))
+          .catch(error => ({ word, type: 'guess', error: error.message }))
+      );
+      
+      // Teach task  
+      corePromises.push(
+        requestWithBudget(SYSTEM_PROMPT, buildTeachPrompt(word, wordLearned), 2000, 30000)
+          .then(result => ({ word, type: 'teach', ...result }))
+          .catch(error => ({ word, type: 'teach', error: error.message }))
+      );
     }
-
-    if (!system || !message) {
-      return res.status(400).json({ error: "Missing system or message" });
+    
+    const coreResults = await Promise.all(corePromises);
+    
+    // Process core results
+    const chapterData = {};
+    let coreFailures = 0;
+    
+    for (const result of coreResults) {
+      if (!chapterData[result.word]) {
+        chapterData[result.word] = { word: result.word };
+      }
+      
+      if (result.error) {
+        chapterData[result.word][result.type + '_error'] = result.error;
+        chapterMetrics.failures.push(`${result.word}:${result.type}`);
+        coreFailures++;
+      } else if (result.type === 'guess') {
+        const validated = validateGuessPayload(tryParseJSON(result.text));
+        chapterData[result.word].guess = validated;
+        chapterData[result.word].guessRaw = result.text;
+      } else if (result.type === 'teach') {
+        chapterData[result.word].teach = result.text;
+      }
     }
-
-    const timeoutMs = Number(process.env.CHAT_PROVIDER_TIMEOUT_MS || 15000);
-    const result = await requestText({
-      system,
-      message,
-      maxTokens: maxTokens || 2000,
-      timeoutMs,
-      preferredProviders,
-    });
-
-    res.setHeader("X-Provider", result.provider);
-    res.setHeader("X-Provider-Family", result.providerFamily);
-    res.setHeader("X-Provider-Latency-Ms", String(result.latencyMs));
-    return res.status(200).json({ text: result.text });
-  } catch (err) {
-    const status = err.status || 500;
-    return res.status(status).json({
-      error: err.message || "All providers failed",
-      details: err.details || undefined,
-    });
+    
+    // Fail fast if too many core failures
+    if (coreFailures > words.length) {
+      throw new Error(`Too many core failures: ${coreFailures}/${words.length * 2}`);
+    }
+    
+    // Stage 2: Background spectrum tasks (non-blocking)
+    const spectrumPromises = words.map(word => 
+      requestWithBudget(SYSTEM_PROMPT, buildSpectrumPrompt(word), 1500, 20000)
+        .then(result => ({ word, spectrum: validateSpectrumPayload(tryParseJSON(result.text)) }))
+        .catch(() => ({ word, spectrum: null }))
+    );
+    
+    const spectrumResults = await Promise.all(spectrumPromises);
+    for (const result of spectrumResults) {
+      if (chapterData[result.word]) {
+        chapterData[result.word].spectrum = result.spectrum;
+      }
+    }
+    
+    // Stage 3: Generate gates (review + cloze)
+    const gates = {};
+    
+    if (words.length >= 5) {
+      try {
+        const reviewResult = await requestWithBudget(SYSTEM_PROMPT, buildReviewPrompt(words), 1800, 25000);
+        gates.review = tryParseJSON(reviewResult.text);
+      } catch (e) {
+        gates.review = null;
+      }
+      
+      try {
+        const clozeResult = await requestWithBudget(SYSTEM_PROMPT, buildClozePrompt(words), 2000, 25000);
+        gates.cloze = tryParseJSON(clozeResult.text);
+      } catch (e) {
+        gates.cloze = null;
+      }
+    }
+    
+    // Final compilation
+    const totalTime = Date.now() - startTime;
+    const chapter = {
+      chapterId: `ch_${words.join('_').substring(0, 20)}_${Date.now()}`,
+      status: 'ready',
+      words: words.map(word => chapterData[word]).filter(Boolean),
+      gates,
+      metadata: {
+        compiledAt: Date.now(),
+        compileTimeMs: totalTime,
+        wordsTotal: words.length,
+        wordsReady: Object.keys(chapterData).length,
+        metrics: chapterMetrics
+      }
+    };
+    
+    // Validate chapter completeness
+    const readyCount = chapter.words.filter(w => w.guess && w.teach).length;
+    if (readyCount < words.length * 0.8) {
+      throw new Error(`Chapter validation failed: only ${readyCount}/${words.length} words ready`);
+    }
+    
+    console.log(`Chapter compiled successfully in ${totalTime}ms: ${readyCount}/${words.length} words ready`);
+    return chapter;
+    
+  } catch (error) {
+    const totalTime = Date.now() - startTime;
+    console.error(`Chapter compilation failed after ${totalTime}ms:`, error.message);
+    
+    return {
+      chapterId: `ch_failed_${Date.now()}`,
+      status: 'failed', 
+      error: error.message,
+      metadata: {
+        compiledAt: Date.now(),
+        compileTimeMs: totalTime,
+        metrics: chapterMetrics
+      }
+    };
   }
 }
+
+function tryParseJSON(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+// Main API handler
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  const { mode, chapterWords, learned, profile } = req.body;
+  
+  if (mode === 'chapter_v5') {
+    if (!chapterWords || !Array.isArray(chapterWords)) {
+      return res.status(400).json({ error: 'chapterWords array required' });
+    }
+    
+    try {
+      const chapter = await compileChapter(chapterWords, learned, profile);
+      return res.status(200).json(chapter);
+    } catch (error) {
+      console.error('Chapter compilation error:', error);
+      return res.status(500).json({ 
+        error: 'Chapter compilation failed',
+        details: error.message 
+      });
+    }
+  }
+  
+  // Legacy single-request mode fallback
+  const { system, message, maxTokens } = req.body;
+  try {
+    const result = await requestWithBudget(system || SYSTEM_PROMPT, message, maxTokens || 2000);
+    return res.status(200).json({ text: result.text });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+export const config = {
+  maxDuration: 60,
+};
