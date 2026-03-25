@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V2-A</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V2-C</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -834,7 +834,7 @@ export default function App() {
     var batchWords = wl.slice(startIdx, endIdx);
     var total = batchWords.length;
     if (total === 0) return;
-    setBatchTotal(total * 3);
+    setBatchTotal(total * 2);
     setBatchProgress(0);
     setPhase("batch_loading");
     setBatchTip(makeBatchTip(0, batchWords[0], total));
@@ -876,12 +876,12 @@ export default function App() {
     var shardProviders = ["deepseek-a", "deepseek-b"]; // A/B split for 5-word pack
     for (var i = 0; i < batchWords.length; i++) {
       var w = batchWords[i];
-      if (dataCache.current[w]) { completed += 3; continue; }
+      if (dataCache.current[w]) { completed += 2; continue; }
       dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
       var wLrn = [...lrn, ...batchWords.slice(0, i)];
       (function(word, learned, providerHint) {
         var preferred = providerHint ? [providerHint] : undefined;
-        // Prioritize guess/spectrum first for faster perceived readiness.
+        // Block on guess + teach; spectrum runs in background to preserve pack smoothness.
         tasks.push(function() {
           return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
             dataCache.current[word].guess = raw ? tryJSON(raw) : null;
@@ -889,15 +889,13 @@ export default function App() {
           }).catch(function() {});
         });
         tasks.push(function() {
-          return callAPIFast(sysP, buildSpectrumPrompt(word), { preferredProviders: preferred }).then(function(raw) {
-            dataCache.current[word].spectrum = raw ? tryJSON(raw) : null;
-          }).catch(function() {});
-        });
-        tasks.push(function() {
           return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
             dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
           }).catch(function() {});
         });
+        callAPIFast(sysP, buildSpectrumPrompt(word), { preferredProviders: preferred }).then(function(raw) {
+          dataCache.current[word].spectrum = raw ? tryJSON(raw) : null;
+        }).catch(function() {});
       })(w, wLrn, shardProviders[i % shardProviders.length]);
     }
 
@@ -917,7 +915,7 @@ export default function App() {
             running--;
             completed++;
             setBatchProgress(completed);
-            if (completed % 3 === 0) {
+            if (completed % 2 === 0) {
               tipWordIdx++;
               if (tipWordIdx < batchWords.length) {
                 setBatchTip(makeBatchTip(tipWordIdx, batchWords[tipWordIdx], total));
