@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V3.1-Stream</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V3.2</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -605,12 +605,9 @@ export default function App() {
     var id = setInterval(function() {
       var tot = batchTotalR.current;
       var prog = batchProgressR.current;
-      var real = tot > 0 ? (100 * prog) / tot : 0;
-      var elapsed = (typeof performance !== "undefined" ? performance.now() : 0) - batchLoadStartRef.current;
-      var fakeCap = Math.min(7, elapsed / 420);
-      var target = tot <= 0 ? 0 : (real > 0 ? Math.max(real, fakeCap) : fakeCap);
+      var target = tot > 0 ? (100 * prog) / tot : 0;
       setBatchUiPct(function(d) {
-        var next = d + (target - d) * 0.14;
+        var next = d + (target - d) * 0.18;
         if (Math.abs(target - next) < 0.35) next = target;
         if (next > 100) next = 100;
         return next;
@@ -828,7 +825,7 @@ export default function App() {
     return tips[Math.floor(Math.random() * tips.length)];
   };
 
-  /* ─── BATCH LOAD: concurrency-limited (max 5) with real progress ─── */
+  /* ─── BATCH LOAD: streaming with guaranteed first-word readiness ─── */
   var loadBatch = async function(startIdx, lrn, words, opts) {
     opts = opts || {};
     var wl = words || wordList;
@@ -836,13 +833,16 @@ export default function App() {
     var batchWords = wl.slice(startIdx, endIdx);
     var total = batchWords.length;
     if (total === 0) return;
-    // Streaming mode: start as soon as first word is ready
-    var enableStreaming = true;
-    var streamStartThreshold = 1; // Always start after 1 word ready
-    setBatchTotal(total * 2);
-    setBatchProgress(0);
-    setPhase("batch_loading");
-    setBatchTip(makeBatchTip(0, batchWords[0], total));
+
+    var firstWord = batchWords[0];
+    var firstCached = !!(dataCache.current[firstWord]?.guess && dataCache.current[firstWord]?.teach);
+    if (!firstCached) {
+      setPhase("batch_loading");
+      setBatchTip(makeBatchTip(0, firstWord, total));
+    }
+
+    setBatchTotal(total);
+    setBatchProgress(firstCached ? 1 : 0);
 
     // ── Phase B: fire review/cloze pre-fetch independently (doesn't affect progress bar) ──
     var endMilestone = lrn.length + batchWords.length;
@@ -876,17 +876,18 @@ export default function App() {
     });
 
     var tasks = [];
-    var completed = 0;
+    var completed = firstCached ? 1 : 0;
     var tipWordIdx = 0;
     var shardProviders = ["deepseek-a", "deepseek-b"]; // A/B split for 5-word pack
     var batchStartedAtMs = Date.now();
-    var readyWordSet = new Set();
+    var readyWordSet = new Set(firstCached ? [firstWord] : []);
+    var countedReady = new Set(firstCached ? [firstWord] : []);
     var earlyStartResolved = false;
     var resolveEarlyStart = null;
-    var earlyStartPromise = enableStreaming ? new Promise(function(r) { resolveEarlyStart = r; }) : null;
-    var tryResolveEarlyStart = function() {
-      if (!enableStreaming || earlyStartResolved) return;
-      if (readyWordSet.size >= streamStartThreshold) {
+    var earlyStartPromise = new Promise(function(r) { resolveEarlyStart = r; });
+    var tryResolveEarlyStart = function(word) {
+      if (earlyStartResolved) return;
+      if (word === firstWord && dataCache.current[firstWord]?.guess && dataCache.current[firstWord]?.teach) {
         earlyStartResolved = true;
         setBatchTip("✅ 第1个词已就绪，立即开始学习！后台继续准备其余词汇...");
         if (resolveEarlyStart) resolveEarlyStart();
@@ -902,8 +903,12 @@ export default function App() {
     for (var i = 0; i < batchWords.length; i++) {
       var w = batchWords[i];
       if (dataCache.current[w]) {
-        completed += 2;
-        if (dataCache.current[w].guess && dataCache.current[w].teach) readyWordSet.add(w);
+        if (dataCache.current[w].guess && dataCache.current[w].teach && !countedReady.has(w)) {
+          countedReady.add(w);
+          readyWordSet.add(w);
+          completed++;
+        }
+        if (w === firstWord) tryResolveEarlyStart(w);
         continue;
       }
       dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
@@ -917,7 +922,12 @@ export default function App() {
             dataCache.current[word].guessRaw = raw;
             if (dataCache.current[word].guess && dataCache.current[word].teach) {
               readyWordSet.add(word);
-              tryResolveEarlyStart();
+              if (!countedReady.has(word)) {
+                countedReady.add(word);
+                completed++;
+                setBatchProgress(completed);
+              }
+              tryResolveEarlyStart(word);
             }
           }).catch(function() {});
         });
@@ -926,7 +936,12 @@ export default function App() {
             dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
             if (dataCache.current[word].guess && dataCache.current[word].teach) {
               readyWordSet.add(word);
-              tryResolveEarlyStart();
+              if (!countedReady.has(word)) {
+                countedReady.add(word);
+                completed++;
+                setBatchProgress(completed);
+              }
+              tryResolveEarlyStart(word);
             }
           }).catch(function() {});
         });
@@ -936,14 +951,14 @@ export default function App() {
       })(w, wLrn, shardProviders[i % shardProviders.length]);
     }
 
-    tryResolveEarlyStart();
+    tryResolveEarlyStart(firstWord);
 
-    var totalTasks = completed + tasks.length;
-    setBatchTotal(totalTasks);
+    var totalTasks = tasks.length;
     setBatchProgress(completed);
 
     var running = 0;
     var taskIdx = 0;
+    var taskDone = 0;
     var runAllPromise = new Promise(function(resolve) {
       if (tasks.length === 0) { resolve(); return; }
       function next() {
@@ -952,15 +967,10 @@ export default function App() {
           var t = tasks[taskIdx++];
           t().finally(function() {
             running--;
-            completed++;
-            setBatchProgress(completed);
-            if (completed % 2 === 0) {
-              tipWordIdx++;
-              if (tipWordIdx < batchWords.length) {
-                setBatchTip(makeBatchTip(tipWordIdx, batchWords[tipWordIdx], total));
-              }
-            }
-            if (completed >= totalTasks) {
+            taskDone++;
+            var prepPct = total > 0 ? Math.round((100 * completed) / total) : 0;
+            setBatchTip("🛠 AI 备课中... " + completed + "/" + total + " 词已就绪（" + prepPct + "%）");
+            if (taskDone >= totalTasks) {
               resolve();
             } else {
               next();
@@ -972,8 +982,8 @@ export default function App() {
     });
 
     var finalizeBatch = function() {
-      setBatchProgress(totalTasks);
-      setBatchTip("✅ " + total + " 个词全部就绪，开始学习！");
+      setBatchProgress(total);
+      setBatchTip("✅ " + total + " 个词全部就绪，继续学习！");
       try {
         if (typeof window !== "undefined") {
           var elapsedMs = Date.now() - batchStartedAtMs;
@@ -1585,8 +1595,15 @@ export default function App() {
               💡 首次加载会稍慢一些，AI 正在根据学生画像量身定制内容，请耐心稍等片刻～
             </p>
           )}
-          <p style={{fontSize:14, color:C.textSec, marginBottom:20, lineHeight:1.6}}>{batchTip}</p>
-          <div style={{background:C.border, borderRadius:8, height:12, overflow:"hidden", marginBottom:12}}>
+          <p style={{fontSize:14, color:C.textSec, marginBottom:16, lineHeight:1.6}}>{batchTip}</p>
+          <div style={{textAlign:"left", marginBottom:8, fontSize:12, color:C.textSec}}>📚 学习进度</div>
+          <div style={{background:C.border, borderRadius:8, height:10, overflow:"hidden", marginBottom:8}}>
+            <div style={{height:"100%", background:C.teal, borderRadius:8, width: Math.max(0, Math.min(100, Math.round((idx / Math.max(1, wordList.length)) * 100))) + "%"}} />
+          </div>
+          <div style={{fontSize:12, color:C.textSec, marginBottom:12}}>{Math.max(0, idx)}/{Math.max(1, wordList.length)} 已学</div>
+
+          <div style={{textAlign:"left", marginBottom:8, fontSize:12, color:C.textSec}}>🤖 AI 备课进度</div>
+          <div style={{background:C.border, borderRadius:8, height:12, overflow:"hidden", marginBottom:8}}>
             <div style={{height:"100%", background:"linear-gradient(90deg, "+C.accent+", "+C.gold+")", borderRadius:8, transition:"none", width: batchUiPct + "%"}} />
           </div>
           <div style={{fontSize:13, color:C.textSec}}>{Math.min(100, Math.round(batchUiPct))}%</div>
