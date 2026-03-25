@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V3.3</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V3.3.1</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -987,7 +987,7 @@ export default function App() {
         }
         setBatchTip("⏱ 首词加载超时，已自动进入学习，后台继续备课...");
         tryResolveEarlyStart(firstWord);
-      }, 20000);
+      }, 12000);
     }
 
     var totalTasks = tasks.length;
@@ -1017,6 +1017,24 @@ export default function App() {
       }
       next();
     });
+
+    runAllPromise.then(function() {
+      if (earlyStartResolved) return;
+      if (!dataCache.current[firstWord]) dataCache.current[firstWord] = { guess: null, guessRaw: null, teach: null, spectrum: null };
+      if (!dataCache.current[firstWord].guess) {
+        dataCache.current[firstWord].guess = {
+          context: "We ___ this word in a sentence.",
+          options: { A: firstWord, B: "learn", C: "quick", D: "study" },
+          answer: "A"
+        };
+        dataCache.current[firstWord].guessRaw = "done-fallback-guess";
+      }
+      if (!dataCache.current[firstWord].teach) {
+        dataCache.current[firstWord].teach = "## 快速讲解\n\n- 首词自动兜底已生效。\n- 你可以先学，后台会继续补全备课内容。";
+      }
+      earlyStartResolved = true;
+      if (resolveEarlyStart) resolveEarlyStart();
+    }).catch(function() {});
 
     var finalizeBatch = function() {
       setBatchProgress(total);
