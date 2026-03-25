@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V3.2</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V3.3</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -841,7 +841,7 @@ export default function App() {
       setBatchTip(makeBatchTip(0, firstWord, total));
     }
 
-    setBatchTotal(total);
+    setBatchTotal(firstCached ? total : 1);
     setBatchProgress(firstCached ? 1 : 0);
 
     // ── Phase B: fire review/cloze pre-fetch independently (doesn't affect progress bar) ──
@@ -889,6 +889,8 @@ export default function App() {
       if (earlyStartResolved) return;
       if (word === firstWord && dataCache.current[firstWord]?.guess && dataCache.current[firstWord]?.teach) {
         earlyStartResolved = true;
+        setBatchTotal(total);
+        setBatchProgress(Math.max(1, completed));
         setBatchTip("✅ 第1个词已就绪，立即开始学习！后台继续准备其余词汇...");
         if (resolveEarlyStart) resolveEarlyStart();
       }
@@ -1584,6 +1586,15 @@ export default function App() {
         </div>
       )}
 
+      {phase !== "batch_loading" && batchTotal > 1 && batchProgress < batchTotal && (
+        <div style={{...S.card, padding:"12px 14px", marginTop:10}}>
+          <div style={{fontSize:12, color:C.textSec, marginBottom:6}}>🤖 后台备课中：{batchProgress}/{batchTotal} 词就绪</div>
+          <div style={{background:C.border, borderRadius:8, height:8, overflow:"hidden"}}>
+            <div style={{height:"100%", background:C.teal, borderRadius:8, width: Math.max(0, Math.min(100, Math.round((batchProgress / Math.max(1, batchTotal)) * 100))) + "%"}} />
+          </div>
+        </div>
+      )}
+
       {error && <div style={S.error}>{error}<button onClick={() => {setError("");loadBatch(idx, learned, undefined, { streaming: true }).then(function() { applyWordData(currentWord); });}} style={S.retryBtn}>🔄 重试</button></div>}
 
       {phase === "batch_loading" && (
@@ -1596,17 +1607,11 @@ export default function App() {
             </p>
           )}
           <p style={{fontSize:14, color:C.textSec, marginBottom:16, lineHeight:1.6}}>{batchTip}</p>
-          <div style={{textAlign:"left", marginBottom:8, fontSize:12, color:C.textSec}}>📚 学习进度</div>
-          <div style={{background:C.border, borderRadius:8, height:10, overflow:"hidden", marginBottom:8}}>
-            <div style={{height:"100%", background:C.teal, borderRadius:8, width: Math.max(0, Math.min(100, Math.round((idx / Math.max(1, wordList.length)) * 100))) + "%"}} />
-          </div>
-          <div style={{fontSize:12, color:C.textSec, marginBottom:12}}>{Math.max(0, idx)}/{Math.max(1, wordList.length)} 已学</div>
-
-          <div style={{textAlign:"left", marginBottom:8, fontSize:12, color:C.textSec}}>🤖 AI 备课进度</div>
+          <div style={{textAlign:"left", marginBottom:8, fontSize:12, color:C.textSec}}>⚡ 当前词加载进度</div>
           <div style={{background:C.border, borderRadius:8, height:12, overflow:"hidden", marginBottom:8}}>
             <div style={{height:"100%", background:"linear-gradient(90deg, "+C.accent+", "+C.gold+")", borderRadius:8, transition:"none", width: batchUiPct + "%"}} />
           </div>
-          <div style={{fontSize:13, color:C.textSec}}>{Math.min(100, Math.round(batchUiPct))}%</div>
+          <div style={{fontSize:13, color:C.textSec}}>{Math.min(100, Math.round(batchUiPct))}%（到100%立即进入学习）</div>
         </div>
       )}
 
