@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V3.3.1</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V4-CHAPTER</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -424,7 +424,6 @@ var PRESETS = {
 /* ─── Storage: localStorage ─── */
 var SKEY = "vocabspark_v1";         // permanent key — never change this
 var SKEY_OLD = "vocabspark_release_2"; // migration source
-var CONC_KEY = "vocabspark_concurrency_cap_v1";
 var loadSave = async () => {
   try {
     if (typeof window === "undefined") return null;
@@ -558,6 +557,7 @@ export default function App() {
   var [clozeSubmitted, setClozeSubmitted] = useState(false);
 
   var [loadingTip, setLoadingTip] = useState("");
+  var chapterCache = useRef({});
   var [phaseDir, setPhaseDir] = useState(1);
   var [showConfetti, setShowConfetti] = useState(false);
   var [showShare, setShowShare] = useState(false);
@@ -825,42 +825,40 @@ export default function App() {
     return tips[Math.floor(Math.random() * tips.length)];
   };
 
-  /* ─── BATCH LOAD: streaming with guaranteed first-word readiness ─── */
-  var loadBatch = async function(startIdx, lrn, words, opts) {
-    opts = opts || {};
-    var wl = words || wordList;
-    var endIdx = Math.min(startIdx + 5, wl.length);
-    var batchWords = wl.slice(startIdx, endIdx);
-    var total = batchWords.length;
-    if (total === 0) return;
+  var makeChapterKey = function(startIdx, wl) {
+    var list = wl || wordList;
+    return String(startIdx) + "::" + list.slice(startIdx, Math.min(startIdx + 5, list.length)).join("|");
+  };
 
-    var firstWord = batchWords[0];
-    var firstCached = !!(dataCache.current[firstWord]?.guess && dataCache.current[firstWord]?.teach);
-    if (!firstCached) {
-      setPhase("batch_loading");
-      setBatchTip(makeBatchTip(0, firstWord, total));
+  var cacheChapterPayload = function(startIdx, payload, wl) {
+    var list = wl || wordList;
+    var batchWords = list.slice(startIdx, Math.min(startIdx + 5, list.length));
+    batchWords.forEach(function(word, index) {
+      var item = payload?.words?.[index];
+      if (!item || item.word !== word) {
+        throw new Error("章节内容与词序不一致：" + word);
+      }
+      dataCache.current[word] = {
+        guess: item.guess,
+        guessRaw: JSON.stringify(item.guess || {}),
+        teach: item.teach,
+        spectrum: item.spectrum,
+      };
+    });
+
+    var milestone = payload?.learnedCountAfter || 0;
+    if (payload?.review?.questions?.length) {
+      dataCache.current["_review_" + milestone] = payload.review;
+    }
+    if (payload?.cloze?.questions?.length) {
+      dataCache.current["_cloze_" + milestone] = payload.cloze;
     }
 
-    setBatchTotal(firstCached ? total : 1);
-    setBatchProgress(firstCached ? 1 : 0);
+    chapterCache.current[makeChapterKey(startIdx, list)] = payload;
+  };
 
-    // ── Phase B: fire review/cloze pre-fetch independently (doesn't affect progress bar) ──
-    var endMilestone = lrn.length + batchWords.length;
-    var willCloze  = endMilestone % 10 === 0;
-    var willReview = endMilestone % 5 === 0 && !willCloze;
-    if (willReview && !dataCache.current["_review_" + endMilestone]) {
-      callAPIFast(sysP, buildReviewPrompt(batchWords))
-        .then(function(raw) { dataCache.current["_review_" + endMilestone] = tryJSON(raw) || null; })
-        .catch(function() {});
-    }
-    if (willCloze && !dataCache.current["_cloze_" + endMilestone]) {
-      callAPIFast(sysP, buildClozePrompt([...lrn.slice(-5), ...batchWords]))
-        .then(function(raw) { dataCache.current["_cloze_" + endMilestone] = tryJSON(raw) || null; })
-        .catch(function() {});
-    }
-
-    // ── Word audio pre-fetch: Free Dictionary API (fire and forget) ──
-    batchWords.forEach(function(word) {
+  var preloadWordAudio = function(words) {
+    words.forEach(function(word) {
       var w = word.toLowerCase();
       if (dictAudioCache[w]) return;
       fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(w))
@@ -874,192 +872,74 @@ export default function App() {
         })
         .catch(function() {});
     });
+  };
 
-    var tasks = [];
-    var completed = firstCached ? 1 : 0;
-    var tipWordIdx = 0;
-    var shardProviders = ["deepseek-a", "deepseek-b"]; // A/B split for 5-word pack
-    var batchStartedAtMs = Date.now();
-    var readyWordSet = new Set(firstCached ? [firstWord] : []);
-    var countedReady = new Set(firstCached ? [firstWord] : []);
-    var earlyStartResolved = false;
-    var resolveEarlyStart = null;
-    var earlyStartPromise = new Promise(function(r) { resolveEarlyStart = r; });
-    var tryResolveEarlyStart = function(word) {
-      if (earlyStartResolved) return;
-      if (word === firstWord && dataCache.current[firstWord]?.guess && dataCache.current[firstWord]?.teach) {
-        earlyStartResolved = true;
-        setBatchTotal(total);
-        setBatchProgress(Math.max(1, completed));
-        setBatchTip("✅ 第1个词已就绪，立即开始学习！后台继续准备其余词汇...");
-        if (resolveEarlyStart) resolveEarlyStart();
-      }
-    };
-    var dynamicCap = 3;
-    try {
-      if (typeof window !== "undefined") {
-        var savedCap = Number(localStorage.getItem(CONC_KEY) || "3");
-        dynamicCap = Math.max(2, Math.min(4, savedCap || 3));
-      }
-    } catch (e) {}
-    for (var i = 0; i < batchWords.length; i++) {
-      var w = batchWords[i];
-      if (dataCache.current[w]) {
-        if (dataCache.current[w].guess && dataCache.current[w].teach && !countedReady.has(w)) {
-          countedReady.add(w);
-          readyWordSet.add(w);
-          completed++;
-        }
-        if (w === firstWord) tryResolveEarlyStart(w);
-        continue;
-      }
-      dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
-      var wLrn = [...lrn, ...batchWords.slice(0, i)];
-      (function(word, learned, providerHint) {
-        var preferred = providerHint ? [providerHint] : undefined;
-        // Block on guess + teach; spectrum runs in background to preserve pack smoothness.
-        tasks.push(function() {
-          return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
-            dataCache.current[word].guess = raw ? tryJSON(raw) : null;
-            dataCache.current[word].guessRaw = raw;
-            if (dataCache.current[word].guess && dataCache.current[word].teach) {
-              readyWordSet.add(word);
-              if (!countedReady.has(word)) {
-                countedReady.add(word);
-                completed++;
-                setBatchProgress(completed);
-              }
-              tryResolveEarlyStart(word);
-            }
-          }).catch(function() {
-            if (word === firstWord && !dataCache.current[word].guess) {
-              dataCache.current[word].guess = {
-                context: "We ___ this word in a sentence.",
-                options: { A: word, B: "learn", C: "quick", D: "study" },
-                answer: "A"
-              };
-              dataCache.current[word].guessRaw = "fallback-guess";
-              tryResolveEarlyStart(word);
-            }
-          });
-        });
-        tasks.push(function() {
-          return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
-            dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
-            if (dataCache.current[word].guess && dataCache.current[word].teach) {
-              readyWordSet.add(word);
-              if (!countedReady.has(word)) {
-                countedReady.add(word);
-                completed++;
-                setBatchProgress(completed);
-              }
-              tryResolveEarlyStart(word);
-            }
-          }).catch(function() {
-            if (word === firstWord && !dataCache.current[word].teach) {
-              dataCache.current[word].teach = "## 快速讲解\n\n- 这个词的 AI 讲解暂时超时了。\n- 先进入学习，后台会继续补全内容。";
-              tryResolveEarlyStart(word);
-            }
-          });
-        });
-        callAPIFast(sysP, buildSpectrumPrompt(word), { preferredProviders: preferred }).then(function(raw) {
-          dataCache.current[word].spectrum = raw ? tryJSON(raw) : null;
-        }).catch(function() {});
-      })(w, wLrn, shardProviders[i % shardProviders.length]);
-    }
+  /* ─── CHAPTER LOAD: one request compiles 5 words + chapter gate ─── */
+  var loadBatch = async function(startIdx, lrn, words) {
+    var wl = words || wordList;
+    var endIdx = Math.min(startIdx + 5, wl.length);
+    var batchWords = wl.slice(startIdx, endIdx);
+    var total = batchWords.length;
+    if (total === 0) return null;
 
-    tryResolveEarlyStart(firstWord);
-
-    if (!firstCached) {
-      setTimeout(function() {
-        if (earlyStartResolved) return;
-        if (!dataCache.current[firstWord]) dataCache.current[firstWord] = { guess: null, guessRaw: null, teach: null, spectrum: null };
-        if (!dataCache.current[firstWord].guess) {
-          dataCache.current[firstWord].guess = {
-            context: "We ___ this word in a sentence.",
-            options: { A: firstWord, B: "learn", C: "quick", D: "study" },
-            answer: "A"
-          };
-          dataCache.current[firstWord].guessRaw = "timeout-fallback-guess";
-        }
-        if (!dataCache.current[firstWord].teach) {
-          dataCache.current[firstWord].teach = "## 快速讲解\n\n- 首词加载超时，先进入学习。\n- 后台会继续备课并补全后续内容。";
-        }
-        setBatchTip("⏱ 首词加载超时，已自动进入学习，后台继续备课...");
-        tryResolveEarlyStart(firstWord);
-      }, 12000);
-    }
-
-    var totalTasks = tasks.length;
-    setBatchProgress(completed);
-
-    var running = 0;
-    var taskIdx = 0;
-    var taskDone = 0;
-    var runAllPromise = new Promise(function(resolve) {
-      if (tasks.length === 0) { resolve(); return; }
-      function next() {
-        while (running < dynamicCap && taskIdx < tasks.length) {
-          running++;
-          var t = tasks[taskIdx++];
-          t().finally(function() {
-            running--;
-            taskDone++;
-            var prepPct = total > 0 ? Math.round((100 * completed) / total) : 0;
-            setBatchTip("🛠 AI 备课中... " + completed + "/" + total + " 词已就绪（" + prepPct + "%）");
-            if (taskDone >= totalTasks) {
-              resolve();
-            } else {
-              next();
-            }
-          });
-        }
-      }
-      next();
-    });
-
-    runAllPromise.then(function() {
-      if (earlyStartResolved) return;
-      if (!dataCache.current[firstWord]) dataCache.current[firstWord] = { guess: null, guessRaw: null, teach: null, spectrum: null };
-      if (!dataCache.current[firstWord].guess) {
-        dataCache.current[firstWord].guess = {
-          context: "We ___ this word in a sentence.",
-          options: { A: firstWord, B: "learn", C: "quick", D: "study" },
-          answer: "A"
-        };
-        dataCache.current[firstWord].guessRaw = "done-fallback-guess";
-      }
-      if (!dataCache.current[firstWord].teach) {
-        dataCache.current[firstWord].teach = "## 快速讲解\n\n- 首词自动兜底已生效。\n- 你可以先学，后台会继续补全备课内容。";
-      }
-      earlyStartResolved = true;
-      if (resolveEarlyStart) resolveEarlyStart();
-    }).catch(function() {});
-
-    var finalizeBatch = function() {
+    var chapterKey = makeChapterKey(startIdx, wl);
+    var cachedChapter = chapterCache.current[chapterKey];
+    if (cachedChapter) {
+      cacheChapterPayload(startIdx, cachedChapter, wl);
+      setBatchTotal(total);
       setBatchProgress(total);
-      setBatchTip("✅ " + total + " 个词全部就绪，继续学习！");
-      try {
-        if (typeof window !== "undefined") {
-          var elapsedMs = Date.now() - batchStartedAtMs;
-          var currentCap = dynamicCap;
-          var nextCap = currentCap;
-          if (elapsedMs > 45000) nextCap = Math.max(2, currentCap - 1);
-          else if (elapsedMs < 20000) nextCap = Math.min(4, currentCap + 1);
-          localStorage.setItem(CONC_KEY, String(nextCap));
-        }
-      } catch (e) {}
-    };
-
-    if (enableStreaming) {
-      runAllPromise.then(function() { finalizeBatch(); }).catch(function() {});
-      await earlyStartPromise;
-      return;
+      setBatchTip("✅ 本章节已缓存，立即开始学习");
+      preloadWordAudio(batchWords);
+      return cachedChapter;
     }
 
-    await runAllPromise;
-    finalizeBatch();
-    await new Promise(function(r) { setTimeout(r, 400); });
+    setError("");
+    setLoading(true);
+    setPhase("batch_loading");
+    setBatchTotal(total);
+    setBatchProgress(0);
+    setBatchTip("🧠 正在一次性编译本章 5 个词的完整内容...");
+    setLoadingTip("🧠 AI 老师正在准备本章 5 个词的完整课件...");
+
+    var progressTimer = setInterval(function() {
+      setBatchProgress(function(prev) {
+        if (prev >= Math.max(0, total - 1)) return prev;
+        return prev + 1;
+      });
+    }, 2200);
+
+    try {
+      var response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "chapter_v4",
+          profile: profile,
+          chapterWords: batchWords,
+          learned: lrn,
+        }),
+      });
+      var payload = await response.json();
+      if (!response.ok || payload.error) {
+        throw new Error(payload.error || "章节生成失败");
+      }
+      if (!payload?.words || payload.words.length !== total) {
+        throw new Error("章节内容不完整，请重试");
+      }
+
+      cacheChapterPayload(startIdx, payload, wl);
+      preloadWordAudio(batchWords);
+      setBatchProgress(total);
+      setBatchTip("✅ 本章 5 词已全部就绪，开始学习");
+      return payload;
+    } catch (e) {
+      setBatchProgress(0);
+      setBatchTip("❌ 本章生成失败，可重试恢复");
+      throw e;
+    } finally {
+      clearInterval(progressTimer);
+      setLoading(false);
+    }
   };
 
   var applyWordData = function(word) {
@@ -1133,10 +1013,15 @@ export default function App() {
     var startLearned = startIdx > 0 ? words.slice(0, startIdx) : [];
     setWordList(words); setIdx(startIdx); setLearned(startLearned); setError("");
     dataCache.current = {};
+    chapterCache.current = {};
     setScreen("learning");
     saveSession(words, startIdx, startLearned);
-    await loadBatch(startIdx, startLearned, words, { streaming: true });
-    applyWordData(words[startIdx]);
+    try {
+      await loadBatch(startIdx, startLearned, words);
+      applyWordData(words[startIdx]);
+    } catch (e) {
+      setError(e.message || "章节生成失败，请重试");
+    }
   };
 
   var teachToSpectrum = () => {
@@ -1196,52 +1081,24 @@ export default function App() {
     saveSession(wordList, nextIdx, newLearned);
 
     if (newLearned.length > 0 && newLearned.length % 10 === 0) {
-      // Phase B: instant if pre-fetched during batch loading
       var cachedCloze = dataCache.current["_cloze_" + newLearned.length];
       if (cachedCloze?.questions) {
         setClozeData(cachedCloze); setClozeAnswers({}); setClozeSubmitted(false); setPhase("cloze"); return;
       }
-      // Phase A: switch phase immediately so spinner shows, then fetch
-      setPhase("cloze"); setLoadingTip("📝 正在生成阅读理解短文...");
-      try {
-        var raw = await callAPIFast(sysP, buildClozePrompt(newLearned.slice(-10)));
-        var parsed = tryJSON(raw);
-        if (parsed?.questions) {
-          setClozeData(parsed); setClozeAnswers({}); setClozeSubmitted(false);
-        } else {
-          if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
-          else { sfx.complete(); setPhase("done"); }
-        }
-      } catch (e) {
-        setError(e.message || "阅读挑战生成失败，已自动继续学习");
-        if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
-        else { sfx.complete(); setPhase("done"); }
-      }
+      setError("本章阅读挑战未准备完成，可重试本章");
+      if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
+      else { sfx.complete(); setPhase("done"); }
       return;
     }
 
     if (newLearned.length > 0 && newLearned.length % 5 === 0) {
-      // Phase B: instant if pre-fetched during batch loading
       var cachedReview = dataCache.current["_review_" + newLearned.length];
       if (cachedReview?.questions) {
         setReviewData(cachedReview); setReviewAnswers({}); setReviewSubmitted(false); setPhase("review"); return;
       }
-      // Phase A: switch phase immediately so spinner shows, then fetch
-      setPhase("review"); setLoadingTip("🎮 设计互动复习挑战中...");
-      try {
-        var raw = await callAPIFast(sysP, buildReviewPrompt(newLearned.slice(-5)));
-        var parsed = tryJSON(raw);
-        if (parsed?.questions) {
-          setReviewData(parsed); setReviewAnswers({}); setReviewSubmitted(false);
-        } else {
-          if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
-          else { sfx.complete(); setPhase("done"); }
-        }
-      } catch (e) {
-        setError(e.message || "复习关卡生成失败，已自动继续学习");
-        if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
-        else { sfx.complete(); setPhase("done"); }
-      }
+      setError("本章复习关卡未准备完成，可重试本章");
+      if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
+      else { sfx.complete(); setPhase("done"); }
       return;
     }
 
@@ -1268,9 +1125,13 @@ export default function App() {
   var afterReview = async function() {
     var nextIdx = idx + 1;
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); return; }
-    await loadBatch(nextIdx, learned, undefined, { streaming: true });
-    setIdx(nextIdx);
-    applyWordData(wordList[nextIdx]);
+    try {
+      await loadBatch(nextIdx, learned);
+      setIdx(nextIdx);
+      applyWordData(wordList[nextIdx]);
+    } catch (e) {
+      setError(e.message || "下一章节生成失败，请重试");
+    }
   };
 
   var submitCloze = () => {
@@ -1285,9 +1146,13 @@ export default function App() {
     var nextIdx = idx + 1;
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); return; }
     if (userRef.current && learned.length >= 10 && !tipDismissed) { setShowTipJar(true); }
-    await loadBatch(nextIdx, learned, undefined, { streaming: true });
-    setIdx(nextIdx);
-    applyWordData(wordList[nextIdx]);
+    try {
+      await loadBatch(nextIdx, learned);
+      setIdx(nextIdx);
+      applyWordData(wordList[nextIdx]);
+    } catch (e) {
+      setError(e.message || "下一章节生成失败，请重试");
+    }
   };
 
   var progress = wordList.length > 0 ? ((idx + (["teach","spectrum","done"].includes(phase) ? 1 : 0)) / wordList.length) * 100 : 0;
@@ -1363,7 +1228,7 @@ export default function App() {
       {hasSession && (
         <div style={{ ...S.card, background: C.tealLight, borderColor: C.teal, marginBottom: 14 }}>
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8, color: C.teal }}>📌 上次学到第 {idx+1} 个词（共 {wordList.length} 个）</div>
-          <button style={{ ...S.primaryBtn, background: C.teal }} onClick={async function() { setScreen("learning"); await loadBatch(idx, learned, undefined, { streaming: true }); applyWordData(wordList[idx]); }}>继续学习 →</button>
+          <button style={{ ...S.primaryBtn, background: C.teal }} onClick={async function() { setScreen("learning"); try { await loadBatch(idx, learned); applyWordData(wordList[idx]); } catch (e) { setError(e.message || "章节生成失败，请重试"); } }}>继续学习 →</button>
         </div>
       )}
 
@@ -1648,7 +1513,7 @@ export default function App() {
         </div>
       )}
 
-      {error && <div style={S.error}>{error}<button onClick={() => {setError("");loadBatch(idx, learned, undefined, { streaming: true }).then(function() { applyWordData(currentWord); });}} style={S.retryBtn}>🔄 重试</button></div>}
+      {error && <div style={S.error}>{error}<button onClick={() => {setError("");loadBatch(idx, learned).then(function() { applyWordData(currentWord); }).catch(function(e) { setError(e.message || "章节生成失败，请重试"); });}} style={S.retryBtn}>🔄 重试</button></div>}
 
       {phase === "batch_loading" && (
         <div style={{...S.card, textAlign:"center", padding:"40px 24px"}}>
