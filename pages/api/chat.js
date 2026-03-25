@@ -405,6 +405,50 @@ export default async function handler(req, res) {
         details: error.message 
       });
     }
+  } else if (mode === 'test_prompt') {
+    const { prompt_type, word, learned } = req.body;
+    let prompt_builder;
+    let maxTokens;
+    let timeoutMs;
+    
+    switch (prompt_type) {
+      case 'guess':
+        prompt_builder = buildGuessPrompt;
+        maxTokens = 1500;
+        timeoutMs = 25000;
+        break;
+      case 'teach':
+        prompt_builder = buildTeachPrompt;
+        maxTokens = 2000;
+        timeoutMs = 30000;
+        break;
+      case 'spectrum':
+        prompt_builder = buildSpectrumPrompt;
+        maxTokens = 1500;
+        timeoutMs = 20000;
+        break;
+      case 'review':
+        prompt_builder = buildReviewPrompt;
+        maxTokens = 1800;
+        timeoutMs = 25000;
+        break;
+      case 'cloze':
+        prompt_builder = buildClozePrompt;
+        maxTokens = 2000;
+        timeoutMs = 25000;
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid prompt_type' });
+    }
+
+    try {
+      const prompt = prompt_builder(word, learned);
+      const result = await requestWithBudget(SYSTEM_PROMPT, prompt, maxTokens, timeoutMs);
+      return res.status(200).json({ raw_text: result.text, parsed: tryParseJSON(result.text), provider: result.provider });
+    } catch (error) {
+      console.error(`[TestPrompt][${prompt_type}][Error] Word: ${word}, Error: ${error.message}`);
+      return res.status(500).json({ error: error.message });
+    }
   }
   
   // Legacy single-request mode fallback
