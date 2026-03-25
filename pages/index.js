@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V5-Factory</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V5-FACTORY</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -543,8 +543,9 @@ export default function App() {
   var [bounceCorrect, setBounceCorrect] = useState(false);
 
   var [teachContent, setTeachContent] = useState("");
-  var [teachLoadFailed, setTeachLoadFailed] = useState(false);
   var [spectrumData, setSpectrumData] = useState(null);
+  var [currentChapter, setCurrentChapter] = useState(null);
+  var [chapterStatus, setChapterStatus] = useState("idle"); // idle, compiling, ready, failed
   var [specSlots, setSpecSlots] = useState([null,null,null]);
   var [specPool, setSpecPool] = useState([]);
   var [specStatus, setSpecStatus] = useState("idle");
@@ -1047,7 +1048,7 @@ export default function App() {
   var applyWordData = function(word) {
     var d = dataCache.current[word];
     setGuessData(null); setSelectedOption(""); setGuessSubmitted(false);
-    setShowHint(false); setTeachContent(""); setTeachLoadFailed(false); setSpectrumData(null);
+    setShowHint(false); setTeachContent(""); setSpectrumData(null);
     setSpecSlots([null,null,null]); setSpecPool([]); setSpecStatus("idle");
     setReviewData(null); setReviewAnswers({}); setReviewSubmitted(false); setPhonetic("");
     setClozeData(null); setClozeAnswers({}); setClozeSubmitted(false);
@@ -1092,7 +1093,16 @@ export default function App() {
         setTeachLoadFailed(false);
       } else if (waited >= 30000) {
         clearInterval(timer);
-        callSingle(sysP, buildTeachPrompt(currentWord, learned), { maxTokens: 2000, timeoutMs: 30000 }).then(function(raw) {
+        fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system: sysP,
+            message: buildTeachPrompt(currentWord, learned),
+            maxTokens: 2000
+          })
+        }).then(res => res.json()).then(function(data) {
+          var raw = data.text;
           if (raw) {
             var t = addSpeakMarkers(raw);
             if (!dataCache.current[currentWord]) dataCache.current[currentWord] = { guess: null, guessRaw: null, teach: null, spectrum: null };
@@ -1100,9 +1110,12 @@ export default function App() {
             setTeachContent(t);
             setTeachLoadFailed(false);
           } else {
-            setTeachLoadFailed(true);
+            setError("讲解加载失败，请重试本章节");
           }
           setLoading(false);
+        }).catch(function() {
+          setLoading(false);
+          setError("讲解加载失败，请重试本章节");
         });
       }
     }, 500);
@@ -1727,7 +1740,7 @@ export default function App() {
 
       {phase === "teach" && <div style={{...S.card, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
         <div style={{...S.tag,background:C.tealLight,color:C.teal}}>📖 学习笔记</div>
-        {!teachContent ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}>{loadingTip||"📖 正在用你的生活场景编写专属讲解..."}{teachLoadFailed ? <div style={{marginTop:10}}><button style={S.retryBtn} onClick={goToTeachWithFallback}>🔄 重试讲解</button></div> : null}</div></div> : <>
+        {!teachContent ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}>{"📖 章节工厂模式：所有内容应已编译完成"}<div style={{marginTop:10}}><button style={S.retryBtn} onClick={() => window.location.reload()}>🔄 重新编译本章</button></div></div></div> : <>
           <div style={{marginBottom:20}}><Md text={teachContent} /></div>
           <button style={S.primaryBtn} onClick={teachToSpectrum} disabled={loading}>{spectrumData?"🎮 词义光谱挑战 →":"→ 下一个词"}</button>
         </>}
