@@ -133,6 +133,21 @@ function buildClozePrompt(words) {
   return "学生刚学完10个词：" + words.join(", ") + "\n\n请写一篇120-150词的英文小短文（故事/日记/场景描述），深度结合学生画像的生活场景。短文中自然嵌入这10个词中的5个，将这5个词替换为 _____(1), _____(2) 等编号空格。\n\n在短文后给出5个填空题，每题3个选项（从10个词中选）。\n\nIMPORTANT: 直接输出JSON：\n" + '{"title":"短文标题","passage":"短文正文，含_____(1)等空格","questions":[{"id":1,"blank":"_____(1)","options":["词1","词2","词3"],"answer":"正确词","explanation":"为什么选这个词"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
 }
 
+function buildChapterPrompt(words, learned) {
+  const learnedCtx = Array.isArray(learned) && learned.length ? ("\n学生之前学过：" + learned.join(", ")) : "";
+  return [
+    "目标：一次性生成本章节 5 个词的完整学习包，必须是纯 JSON。",
+    "章节词汇：" + words.join(", ") + learnedCtx,
+    "要求：每个词都要包含完整字段 guess/teach/spectrum，质量不能降级。",
+    "guess 必须含：phonetic/context/options(A-D)/answer/hint。",
+    "teach 必须是中文讲解+英文例句，长度至少 220 字。",
+    "spectrum 必须含 3 个递进词，且包含目标词本身。",
+    "此外按规则返回 chapter 关卡：若(learned.length+words.length)%10==0 返回 cloze；若%5==0 返回 review；否则两者为 null。",
+    "IMPORTANT: 仅输出 JSON，不要 markdown，不要解释。",
+    '{"mode":"chapter_v4","words":[{"word":"单词","guess":{"phonetic":"/音标/","context":"语境句","options":{"A":"","B":"","C":"","D":""},"answer":"A","hint":"提示"},"teach":"讲解全文","spectrum":{"spectrum_words":["弱","中","强"],"scenario":"场景","decoded":"解读"}}],"review":null,"cloze":null}'
+  ].join("\n\n");
+}
+
 async function callProvider(provider, system, message, maxTokens, timeoutMs) {
   const response = await fetch(provider.url, {
     method: "POST",
@@ -308,48 +323,68 @@ async function compileChapter(body) {
     throw err;
   }
 
-  const timeoutMs = Number(process.env.CHAT_PROVIDER_TIMEOUT_MS || 15000);
+  const timeoutMs = Math.max(Number(process.env.CHAT_PROVIDER_TIMEOUT_MS || 15000), 35000);
   const system = buildSys(profile);
-  const shardProviders = ["deepseek-a", "deepseek-b", "gemini"];
 
-  const wordPacks = await Promise.all(
-    chapterWords.map((word, index) =>
-      compileWordPack({
-        word,
-        learned: learned.concat(chapterWords.slice(0, index)),
-        system,
-        timeoutMs,
-        providerHint: shardProviders[index % shardProviders.length],
-      })
-    )
-  );
+  const chapterResult = await requestText({
+    system,
+    message: buildChapterPrompt(chapterWords, learned),
+    maxTokens: 7000,
+    timeoutMs,
+    preferredProviders: ["deepseek-a", "deepseek-b", "gemini"],
+  });
+
+  const parsed = tryJSON(chapterResult.text);
+  if (!parsed || !Array.isArray(parsed.words) || parsed.words.length !== chapterWords.length) {
+    throw new Error("Invalid chapter payload");
+  }
+
+  const wordPacks = parsed.words.map((entry, index) => {
+    const word = String(entry?.word || chapterWords[index]).trim().toLowerCase();
+    const guess = entry?.guess;
+    const teach = addSpeakMarkers(String(entry?.teach || ""));
+    const spectrum = entry?.spectrum;
+
+    if (!validateGuess(guess)) {
+      throw new Error(`Invalid guess payload for ${word}`);
+    }
+    if (!teach || teach.length < 80) {
+      throw new Error(`Invalid teach payload for ${word}`);
+    }
+    if (!validateSpectrum(spectrum, word)) {
+      throw new Error(`Invalid spectrum payload for ${word}`);
+    }
+
+    return {
+      word,
+      guess,
+      teach,
+      spectrum,
+      providers: {
+        guess: chapterResult.provider,
+        teach: chapterResult.provider,
+        spectrum: chapterResult.provider,
+      },
+    };
+  });
 
   const chapterLearnedCount = learned.length + chapterWords.length;
-  let review = null;
-  let cloze = null;
+  let review = parsed.review || null;
+  let cloze = parsed.cloze || null;
 
   if (chapterLearnedCount % 10 === 0) {
-    const clozeResult = await requestText({
-      system,
-      message: buildClozePrompt(learned.slice(-5).concat(chapterWords)),
-      maxTokens: 1500,
-      timeoutMs: Math.max(timeoutMs, 20000),
-    });
-    cloze = tryJSON(clozeResult.text);
     if (!validateCloze(cloze)) {
       throw new Error("Invalid cloze payload for chapter");
     }
+    review = null;
   } else if (chapterLearnedCount % 5 === 0) {
-    const reviewResult = await requestText({
-      system,
-      message: buildReviewPrompt(chapterWords),
-      maxTokens: 1500,
-      timeoutMs,
-    });
-    review = tryJSON(reviewResult.text);
     if (!validateReview(review)) {
       throw new Error("Invalid review payload for chapter");
     }
+    cloze = null;
+  } else {
+    review = null;
+    cloze = null;
   }
 
   return {
@@ -360,6 +395,8 @@ async function compileChapter(body) {
     words: wordPacks,
     review,
     cloze,
+    chapterProvider: chapterResult.provider,
+    chapterLatencyMs: chapterResult.latencyMs,
   };
 }
 

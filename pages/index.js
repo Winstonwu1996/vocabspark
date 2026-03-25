@@ -896,17 +896,20 @@ export default function App() {
     setError("");
     setLoading(true);
     setPhase("batch_loading");
-    setBatchTotal(total);
+    setBatchTotal(100);
     setBatchProgress(0);
     setBatchTip("🧠 正在一次性编译本章 5 个词的完整内容...");
     setLoadingTip("🧠 AI 老师正在准备本章 5 个词的完整课件...");
 
+    var loadStartedAt = Date.now();
     var progressTimer = setInterval(function() {
+      var elapsed = Date.now() - loadStartedAt;
+      var target = Math.min(92, Math.max(3, Math.floor(elapsed / 380)));
       setBatchProgress(function(prev) {
-        if (prev >= Math.max(0, total - 1)) return prev;
-        return prev + 1;
+        if (prev >= target) return prev;
+        return prev + Math.max(1, Math.floor((target - prev) * 0.22));
       });
-    }, 2200);
+    }, 120);
 
     try {
       var response = await fetch("/api/chat", {
@@ -929,10 +932,13 @@ export default function App() {
 
       cacheChapterPayload(startIdx, payload, wl);
       preloadWordAudio(batchWords);
-      setBatchProgress(total);
+      setBatchProgress(100);
       setBatchTip("✅ 本章 5 词已全部就绪，开始学习");
+      setBatchTotal(total);
+      setBatchProgress(total);
       return payload;
     } catch (e) {
+      setBatchTotal(total);
       setBatchProgress(0);
       setBatchTip("❌ 本章生成失败，可重试恢复");
       throw e;
