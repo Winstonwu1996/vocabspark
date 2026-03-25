@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V2-D</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V3</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -829,12 +829,15 @@ export default function App() {
   };
 
   /* ─── BATCH LOAD: concurrency-limited (max 5) with real progress ─── */
-  var loadBatch = async function(startIdx, lrn, words) {
+  var loadBatch = async function(startIdx, lrn, words, opts) {
+    opts = opts || {};
     var wl = words || wordList;
     var endIdx = Math.min(startIdx + 5, wl.length);
     var batchWords = wl.slice(startIdx, endIdx);
     var total = batchWords.length;
     if (total === 0) return;
+    var earlyStartThreshold = Math.max(0, Math.min(total, Number(opts.startThresholdWords || 0)));
+    var enableEarlyStart = earlyStartThreshold > 0;
     setBatchTotal(total * 2);
     setBatchProgress(0);
     setPhase("batch_loading");
@@ -876,6 +879,18 @@ export default function App() {
     var tipWordIdx = 0;
     var shardProviders = ["deepseek-a", "deepseek-b"]; // A/B split for 5-word pack
     var batchStartedAtMs = Date.now();
+    var readyWordSet = new Set();
+    var earlyStartResolved = false;
+    var resolveEarlyStart = null;
+    var earlyStartPromise = enableEarlyStart ? new Promise(function(r) { resolveEarlyStart = r; }) : null;
+    var tryResolveEarlyStart = function() {
+      if (!enableEarlyStart || earlyStartResolved) return;
+      if (readyWordSet.size >= earlyStartThreshold) {
+        earlyStartResolved = true;
+        setBatchTip("✅ 前" + earlyStartThreshold + "个词已就绪，先开始学习，后台继续备课...");
+        if (resolveEarlyStart) resolveEarlyStart();
+      }
+    };
     var dynamicCap = 3;
     try {
       if (typeof window !== "undefined") {
@@ -885,7 +900,11 @@ export default function App() {
     } catch (e) {}
     for (var i = 0; i < batchWords.length; i++) {
       var w = batchWords[i];
-      if (dataCache.current[w]) { completed += 2; continue; }
+      if (dataCache.current[w]) {
+        completed += 2;
+        if (dataCache.current[w].guess && dataCache.current[w].teach) readyWordSet.add(w);
+        continue;
+      }
       dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
       var wLrn = [...lrn, ...batchWords.slice(0, i)];
       (function(word, learned, providerHint) {
@@ -895,11 +914,19 @@ export default function App() {
           return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
             dataCache.current[word].guess = raw ? tryJSON(raw) : null;
             dataCache.current[word].guessRaw = raw;
+            if (dataCache.current[word].guess && dataCache.current[word].teach) {
+              readyWordSet.add(word);
+              tryResolveEarlyStart();
+            }
           }).catch(function() {});
         });
         tasks.push(function() {
           return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
             dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
+            if (dataCache.current[word].guess && dataCache.current[word].teach) {
+              readyWordSet.add(word);
+              tryResolveEarlyStart();
+            }
           }).catch(function() {});
         });
         callAPIFast(sysP, buildSpectrumPrompt(word), { preferredProviders: preferred }).then(function(raw) {
@@ -908,13 +935,15 @@ export default function App() {
       })(w, wLrn, shardProviders[i % shardProviders.length]);
     }
 
+    tryResolveEarlyStart();
+
     var totalTasks = completed + tasks.length;
     setBatchTotal(totalTasks);
     setBatchProgress(completed);
 
     var running = 0;
     var taskIdx = 0;
-    await new Promise(function(resolve) {
+    var runAllPromise = new Promise(function(resolve) {
       if (tasks.length === 0) { resolve(); return; }
       function next() {
         while (running < dynamicCap && taskIdx < tasks.length) {
@@ -941,21 +970,29 @@ export default function App() {
       next();
     });
 
-    setBatchProgress(totalTasks);
-    setBatchTip("✅ " + total + " 个词全部就绪，开始学习！");
+    var finalizeBatch = function() {
+      setBatchProgress(totalTasks);
+      setBatchTip("✅ " + total + " 个词全部就绪，开始学习！");
+      try {
+        if (typeof window !== "undefined") {
+          var elapsedMs = Date.now() - batchStartedAtMs;
+          var currentCap = dynamicCap;
+          var nextCap = currentCap;
+          if (elapsedMs > 45000) nextCap = Math.max(2, currentCap - 1);
+          else if (elapsedMs < 20000) nextCap = Math.min(4, currentCap + 1);
+          localStorage.setItem(CONC_KEY, String(nextCap));
+        }
+      } catch (e) {}
+    };
 
-    // Adaptive concurrency tuning by real batch wall time (single-key safe defaults: 2~4)
-    try {
-      if (typeof window !== "undefined") {
-        var elapsedMs = Date.now() - batchStartedAtMs;
-        var currentCap = dynamicCap;
-        var nextCap = currentCap;
-        if (elapsedMs > 45000) nextCap = Math.max(2, currentCap - 1);
-        else if (elapsedMs < 20000) nextCap = Math.min(4, currentCap + 1);
-        localStorage.setItem(CONC_KEY, String(nextCap));
-      }
-    } catch (e) {}
+    if (enableEarlyStart) {
+      runAllPromise.then(function() { finalizeBatch(); }).catch(function() {});
+      await earlyStartPromise;
+      return;
+    }
 
+    await runAllPromise;
+    finalizeBatch();
     await new Promise(function(r) { setTimeout(r, 400); });
   };
 
@@ -1032,7 +1069,7 @@ export default function App() {
     dataCache.current = {};
     setScreen("learning");
     saveSession(words, startIdx, startLearned);
-    await loadBatch(startIdx, startLearned, words);
+    await loadBatch(startIdx, startLearned, words, { startThresholdWords: 2 });
     applyWordData(words[startIdx]);
   };
 
@@ -1165,7 +1202,7 @@ export default function App() {
   var afterReview = async function() {
     var nextIdx = idx + 1;
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); return; }
-    await loadBatch(nextIdx, learned);
+    await loadBatch(nextIdx, learned, undefined, { startThresholdWords: 2 });
     setIdx(nextIdx);
     applyWordData(wordList[nextIdx]);
   };
@@ -1182,7 +1219,7 @@ export default function App() {
     var nextIdx = idx + 1;
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); return; }
     if (userRef.current && learned.length >= 10 && !tipDismissed) { setShowTipJar(true); }
-    await loadBatch(nextIdx, learned);
+    await loadBatch(nextIdx, learned, undefined, { startThresholdWords: 2 });
     setIdx(nextIdx);
     applyWordData(wordList[nextIdx]);
   };
@@ -1260,7 +1297,7 @@ export default function App() {
       {hasSession && (
         <div style={{ ...S.card, background: C.tealLight, borderColor: C.teal, marginBottom: 14 }}>
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8, color: C.teal }}>📌 上次学到第 {idx+1} 个词（共 {wordList.length} 个）</div>
-          <button style={{ ...S.primaryBtn, background: C.teal }} onClick={async function() { setScreen("learning"); await loadBatch(idx, learned); applyWordData(wordList[idx]); }}>继续学习 →</button>
+          <button style={{ ...S.primaryBtn, background: C.teal }} onClick={async function() { setScreen("learning"); await loadBatch(idx, learned, undefined, { startThresholdWords: 2 }); applyWordData(wordList[idx]); }}>继续学习 →</button>
         </div>
       )}
 
@@ -1536,7 +1573,7 @@ export default function App() {
         </div>
       )}
 
-      {error && <div style={S.error}>{error}<button onClick={() => {setError("");loadBatch(idx, learned).then(function() { applyWordData(currentWord); });}} style={S.retryBtn}>🔄 重试</button></div>}
+      {error && <div style={S.error}>{error}<button onClick={() => {setError("");loadBatch(idx, learned, undefined, { startThresholdWords: 2 }).then(function() { applyWordData(currentWord); });}} style={S.retryBtn}>🔄 重试</button></div>}
 
       {phase === "batch_loading" && (
         <div style={{...S.card, textAlign:"center", padding:"40px 24px"}}>
