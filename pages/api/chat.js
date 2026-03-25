@@ -94,12 +94,17 @@ async function callProvider(provider, system, message, maxTokens = 2000, timeout
 
     const data = await response.json();
     const latency = Date.now() - startTime;
-    
+
     let text;
     if (provider === "gemini") {
       text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     } else {
       text = data.choices?.[0]?.message?.content || "";
+    }
+
+    if (!text) {
+      console.error(`[${provider}] Empty response text for system: ${system.substring(0, 50)}... message: ${message.substring(0, 50)}... full_response:`, JSON.stringify(data, null, 2));
+      throw new Error(`[${provider}] Empty response text from LLM`);
     }
 
     return { text, latency, provider };
@@ -195,15 +200,31 @@ async function compileChapter(words, learned = [], profile = {}) {
       // Guess task
       corePromises.push(
         requestWithBudget(SYSTEM_PROMPT, buildGuessPrompt(word, wordLearned), 1500, 25000)
-          .then(result => ({ word, type: 'guess', ...result }))
-          .catch(error => ({ word, type: 'guess', error: error.message }))
+          .then(result => {
+            if (result.error) {
+              console.error(`[ChapterFactory][GuessError] Word: ${word}, Error: ${result.error}`);
+            }
+            return { word, type: 'guess', ...result };
+          })
+          .catch(error => {
+            console.error(`[ChapterFactory][GuessBudgetFail] Word: ${word}, Error: ${error.message}`);
+            return { word, type: 'guess', error: error.message };
+          })
       );
       
       // Teach task  
       corePromises.push(
         requestWithBudget(SYSTEM_PROMPT, buildTeachPrompt(word, wordLearned), 2000, 30000)
-          .then(result => ({ word, type: 'teach', ...result }))
-          .catch(error => ({ word, type: 'teach', error: error.message }))
+          .then(result => {
+            if (result.error) {
+              console.error(`[ChapterFactory][TeachError] Word: ${word}, Error: ${result.error}`);
+            }
+            return { word, type: 'teach', ...result };
+          })
+          .catch(error => {
+            console.error(`[ChapterFactory][TeachBudgetFail] Word: ${word}, Error: ${error.message}`);
+            return { word, type: 'teach', error: error.message };
+          })
       );
     }
     
@@ -223,7 +244,16 @@ async function compileChapter(words, learned = [], profile = {}) {
         chapterMetrics.failures.push(`${result.word}:${result.type}`);
         coreFailures++;
       } else if (result.type === 'guess') {
-        const validated = validateGuessPayload(tryParseJSON(result.text));
+        const parsed = tryParseJSON(result.text);
+        if (!parsed) {
+          console.error(`[ChapterFactory][GuessJSONParseFail] Word: ${result.word}, Raw: ${result.text.substring(0, 200)}...`);
+          chapterMetrics.failures.push(`${result.word}:guess_json_fail`);
+        }
+        const validated = validateGuessPayload(parsed);
+        if (!validated) {
+          console.error(`[ChapterFactory][GuessValidationFail] Word: ${result.word}, Parsed:`, parsed);
+          chapterMetrics.failures.push(`${result.word}:guess_validation_fail`);
+        }
         chapterData[result.word].guess = validated;
         chapterData[result.word].guessRaw = result.text;
       } else if (result.type === 'teach') {
@@ -239,8 +269,27 @@ async function compileChapter(words, learned = [], profile = {}) {
     // Stage 2: Background spectrum tasks (non-blocking)
     const spectrumPromises = words.map(word => 
       requestWithBudget(SYSTEM_PROMPT, buildSpectrumPrompt(word), 1500, 20000)
-        .then(result => ({ word, spectrum: validateSpectrumPayload(tryParseJSON(result.text)) }))
-        .catch(() => ({ word, spectrum: null }))
+        .then(result => {
+          if (result.error) {
+            console.error(`[ChapterFactory][SpectrumError] Word: ${word}, Error: ${result.error}`);
+            return { word, spectrum: null };
+          }
+          const parsed = tryParseJSON(result.text);
+          if (!parsed) {
+            console.error(`[ChapterFactory][SpectrumJSONParseFail] Word: ${word}, Raw: ${result.text.substring(0, 200)}...`);
+            chapterMetrics.failures.push(`${word}:spectrum_json_fail`);
+          }
+          const validated = validateSpectrumPayload(parsed);
+          if (!validated) {
+            console.error(`[ChapterFactory][SpectrumValidationFail] Word: ${word}, Parsed:`, parsed);
+            chapterMetrics.failures.push(`${word}:spectrum_validation_fail`);
+          }
+          return { word, spectrum: validated };
+        })
+        .catch(error => {
+          console.error(`[ChapterFactory][SpectrumBudgetFail] Word: ${word}, Error: ${error.message}`);
+          return { word, spectrum: null };
+        })
     );
     
     const spectrumResults = await Promise.all(spectrumPromises);
@@ -257,14 +306,24 @@ async function compileChapter(words, learned = [], profile = {}) {
       try {
         const reviewResult = await requestWithBudget(SYSTEM_PROMPT, buildReviewPrompt(words), 1800, 25000);
         gates.review = tryParseJSON(reviewResult.text);
+        if (!gates.review) {
+          console.error(`[ChapterFactory][ReviewJSONParseFail] Raw: ${reviewResult.text.substring(0, 200)}...`);
+          chapterMetrics.failures.push(`review_json_fail`);
+        }
       } catch (e) {
+        console.error(`[ChapterFactory][ReviewBudgetFail] Error: ${e.message}`);
         gates.review = null;
       }
       
       try {
         const clozeResult = await requestWithBudget(SYSTEM_PROMPT, buildClozePrompt(words), 2000, 25000);
         gates.cloze = tryParseJSON(clozeResult.text);
+        if (!gates.cloze) {
+          console.error(`[ChapterFactory][ClozeJSONParseFail] Raw: ${clozeResult.text.substring(0, 200)}...`);
+          chapterMetrics.failures.push(`cloze_json_fail`);
+        }
       } catch (e) {
+        console.error(`[ChapterFactory][ClozeBudgetFail] Error: ${e.message}`);
         gates.cloze = null;
       }
     }
@@ -288,17 +347,17 @@ async function compileChapter(words, learned = [], profile = {}) {
     // Validate chapter completeness
     const readyCount = chapter.words.filter(w => w.guess && w.teach).length;
     if (readyCount < words.length * 0.8) {
+      console.error(`[ChapterFactory][FinalValidationFail] Chapter ID: ${chapter.chapterId}, Ready: ${readyCount}/${words.length}, Chapter Object:`, JSON.stringify(chapter, null, 2));
       throw new Error(`Chapter validation failed: only ${readyCount}/${words.length} words ready`);
     }
     
-    console.log(`Chapter compiled successfully in ${totalTime}ms: ${readyCount}/${words.length} words ready`);
+    console.log(`[ChapterFactory][Success] Chapter compiled successfully in ${totalTime}ms: ${readyCount}/${words.length} words ready, Chapter ID: ${chapter.chapterId}`);
+    console.log(`[ChapterFactory][SUCCESS_CHAPTER_OBJECT]`, JSON.stringify(chapter, null, 2));
     return chapter;
     
   } catch (error) {
     const totalTime = Date.now() - startTime;
-    console.error(`Chapter compilation failed after ${totalTime}ms:`, error.message);
-    
-    return {
+    const failedChapter = {
       chapterId: `ch_failed_${Date.now()}`,
       status: 'failed', 
       error: error.message,
@@ -308,6 +367,10 @@ async function compileChapter(words, learned = [], profile = {}) {
         metrics: chapterMetrics
       }
     };
+    console.error(`[ChapterFactory][Failure] Chapter compilation failed after ${totalTime}ms:`, error.message);
+    console.error(`[ChapterFactory][FAILED_CHAPTER_OBJECT]`, JSON.stringify(failedChapter, null, 2));
+    
+    return failedChapter;
   }
 }
 
