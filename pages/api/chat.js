@@ -55,7 +55,7 @@ async function applyProviderPacing(providerName) {
   slot.nextAt = Date.now() + slot.gapMs;
 }
 
-async function callProvider(provider, system, message, maxTokens) {
+async function callProvider(provider, system, message, maxTokens, timeoutMs) {
   const response = await fetch(provider.url, {
     method: "POST",
     headers: {
@@ -70,7 +70,7 @@ async function callProvider(provider, system, message, maxTokens) {
         { role: "user", content: message },
       ],
     }),
-    signal: AbortSignal.timeout(25000), // 25s timeout, Vercel limit is 30s
+    signal: AbortSignal.timeout(timeoutMs),
   });
 
   if (response.status === 429) {
@@ -91,12 +91,12 @@ async function callProvider(provider, system, message, maxTokens) {
   return text;
 }
 
-async function callWithRetry(provider, system, message, maxTokens) {
+async function callWithRetry(provider, system, message, maxTokens, timeoutMs) {
   // For 429 errors, retry up to 2 times with exponential backoff (1s, 2s)
   for (let attempt = 0; attempt <= 2; attempt++) {
     try {
       await applyProviderPacing(provider.name);
-      return await callProvider(provider, system, message, maxTokens);
+      return await callProvider(provider, system, message, maxTokens, timeoutMs);
     } catch (err) {
       if (err.status === 429 && attempt < 2) {
         await sleep(1000 * Math.pow(2, attempt)); // 1s, 2s
@@ -112,13 +112,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { system, message, maxTokens } = req.body;
+  const { system, message, maxTokens, preferredProviders } = req.body;
 
   if (!system || !message) {
     return res.status(400).json({ error: "Missing system or message" });
   }
 
   const tokens = maxTokens || 2000;
+  const timeoutMs = Number(process.env.CHAT_PROVIDER_TIMEOUT_MS || 15000);
   const errors = [];
   const providers = buildProviders();
   if (!providers.length) {
@@ -140,10 +141,17 @@ export default async function handler(req, res) {
     orderedProviders = providers;
   }
 
+  if (Array.isArray(preferredProviders) && preferredProviders.length > 0) {
+    const prefSet = new Set(preferredProviders);
+    const preferred = orderedProviders.filter((p) => prefSet.has(p.name));
+    const rest = orderedProviders.filter((p) => !prefSet.has(p.name));
+    orderedProviders = preferred.concat(rest);
+  }
+
   for (const provider of orderedProviders) {
     try {
       const t0 = Date.now();
-      const text = await callWithRetry(provider, system, message, tokens);
+      const text = await callWithRetry(provider, system, message, tokens, timeoutMs);
       res.setHeader("X-Provider", provider.name);
       res.setHeader("X-Provider-Family", provider.family || provider.name);
       res.setHeader("X-Provider-Latency-Ms", String(Date.now() - t0));

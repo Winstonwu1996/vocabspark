@@ -324,22 +324,34 @@ var AppHeroHeader = ({ stats }) => {
 };
 
 /* ─── API Calls (server-side proxy, key hidden) ─── */
-var callAPI = async (sys, msg) => {
+var callAPI = async (sys, msg, opts) => {
+  opts = opts || {};
   const response = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ system: sys, message: msg, maxTokens: 1200 }),
+    body: JSON.stringify({
+      system: sys,
+      message: msg,
+      maxTokens: 1200,
+      preferredProviders: opts.preferredProviders || undefined,
+    }),
   });
   const data = await response.json();
   if (data.error) throw new Error(data.error);
   return data.text;
 };
 
-var callAPIFast = async (sys, msg) => {
+var callAPIFast = async (sys, msg, opts) => {
+  opts = opts || {};
   const response = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ system: sys, message: msg, maxTokens: 1500 }),
+    body: JSON.stringify({
+      system: sys,
+      message: msg,
+      maxTokens: 1500,
+      preferredProviders: opts.preferredProviders || undefined,
+    }),
   });
   const data = await response.json();
   if (data.error) throw new Error(data.error);
@@ -860,29 +872,32 @@ export default function App() {
     var tasks = [];
     var completed = 0;
     var tipWordIdx = 0;
+    var shardProviders = ["deepseek-a", "deepseek-b"]; // A/B split for 5-word pack
     for (var i = 0; i < batchWords.length; i++) {
       var w = batchWords[i];
       if (dataCache.current[w]) { completed += 3; continue; }
       dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
       var wLrn = [...lrn, ...batchWords.slice(0, i)];
-      (function(word, learned) {
+      (function(word, learned, providerHint) {
+        var preferred = providerHint ? [providerHint] : undefined;
+        // Prioritize guess/spectrum first for faster perceived readiness.
         tasks.push(function() {
-          return callAPIFast(sysP, buildGuessPrompt(word, learned)).then(function(raw) {
+          return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
             dataCache.current[word].guess = raw ? tryJSON(raw) : null;
             dataCache.current[word].guessRaw = raw;
           }).catch(function() {});
         });
         tasks.push(function() {
-          return callAPI(sysP, buildTeachPrompt(word, learned)).then(function(raw) {
-            dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
-          }).catch(function() {});
-        });
-        tasks.push(function() {
-          return callAPIFast(sysP, buildSpectrumPrompt(word)).then(function(raw) {
+          return callAPIFast(sysP, buildSpectrumPrompt(word), { preferredProviders: preferred }).then(function(raw) {
             dataCache.current[word].spectrum = raw ? tryJSON(raw) : null;
           }).catch(function() {});
         });
-      })(w, wLrn);
+        tasks.push(function() {
+          return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
+            dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
+          }).catch(function() {});
+        });
+      })(w, wLrn, shardProviders[i % shardProviders.length]);
     }
 
     var totalTasks = completed + tasks.length;
