@@ -855,8 +855,13 @@ export default function App() {
       if (typeof ans === "string") ans = ans.trim().toUpperCase();
       if (!["A","B","C","D"].includes(ans)) ans = "A";
 
+      var ctx = String(obj.context || obj.question || "")
+        .replace(/\*\*(.*?)\*\*/g, "$1")
+        .replace(/`/g, "")
+        .replace(/_+\s*[^_]{1,60}\s*_+/g, "_____");
+
       return {
-        context: obj.context || obj.question || "",
+        context: ctx,
         options: mappedOptions,
         answer: ans,
         hint: obj.hint || obj.explanation || "",
@@ -1097,6 +1102,16 @@ export default function App() {
 
   var applyWordData = function(word) {
     var d = dataCache.current[word];
+    var ensureBlank = function(ctx, w) {
+      if (!ctx) return "";
+      if (/_+/.test(ctx)) return ctx;
+      try {
+        var esc = String(w).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        return String(ctx).replace(new RegExp("\\b" + esc + "\\b", "i"), "_____");
+      } catch {
+        return ctx;
+      }
+    };
     setGuessData(null); setSelectedOption(""); setGuessSubmitted(false);
     setShowHint(false); setTeachContent(""); setSpectrumData(null);
     setSpecSlots([null,null,null]); setSpecPool([]); setSpecStatus("idle");
@@ -1106,8 +1121,9 @@ export default function App() {
     setWordStart(Date.now());
 
     if (d?.guess?.context && d?.guess?.options) {
-      setGuessData(d.guess);
-      if (d.guess.phonetic) setPhonetic(d.guess.phonetic);
+      var g = { ...d.guess, context: ensureBlank(d.guess.context, word) };
+      setGuessData(g);
+      if (g.phonetic) setPhonetic(g.phonetic);
     } else {
       setGuessData({ context: (d?.guessRaw||"").substring(0,300) || "格式异常", options: null });
     }
@@ -1181,7 +1197,7 @@ export default function App() {
 
     save({ ...stats, total: stats.total+1, correct: stats.correct+(correct?1:0), streak: correct ? stats.streak+1 : 0, bestStreak: correct ? Math.max(stats.bestStreak, stats.streak+1) : stats.bestStreak, xp: stats.xp+(correct?15:5) });
 
-    setTimeout(function() { goToTeachWithFallback(); }, 800);
+    setTimeout(function() { goToTeachWithFallback(); }, 250);
   };
 
   var skipGuess = function() {
@@ -1765,7 +1781,7 @@ export default function App() {
                   return [
                     <span key={"t"+i}>{seg}</span>,
                     guessSubmitted
-                      ? <span key={"f"+i} style={{fontWeight:700, color: isCorrect ? C.green : C.red, display:"inline-block", animation:"fillIn 0.4s ease-out", padding:"0 2px", borderRadius:4, background: isCorrect ? C.greenLight : C.redLight}}>{guessData.answer}</span>
+                      ? <span key={"f"+i} style={{fontWeight:700, color: isCorrect ? C.green : C.red, display:"inline-block", animation:"fillIn 0.4s ease-out", padding:"0 2px", borderRadius:4, background: isCorrect ? C.greenLight : C.redLight}}>{currentWord}</span>
                       : <span key={"b"+i} style={{letterSpacing:3, color:C.textSec, fontWeight:700}}>___</span>
                   ];
                 })}
