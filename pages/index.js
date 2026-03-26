@@ -582,6 +582,7 @@ export default function App() {
   var [batchTip, setBatchTip] = useState("");
   var [batchUiPct, setBatchUiPct] = useState(0);
   var [smoothLessonPct, setSmoothLessonPct] = useState(0);
+  var [speedWaitSec, setSpeedWaitSec] = useState(0);
   var batchProgressR = useRef(0);
   var batchTotalR = useRef(0);
   var lessonProgressTargetRef = useRef(0);
@@ -888,8 +889,12 @@ export default function App() {
       if (!enableStreaming || earlyStartResolved) return;
       if (readyWordSet.size >= streamStartThreshold) {
         earlyStartResolved = true;
-        setBatchTip("✅ 第1个词已就绪，立即开始学习！后台继续准备其余词汇...");
-        if (resolveEarlyStart) resolveEarlyStart();
+        // UX-only smoothing: finish visual progress to 100 before entering learning
+        setBatchTip("✅ 首词已就绪，正在为你打开学习页面...");
+        setBatchProgress(function() { return batchTotalR.current || 0; });
+        setTimeout(function() {
+          if (resolveEarlyStart) resolveEarlyStart();
+        }, 520);
       }
     };
     var dynamicCap = 3;
@@ -1108,6 +1113,38 @@ export default function App() {
     }
   };
 
+  var waitAndEnterNextWord = async function(nextIdx, learnedSnapshot) {
+    var nextWord = wordList[nextIdx];
+    if (!nextWord) return;
+
+    var ready = function() {
+      var d = dataCache.current[nextWord];
+      return !!(d && d.guess && d.teach);
+    };
+
+    if (ready()) {
+      setIdx(nextIdx);
+      applyWordData(nextWord);
+      return;
+    }
+
+    setPhase("speed_wait");
+    setSpeedWaitSec(0);
+
+    var start = Date.now();
+    while (!ready() && Date.now() - start < 18000) {
+      setSpeedWaitSec(Math.floor((Date.now() - start) / 1000));
+      await new Promise(function(r) { setTimeout(r, 240); });
+    }
+
+    if (!ready()) {
+      await loadBatch(nextIdx, learnedSnapshot, undefined, { streaming: true });
+    }
+
+    setIdx(nextIdx);
+    applyWordData(nextWord);
+  };
+
   var goNextWord = async function() {
     // Check daily limit for guests
     if (!userRef.current) {
@@ -1184,8 +1221,7 @@ export default function App() {
 
     if (userRef.current && newLearned.length === 10 && !tipDismissed) { setShowTipJar(true); }
 
-    setIdx(nextIdx);
-    applyWordData(wordList[nextIdx]);
+    await waitAndEnterNextWord(nextIdx, newLearned);
   };
 
   var submitReview = () => {
@@ -1563,7 +1599,7 @@ export default function App() {
         </div>
       )}
 
-      {phase !== "review" && phase !== "done" && phase !== "batch_loading" && phase !== "cloze" && (
+      {phase !== "review" && phase !== "done" && phase !== "batch_loading" && phase !== "cloze" && phase !== "speed_wait" && (
         <div style={{...S.wordHeader, boxShadow: stats.streak >= 5 ? "0 0 0 2px "+C.gold+", 0 0 18px "+C.gold+"55" : C.shadow, border: stats.streak >= 5 ? "1px solid "+C.gold : "1px solid "+C.border, animation: stats.streak >= 5 ? "glowPulse 2s ease-in-out infinite" : "fadeUp 0.3s ease-out"}}>
           <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
             <h2 style={S.wordTitle}>{currentWord}</h2>
@@ -1590,6 +1626,19 @@ export default function App() {
             <div style={{height:"100%", background:"linear-gradient(90deg, "+C.accent+", "+C.gold+")", borderRadius:8, transition:"none", width: batchUiPct + "%"}} />
           </div>
           <div style={{fontSize:13, color:C.textSec}}>{Math.min(100, Math.round(batchUiPct))}%</div>
+        </div>
+      )}
+
+      {phase === "speed_wait" && (
+        <div style={{...S.card, textAlign:"center", padding:"34px 24px"}}>
+          <div style={S.tag}>⚡ 你太厉害了</div>
+          <p style={{fontSize:14, color:C.textSec, marginBottom:14, lineHeight:1.7}}>
+            你的学习速度比 AI 定制内容还快，正在补齐下一词，请稍等一下下哦～
+          </p>
+          <div style={{background:C.border, borderRadius:999, height:10, overflow:"hidden", marginBottom:10}}>
+            <div style={{height:"100%", width: (((speedWaitSec % 6) + 1) * 16) + "%", background:"linear-gradient(90deg, "+C.teal+", "+C.accent+")", borderRadius:999, transition:"width 0.42s ease"}} />
+          </div>
+          <div style={{fontSize:12, color:C.textSec}}>已等待 {speedWaitSec}s，马上进入</div>
         </div>
       )}
 
