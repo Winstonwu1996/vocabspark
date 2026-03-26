@@ -376,22 +376,36 @@ async function compileChapter(words, learned = [], profile = {}) {
 
 function tryParseJSON(text) {
   let cleanedText = text.trim();
+  console.log("tryParseJSON: Original text start: ", text.substring(0, 200));
   // First, try to parse the raw text directly
   try {
-    return JSON.parse(cleanedText);
+    const parsed = JSON.parse(cleanedText);
+    console.log("tryParseJSON: Direct parse SUCCESS");
+    return parsed;
   } catch (directParseError) {
+    console.log("tryParseJSON: Direct parse FAILED. Error:", directParseError.message);
     // If direct parsing fails, check if it's wrapped in a markdown code block
     if (cleanedText.startsWith('```json') && cleanedText.endsWith('```')) {
-      cleanedText = cleanedText.substring(cleanedText.indexOf('```json') + 7, cleanedText.lastIndexOf('```')).trim();
-      try {
-        return JSON.parse(cleanedText);
-      } catch (codeBlockParseError) {
-        console.error("JSON parse error (from code block) for text:", cleanedText.substring(0, 500), "Original text start:", text.substring(0, 200), "Error:", codeBlockParseError);
+      const contentStart = cleanedText.indexOf('```json') + 7; // Length of '```json\n'
+      const contentEnd = cleanedText.lastIndexOf('```');
+      if (contentEnd > contentStart) {
+        cleanedText = cleanedText.substring(contentStart, contentEnd).trim();
+        console.log("tryParseJSON: Extracted from code block. Cleaned text start: ", cleanedText.substring(0, 200));
+        try {
+          const parsed = JSON.parse(cleanedText);
+          console.log("tryParseJSON: Code block parse SUCCESS");
+          return parsed;
+        } catch (codeBlockParseError) {
+          console.error("JSON parse error (from code block) for text:\n", cleanedText.substring(0, 500), "\nOriginal text start:\n", text.substring(0, 200), "\nError:", codeBlockParseError);
+          return null;
+        }
+      } else {
+        console.error("JSON parse error (code block malformed: end ``` before start) Original text start:\n", text.substring(0, 200));
         return null;
       }
     } else {
       // Neither direct JSON nor markdown block, log full original text for debugging
-      console.error("JSON parse error (neither direct nor code block) for text:", cleanedText.substring(0, 500), "Original text start:", text.substring(0, 200), "Error:", directParseError);
+      console.error("JSON parse error (neither direct nor code block) for text:\n", cleanedText.substring(0, 500), "\nOriginal text start:\n", text.substring(0, 200), "\nError:", directParseError);
       return null;
     }
   }
