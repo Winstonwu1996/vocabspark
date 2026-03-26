@@ -214,7 +214,7 @@ async function compileChapter(words, learned = [], profile = {}) {
       
       // Teach task  
       corePromises.push(
-        requestWithBudget(SYSTEM_PROMPT, buildTeachPrompt(word, wordLearned), 2000, 30000)
+        requestWithBudget(SYSTEM_PROMPT, buildTeachPrompt(word, wordLearned), 2000, 45000) // Increased budget for teach
           .then(result => {
             if (result.error) {
               console.error(`[ChapterFactory][TeachError] Word: ${word}, Error: ${result.error}`);
