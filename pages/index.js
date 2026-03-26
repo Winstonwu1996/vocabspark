@@ -914,6 +914,22 @@ export default function App() {
     });
   };
 
+  var REVIEW_INTERVAL_DAYS = [1, 3, 7, 14, 30];
+  var addDaysISO = function(days) {
+    var d = new Date();
+    d.setDate(d.getDate() + days);
+    d.setHours(0,0,0,0);
+    return d.toISOString();
+  };
+  var isDueDate = function(iso) {
+    if (!iso) return false;
+    var t = new Date(iso).getTime();
+    if (!Number.isFinite(t)) return false;
+    var now = new Date();
+    now.setHours(0,0,0,0);
+    return t <= now.getTime();
+  };
+
   /* ─── BATCH LOAD: concurrency-limited (max 5) with real progress ─── */
   var loadBatch = async function(startIdx, lrn, words, opts) {
     opts = opts || {};
@@ -1257,6 +1273,8 @@ export default function App() {
         meaning: meaning || oldItem.meaning || "",
         firstLearnedAt: oldItem.firstLearnedAt || new Date().toISOString(),
         guessCorrect: guessCorrect,
+        reviewLevel: Number.isFinite(oldItem.reviewLevel) ? oldItem.reviewLevel : 0,
+        nextReviewDate: oldItem.nextReviewDate || addDaysISO(REVIEW_INTERVAL_DAYS[0]),
       });
       if (guessCorrect === true && !wordStatusMap[currentWord]) {
         updateManualWordStatus(currentWord, "mastered");
@@ -1387,12 +1405,17 @@ export default function App() {
     return function() { clearInterval(id); };
   }, [screen, progress]);
 
-  var startQuickReview = function() {
+  var startQuickReview = function(mode) {
+    mode = mode || "all"; // all | due | focus
     var words = parseWordsFromInput(wordInput);
     var queue = words
       .filter(function(w, i) {
         var s = getWordStatus(w, i, words);
-        return s !== "unlearned";
+        if (s === "unlearned") return false;
+        var d = reviewWordData[w] || {};
+        if (mode === "due") return isDueDate(d.nextReviewDate);
+        if (mode === "focus") return s === "uncertain" || s === "error";
+        return true;
       })
       .map(function(w) {
         var d = reviewWordData[w] || {};
@@ -1404,7 +1427,7 @@ export default function App() {
       });
 
     if (!queue.length) {
-      setError("暂无可复习单词，请先学习几个词");
+      setError(mode === "due" ? "今天没有到期复习词" : mode === "focus" ? "目前没有🟡/🔴重点词" : "暂无可复习单词，请先学习几个词");
       return;
     }
 
@@ -1424,8 +1447,14 @@ export default function App() {
     updateManualWordStatus(item.word, nextStatus);
 
     var oldItem = reviewWordData[item.word] || { reviewHistory: [] };
+    var prevLevel = Number.isFinite(oldItem.reviewLevel) ? oldItem.reviewLevel : 0;
+    var nextLevel = prevLevel;
+    if (result === "remembered") nextLevel = Math.min(REVIEW_INTERVAL_DAYS.length - 1, prevLevel + 1);
+    if (result === "forgot") nextLevel = 0;
+    var nextReviewDate = addDaysISO(REVIEW_INTERVAL_DAYS[nextLevel]);
+
     var hist = [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "quick", result: result }];
-    upsertReviewWordData(item.word, { reviewHistory: hist });
+    upsertReviewWordData(item.word, { reviewHistory: hist, reviewLevel: nextLevel, nextReviewDate: nextReviewDate });
 
     setQuickReviewStats(function(prev){ return { ...prev, [result]: (prev[result] || 0) + 1 }; });
 
@@ -1483,7 +1512,10 @@ export default function App() {
             🤔 模糊 {quickReviewStats.fuzzy} 个<br/>
             😵 忘了 {quickReviewStats.forgot} 个
           </div>
-          <button style={S.primaryBtn} onClick={() => setScreen("setup")}>← 返回词汇列表</button>
+          <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+            <button style={{...S.primaryBtn,background:C.red}} onClick={() => startQuickReview("focus")}>🔴 重点攻克</button>
+            <button style={S.primaryBtn} onClick={() => setScreen("setup")}>← 返回词汇列表</button>
+          </div>
         </div>
       </div></div>
     );
@@ -1598,10 +1630,14 @@ export default function App() {
           {(() => {
             var words = parseWordsFromInput(wordInput);
             var counts = { unlearned:0, learning:0, mastered:0, uncertain:0, error:0 };
+            var dueCount = 0;
             words.forEach(function(w, i){
               var s = getWordStatus(w, i, words);
               counts[s] = (counts[s] || 0) + 1;
+              var d = reviewWordData[w] || {};
+              if (isDueDate(d.nextReviewDate)) dueCount++;
             });
+            var focusCount = (counts.uncertain || 0) + (counts.error || 0);
             return <>
               <div style={{display:"flex",gap:10,flexWrap:"wrap",margin:"8px 0 10px",fontSize:12,color:C.textSec}}>
                 {Object.keys(WORD_STATUS_META).map(function(k){
@@ -1609,8 +1645,15 @@ export default function App() {
                   return <span key={k} style={{padding:"4px 8px",borderRadius:999,background:C.bg,border:"1px solid "+C.border,color:m.color,fontWeight:700}}>{m.icon} {m.text} {counts[k]||0}</span>;
                 })}
               </div>
-              <div style={{display:"flex",gap:10,margin:"0 0 10px"}}>
-                <button style={{...S.primaryBtn,background:C.teal}} onClick={startQuickReview}>🔄 快速复习已学词</button>
+              {dueCount > 0 && (
+                <div style={{background:C.tealLight,border:"1px solid "+C.teal,borderRadius:10,padding:"9px 12px",fontSize:13,margin:"0 0 10px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+                  <span style={{color:C.teal,fontWeight:700}}>📅 今天有 {dueCount} 个词需要复习</span>
+                  <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none"}} onClick={function(){startQuickReview("due");}}>开始快速复习 →</button>
+                </div>
+              )}
+              <div style={{display:"flex",gap:10,margin:"0 0 10px",flexWrap:"wrap"}}>
+                <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){startQuickReview("all");}}>🔄 快速复习已学词</button>
+                <button style={{...S.ghostBtn,borderColor:C.red,color:C.red}} onClick={function(){startQuickReview("focus");}}>🔴 重点攻克 {focusCount}</button>
               </div>
 
               <div style={{maxHeight:260,overflow:"auto",border:"1px solid "+C.border,borderRadius:12,background:C.bg,marginBottom:10}}>
