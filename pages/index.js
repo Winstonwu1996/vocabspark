@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V5-FACTORY</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V3.3</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -333,7 +333,7 @@ var callAPI = async (sys, msg, opts) => {
     body: JSON.stringify({
       system: sys,
       message: msg,
-      maxTokens: opts.maxTokens || 1200,
+      maxTokens: 1200,
       preferredProviders: opts.preferredProviders || undefined,
     }),
   });
@@ -350,7 +350,7 @@ var callAPIFast = async (sys, msg, opts) => {
     body: JSON.stringify({
       system: sys,
       message: msg,
-      maxTokens: opts.maxTokens || 1500,
+      maxTokens: 1500,
       preferredProviders: opts.preferredProviders || undefined,
     }),
   });
@@ -424,6 +424,7 @@ var PRESETS = {
 /* ─── Storage: localStorage ─── */
 var SKEY = "vocabspark_v1";         // permanent key — never change this
 var SKEY_OLD = "vocabspark_release_2"; // migration source
+var CONC_KEY = "vocabspark_concurrency_cap_v1";
 var loadSave = async () => {
   try {
     if (typeof window === "undefined") return null;
@@ -544,8 +545,6 @@ export default function App() {
 
   var [teachContent, setTeachContent] = useState("");
   var [spectrumData, setSpectrumData] = useState(null);
-  var [currentChapter, setCurrentChapter] = useState(null);
-  var [chapterStatus, setChapterStatus] = useState("idle"); // idle, compiling, ready, failed
   var [specSlots, setSpecSlots] = useState([null,null,null]);
   var [specPool, setSpecPool] = useState([]);
   var [specStatus, setSpecStatus] = useState("idle");
@@ -559,7 +558,6 @@ export default function App() {
   var [clozeSubmitted, setClozeSubmitted] = useState(false);
 
   var [loadingTip, setLoadingTip] = useState("");
-  var chapterCache = useRef({});
   var [phaseDir, setPhaseDir] = useState(1);
   var [showConfetti, setShowConfetti] = useState(false);
   var [showShare, setShowShare] = useState(false);
@@ -827,109 +825,42 @@ export default function App() {
     return tips[Math.floor(Math.random() * tips.length)];
   };
 
-  var validateGuessPayload = function(obj) {
-    if (!obj || typeof obj !== "object") return null;
-
-    // New API shape: { question, options:[...], answer, explanation }
-    if (obj.question && obj.options) {
-      var mapped = null;
-      if (Array.isArray(obj.options)) {
-        mapped = { A: "", B: "", C: "", D: "" };
-        ["A","B","C","D"].forEach(function(k, i) {
-          var raw = String(obj.options[i] || "").trim();
-          mapped[k] = raw.replace(new RegExp("^" + k + "[\\.、:)\\s-]*", "i"), "").trim();
-        });
-      } else if (typeof obj.options === "object") {
-        mapped = {
-          A: String(obj.options.A || "").trim(),
-          B: String(obj.options.B || "").trim(),
-          C: String(obj.options.C || "").trim(),
-          D: String(obj.options.D || "").trim(),
-        };
-      }
-      if (!mapped || !mapped.A || !mapped.B || !mapped.C || !mapped.D) return null;
-      var ans = String(obj.answer || "A").trim().toUpperCase();
-      if (!["A","B","C","D"].includes(ans)) ans = "A";
-      return {
-        context: String(obj.context || obj.question || ""),
-        options: mapped,
-        answer: ans,
-        hint: String(obj.hint || obj.explanation || ""),
-        phonetic: String(obj.phonetic || ""),
-      };
-    }
-
-    // Legacy shape: { context, options:{A..D}, answer, hint, phonetic }
-    if (!obj.context || !obj.options) return null;
-    var legacyAns = String(obj.answer || "A").trim().toUpperCase();
-    if (!["A","B","C","D"].includes(legacyAns)) legacyAns = Object.keys(obj.options || {})[0] || "A";
-    if (!obj.hint) obj.hint = "";
-    if (!obj.phonetic) obj.phonetic = "";
-    return {
-      context: obj.context,
-      options: obj.options,
-      answer: legacyAns,
-      hint: obj.hint,
-      phonetic: obj.phonetic,
-    };
-  };
-
-  var validateSpectrumPayload = function(obj) {
-    if (!Array.isArray(obj?.spectrum_words) || obj.spectrum_words.length !== 3) return null;
-    if (!obj.scenario) obj.scenario = "";
-    if (!obj.decoded) obj.decoded = "";
-    return obj;
-  };
-
-  var callWithRetry = async function(sys, msg, opts, retries) {
+  /* ─── BATCH LOAD: streaming with guaranteed first-word readiness ─── */
+  var loadBatch = async function(startIdx, lrn, words, opts) {
     opts = opts || {};
-    retries = retries || 0;
-    var TIMEOUT = opts.timeoutMs || 15000;
-    try {
-      return await Promise.race([
-        callAPI(sys, msg, opts),
-        new Promise(function(_, reject) { setTimeout(function() { reject(new Error("timeout")); }, TIMEOUT); }),
-      ]);
-    } catch (e) {
-      if (retries < 2) return callWithRetry(sys, msg, opts, retries + 1);
-      return null;
-    }
-  };
+    var wl = words || wordList;
+    var endIdx = Math.min(startIdx + 5, wl.length);
+    var batchWords = wl.slice(startIdx, endIdx);
+    var total = batchWords.length;
+    if (total === 0) return;
 
-  var makeChapterKey = function(startIdx, wl) {
-    var list = wl || wordList;
-    return String(startIdx) + "::" + list.slice(startIdx, Math.min(startIdx + 5, list.length)).join("|");
-  };
-
-  var cacheChapterPayload = function(startIdx, payload, wl) {
-    var list = wl || wordList;
-    var batchWords = list.slice(startIdx, Math.min(startIdx + 5, list.length));
-    batchWords.forEach(function(word, index) {
-      var item = payload?.words?.[index];
-      if (!item || item.word !== word) {
-        throw new Error("章节内容与词序不一致：" + word);
-      }
-      dataCache.current[word] = {
-        guess: validateGuessPayload(item.guess),
-        guessRaw: JSON.stringify(item.guess || {}),
-        teach: item.teach,
-        spectrum: item.spectrum,
-      };
-    });
-
-    var milestone = payload?.learnedCountAfter || 0;
-    if (payload?.review?.questions?.length) {
-      dataCache.current["_review_" + milestone] = payload.review;
-    }
-    if (payload?.cloze?.questions?.length) {
-      dataCache.current["_cloze_" + milestone] = payload.cloze;
+    var firstWord = batchWords[0];
+    var firstCached = !!(dataCache.current[firstWord]?.guess && dataCache.current[firstWord]?.teach);
+    if (!firstCached) {
+      setPhase("batch_loading");
+      setBatchTip(makeBatchTip(0, firstWord, total));
     }
 
-    chapterCache.current[makeChapterKey(startIdx, list)] = payload;
-  };
+    setBatchTotal(firstCached ? total : 1);
+    setBatchProgress(firstCached ? 1 : 0);
 
-  var preloadWordAudio = function(words) {
-    words.forEach(function(word) {
+    // ── Phase B: fire review/cloze pre-fetch independently (doesn't affect progress bar) ──
+    var endMilestone = lrn.length + batchWords.length;
+    var willCloze  = endMilestone % 10 === 0;
+    var willReview = endMilestone % 5 === 0 && !willCloze;
+    if (willReview && !dataCache.current["_review_" + endMilestone]) {
+      callAPIFast(sysP, buildReviewPrompt(batchWords))
+        .then(function(raw) { dataCache.current["_review_" + endMilestone] = tryJSON(raw) || null; })
+        .catch(function() {});
+    }
+    if (willCloze && !dataCache.current["_cloze_" + endMilestone]) {
+      callAPIFast(sysP, buildClozePrompt([...lrn.slice(-5), ...batchWords]))
+        .then(function(raw) { dataCache.current["_cloze_" + endMilestone] = tryJSON(raw) || null; })
+        .catch(function() {});
+    }
+
+    // ── Word audio pre-fetch: Free Dictionary API (fire and forget) ──
+    batchWords.forEach(function(word) {
       var w = word.toLowerCase();
       if (dictAudioCache[w]) return;
       fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(w))
@@ -943,145 +874,139 @@ export default function App() {
         })
         .catch(function() {});
     });
-  };
 
-  /* ─── CHAPTER FACTORY V5: Two-stage commit with complete chapter compilation ─── */
-  var loadBatch = async function(startIdx, lrn, words, opts) {
-    opts = opts || {};
-    var silent = !!opts.silent;
-    var wl = words || wordList;
-    var endIdx = Math.min(startIdx + 5, wl.length);
-    var batchWords = wl.slice(startIdx, endIdx);
-    var total = batchWords.length;
-    if (total === 0) return null;
-
-    var chapterKey = makeChapterKey(startIdx, wl);
-    var cachedChapter = chapterCache.current[chapterKey];
-    
-    // Check for complete cached chapter
-    if (cachedChapter?.status === 'ready' && cachedChapter.words?.length >= total) {
-      var allReady = cachedChapter.words.every(function(w) { return w.guess && w.teach; });
-      if (allReady) {
-        if (!silent) {
-          setBatchTotal(100);
-          setBatchProgress(100);
-          setBatchTip("✅ 本章节内容已就绪");
-        }
-        
-        // Cache individual word data for compatibility
-        cachedChapter.words.forEach(function(wordData) {
-          if (!dataCache.current[wordData.word]) {
-            dataCache.current[wordData.word] = {
-              guess: validateGuessPayload(wordData.guess),
-              guessRaw: wordData.guessRaw,
-              teach: wordData.teach ? addSpeakMarkers(wordData.teach) : null,
-              spectrum: wordData.spectrum
-            };
-          }
-        });
-        
-        preloadWordAudio(batchWords);
-        return { batchWords: batchWords, cached: true };
+    var tasks = [];
+    var completed = firstCached ? 1 : 0;
+    var tipWordIdx = 0;
+    var shardProviders = ["deepseek-a", "deepseek-b"]; // A/B split for 5-word pack
+    var batchStartedAtMs = Date.now();
+    var readyWordSet = new Set(firstCached ? [firstWord] : []);
+    var countedReady = new Set(firstCached ? [firstWord] : []);
+    var earlyStartResolved = false;
+    var resolveEarlyStart = null;
+    var earlyStartPromise = new Promise(function(r) { resolveEarlyStart = r; });
+    var tryResolveEarlyStart = function(word) {
+      if (earlyStartResolved) return;
+      if (word === firstWord && dataCache.current[firstWord]?.guess && dataCache.current[firstWord]?.teach) {
+        earlyStartResolved = true;
+        setBatchTotal(total);
+        setBatchProgress(Math.max(1, completed));
+        setBatchTip("✅ 第1个词已就绪，立即开始学习！后台继续准备其余词汇...");
+        if (resolveEarlyStart) resolveEarlyStart();
       }
-    }
-
-    if (!silent) {
-      setError("");
-      setLoading(true);
-      setPhase("batch_loading");
-      setBatchTotal(100);
-      setBatchProgress(0);
-      setBatchTip("🏭 正在编译本章节完整内容...");
-    }
-
-    var loadStartedAt = Date.now();
-    
-    // Progress simulation with real status updates
-    var progressTimer = setInterval(function() {
-      var elapsed = Date.now() - loadStartedAt;
-      
-      if (elapsed < 10000) {
-        var p = Math.min(30, Math.floor(elapsed / 333));
-        setBatchProgress(function(prev) { return Math.max(prev, p); });
-        setBatchTip("🔧 初始化章节编译器...");
-      } else if (elapsed < 25000) {
-        var p = 30 + Math.min(50, Math.floor((elapsed - 10000) / 300));
-        setBatchProgress(function(prev) { return Math.max(prev, p); });
-        setBatchTip("⚡ 并行生成核心内容...");
-      } else {
-        var p = 80 + Math.min(15, Math.floor((elapsed - 25000) / 1000));
-        setBatchProgress(function(prev) { return Math.max(prev, p); });
-        setBatchTip("🔍 验证章节完整性...");
-      }
-    }, 300);
-
+    };
+    var dynamicCap = 3;
     try {
-      var response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: "chapter_v5",
-          chapterWords: batchWords,
-          learned: lrn,
-          profile: profile,
-        }),
-      });
-      
-      var chapterResult = await response.json();
-      
-      if (!response.ok || chapterResult.status === 'failed') {
-        throw new Error(chapterResult.error || chapterResult.details || "章节编译失败");
+      if (typeof window !== "undefined") {
+        var savedCap = Number(localStorage.getItem(CONC_KEY) || "3");
+        dynamicCap = Math.max(2, Math.min(4, savedCap || 3));
       }
-      
-      if (chapterResult.status !== 'ready' || !chapterResult.words || chapterResult.words.length < total * 0.8) {
-        throw new Error("章节内容不完整");
-      }
-      
-      // Cache the complete chapter
-      chapterCache.current[chapterKey] = chapterResult;
-      
-      // Cache individual word data for compatibility  
-      chapterResult.words.forEach(function(wordData) {
-        if (!dataCache.current[wordData.word]) {
-          dataCache.current[wordData.word] = {
-            guess: validateGuessPayload(wordData.guess),
-            guessRaw: wordData.guessRaw,
-            teach: wordData.teach ? addSpeakMarkers(wordData.teach) : null,
-            spectrum: wordData.spectrum
-          };
+    } catch (e) {}
+    for (var i = 0; i < batchWords.length; i++) {
+      var w = batchWords[i];
+      if (dataCache.current[w]) {
+        if (dataCache.current[w].guess && dataCache.current[w].teach && !countedReady.has(w)) {
+          countedReady.add(w);
+          readyWordSet.add(w);
+          completed++;
         }
-      });
-      
-      // Cache gates for review/cloze
-      if (chapterResult.gates?.review) {
-        dataCache.current["_review_" + (startIdx + total)] = chapterResult.gates.review;
+        if (w === firstWord) tryResolveEarlyStart(w);
+        continue;
       }
-      if (chapterResult.gates?.cloze) {
-        dataCache.current["_cloze_" + (startIdx + total)] = chapterResult.gates.cloze;
-      }
-      
-      preloadWordAudio(batchWords);
-      
-      if (!silent) {
-        setBatchProgress(100);
-        var compileTime = chapterResult.metadata?.compileTimeMs || 0;
-        setBatchTip(`✅ 章节编译完成 (${Math.round(compileTime/1000)}s)`);
-        setLoading(false);
-      }
-      
-      return { batchWords: batchWords, chapter: chapterResult };
-      
-    } catch (e) {
-      if (!silent) {
-        setBatchProgress(0);
-        setBatchTip("❌ 章节编译失败");
-        setError("章节编译失败: " + e.message);
-        setLoading(false);
-      }
-      throw e;
-    } finally {
-      clearInterval(progressTimer);
+      dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
+      var wLrn = [...lrn, ...batchWords.slice(0, i)];
+      (function(word, learned, providerHint) {
+        var preferred = providerHint ? [providerHint] : undefined;
+        // Block on guess + teach; spectrum runs in background to preserve pack smoothness.
+        tasks.push(function() {
+          return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
+            dataCache.current[word].guess = raw ? tryJSON(raw) : null;
+            dataCache.current[word].guessRaw = raw;
+            if (dataCache.current[word].guess && dataCache.current[word].teach) {
+              readyWordSet.add(word);
+              if (!countedReady.has(word)) {
+                countedReady.add(word);
+                completed++;
+                setBatchProgress(completed);
+              }
+              tryResolveEarlyStart(word);
+            }
+          }).catch(function() {});
+        });
+        tasks.push(function() {
+          return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
+            dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
+            if (dataCache.current[word].guess && dataCache.current[word].teach) {
+              readyWordSet.add(word);
+              if (!countedReady.has(word)) {
+                countedReady.add(word);
+                completed++;
+                setBatchProgress(completed);
+              }
+              tryResolveEarlyStart(word);
+            }
+          }).catch(function() {});
+        });
+        callAPIFast(sysP, buildSpectrumPrompt(word), { preferredProviders: preferred }).then(function(raw) {
+          dataCache.current[word].spectrum = raw ? tryJSON(raw) : null;
+        }).catch(function() {});
+      })(w, wLrn, shardProviders[i % shardProviders.length]);
     }
+
+    tryResolveEarlyStart(firstWord);
+
+    var totalTasks = tasks.length;
+    setBatchProgress(completed);
+
+    var running = 0;
+    var taskIdx = 0;
+    var taskDone = 0;
+    var runAllPromise = new Promise(function(resolve) {
+      if (tasks.length === 0) { resolve(); return; }
+      function next() {
+        while (running < dynamicCap && taskIdx < tasks.length) {
+          running++;
+          var t = tasks[taskIdx++];
+          t().finally(function() {
+            running--;
+            taskDone++;
+            var prepPct = total > 0 ? Math.round((100 * completed) / total) : 0;
+            setBatchTip("🛠 AI 备课中... " + completed + "/" + total + " 词已就绪（" + prepPct + "%）");
+            if (taskDone >= totalTasks) {
+              resolve();
+            } else {
+              next();
+            }
+          });
+        }
+      }
+      next();
+    });
+
+    var finalizeBatch = function() {
+      setBatchProgress(total);
+      setBatchTip("✅ " + total + " 个词全部就绪，继续学习！");
+      try {
+        if (typeof window !== "undefined") {
+          var elapsedMs = Date.now() - batchStartedAtMs;
+          var currentCap = dynamicCap;
+          var nextCap = currentCap;
+          if (elapsedMs > 45000) nextCap = Math.max(2, currentCap - 1);
+          else if (elapsedMs < 20000) nextCap = Math.min(4, currentCap + 1);
+          localStorage.setItem(CONC_KEY, String(nextCap));
+        }
+      } catch (e) {}
+    };
+
+    if (enableStreaming) {
+      runAllPromise.then(function() { finalizeBatch(); }).catch(function() {});
+      await earlyStartPromise;
+      return;
+    }
+
+    await runAllPromise;
+    finalizeBatch();
+    await new Promise(function(r) { setTimeout(r, 400); });
   };
 
   var applyWordData = function(word) {
@@ -1105,61 +1030,6 @@ export default function App() {
     setPhaseDir(1); setPhase("guess");
   };
 
-  var goToTeachWithFallback = function() {
-    var c = dataCache.current[currentWord];
-    setTeachLoadFailed(false);
-    if (c?.teach) {
-      setTeachContent(c.teach);
-      if (c?.spectrum?.spectrum_words) setSpectrumData(c.spectrum);
-      setPhaseDir(1); setPhase("teach");
-      return;
-    }
-
-    // enter teach page first; keep loading state until teach ready
-    setTeachContent("");
-    setPhaseDir(1); setPhase("teach");
-    setLoading(true);
-    setLoadingTip("📖 正在编写专属讲解...");
-    var waited = 0;
-    var timer = setInterval(function() {
-      waited += 500;
-      var cc = dataCache.current[currentWord];
-      if (cc?.teach) {
-        clearInterval(timer);
-        setLoading(false);
-        setTeachContent(cc.teach);
-        if (cc?.spectrum?.spectrum_words) setSpectrumData(cc.spectrum);
-        setTeachLoadFailed(false);
-      } else if (waited >= 30000) {
-        clearInterval(timer);
-        fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            system: sysP,
-            message: buildTeachPrompt(currentWord, learned),
-            maxTokens: 2000
-          })
-        }).then(res => res.json()).then(function(data) {
-          var raw = data.text;
-          if (raw) {
-            var t = addSpeakMarkers(raw);
-            if (!dataCache.current[currentWord]) dataCache.current[currentWord] = { guess: null, guessRaw: null, teach: null, spectrum: null };
-            dataCache.current[currentWord].teach = t;
-            setTeachContent(t);
-            setTeachLoadFailed(false);
-          } else {
-            setError("讲解加载失败，请重试本章节");
-          }
-          setLoading(false);
-        }).catch(function() {
-          setLoading(false);
-          setError("讲解加载失败，请重试本章节");
-        });
-      }
-    }, 500);
-  };
-
   var submitGuess = function() {
     if (!selectedOption) return;
     setGuessSubmitted(true);
@@ -1170,12 +1040,12 @@ export default function App() {
 
     save({ ...stats, total: stats.total+1, correct: stats.correct+(correct?1:0), streak: correct ? stats.streak+1 : 0, bestStreak: correct ? Math.max(stats.bestStreak, stats.streak+1) : stats.bestStreak, xp: stats.xp+(correct?15:5) });
 
-    setTimeout(function() { goToTeachWithFallback(); }, 800);
+    setTimeout(function() { setPhaseDir(1); setPhase("teach"); }, 800);
   };
 
   var skipGuess = function() {
     save({ ...stats, total: stats.total+1, streak: 0, xp: stats.xp+3 });
-    goToTeachWithFallback();
+    setPhaseDir(1); setPhase("teach");
   };
 
   var handleFile = async (e) => {
@@ -1210,15 +1080,10 @@ export default function App() {
     var startLearned = startIdx > 0 ? words.slice(0, startIdx) : [];
     setWordList(words); setIdx(startIdx); setLearned(startLearned); setError("");
     dataCache.current = {};
-    chapterCache.current = {};
     setScreen("learning");
     saveSession(words, startIdx, startLearned);
-    try {
-      await loadBatch(startIdx, startLearned, words);
-      applyWordData(words[startIdx]);
-    } catch (e) {
-      setError(e.message || "章节生成失败，请重试");
-    }
+    await loadBatch(startIdx, startLearned, words, { streaming: true });
+    applyWordData(words[startIdx]);
   };
 
   var teachToSpectrum = () => {
@@ -1278,37 +1143,53 @@ export default function App() {
     saveSession(wordList, nextIdx, newLearned);
 
     if (newLearned.length > 0 && newLearned.length % 10 === 0) {
+      // Phase B: instant if pre-fetched during batch loading
       var cachedCloze = dataCache.current["_cloze_" + newLearned.length];
-      if (!cachedCloze?.questions) {
-        var clozeRaw = await callSingle(sysP, buildClozePrompt(newLearned.slice(-10)), { maxTokens: 1800, timeoutMs: 18000 });
-        cachedCloze = clozeRaw ? tryJSON(clozeRaw) : null;
-        if (cachedCloze?.questions) dataCache.current["_cloze_" + newLearned.length] = cachedCloze;
+      if (cachedCloze?.questions) {
+        setClozeData(cachedCloze); setClozeAnswers({}); setClozeSubmitted(false); setPhase("cloze"); return;
       }
-      if (!cachedCloze?.questions) {
-        setError("本章阅读挑战加载失败，可重试");
+      // Phase A: switch phase immediately so spinner shows, then fetch
+      setPhase("cloze"); setLoadingTip("📝 正在生成阅读理解短文...");
+      try {
+        var raw = await callAPIFast(sysP, buildClozePrompt(newLearned.slice(-10)));
+        var parsed = tryJSON(raw);
+        if (parsed?.questions) {
+          setClozeData(parsed); setClozeAnswers({}); setClozeSubmitted(false);
+        } else {
+          if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
+          else { sfx.complete(); setPhase("done"); }
+        }
+      } catch (e) {
+        setError(e.message || "阅读挑战生成失败，已自动继续学习");
         if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
         else { sfx.complete(); setPhase("done"); }
-        return;
       }
-      if (nextIdx < wordList.length) { loadBatch(nextIdx, newLearned, undefined, { silent: true }).catch(function() {}); }
-      setClozeData(cachedCloze); setClozeAnswers({}); setClozeSubmitted(false); setPhase("cloze"); return;
+      return;
     }
 
     if (newLearned.length > 0 && newLearned.length % 5 === 0) {
+      // Phase B: instant if pre-fetched during batch loading
       var cachedReview = dataCache.current["_review_" + newLearned.length];
-      if (!cachedReview?.questions) {
-        var reviewRaw = await callSingle(sysP, buildReviewPrompt(newLearned.slice(-5)), { maxTokens: 1600, timeoutMs: 15000 });
-        cachedReview = reviewRaw ? tryJSON(reviewRaw) : null;
-        if (cachedReview?.questions) dataCache.current["_review_" + newLearned.length] = cachedReview;
+      if (cachedReview?.questions) {
+        setReviewData(cachedReview); setReviewAnswers({}); setReviewSubmitted(false); setPhase("review"); return;
       }
-      if (!cachedReview?.questions) {
-        setError("本章复习关卡加载失败，可重试");
+      // Phase A: switch phase immediately so spinner shows, then fetch
+      setPhase("review"); setLoadingTip("🎮 设计互动复习挑战中...");
+      try {
+        var raw = await callAPIFast(sysP, buildReviewPrompt(newLearned.slice(-5)));
+        var parsed = tryJSON(raw);
+        if (parsed?.questions) {
+          setReviewData(parsed); setReviewAnswers({}); setReviewSubmitted(false);
+        } else {
+          if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
+          else { sfx.complete(); setPhase("done"); }
+        }
+      } catch (e) {
+        setError(e.message || "复习关卡生成失败，已自动继续学习");
         if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
         else { sfx.complete(); setPhase("done"); }
-        return;
       }
-      if (nextIdx < wordList.length) { loadBatch(nextIdx, newLearned, undefined, { silent: true }).catch(function() {}); }
-      setReviewData(cachedReview); setReviewAnswers({}); setReviewSubmitted(false); setPhase("review"); return;
+      return;
     }
 
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); saveSession(wordList, nextIdx, newLearned); return; }
@@ -1334,13 +1215,9 @@ export default function App() {
   var afterReview = async function() {
     var nextIdx = idx + 1;
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); return; }
-    try {
-      await loadBatch(nextIdx, learned);
-      setIdx(nextIdx);
-      applyWordData(wordList[nextIdx]);
-    } catch (e) {
-      setError(e.message || "下一章节生成失败，请重试");
-    }
+    await loadBatch(nextIdx, learned, undefined, { streaming: true });
+    setIdx(nextIdx);
+    applyWordData(wordList[nextIdx]);
   };
 
   var submitCloze = () => {
@@ -1355,13 +1232,9 @@ export default function App() {
     var nextIdx = idx + 1;
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); return; }
     if (userRef.current && learned.length >= 10 && !tipDismissed) { setShowTipJar(true); }
-    try {
-      await loadBatch(nextIdx, learned);
-      setIdx(nextIdx);
-      applyWordData(wordList[nextIdx]);
-    } catch (e) {
-      setError(e.message || "下一章节生成失败，请重试");
-    }
+    await loadBatch(nextIdx, learned, undefined, { streaming: true });
+    setIdx(nextIdx);
+    applyWordData(wordList[nextIdx]);
   };
 
   var progress = wordList.length > 0 ? ((idx + (["teach","spectrum","done"].includes(phase) ? 1 : 0)) / wordList.length) * 100 : 0;
@@ -1437,7 +1310,7 @@ export default function App() {
       {hasSession && (
         <div style={{ ...S.card, background: C.tealLight, borderColor: C.teal, marginBottom: 14 }}>
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8, color: C.teal }}>📌 上次学到第 {idx+1} 个词（共 {wordList.length} 个）</div>
-          <button style={{ ...S.primaryBtn, background: C.teal }} onClick={async function() { setScreen("learning"); try { await loadBatch(idx, learned); applyWordData(wordList[idx]); } catch (e) { setError(e.message || "章节生成失败，请重试"); } }}>继续学习 →</button>
+          <button style={{ ...S.primaryBtn, background: C.teal }} onClick={async function() { setScreen("learning"); await loadBatch(idx, learned, undefined, { streaming: true }); applyWordData(wordList[idx]); }}>继续学习 →</button>
         </div>
       )}
 
@@ -1722,7 +1595,7 @@ export default function App() {
         </div>
       )}
 
-      {error && <div style={S.error}>{error}<button onClick={() => {setError("");loadBatch(idx, learned).then(function() { applyWordData(currentWord); }).catch(function(e) { setError(e.message || "章节生成失败，请重试"); });}} style={S.retryBtn}>🔄 重试</button></div>}
+      {error && <div style={S.error}>{error}<button onClick={() => {setError("");loadBatch(idx, learned, undefined, { streaming: true }).then(function() { applyWordData(currentWord); });}} style={S.retryBtn}>🔄 重试</button></div>}
 
       {phase === "batch_loading" && (
         <div style={{...S.card, textAlign:"center", padding:"40px 24px"}}>
@@ -1779,7 +1652,7 @@ export default function App() {
 
       {phase === "teach" && <div style={{...S.card, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
         <div style={{...S.tag,background:C.tealLight,color:C.teal}}>📖 学习笔记</div>
-        {!teachContent ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}>{"📖 章节工厂模式：所有内容应已编译完成"}<div style={{marginTop:10}}><button style={S.retryBtn} onClick={() => window.location.reload()}>🔄 重新编译本章</button></div></div></div> : <>
+        {!teachContent ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}>{loadingTip||"📖 正在用你的生活场景编写专属讲解..."}</div></div> : <>
           <div style={{marginBottom:20}}><Md text={teachContent} /></div>
           <button style={S.primaryBtn} onClick={teachToSpectrum} disabled={loading}>{spectrumData?"🎮 词义光谱挑战 →":"→ 下一个词"}</button>
         </>}
