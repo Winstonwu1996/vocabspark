@@ -543,6 +543,7 @@ export default function App() {
   var [showTipJar, setShowTipJar] = useState(false);
   var [tipDismissed, setTipDismissed] = useState(false);
   var [showSettings, setShowSettings] = useState(false);
+  var [dailyNewWords, setDailyNewWords] = useState(20);
   var [profile, setProfile] = useState("");
   var [wordInput, setWordInput] = useState("");
   var [wordList, setWordList] = useState([]);
@@ -697,6 +698,7 @@ export default function App() {
   useEffect(function() {
     loadSave().then(function(d) {
       try {
+        if (d?.settings?.dailyNewWords) setDailyNewWords(d.settings.dailyNewWords);
         if (d?.profile) { setProfile(d.profile); setProfileLocked(true); }
         if (d?.stats) setStats(function(s) { return {...s, ...(d.stats||{})}; });
         if (d?.profile) setShowWelcome(false);
@@ -876,6 +878,15 @@ export default function App() {
       var data = {...(d||{}), profile, stats: s, session: session || d?.session};
       doSave(data);
       syncToCloud(data);
+    });
+  };
+
+  var updateDailyNewWords = (n) => {
+    setDailyNewWords(n);
+    loadSave().then(d => {
+      var nextData = {...(d||{}), settings: {...(d?.settings||{}), dailyNewWords: n}};
+      doSave(nextData);
+      syncToCloud(nextData);
     });
   };
 
@@ -1204,10 +1215,18 @@ export default function App() {
   };
 
   var startLearning = async function(resumeIdx) {
-    var words = wordInput.trim().split(/[\n,，、]+/).map(function(w) { return w.trim().toLowerCase(); }).filter(Boolean);
-    if (!words.length) { setError("请输入至少一个单词"); return; }
+    var rawWords = wordInput.trim().split(/[\n,，、]+/).map(function(w) { return w.trim().toLowerCase(); }).filter(Boolean);
+    if (!rawWords.length) { setError("请输入至少一个单词"); return; }
     if (!profile.trim()) { setError("请先填写并保存学生画像"); return; }
+    
     var startIdx = typeof resumeIdx === "number" ? resumeIdx : 0;
+    var words = rawWords;
+    if (startIdx === 0) {
+      var unlearned = rawWords.filter(w => !wordStatusMap[w] || wordStatusMap[w] === "unlearned");
+      if (unlearned.length === 0) unlearned = rawWords; 
+      words = unlearned.slice(0, dailyNewWords || 20);
+    }
+    
     var startLearned = startIdx > 0 ? words.slice(0, startIdx) : [];
     setWordList(words); setIdx(startIdx); setLearned(startLearned); setError("");
     dataCache.current = {};
@@ -1825,6 +1844,16 @@ export default function App() {
       {setupTab === "words" && (
         <div style={S.setupCard}>
           <div style={S.setupHint}>词汇管理面板：先看状态与复习，再按需编辑词表。<br/><span style={{color:C.accent}}>💡 已学词可手动标注 🟢🟡🔴，用于后续复习优先级。</span></div>
+
+          <div style={{margin:"8px 0 12px"}}>
+            <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"0 0 8px"}}>📅 每日新词数</div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              {[10,15,20,25,30,50].map(function(n){
+                var active = dailyNewWords===n;
+                return <button key={n} onClick={function(){updateDailyNewWords(n);}} style={active ? {...S.ghostBtn,background:C.accent,color:"#fff",borderColor:C.accent,padding:"7px 12px"} : {...S.ghostBtn,padding:"7px 12px"}}>{n}</button>;
+              })}
+            </div>
+          </div>
           <div style={S.uploadRow}>
             <button style={S.uploadBtn} onClick={() => fileRef.current?.click()}>📁 上传</button>
             <span style={{fontSize:13,color:C.textSec}}>{fileLabel||".xlsx .csv .txt 均支持"}</span>
@@ -2064,6 +2093,15 @@ export default function App() {
               {setupTab === "words" && (
                 <div>
                   <div style={S.setupHint}>学习中如需做标记/复习，建议进入「词汇状态面板」。修改词表后可重新开始。</div>
+
+                  <div style={{marginBottom:16}}>
+                    <div style={{fontWeight:700,fontSize:14,marginBottom:8}}>📅 每日新词数</div>
+                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                      {[10,15,20,25,30,50].map(n => (
+                        <button key={n} onClick={()=>updateDailyNewWords(n)} style={dailyNewWords===n ? {...S.ghostBtn, background:C.accent, color:"#fff", borderColor:C.accent, padding:"8px 14px"} : {...S.ghostBtn, padding:"8px 14px"}}>{n}</button>
+                      ))}
+                    </div>
+                  </div>
 
                   <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:12}}>
                     <button style={{...S.primaryBtn,background:C.teal}} onClick={() => { setShowSettings(false); setScreen("setup"); setSetupTab("words"); }}>🧭 打开词汇状态面板</button>
