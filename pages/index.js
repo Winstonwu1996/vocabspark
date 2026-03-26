@@ -827,12 +827,60 @@ export default function App() {
     return tips[Math.floor(Math.random() * tips.length)];
   };
 
+  var normalizeGuessPayload = function(obj) {
+    if (!obj || typeof obj !== "object") return null;
+
+    // New backend schema: { question, options: ["A...","B..."], answer, explanation }
+    if (obj.question && obj.options) {
+      var mappedOptions = null;
+
+      if (Array.isArray(obj.options)) {
+        mappedOptions = { A: "", B: "", C: "", D: "" };
+        ["A","B","C","D"].forEach(function(k, i) {
+          var raw = obj.options[i] || "";
+          mappedOptions[k] = String(raw).replace(new RegExp("^" + k + "[\\.、:)\\s-]*", "i"), "").trim();
+        });
+      } else if (typeof obj.options === "object") {
+        mappedOptions = {
+          A: obj.options.A || "",
+          B: obj.options.B || "",
+          C: obj.options.C || "",
+          D: obj.options.D || "",
+        };
+      }
+
+      if (!mappedOptions || !mappedOptions.A || !mappedOptions.B || !mappedOptions.C || !mappedOptions.D) return null;
+
+      var ans = obj.answer;
+      if (typeof ans === "string") ans = ans.trim().toUpperCase();
+      if (!["A","B","C","D"].includes(ans)) ans = "A";
+
+      return {
+        context: obj.context || obj.question || "",
+        options: mappedOptions,
+        answer: ans,
+        hint: obj.hint || obj.explanation || "",
+        phonetic: obj.phonetic || "",
+      };
+    }
+
+    // Legacy frontend schema: { context, options:{A..D}, answer, hint, phonetic }
+    if (!obj.context || !obj.options) return null;
+    var legacyAns = obj.answer;
+    if (typeof legacyAns === "string") legacyAns = legacyAns.trim().toUpperCase();
+    if (!["A","B","C","D"].includes(legacyAns)) legacyAns = Object.keys(obj.options || {})[0] || "A";
+
+    return {
+      context: obj.context,
+      options: obj.options,
+      answer: legacyAns,
+      hint: obj.hint || "",
+      phonetic: obj.phonetic || "",
+    };
+  };
+
   var validateGuessPayload = function(obj) {
-    if (!obj?.context || !obj?.options) return null;
-    if (!["A","B","C","D"].includes(obj.answer)) obj.answer = Object.keys(obj.options || {})[0] || "A";
-    if (!obj.hint) obj.hint = "";
-    if (!obj.phonetic) obj.phonetic = "";
-    return obj;
+    return normalizeGuessPayload(obj);
   };
 
   var validateSpectrumPayload = function(obj) {
@@ -870,8 +918,9 @@ export default function App() {
       if (!item || item.word !== word) {
         throw new Error("章节内容与词序不一致：" + word);
       }
+      var normalizedGuess = normalizeGuessPayload(item.guess);
       dataCache.current[word] = {
-        guess: item.guess,
+        guess: normalizedGuess,
         guessRaw: JSON.stringify(item.guess || {}),
         teach: item.teach,
         spectrum: item.spectrum,
@@ -933,7 +982,7 @@ export default function App() {
         cachedChapter.words.forEach(function(wordData) {
           if (!dataCache.current[wordData.word]) {
             dataCache.current[wordData.word] = {
-              guess: wordData.guess,
+              guess: normalizeGuessPayload(wordData.guess),
               guessRaw: wordData.guessRaw,
               teach: wordData.teach ? addSpeakMarkers(wordData.teach) : null,
               spectrum: wordData.spectrum
@@ -970,9 +1019,10 @@ export default function App() {
         setBatchProgress(function(prev) { return Math.max(prev, p); });
         setBatchTip("⚡ 并行生成核心内容...");
       } else {
-        var p = 80 + Math.min(15, Math.floor((elapsed - 25000) / 1000));
+        var p = 80 + Math.min(19, Math.floor((elapsed - 25000) / 1000));
         setBatchProgress(function(prev) { return Math.max(prev, p); });
-        setBatchTip("🔍 验证章节完整性...");
+        var sec = Math.floor(elapsed / 1000);
+        setBatchTip("🔍 正在做最终校验（约" + sec + "s）...");
       }
     }, 300);
 
@@ -1005,7 +1055,7 @@ export default function App() {
       chapterResult.words.forEach(function(wordData) {
         if (!dataCache.current[wordData.word]) {
           dataCache.current[wordData.word] = {
-            guess: wordData.guess,
+            guess: normalizeGuessPayload(wordData.guess),
             guessRaw: wordData.guessRaw,
             teach: wordData.teach ? addSpeakMarkers(wordData.teach) : null,
             spectrum: wordData.spectrum
