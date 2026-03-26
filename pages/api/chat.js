@@ -125,12 +125,12 @@ async function requestWithBudget(system, message, maxTokens, totalBudgetMs = 250
     if (remaining < 5000) break; // Not enough budget for another attempt
     
     try {
-      console.log(`[${provider}] attempting with ${remaining}ms budget remaining`);
+      console.log(`[${provider}] attempting with ${remaining}ms budget remaining, prompt_type: ${system.substring(0, 30)}...`);
       const result = await callProvider(provider, system, message, maxTokens, Math.min(remaining - 1000, 20000));
-      console.log(`[${provider}] success in ${result.latency}ms`);
+      console.log(`[${provider}] success in ${result.latency}ms, raw_text_start: ${result.text.substring(0, 100)}...`);
       return result;
     } catch (error) {
-      console.error(`[${provider}] failed: ${error.message}`);
+      console.error(`[${provider}] failed: ${error.message}, raw_error_text_start: ${error.message.substring(0, 100)}...`);
       continue;
     }
   }
@@ -375,13 +375,25 @@ async function compileChapter(words, learned = [], profile = {}) {
 }
 
 function tryParseJSON(text) {
-  // Remove markdown code block if present
-  const cleanedText = text.replace(/```json\n([\s\S]*?)\n```/, '$1').trim();
+  let cleanedText = text.trim();
+  // First, try to parse the raw text directly
   try {
     return JSON.parse(cleanedText);
-  } catch (e) {
-    console.error("JSON parse error for text:", cleanedText.substring(0, 500), "Error:", e);
-    return null;
+  } catch (directParseError) {
+    // If direct parsing fails, check if it's wrapped in a markdown code block
+    if (cleanedText.startsWith('```json') && cleanedText.endsWith('```')) {
+      cleanedText = cleanedText.substring(cleanedText.indexOf('```json') + 7, cleanedText.lastIndexOf('```')).trim();
+      try {
+        return JSON.parse(cleanedText);
+      } catch (codeBlockParseError) {
+        console.error("JSON parse error (from code block) for text:", cleanedText.substring(0, 500), "Original text start:", text.substring(0, 200), "Error:", codeBlockParseError);
+        return null;
+      }
+    } else {
+      // Neither direct JSON nor markdown block, log full original text for debugging
+      console.error("JSON parse error (neither direct nor code block) for text:", cleanedText.substring(0, 500), "Original text start:", text.substring(0, 200), "Error:", directParseError);
+      return null;
+    }
   }
 }
 
