@@ -828,11 +828,50 @@ export default function App() {
   };
 
   var validateGuessPayload = function(obj) {
-    if (!obj?.context || !obj?.options) return null;
-    if (!["A","B","C","D"].includes(obj.answer)) obj.answer = Object.keys(obj.options || {})[0] || "A";
+    if (!obj || typeof obj !== "object") return null;
+
+    // New API shape: { question, options:[...], answer, explanation }
+    if (obj.question && obj.options) {
+      var mapped = null;
+      if (Array.isArray(obj.options)) {
+        mapped = { A: "", B: "", C: "", D: "" };
+        ["A","B","C","D"].forEach(function(k, i) {
+          var raw = String(obj.options[i] || "").trim();
+          mapped[k] = raw.replace(new RegExp("^" + k + "[\\.、:)\\s-]*", "i"), "").trim();
+        });
+      } else if (typeof obj.options === "object") {
+        mapped = {
+          A: String(obj.options.A || "").trim(),
+          B: String(obj.options.B || "").trim(),
+          C: String(obj.options.C || "").trim(),
+          D: String(obj.options.D || "").trim(),
+        };
+      }
+      if (!mapped || !mapped.A || !mapped.B || !mapped.C || !mapped.D) return null;
+      var ans = String(obj.answer || "A").trim().toUpperCase();
+      if (!["A","B","C","D"].includes(ans)) ans = "A";
+      return {
+        context: String(obj.context || obj.question || ""),
+        options: mapped,
+        answer: ans,
+        hint: String(obj.hint || obj.explanation || ""),
+        phonetic: String(obj.phonetic || ""),
+      };
+    }
+
+    // Legacy shape: { context, options:{A..D}, answer, hint, phonetic }
+    if (!obj.context || !obj.options) return null;
+    var legacyAns = String(obj.answer || "A").trim().toUpperCase();
+    if (!["A","B","C","D"].includes(legacyAns)) legacyAns = Object.keys(obj.options || {})[0] || "A";
     if (!obj.hint) obj.hint = "";
     if (!obj.phonetic) obj.phonetic = "";
-    return obj;
+    return {
+      context: obj.context,
+      options: obj.options,
+      answer: legacyAns,
+      hint: obj.hint,
+      phonetic: obj.phonetic,
+    };
   };
 
   var validateSpectrumPayload = function(obj) {
@@ -871,7 +910,7 @@ export default function App() {
         throw new Error("章节内容与词序不一致：" + word);
       }
       dataCache.current[word] = {
-        guess: item.guess,
+        guess: validateGuessPayload(item.guess),
         guessRaw: JSON.stringify(item.guess || {}),
         teach: item.teach,
         spectrum: item.spectrum,
@@ -933,7 +972,7 @@ export default function App() {
         cachedChapter.words.forEach(function(wordData) {
           if (!dataCache.current[wordData.word]) {
             dataCache.current[wordData.word] = {
-              guess: wordData.guess,
+              guess: validateGuessPayload(wordData.guess),
               guessRaw: wordData.guessRaw,
               teach: wordData.teach ? addSpeakMarkers(wordData.teach) : null,
               spectrum: wordData.spectrum
@@ -1005,7 +1044,7 @@ export default function App() {
       chapterResult.words.forEach(function(wordData) {
         if (!dataCache.current[wordData.word]) {
           dataCache.current[wordData.word] = {
-            guess: wordData.guess,
+            guess: validateGuessPayload(wordData.guess),
             guessRaw: wordData.guessRaw,
             teach: wordData.teach ? addSpeakMarkers(wordData.teach) : null,
             spectrum: wordData.spectrum
