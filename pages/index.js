@@ -557,6 +557,9 @@ export default function App() {
   var [deepReviewIdx, setDeepReviewIdx] = useState(0);
   var [deepReviewContent, setDeepReviewContent] = useState("");
   var [deepReviewLoading, setDeepReviewLoading] = useState(false);
+  var [deepQuiz, setDeepQuiz] = useState(null);
+  var [deepQuizSelect, setDeepQuizSelect] = useState("");
+  var [deepQuizSubmitted, setDeepQuizSubmitted] = useState(false);
   var fileRef = useRef(null);
   var [setupTab, setSetupTab] = useState("profile");
   var [profileLocked, setProfileLocked] = useState(false);
@@ -1507,15 +1510,39 @@ export default function App() {
     setScreen("deep_review");
   };
 
+  var parseDeepQuiz = function(text) {
+    if (!text) return null;
+    var lines = String(text).split(/\n+/).map(function(s){ return s.trim(); }).filter(Boolean);
+    var qIdx = lines.findIndex(function(l){ return /ssat|选择题|single choice|question/i.test(l); });
+    var pool = qIdx >= 0 ? lines.slice(qIdx) : lines;
+    var opts = pool.filter(function(l){ return /^[A-D][\).、:：\s]/i.test(l); }).slice(0,4);
+    if (opts.length < 2) return null;
+    var question = (qIdx >= 0 ? lines[qIdx] : "SSAT 仿真题")
+      .replace(/^#+\s*/, "");
+    var answerLine = lines.find(function(l){ return /答案|answer/i.test(l); }) || "";
+    var answerMatch = answerLine.match(/[A-D]/i);
+    var answer = answerMatch ? answerMatch[0].toUpperCase() : "";
+    var mapped = opts.map(function(l){
+      var m = l.match(/^([A-D])[\).、:：\s]*(.*)$/i);
+      return { key: m ? m[1].toUpperCase() : "", text: m ? m[2] : l };
+    }).filter(function(o){ return o.key; });
+    return { question: question, options: mapped, answer: answer };
+  };
+
   var loadDeepReviewContent = async function(word) {
     if (!word) return;
     setDeepReviewLoading(true);
     setDeepReviewContent("");
+    setDeepQuiz(null);
+    setDeepQuizSelect("");
+    setDeepQuizSubmitted(false);
     try {
       var d = reviewWordData[word] || {};
       var reviewCount = (d.reviewHistory || []).length + 1;
       var raw = await callAPIFast(sysP, buildReviewTeachPrompt(word, learned, reviewCount));
-      setDeepReviewContent(raw || "生成失败，请重试");
+      var text = raw || "生成失败，请重试";
+      setDeepReviewContent(text);
+      setDeepQuiz(parseDeepQuiz(text));
     } catch (e) {
       setDeepReviewContent("生成失败，请重试");
     } finally {
@@ -1579,6 +1606,14 @@ export default function App() {
 
   if (screen === "deep_review") {
     var dw = deepReviewQueue[deepReviewIdx];
+    var moveNext = function(){
+      var oldItem = reviewWordData[dw] || { reviewHistory: [] };
+      var hist = [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "deep", result: "relearned" }];
+      upsertReviewWordData(dw, { reviewHistory: hist, nextReviewDate: addDaysISO(REVIEW_INTERVAL_DAYS[1]) });
+      updateManualWordStatus(dw, "uncertain");
+      var n = deepReviewIdx + 1;
+      if (n >= deepReviewQueue.length) setScreen("setup"); else setDeepReviewIdx(n);
+    };
     return (
       <div style={S.root}><div style={S.container}>
         <div style={S.topBar}><button style={S.backBtn} onClick={() => setScreen("setup")}>←</button><div style={{fontSize:13,color:C.textSec}}>重点攻克 {deepReviewIdx+1}/{deepReviewQueue.length}</div></div>
@@ -1586,8 +1621,29 @@ export default function App() {
           <div style={{...S.tag, background:C.redLight, color:C.red}}>🔴 深度复习</div>
           <h2 style={{fontSize:30,margin:"8px 0 10px"}}>{dw}</h2>
           {deepReviewLoading ? <div style={S.loadingBox}><span style={S.spinner}/><div>AI 正在生成复习讲解...</div></div> : <div style={{marginBottom:16}}><Md text={deepReviewContent || "暂无内容"} /></div>}
+
+          {!deepReviewLoading && deepQuiz && (
+            <div style={{border:"1px solid "+C.border,borderRadius:12,padding:"12px 12px",background:C.bg,marginBottom:12}}>
+              <div style={{fontWeight:700,marginBottom:8}}>🧪 SSAT 仿真题</div>
+              <div style={{fontSize:14,lineHeight:1.7,marginBottom:10}}>{deepQuiz.question}</div>
+              <div style={{display:"grid",gap:8}}>
+                {deepQuiz.options.map(function(op){
+                  var picked = deepQuizSelect === op.key;
+                  var ok = deepQuizSubmitted && op.key === deepQuiz.answer;
+                  var bad = deepQuizSubmitted && picked && op.key !== deepQuiz.answer;
+                  return <button key={op.key} disabled={deepQuizSubmitted} onClick={function(){setDeepQuizSelect(op.key);}} style={{...S.optionBtn,justifyContent:"flex-start",background:ok?C.greenLight:bad?C.redLight:picked?C.accentLight:C.bg,borderColor:ok?C.green:bad?C.red:picked?C.accent:C.border,color:ok?C.green:bad?C.red:C.text}}><span style={S.optionKey}>{op.key}</span>{op.text}</button>;
+                })}
+              </div>
+              {!deepQuizSubmitted ? (
+                <div style={{marginTop:10}}><button style={S.primaryBtn} disabled={!deepQuizSelect} onClick={function(){setDeepQuizSubmitted(true);}}>提交答案</button></div>
+              ) : (
+                <div style={{marginTop:10,fontSize:13,color:C.textSec}}>正确答案：<b>{deepQuiz.answer || "未提供"}</b></div>
+              )}
+            </div>
+          )}
+
           <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-            <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){ updateManualWordStatus(dw, "uncertain"); var n = deepReviewIdx + 1; if (n >= deepReviewQueue.length) setScreen("setup"); else setDeepReviewIdx(n); }}>完成，标记🟡</button>
+            <button style={{...S.primaryBtn,background:C.teal}} onClick={moveNext}>完成，标记🟡</button>
             <button style={S.ghostBtn} onClick={function(){ var n = deepReviewIdx + 1; if (n >= deepReviewQueue.length) setScreen("setup"); else setDeepReviewIdx(n); }}>跳过下一个</button>
           </div>
         </div>
