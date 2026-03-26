@@ -1502,6 +1502,7 @@ export default function App() {
     });
     if (!queue.length) {
       setError("目前没有可进行深度复习的🟡/🔴词");
+      setScreen("setup");
       return;
     }
     setDeepReviewQueue(queue);
@@ -1784,7 +1785,7 @@ export default function App() {
               )}
               <div style={{display:"flex",gap:10,margin:"0 0 12px",flexWrap:"wrap"}}>
                 <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){startQuickReview("all");}}>🔄 快速复习已学词</button>
-                <button style={{...S.primaryBtn,background:C.red}} onClick={function(){startQuickReview("focus");}}>🔴 重点攻克 {focusCount}</button>
+                <button style={{...S.primaryBtn,background:C.red}} onClick={startDeepReview}>🔴 重点攻克 {focusCount}</button>
               </div>
 
               <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"0 0 8px"}}>词汇状态</div>
