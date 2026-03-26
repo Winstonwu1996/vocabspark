@@ -561,6 +561,7 @@ export default function App() {
   var [deepQuizSelect, setDeepQuizSelect] = useState("");
   var [deepQuizSubmitted, setDeepQuizSubmitted] = useState(false);
   var [deepLoadSec, setDeepLoadSec] = useState(0);
+  var [deepSessionStats, setDeepSessionStats] = useState({ remembered:0, fuzzy:0, forgot:0 });
   var deepReviewCacheRef = useRef({});
   var deepReviewInflightRef = useRef({});
   var fileRef = useRef(null);
@@ -1511,12 +1512,14 @@ export default function App() {
     });
     if (!queue.length) {
       setError("目前没有可进行深度复习的🟡/🔴词");
+      setSetupTab("words");
       setScreen("setup");
       return;
     }
     setDeepReviewQueue(queue);
     setDeepReviewIdx(0);
     setDeepReviewContent("");
+    setDeepSessionStats({ remembered:0, fuzzy:0, forgot:0 });
     setScreen("deep_review");
   };
 
@@ -1662,8 +1665,9 @@ export default function App() {
       var hist = [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "deep", result: result }];
       upsertReviewWordData(dw, { reviewHistory: hist, reviewLevel: nextLevel, nextReviewDate: addDaysISO(REVIEW_INTERVAL_DAYS[nextLevel]) });
       updateManualWordStatus(dw, statusMap[result] || "uncertain");
+      setDeepSessionStats(function(prev){ return { ...prev, [result]: (prev[result] || 0) + 1 }; });
       var n = deepReviewIdx + 1;
-      if (n >= deepReviewQueue.length) setScreen("setup"); else setDeepReviewIdx(n);
+      if (n >= deepReviewQueue.length) setScreen("deep_review_done"); else setDeepReviewIdx(n);
     };
     return (
       <div style={S.root}><div style={S.container}>
@@ -1697,6 +1701,25 @@ export default function App() {
             <button style={{...S.primaryBtn,background:C.green,borderColor:C.green,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("remembered");}}>😎 已稳住</button>
             <button style={{...S.primaryBtn,background:C.gold,borderColor:C.gold,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("fuzzy");}}>🤔 还模糊</button>
             <button style={{...S.primaryBtn,background:C.red,borderColor:C.red,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("forgot");}}>😵 仍不会</button>
+          </div>
+        </div>
+      </div></div>
+    );
+  }
+
+  if (screen === "deep_review_done") {
+    return (
+      <div style={S.root}><div style={S.container}>
+        <div style={{...S.card,textAlign:"center",padding:"30px 20px"}}>
+          <div style={{...S.tag,background:C.redLight,color:C.red}}>✅ 重点攻克完成</div>
+          <div style={{fontSize:15,lineHeight:2,margin:"10px 0 14px"}}>
+            <span style={{color:C.green,fontWeight:700}}>😎 已稳住 {deepSessionStats.remembered} 个</span><br/>
+            <span style={{color:C.gold,fontWeight:700}}>🤔 还模糊 {deepSessionStats.fuzzy} 个</span><br/>
+            <span style={{color:C.red,fontWeight:700}}>😵 仍不会 {deepSessionStats.forgot} 个</span>
+          </div>
+          <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+            <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){startQuickReview("due");}}>继续今日复习</button>
+            <button style={S.primaryBtn} onClick={() => { setSetupTab("words"); setScreen("setup"); }}>返回词汇状态</button>
           </div>
         </div>
       </div></div>
