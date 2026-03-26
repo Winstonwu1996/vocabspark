@@ -603,20 +603,40 @@ export default function App() {
     }
     batchLoadStartRef.current = typeof performance !== "undefined" ? performance.now() : 0;
     setBatchUiPct(0);
+
     var id = setInterval(function() {
       var tot = batchTotalR.current;
       var prog = batchProgressR.current;
       var real = tot > 0 ? (100 * prog) / tot : 0;
       var elapsed = (typeof performance !== "undefined" ? performance.now() : 0) - batchLoadStartRef.current;
-      var fakeCap = Math.min(7, elapsed / 420);
-      var target = tot <= 0 ? 0 : (real > 0 ? Math.max(real, fakeCap) : fakeCap);
+
+      // UX curve: front slow, back fast, continuous (independent from discrete task jumps)
+      var fake;
+      if (elapsed < 12000) {
+        // 0 -> 22
+        var t1 = elapsed / 12000;
+        fake = 22 * (1 - Math.pow(1 - t1, 2));
+      } else if (elapsed < 36000) {
+        // 22 -> 78
+        var t2 = (elapsed - 12000) / 24000;
+        fake = 22 + 56 * t2;
+      } else {
+        // 78 -> 95 (slow finish before final release)
+        var t3 = Math.min(1, (elapsed - 36000) / 14000);
+        fake = 78 + 17 * t3;
+      }
+
+      var target = real >= 100 ? 100 : fake;
+
       setBatchUiPct(function(d) {
-        var next = d + (target - d) * 0.14;
-        if (Math.abs(target - next) < 0.35) next = target;
+        var alpha = target < 85 ? 0.08 : 0.18; // back-half accelerates
+        var next = d + (target - d) * alpha;
+        if (Math.abs(target - next) < 0.25) next = target;
         if (next > 100) next = 100;
         return next;
       });
     }, 48);
+
     return function() { clearInterval(id); };
   }, [phase]);
   useEffect(function() { if (topRef.current) topRef.current.scrollIntoView({ behavior:"smooth", block:"start" }); }, [phase, idx]);
