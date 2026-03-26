@@ -1546,10 +1546,10 @@ export default function App() {
               <div style={{margin:"8px 0 16px",padding:"12px 14px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,textAlign:"left",lineHeight:1.7}}>
                 释义：{qr?.meaning || "（暂无）"}
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                <button style={S.primaryBtn} onClick={() => markQuickReview("remembered")}>😎 记得</button>
-                <button style={S.ghostBtn} onClick={() => markQuickReview("fuzzy")}>🤔 模糊</button>
-                <button style={{...S.ghostBtn,gridColumn:"span 2",borderColor:C.red,color:C.red}} onClick={() => markQuickReview("forgot")}>😵 忘了</button>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                <button style={{...S.primaryBtn,background:C.green,borderColor:C.green,justifyContent:"center",padding:"10px 8px"}} onClick={() => markQuickReview("remembered")}>😎 记得</button>
+                <button style={{...S.primaryBtn,background:C.gold,borderColor:C.gold,justifyContent:"center",padding:"10px 8px"}} onClick={() => markQuickReview("fuzzy")}>🤔 模糊</button>
+                <button style={{...S.primaryBtn,background:C.red,borderColor:C.red,justifyContent:"center",padding:"10px 8px"}} onClick={() => markQuickReview("forgot")}>😵 忘了</button>
               </div>
             </>
           )}
@@ -1564,9 +1564,9 @@ export default function App() {
         <div style={{...S.card,textAlign:"center",padding:"30px 20px"}}>
           <div style={S.tag}>📊 复习完成</div>
           <div style={{fontSize:15,lineHeight:2,margin:"10px 0 14px"}}>
-            😎 记得 {quickReviewStats.remembered} 个<br/>
-            🤔 模糊 {quickReviewStats.fuzzy} 个<br/>
-            😵 忘了 {quickReviewStats.forgot} 个
+            <span style={{color:C.green,fontWeight:700}}>😎 记得 {quickReviewStats.remembered} 个</span><br/>
+            <span style={{color:C.gold,fontWeight:700}}>🤔 模糊 {quickReviewStats.fuzzy} 个</span><br/>
+            <span style={{color:C.red,fontWeight:700}}>😵 忘了 {quickReviewStats.forgot} 个</span>
           </div>
           <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
             <button style={{...S.primaryBtn,background:C.red}} onClick={startDeepReview}>🔴 重点攻克</button>
@@ -1693,7 +1693,7 @@ export default function App() {
       )}
       {setupTab === "words" && (
         <div style={S.setupCard}>
-          <div style={S.setupHint}>上传 CSV/TXT 文件、选预设，或手动输入（每行一个单词）<br/><span style={{color:C.accent}}>💡 状态视图已启用：可对已学词手动标注 🟢🟡🔴</span></div>
+          <div style={S.setupHint}>词汇管理面板：先看状态与复习，再按需编辑词表。<br/><span style={{color:C.accent}}>💡 已学词可手动标注 🟢🟡🔴，用于后续复习优先级。</span></div>
           <div style={S.uploadRow}>
             <button style={S.uploadBtn} onClick={() => fileRef.current?.click()}>📁 上传</button>
             <span style={{fontSize:13,color:C.textSec}}>{fileLabel||".xlsx .csv .txt 均支持"}</span>
@@ -1719,19 +1719,21 @@ export default function App() {
                   return <span key={k} style={{padding:"4px 8px",borderRadius:999,background:C.bg,border:"1px solid "+C.border,color:m.color,fontWeight:700}}>{m.icon} {m.text} {counts[k]||0}</span>;
                 })}
               </div>
+              <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"0 0 8px"}}>复习入口</div>
               {dueCount > 0 && (
                 <div style={{background:C.tealLight,border:"1px solid "+C.teal,borderRadius:10,padding:"9px 12px",fontSize:13,margin:"0 0 10px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
                   <span style={{color:C.teal,fontWeight:700}}>📅 今天有 {dueCount} 个词需要复习</span>
                   <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none"}} onClick={function(){startQuickReview("due");}}>开始快速复习 →</button>
                 </div>
               )}
-              <div style={{display:"flex",gap:10,margin:"0 0 10px",flexWrap:"wrap"}}>
+              <div style={{display:"flex",gap:10,margin:"0 0 12px",flexWrap:"wrap"}}>
                 <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){startQuickReview("all");}}>🔄 快速复习已学词</button>
-                <button style={{...S.ghostBtn,borderColor:C.red,color:C.red}} onClick={function(){startQuickReview("focus");}}>🔴 重点攻克 {focusCount}</button>
+                <button style={{...S.primaryBtn,background:C.red}} onClick={function(){startQuickReview("focus");}}>🔴 重点攻克 {focusCount}</button>
               </div>
 
-              <div style={{maxHeight:260,overflow:"auto",border:"1px solid "+C.border,borderRadius:12,background:C.bg,marginBottom:10}}>
-                {words.length === 0 ? <div style={{padding:14,fontSize:13,color:C.textSec}}>先输入词汇，状态列表会显示在这里。</div> : words.map(function(w, i){
+              <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"0 0 8px"}}>词汇状态</div>
+              <div style={{maxHeight:260,overflow:"auto",border:"1px solid "+C.border,borderRadius:12,background:C.bg,marginBottom:12}}>
+                {words.length === 0 ? <div style={{padding:14,fontSize:13,color:C.textSec}}>先输入词汇，状态列表会显示在这里。</div> : words.map(function(w, i){ 
                   var s = getWordStatus(w, i, words);
                   var m = WORD_STATUS_META[s] || WORD_STATUS_META.unlearned;
                   var learnedWord = learned.includes(w) || i <= idx;
@@ -1768,6 +1770,7 @@ export default function App() {
             </>;
           })()}
 
+          <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"2px 0 8px"}}>编辑词表</div>
           <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={5} placeholder="arduous\nbenevolent" />
           <div style={{fontSize:13,color:C.textSec,marginTop:4}}>{wordInput.trim() ? "共 "+parseWordsFromInput(wordInput).length+" 个词" : ""}</div>
         </div>
