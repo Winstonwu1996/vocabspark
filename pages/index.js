@@ -561,6 +561,8 @@ export default function App() {
   var [deepQuizSelect, setDeepQuizSelect] = useState("");
   var [deepQuizSubmitted, setDeepQuizSubmitted] = useState(false);
   var [deepLoadSec, setDeepLoadSec] = useState(0);
+  var deepReviewCacheRef = useRef({});
+  var deepReviewInflightRef = useRef({});
   var fileRef = useRef(null);
   var [setupTab, setSetupTab] = useState("profile");
   var [profileLocked, setProfileLocked] = useState(false);
@@ -1542,6 +1544,40 @@ export default function App() {
     return { teach: teachLines.join("\n\n"), quiz: quiz };
   };
 
+  var fetchDeepReviewPayload = async function(word) {
+    if (!word) return { teach: "暂无内容", quiz: null };
+    if (deepReviewCacheRef.current[word]) return deepReviewCacheRef.current[word];
+    if (deepReviewInflightRef.current[word]) return deepReviewInflightRef.current[word];
+
+    var p = (async function(){
+      try {
+        var d = reviewWordData[word] || {};
+        var reviewCount = (d.reviewHistory || []).length + 1;
+        var raw = await callAPIFast(sysP, buildReviewTeachPrompt(word, learned, reviewCount));
+        var text = raw || "生成失败，请重试";
+        var parts = splitDeepReviewParts(text);
+        var payload = { teach: parts.teach || text, quiz: parts.quiz || null };
+        deepReviewCacheRef.current[word] = payload;
+        return payload;
+      } catch (e) {
+        var payload = { teach: "生成失败，请重试", quiz: null };
+        deepReviewCacheRef.current[word] = payload;
+        return payload;
+      } finally {
+        delete deepReviewInflightRef.current[word];
+      }
+    })();
+
+    deepReviewInflightRef.current[word] = p;
+    return p;
+  };
+
+  var prefetchDeepReview = function(word) {
+    if (!word) return;
+    if (deepReviewCacheRef.current[word] || deepReviewInflightRef.current[word]) return;
+    fetchDeepReviewPayload(word).catch(function(){});
+  };
+
   var loadDeepReviewContent = async function(word) {
     if (!word) return;
     setDeepReviewLoading(true);
@@ -1550,19 +1586,14 @@ export default function App() {
     setDeepQuiz(null);
     setDeepQuizSelect("");
     setDeepQuizSubmitted(false);
-    try {
-      var d = reviewWordData[word] || {};
-      var reviewCount = (d.reviewHistory || []).length + 1;
-      var raw = await callAPIFast(sysP, buildReviewTeachPrompt(word, learned, reviewCount));
-      var text = raw || "生成失败，请重试";
-      var parts = splitDeepReviewParts(text);
-      setDeepReviewContent(parts.teach || text);
-      setDeepQuiz(parts.quiz);
-    } catch (e) {
-      setDeepReviewContent("生成失败，请重试");
-    } finally {
-      setDeepReviewLoading(false);
-    }
+    var payload = await fetchDeepReviewPayload(word);
+    setDeepReviewContent(payload.teach || "暂无内容");
+    setDeepQuiz(payload.quiz || null);
+    setDeepReviewLoading(false);
+
+    // Prefetch next word during current review to avoid per-word waits
+    var nextWord = deepReviewQueue[deepReviewIdx + 1];
+    if (nextWord) prefetchDeepReview(nextWord);
   };
 
   var getTimingStats = () => {
