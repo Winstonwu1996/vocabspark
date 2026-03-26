@@ -126,7 +126,7 @@ async function requestWithBudget(system, message, maxTokens, totalBudgetMs = 250
     
     try {
       console.log(`[${provider}] attempting with ${remaining}ms budget remaining, prompt_type: ${system.substring(0, 30)}...`);
-      const result = await callProvider(provider, system, message, maxTokens, Math.min(remaining - 1000, 20000));
+      const result = await callProvider(provider, system, message, maxTokens, Math.min(remaining - 1000, 30000));
       console.log(`[${provider}] success in ${result.latency}ms, raw_text_start: ${result.text.substring(0, 100)}...`);
       return result;
     } catch (error) {
@@ -138,6 +138,16 @@ async function requestWithBudget(system, message, maxTokens, totalBudgetMs = 250
   throw new Error(`All providers failed within ${totalBudgetMs}ms budget`);
 }
 
+async function generateTeachWithFallback(word, learned, chapterMetrics) {
+  try {
+    return await requestWithBudget(SYSTEM_PROMPT, buildTeachPrompt(word, learned), 1800, 45000);
+  } catch (primaryError) {
+    chapterMetrics.retries++;
+    console.warn(`[TeachFallback] primary failed for ${word}: ${primaryError.message}`);
+    return await requestWithBudget(SYSTEM_PROMPT, buildTeachFallbackPrompt(word, learned), 1200, 30000);
+  }
+}
+
 // Prompt builders
 function buildGuessPrompt(word, learned) {
   const context = learned.length > 0 ? `已学词汇：${learned.join(", ")}` : "";
@@ -147,6 +157,11 @@ function buildGuessPrompt(word, learned) {
 function buildTeachPrompt(word, learned) {
   const context = learned.length > 0 ? `已学词汇：${learned.join(", ")}` : "";
   return `${context}\n\n为「${word}」写专业教学内容。包含：词汇解析、记忆技巧、使用场景。语言生动、有趣，适合中国学生。300-500字。`;
+}
+
+function buildTeachFallbackPrompt(word, learned) {
+  const context = learned.length > 0 ? `已学词汇：${learned.join(", ")}` : "";
+  return `${context}\n\n为「${word}」写高质量紧凑教学卡片，必须包含4段并用Markdown标题：\n## 词义\n## 记忆\n## 场景\n## 易错点\n要求：220-320字，信息密度高，避免铺陈。直接输出Markdown正文，不要JSON。`;
 }
 
 function buildSpectrumPrompt(word) {
@@ -212,9 +227,9 @@ async function compileChapter(words, learned = [], profile = {}) {
           })
       );
       
-      // Teach task  
+      // Teach task (with fallback path)
       corePromises.push(
-        requestWithBudget(SYSTEM_PROMPT, buildTeachPrompt(word, wordLearned), 2000, 45000) // Increased budget for teach
+        generateTeachWithFallback(word, wordLearned, chapterMetrics)
           .then(result => {
             if (result.error) {
               console.error(`[ChapterFactory][TeachError] Word: ${word}, Error: ${result.error}`);
