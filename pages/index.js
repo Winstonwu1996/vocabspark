@@ -36,6 +36,15 @@ var PROFILE_TEXTAREA_PLACEHOLDER =
   "• Willow 的偶像是 Taylor Swift，已经刷了 100 遍 Eras Tour\n\n" +
   "写越多，AI 越了解你，学单词越有趣！";
 
+var WORD_STATUS_KEY = "vocabspark_word_status_v1";
+var WORD_STATUS_META = {
+  unlearned: { icon: "⚪", text: "未学", color: "#98a2b3" },
+  learning: { icon: "🔵", text: "学习中", color: "#2f81f7" },
+  mastered: { icon: "🟢", text: "已掌握", color: "#22a06b" },
+  uncertain: { icon: "🟡", text: "不确定", color: "#e6a817" },
+  error: { icon: "🔴", text: "易错", color: "#e53e3e" },
+};
+
 /** 缩小边长并转 JPEG base64，避免请求体过大（Next 默认 1MB）及加速上传 */
 var compressImageToJpegBase64 = function(file, maxEdge) {
   maxEdge = maxEdge || 1280;
@@ -525,6 +534,7 @@ export default function App() {
   var [wordInput, setWordInput] = useState("");
   var [wordList, setWordList] = useState([]);
   var [fileLabel, setFileLabel] = useState("");
+  var [wordStatusMap, setWordStatusMap] = useState({});
   var fileRef = useRef(null);
   var [setupTab, setSetupTab] = useState("profile");
   var [profileLocked, setProfileLocked] = useState(false);
@@ -657,6 +667,11 @@ export default function App() {
         }
       } catch(e) {}
     }).catch(function() {});
+
+    try {
+      var rawStatus = localStorage.getItem(WORD_STATUS_KEY);
+      if (rawStatus) setWordStatusMap(JSON.parse(rawStatus) || {});
+    } catch (e) {}
   }, []);
 
   // ── Daily count helpers ──
@@ -847,6 +862,35 @@ export default function App() {
     if (kw.length > 0) tips.push("🎯 正在用「" + kw[Math.floor(Math.random()*kw.length)] + "」相关的场景编写例句...");
     if (kw.length > 1) tips.push("🌟 AI 老师找到了一个和「" + kw[Math.floor(Math.random()*kw.length)] + "」有关的绝妙比喻...");
     return tips[Math.floor(Math.random() * tips.length)];
+  };
+
+  var parseWordsFromInput = function(input) {
+    return (input || "")
+      .split(/[\n,，、]+/)
+      .map(function(w) { return w.trim(); })
+      .filter(function(w) { return !!w; });
+  };
+
+  var getAutoWordStatus = function(word, index, sourceWords) {
+    var inLearned = learned.includes(word);
+    if (!inLearned) {
+      return index <= idx ? "learning" : "unlearned";
+    }
+    return "learning";
+  };
+
+  var getWordStatus = function(word, index, sourceWords) {
+    var manual = wordStatusMap[word];
+    if (manual) return manual;
+    return getAutoWordStatus(word, index, sourceWords);
+  };
+
+  var updateManualWordStatus = function(word, nextStatus) {
+    var next = { ...(wordStatusMap || {}) };
+    if (!nextStatus) delete next[word];
+    else next[word] = nextStatus;
+    setWordStatusMap(next);
+    try { localStorage.setItem(WORD_STATUS_KEY, JSON.stringify(next)); } catch(e) {}
   };
 
   /* ─── BATCH LOAD: concurrency-limited (max 5) with real progress ─── */
@@ -1405,15 +1449,69 @@ export default function App() {
       )}
       {setupTab === "words" && (
         <div style={S.setupCard}>
-          <div style={S.setupHint}>上传 CSV/TXT 文件、选预设，或手动输入（每行一个单词）<br/><span style={{color:C.accent}}>💡 Excel 用户：选中单词列 → 复制 → 粘贴到下方输入框即可</span></div>
+          <div style={S.setupHint}>上传 CSV/TXT 文件、选预设，或手动输入（每行一个单词）<br/><span style={{color:C.accent}}>💡 状态视图已启用：可对已学词手动标注 🟢🟡🔴</span></div>
           <div style={S.uploadRow}>
             <button style={S.uploadBtn} onClick={() => fileRef.current?.click()}>📁 上传</button>
             <span style={{fontSize:13,color:C.textSec}}>{fileLabel||".xlsx .csv .txt 均支持"}</span>
             <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" style={{display:"none"}} onChange={handleFile} />
           </div>
           <div style={S.presetRow}>{Object.keys(PRESETS).map(n => <button key={n} style={S.presetBtn} onClick={() => setWordInput(PRESETS[n])}>{n}</button>)}</div>
-          <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={6} placeholder="arduous\nbenevolent" />
-          <div style={{fontSize:13,color:C.textSec,marginTop:4}}>{wordInput.trim() ? "共 "+wordInput.trim().split(/[\n,，、]+/).filter(w=>w.trim()).length+" 个词" : ""}</div>
+
+          {(() => {
+            var words = parseWordsFromInput(wordInput);
+            var counts = { unlearned:0, learning:0, mastered:0, uncertain:0, error:0 };
+            words.forEach(function(w, i){
+              var s = getWordStatus(w, i, words);
+              counts[s] = (counts[s] || 0) + 1;
+            });
+            return <>
+              <div style={{display:"flex",gap:10,flexWrap:"wrap",margin:"8px 0 10px",fontSize:12,color:C.textSec}}>
+                {Object.keys(WORD_STATUS_META).map(function(k){
+                  var m = WORD_STATUS_META[k];
+                  return <span key={k} style={{padding:"4px 8px",borderRadius:999,background:C.bg,border:"1px solid "+C.border,color:m.color,fontWeight:700}}>{m.icon} {m.text} {counts[k]||0}</span>;
+                })}
+              </div>
+
+              <div style={{maxHeight:260,overflow:"auto",border:"1px solid "+C.border,borderRadius:12,background:C.bg,marginBottom:10}}>
+                {words.length === 0 ? <div style={{padding:14,fontSize:13,color:C.textSec}}>先输入词汇，状态列表会显示在这里。</div> : words.map(function(w, i){
+                  var s = getWordStatus(w, i, words);
+                  var m = WORD_STATUS_META[s] || WORD_STATUS_META.unlearned;
+                  var learnedWord = learned.includes(w) || i <= idx;
+                  var starred = wordStatusMap[w] === "uncertain";
+                  return <div key={w+"_"+i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",borderBottom:i===words.length-1?"none":"1px solid "+C.border}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}>
+                      <button
+                        onClick={function(){
+                          if (!learnedWord) return;
+                          var seq = ["mastered","uncertain","error"];
+                          var cur = wordStatusMap[w] || "mastered";
+                          var next = seq[(seq.indexOf(cur) + 1) % seq.length];
+                          updateManualWordStatus(w, next);
+                        }}
+                        disabled={!learnedWord}
+                        style={{border:"none",background:"transparent",fontSize:18,cursor:learnedWord?"pointer":"not-allowed",opacity:learnedWord?1:0.55}}
+                        title={learnedWord?"点击切换状态 🟢→🟡→🔴":"未学习词不可手动标注"}
+                      >{m.icon}</button>
+                      <span style={{fontWeight:700,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:180}}>{w}</span>
+                      <span style={{fontSize:11,color:m.color,fontWeight:700}}>{m.text}</span>
+                    </div>
+                    <button
+                      onClick={function(){
+                        if (!learnedWord) return;
+                        updateManualWordStatus(w, starred ? null : "uncertain");
+                      }}
+                      disabled={!learnedWord}
+                      style={{border:"none",background:"transparent",fontSize:16,cursor:learnedWord?"pointer":"not-allowed",opacity:learnedWord?1:0.45,color:starred?C.gold:C.textSec}}
+                      title="快速标记为不确定"
+                    >{starred?"⭐":"☆"}</button>
+                  </div>;
+                })}
+              </div>
+            </>;
+          })()}
+
+          <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={5} placeholder="arduous\nbenevolent" />
+          <div style={{fontSize:13,color:C.textSec,marginTop:4}}>{wordInput.trim() ? "共 "+parseWordsFromInput(wordInput).length+" 个词" : ""}</div>
         </div>
       )}
       {error && <div style={S.error}>{error}</div>}
