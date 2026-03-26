@@ -168,6 +168,18 @@ var buildClozePrompt = (words) => {
   return "学生刚学完10个词：" + words.join(", ") + "\n\n请写一篇120-150词的英文小短文（故事/日记/场景描述），深度结合学生画像的生活场景。短文中自然嵌入这10个词中的5个，将这5个词替换为 _____(1), _____(2) 等编号空格。\n\n在短文后给出5个填空题，每题3个选项（从10个词中选）。\n\nIMPORTANT: 直接输出JSON：\n" + '{"title":"短文标题","passage":"短文正文，含_____(1)等空格","questions":[{"id":1,"blank":"_____(1)","options":["词1","词2","词3"],"answer":"正确词","explanation":"为什么选这个词"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
 };
 
+var buildReviewTeachPrompt = (word, learned, reviewCount) => {
+  return "单词复习：" + word +
+    "\n这是学生第 " + reviewCount + " 次复习这个词。" +
+    "\n学生之前学过但记忆模糊，需要巩固。" +
+    "\n\n请用一个全新的生活场景帮助记忆（不要重复之前例子），要求：" +
+    "\n1) 2-3句生动场景（结合学生画像）" +
+    "\n2) 一个易混词对比" +
+    "\n3) 一个简短记忆口诀" +
+    "\n4) 一道SSAT风格单选题（含答案与解释）" +
+    "\n\n输出格式：Markdown，200-250字，朋友聊天语气。";
+};
+
 /* ─── TTS: server proxy (Google Neural) → speechSynthesis fallback ─── */
 var audioCache = {};     // sentence text → Audio object (server TTS)
 var dictAudioCache = {}; // word → Audio object (Free Dictionary API, real human recording)
@@ -541,6 +553,10 @@ export default function App() {
   var [quickReviewIdx, setQuickReviewIdx] = useState(0);
   var [quickReviewFlipped, setQuickReviewFlipped] = useState(false);
   var [quickReviewStats, setQuickReviewStats] = useState({ remembered:0, fuzzy:0, forgot:0 });
+  var [deepReviewQueue, setDeepReviewQueue] = useState([]);
+  var [deepReviewIdx, setDeepReviewIdx] = useState(0);
+  var [deepReviewContent, setDeepReviewContent] = useState("");
+  var [deepReviewLoading, setDeepReviewLoading] = useState(false);
   var fileRef = useRef(null);
   var [setupTab, setSetupTab] = useState("profile");
   var [profileLocked, setProfileLocked] = useState(false);
@@ -612,6 +628,12 @@ export default function App() {
   var [photoLoading, setPhotoLoading] = useState(false);
 
   useEffect(function() { if (typeof window !== "undefined") window.speechSynthesis?.getVoices(); }, []);
+  useEffect(function() {
+    if (screen === "deep_review") {
+      var w = deepReviewQueue[deepReviewIdx];
+      if (w) loadDeepReviewContent(w);
+    }
+  }, [screen, deepReviewIdx]);
   useEffect(function() {
     if (phase !== "batch_loading") {
       setBatchUiPct(0);
@@ -1467,6 +1489,38 @@ export default function App() {
     setQuickReviewFlipped(false);
   };
 
+  var startDeepReview = function() {
+    var words = parseWordsFromInput(wordInput);
+    var queue = words.filter(function(w, i) {
+      var s = getWordStatus(w, i, words);
+      return s === "uncertain" || s === "error";
+    });
+    if (!queue.length) {
+      setError("目前没有可进行深度复习的🟡/🔴词");
+      return;
+    }
+    setDeepReviewQueue(queue);
+    setDeepReviewIdx(0);
+    setDeepReviewContent("");
+    setScreen("deep_review");
+  };
+
+  var loadDeepReviewContent = async function(word) {
+    if (!word) return;
+    setDeepReviewLoading(true);
+    setDeepReviewContent("");
+    try {
+      var d = reviewWordData[word] || {};
+      var reviewCount = (d.reviewHistory || []).length + 1;
+      var raw = await callAPIFast(sysP, buildReviewTeachPrompt(word, learned, reviewCount));
+      setDeepReviewContent(raw || "生成失败，请重试");
+    } catch (e) {
+      setDeepReviewContent("生成失败，请重试");
+    } finally {
+      setDeepReviewLoading(false);
+    }
+  };
+
   var getTimingStats = () => {
     var entries = Object.entries(wordTimings).filter(([_,v]) => v.duration);
     if (!entries.length) return null;
@@ -1513,8 +1567,26 @@ export default function App() {
             😵 忘了 {quickReviewStats.forgot} 个
           </div>
           <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
-            <button style={{...S.primaryBtn,background:C.red}} onClick={() => startQuickReview("focus")}>🔴 重点攻克</button>
+            <button style={{...S.primaryBtn,background:C.red}} onClick={startDeepReview}>🔴 重点攻克</button>
             <button style={S.primaryBtn} onClick={() => setScreen("setup")}>← 返回词汇列表</button>
+          </div>
+        </div>
+      </div></div>
+    );
+  }
+
+  if (screen === "deep_review") {
+    var dw = deepReviewQueue[deepReviewIdx];
+    return (
+      <div style={S.root}><div style={S.container}>
+        <div style={S.topBar}><button style={S.backBtn} onClick={() => setScreen("setup")}>←</button><div style={{fontSize:13,color:C.textSec}}>重点攻克 {deepReviewIdx+1}/{deepReviewQueue.length}</div></div>
+        <div style={{...S.card, padding:"24px 20px"}}>
+          <div style={{...S.tag, background:C.redLight, color:C.red}}>🔴 深度复习</div>
+          <h2 style={{fontSize:30,margin:"8px 0 10px"}}>{dw}</h2>
+          {deepReviewLoading ? <div style={S.loadingBox}><span style={S.spinner}/><div>AI 正在生成复习讲解...</div></div> : <div style={{marginBottom:16}}><Md text={deepReviewContent || "暂无内容"} /></div>}
+          <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+            <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){ updateManualWordStatus(dw, "uncertain"); var n = deepReviewIdx + 1; if (n >= deepReviewQueue.length) setScreen("setup"); else setDeepReviewIdx(n); }}>完成，标记🟡</button>
+            <button style={S.ghostBtn} onClick={function(){ var n = deepReviewIdx + 1; if (n >= deepReviewQueue.length) setScreen("setup"); else setDeepReviewIdx(n); }}>跳过下一个</button>
           </div>
         </div>
       </div></div>
