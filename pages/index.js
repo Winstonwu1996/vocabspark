@@ -1461,6 +1461,54 @@ export default function App() {
     return function() { clearInterval(id); };
   }, [screen, progress]);
 
+  var getDailyPlan = function() {
+    var words = parseWordsFromInput(wordInput);
+    var todayKey = new Date().toISOString().slice(0,10);
+
+    var toReview = words.filter(function(w, i) {
+      var s = getWordStatus(w, i, words);
+      if (s === "unlearned") return false;
+      var d = reviewWordData[w] || {};
+      return isDueDate(d.nextReviewDate);
+    });
+
+    var deepPool = words.filter(function(w, i) {
+      var s = getWordStatus(w, i, words);
+      var d = reviewWordData[w] || {};
+      return s === "error" || s === "uncertain" || (d.consecutiveForgot || 0) >= 2;
+    });
+
+    var deepLimit = 10;
+    var deepToday = deepPool.slice(0, deepLimit);
+
+    var unlearned = words.filter(function(w, i) {
+      var s = getWordStatus(w, i, words);
+      return s === "unlearned";
+    });
+    var newWordsToday = unlearned.slice(0, dailyNewWords || 20);
+
+    var quickDoneToday = Object.values(reviewWordData || {}).some(function(item) {
+      return (item.reviewHistory || []).some(function(r) {
+        return r.mode === "quick" && String(r.date || "").slice(0,10) === todayKey;
+      });
+    });
+
+    var quickMin = Math.ceil((toReview.length * 5) / 60);
+    var deepMin = deepToday.length * 2;
+    var newMin = Math.ceil(newWordsToday.length * 1.5);
+
+    return {
+      toReview: toReview,
+      deepToday: deepToday,
+      deepLocked: !quickDoneToday,
+      newWordsToday: newWordsToday,
+      quickMin: quickMin,
+      deepMin: deepMin,
+      newMin: newMin,
+      totalMin: quickMin + deepMin + newMin,
+    };
+  };
+
   var startQuickReview = function(mode) {
     mode = mode || "all"; // all | due | focus
     var words = parseWordsFromInput(wordInput);
@@ -1748,6 +1796,7 @@ export default function App() {
   /* ═══ SETUP SCREEN ═══ */
   if (screen === "setup") {
     var hasSession = wordList.length > 0 && idx < wordList.length && idx > 0;
+    var dailyPlan = getDailyPlan();
     return (
     <div style={S.root}>
       <Head>
@@ -1788,6 +1837,29 @@ export default function App() {
       )}
 
       <AppHeroHeader stats={stats} />
+
+      <div style={{...S.card, marginBottom:14, borderColor:C.teal, background:C.tealLight}}>
+        <div style={{fontWeight:800,fontSize:16,marginBottom:8,color:C.teal}}>🏠 今日任务</div>
+        <div style={{fontSize:13,color:C.textSec,marginBottom:10}}>预计总用时：{dailyPlan.totalMin} 分钟</div>
+
+        <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:8}}>
+          <div style={{fontWeight:700,marginBottom:4}}>① 🔄 快速复习（约 {dailyPlan.quickMin} 分钟）</div>
+          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>到期词 {dailyPlan.toReview.length} 个</div>
+          <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none"}} onClick={function(){startQuickReview("due");}}>开始 →</button>
+        </div>
+
+        <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:8,opacity:dailyPlan.deepLocked?0.7:1}}>
+          <div style={{fontWeight:700,marginBottom:4}}>② 🔴 深度攻克（约 {dailyPlan.deepMin} 分钟）</div>
+          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>{dailyPlan.deepLocked ? "完成快速复习后解锁" : "今日候选 " + dailyPlan.deepToday.length + " 个"}</div>
+          <button style={{...S.smallBtn,background:dailyPlan.deepLocked?C.textSec:C.red,color:"#fff",border:"none"}} disabled={dailyPlan.deepLocked} onClick={startDeepReview}>{dailyPlan.deepLocked?"🔒 待解锁":"开始 →"}</button>
+        </div>
+
+        <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px"}}>
+          <div style={{fontWeight:700,marginBottom:4}}>③ 📘 新学 {dailyPlan.newWordsToday.length} 个词（约 {dailyPlan.newMin} 分钟）</div>
+          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>每日新词设置：{dailyNewWords}</div>
+          <button style={{...S.smallBtn,background:C.accent,color:"#fff",border:"none"}} onClick={function(){startLearning(0);}}>开始 →</button>
+        </div>
+      </div>
 
       {hasSession && (
         <div style={{ ...S.card, background: C.tealLight, borderColor: C.teal, marginBottom: 14 }}>
