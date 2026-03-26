@@ -312,11 +312,20 @@ async function compileChapter(words, learned = [], profile = {}) {
 }
 
 function tryParseJSON(text) {
+  const raw = String(text || "").trim();
   try {
-    return JSON.parse(text);
-  } catch {
-    return null;
+    return JSON.parse(raw);
+  } catch {}
+
+  // Handle markdown fenced JSON blocks: ```json ... ``` or ``` ... ```
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fenced && fenced[1]) {
+    try {
+      return JSON.parse(fenced[1].trim());
+    } catch {}
   }
+
+  return null;
 }
 
 // Main API handler
