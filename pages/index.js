@@ -612,6 +612,7 @@ export default function App() {
   var [batchProgress, setBatchProgress] = useState(0);
   var [batchTotal, setBatchTotal] = useState(0);
   var [batchTip, setBatchTip] = useState("");
+  var [batchGroupNo, setBatchGroupNo] = useState(1);
   var [batchUiPct, setBatchUiPct] = useState(0);
   var [smoothLessonPct, setSmoothLessonPct] = useState(0);
   var [speedWaitSec, setSpeedWaitSec] = useState(0);
@@ -965,6 +966,7 @@ export default function App() {
     var streamStartThreshold = 1; // Always start after 1 word ready
     setBatchTotal(total * 2);
     setBatchProgress(0);
+    setBatchGroupNo(Math.floor(startIdx / 5) + 1);
     setPhase("batch_loading");
     setBatchTip(makeBatchTip(0, batchWords[0], total));
 
@@ -1927,7 +1929,14 @@ export default function App() {
               )}
               {setupTab === "words" && (
                 <div>
-                  <div style={S.setupHint}>修改词汇列表后，点「重新开始」从第一个词开始学习。</div>
+                  <div style={S.setupHint}>学习中如需做标记/复习，建议进入「词汇状态面板」。修改词表后可重新开始。</div>
+
+                  <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:12}}>
+                    <button style={{...S.primaryBtn,background:C.teal}} onClick={() => { setShowSettings(false); setScreen("setup"); setSetupTab("words"); }}>🧭 打开词汇状态面板</button>
+                    <button style={S.ghostBtn} onClick={() => { setShowSettings(false); startQuickReview("all"); }}>🔄 快速复习</button>
+                    <button style={{...S.ghostBtn,borderColor:C.red,color:C.red}} onClick={() => { setShowSettings(false); startDeepReview(); }}>🔴 重点攻克</button>
+                  </div>
+
                   <div style={S.presetRow}>{Object.keys(PRESETS).map(n => <button key={n} style={S.presetBtn} onClick={() => setWordInput(PRESETS[n])}>{n}</button>)}</div>
                   <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={8} placeholder="arduous\nbenevolent" />
                   <div style={{fontSize:13,color:C.textSec,margin:"6px 0 12px"}}>{wordInput.trim() ? "共 "+wordInput.trim().split(/[\n,，、]+/).filter(w=>w.trim()).length+" 个词" : ""}</div>
@@ -1989,7 +1998,7 @@ export default function App() {
       {phase === "batch_loading" && (
         <div style={{...S.card, textAlign:"center", padding:"40px 24px"}}>
           <BrandSparkIcon size={48} marginBottom={16} />
-          <h3 style={{fontSize:18, fontWeight:700, margin:"0 0 8px"}}>正在准备第 {Math.floor(idx/5)+1} 组学习内容</h3>
+          <h3 style={{fontSize:18, fontWeight:700, margin:"0 0 8px"}}>正在准备第 {batchGroupNo} 组学习内容</h3>
           {Math.floor(idx / 5) === 0 && (
             <p style={{fontSize:13, color:C.textSec, margin:"0 0 12px", lineHeight:1.65, padding:"10px 14px", background:C.tealLight, borderRadius:10, border:"1px solid rgba(42,122,110,0.12)"}}>
               💡 首次加载会稍慢一些，AI 正在根据学生画像量身定制内容，请耐心稍等片刻～
