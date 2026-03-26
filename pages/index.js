@@ -560,6 +560,7 @@ export default function App() {
   var [deepQuiz, setDeepQuiz] = useState(null);
   var [deepQuizSelect, setDeepQuizSelect] = useState("");
   var [deepQuizSubmitted, setDeepQuizSubmitted] = useState(false);
+  var [deepLoadSec, setDeepLoadSec] = useState(0);
   var fileRef = useRef(null);
   var [setupTab, setSetupTab] = useState("profile");
   var [profileLocked, setProfileLocked] = useState(false);
@@ -638,6 +639,12 @@ export default function App() {
       if (w) loadDeepReviewContent(w);
     }
   }, [screen, deepReviewIdx]);
+
+  useEffect(function() {
+    if (!deepReviewLoading) return;
+    var id = setInterval(function(){ setDeepLoadSec(function(s){ return s + 1; }); }, 1000);
+    return function(){ clearInterval(id); };
+  }, [deepReviewLoading]);
   useEffect(function() {
     if (phase !== "batch_loading") {
       setBatchUiPct(0);
@@ -1511,28 +1518,34 @@ export default function App() {
     setScreen("deep_review");
   };
 
-  var parseDeepQuiz = function(text) {
-    if (!text) return null;
-    var lines = String(text).split(/\n+/).map(function(s){ return s.trim(); }).filter(Boolean);
-    var qIdx = lines.findIndex(function(l){ return /ssat|选择题|single choice|question/i.test(l); });
-    var pool = qIdx >= 0 ? lines.slice(qIdx) : lines;
+  var parseDeepQuiz = function(lines, startIdx) {
+    var pool = startIdx >= 0 ? lines.slice(startIdx) : lines;
     var opts = pool.filter(function(l){ return /^[A-D][\).、:：\s]/i.test(l); }).slice(0,4);
     if (opts.length < 2) return null;
-    var question = (qIdx >= 0 ? lines[qIdx] : "SSAT 仿真题")
-      .replace(/^#+\s*/, "");
-    var answerLine = lines.find(function(l){ return /答案|answer/i.test(l); }) || "";
+    var stem = pool.find(function(l){ return !/^[A-D][\).、:：\s]/i.test(l) && !/答案|answer/i.test(l) && !/ssat|选择题|single choice|question/i.test(l); }) || "请选择最合适选项";
+    var answerLine = pool.find(function(l){ return /答案|answer/i.test(l); }) || "";
     var answerMatch = answerLine.match(/[A-D]/i);
     var answer = answerMatch ? answerMatch[0].toUpperCase() : "";
     var mapped = opts.map(function(l){
       var m = l.match(/^([A-D])[\).、:：\s]*(.*)$/i);
       return { key: m ? m[1].toUpperCase() : "", text: m ? m[2] : l };
     }).filter(function(o){ return o.key; });
-    return { question: question, options: mapped, answer: answer };
+    return { question: stem, options: mapped, answer: answer };
+  };
+
+  var splitDeepReviewParts = function(text) {
+    var lines = String(text || "").split(/\n+/).map(function(s){ return s.trim(); }).filter(Boolean);
+    var qIdx = lines.findIndex(function(l){ return /ssat|选择题|single choice|question/i.test(l); });
+    var quiz = parseDeepQuiz(lines, qIdx);
+    var teachLines = qIdx >= 0 ? lines.slice(0, qIdx) : lines;
+    teachLines = teachLines.filter(function(l){ return !/^[A-D][\).、:：\s]/i.test(l) && !/答案|answer/i.test(l); });
+    return { teach: teachLines.join("\n\n"), quiz: quiz };
   };
 
   var loadDeepReviewContent = async function(word) {
     if (!word) return;
     setDeepReviewLoading(true);
+    setDeepLoadSec(0);
     setDeepReviewContent("");
     setDeepQuiz(null);
     setDeepQuizSelect("");
@@ -1542,8 +1555,9 @@ export default function App() {
       var reviewCount = (d.reviewHistory || []).length + 1;
       var raw = await callAPIFast(sysP, buildReviewTeachPrompt(word, learned, reviewCount));
       var text = raw || "生成失败，请重试";
-      setDeepReviewContent(text);
-      setDeepQuiz(parseDeepQuiz(text));
+      var parts = splitDeepReviewParts(text);
+      setDeepReviewContent(parts.teach || text);
+      setDeepQuiz(parts.quiz);
     } catch (e) {
       setDeepReviewContent("生成失败，请重试");
     } finally {
@@ -1607,11 +1621,16 @@ export default function App() {
 
   if (screen === "deep_review") {
     var dw = deepReviewQueue[deepReviewIdx];
-    var moveNext = function(){
+    var finishDeep = function(result){
       var oldItem = reviewWordData[dw] || { reviewHistory: [] };
-      var hist = [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "deep", result: "relearned" }];
-      upsertReviewWordData(dw, { reviewHistory: hist, nextReviewDate: addDaysISO(REVIEW_INTERVAL_DAYS[1]) });
-      updateManualWordStatus(dw, "uncertain");
+      var prevLevel = Number.isFinite(oldItem.reviewLevel) ? oldItem.reviewLevel : 0;
+      var nextLevel = prevLevel;
+      if (result === "remembered") nextLevel = Math.min(REVIEW_INTERVAL_DAYS.length - 1, prevLevel + 1);
+      if (result === "forgot") nextLevel = 0;
+      var statusMap = { remembered: "mastered", fuzzy: "uncertain", forgot: "error" };
+      var hist = [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "deep", result: result }];
+      upsertReviewWordData(dw, { reviewHistory: hist, reviewLevel: nextLevel, nextReviewDate: addDaysISO(REVIEW_INTERVAL_DAYS[nextLevel]) });
+      updateManualWordStatus(dw, statusMap[result] || "uncertain");
       var n = deepReviewIdx + 1;
       if (n >= deepReviewQueue.length) setScreen("setup"); else setDeepReviewIdx(n);
     };
@@ -1621,7 +1640,7 @@ export default function App() {
         <div style={{...S.card, padding:"24px 20px"}}>
           <div style={{...S.tag, background:C.redLight, color:C.red}}>🔴 深度复习</div>
           <h2 style={{fontSize:30,margin:"8px 0 10px"}}>{dw}</h2>
-          {deepReviewLoading ? <div style={S.loadingBox}><span style={S.spinner}/><div>AI 正在生成复习讲解...</div></div> : <div style={{marginBottom:16}}><Md text={deepReviewContent || "暂无内容"} /></div>}
+          {deepReviewLoading ? <div style={S.loadingBox}><span style={S.spinner}/><div style={{textAlign:"center"}}><div>AI 正在生成复习讲解...</div><div style={{fontSize:12,color:C.textSec,marginTop:6}}>已等待 {deepLoadSec}s · {deepLoadSec < 4 ? "生成新场景" : deepLoadSec < 8 ? "生成对比点" : "生成SSAT仿真题"}</div></div></div> : <div style={{marginBottom:16}}><Md text={deepReviewContent || "暂无内容"} /></div>}
 
           {!deepReviewLoading && deepQuiz && (
             <div style={{border:"1px solid "+C.border,borderRadius:12,padding:"12px 12px",background:C.bg,marginBottom:12}}>
@@ -1643,9 +1662,10 @@ export default function App() {
             </div>
           )}
 
-          <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-            <button style={{...S.primaryBtn,background:C.teal}} onClick={moveNext}>完成，标记🟡</button>
-            <button style={S.ghostBtn} onClick={function(){ var n = deepReviewIdx + 1; if (n >= deepReviewQueue.length) setScreen("setup"); else setDeepReviewIdx(n); }}>跳过下一个</button>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginTop:8}}>
+            <button style={{...S.primaryBtn,background:C.green,borderColor:C.green,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("remembered");}}>😎 已稳住</button>
+            <button style={{...S.primaryBtn,background:C.gold,borderColor:C.gold,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("fuzzy");}}>🤔 还模糊</button>
+            <button style={{...S.primaryBtn,background:C.red,borderColor:C.red,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("forgot");}}>😵 仍不会</button>
           </div>
         </div>
       </div></div>
