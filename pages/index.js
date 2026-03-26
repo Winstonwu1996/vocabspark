@@ -309,7 +309,7 @@ var AppHeroHeader = ({ stats }) => {
       <h1 style={S.heroTitle}>
         <span style={{ color: C.text }}>Vocab</span>
         <span style={{ color: C.accent }}>Spark</span>
-        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V5-FIX-95-STALL</span>
+        <span style={{fontSize:12,fontWeight:700,marginLeft:8,verticalAlign:"middle",color:C.teal}}>🔱V5-FACTORY</span>
       </h1>
       <p style={S.heroTaglineCn}>专为你的孩子定制的 AI 英语词汇导师</p>
       <p style={S.heroTaglineEn}>The AI that truly knows your child.</p>
@@ -827,65 +827,12 @@ export default function App() {
     return tips[Math.floor(Math.random() * tips.length)];
   };
 
-  var normalizeGuessPayload = function(obj) {
-    if (!obj || typeof obj !== "object") return null;
-
-    // New backend schema: { question, options: ["A...","B..."], answer, explanation }
-    if (obj.question && obj.options) {
-      var mappedOptions = null;
-
-      if (Array.isArray(obj.options)) {
-        mappedOptions = { A: "", B: "", C: "", D: "" };
-        ["A","B","C","D"].forEach(function(k, i) {
-          var raw = obj.options[i] || "";
-          mappedOptions[k] = String(raw).replace(new RegExp("^" + k + "[\\.、:)\\s-]*", "i"), "").trim();
-        });
-      } else if (typeof obj.options === "object") {
-        mappedOptions = {
-          A: obj.options.A || "",
-          B: obj.options.B || "",
-          C: obj.options.C || "",
-          D: obj.options.D || "",
-        };
-      }
-
-      if (!mappedOptions || !mappedOptions.A || !mappedOptions.B || !mappedOptions.C || !mappedOptions.D) return null;
-
-      var ans = obj.answer;
-      if (typeof ans === "string") ans = ans.trim().toUpperCase();
-      if (!["A","B","C","D"].includes(ans)) ans = "A";
-
-      var ctx = String(obj.context || obj.question || "")
-        .replace(/\*\*(.*?)\*\*/g, "$1")
-        .replace(/`/g, "")
-        .replace(/_+\s*[^_]{1,60}\s*_+/g, "_____");
-
-      return {
-        context: ctx,
-        options: mappedOptions,
-        answer: ans,
-        hint: obj.hint || obj.explanation || "",
-        phonetic: obj.phonetic || "",
-      };
-    }
-
-    // Legacy frontend schema: { context, options:{A..D}, answer, hint, phonetic }
-    if (!obj.context || !obj.options) return null;
-    var legacyAns = obj.answer;
-    if (typeof legacyAns === "string") legacyAns = legacyAns.trim().toUpperCase();
-    if (!["A","B","C","D"].includes(legacyAns)) legacyAns = Object.keys(obj.options || {})[0] || "A";
-
-    return {
-      context: obj.context,
-      options: obj.options,
-      answer: legacyAns,
-      hint: obj.hint || "",
-      phonetic: obj.phonetic || "",
-    };
-  };
-
   var validateGuessPayload = function(obj) {
-    return normalizeGuessPayload(obj);
+    if (!obj?.context || !obj?.options) return null;
+    if (!["A","B","C","D"].includes(obj.answer)) obj.answer = Object.keys(obj.options || {})[0] || "A";
+    if (!obj.hint) obj.hint = "";
+    if (!obj.phonetic) obj.phonetic = "";
+    return obj;
   };
 
   var validateSpectrumPayload = function(obj) {
@@ -923,9 +870,8 @@ export default function App() {
       if (!item || item.word !== word) {
         throw new Error("章节内容与词序不一致：" + word);
       }
-      var normalizedGuess = normalizeGuessPayload(item.guess);
       dataCache.current[word] = {
-        guess: normalizedGuess,
+        guess: item.guess,
         guessRaw: JSON.stringify(item.guess || {}),
         teach: item.teach,
         spectrum: item.spectrum,
@@ -987,7 +933,7 @@ export default function App() {
         cachedChapter.words.forEach(function(wordData) {
           if (!dataCache.current[wordData.word]) {
             dataCache.current[wordData.word] = {
-              guess: normalizeGuessPayload(wordData.guess),
+              guess: wordData.guess,
               guessRaw: wordData.guessRaw,
               teach: wordData.teach ? addSpeakMarkers(wordData.teach) : null,
               spectrum: wordData.spectrum
@@ -1024,10 +970,9 @@ export default function App() {
         setBatchProgress(function(prev) { return Math.max(prev, p); });
         setBatchTip("⚡ 并行生成核心内容...");
       } else {
-        var p = 80 + Math.min(19, Math.floor((elapsed - 25000) / 1000));
+        var p = 80 + Math.min(15, Math.floor((elapsed - 25000) / 1000));
         setBatchProgress(function(prev) { return Math.max(prev, p); });
-        var sec = Math.floor(elapsed / 1000);
-        setBatchTip("🔍 正在做最终校验（约" + sec + "s）...");
+        setBatchTip("🔍 验证章节完整性...");
       }
     }, 300);
 
@@ -1060,7 +1005,7 @@ export default function App() {
       chapterResult.words.forEach(function(wordData) {
         if (!dataCache.current[wordData.word]) {
           dataCache.current[wordData.word] = {
-            guess: normalizeGuessPayload(wordData.guess),
+            guess: wordData.guess,
             guessRaw: wordData.guessRaw,
             teach: wordData.teach ? addSpeakMarkers(wordData.teach) : null,
             spectrum: wordData.spectrum
@@ -1102,16 +1047,6 @@ export default function App() {
 
   var applyWordData = function(word) {
     var d = dataCache.current[word];
-    var ensureBlank = function(ctx, w) {
-      if (!ctx) return "";
-      if (/_+/.test(ctx)) return ctx;
-      try {
-        var esc = String(w).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        return String(ctx).replace(new RegExp("\\b" + esc + "\\b", "i"), "_____");
-      } catch {
-        return ctx;
-      }
-    };
     setGuessData(null); setSelectedOption(""); setGuessSubmitted(false);
     setShowHint(false); setTeachContent(""); setSpectrumData(null);
     setSpecSlots([null,null,null]); setSpecPool([]); setSpecStatus("idle");
@@ -1121,9 +1056,8 @@ export default function App() {
     setWordStart(Date.now());
 
     if (d?.guess?.context && d?.guess?.options) {
-      var g = { ...d.guess, context: ensureBlank(d.guess.context, word) };
-      setGuessData(g);
-      if (g.phonetic) setPhonetic(g.phonetic);
+      setGuessData(d.guess);
+      if (d.guess.phonetic) setPhonetic(d.guess.phonetic);
     } else {
       setGuessData({ context: (d?.guessRaw||"").substring(0,300) || "格式异常", options: null });
     }
@@ -1197,7 +1131,7 @@ export default function App() {
 
     save({ ...stats, total: stats.total+1, correct: stats.correct+(correct?1:0), streak: correct ? stats.streak+1 : 0, bestStreak: correct ? Math.max(stats.bestStreak, stats.streak+1) : stats.bestStreak, xp: stats.xp+(correct?15:5) });
 
-    setTimeout(function() { goToTeachWithFallback(); }, 250);
+    setTimeout(function() { goToTeachWithFallback(); }, 800);
   };
 
   var skipGuess = function() {
@@ -1781,7 +1715,7 @@ export default function App() {
                   return [
                     <span key={"t"+i}>{seg}</span>,
                     guessSubmitted
-                      ? <span key={"f"+i} style={{fontWeight:700, color: isCorrect ? C.green : C.red, display:"inline-block", animation:"fillIn 0.4s ease-out", padding:"0 2px", borderRadius:4, background: isCorrect ? C.greenLight : C.redLight}}>{currentWord}</span>
+                      ? <span key={"f"+i} style={{fontWeight:700, color: isCorrect ? C.green : C.red, display:"inline-block", animation:"fillIn 0.4s ease-out", padding:"0 2px", borderRadius:4, background: isCorrect ? C.greenLight : C.redLight}}>{guessData.answer}</span>
                       : <span key={"b"+i} style={{letterSpacing:3, color:C.textSec, fontWeight:700}}>___</span>
                   ];
                 })}
