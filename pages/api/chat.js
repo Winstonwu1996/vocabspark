@@ -121,7 +121,7 @@ async function requestWithBudget(system, message, maxTokens, totalBudgetMs = 250
     
     try {
       console.log(`[${provider}] attempting with ${remaining}ms budget remaining`);
-      const result = await callProvider(provider, system, message, maxTokens, Math.min(remaining - 1000, 20000));
+      const result = await callProvider(provider, system, message, maxTokens, Math.min(remaining - 1000, 30000));
       console.log(`[${provider}] success in ${result.latency}ms`);
       return result;
     } catch (error) {
@@ -201,7 +201,7 @@ async function compileChapter(words, learned = [], profile = {}) {
       
       // Teach task  
       corePromises.push(
-        requestWithBudget(SYSTEM_PROMPT, buildTeachPrompt(word, wordLearned), 2000, 30000)
+        requestWithBudget(SYSTEM_PROMPT, buildTeachPrompt(word, wordLearned), 2000, 45000)
           .then(result => ({ word, type: 'teach', ...result }))
           .catch(error => ({ word, type: 'teach', error: error.message }))
       );
@@ -364,5 +364,5 @@ export default async function handler(req, res) {
 }
 
 export const config = {
-  maxDuration: 60,
+  maxDuration: 300,
 };
