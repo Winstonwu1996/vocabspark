@@ -37,6 +37,7 @@ var PROFILE_TEXTAREA_PLACEHOLDER =
   "写越多，AI 越了解你，学单词越有趣！";
 
 var WORD_STATUS_KEY = "vocabspark_word_status_v1";
+var REVIEW_WORD_DATA_KEY = "vocabspark_review_word_data_v1";
 var WORD_STATUS_META = {
   unlearned: { icon: "⚪", text: "未学", color: "#98a2b3" },
   learning: { icon: "🔵", text: "学习中", color: "#2f81f7" },
@@ -535,6 +536,11 @@ export default function App() {
   var [wordList, setWordList] = useState([]);
   var [fileLabel, setFileLabel] = useState("");
   var [wordStatusMap, setWordStatusMap] = useState({});
+  var [reviewWordData, setReviewWordData] = useState({});
+  var [quickReviewQueue, setQuickReviewQueue] = useState([]);
+  var [quickReviewIdx, setQuickReviewIdx] = useState(0);
+  var [quickReviewFlipped, setQuickReviewFlipped] = useState(false);
+  var [quickReviewStats, setQuickReviewStats] = useState({ remembered:0, fuzzy:0, forgot:0 });
   var fileRef = useRef(null);
   var [setupTab, setSetupTab] = useState("profile");
   var [profileLocked, setProfileLocked] = useState(false);
@@ -671,6 +677,11 @@ export default function App() {
     try {
       var rawStatus = localStorage.getItem(WORD_STATUS_KEY);
       if (rawStatus) setWordStatusMap(JSON.parse(rawStatus) || {});
+    } catch (e) {}
+
+    try {
+      var rawReviewData = localStorage.getItem(REVIEW_WORD_DATA_KEY);
+      if (rawReviewData) setReviewWordData(JSON.parse(rawReviewData) || {});
     } catch (e) {}
   }, []);
 
@@ -891,6 +902,16 @@ export default function App() {
     else next[word] = nextStatus;
     setWordStatusMap(next);
     try { localStorage.setItem(WORD_STATUS_KEY, JSON.stringify(next)); } catch(e) {}
+  };
+
+  var upsertReviewWordData = function(word, patch) {
+    if (!word) return;
+    setReviewWordData(function(prev) {
+      var base = prev[word] || { word: word, reviewHistory: [] };
+      var next = { ...prev, [word]: { ...base, ...patch } };
+      try { localStorage.setItem(REVIEW_WORD_DATA_KEY, JSON.stringify(next)); } catch(e) {}
+      return next;
+    });
   };
 
   /* ─── BATCH LOAD: concurrency-limited (max 5) with real progress ─── */
@@ -1222,6 +1243,28 @@ export default function App() {
     var newLearned = [...learned, currentWord];
     setLearned(newLearned);
     var nextIdx = idx + 1;
+
+    // Collect basic review data from normal learning flow (P0)
+    try {
+      var answerKey = guessData?.answer;
+      var meaning = answerKey && guessData?.options ? (guessData.options[answerKey] || "") : "";
+      var guessed = !!selectedOption;
+      var guessCorrect = guessed && answerKey ? selectedOption === answerKey : null;
+      var oldItem = reviewWordData[currentWord] || { reviewHistory: [] };
+      upsertReviewWordData(currentWord, {
+        word: currentWord,
+        phonetic: phonetic || oldItem.phonetic || "",
+        meaning: meaning || oldItem.meaning || "",
+        firstLearnedAt: oldItem.firstLearnedAt || new Date().toISOString(),
+        guessCorrect: guessCorrect,
+      });
+      if (guessCorrect === true && !wordStatusMap[currentWord]) {
+        updateManualWordStatus(currentWord, "mastered");
+      }
+      if (guessCorrect === false && !wordStatusMap[currentWord]) {
+        updateManualWordStatus(currentWord, "error");
+      }
+    } catch(e) {}
     // Persist completed word permanently (survives session resets)
     loadSave().then(function(d) {
       var existing = d?.completedWords || [];
@@ -1344,12 +1387,107 @@ export default function App() {
     return function() { clearInterval(id); };
   }, [screen, progress]);
 
+  var startQuickReview = function() {
+    var words = parseWordsFromInput(wordInput);
+    var queue = words
+      .filter(function(w, i) {
+        var s = getWordStatus(w, i, words);
+        return s !== "unlearned";
+      })
+      .map(function(w) {
+        var d = reviewWordData[w] || {};
+        return {
+          word: w,
+          phonetic: d.phonetic || "",
+          meaning: d.meaning || "（释义将随学习自动补全）",
+        };
+      });
+
+    if (!queue.length) {
+      setError("暂无可复习单词，请先学习几个词");
+      return;
+    }
+
+    setQuickReviewQueue(queue);
+    setQuickReviewIdx(0);
+    setQuickReviewFlipped(false);
+    setQuickReviewStats({ remembered:0, fuzzy:0, forgot:0 });
+    setScreen("quick_review");
+  };
+
+  var markQuickReview = function(result) {
+    var item = quickReviewQueue[quickReviewIdx];
+    if (!item) return;
+    var map = { remembered: "mastered", fuzzy: "uncertain", forgot: "error" };
+    var nextStatus = map[result] || "uncertain";
+
+    updateManualWordStatus(item.word, nextStatus);
+
+    var oldItem = reviewWordData[item.word] || { reviewHistory: [] };
+    var hist = [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "quick", result: result }];
+    upsertReviewWordData(item.word, { reviewHistory: hist });
+
+    setQuickReviewStats(function(prev){ return { ...prev, [result]: (prev[result] || 0) + 1 }; });
+
+    var nextIdx = quickReviewIdx + 1;
+    if (nextIdx >= quickReviewQueue.length) {
+      setScreen("quick_review_done");
+      return;
+    }
+    setQuickReviewIdx(nextIdx);
+    setQuickReviewFlipped(false);
+  };
+
   var getTimingStats = () => {
     var entries = Object.entries(wordTimings).filter(([_,v]) => v.duration);
     if (!entries.length) return null;
     entries.sort((a,b) => a[1].duration - b[1].duration);
     return { fastest: entries[0], slowest: entries[entries.length-1], avg: Math.round(entries.reduce((s,e) => s+e[1].duration, 0) / entries.length / 1000) };
   };
+
+  if (screen === "quick_review") {
+    var qr = quickReviewQueue[quickReviewIdx];
+    return (
+      <div style={S.root}><div style={S.container}>
+        <div style={S.topBar}><button style={S.backBtn} onClick={() => setScreen("setup")}>←</button><div style={{fontSize:13,color:C.textSec}}>快速复习 {quickReviewIdx+1}/{quickReviewQueue.length}</div></div>
+        <div style={{...S.card, textAlign:"center", padding:"30px 20px"}}>
+          <div style={S.tag}>🔄 快速复习</div>
+          <h2 style={{fontSize:34,margin:"8px 0 4px"}}>{qr?.word}</h2>
+          {!!qr?.phonetic && <div style={{fontSize:14,color:C.textSec,marginBottom:16}}>{qr.phonetic}</div>}
+          {!quickReviewFlipped ? (
+            <button style={S.primaryBtn} onClick={() => setQuickReviewFlipped(true)}>翻转查看 👆</button>
+          ) : (
+            <>
+              <div style={{margin:"8px 0 16px",padding:"12px 14px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,textAlign:"left",lineHeight:1.7}}>
+                释义：{qr?.meaning || "（暂无）"}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <button style={S.primaryBtn} onClick={() => markQuickReview("remembered")}>😎 记得</button>
+                <button style={S.ghostBtn} onClick={() => markQuickReview("fuzzy")}>🤔 模糊</button>
+                <button style={{...S.ghostBtn,gridColumn:"span 2",borderColor:C.red,color:C.red}} onClick={() => markQuickReview("forgot")}>😵 忘了</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div></div>
+    );
+  }
+
+  if (screen === "quick_review_done") {
+    return (
+      <div style={S.root}><div style={S.container}>
+        <div style={{...S.card,textAlign:"center",padding:"30px 20px"}}>
+          <div style={S.tag}>📊 复习完成</div>
+          <div style={{fontSize:15,lineHeight:2,margin:"10px 0 14px"}}>
+            😎 记得 {quickReviewStats.remembered} 个<br/>
+            🤔 模糊 {quickReviewStats.fuzzy} 个<br/>
+            😵 忘了 {quickReviewStats.forgot} 个
+          </div>
+          <button style={S.primaryBtn} onClick={() => setScreen("setup")}>← 返回词汇列表</button>
+        </div>
+      </div></div>
+    );
+  }
 
   /* ═══ SETUP SCREEN ═══ */
   if (screen === "setup") {
@@ -1470,6 +1608,9 @@ export default function App() {
                   var m = WORD_STATUS_META[k];
                   return <span key={k} style={{padding:"4px 8px",borderRadius:999,background:C.bg,border:"1px solid "+C.border,color:m.color,fontWeight:700}}>{m.icon} {m.text} {counts[k]||0}</span>;
                 })}
+              </div>
+              <div style={{display:"flex",gap:10,margin:"0 0 10px"}}>
+                <button style={{...S.primaryBtn,background:C.teal}} onClick={startQuickReview}>🔄 快速复习已学词</button>
               </div>
 
               <div style={{maxHeight:260,overflow:"auto",border:"1px solid "+C.border,borderRadius:12,background:C.bg,marginBottom:10}}>
