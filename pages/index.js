@@ -875,6 +875,46 @@ export default function App() {
     setUser(null); userRef.current = null;
   };
 
+  var handleFactoryReset = async function() {
+    if (!confirm('🚨 危险操作：确认要清除所有学习记录、画像和单词本，从零开始吗？此操作不可逆！')) return;
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem(DAILY_QUOTA_KEY);
+        localStorage.removeItem(DAILY_NEW_QUOTA_KEY);
+      }
+    } catch (e) {}
+    
+    setWordList([]);
+    setLearned([]);
+    setIdx(0);
+    setProfile("");
+    setTargetDate("");
+    setWordStatusMap({});
+    setWordDetailsMap({});
+    setStats({ xp: 0, streak: 0, lastStudyDate: null });
+    setWordInput("");
+    
+    var emptyData = {
+      wordList: [],
+      learned: [],
+      idx: 0,
+      profile: "",
+      targetDate: "",
+      wordStatusMap: {},
+      wordDetailsMap: {},
+      stats: { xp: 0, streak: 0, lastStudyDate: null },
+      updatedAt: new Date().getTime()
+    };
+    if (userRef.current) {
+      await syncToCloud(emptyData);
+    }
+    
+    alert('✅ 所有记录已清除，应用已重置为初始状态。');
+    setSetupTab("profile");
+  };
+
   var handlePhotoUpload = async function(e) {
     var file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
@@ -2572,6 +2612,11 @@ export default function App() {
               {planView.remainingWords > 0 && <li><strong>待学习新词还有 {planView.remainingWords} 个</strong>，按照目前的每日 {planView.recommendedNewPerDay} 个的目标前进吧！</li>}
               {statsView.dueCount === 0 && ((statsView.statuses.uncertain||0) + (statsView.statuses.error||0)) === 0 && <li><strong>太棒了！</strong>今天的复习压力已清空，尽情探索新单词吧。</li>}
             </ul>
+          </div>
+          <div style={{marginTop:16,padding:"16px",background:C.redLight,border:"1px dashed "+C.red,borderRadius:10,textAlign:"center"}}>
+            <div style={{fontWeight:700,fontSize:14,color:C.red,marginBottom:8}}>🚨 危险区域 (Danger Zone)</div>
+            <div style={{fontSize:12,color:C.textSec,marginBottom:12,lineHeight:1.6}}>清空当前账号的所有学习进度、单词本、学生画像与积分，从零开始。<br/><strong>注意：此操作不可逆！</strong></div>
+            <button onClick={handleFactoryReset} style={{...S.smallBtn,background:C.red,color:"#fff",border:"none",padding:"8px 16px",fontWeight:600}}>⚠️ 初始化（清除所有记录）</button>
           </div>
         </div>;
       })()}
