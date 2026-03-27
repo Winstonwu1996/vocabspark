@@ -328,24 +328,22 @@ var BrandSparkIcon = ({ size, marginBottom }) => {
 var AppHeroHeader = ({ stats }) => {
   var pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
   return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 12px", marginBottom:14 }}>
-      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-        <div style={{ transform: "scale(0.8)", transformOrigin: "left center" }}><BrandSparkIcon /></div>
-        <div>
-          <h1 style={{ fontSize:20, margin:0, fontWeight:800, letterSpacing:"-0.02em" }}>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 10px", marginBottom:10, gap:8 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
+        <div style={{ transform: "scale(0.72)", transformOrigin: "left center" }}><BrandSparkIcon /></div>
+        <div style={{minWidth:0}}>
+          <h1 style={{ fontSize:20, margin:0, fontWeight:800, letterSpacing:"-0.02em", lineHeight:1.05 }}>
             <span style={{ color: C.text }}>Vocab</span><span style={{ color: C.accent }}>Spark</span>
             <span style={{fontSize:10,fontWeight:700,marginLeft:6,verticalAlign:"middle",color:C.teal}}>🔱V3.1</span>
           </h1>
-          <p style={{ margin:"2px 0 0", fontSize:12, color:C.textSec, fontWeight:500 }}>The AI that truly knows your child.</p>
+          <p style={{ margin:"2px 0 0", fontSize:12, color:C.textSec, fontWeight:500, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>The AI that truly knows your child.</p>
         </div>
       </div>
       {stats.xp > 0 && (
-        <div style={{ display:"flex", flexDirection:"column", gap:4, alignItems:"flex-end" }}>
-          <div style={{ display:"flex", gap:6 }}>
-            <span style={{...S.heroStatPillGold, padding:"2px 6px", fontSize:11}}>{"⚡ " + stats.xp + " XP"}</span>
-            <span style={{...S.heroStatPillGreen, padding:"2px 6px", fontSize:11}}>{"✅ " + pct + "%"}</span>
-          </div>
-          <span style={{...S.heroStatPillAccent, padding:"2px 6px", fontSize:11}}>{"🔥 连对 " + stats.bestStreak}</span>
+        <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0 }}>
+          <span style={{...S.heroStatPillGold, padding:"2px 6px", fontSize:11}}>{"⚡ " + stats.xp}</span>
+          <span style={{...S.heroStatPillAccent, padding:"2px 6px", fontSize:11}}>{"🔥 " + stats.bestStreak}</span>
+          <span style={{...S.heroStatPillGreen, padding:"2px 6px", fontSize:11}}>{"✅ " + pct + "%"}</span>
         </div>
       )}
     </div>
@@ -565,6 +563,8 @@ export default function App() {
   var [selectedWords, setSelectedWords] = useState({});
   var [wordPage, setWordPage] = useState(1);
   var [wordPageSize, setWordPageSize] = useState(120);
+  var [wordDensity, setWordDensity] = useState("cozy");
+  var [showTaskOrderHint, setShowTaskOrderHint] = useState(true);
   var [quickReviewQueue, setQuickReviewQueue] = useState([]);
   var [quickReviewIdx, setQuickReviewIdx] = useState(0);
   var [quickReviewFlipped, setQuickReviewFlipped] = useState(false);
@@ -2085,9 +2085,9 @@ export default function App() {
                 释义：{qr?.meaning || "（暂无）"}
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-                <button style={{...S.primaryBtn,background:C.green,borderColor:C.green,justifyContent:"center",padding:"10px 8px"}} onClick={() => markQuickReview("remembered")}>😎 记得</button>
-                <button style={{...S.primaryBtn,background:C.gold,borderColor:C.gold,justifyContent:"center",padding:"10px 8px"}} onClick={() => markQuickReview("fuzzy")}>🤔 模糊</button>
-                <button style={{...S.primaryBtn,background:C.red,borderColor:C.red,justifyContent:"center",padding:"10px 8px"}} onClick={() => markQuickReview("forgot")}>😵 忘了</button>
+                <button style={{...S.primaryBtn,background:C.green,borderColor:C.green,justifyContent:"center",padding:"10px 8px"}} onClick={() => markQuickReview("remembered")}>🟢 彻底掌握</button>
+                <button style={{...S.primaryBtn,background:C.gold,borderColor:C.gold,justifyContent:"center",padding:"10px 8px"}} onClick={() => markQuickReview("fuzzy")}>🟡 仍不确定</button>
+                <button style={{...S.primaryBtn,background:C.red,borderColor:C.red,justifyContent:"center",padding:"10px 8px"}} onClick={() => markQuickReview("forgot")}>🔴 面临易错</button>
               </div>
             </>
           )}
@@ -2102,9 +2102,9 @@ export default function App() {
         <div style={{...S.card,textAlign:"center",padding:"30px 20px"}}>
           <div style={S.tag}>📊 复习完成</div>
           <div style={{fontSize:15,lineHeight:2,margin:"10px 0 14px"}}>
-            <span style={{color:C.green,fontWeight:700}}>😎 记得 {quickReviewStats.remembered} 个</span><br/>
-            <span style={{color:C.gold,fontWeight:700}}>🤔 模糊 {quickReviewStats.fuzzy} 个</span><br/>
-            <span style={{color:C.red,fontWeight:700}}>😵 忘了 {quickReviewStats.forgot} 个</span>
+            <span style={{color:C.green,fontWeight:700}}>🟢 彻底掌握 {quickReviewStats.remembered} 个</span><br/>
+            <span style={{color:C.gold,fontWeight:700}}>🟡 仍不确定 {quickReviewStats.fuzzy} 个</span><br/>
+            <span style={{color:C.red,fontWeight:700}}>🔴 面临易错 {quickReviewStats.forgot} 个</span>
           </div>
           <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
             <button style={{...S.primaryBtn,background:C.red}} onClick={startDeepReview}>🔴 重点攻克</button>
@@ -2161,9 +2161,9 @@ export default function App() {
           )}
 
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginTop:8}}>
-            <button style={{...S.primaryBtn,background:C.green,borderColor:C.green,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("remembered");}}>😎 已稳住</button>
-            <button style={{...S.primaryBtn,background:C.gold,borderColor:C.gold,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("fuzzy");}}>🤔 还模糊</button>
-            <button style={{...S.primaryBtn,background:C.red,borderColor:C.red,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("forgot");}}>😵 仍不会</button>
+            <button style={{...S.primaryBtn,background:C.green,borderColor:C.green,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("remembered");}}>🟢 彻底掌握</button>
+            <button style={{...S.primaryBtn,background:C.gold,borderColor:C.gold,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("fuzzy");}}>🟡 仍不确定</button>
+            <button style={{...S.primaryBtn,background:C.red,borderColor:C.red,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("forgot");}}>🔴 面临易错</button>
           </div>
         </div>
       </div></div>
@@ -2176,9 +2176,9 @@ export default function App() {
         <div style={{...S.card,textAlign:"center",padding:"30px 20px"}}>
           <div style={{...S.tag,background:C.redLight,color:C.red}}>✅ 重点攻克完成</div>
           <div style={{fontSize:15,lineHeight:2,margin:"10px 0 14px"}}>
-            <span style={{color:C.green,fontWeight:700}}>😎 已稳住 {deepSessionStats.remembered} 个</span><br/>
-            <span style={{color:C.gold,fontWeight:700}}>🤔 还模糊 {deepSessionStats.fuzzy} 个</span><br/>
-            <span style={{color:C.red,fontWeight:700}}>😵 仍不会 {deepSessionStats.forgot} 个</span>
+            <span style={{color:C.green,fontWeight:700}}>🟢 彻底掌握 {deepSessionStats.remembered} 个</span><br/>
+            <span style={{color:C.gold,fontWeight:700}}>🟡 仍不确定 {deepSessionStats.fuzzy} 个</span><br/>
+            <span style={{color:C.red,fontWeight:700}}>🔴 面临易错 {deepSessionStats.forgot} 个</span>
           </div>
           <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
             <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){startQuickReview("due");}}>继续今日复习</button>
@@ -2235,10 +2235,16 @@ export default function App() {
       <AppHeroHeader stats={stats} />
 
       <div style={{...S.card, marginBottom:14, borderColor:C.teal, background:C.tealLight}}>
-        <div style={{fontWeight:800,fontSize:15,marginBottom:10,color:C.teal,display:"flex",justifyContent:"space-between"}}>
+        <div style={{fontWeight:800,fontSize:15,marginBottom:8,color:C.teal,display:"flex",justifyContent:"space-between"}}>
           <span>🏠 今日任务</span>
           <span style={{fontSize:12,fontWeight:600}}>总计：约 {dailyPlan.totalMin} 分</span>
         </div>
+        {showTaskOrderHint && (
+          <div style={{fontSize:12,color:C.textSec,marginBottom:8,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"6px 8px"}}>
+            <span>建议顺序：先复习，再攻克，最后学新词</span>
+            <button style={{...S.smallBtn,padding:"2px 8px"}} onClick={function(){setShowTaskOrderHint(false);}}>跳过建议</button>
+          </div>
+        )}
 
         <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px 12px",marginBottom:8,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{flex:1}}>
@@ -2324,7 +2330,7 @@ export default function App() {
       {setupTab === "plan" && (() => {
         var planView = getStudyPlanPrediction();
         return <div style={S.setupCard}>
-          <div style={S.setupHint}>学习计划页：围绕<strong>目标日期 / Target Date</strong>安排每日节奏，不绑定考试场景。</div>
+          <div style={S.setupHint}>设定目标日期，系统会自动安排每天任务。</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
             <div>
               <div style={{fontSize:12,color:C.textSec,fontWeight:700,marginBottom:6}}>目标日期 / Target Date</div>
@@ -2350,17 +2356,7 @@ export default function App() {
 
       {setupTab === "words" && (
         <div style={S.setupCard}>
-          <div style={S.setupHint}>词汇管理面板：先看状态与复习，再按需编辑词表。<br/><span style={{color:C.accent}}>💡 支持筛选、搜索、排序和批量标注，便于日常维护。</span></div>
-
-          <div style={{margin:"8px 0 12px"}}>
-            <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"0 0 8px"}}>📅 每日新词数</div>
-            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              {[10,15,20,25,30,50].map(function(n){
-                var active = dailyNewWords===n;
-                return <button key={n} onClick={function(){updateDailyNewWords(n);}} style={active ? {...S.ghostBtn,background:C.accent,color:"#fff",borderColor:C.accent,padding:"7px 12px"} : {...S.ghostBtn,padding:"7px 12px"}}>{n}</button>;
-              })}
-            </div>
-          </div>
+          <div style={S.setupHint}>词库管理：导入、筛选、状态维护与批量操作。</div>
           <div style={S.uploadRow}>
             <button style={S.uploadBtn} onClick={() => fileRef.current?.click()}>📁 上传</button>
             <span style={{fontSize:13,color:C.textSec}}>{fileLabel||".xlsx .csv .txt 均支持"}</span>
@@ -2408,10 +2404,15 @@ export default function App() {
                   <option value="due">按到期时间</option>
                 </select>
               </div>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,fontSize:12,color:C.textSec}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,fontSize:12,color:C.textSec,flexWrap:"wrap",gap:8}}>
                 <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}>
                   <input type="checkbox" checked={showDueOnly} onChange={function(e){setShowDueOnly(e.target.checked);}} /> 仅看逾期复习
                 </label>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span>视图：</span>
+                  <button style={wordDensity==="compact"?{...S.smallBtn,background:C.accentLight,borderColor:C.accent,color:C.accent}:{...S.smallBtn}} onClick={function(){setWordDensity("compact");}}>紧凑</button>
+                  <button style={wordDensity==="cozy"?{...S.smallBtn,background:C.accentLight,borderColor:C.accent,color:C.accent}:{...S.smallBtn}} onClick={function(){setWordDensity("cozy");}}>舒适</button>
+                </div>
                 <span>筛选后 {totalRows} 个词</span>
               </div>
 
@@ -2485,8 +2486,16 @@ export default function App() {
                         title={learnedWord?"点击切换状态 🟢→🟡→🔴":"未学习词不可手动标注"}
                       >{m.icon}</button>
                       <div style={{minWidth:0}}>
-                        <div style={{fontWeight:700,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:180}}>{w}</div>
-                        <div style={{fontSize:11,color:m.color,fontWeight:700}}>{m.text} · {reviewAgeText(d.lastReviewDate)} {overdue ? "⚠️" : ""}</div>
+                        {wordDensity === "compact" ? (
+                          <div style={{fontWeight:700,fontSize:13,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:220,color:m.color}}>
+                            {w} · {m.text}{overdue ? " ⚠️" : ""}
+                          </div>
+                        ) : (
+                          <>
+                            <div style={{fontWeight:700,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:180}}>{w}</div>
+                            <div style={{fontSize:11,color:m.color,fontWeight:700}}>{m.text} · {reviewAgeText(d.lastReviewDate)} {overdue ? "⚠️" : ""}</div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>;
@@ -2541,9 +2550,14 @@ export default function App() {
             </div>
             <div style={{fontSize:12,color:C.textSec,lineHeight:1.7}}>当前进度：已学习 {phaseView.learnedCount}/{phaseView.totalWords}，到期 {phaseView.dueCount}，重点词 {phaseView.focusCount}。</div>
           </div>
-          <div style={{fontSize:12,color:C.textSec,lineHeight:1.7}}>
-            快速结论：{statsView.dueCount > 0 ? "有到期词待复习，建议先做快速复习。" : "今日复习压力较低。"}
-            {" "}当前重点词（🟡+🔴）{(statsView.statuses.uncertain||0) + (statsView.statuses.error||0)} 个。
+          <div style={{background:C.goldLight,border:"1px solid "+C.gold,borderRadius:10,padding:"12px 14px",fontSize:13,lineHeight:1.6,color:C.text}}>
+            <div style={{fontWeight:700,marginBottom:4}}>⚡ 行动建议 (Action Items)</div>
+            <ul style={{margin:0,paddingLeft:20}}>
+              {statsView.dueCount > 0 && <li><strong>有 {statsView.dueCount} 个到期词待复习</strong>，建议先做快速复习清空队列。</li>}
+              {(statsView.statuses.uncertain||0) + (statsView.statuses.error||0) > 0 && <li><strong>你的易错/不确定词有 {(statsView.statuses.uncertain||0) + (statsView.statuses.error||0)} 个</strong>，请在精力充沛时优先点击“深度攻克”。</li>}
+              {planView.remainingWords > 0 && <li><strong>待学习新词还有 {planView.remainingWords} 个</strong>，按照目前的每日 {planView.recommendedNewPerDay} 个的目标前进吧！</li>}
+              {statsView.dueCount === 0 && ((statsView.statuses.uncertain||0) + (statsView.statuses.error||0)) === 0 && <li><strong>太棒了！</strong>今天的复习压力已清空，尽情探索新单词吧。</li>}
+            </ul>
           </div>
         </div>;
       })()}
