@@ -550,6 +550,7 @@ export default function App() {
   var [fileLabel, setFileLabel] = useState("");
   var [wordStatusMap, setWordStatusMap] = useState({});
   var [reviewWordData, setReviewWordData] = useState({});
+  var [wordStatusFilter, setWordStatusFilter] = useState("all");
   var [quickReviewQueue, setQuickReviewQueue] = useState([]);
   var [quickReviewIdx, setQuickReviewIdx] = useState(0);
   var [quickReviewFlipped, setQuickReviewFlipped] = useState(false);
@@ -975,6 +976,17 @@ export default function App() {
     var now = new Date();
     now.setHours(0,0,0,0);
     return t <= now.getTime();
+  };
+
+  var reviewAgeText = function(iso) {
+    if (!iso) return "未复习";
+    var t = new Date(iso).getTime();
+    if (!Number.isFinite(t)) return "未复习";
+    var now = new Date();
+    var days = Math.floor((now.getTime() - t) / 86400000);
+    if (days <= 0) return "今天复习";
+    if (days === 1) return "昨天复习";
+    return days + "天前复习";
   };
 
   /* ─── BATCH LOAD: concurrency-limited (max 5) with real progress ─── */
@@ -1844,14 +1856,14 @@ export default function App() {
 
         <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:8}}>
           <div style={{fontWeight:700,marginBottom:4}}>① 🔄 快速复习（约 {dailyPlan.quickMin} 分钟）</div>
-          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>到期词 {dailyPlan.toReview.length} 个</div>
-          <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none"}} onClick={function(){startQuickReview("due");}}>开始 →</button>
+          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>{dailyPlan.toReview.length === 0 ? "✅ 今日无到期词" : "到期词 " + dailyPlan.toReview.length + " 个"}</div>
+          <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none"}} onClick={function(){startQuickReview("due");}}>{dailyPlan.toReview.length === 0 ? "查看全部复习 →" : "开始 →"}</button>
         </div>
 
         <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:8,opacity:dailyPlan.deepLocked?0.7:1}}>
           <div style={{fontWeight:700,marginBottom:4}}>② 🔴 深度攻克（约 {dailyPlan.deepMin} 分钟）</div>
-          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>{dailyPlan.deepLocked ? "完成快速复习后解锁" : "今日候选 " + dailyPlan.deepToday.length + " 个"}</div>
-          <button style={{...S.smallBtn,background:dailyPlan.deepLocked?C.textSec:C.red,color:"#fff",border:"none"}} disabled={dailyPlan.deepLocked} onClick={startDeepReview}>{dailyPlan.deepLocked?"🔒 待解锁":"开始 →"}</button>
+          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>{dailyPlan.deepLocked ? "🔒 完成快速复习后解锁" : (dailyPlan.deepToday.length===0?"✅ 今日无重点攻克词":"今日候选 " + dailyPlan.deepToday.length + " 个")}</div>
+          <button style={{...S.smallBtn,background:dailyPlan.deepLocked?C.textSec:C.red,color:"#fff",border:"none"}} disabled={dailyPlan.deepLocked} onClick={startDeepReview}>{dailyPlan.deepLocked?"待解锁":"开始 →"}</button>
         </div>
 
         <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px"}}>
@@ -1946,9 +1958,11 @@ export default function App() {
             var focusCount = (counts.uncertain || 0) + (counts.error || 0);
             return <>
               <div style={{display:"flex",gap:10,flexWrap:"wrap",margin:"8px 0 10px",fontSize:12,color:C.textSec}}>
+                <button onClick={function(){setWordStatusFilter("all");}} style={{padding:"4px 8px",borderRadius:999,background:wordStatusFilter==="all"?C.accentLight:C.bg,border:"1px solid "+(wordStatusFilter==="all"?C.accent:C.border),color:wordStatusFilter==="all"?C.accent:C.textSec,fontWeight:700,cursor:"pointer"}}>全部 {words.length}</button>
                 {Object.keys(WORD_STATUS_META).map(function(k){
                   var m = WORD_STATUS_META[k];
-                  return <span key={k} style={{padding:"4px 8px",borderRadius:999,background:C.bg,border:"1px solid "+C.border,color:m.color,fontWeight:700}}>{m.icon} {m.text} {counts[k]||0}</span>;
+                  var active = wordStatusFilter===k;
+                  return <button key={k} onClick={function(){setWordStatusFilter(k);}} style={{padding:"4px 8px",borderRadius:999,background:active?C.accentLight:C.bg,border:"1px solid "+(active?C.accent:C.border),color:m.color,fontWeight:700,cursor:"pointer"}}>{m.icon} {m.text} {counts[k]||0}</button>;
                 })}
               </div>
               <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"0 0 8px"}}>复习入口</div>
@@ -1965,12 +1979,17 @@ export default function App() {
 
               <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"0 0 8px"}}>词汇状态</div>
               <div style={{maxHeight:260,overflow:"auto",border:"1px solid "+C.border,borderRadius:12,background:C.bg,marginBottom:12}}>
-                {words.length === 0 ? <div style={{padding:14,fontSize:13,color:C.textSec}}>先输入词汇，状态列表会显示在这里。</div> : words.map(function(w, i){ 
+                {words.length === 0 ? <div style={{padding:14,fontSize:13,color:C.textSec}}>先输入词汇，状态列表会显示在这里。</div> : words.filter(function(w, i){
                   var s = getWordStatus(w, i, words);
+                  return wordStatusFilter === "all" ? true : s === wordStatusFilter;
+                }).map(function(w, i){
+                  var originalIdx = words.indexOf(w);
+                  var s = getWordStatus(w, originalIdx, words);
                   var m = WORD_STATUS_META[s] || WORD_STATUS_META.unlearned;
-                  var learnedWord = learned.includes(w) || i <= idx;
-                  var starred = wordStatusMap[w] === "uncertain";
-                  return <div key={w+"_"+i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",borderBottom:i===words.length-1?"none":"1px solid "+C.border}}>
+                  var learnedWord = learned.includes(w) || originalIdx <= idx;
+                  var d = reviewWordData[w] || {};
+                  var overdue = d.nextReviewDate && isDueDate(d.nextReviewDate) && s !== "unlearned";
+                  return <div key={w+"_"+i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",borderBottom:i===words.filter(function(x,j){ var ss = getWordStatus(x,j,words); return wordStatusFilter === "all" ? true : ss === wordStatusFilter; }).length-1?"none":"1px solid "+C.border}}>
                     <div style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}>
                       <button
                         onClick={function(){
@@ -1984,18 +2003,11 @@ export default function App() {
                         style={{border:"none",background:"transparent",fontSize:18,cursor:learnedWord?"pointer":"not-allowed",opacity:learnedWord?1:0.55}}
                         title={learnedWord?"点击切换状态 🟢→🟡→🔴":"未学习词不可手动标注"}
                       >{m.icon}</button>
-                      <span style={{fontWeight:700,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:180}}>{w}</span>
-                      <span style={{fontSize:11,color:m.color,fontWeight:700}}>{m.text}</span>
+                      <div style={{minWidth:0}}>
+                        <div style={{fontWeight:700,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:180}}>{w}</div>
+                        <div style={{fontSize:11,color:m.color,fontWeight:700}}>{m.text} · {reviewAgeText(d.lastReviewDate)} {overdue ? "⚠️" : ""}</div>
+                      </div>
                     </div>
-                    <button
-                      onClick={function(){
-                        if (!learnedWord) return;
-                        updateManualWordStatus(w, starred ? null : "uncertain");
-                      }}
-                      disabled={!learnedWord}
-                      style={{border:"none",background:"transparent",fontSize:16,cursor:learnedWord?"pointer":"not-allowed",opacity:learnedWord?1:0.45,color:starred?C.gold:C.textSec}}
-                      title="快速标记为不确定"
-                    >{starred?"⭐":"☆"}</button>
                   </div>;
                 })}
               </div>
