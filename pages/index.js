@@ -469,7 +469,7 @@ var loadSave = async () => {
 var doSave = async (d) => {
   try {
     if (typeof window === "undefined") return;
-    localStorage.setItem(SKEY, JSON.stringify({ schemaVersion: 1, completedWords: [], ...d }));
+    localStorage.setItem(SKEY, JSON.stringify({ schemaVersion: 1, completedWords: [], updatedAt: new Date().toISOString(), ...d }));
   } catch(e) {}
 };
 
@@ -559,6 +559,8 @@ export default function App() {
   var [showDueOnly, setShowDueOnly] = useState(false);
   var [wordSortMode, setWordSortMode] = useState("default");
   var [selectedWords, setSelectedWords] = useState({});
+  var [wordPage, setWordPage] = useState(1);
+  var [wordPageSize, setWordPageSize] = useState(120);
   var [quickReviewQueue, setQuickReviewQueue] = useState([]);
   var [quickReviewIdx, setQuickReviewIdx] = useState(0);
   var [quickReviewFlipped, setQuickReviewFlipped] = useState(false);
@@ -842,9 +844,10 @@ export default function App() {
   var loadFromCloud = async function(userId) {
     try {
       var {data} = await supabase
-        .from('user_progress').select('progress_data')
+        .from('user_progress').select('progress_data, updated_at')
         .eq('user_id', userId).single();
-      return data?.progress_data || null;
+      if (!data?.progress_data) return null;
+      return { ...data.progress_data, updatedAt: data.updated_at || data.progress_data.updatedAt };
     } catch(e) { return null; }
   };
 
@@ -939,7 +942,10 @@ export default function App() {
         var cloudData = await loadFromCloud(u.id);
         if (cloudData) {
           var localData = await loadSave();
-          if ((cloudData?.stats?.xp||0) >= (localData?.stats?.xp||0)) {
+          var localTs = new Date(localData?.updatedAt || 0).getTime() || 0;
+          var cloudTs = new Date(cloudData?.updatedAt || 0).getTime() || 0;
+          var useCloud = cloudTs > localTs || (!localTs && (cloudData?.stats?.xp||0) >= (localData?.stats?.xp||0));
+          if (useCloud) {
             await doSave(cloudData);
             if (cloudData.stats) setStats(function(s) { return {...s, ...cloudData.stats}; });
           } else {
@@ -1770,6 +1776,10 @@ export default function App() {
     return rows;
   };
 
+  useEffect(function(){
+    setWordPage(1);
+  }, [wordSearch, wordStatusFilter, showDueOnly, wordSortMode]);
+
   var toggleWordSelection = function(word) {
     setSelectedWords(function(prev) {
       var next = { ...prev };
@@ -2330,6 +2340,11 @@ export default function App() {
             });
             var focusCount = (counts.uncertain || 0) + (counts.error || 0);
             var rows = getWordRows();
+            var totalRows = rows.length;
+            var totalPages = Math.max(1, Math.ceil(totalRows / wordPageSize));
+            var safePage = Math.min(wordPage, totalPages);
+            var pageStart = (safePage - 1) * wordPageSize;
+            var pageRows = rows.slice(pageStart, pageStart + wordPageSize);
             var filteredWordKeys = rows.map(function(r){ return r.word; });
             var selectedCount = Object.keys(selectedWords).filter(function(k){ return selectedWords[k]; }).length;
             var allFilteredSelected = filteredWordKeys.length > 0 && filteredWordKeys.every(function(w){ return !!selectedWords[w]; });
@@ -2357,7 +2372,7 @@ export default function App() {
                 <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}>
                   <input type="checkbox" checked={showDueOnly} onChange={function(e){setShowDueOnly(e.target.checked);}} /> 仅看逾期复习
                 </label>
-                <span>筛选后 {rows.length} 个词</span>
+                <span>筛选后 {totalRows} 个词</span>
               </div>
 
               <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"0 0 8px"}}>复习入口</div>
@@ -2392,8 +2407,21 @@ export default function App() {
                   </>}
                 </div>
               </div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",margin:"0 0 8px",fontSize:12,color:C.textSec}}>
+                <div>第 {safePage}/{totalPages} 页</div>
+                <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                  <select value={wordPageSize} onChange={function(e){setWordPageSize(Number(e.target.value)||120);}} style={{padding:"4px 6px",border:"1px solid "+C.border,borderRadius:6,fontFamily:FONT,fontSize:12}}>
+                    <option value={80}>80/页</option>
+                    <option value={120}>120/页</option>
+                    <option value={200}>200/页</option>
+                  </select>
+                  <button style={S.smallBtn} disabled={safePage<=1} onClick={function(){setWordPage(function(p){return Math.max(1,p-1);});}}>上一页</button>
+                  <button style={S.smallBtn} disabled={safePage>=totalPages} onClick={function(){setWordPage(function(p){return Math.min(totalPages,p+1);});}}>下一页</button>
+                </div>
+              </div>
+
               <div style={{maxHeight:280,overflow:"auto",border:"1px solid "+C.border,borderRadius:12,background:C.bg,marginBottom:12}}>
-                {rows.length === 0 ? <div style={{padding:14,fontSize:13,color:C.textSec}}>没有匹配结果。试试清空筛选或修改搜索词。</div> : rows.map(function(row, i){
+                {totalRows === 0 ? <div style={{padding:14,fontSize:13,color:C.textSec}}>没有匹配结果。试试清空筛选或修改搜索词。</div> : pageRows.map(function(row, i){ 
                   var w = row.word;
                   var s = row.status;
                   var m = WORD_STATUS_META[s] || WORD_STATUS_META.unlearned;
@@ -2401,7 +2429,7 @@ export default function App() {
                   var d = row.reviewData || {};
                   var overdue = row.due;
                   var checked = !!selectedWords[w];
-                  return <div key={w+"_"+i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",borderBottom:i===rows.length-1?"none":"1px solid "+C.border,background:checked?C.accentLight:"transparent"}}>
+                  return <div key={w+"_"+i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",borderBottom:i===pageRows.length-1?"none":"1px solid "+C.border,background:checked?C.accentLight:"transparent"}}>
                     <div style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}>
                       <input type="checkbox" checked={checked} onChange={function(){toggleWordSelection(w);}} />
                       <button
