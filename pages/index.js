@@ -1719,6 +1719,30 @@ export default function App() {
     };
   };
 
+  var getPhaseExecutionSnapshot = function() {
+    var statsView = getStatsSnapshot();
+    var planView = getStudyPlanPrediction();
+    var words = parseWordsFromInput(wordInput);
+    var hasWords = words.length > 0;
+    var learnedCount = statsView.totalWords - (statsView.statuses.unlearned || 0);
+    var focusCount = (statsView.statuses.uncertain || 0) + (statsView.statuses.error || 0);
+
+    var p0Ready = hasWords && (learnedCount > 0 || Number(statsView.answered || 0) > 0);
+    var p1Ready = p0Ready && (Number(statsView.quickReviews || 0) + Number(statsView.deepReviews || 0) > 0 || !!targetDate);
+    var managementSignals = Object.keys(wordStatusMap || {}).length > 0 || !!wordSearch.trim() || wordSortMode !== "default" || showDueOnly;
+    var p2Ready = p1Ready && hasWords && (managementSignals || statsView.totalReviews > 0);
+
+    return {
+      P0: p0Ready,
+      P1: p1Ready,
+      P2: p2Ready,
+      learnedCount: learnedCount,
+      totalWords: statsView.totalWords,
+      focusCount: focusCount,
+      dueCount: planView.dueCount,
+    };
+  };
+
   var getWordRows = function() {
     var words = parseWordsFromInput(wordInput);
     var rows = words.map(function(w, i) {
@@ -1766,8 +1790,10 @@ export default function App() {
       });
     } else if (wordSortMode === "due") {
       rows.sort(function(a, b) {
-        var ad = a.reviewData?.nextReviewDate ? new Date(a.reviewData.nextReviewDate).getTime() : Infinity;
-        var bd = b.reviewData?.nextReviewDate ? new Date(b.reviewData.nextReviewDate).getTime() : Infinity;
+        var adRaw = a.reviewData?.nextReviewDate ? new Date(a.reviewData.nextReviewDate).getTime() : Infinity;
+        var bdRaw = b.reviewData?.nextReviewDate ? new Date(b.reviewData.nextReviewDate).getTime() : Infinity;
+        var ad = Number.isFinite(adRaw) ? adRaw : Infinity;
+        var bd = Number.isFinite(bdRaw) ? bdRaw : Infinity;
         if (ad !== bd) return ad - bd;
         return a.word.localeCompare(b.word);
       });
@@ -2464,6 +2490,7 @@ export default function App() {
       {setupTab === "stats" && (() => {
         var statsView = getStatsSnapshot();
         var planView = getStudyPlanPrediction();
+        var phaseView = getPhaseExecutionSnapshot();
         return <div style={S.setupCard}>
           <div style={S.setupHint}>学习统计中心：查看学习成效、复习量和当前词库健康度。</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,marginBottom:12}}>
@@ -2490,6 +2517,15 @@ export default function App() {
                 <div style={{height:6,background:C.border,borderRadius:999,overflow:"hidden"}}><div style={{height:"100%",width:pct+"%",background:m.color,borderRadius:999}}/></div>
               </div>;
             })}
+          </div>
+          <div style={{background:C.bg,border:"1px dashed "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>🚦 P0 / P1 / P2 阶段看板</div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap",fontSize:12,marginBottom:6}}>
+              <span style={{padding:"2px 8px",borderRadius:999,background:phaseView.P0?C.greenLight:C.redLight,color:phaseView.P0?C.green:C.red,fontWeight:700}}>P0 基础学习 {phaseView.P0?"✅":"⏳"}</span>
+              <span style={{padding:"2px 8px",borderRadius:999,background:phaseView.P1?C.greenLight:C.redLight,color:phaseView.P1?C.green:C.red,fontWeight:700}}>P1 复习与计划 {phaseView.P1?"✅":"⏳"}</span>
+              <span style={{padding:"2px 8px",borderRadius:999,background:phaseView.P2?C.greenLight:C.redLight,color:phaseView.P2?C.green:C.red,fontWeight:700}}>P2 管理与统计 {phaseView.P2?"✅":"⏳"}</span>
+            </div>
+            <div style={{fontSize:12,color:C.textSec,lineHeight:1.7}}>当前进度：已学习 {phaseView.learnedCount}/{phaseView.totalWords}，到期 {phaseView.dueCount}，重点词 {phaseView.focusCount}。</div>
           </div>
           <div style={{fontSize:12,color:C.textSec,lineHeight:1.7}}>
             快速结论：{statsView.dueCount > 0 ? "有到期词待复习，建议先做快速复习。" : "今日复习压力较低。"}
@@ -2698,6 +2734,7 @@ export default function App() {
               {setupTab === "stats" && (() => {
                 var sv = getStatsSnapshot();
                 var pv = getStudyPlanPrediction();
+                var ph = getPhaseExecutionSnapshot();
                 return <div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,marginBottom:12}}>
                     <div style={S.statCard}><div style={S.statNum}>{sv.accuracy}%</div><div style={S.statLabel}>正确率</div></div>
@@ -2707,6 +2744,7 @@ export default function App() {
                     <div style={S.statCard}><div style={S.statNum}>{pv.recommendedNewPerDay}</div><div style={S.statLabel}>建议每日新词</div></div>
                     <div style={S.statCard}><div style={S.statNum}>{pv.remainingWords}</div><div style={S.statLabel}>待学习词数</div></div>
                   </div>
+                  <div style={{fontSize:12,color:C.textSec,marginBottom:10}}>阶段概览：P0 {ph.P0?"✅":"⏳"} · P1 {ph.P1?"✅":"⏳"} · P2 {ph.P2?"✅":"⏳"}</div>
                   <button style={{...S.primaryBtn,background:C.teal}} onClick={() => { setShowSettings(false); setScreen("setup"); setSetupTab("stats"); }}>打开完整统计页</button>
                 </div>;
               })()}
