@@ -1505,14 +1505,35 @@ export default function App() {
       });
     });
 
+    var deepDoneCountToday = Object.values(reviewWordData || {}).reduce(function(acc, item) {
+      var c = (item.reviewHistory || []).filter(function(r) {
+        return r.mode === "deep" && String(r.date || "").slice(0,10) === todayKey;
+      }).length;
+      return acc + c;
+    }, 0);
+
+    var newLearnedToday = Object.values(reviewWordData || {}).filter(function(item) {
+      return String(item.firstLearnedAt || "").slice(0,10) === todayKey;
+    }).length;
+
     var quickMin = Math.ceil((toReview.length * 5) / 60);
     var deepMin = deepToday.length * 2;
     var newMin = Math.ceil(newWordsToday.length * 1.5);
 
+    var quickDone = quickDoneToday || toReview.length === 0;
+    var deepLocked = !quickDone;
+    var deepDone = !deepLocked && (deepToday.length === 0 || deepDoneCountToday >= Math.min(deepToday.length, 1));
+    var newDone = newLearnedToday >= (dailyNewWords || 20);
+
     return {
       toReview: toReview,
       deepToday: deepToday,
-      deepLocked: !quickDoneToday,
+      deepLocked: deepLocked,
+      quickDone: quickDone,
+      deepDone: deepDone,
+      newDone: newDone,
+      deepDoneCountToday: deepDoneCountToday,
+      newLearnedToday: newLearnedToday,
       newWordsToday: newWordsToday,
       quickMin: quickMin,
       deepMin: deepMin,
@@ -1855,21 +1876,21 @@ export default function App() {
         <div style={{fontSize:13,color:C.textSec,marginBottom:10}}>预计总用时：{dailyPlan.totalMin} 分钟</div>
 
         <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:8}}>
-          <div style={{fontWeight:700,marginBottom:4}}>① 🔄 快速复习（约 {dailyPlan.quickMin} 分钟）</div>
-          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>{dailyPlan.toReview.length === 0 ? "✅ 今日无到期词" : "到期词 " + dailyPlan.toReview.length + " 个"}</div>
-          <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none"}} onClick={function(){startQuickReview("due");}}>{dailyPlan.toReview.length === 0 ? "查看全部复习 →" : "开始 →"}</button>
+          <div style={{fontWeight:700,marginBottom:4}}>① 🔄 快速复习（约 {dailyPlan.quickMin} 分钟） {dailyPlan.quickDone ? "✅" : ""}</div>
+          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>{dailyPlan.quickDone ? "已完成" : (dailyPlan.toReview.length === 0 ? "✅ 今日无到期词" : "到期词 " + dailyPlan.toReview.length + " 个")}</div>
+          <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none"}} onClick={function(){startQuickReview("due");}}>{dailyPlan.quickDone ? "继续复习 →" : (dailyPlan.toReview.length === 0 ? "查看全部复习 →" : "开始 →")}</button>
         </div>
 
         <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:8,opacity:dailyPlan.deepLocked?0.7:1}}>
-          <div style={{fontWeight:700,marginBottom:4}}>② 🔴 深度攻克（约 {dailyPlan.deepMin} 分钟）</div>
-          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>{dailyPlan.deepLocked ? "🔒 完成快速复习后解锁" : (dailyPlan.deepToday.length===0?"✅ 今日无重点攻克词":"今日候选 " + dailyPlan.deepToday.length + " 个")}</div>
-          <button style={{...S.smallBtn,background:dailyPlan.deepLocked?C.textSec:C.red,color:"#fff",border:"none"}} disabled={dailyPlan.deepLocked} onClick={startDeepReview}>{dailyPlan.deepLocked?"待解锁":"开始 →"}</button>
+          <div style={{fontWeight:700,marginBottom:4}}>② 🔴 深度攻克（约 {dailyPlan.deepMin} 分钟） {dailyPlan.deepDone ? "✅" : ""}</div>
+          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>{dailyPlan.deepLocked ? "🔒 完成快速复习后解锁" : (dailyPlan.deepDone ? ("已完成 " + dailyPlan.deepDoneCountToday + " 词") : (dailyPlan.deepToday.length===0?"✅ 今日无重点攻克词":"今日候选 " + dailyPlan.deepToday.length + " 个"))}</div>
+          <button style={{...S.smallBtn,background:dailyPlan.deepLocked?C.textSec:C.red,color:"#fff",border:"none"}} disabled={dailyPlan.deepLocked} onClick={startDeepReview}>{dailyPlan.deepLocked?"待解锁":(dailyPlan.deepDone?"继续攻克 →":"开始 →")}</button>
         </div>
 
         <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px"}}>
-          <div style={{fontWeight:700,marginBottom:4}}>③ 📘 新学 {dailyPlan.newWordsToday.length} 个词（约 {dailyPlan.newMin} 分钟）</div>
-          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>每日新词设置：{dailyNewWords}</div>
-          <button style={{...S.smallBtn,background:C.accent,color:"#fff",border:"none"}} onClick={function(){startLearning(0);}}>开始 →</button>
+          <div style={{fontWeight:700,marginBottom:4}}>③ 📘 新学 {dailyPlan.newWordsToday.length} 个词（约 {dailyPlan.newMin} 分钟） {dailyPlan.newDone ? "✅" : ""}</div>
+          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>每日新词设置：{dailyNewWords} · 今日已学 {dailyPlan.newLearnedToday}</div>
+          <button style={{...S.smallBtn,background:C.accent,color:"#fff",border:"none"}} onClick={function(){startLearning(0);}}>{dailyPlan.newDone?"继续学习 →":"开始 →"}</button>
         </div>
       </div>
 
