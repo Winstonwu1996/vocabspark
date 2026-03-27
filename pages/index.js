@@ -19,6 +19,7 @@ var C = {
 var FONT = "'DM Sans','Noto Sans SC',sans-serif";
 var DAILY_LIMIT = 10;
 var DAILY_KEY = 'vocabspark_daily';
+var DAILY_NEW_QUOTA_KEY = 'vocabspark_daily_new_quota_v1';
 var PHOTO_LIMIT = 5;
 var PROFILE_MAX = 1000;
 var PROFILE_TEXTAREA_PLACEHOLDER =
@@ -551,6 +552,10 @@ export default function App() {
   var [wordStatusMap, setWordStatusMap] = useState({});
   var [reviewWordData, setReviewWordData] = useState({});
   var [wordStatusFilter, setWordStatusFilter] = useState("all");
+  var [wordSearch, setWordSearch] = useState("");
+  var [showDueOnly, setShowDueOnly] = useState(false);
+  var [wordSortMode, setWordSortMode] = useState("default");
+  var [selectedWords, setSelectedWords] = useState({});
   var [quickReviewQueue, setQuickReviewQueue] = useState([]);
   var [quickReviewIdx, setQuickReviewIdx] = useState(0);
   var [quickReviewFlipped, setQuickReviewFlipped] = useState(false);
@@ -725,23 +730,76 @@ export default function App() {
   }, []);
 
   // ── Daily count helpers ──
+  var getLocalDateKey = function() {
+    var d = new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  };
+
   var getDailyState = function() {
     try {
-      var today = new Date().toISOString().slice(0,10);
+      var today = getLocalDateKey();
+      if (typeof window === "undefined") return {count:0, date:today};
       var stored = JSON.parse(localStorage.getItem(DAILY_KEY) || '{}');
       return stored.date === today ? stored : {count:0, date:today};
-    } catch(e) { return {count:0, date:''}; }
+    } catch(e) { return {count:0, date:getLocalDateKey()}; }
   };
 
   var incrementDailyCount = function() {
     try {
-      var today = new Date().toISOString().slice(0,10);
+      var today = getLocalDateKey();
       var curr = getDailyState();
       var next = {date:today, count:(curr.date===today ? curr.count : 0)+1};
       localStorage.setItem(DAILY_KEY, JSON.stringify(next));
       setTodayCount(next.count);
       return next.count;
     } catch(e) { return 0; }
+  };
+
+  var getNewWordQuotaState = function() {
+    try {
+      var today = getLocalDateKey();
+      if (typeof window === "undefined") {
+        return { date: today, quota: dailyNewWords || 20, consumed: 0 };
+      }
+      var stored = JSON.parse(localStorage.getItem(DAILY_NEW_QUOTA_KEY) || '{}');
+      if (stored.date === today) {
+        return {
+          date: today,
+          quota: Number.isFinite(stored.quota) ? stored.quota : (dailyNewWords || 20),
+          consumed: Number.isFinite(stored.consumed) ? stored.consumed : 0,
+        };
+      }
+      return { date: today, quota: dailyNewWords || 20, consumed: 0 };
+    } catch (e) {
+      return { date: getLocalDateKey(), quota: dailyNewWords || 20, consumed: 0 };
+    }
+  };
+
+  var saveNewWordQuotaState = function(state) {
+    try {
+      if (typeof window === "undefined") return;
+      localStorage.setItem(DAILY_NEW_QUOTA_KEY, JSON.stringify(state));
+    } catch (e) {}
+  };
+
+  var getRemainingNewWordQuota = function() {
+    var s = getNewWordQuotaState();
+    return Math.max(0, (s.quota || 0) - (s.consumed || 0));
+  };
+
+  var consumeNewWordQuota = function(n) {
+    var amount = n || 1;
+    var s = getNewWordQuotaState();
+    var next = {
+      date: s.date,
+      quota: s.quota,
+      consumed: Math.min(s.quota, (s.consumed || 0) + amount),
+    };
+    saveNewWordQuotaState(next);
+    return next;
   };
 
   // ── Cloud sync helpers ──
@@ -888,6 +946,12 @@ export default function App() {
       var nextData = {...(d||{}), settings: {...(d?.settings||{}), dailyNewWords: n}};
       doSave(nextData);
       syncToCloud(nextData);
+    });
+    var quotaState = getNewWordQuotaState();
+    saveNewWordQuotaState({
+      date: quotaState.date,
+      quota: n,
+      consumed: Math.min(quotaState.consumed || 0, n),
     });
   };
 
@@ -1235,8 +1299,13 @@ export default function App() {
     var words = rawWords;
     if (startIdx === 0) {
       var unlearned = rawWords.filter(w => !wordStatusMap[w] || wordStatusMap[w] === "unlearned");
-      if (unlearned.length === 0) unlearned = rawWords; 
-      words = unlearned.slice(0, dailyNewWords || 20);
+      if (unlearned.length === 0) unlearned = rawWords;
+      var remainingQuota = getRemainingNewWordQuota();
+      if (remainingQuota <= 0) {
+        setError("📘 今日新词配额已完成，先做复习任务或明天继续。");
+        return;
+      }
+      words = unlearned.slice(0, Math.min(dailyNewWords || 20, remainingQuota));
     }
     
     var startLearned = startIdx > 0 ? words.slice(0, startIdx) : [];
@@ -1335,6 +1404,7 @@ export default function App() {
       var guessed = !!selectedOption;
       var guessCorrect = guessed && answerKey ? selectedOption === answerKey : null;
       var oldItem = reviewWordData[currentWord] || { reviewHistory: [] };
+      var isFirstLearnToday = !oldItem.firstLearnedAt;
       upsertReviewWordData(currentWord, {
         word: currentWord,
         phonetic: phonetic || oldItem.phonetic || "",
@@ -1344,6 +1414,9 @@ export default function App() {
         reviewLevel: Number.isFinite(oldItem.reviewLevel) ? oldItem.reviewLevel : 0,
         nextReviewDate: oldItem.nextReviewDate || addDaysISO(REVIEW_INTERVAL_DAYS[0]),
       });
+      if (isFirstLearnToday) {
+        consumeNewWordQuota(1);
+      }
       if (guessCorrect === true && !wordStatusMap[currentWord]) {
         updateManualWordStatus(currentWord, "mastered");
       }
@@ -1475,7 +1548,7 @@ export default function App() {
 
   var getDailyPlan = function() {
     var words = parseWordsFromInput(wordInput);
-    var todayKey = new Date().toISOString().slice(0,10);
+    var todayKey = getLocalDateKey();
 
     var toReview = words.filter(function(w, i) {
       var s = getWordStatus(w, i, words);
@@ -1493,11 +1566,13 @@ export default function App() {
     var deepLimit = 10;
     var deepToday = deepPool.slice(0, deepLimit);
 
+    var quotaState = getNewWordQuotaState();
     var unlearned = words.filter(function(w, i) {
       var s = getWordStatus(w, i, words);
       return s === "unlearned";
     });
-    var newWordsToday = unlearned.slice(0, dailyNewWords || 20);
+    var remainingNewQuota = Math.max(0, (quotaState.quota || 0) - (quotaState.consumed || 0));
+    var newWordsToday = unlearned.slice(0, remainingNewQuota);
 
     var quickDoneToday = Object.values(reviewWordData || {}).some(function(item) {
       return (item.reviewHistory || []).some(function(r) {
@@ -1512,9 +1587,7 @@ export default function App() {
       return acc + c;
     }, 0);
 
-    var newLearnedToday = Object.values(reviewWordData || {}).filter(function(item) {
-      return String(item.firstLearnedAt || "").slice(0,10) === todayKey;
-    }).length;
+    var newLearnedToday = Math.min(quotaState.quota || 0, quotaState.consumed || 0);
 
     var quickMin = Math.ceil((toReview.length * 5) / 60);
     var deepMin = deepToday.length * 2;
@@ -1523,7 +1596,7 @@ export default function App() {
     var quickDone = quickDoneToday || toReview.length === 0;
     var deepLocked = !quickDone;
     var deepDone = !deepLocked && (deepToday.length === 0 || deepDoneCountToday >= Math.min(deepToday.length, 1));
-    var newDone = newLearnedToday >= (dailyNewWords || 20);
+    var newDone = newLearnedToday >= (quotaState.quota || dailyNewWords || 20);
 
     return {
       toReview: toReview,
@@ -1535,10 +1608,132 @@ export default function App() {
       deepDoneCountToday: deepDoneCountToday,
       newLearnedToday: newLearnedToday,
       newWordsToday: newWordsToday,
+      newQuota: quotaState.quota || dailyNewWords || 20,
+      newRemainingQuota: remainingNewQuota,
       quickMin: quickMin,
       deepMin: deepMin,
       newMin: newMin,
       totalMin: quickMin + deepMin + newMin,
+    };
+  };
+
+  var getWordRows = function() {
+    var words = parseWordsFromInput(wordInput);
+    var rows = words.map(function(w, i) {
+      var status = getWordStatus(w, i, words);
+      var d = reviewWordData[w] || {};
+      var due = !!(d.nextReviewDate && isDueDate(d.nextReviewDate) && status !== "unlearned");
+      return {
+        word: w,
+        index: i,
+        status: status,
+        reviewData: d,
+        due: due,
+      };
+    });
+
+    var q = wordSearch.trim().toLowerCase();
+    if (q) {
+      rows = rows.filter(function(r) {
+        var meaning = String(r.reviewData?.meaning || "").toLowerCase();
+        return r.word.toLowerCase().includes(q) || meaning.includes(q);
+      });
+    }
+    if (wordStatusFilter !== "all") {
+      rows = rows.filter(function(r) { return r.status === wordStatusFilter; });
+    }
+    if (showDueOnly) {
+      rows = rows.filter(function(r) { return r.due; });
+    }
+
+    if (wordSortMode === "alpha") {
+      rows.sort(function(a, b) { return a.word.localeCompare(b.word); });
+    } else if (wordSortMode === "status") {
+      var order = { error: 0, uncertain: 1, learning: 2, mastered: 3, unlearned: 4 };
+      rows.sort(function(a, b) {
+        var oa = Number.isFinite(order[a.status]) ? order[a.status] : 99;
+        var ob = Number.isFinite(order[b.status]) ? order[b.status] : 99;
+        if (oa !== ob) return oa - ob;
+        return a.word.localeCompare(b.word);
+      });
+    } else if (wordSortMode === "due") {
+      rows.sort(function(a, b) {
+        if (a.due !== b.due) return a.due ? -1 : 1;
+        return a.word.localeCompare(b.word);
+      });
+    }
+
+    return rows;
+  };
+
+  var toggleWordSelection = function(word) {
+    setSelectedWords(function(prev) {
+      var next = { ...prev };
+      if (next[word]) delete next[word];
+      else next[word] = true;
+      return next;
+    });
+  };
+
+  var applyBulkStatus = function(nextStatus) {
+    var selected = Object.keys(selectedWords).filter(function(w) { return selectedWords[w]; });
+    if (!selected.length) return;
+
+    var words = parseWordsFromInput(wordInput);
+    var learnedSet = new Set((learned || []).concat(words.slice(0, Math.max(0, idx + 1))));
+
+    var next = { ...(wordStatusMap || {}) };
+    selected.forEach(function(w) {
+      if (!learnedSet.has(w)) return; // keep parity with single-word guard: only learned words can be manually marked
+      if (!nextStatus || nextStatus === "unlearned") delete next[w];
+      else next[w] = nextStatus;
+    });
+    setWordStatusMap(next);
+    try { localStorage.setItem(WORD_STATUS_KEY, JSON.stringify(next)); } catch (e) {}
+    setSelectedWords({});
+  };
+
+  var getStatsSnapshot = function() {
+    var words = parseWordsFromInput(wordInput);
+    var reviewRecords = Object.values(reviewWordData || {});
+    var totalReviews = reviewRecords.reduce(function(acc, item) {
+      return acc + ((item.reviewHistory || []).length || 0);
+    }, 0);
+    var quickReviews = reviewRecords.reduce(function(acc, item) {
+      return acc + (item.reviewHistory || []).filter(function(r) { return r.mode === "quick"; }).length;
+    }, 0);
+    var deepReviews = reviewRecords.reduce(function(acc, item) {
+      return acc + (item.reviewHistory || []).filter(function(r) { return r.mode === "deep"; }).length;
+    }, 0);
+    var correct = Number(stats.correct || 0);
+    var total = Number(stats.total || 0);
+    var accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+    var statuses = { unlearned: 0, learning: 0, mastered: 0, uncertain: 0, error: 0 };
+    words.forEach(function(w, i) {
+      var s = getWordStatus(w, i, words);
+      statuses[s] = (statuses[s] || 0) + 1;
+    });
+
+    var dueCount = words.filter(function(w, i) {
+      var s = getWordStatus(w, i, words);
+      if (s === "unlearned") return false;
+      var d = reviewWordData[w] || {};
+      return d.nextReviewDate && isDueDate(d.nextReviewDate);
+    }).length;
+
+    return {
+      totalWords: words.length,
+      statuses: statuses,
+      dueCount: dueCount,
+      xp: Number(stats.xp || 0),
+      bestStreak: Number(stats.bestStreak || 0),
+      currentStreak: Number(stats.streak || 0),
+      accuracy: accuracy,
+      answered: total,
+      totalReviews: totalReviews,
+      quickReviews: quickReviews,
+      deepReviews: deepReviews,
     };
   };
 
@@ -1889,7 +2084,7 @@ export default function App() {
 
         <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px"}}>
           <div style={{fontWeight:700,marginBottom:4}}>③ 📘 新学 {dailyPlan.newWordsToday.length} 个词（约 {dailyPlan.newMin} 分钟） {dailyPlan.newDone ? "✅" : ""}</div>
-          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>每日新词设置：{dailyNewWords} · 今日已学 {dailyPlan.newLearnedToday}</div>
+          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>每日新词配额：{dailyPlan.newQuota} · 今日已学 {dailyPlan.newLearnedToday} · 剩余 {dailyPlan.newRemainingQuota}</div>
           <button style={{...S.smallBtn,background:C.accent,color:"#fff",border:"none"}} onClick={function(){startLearning(0);}}>{dailyPlan.newDone?"继续学习 →":"开始 →"}</button>
         </div>
       </div>
@@ -1917,6 +2112,7 @@ export default function App() {
       <div style={S.tabBar}>
         <button style={setupTab==="profile"?S.tabActive:S.tab} onClick={() => setSetupTab("profile")}>👤 学生画像</button>
         <button style={setupTab==="words"?S.tabActive:S.tab} onClick={() => setSetupTab("words")}>📝 词汇</button>
+        <button style={setupTab==="stats"?S.tabActive:S.tab} onClick={() => setSetupTab("stats")}>📊 统计</button>
       </div>
       {setupTab === "profile" && (
         <div style={S.setupCard}>
@@ -1948,7 +2144,7 @@ export default function App() {
       )}
       {setupTab === "words" && (
         <div style={S.setupCard}>
-          <div style={S.setupHint}>词汇管理面板：先看状态与复习，再按需编辑词表。<br/><span style={{color:C.accent}}>💡 已学词可手动标注 🟢🟡🔴，用于后续复习优先级。</span></div>
+          <div style={S.setupHint}>词汇管理面板：先看状态与复习，再按需编辑词表。<br/><span style={{color:C.accent}}>💡 支持筛选、搜索、排序和批量标注，便于日常维护。</span></div>
 
           <div style={{margin:"8px 0 12px"}}>
             <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"0 0 8px"}}>📅 每日新词数</div>
@@ -1977,6 +2173,8 @@ export default function App() {
               if (isDueDate(d.nextReviewDate)) dueCount++;
             });
             var focusCount = (counts.uncertain || 0) + (counts.error || 0);
+            var rows = getWordRows();
+            var selectedCount = Object.keys(selectedWords).filter(function(k){ return selectedWords[k]; }).length;
             return <>
               <div style={{display:"flex",gap:10,flexWrap:"wrap",margin:"8px 0 10px",fontSize:12,color:C.textSec}}>
                 <button onClick={function(){setWordStatusFilter("all");}} style={{padding:"4px 8px",borderRadius:999,background:wordStatusFilter==="all"?C.accentLight:C.bg,border:"1px solid "+(wordStatusFilter==="all"?C.accent:C.border),color:wordStatusFilter==="all"?C.accent:C.textSec,fontWeight:700,cursor:"pointer"}}>全部 {words.length}</button>
@@ -1986,6 +2184,23 @@ export default function App() {
                   return <button key={k} onClick={function(){setWordStatusFilter(k);}} style={{padding:"4px 8px",borderRadius:999,background:active?C.accentLight:C.bg,border:"1px solid "+(active?C.accent:C.border),color:m.color,fontWeight:700,cursor:"pointer"}}>{m.icon} {m.text} {counts[k]||0}</button>;
                 })}
               </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,margin:"0 0 10px"}}>
+                <input value={wordSearch} onChange={function(e){setWordSearch(e.target.value);}} placeholder="搜索单词/释义" style={{padding:"8px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
+                <select value={wordSortMode} onChange={function(e){setWordSortMode(e.target.value);}} style={{padding:"8px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13,background:C.card}}>
+                  <option value="default">默认顺序</option>
+                  <option value="alpha">按字母排序</option>
+                  <option value="status">按状态排序</option>
+                  <option value="due">逾期优先</option>
+                </select>
+              </div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,fontSize:12,color:C.textSec}}>
+                <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}>
+                  <input type="checkbox" checked={showDueOnly} onChange={function(e){setShowDueOnly(e.target.checked);}} /> 仅看逾期复习
+                </label>
+                <span>筛选后 {rows.length} 个词</span>
+              </div>
+
               <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"0 0 8px"}}>复习入口</div>
               {dueCount > 0 && (
                 <div style={{background:C.tealLight,border:"1px solid "+C.teal,borderRadius:10,padding:"9px 12px",fontSize:13,margin:"0 0 10px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
@@ -1998,20 +2213,27 @@ export default function App() {
                 <button style={{...S.primaryBtn,background:C.red}} onClick={startDeepReview}>🔴 重点攻克 {focusCount}</button>
               </div>
 
-              <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"0 0 8px"}}>词汇状态</div>
-              <div style={{maxHeight:260,overflow:"auto",border:"1px solid "+C.border,borderRadius:12,background:C.bg,marginBottom:12}}>
-                {words.length === 0 ? <div style={{padding:14,fontSize:13,color:C.textSec}}>先输入词汇，状态列表会显示在这里。</div> : words.filter(function(w, i){
-                  var s = getWordStatus(w, i, words);
-                  return wordStatusFilter === "all" ? true : s === wordStatusFilter;
-                }).map(function(w, i){
-                  var originalIdx = words.indexOf(w);
-                  var s = getWordStatus(w, originalIdx, words);
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",margin:"0 0 8px"}}>
+                <div style={{fontSize:12,color:C.textSec,fontWeight:700}}>词汇状态（可多选批量标注）</div>
+                {selectedCount > 0 && <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  <button style={{...S.smallBtn,borderColor:C.green,color:C.green}} onClick={function(){applyBulkStatus("mastered");}}>批量🟢</button>
+                  <button style={{...S.smallBtn,borderColor:C.gold,color:C.gold}} onClick={function(){applyBulkStatus("uncertain");}}>批量🟡</button>
+                  <button style={{...S.smallBtn,borderColor:C.red,color:C.red}} onClick={function(){applyBulkStatus("error");}}>批量🔴</button>
+                  <button style={S.smallBtn} onClick={function(){applyBulkStatus("unlearned");}}>清除标注</button>
+                </div>}
+              </div>
+              <div style={{maxHeight:280,overflow:"auto",border:"1px solid "+C.border,borderRadius:12,background:C.bg,marginBottom:12}}>
+                {rows.length === 0 ? <div style={{padding:14,fontSize:13,color:C.textSec}}>没有匹配结果。试试清空筛选或修改搜索词。</div> : rows.map(function(row, i){
+                  var w = row.word;
+                  var s = row.status;
                   var m = WORD_STATUS_META[s] || WORD_STATUS_META.unlearned;
-                  var learnedWord = learned.includes(w) || originalIdx <= idx;
-                  var d = reviewWordData[w] || {};
-                  var overdue = d.nextReviewDate && isDueDate(d.nextReviewDate) && s !== "unlearned";
-                  return <div key={w+"_"+i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",borderBottom:i===words.filter(function(x,j){ var ss = getWordStatus(x,j,words); return wordStatusFilter === "all" ? true : ss === wordStatusFilter; }).length-1?"none":"1px solid "+C.border}}>
+                  var learnedWord = learned.includes(w) || row.index <= idx;
+                  var d = row.reviewData || {};
+                  var overdue = row.due;
+                  var checked = !!selectedWords[w];
+                  return <div key={w+"_"+i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",borderBottom:i===rows.length-1?"none":"1px solid "+C.border,background:checked?C.accentLight:"transparent"}}>
                     <div style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}>
+                      <input type="checkbox" checked={checked} onChange={function(){toggleWordSelection(w);}} />
                       <button
                         onClick={function(){
                           if (!learnedWord) return;
@@ -2040,6 +2262,38 @@ export default function App() {
           <div style={{fontSize:13,color:C.textSec,marginTop:4}}>{wordInput.trim() ? "共 "+parseWordsFromInput(wordInput).length+" 个词" : ""}</div>
         </div>
       )}
+
+      {setupTab === "stats" && (() => {
+        var statsView = getStatsSnapshot();
+        return <div style={S.setupCard}>
+          <div style={S.setupHint}>学习统计中心：查看学习成效、复习量和当前词库健康度。</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,marginBottom:12}}>
+            <div style={S.statCard}><div style={S.statNum}>{statsView.totalWords}</div><div style={S.statLabel}>词库总数</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{statsView.dueCount}</div><div style={S.statLabel}>今日到期复习</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{statsView.accuracy}%</div><div style={S.statLabel}>猜词正确率</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{statsView.xp}</div><div style={S.statLabel}>累计 XP</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{statsView.bestStreak}</div><div style={S.statLabel}>最佳连对</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{statsView.totalReviews}</div><div style={S.statLabel}>总复习次数</div></div>
+          </div>
+          <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:8}}>词汇状态分布</div>
+            {Object.keys(WORD_STATUS_META).map(function(k){
+              var m = WORD_STATUS_META[k];
+              var c = statsView.statuses[k] || 0;
+              var total = Math.max(1, statsView.totalWords);
+              var pct = Math.round((c / total) * 100);
+              return <div key={k} style={{marginBottom:8}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}><span style={{color:m.color,fontWeight:700}}>{m.icon} {m.text}</span><span>{c} ({pct}%)</span></div>
+                <div style={{height:6,background:C.border,borderRadius:999,overflow:"hidden"}}><div style={{height:"100%",width:pct+"%",background:m.color,borderRadius:999}}/></div>
+              </div>;
+            })}
+          </div>
+          <div style={{fontSize:12,color:C.textSec,lineHeight:1.7}}>
+            快速结论：{statsView.dueCount > 0 ? "有到期词待复习，建议先做快速复习。" : "今日复习压力较低。"}
+            {" "}当前重点词（🟡+🔴）{(statsView.statuses.uncertain||0) + (statsView.statuses.error||0)} 个。
+          </div>
+        </div>;
+      })()}
       {error && <div style={S.error}>{error}</div>}
       <button style={S.bigBtn} onClick={() => startLearning(0)}>✨ 开始学习</button>
       <Disclaimer />
@@ -2164,6 +2418,7 @@ export default function App() {
             <div style={{display:"flex",borderBottom:"1px solid "+C.border,margin:"16px 20px 0"}}>
               <button style={setupTab==="profile"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("profile")}>👤 学生画像</button>
               <button style={setupTab==="words"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("words")}>📝 词汇</button>
+              <button style={setupTab==="stats"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("stats")}>📊 统计</button>
               <button style={setupTab==="account"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("account")}>🔑 账号</button>
             </div>
             <div style={{padding:"16px 20px 20px"}}>
@@ -2220,6 +2475,18 @@ export default function App() {
                   <button style={S.primaryBtn} onClick={() => { setShowSettings(false); startLearning(0); }}>✨ 重新开始</button>
                 </div>
               )}
+              {setupTab === "stats" && (() => {
+                var sv = getStatsSnapshot();
+                return <div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,marginBottom:12}}>
+                    <div style={S.statCard}><div style={S.statNum}>{sv.accuracy}%</div><div style={S.statLabel}>正确率</div></div>
+                    <div style={S.statCard}><div style={S.statNum}>{sv.dueCount}</div><div style={S.statLabel}>到期词</div></div>
+                    <div style={S.statCard}><div style={S.statNum}>{sv.quickReviews}</div><div style={S.statLabel}>快速复习</div></div>
+                    <div style={S.statCard}><div style={S.statNum}>{sv.deepReviews}</div><div style={S.statLabel}>深度复习</div></div>
+                  </div>
+                  <button style={{...S.primaryBtn,background:C.teal}} onClick={() => { setShowSettings(false); setScreen("setup"); setSetupTab("stats"); }}>打开完整统计页</button>
+                </div>;
+              })()}
               {setupTab === "account" && (
                 <div>
                   {user ? (
@@ -2682,4 +2949,7 @@ var S = {
   doneStatLabel:{fontSize:13,color:C.textSec},
   doneWords:{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center",marginTop:8},
   doneTag:{padding:"6px 14px",background:C.accentLight,color:C.accent,borderRadius:20,fontSize:14,fontWeight:600,cursor:"pointer"},
+  statCard:{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",textAlign:"center"},
+  statNum:{fontSize:22,fontWeight:800,color:C.accent,lineHeight:1.1},
+  statLabel:{fontSize:12,color:C.textSec,marginTop:4},
 };
