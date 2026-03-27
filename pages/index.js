@@ -879,10 +879,14 @@ export default function App() {
     if (!confirm('🚨 危险操作：确认要清除所有学习记录、画像和单词本，从零开始吗？此操作不可逆！')) return;
     try {
       if (typeof window !== "undefined") {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(SESSION_KEY);
-        localStorage.removeItem(DAILY_QUOTA_KEY);
+        localStorage.removeItem(SKEY);
+        localStorage.removeItem(SKEY_OLD);
+        localStorage.removeItem(CONC_KEY);
+        localStorage.removeItem(WORD_STATUS_KEY);
+        localStorage.removeItem(REVIEW_WORD_DATA_KEY);
+        localStorage.removeItem(DAILY_KEY);
         localStorage.removeItem(DAILY_NEW_QUOTA_KEY);
+        localStorage.removeItem(DEEP_REVIEW_DAILY_KEY);
       }
     } catch (e) {}
     
