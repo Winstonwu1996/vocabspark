@@ -20,6 +20,7 @@ var FONT = "'DM Sans','Noto Sans SC',sans-serif";
 var DAILY_LIMIT = 10;
 var DAILY_KEY = 'vocabspark_daily';
 var DAILY_NEW_QUOTA_KEY = 'vocabspark_daily_new_quota_v1';
+var DEEP_REVIEW_DAILY_KEY = 'vocabspark_deep_review_daily_v1';
 var PHOTO_LIMIT = 5;
 var PROFILE_MAX = 1000;
 var PROFILE_TEXTAREA_PLACEHOLDER =
@@ -545,6 +546,8 @@ export default function App() {
   var [tipDismissed, setTipDismissed] = useState(false);
   var [showSettings, setShowSettings] = useState(false);
   var [dailyNewWords, setDailyNewWords] = useState(20);
+  var [targetDate, setTargetDate] = useState("");
+  var [deepReviewDailyCap, setDeepReviewDailyCap] = useState(8);
   var [profile, setProfile] = useState("");
   var [wordInput, setWordInput] = useState("");
   var [wordList, setWordList] = useState([]);
@@ -705,6 +708,8 @@ export default function App() {
     loadSave().then(function(d) {
       try {
         if (d?.settings?.dailyNewWords) setDailyNewWords(d.settings.dailyNewWords);
+        if (d?.settings?.targetDate) setTargetDate(d.settings.targetDate);
+        if (d?.settings?.deepReviewDailyCap) setDeepReviewDailyCap(d.settings.deepReviewDailyCap);
         if (d?.profile) { setProfile(d.profile); setProfileLocked(true); }
         if (d?.stats) setStats(function(s) { return {...s, ...(d.stats||{})}; });
         if (d?.profile) setShowWelcome(false);
@@ -745,6 +750,26 @@ export default function App() {
       var stored = JSON.parse(localStorage.getItem(DAILY_KEY) || '{}');
       return stored.date === today ? stored : {count:0, date:today};
     } catch(e) { return {count:0, date:getLocalDateKey()}; }
+  };
+
+  var getDeepReviewDailyState = function() {
+    try {
+      var today = getLocalDateKey();
+      if (typeof window === "undefined") return { date: today, count: 0 };
+      var stored = JSON.parse(localStorage.getItem(DEEP_REVIEW_DAILY_KEY) || '{}');
+      return stored.date === today ? stored : { date: today, count: 0 };
+    } catch (e) {
+      return { date: getLocalDateKey(), count: 0 };
+    }
+  };
+
+  var incrementDeepReviewDailyCount = function() {
+    var curr = getDeepReviewDailyState();
+    var next = { date: curr.date, count: (curr.count || 0) + 1 };
+    try {
+      if (typeof window !== "undefined") localStorage.setItem(DEEP_REVIEW_DAILY_KEY, JSON.stringify(next));
+    } catch (e) {}
+    return next.count;
   };
 
   var incrementDailyCount = function() {
@@ -952,6 +977,25 @@ export default function App() {
       date: quotaState.date,
       quota: n,
       consumed: Math.min(quotaState.consumed || 0, n),
+    });
+  };
+
+  var updateTargetDate = function(v) {
+    setTargetDate(v || "");
+    loadSave().then(function(d) {
+      var nextData = { ...(d || {}), settings: { ...(d?.settings || {}), targetDate: v || "" } };
+      doSave(nextData);
+      syncToCloud(nextData);
+    });
+  };
+
+  var updateDeepReviewDailyCap = function(v) {
+    var cap = Math.max(1, Math.min(30, Number(v) || 1));
+    setDeepReviewDailyCap(cap);
+    loadSave().then(function(d) {
+      var nextData = { ...(d || {}), settings: { ...(d?.settings || {}), deepReviewDailyCap: cap } };
+      doSave(nextData);
+      syncToCloud(nextData);
     });
   };
 
@@ -1563,8 +1607,9 @@ export default function App() {
       return s === "error" || s === "uncertain" || (d.consecutiveForgot || 0) >= 2;
     });
 
-    var deepLimit = 10;
-    var deepToday = deepPool.slice(0, deepLimit);
+    var deepLimit = deepReviewDailyCap || 8;
+    var deepUsedToday = getDeepReviewDailyState().count || 0;
+    var deepToday = deepPool.slice(0, Math.max(0, deepLimit - deepUsedToday));
 
     var quotaState = getNewWordQuotaState();
     var unlearned = words.filter(function(w, i) {
@@ -1595,7 +1640,7 @@ export default function App() {
 
     var quickDone = quickDoneToday || toReview.length === 0;
     var deepLocked = !quickDone;
-    var deepDone = !deepLocked && (deepToday.length === 0 || deepDoneCountToday >= Math.min(deepToday.length, 1));
+    var deepDone = !deepLocked && (deepToday.length === 0 || deepUsedToday >= deepLimit);
     var newDone = newLearnedToday >= (quotaState.quota || dailyNewWords || 20);
 
     return {
@@ -1606,6 +1651,8 @@ export default function App() {
       deepDone: deepDone,
       newDone: newDone,
       deepDoneCountToday: deepDoneCountToday,
+      deepUsedToday: deepUsedToday,
+      deepCap: deepLimit,
       newLearnedToday: newLearnedToday,
       newWordsToday: newWordsToday,
       newQuota: quotaState.quota || dailyNewWords || 20,
@@ -1614,6 +1661,55 @@ export default function App() {
       deepMin: deepMin,
       newMin: newMin,
       totalMin: quickMin + deepMin + newMin,
+    };
+  };
+
+  var rankPriority = function(status, reviewData) {
+    var dueBoost = reviewData?.nextReviewDate && isDueDate(reviewData.nextReviewDate) ? 10 : 0;
+    if (status === "error") return 100 + dueBoost;
+    if (status === "uncertain") return 80 + dueBoost;
+    if (status === "learning") return 60 + dueBoost;
+    if (status === "mastered") return 30 + dueBoost;
+    return 0 + dueBoost;
+  };
+
+  var getStudyPlanPrediction = function() {
+    var words = parseWordsFromInput(wordInput);
+    var totalWords = words.length;
+    var learnedCount = words.filter(function(w, i) {
+      return getWordStatus(w, i, words) !== "unlearned";
+    }).length;
+    var dueCount = words.filter(function(w, i) {
+      var s = getWordStatus(w, i, words);
+      if (s === "unlearned") return false;
+      var d = reviewWordData[w] || {};
+      return d.nextReviewDate && isDueDate(d.nextReviewDate);
+    }).length;
+
+    var daysLeft = null;
+    if (targetDate) {
+      var td = new Date(targetDate + "T23:59:59");
+      if (!Number.isNaN(td.getTime())) {
+        daysLeft = Math.ceil((td.getTime() - Date.now()) / 86400000);
+      }
+    }
+
+    var remainingWords = Math.max(0, totalWords - learnedCount);
+    var safeDays = daysLeft && daysLeft > 0 ? daysLeft : null;
+    var recommendedNewPerDay = safeDays ? Math.max(1, Math.ceil(remainingWords / safeDays)) : (dailyNewWords || 20);
+    var deepUsedToday = getDeepReviewDailyState().count || 0;
+    var deepLeftToday = Math.max(0, (deepReviewDailyCap || 8) - deepUsedToday);
+
+    return {
+      totalWords: totalWords,
+      learnedCount: learnedCount,
+      remainingWords: remainingWords,
+      dueCount: dueCount,
+      daysLeft: daysLeft,
+      recommendedNewPerDay: recommendedNewPerDay,
+      deepUsedToday: deepUsedToday,
+      deepLeftToday: deepLeftToday,
+      targetDateSet: !!targetDate,
     };
   };
 
@@ -1629,6 +1725,7 @@ export default function App() {
         status: status,
         reviewData: d,
         due: due,
+        priority: rankPriority(status, d),
       };
     });
 
@@ -1656,9 +1753,16 @@ export default function App() {
         if (oa !== ob) return oa - ob;
         return a.word.localeCompare(b.word);
       });
+    } else if (wordSortMode === "priority") {
+      rows.sort(function(a, b) {
+        if (a.priority !== b.priority) return b.priority - a.priority;
+        return a.word.localeCompare(b.word);
+      });
     } else if (wordSortMode === "due") {
       rows.sort(function(a, b) {
-        if (a.due !== b.due) return a.due ? -1 : 1;
+        var ad = a.reviewData?.nextReviewDate ? new Date(a.reviewData.nextReviewDate).getTime() : Infinity;
+        var bd = b.reviewData?.nextReviewDate ? new Date(b.reviewData.nextReviewDate).getTime() : Infinity;
+        if (ad !== bd) return ad - bd;
         return a.word.localeCompare(b.word);
       });
     }
@@ -1749,14 +1853,17 @@ export default function App() {
         if (mode === "focus") return s === "uncertain" || s === "error";
         return true;
       })
-      .map(function(w) {
+      .map(function(w, i) {
         var d = reviewWordData[w] || {};
+        var status = getWordStatus(w, i, words);
         return {
           word: w,
           phonetic: d.phonetic || "",
           meaning: d.meaning || "（释义将随学习自动补全）",
+          _priority: rankPriority(status, d),
         };
-      });
+      })
+      .sort(function(a, b) { return b._priority - a._priority || a.word.localeCompare(b.word); });
 
     if (!queue.length) {
       setError(mode === "due" ? "今天没有到期复习词" : mode === "focus" ? "目前没有🟡/🔴重点词" : "暂无可复习单词，请先学习几个词");
@@ -1800,11 +1907,31 @@ export default function App() {
   };
 
   var startDeepReview = function() {
+    var todayDeep = getDeepReviewDailyState().count || 0;
+    if (todayDeep >= (deepReviewDailyCap || 8)) {
+      setError("🔴 今日深度攻克已达上限（" + (deepReviewDailyCap || 8) + "）。请先做快速复习，或明天继续。");
+      setSetupTab("plan");
+      setScreen("setup");
+      return;
+    }
+
     var words = parseWordsFromInput(wordInput);
-    var queue = words.filter(function(w, i) {
-      var s = getWordStatus(w, i, words);
-      return s === "uncertain" || s === "error";
-    });
+    var queue = words
+      .filter(function(w, i) {
+        var s = getWordStatus(w, i, words);
+        return s === "uncertain" || s === "error";
+      })
+      .map(function(w, i) {
+        var d = reviewWordData[w] || {};
+        var s = getWordStatus(w, i, words);
+        return { word: w, _priority: rankPriority(s, d) };
+      })
+      .sort(function(a, b) { return b._priority - a._priority || a.word.localeCompare(b.word); })
+      .map(function(x) { return x.word; });
+
+    var leftCap = Math.max(0, (deepReviewDailyCap || 8) - todayDeep);
+    queue = queue.slice(0, leftCap);
+
     if (!queue.length) {
       setError("目前没有可进行深度复习的🟡/🔴词");
       setSetupTab("words");
@@ -1960,6 +2087,7 @@ export default function App() {
       var hist = [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "deep", result: result }];
       upsertReviewWordData(dw, { reviewHistory: hist, reviewLevel: nextLevel, nextReviewDate: addDaysISO(REVIEW_INTERVAL_DAYS[nextLevel]) });
       updateManualWordStatus(dw, statusMap[result] || "uncertain");
+      incrementDeepReviewDailyCount();
       setDeepSessionStats(function(prev){ return { ...prev, [result]: (prev[result] || 0) + 1 }; });
       var n = deepReviewIdx + 1;
       if (n >= deepReviewQueue.length) setScreen("deep_review_done"); else setDeepReviewIdx(n);
@@ -2078,7 +2206,7 @@ export default function App() {
 
         <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:8,opacity:dailyPlan.deepLocked?0.7:1}}>
           <div style={{fontWeight:700,marginBottom:4}}>② 🔴 深度攻克（约 {dailyPlan.deepMin} 分钟） {dailyPlan.deepDone ? "✅" : ""}</div>
-          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>{dailyPlan.deepLocked ? "🔒 完成快速复习后解锁" : (dailyPlan.deepDone ? ("已完成 " + dailyPlan.deepDoneCountToday + " 词") : (dailyPlan.deepToday.length===0?"✅ 今日无重点攻克词":"今日候选 " + dailyPlan.deepToday.length + " 个"))}</div>
+          <div style={{fontSize:12,color:C.textSec,marginBottom:8}}>{dailyPlan.deepLocked ? "🔒 完成快速复习后解锁" : (dailyPlan.deepDone ? ("已完成 " + dailyPlan.deepUsedToday + " / " + dailyPlan.deepCap + " 词") : (dailyPlan.deepToday.length===0?"✅ 今日无重点攻克词":"今日候选 " + dailyPlan.deepToday.length + " 个 · 已用 " + dailyPlan.deepUsedToday + "/" + dailyPlan.deepCap))}</div>
           <button style={{...S.smallBtn,background:dailyPlan.deepLocked?C.textSec:C.red,color:"#fff",border:"none"}} disabled={dailyPlan.deepLocked} onClick={startDeepReview}>{dailyPlan.deepLocked?"待解锁":(dailyPlan.deepDone?"继续攻克 →":"开始 →")}</button>
         </div>
 
@@ -2111,6 +2239,7 @@ export default function App() {
 
       <div style={S.tabBar}>
         <button style={setupTab==="profile"?S.tabActive:S.tab} onClick={() => setSetupTab("profile")}>👤 学生画像</button>
+        <button style={setupTab==="plan"?S.tabActive:S.tab} onClick={() => setSetupTab("plan")}>🎯 计划</button>
         <button style={setupTab==="words"?S.tabActive:S.tab} onClick={() => setSetupTab("words")}>📝 词汇</button>
         <button style={setupTab==="stats"?S.tabActive:S.tab} onClick={() => setSetupTab("stats")}>📊 统计</button>
       </div>
@@ -2142,6 +2271,33 @@ export default function App() {
           )}
         </div>
       )}
+      {setupTab === "plan" && (() => {
+        var planView = getStudyPlanPrediction();
+        return <div style={S.setupCard}>
+          <div style={S.setupHint}>学习计划页：围绕<strong>目标日期 / Target Date</strong>安排每日节奏，不绑定考试场景。</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+            <div>
+              <div style={{fontSize:12,color:C.textSec,fontWeight:700,marginBottom:6}}>目标日期 / Target Date</div>
+              <input type="date" value={targetDate} onChange={function(e){updateTargetDate(e.target.value);}} style={{width:"100%",padding:"9px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
+            </div>
+            <div>
+              <div style={{fontSize:12,color:C.textSec,fontWeight:700,marginBottom:6}}>每日深度攻克上限</div>
+              <input type="number" min={1} max={30} value={deepReviewDailyCap} onChange={function(e){updateDeepReviewDailyCap(e.target.value);}} style={{width:"100%",padding:"9px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
+            </div>
+          </div>
+          <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",fontSize:13,lineHeight:1.8}}>
+            <div>📚 词库总量：<strong>{planView.totalWords}</strong>（已学习 {planView.learnedCount}，剩余 {planView.remainingWords}）</div>
+            <div>📅 今日到期复习：<strong>{planView.dueCount}</strong></div>
+            <div>🔴 今日深度攻克剩余：<strong>{planView.deepLeftToday}</strong> / {deepReviewDailyCap}</div>
+            <div>🎯 建议每日新词目标：<strong>{planView.recommendedNewPerDay}</strong>{planView.daysLeft != null ? "（距目标日期 " + planView.daysLeft + " 天）" : "（未设置目标日期）"}</div>
+          </div>
+          <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:12}}>
+            <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){setSetupTab("words");}}>去执行词汇管理 →</button>
+            <button style={{...S.primaryBtn,background:C.red}} onClick={startDeepReview}>开始深度攻克</button>
+          </div>
+        </div>;
+      })()}
+
       {setupTab === "words" && (
         <div style={S.setupCard}>
           <div style={S.setupHint}>词汇管理面板：先看状态与复习，再按需编辑词表。<br/><span style={{color:C.accent}}>💡 支持筛选、搜索、排序和批量标注，便于日常维护。</span></div>
@@ -2174,7 +2330,9 @@ export default function App() {
             });
             var focusCount = (counts.uncertain || 0) + (counts.error || 0);
             var rows = getWordRows();
+            var filteredWordKeys = rows.map(function(r){ return r.word; });
             var selectedCount = Object.keys(selectedWords).filter(function(k){ return selectedWords[k]; }).length;
+            var allFilteredSelected = filteredWordKeys.length > 0 && filteredWordKeys.every(function(w){ return !!selectedWords[w]; });
             return <>
               <div style={{display:"flex",gap:10,flexWrap:"wrap",margin:"8px 0 10px",fontSize:12,color:C.textSec}}>
                 <button onClick={function(){setWordStatusFilter("all");}} style={{padding:"4px 8px",borderRadius:999,background:wordStatusFilter==="all"?C.accentLight:C.bg,border:"1px solid "+(wordStatusFilter==="all"?C.accent:C.border),color:wordStatusFilter==="all"?C.accent:C.textSec,fontWeight:700,cursor:"pointer"}}>全部 {words.length}</button>
@@ -2191,7 +2349,8 @@ export default function App() {
                   <option value="default">默认顺序</option>
                   <option value="alpha">按字母排序</option>
                   <option value="status">按状态排序</option>
-                  <option value="due">逾期优先</option>
+                  <option value="priority">按复习优先级</option>
+                  <option value="due">按到期时间</option>
                 </select>
               </div>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,fontSize:12,color:C.textSec}}>
@@ -2213,14 +2372,25 @@ export default function App() {
                 <button style={{...S.primaryBtn,background:C.red}} onClick={startDeepReview}>🔴 重点攻克 {focusCount}</button>
               </div>
 
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",margin:"0 0 8px"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",margin:"0 0 8px",gap:8,flexWrap:"wrap"}}>
                 <div style={{fontSize:12,color:C.textSec,fontWeight:700}}>词汇状态（可多选批量标注）</div>
-                {selectedCount > 0 && <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                  <button style={{...S.smallBtn,borderColor:C.green,color:C.green}} onClick={function(){applyBulkStatus("mastered");}}>批量🟢</button>
-                  <button style={{...S.smallBtn,borderColor:C.gold,color:C.gold}} onClick={function(){applyBulkStatus("uncertain");}}>批量🟡</button>
-                  <button style={{...S.smallBtn,borderColor:C.red,color:C.red}} onClick={function(){applyBulkStatus("error");}}>批量🔴</button>
-                  <button style={S.smallBtn} onClick={function(){applyBulkStatus("unlearned");}}>清除标注</button>
-                </div>}
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  <button style={S.smallBtn} onClick={function(){
+                    if (allFilteredSelected) {
+                      setSelectedWords({});
+                      return;
+                    }
+                    var next = {};
+                    filteredWordKeys.forEach(function(w){ next[w] = true; });
+                    setSelectedWords(next);
+                  }}>{allFilteredSelected ? "取消全选" : "全选筛选结果"}</button>
+                  {selectedCount > 0 && <>
+                    <button style={{...S.smallBtn,borderColor:C.green,color:C.green}} onClick={function(){applyBulkStatus("mastered");}}>批量🟢</button>
+                    <button style={{...S.smallBtn,borderColor:C.gold,color:C.gold}} onClick={function(){applyBulkStatus("uncertain");}}>批量🟡</button>
+                    <button style={{...S.smallBtn,borderColor:C.red,color:C.red}} onClick={function(){applyBulkStatus("error");}}>批量🔴</button>
+                    <button style={S.smallBtn} onClick={function(){applyBulkStatus("unlearned");}}>清除标注</button>
+                  </>}
+                </div>
               </div>
               <div style={{maxHeight:280,overflow:"auto",border:"1px solid "+C.border,borderRadius:12,background:C.bg,marginBottom:12}}>
                 {rows.length === 0 ? <div style={{padding:14,fontSize:13,color:C.textSec}}>没有匹配结果。试试清空筛选或修改搜索词。</div> : rows.map(function(row, i){
@@ -2265,6 +2435,7 @@ export default function App() {
 
       {setupTab === "stats" && (() => {
         var statsView = getStatsSnapshot();
+        var planView = getStudyPlanPrediction();
         return <div style={S.setupCard}>
           <div style={S.setupHint}>学习统计中心：查看学习成效、复习量和当前词库健康度。</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,marginBottom:12}}>
@@ -2274,6 +2445,10 @@ export default function App() {
             <div style={S.statCard}><div style={S.statNum}>{statsView.xp}</div><div style={S.statLabel}>累计 XP</div></div>
             <div style={S.statCard}><div style={S.statNum}>{statsView.bestStreak}</div><div style={S.statLabel}>最佳连对</div></div>
             <div style={S.statCard}><div style={S.statNum}>{statsView.totalReviews}</div><div style={S.statLabel}>总复习次数</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{planView.deepUsedToday}/{deepReviewDailyCap}</div><div style={S.statLabel}>深度攻克今日用量</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{planView.recommendedNewPerDay}</div><div style={S.statLabel}>建议每日新词</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{targetDate ? (planView.daysLeft==null?"-":planView.daysLeft) : "未设"}</div><div style={S.statLabel}>距目标日期(天)</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{planView.remainingWords}</div><div style={S.statLabel}>待学习词数</div></div>
           </div>
           <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
             <div style={{fontWeight:700,fontSize:13,marginBottom:8}}>词汇状态分布</div>
@@ -2417,6 +2592,7 @@ export default function App() {
             </div>
             <div style={{display:"flex",borderBottom:"1px solid "+C.border,margin:"16px 20px 0"}}>
               <button style={setupTab==="profile"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("profile")}>👤 学生画像</button>
+              <button style={setupTab==="plan"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("plan")}>🎯 计划</button>
               <button style={setupTab==="words"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("words")}>📝 词汇</button>
               <button style={setupTab==="stats"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("stats")}>📊 统计</button>
               <button style={setupTab==="account"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("account")}>🔑 账号</button>
@@ -2450,6 +2626,22 @@ export default function App() {
                   )}
                 </div>
               )}
+              {setupTab === "plan" && (
+                <div>
+                  <div style={S.setupHint}>设置目标日期 / Target Date 与深度攻克上限，系统会按此自动约束每日节奏。</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+                    <div>
+                      <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>目标日期 / Target Date</div>
+                      <input type="date" value={targetDate} onChange={function(e){updateTargetDate(e.target.value);}} style={{width:"100%",padding:"8px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
+                    </div>
+                    <div>
+                      <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>每日深度攻克上限</div>
+                      <input type="number" min={1} max={30} value={deepReviewDailyCap} onChange={function(e){updateDeepReviewDailyCap(e.target.value);}} style={{width:"100%",padding:"8px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
+                    </div>
+                  </div>
+                  <button style={{...S.primaryBtn,background:C.teal}} onClick={() => { setShowSettings(false); setScreen("setup"); setSetupTab("plan"); }}>打开完整计划页</button>
+                </div>
+              )}
               {setupTab === "words" && (
                 <div>
                   <div style={S.setupHint}>学习中如需做标记/复习，建议进入「词汇状态面板」。修改词表后可重新开始。</div>
@@ -2477,12 +2669,15 @@ export default function App() {
               )}
               {setupTab === "stats" && (() => {
                 var sv = getStatsSnapshot();
+                var pv = getStudyPlanPrediction();
                 return <div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,marginBottom:12}}>
                     <div style={S.statCard}><div style={S.statNum}>{sv.accuracy}%</div><div style={S.statLabel}>正确率</div></div>
                     <div style={S.statCard}><div style={S.statNum}>{sv.dueCount}</div><div style={S.statLabel}>到期词</div></div>
                     <div style={S.statCard}><div style={S.statNum}>{sv.quickReviews}</div><div style={S.statLabel}>快速复习</div></div>
                     <div style={S.statCard}><div style={S.statNum}>{sv.deepReviews}</div><div style={S.statLabel}>深度复习</div></div>
+                    <div style={S.statCard}><div style={S.statNum}>{pv.recommendedNewPerDay}</div><div style={S.statLabel}>建议每日新词</div></div>
+                    <div style={S.statCard}><div style={S.statNum}>{pv.remainingWords}</div><div style={S.statLabel}>待学习词数</div></div>
                   </div>
                   <button style={{...S.primaryBtn,background:C.teal}} onClick={() => { setShowSettings(false); setScreen("setup"); setSetupTab("stats"); }}>打开完整统计页</button>
                 </div>;
