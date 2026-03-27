@@ -1,3 +1,7 @@
+export const config = {
+  maxDuration: 60,
+};
+
 let providerStartCursor = 0;
 
 const buildProviders = () => {
