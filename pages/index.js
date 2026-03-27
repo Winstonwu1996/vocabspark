@@ -2246,30 +2246,41 @@ export default function App() {
           </div>
         )}
 
-        <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px 12px",marginBottom:8,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{flex:1}}>
-            <div style={{fontWeight:700,fontSize:14,marginBottom:2}}>① 快速复习 <span style={{fontSize:12,fontWeight:500,color:C.textSec}}>约 {dailyPlan.quickMin} 分</span></div>
-            <div style={{fontSize:12,color:dailyPlan.quickDone?C.green:C.textSec,fontWeight:dailyPlan.quickDone?600:500}}>{dailyPlan.quickDone ? "✅ 已完成" : (dailyPlan.toReview.length === 0 ? "🎉 今日无到期" : "待复习 " + dailyPlan.toReview.length + " 个")}</div>
-          </div>
-          <button style={{...S.smallBtn,background:dailyPlan.quickDone?C.card:C.teal,color:dailyPlan.quickDone?C.teal:"#fff",border:dailyPlan.quickDone?"1px solid "+C.teal:"none",padding:"6px 14px"}} onClick={function(){startQuickReview("due");}}>{dailyPlan.quickDone ? "再复习" : "开始"}</button>
-        </div>
-
-        <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px 12px",marginBottom:8,display:"flex",alignItems:"center",justifyContent:"space-between",opacity:dailyPlan.deepLocked?0.7:1}}>
-          <div style={{flex:1}}>
-            <div style={{fontWeight:700,fontSize:14,marginBottom:2}}>② 重点攻克 <span style={{fontSize:12,fontWeight:500,color:C.textSec}}>约 {dailyPlan.deepMin} 分</span></div>
-            <div style={{fontSize:12,color:dailyPlan.deepLocked?C.textSec:dailyPlan.deepDone?C.green:C.textSec,fontWeight:dailyPlan.deepDone?600:500}}>
-              {dailyPlan.deepLocked ? "🔒 待解锁" : (dailyPlan.deepDone ? "✅ 已完成" : "攻克 " + dailyPlan.deepUsedToday + "/" + dailyPlan.deepCap + " 重点词")}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+          <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>① 快速复习</div>
+              <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.quickMin} 分</div>
+              <div style={{fontSize:11,color:dailyPlan.quickDone?C.green:C.textSec,fontWeight:dailyPlan.quickDone?600:500,minHeight:16}}>{dailyPlan.quickDone ? "✅ 已完成" : (dailyPlan.toReview.length === 0 ? "🎉 无到期" : "待审 " + dailyPlan.toReview.length)}</div>
             </div>
+            <button style={{...S.smallBtn,background:dailyPlan.quickDone?C.card:C.teal,color:dailyPlan.quickDone?C.teal:"#fff",border:dailyPlan.quickDone?"1px solid "+C.teal:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} onClick={function(){startQuickReview("due");}}>{dailyPlan.quickDone?"再复习":"开始"}</button>
           </div>
-          <button style={{...S.smallBtn,background:dailyPlan.deepLocked?C.textSec:dailyPlan.deepDone?C.card:C.red,color:dailyPlan.deepDone?C.red:"#fff",border:dailyPlan.deepDone?"1px solid "+C.red:"none",padding:"6px 14px"}} disabled={dailyPlan.deepLocked} onClick={startDeepReview}>{dailyPlan.deepLocked?"锁定":(dailyPlan.deepDone?"继续":"开始")}</button>
-        </div>
 
-        <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{flex:1}}>
-            <div style={{fontWeight:700,fontSize:14,marginBottom:2}}>③ 学习新词 <span style={{fontSize:12,fontWeight:500,color:C.textSec}}>约 {dailyPlan.newMin} 分</span></div>
-            <div style={{fontSize:12,color:dailyPlan.newDone?C.green:C.textSec,fontWeight:dailyPlan.newDone?600:500}}>{dailyPlan.newDone ? "✅ 额度用空" : "可学 " + dailyPlan.newRemainingQuota + " 个"}</div>
+          <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between",opacity:dailyPlan.deepLocked?0.7:1}}>
+            <div>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>② 重点攻克</div>
+              <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.deepMin} 分</div>
+              <div style={{fontSize:11,color:dailyPlan.deepLocked?C.textSec:dailyPlan.deepDone?C.green:C.textSec,fontWeight:dailyPlan.deepDone?600:500,minHeight:16}}>
+                {dailyPlan.deepLocked ? "🔒 待解锁" : (dailyPlan.deepDone ? "✅ 已完成" : dailyPlan.deepUsedToday + "/" + dailyPlan.deepCap + " 词")}
+              </div>
+            </div>
+            <button style={{...S.smallBtn,background:dailyPlan.deepLocked?C.textSec:dailyPlan.deepDone?C.card:C.red,color:dailyPlan.deepDone?C.red:"#fff",border:dailyPlan.deepDone?"1px solid "+C.red:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} disabled={dailyPlan.deepLocked} onClick={startDeepReview}>
+              {dailyPlan.deepLocked?"锁定":(dailyPlan.deepDone?"继续":"开始")}
+            </button>
           </div>
-          <button style={{...S.smallBtn,background:dailyPlan.newDone?C.card:C.accent,color:dailyPlan.newDone?C.accent:"#fff",border:dailyPlan.newDone?"1px solid "+C.accent:"none",padding:"6px 14px"}} onClick={function(){startLearning(0);}}>{dailyPlan.newDone?"继续":"开始"}</button>
+
+          <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>③ 学习新词</div>
+              <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.newMin} 分</div>
+              <div style={{fontSize:11,color:dailyPlan.newDone?C.green:C.textSec,fontWeight:dailyPlan.newDone?600:500,minHeight:16}}>
+                {dailyPlan.newDone ? "✅ 已达标" : "可学 " + dailyPlan.newRemainingQuota}
+              </div>
+            </div>
+            <button style={{...S.smallBtn,background:dailyPlan.newDone?C.card:C.accent,color:dailyPlan.newDone?C.accent:"#fff",border:dailyPlan.newDone?"1px solid "+C.accent:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} onClick={function(){startLearning(0);}}>
+              {dailyPlan.newDone?"继续":"开始"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -2293,11 +2304,14 @@ export default function App() {
         </div>
       )}
 
-      <div style={S.tabBar}>
-        <button style={setupTab==="profile"?S.tabActive:S.tab} onClick={() => setSetupTab("profile")}>👤 学生画像</button>
-        <button style={setupTab==="plan"?S.tabActive:S.tab} onClick={() => setSetupTab("plan")}>🎯 计划</button>
-        <button style={setupTab==="words"?S.tabActive:S.tab} onClick={() => setSetupTab("words")}>📝 词汇</button>
-        <button style={setupTab==="stats"?S.tabActive:S.tab} onClick={() => setSetupTab("stats")}>📊 统计</button>
+      <div style={{...S.tabBar, alignItems:"center", padding:"0 6px"}}>
+        <button style={{...(setupTab==="profile"?S.tabActive:S.tab), padding:"13px 6px", fontSize:13}} onClick={() => setSetupTab("profile")}>👤 画像</button>
+        <span style={{color:C.border, fontSize:12, fontWeight:700}}>➔</span>
+        <button style={{...(setupTab==="words"?S.tabActive:S.tab), padding:"13px 6px", fontSize:13}} onClick={() => setSetupTab("words")}>📝 词汇列表</button>
+        <span style={{color:C.border, fontSize:12, fontWeight:700}}>➔</span>
+        <button style={{...(setupTab==="plan"?S.tabActive:S.tab), padding:"13px 6px", fontSize:13}} onClick={() => setSetupTab("plan")}>🎯 学习计划</button>
+        <span style={{color:C.border, fontSize:12, fontWeight:700}}>➔</span>
+        <button style={{...(setupTab==="stats"?S.tabActive:S.tab), padding:"13px 6px", fontSize:13}} onClick={() => setSetupTab("stats")}>📊 统计</button>
       </div>
       {setupTab === "profile" && (
         <div style={S.setupCard}>
