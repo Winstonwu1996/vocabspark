@@ -1595,11 +1595,13 @@ export default function App() {
       var words = [];
       if (/\.(xlsx|xls)$/i.test(file.name)) {
         var xlsxMod = await import('xlsx');
-        var XLSX = xlsxMod.default || xlsxMod;
-        var buf = await file.arrayBuffer();
-        var wb = XLSX.read(buf, {type:'array'});
+        var readFn = xlsxMod.read || (xlsxMod.default && xlsxMod.default.read);
+        var utilsFn = xlsxMod.utils || (xlsxMod.default && xlsxMod.default.utils);
+        if (!readFn || !utilsFn) throw new Error("xlsx 模块加载异常，请刷新页面后重试");
+        var buf = new Uint8Array(await file.arrayBuffer());
+        var wb = readFn(buf, {type:'array'});
         var ws = wb.Sheets[wb.SheetNames[0]];
-        var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+        var rows = utilsFn.sheet_to_json(ws, {header:1, defval:''});
         words = rows.flat()
           .map(function(c) { return String(c).trim().toLowerCase(); })
           .filter(function(w) { return /^[a-z][a-z\s'\-]{0,30}$/.test(w); });
