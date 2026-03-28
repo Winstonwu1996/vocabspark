@@ -36,6 +36,18 @@ var PROFILE_GUIDE_EXAMPLES = [
   "• Willow 的偶像是 Taylor Swift，已刷了 100 遍 Eras Tour"
 ];
 
+var PROFILE_DEFAULT_EXAMPLE = "Willow，6年级，在 Irvine 读书\n好朋友：Emily、Sophia\n爱好：网球（教练 Ms. Lee）、画画\n最近在追《鬼灭之刃》，最喜欢炭治郎\n偶像是 Taylor Swift\n上周末和 Emily 去 Irvine Spectrum 吃了抹茶冰淇淋";
+
+var STUDY_GOAL_OPTIONS = [
+  { key: "ssat", label: "备考 SSAT", desc: "冲刺 SSAT 词汇部分" },
+  { key: "sat", label: "备考 SAT", desc: "SAT 高频核心词" },
+  { key: "school", label: "课内提升", desc: "配合学校课程、课本词汇" },
+  { key: "reading", label: "课外阅读", desc: "读原版小说、文章扩词量" },
+  { key: "speech", label: "演讲/写作", desc: "提升表达和写作用词水平" },
+  { key: "interest", label: "兴趣驱动", desc: "纯粹想多认识一些英文词" },
+  { key: "other", label: "其他", desc: "自定义目标" },
+];
+
 var WORD_STATUS_KEY = "vocabspark_word_status_v1";
 var REVIEW_WORD_DATA_KEY = "vocabspark_review_word_data_v1";
 var WORD_STATUS_META = {
@@ -141,9 +153,14 @@ var sfx = {
 };
 
 /* ─── Prompt Builders ─── */
-var buildSys = (profile) => {
+var buildSys = (profile, goal) => {
   var p = (profile || '').slice(0, PROFILE_MAX);
-  return "你是一个幽默、有耐心且精通中英双语的词汇导师。风格像一个很酷的大姐姐——会用梗、会吐槽、偶尔抖机灵，但绝不油腻。\n\n【学生画像】\n" + p + "\n\n你必须深度利用上面的学生画像。每一个例句、每一个画面、每一个比喻，都必须和这个学生的具体爱好、常去的地方、日常生活紧密关联。让学生觉得\"这说的就是我的生活\"。";
+  var goalText = "";
+  if (goal) {
+    var found = STUDY_GOAL_OPTIONS.find(function(o) { return o.key === goal; });
+    goalText = found ? "\n\n【学习目的】\n" + found.label + "（" + found.desc + "）\n请在教学中适当贴合该目标，例如选用与考试/阅读/写作相关的例句语境。" : "";
+  }
+  return "你是一个幽默、有耐心且精通中英双语的词汇导师。风格像一个很酷的大姐姐——会用梗、会吐槽、偶尔抖机灵，但绝不油腻。\n\n【学生画像】\n" + p + goalText + "\n\n你必须深度利用上面的学生画像。每一个例句、每一个画面、每一个比喻，都必须和这个学生的具体爱好、常去的地方、日常生活紧密关联。让学生觉得\"这说的就是我的生活\"。";
 };
 
 var buildGuessPrompt = (word, learned) => {
@@ -574,6 +591,7 @@ export default function App() {
   var [targetDate, setTargetDate] = useState("");
   var [deepReviewDailyCap, setDeepReviewDailyCap] = useState(8);
   var [profile, setProfile] = useState("");
+  var [studyGoal, setStudyGoal] = useState("");
   var [wordInput, setWordInput] = useState("");
   var [wordList, setWordList] = useState([]);
   var [fileLabel, setFileLabel] = useState("");
@@ -746,6 +764,7 @@ export default function App() {
         if (d?.settings?.targetDate) setTargetDate(d.settings.targetDate);
         if (d?.settings?.deepReviewDailyCap) setDeepReviewDailyCap(d.settings.deepReviewDailyCap);
         if (d?.profile) { setProfile(d.profile); setProfileLocked(true); }
+        if (d?.settings?.studyGoal) setStudyGoal(d.settings.studyGoal);
         if (d?.stats) setStats(function(s) { return {...s, ...(d.stats||{})}; });
         if (d?.profile) setShowWelcome(false);
         if (d?.tipDismissed) setTipDismissed(true);
@@ -1060,7 +1079,7 @@ export default function App() {
     return function() { subscription.unsubscribe(); };
   }, []);
 
-  var sysP = buildSys(profile);
+  var sysP = buildSys(profile, studyGoal);
 
   var save = function(s, session) {
     setStats(s);
@@ -2479,8 +2498,9 @@ export default function App() {
 
       <div id="vocabspark-profile-section" style={{...S.tabBar}}>
         <button style={{...(setupTab==="profile"?S.tabActive:S.tab)}} onClick={() => setSetupTab("profile")}>👤 画像</button>
+        <button style={{...(setupTab==="goal"?S.tabActive:S.tab)}} onClick={() => setSetupTab("goal")}>🎯 目的</button>
         <button style={{...(setupTab==="words"?S.tabActive:S.tab)}} onClick={() => setSetupTab("words")}>📝 词汇表</button>
-        <button style={{...(setupTab==="plan"?S.tabActive:S.tab)}} onClick={() => setSetupTab("plan")}>🎯 计划</button>
+        <button style={{...(setupTab==="plan"?S.tabActive:S.tab)}} onClick={() => setSetupTab("plan")}>📅 计划</button>
         <button style={{...(setupTab==="stats"?S.tabActive:S.tab)}} onClick={() => setSetupTab("stats")}>📊 统计</button>
       </div>
       {setupTab === "profile" && (
@@ -2490,6 +2510,14 @@ export default function App() {
             <div><div style={S.profilePrev}>{profile.slice(0,250)}{profile.length>250?"...":""}</div><button style={S.smallBtn} onClick={() => setProfileLocked(false)}>✏️ 编辑</button></div>
           ) : (
             <div>
+              {/* 默认示例提示 */}
+              {!profile.trim() && (
+                <div style={{background:C.goldLight,border:"1px solid "+C.gold+"55",borderRadius:10,padding:"12px 14px",marginBottom:12,fontSize:13,lineHeight:1.7}}>
+                  <div style={{fontWeight:700,marginBottom:4,color:C.text}}>👇 下面已预填了一个示例，请替换成你孩子的真实信息</div>
+                  <div style={{color:C.textSec,fontSize:12}}>写得越具体，AI 生成的例句越贴近孩子的真实生活，学习效果越好。</div>
+                  <button style={{background:C.gold,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT,marginTop:8}} onClick={function(){ setProfile(PROFILE_DEFAULT_EXAMPLE); }}>📝 填入示例，我来修改</button>
+                </div>
+              )}
               <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
                 {["💬 今天最开心的事","🎬 最近在追的剧/动画","🌟 最近认识的新朋友","📍 上周末去了哪里","😋 最近特别想吃什么","🎵 最近单曲循环的歌","😤 最近让你烦心的事","🐾 有没有喜欢的宠物"].map(function(p) {
                   return <button key={p} onClick={function() { setProfile(function(prev) { return prev + (prev && !prev.endsWith('\n') ? '\n' : '') + p + '：'; }); }} style={{background:C.accentLight,border:"1px solid "+C.accent+"44",borderRadius:20,padding:"4px 12px",fontSize:12,color:C.accent,cursor:"pointer",fontFamily:FONT,fontWeight:500}}>{p}</button>;
@@ -2519,6 +2547,46 @@ export default function App() {
               </div>
               <button style={{...S.tealBtn,opacity:profile.length>PROFILE_MAX?0.45:1,cursor:profile.length>PROFILE_MAX?"not-allowed":"pointer"}} disabled={profile.length>PROFILE_MAX} onClick={() => { setProfileLocked(true); loadSave().then(d => doSave({...(d||{}), profile, stats})); }}>💾 保存画像</button>
             </div>
+          )}
+        </div>
+      )}
+      {setupTab === "goal" && (
+        <div style={S.setupCard}>
+          <div style={S.setupHint}>告诉我们背单词的目的，AI 会根据目标调整教学风格和例句选择。</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+            {STUDY_GOAL_OPTIONS.map(function(opt) {
+              var selected = studyGoal === opt.key;
+              return <button key={opt.key} onClick={function(){
+                var newGoal = selected ? "" : opt.key;
+                setStudyGoal(newGoal);
+                loadSave().then(function(d) {
+                  var nextData = {...(d||{}), settings: {...(d?.settings||{}), studyGoal: newGoal}};
+                  doSave(nextData);
+                  syncToCloud(nextData);
+                });
+              }} style={{
+                background: selected ? C.tealLight : C.card,
+                border: "1.5px solid " + (selected ? C.teal : C.border),
+                borderRadius: 12,
+                padding: "14px 12px",
+                textAlign: "left",
+                cursor: "pointer",
+                fontFamily: FONT,
+                transition: "all 0.15s ease",
+              }}>
+                <div style={{fontSize:14,fontWeight:700,color: selected ? C.teal : C.text,marginBottom:2}}>{selected ? "✅ " : ""}{opt.label}</div>
+                <div style={{fontSize:12,color:C.textSec,lineHeight:1.4}}>{opt.desc}</div>
+              </button>;
+            })}
+          </div>
+          {studyGoal && (
+            <div style={{background:C.tealLight,border:"1px solid "+C.teal+"44",borderRadius:10,padding:"12px 14px",fontSize:13,color:C.teal,lineHeight:1.6}}>
+              ✅ 已设置目标：<strong>{STUDY_GOAL_OPTIONS.find(function(o){return o.key===studyGoal;})?.label}</strong>
+              <br/><span style={{fontSize:12,color:C.textSec}}>AI 生成的教学内容会贴合此目标。随时可以更改。</span>
+            </div>
+          )}
+          {!studyGoal && (
+            <div style={{fontSize:12,color:C.textSec,lineHeight:1.6}}>💡 选择一个最接近的目标即可，不确定就选"兴趣驱动"。设置后 AI 会在例句和教学中适当偏向该目标场景。</div>
           )}
         </div>
       )}
