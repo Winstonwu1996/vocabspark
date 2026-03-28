@@ -1228,22 +1228,31 @@ export default function App() {
 
   var resetLearningProgress = function() {
     if (!confirm("⚠️ 确认重置学习进度？\n\n将清除：\n· 所有单词的学习状态\n· 复习记录与复习计划\n· 统计数据（XP、正确率等）\n· 今日学习配额\n\n不会清除：\n· 词表内容\n· 学生画像\n· 每日目标设置\n· 连续学习天数\n\n此操作不可撤销。")) return;
+    // 清除学习状态
     setWordStatusMap({});
     setReviewWordData({});
     var newStats = { correct:0, total:0, streak:0, bestStreak:0, xp:0 };
     setStats(newStats);
     setTodayCount(0);
+    // 清除学习会话
+    setWordList([]);
+    setIdx(0);
+    setLearned([]);
+    // 清除 localStorage
     localStorage.removeItem(WORD_STATUS_KEY);
     localStorage.removeItem(REVIEW_WORD_DATA_KEY);
     localStorage.removeItem(DAILY_KEY);
     localStorage.removeItem(DAILY_NEW_QUOTA_KEY);
     localStorage.removeItem(DEEP_REVIEW_DAILY_KEY);
+    // 同步到本地和云端
     loadSave().then(function(d) {
       var nextData = {...(d||{}), stats: newStats, completedWords: [], session: null, wordStatusMap: {}, reviewWordData: {}};
       doSave(nextData);
       syncToCloud(nextData);
     });
-    alert("✅ 学习进度已重置，可以重新开始了！");
+    // 成功提示
+    setLoginToast("✅ 学习进度已重置");
+    setTimeout(function() { setLoginToast(null); }, 3000);
   };
 
   var currentWord = wordList[idx] || "";
