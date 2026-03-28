@@ -4,8 +4,8 @@ import { supabase } from '../lib/supabase';
 import * as XLSX from 'xlsx';
 
 /* ═══════════════════════════════════════════════════════
-   VocabSpark v8 — AI 词汇导师
-   v8 变更：预加载优化 · TTS 升级(真人录音+神经语音) · 进度里程碑 · 滑入动画 · 答案填入 · 庆祝效果
+   KnowU VocabSpark — AI 词汇导师
+   KnowU Learning 系列产品
    ═══════════════════════════════════════════════════════ */
 
 var C = {
@@ -26,16 +26,16 @@ var STUDY_STREAK_KEY = 'vocabspark_study_streak_v1';
 var PHOTO_LIMIT = 5;
 var PROFILE_MAX = 1000;
 var PROFILE_TEXTAREA_PLACEHOLDER =
-  "写几句孩子的情况，例如：年级、城市、好朋友、爱好、最近喜欢的动画或歌……写越多 AI 越了解孩子，学单词越有趣！";
+  "写几句学习者的情况，例如：年龄/年级、城市、好朋友、爱好、最近喜欢的动画或歌……写越多 AI 越了解，学单词越有趣！";
 
 var PROFILE_GUIDE_EXAMPLES = [
-  "• 年级、所在城市 / 学校简称",
-  "• 好朋友的名字（例：Emily）",
+  "• 年龄/年级、所在城市",
+  "• 好朋友的名字（例：Emily、Sophia）",
   "• 教练或老师的称呼（例：网球教练 Ms. Lee）",
   "• Willow 今天和 Emily 打了一场超刺激的网球！",
-  "• Willow 最近在追《鬼灭之刃》，超喜欢炭治郎",
+  "• 最近在追《鬼灭之刃》，超喜欢炭治郎",
   "• 上周末去了 Irvine Spectrum，吃了抹茶冰淇淋",
-  "• Willow 的偶像是 Taylor Swift，已刷了 100 遍 Eras Tour"
+  "• 偶像是 Taylor Swift，已刷了 100 遍 Eras Tour"
 ];
 
 var PROFILE_DEFAULT_EXAMPLE = "Willow，6年级，在 Irvine 读书\n好朋友：Emily、Sophia\n爱好：网球（教练 Ms. Lee）、画画\n最近在追《鬼灭之刃》，最喜欢炭治郎\n偶像是 Taylor Swift\n上周末和 Emily 去 Irvine Spectrum 吃了抹茶冰淇淋";
@@ -166,12 +166,12 @@ var buildSys = (profile, goal, goalCustom) => {
       goalText = found ? "\n\n【学习目的】\n" + found.label + "（" + found.desc + "）\n请在教学中适当贴合该目标，例如选用与考试/阅读/写作相关的例句语境。" : "";
     }
   }
-  return "你是幽默有耐心的中英双语词汇导师，风格像很酷的大姐姐——会用梗、偶尔吐槽抖机灵。\n\n【学生画像】\n" + p + goalText + "\n\n深度利用画像：例句、画面、比喻必须紧扣学生的爱好、常去地方、日常生活。让学生觉得\"说的就是我\"。";
+  return "你是幽默有耐心的中英双语词汇导师，风格轻松活泼——会用梗、偶尔吐槽抖机灵。\n\n【学习画像】\n" + p + goalText + "\n\n深度利用画像：例句、画面、比喻必须紧扣用户的爱好、常去地方、日常生活。让用户觉得\"说的就是我\"。";
 };
 
 var buildGuessPrompt = (word, learned) => {
-  var ctx = learned.length > 0 ? "\n学生之前学过：" + learned.join(", ") : "";
-  return "单词：" + word + ctx + "\n\n请执行 Step 1（猜）：\n\n1. 给出这个单词的IPA音标\n2. 给出一个生动的英文语境句（1-2句），用 _____ 代替目标单词，深度使用学生画像中的具体场景。\n3. 给出 4 个中文选项（A/B/C/D），其中只有 1 个是正确含义。\n\nIMPORTANT: 直接输出JSON，不要任何前导文字：\n" + '{"phonetic":"/音标/","context":"语境句","options":{"A":"选项A","B":"选项B","C":"选项C","D":"选项D"},"answer":"字母","hint":"提示"}';
+  var ctx = learned.length > 0 ? "\n之前学过：" + learned.join(", ") : "";
+  return "单词：" + word + ctx + "\n\n请执行 Step 1（猜）：\n\n1. 给出这个单词的IPA音标\n2. 给出一个生动的英文语境句（1-2句），用 _____ 代替目标单词，深度使用学习画像中的具体场景。\n3. 给出 4 个中文选项（A/B/C/D），其中只有 1 个是正确含义。\n\nIMPORTANT: 直接输出JSON，不要任何前导文字：\n" + '{"phonetic":"/音标/","context":"语境句","options":{"A":"选项A","B":"选项B","C":"选项C","D":"选项D"},"answer":"字母","hint":"提示"}';
 };
 
 var buildTeachPrompt = (word, learned) => {
@@ -180,23 +180,23 @@ var buildTeachPrompt = (word, learned) => {
 };
 
 var buildSpectrumPrompt = (word) => {
-  return "单词：" + word + "\n\n设计\"词义光谱排序\"游戏。找2个含义相近但程度不同的常见词，组成从弱到强的3词光谱。写2-3句沉浸式场景描述（用学生画像场景），及排序正确后的解读。\n\nIMPORTANT: 直接输出JSON：\n" + '{"spectrum_words":["弱","中","强(目标词)"],"scenario":"场景","decoded":"解读"}';
+  return "单词：" + word + "\n\n设计\"词义光谱排序\"游戏。找2个含义相近但程度不同的常见词，组成从弱到强的3词光谱。写2-3句沉浸式场景描述（用学习画像场景），及排序正确后的解读。\n\nIMPORTANT: 直接输出JSON：\n" + '{"spectrum_words":["弱","中","强(目标词)"],"scenario":"场景","decoded":"解读"}';
 };
 
 var buildReviewPrompt = (words) => {
-  return "学生刚学完5个词：" + words.join(", ") + "\n\n设计互动复习关卡。直接输出JSON：\n" + '{"type":"fill_blank","title":"标题","intro":"场景描述","questions":[{"id":1,"sentence":"含_____的句","options":["词1","词2","词3"],"answer":"答案","explanation":"解释"},{"id":2,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":3,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":4,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":5,"sentence":"...","options":["..."],"answer":"...","explanation":"..."}]}' + "\n\n每题对应一个词，options含正确答案和2个干扰词，场景结合学生画像。";
+  return "刚学完5个词：" + words.join(", ") + "\n\n设计互动复习关卡。直接输出JSON：\n" + '{"type":"fill_blank","title":"标题","intro":"场景描述","questions":[{"id":1,"sentence":"含_____的句","options":["词1","词2","词3"],"answer":"答案","explanation":"解释"},{"id":2,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":3,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":4,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":5,"sentence":"...","options":["..."],"answer":"...","explanation":"..."}]}' + "\n\n每题对应一个词，options含正确答案和2个干扰词，场景结合学习画像。";
 };
 
 var buildClozePrompt = (words) => {
-  return "学生刚学完10个词：" + words.join(", ") + "\n\n请写一篇120-150词的英文小短文（故事/日记/场景描述），深度结合学生画像的生活场景。短文中自然嵌入这10个词中的5个，将这5个词替换为 _____(1), _____(2) 等编号空格。\n\n在短文后给出5个填空题，每题3个选项（从10个词中选）。\n\nIMPORTANT: 直接输出JSON：\n" + '{"title":"短文标题","passage":"短文正文，含_____(1)等空格","questions":[{"id":1,"blank":"_____(1)","options":["词1","词2","词3"],"answer":"正确词","explanation":"为什么选这个词"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
+  return "刚学完10个词：" + words.join(", ") + "\n\n请写一篇120-150词的英文小短文（故事/日记/场景描述），深度结合学习画像的生活场景。短文中自然嵌入这10个词中的5个，将这5个词替换为 _____(1), _____(2) 等编号空格。\n\n在短文后给出5个填空题，每题3个选项（从10个词中选）。\n\nIMPORTANT: 直接输出JSON：\n" + '{"title":"短文标题","passage":"短文正文，含_____(1)等空格","questions":[{"id":1,"blank":"_____(1)","options":["词1","词2","词3"],"answer":"正确词","explanation":"为什么选这个词"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
 };
 
 var buildReviewTeachPrompt = (word, learned, reviewCount) => {
   return "单词复习：" + word +
-    "\n这是学生第 " + reviewCount + " 次复习这个词。" +
-    "\n学生之前学过但记忆模糊，需要巩固。" +
+    "\n这是第 " + reviewCount + " 次复习这个词。" +
+    "\n之前学过但记忆模糊，需要巩固。" +
     "\n\n请用一个全新的生活场景帮助记忆（不要重复之前例子），要求：" +
-    "\n1) 2-3句生动场景（结合学生画像）" +
+    "\n1) 2-3句生动场景（结合学习画像）" +
     "\n2) 一个易混词对比" +
     "\n3) 一个简短记忆口诀" +
     "\n4) 一道SSAT风格单选题（含答案与解释）" +
@@ -325,8 +325,8 @@ var BrandSparkIcon = ({ size, marginBottom }) => {
         width: box,
         height: box,
         borderRadius: radius,
-        background: "linear-gradient(145deg, " + C.accent + " 0%, " + C.gold + " 100%)",
-        boxShadow: "0 10px 28px rgba(212, 93, 60, 0.32), inset 0 1px 0 rgba(255,255,255,0.25)",
+        background: "linear-gradient(145deg, " + C.teal + " 0%, " + C.accent + " 100%)",
+        boxShadow: "0 6px 20px rgba(42, 122, 110, 0.25), inset 0 1px 0 rgba(255,255,255,0.2)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -346,21 +346,35 @@ var BrandSparkIcon = ({ size, marginBottom }) => {
   );
 };
 
+var BrandLogo = ({ layout }) => {
+  // layout: "horizontal" (header) or "vertical" (welcome modal / loading)
+  var isV = layout === "vertical";
+  return (
+    <div style={{ display:"flex", flexDirection:isV?"column":"row", alignItems:"center", gap:isV?2:0 }}>
+      <div style={{ display:"flex", alignItems:"baseline", gap:0 }}>
+        {isV && <BrandSparkIcon size={52} marginBottom={8} />}
+      </div>
+      <div style={{ textAlign:isV?"center":"left" }}>
+        <div style={{ fontSize:isV?11:10, fontWeight:700, color:C.teal, letterSpacing:"0.12em", textTransform:"uppercase", lineHeight:1, marginBottom:isV?4:2 }}>KnowU</div>
+        <div style={{ display:"flex", alignItems:"center", gap:3 }}>
+          {!isV && <BrandSparkIcon size={32} marginBottom={0} />}
+          <span style={{ fontSize:isV?28:22, fontWeight:800, letterSpacing:"-0.03em", lineHeight:1 }}>
+            <span style={{ color:C.text }}>Vocab</span><span style={{ color:C.accent }}>Spark</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 var AppHeroHeader = ({ stats, studyStreak }) => {
   var pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
   var hasStats = stats.xp > 0;
   return (
     <div style={{ background:"linear-gradient(135deg, "+C.card+" 0%, "+C.tealLight+" 50%, "+C.accentLight+" 100%)", borderRadius:16, padding:"18px 18px 14px", marginBottom:14, border:"1px solid "+C.border, boxShadow:"0 4px 20px rgba(44,36,32,0.08)" }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:10 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:12, minWidth:0 }}>
-          <BrandSparkIcon size={44} marginBottom={0} />
-          <div style={{minWidth:0}}>
-            <h1 style={{ fontSize:22, margin:0, fontWeight:800, letterSpacing:"-0.03em", lineHeight:1.1 }}>
-              <span style={{ color: C.text }}>Vocab</span><span style={{ color: C.accent }}>Spark</span>
-              <span style={{fontSize:9,fontWeight:600,marginLeft:5,verticalAlign:"middle",color:C.textSec,opacity:0.5}}>v3.1</span>
-            </h1>
-            <p style={{ margin:"3px 0 0", fontSize:12, color:C.textSec, fontWeight:500, fontStyle:"italic", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>The AI that truly knows your child.</p>
-          </div>
+        <div style={{ display:"flex", alignItems:"center", gap:0, minWidth:0 }}>
+          <BrandLogo layout="horizontal" />
         </div>
       </div>
       {(hasStats || (studyStreak && studyStreak.streak > 0)) && (
@@ -461,7 +475,7 @@ var shuffle = (a) => { a = [...a]; for (var i = a.length-1; i > 0; i--) { var j 
 
 var Disclaimer = () => (
   <div style={{ textAlign:"center", fontSize:12, color:C.textSec, padding:"10px 0 4px", lineHeight:1.7, borderTop:"1px solid "+C.border, marginTop:8 }}>
-    VocabSpark 专注于理解与记忆 · 拼写练习推荐搭配<strong>百词斩</strong>等工具
+    KnowU VocabSpark 专注于理解与记忆 · 拼写练习推荐搭配<strong>百词斩</strong>等工具
   </div>
 );
 
@@ -475,7 +489,7 @@ function PrivacyNotice() {
       {open && (
         <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:12,padding:"16px 18px",marginTop:8,textAlign:"left",lineHeight:1.9,maxWidth:480,margin:"8px auto 0",fontSize:12}}>
           <div style={{fontWeight:700,marginBottom:8,fontSize:13}}>🔒 数据隐私承诺</div>
-          <p style={{margin:"0 0 8px"}}>您在「学生画像」中填写的文字及上传的照片，<strong>仅用于</strong>由 AI 生成个性化学习内容（例句、讲解、记忆场景），不作任何其他用途。</p>
+          <p style={{margin:"0 0 8px"}}>您在「学习画像」中填写的文字及上传的照片，<strong>仅用于</strong> AI 生成个性化学习内容（例句、讲解、记忆场景），不作任何其他用途。</p>
           <div style={{color:C.textSec}}>
             • 所有数据在传输和存储过程中均采用 HTTPS 加密保护<br/>
             • 您的原始信息不会被开发者读取、分析，或以任何形式向第三方披露<br/>
@@ -1230,7 +1244,7 @@ export default function App() {
   };
 
   var resetLearningProgress = function() {
-    if (!confirm("⚠️ 确认重置学习进度？\n\n将清除：\n· 所有单词的学习状态\n· 复习记录与复习计划\n· 统计数据（XP、正确率等）\n· 今日学习配额\n\n不会清除：\n· 词表内容\n· 学生画像\n· 每日目标设置\n· 连续学习天数\n\n此操作不可撤销。")) return;
+    if (!confirm("⚠️ 确认重置学习进度？\n\n将清除：\n· 所有单词的学习状态\n· 复习记录与复习计划\n· 统计数据（XP、正确率等）\n· 今日学习配额\n\n不会清除：\n· 词表内容\n· 学习画像\n· 每日目标设置\n· 连续学习天数\n\n此操作不可撤销。")) return;
     // 清除学习状态
     setWordStatusMap({});
     setReviewWordData({});
@@ -1690,7 +1704,7 @@ export default function App() {
   var startLearning = async function(resumeIdx) {
     var rawWords = wordInput.trim().split(/[\n,，、]+/).map(function(w) { return w.trim().toLowerCase(); }).filter(Boolean);
     if (!rawWords.length) { setError("请输入至少一个单词"); return; }
-    if (!profile.trim()) { setError("请先填写并保存学生画像"); return; }
+    if (!profile.trim()) { setError("请先填写并保存「学习画像」"); return; }
     
     var startIdx = typeof resumeIdx === "number" ? resumeIdx : 0;
     var words = rawWords;
@@ -2822,14 +2836,14 @@ export default function App() {
     return (
     <div style={S.root}>
       <Head>
-        <title>VocabSpark — AI 词汇导师</title>
+        <title>KnowU VocabSpark — AI 词汇导师</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="AI 驱动的英语词汇学习工具，专为华裔孩子设计。用孩子自己的生活场景讲单词，过目不忘 🎉" />
-        <meta property="og:title" content="VocabSpark — AI 英语词汇导师" />
-        <meta property="og:description" content="AI 用孩子自己的生活场景讲单词，猜→教→练，过目不忘。免费试用！" />
-        <meta property="og:url" content="https://vocabspark.vercel.app" />
+        <meta name="description" content="AI 驱动的英语词汇学习工具，用你自己的生活场景讲单词，猜→教→练，过目不忘 🎉" />
+        <meta property="og:title" content="KnowU VocabSpark — AI 英语词汇导师" />
+        <meta property="og:description" content="AI 用你自己的生活场景讲单词，猜→教→练，过目不忘。免费试用！" />
+        <meta property="og:url" content="https://knowulearning.com" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://vocabspark.vercel.app/og-cover.png" />
+        <meta property="og:image" content="https://knowulearning.com/og-cover.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -2840,16 +2854,13 @@ export default function App() {
       {showWelcome && (
         <div style={{ position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.55)", zIndex:999, display:"flex", alignItems:"center", justifyContent:"center", padding:20, fontFamily:FONT }}>
           <div style={{ background:C.card, borderRadius:20, padding:"32px 28px", maxWidth:480, width:"100%", boxShadow:"0 20px 60px rgba(0,0,0,0.25)", animation:"fadeUp 0.25s ease-out" }}>
-            <BrandSparkIcon size={52} marginBottom={10} />
-            <h2 style={{ fontSize:26, fontWeight:800, textAlign:"center", margin:"0 0 6px", letterSpacing:"-0.03em", lineHeight:1.1, color:C.text }}>
-              欢迎使用 <span style={{ color:C.text }}>Vocab</span><span style={{ color:C.accent }}>Spark</span>
-            </h2>
-            <p style={{ fontSize:13, color:C.textSec, fontStyle:"italic", textAlign:"center", margin:"0 0 18px", letterSpacing:"0.02em" }}>The AI that truly knows your child.</p>
+            <BrandLogo layout="vertical" />
+            <p style={{ fontSize:13, color:C.textSec, fontStyle:"italic", textAlign:"center", margin:"6px 0 18px", letterSpacing:"0.02em" }}>The AI that truly knows you.</p>
             <div style={{ fontSize:14, lineHeight:1.85, color:C.text }}>
-              <p style={{ margin:"0 0 12px" }}><strong>VocabSpark</strong> 是 AI 驱动的英语词汇学习工具，通过<strong>猜 → 讲 → 光谱排序 → 复习</strong>帮孩子把单词记牢。</p>
+              <p style={{ margin:"0 0 12px" }}><strong>KnowU VocabSpark</strong> 是 AI 驱动的英语词汇学习工具，通过<strong>猜 → 讲 → 光谱排序 → 复习</strong>帮你把单词记牢。</p>
               <p style={{ margin:0, padding:"12px 14px", background:C.tealLight, borderRadius:12, fontSize:13, lineHeight:1.75, border:"1px solid rgba(42,122,110,0.12)" }}>
-                <strong>开始前请先设置「学生画像」</strong><br/>
-                填写年级、爱好、常去的地方等。AI 会据此定制讲解和例句；也可以稍后用「照片日记」补充，越具体越有趣。
+                <strong>开始前请先设置「学习画像」</strong><br/>
+                填写你的兴趣爱好、常去的地方等。AI 会据此定制讲解和例句；也可以稍后用「照片日记」补充，越具体越有趣。
               </p>
             </div>
             <button onClick={() => { setShowWelcome(false); setSetupTab("profile"); setTimeout(function(){ var el = document.getElementById("vocabspark-profile-section"); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }, 120); }} style={{ ...S.bigBtn, marginTop:16, width:"100%" }}>👍 我知道了，开始设置</button>
@@ -2897,7 +2908,7 @@ export default function App() {
             <div style={{background:C.card,border:"1px dashed "+C.teal,borderRadius:10,padding:"20px 16px",textAlign:"center"}}>
               <div style={{fontSize:28,marginBottom:8}}>📚</div>
               <div style={{fontWeight:700,fontSize:15,color:C.text,marginBottom:6}}>导入你的第一个词表，开始学习吧！</div>
-              <div style={{fontSize:13,color:C.textSec,marginBottom:14,lineHeight:1.6}}>在「词汇表」页签中粘贴单词（每行一个），AI 会为孩子量身定制学习内容。</div>
+              <div style={{fontSize:13,color:C.textSec,marginBottom:14,lineHeight:1.6}}>在「词汇表」页签中粘贴单词（每行一个），AI 会为你量身定制学习内容。</div>
               <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none",padding:"8px 20px",fontSize:14,fontWeight:600}} onClick={function(){ setSetupTab("words"); setTimeout(function(){ var el = document.getElementById("vocabspark-profile-section"); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }, 120); }}>前往词汇表 →</button>
             </div>
             <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"14px 16px",marginTop:10}}>
@@ -2905,9 +2916,9 @@ export default function App() {
               <div style={{fontSize:13,color:C.text,lineHeight:1.7,background:C.tealLight,borderRadius:8,padding:"10px 12px"}}>
                 <div style={{fontWeight:700,marginBottom:4}}>abandon</div>
                 <div>普通教材：<span style={{color:C.textSec}}>to leave completely and finally</span></div>
-                <div style={{marginTop:4}}>VocabSpark：<span style={{color:C.accent,fontWeight:600}}>Willow 正和 Emily 打网球，突然下暴雨 — they had to <u>abandon</u> the match and run to Irvine Spectrum for matcha ice cream!</span></div>
+                <div style={{marginTop:4}}>KnowU：<span style={{color:C.accent,fontWeight:600}}>Willow 正和 Emily 打网球，突然下暴雨 — they had to <u>abandon</u> the match and run to Irvine Spectrum for matcha ice cream!</span></div>
               </div>
-              <div style={{fontSize:11,color:C.textSec,marginTop:6,textAlign:"center"}}>填写「画像」后，所有例句都会围绕孩子的真实生活</div>
+              <div style={{fontSize:11,color:C.textSec,marginTop:6,textAlign:"center"}}>填写「画像」后，所有例句都会围绕你的真实生活</div>
             </div>
           </>
         ) : (
@@ -2991,7 +3002,7 @@ export default function App() {
       </div>
       {setupTab === "profile" && (
         <div style={S.setupCard}>
-          <div style={S.setupHint}>{profileLocked ? "✅ 画像已保存" : "🌟 把这里想象成孩子的秘密日记——告诉 AI 她的世界，越真实越有趣，AI 造的句子会让她惊喜！"}</div>
+          <div style={S.setupHint}>{profileLocked ? "✅ 画像已保存" : "🌟 告诉 AI 你的世界——兴趣爱好、日常生活，越真实越有趣，AI 造的句子会让你惊喜！"}</div>
           {profileLocked ? (
             <div><div style={S.profilePrev}>{profile.slice(0,250)}{profile.length>250?"...":""}</div><button style={S.smallBtn} onClick={() => setProfileLocked(false)}>✏️ 编辑</button></div>
           ) : (
@@ -2999,8 +3010,8 @@ export default function App() {
               {/* 默认示例提示 */}
               {!profile.trim() && (
                 <div style={{background:C.goldLight,border:"1px solid "+C.gold+"55",borderRadius:10,padding:"12px 14px",marginBottom:12,fontSize:13,lineHeight:1.7}}>
-                  <div style={{fontWeight:700,marginBottom:4,color:C.text}}>👇 下面已预填了一个示例，请替换成你孩子的真实信息</div>
-                  <div style={{color:C.textSec,fontSize:12}}>写得越具体，AI 生成的例句越贴近孩子的真实生活，学习效果越好。</div>
+                  <div style={{fontWeight:700,marginBottom:4,color:C.text}}>👇 下面已预填了一个示例，请替换成你的真实信息</div>
+                  <div style={{color:C.textSec,fontSize:12}}>写得越具体，AI 生成的例句越贴近你的真实生活，学习效果越好。</div>
                   <button style={{background:C.gold,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT,marginTop:8}} onClick={function(){ setProfile(PROFILE_DEFAULT_EXAMPLE); }}>📝 填入示例，我来修改</button>
                 </div>
               )}
@@ -3015,7 +3026,7 @@ export default function App() {
                 </button>
                 {showProfileGuide && (
                   <div style={{background:C.accentLight,border:"1px solid "+C.accent+"33",borderRadius:8,padding:"10px 14px",marginTop:6,fontSize:12,color:C.text,lineHeight:1.8}}>
-                    <div style={{fontWeight:600,marginBottom:4}}>可以写这些（把名字换成孩子的）：</div>
+                    <div style={{fontWeight:600,marginBottom:4}}>可以写这些（替换成你自己的信息）：</div>
                     {PROFILE_GUIDE_EXAMPLES.map(function(ex, i) { return <div key={i}>{ex}</div>; })}
                   </div>
                 )}
@@ -3169,7 +3180,7 @@ export default function App() {
           </div>
           {helpTip === "reset" && <div style={{background:C.accentLight,border:"1px solid "+C.accent+"33",borderRadius:10,padding:"10px 14px",fontSize:12,color:C.text,lineHeight:1.7,marginBottom:10}}>
             <strong>重置进度</strong>：换词表后建议重置，清除旧词的学习状态和统计数据，从零开始。<br/>
-            <span style={{color:C.textSec}}>会清除：单词状态、复习记录、XP 和正确率、今日配额<br/>不会清除：词表内容、学生画像、每日目标、连续学习天数</span>
+            <span style={{color:C.textSec}}>会清除：单词状态、复习记录、XP 和正确率、今日配额<br/>不会清除：词表内容、学习画像、每日目标、连续学习天数</span>
             <div style={{textAlign:"right",marginTop:4}}><span onClick={function(){setHelpTip(null);}} style={{color:C.accent,cursor:"pointer",fontWeight:600}}>收起</span></div>
           </div>}
           <div style={S.presetRow}>{Object.keys(PRESETS).map(n => <button key={n} style={S.presetBtn} onClick={() => setWordInput(PRESETS[n])}>{n}</button>)}</div>
@@ -3424,7 +3435,7 @@ export default function App() {
           </div>
           <div style={{marginTop:16,padding:"16px",background:C.redLight,border:"1px dashed "+C.red,borderRadius:10,textAlign:"center"}}>
             <div style={{fontWeight:700,fontSize:14,color:C.red,marginBottom:8}}>🚨 危险区域 (Danger Zone)</div>
-            <div style={{fontSize:12,color:C.textSec,marginBottom:12,lineHeight:1.6}}>清空当前账号的所有学习进度、单词本、学生画像与积分，从零开始。<br/><strong>注意：此操作不可逆！</strong></div>
+            <div style={{fontSize:12,color:C.textSec,marginBottom:12,lineHeight:1.6}}>清空当前账号的所有学习进度、单词本、画像与积分，从零开始。<br/><strong>注意：此操作不可逆！</strong></div>
             <button onClick={handleFactoryReset} style={{...S.smallBtn,background:C.red,color:"#fff",border:"none",padding:"8px 16px",fontWeight:600}}>⚠️ 初始化（清除所有记录）</button>
           </div>
         </div>;
@@ -3434,14 +3445,14 @@ export default function App() {
       <Disclaimer />
 
       <div style={{ textAlign:"center", padding:"24px 0 8px", fontSize:13, lineHeight:1.8, color:C.textSec }}>
-        <div>Made with ❤️ by Willow's 👨‍👧</div>
-        <div style={{ fontStyle:"italic" }}>献给 Willow 和所有征战复杂单词的孩子们，加油！</div>
+        <div>Made with ❤️ by a dad for his daughter, and for you.</div>
+        <div style={{ fontStyle:"italic" }}>为女儿而写，献给每一位认真学习的你</div>
         <div style={{ marginTop:6, fontSize:12 }}>问题反馈：<a href="mailto:Winstonwu1996@icloud.com" style={{ color:C.accent, textDecoration:"none" }}>Winstonwu1996@icloud.com</a> ✉️</div>
         <div style={{ marginTop:4, fontSize:12, display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap", alignItems:"center" }}>
           <a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a>
           <button onClick={()=>setShowShare(true)} style={{ background:"transparent", border:"none", color:C.accent, fontFamily:FONT, fontSize:12, fontWeight:600, cursor:"pointer", padding:0 }}>🔗 推荐给朋友</button>
         </div>
-        <div style={{ marginTop:4, fontSize:11, color:C.border }}>VocabSpark v3.1</div>
+        <div style={{ marginTop:4, fontSize:11, color:C.border }}>KnowU VocabSpark</div>
       </div>
       <PrivacyNotice />
 
@@ -3491,15 +3502,15 @@ export default function App() {
             <h3 style={{fontSize:18,fontWeight:700,margin:"0 0 4px"}}>推荐给朋友</h3>
             <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,margin:"0 0 18px"}}>觉得好用？让身边的华人朋友也试试~</p>
             <div style={{background:C.bg,borderRadius:12,padding:14,marginBottom:14,display:"inline-block"}}>
-              <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fvocabspark.vercel.app&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="QR Code" style={{display:"block",borderRadius:6}} />
+              <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fknowulearning.com&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="QR Code" style={{display:"block",borderRadius:6}} />
             </div>
             <div style={{fontSize:12,color:C.textSec,marginBottom:16}}>📱 手机扫码 / 长按保存发朋友圈</div>
-            <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>{"发现一个免费 AI 英语词汇 App，专为华人孩子设计！AI 用孩子自己的生活场景讲单词，我家娃超喜欢 🎉\n👉 vocabspark.vercel.app"}</div>
+            <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>{"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉\n👉 knowulearning.com"}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {typeof navigator !== "undefined" && navigator.share && (
-                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{ try { await navigator.share({ title:"VocabSpark — AI 英语词汇导师", text:"发现一个免费 AI 英语词汇 App，专为华人孩子设计！AI 用孩子自己的生活场景讲单词，我家娃超喜欢 🎉", url:"https://vocabspark.vercel.app" }); } catch(e){} }}>📱 分享到微信 / 其他 App</button>
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{ try { await navigator.share({ title:"KnowU VocabSpark — AI 英语词汇导师", text:"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉", url:"https://knowulearning.com" }); } catch(e){} }}>📱 分享到微信 / 其他 App</button>
               )}
-              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{ navigator.clipboard?.writeText("发现一个免费 AI 英语词汇 App，专为华人孩子设计！AI 用孩子自己的生活场景讲单词，我家娃超喜欢 🎉 vocabspark.vercel.app").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接")); }}>📋 复制邀请文案</button>
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{ navigator.clipboard?.writeText("发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接")); }}>📋 复制邀请文案</button>
               <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>关闭</button>
             </div>
           </div>
@@ -3520,7 +3531,7 @@ export default function App() {
   return (
     <div style={S.root}>
       <Head>
-        <title>VocabSpark — {currentWord || "学习中"}</title>
+        <title>KnowU VocabSpark — {currentWord || "学习中"}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -3561,7 +3572,7 @@ export default function App() {
               <button onClick={() => { setShowSettings(false); window.scrollTo(0,0); }} style={{background:"transparent",border:"none",fontSize:22,cursor:"pointer",color:C.textSec,padding:"0 4px"}}>×</button>
             </div>
             <div style={{display:"flex",borderBottom:"1px solid "+C.border,margin:"16px 20px 0"}}>
-              <button style={setupTab==="profile"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("profile")}>👤 学生画像</button>
+              <button style={setupTab==="profile"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("profile")}>👤 画像</button>
               <button style={setupTab==="plan"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("plan")}>🎯 计划</button>
               <button style={setupTab==="words"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("words")}>📝 词汇</button>
               <button style={setupTab==="stats"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("stats")}>📊 统计</button>
@@ -3570,7 +3581,7 @@ export default function App() {
             <div style={{padding:"16px 20px 20px"}}>
               {setupTab === "profile" && (
                 <div>
-                  <div style={S.setupHint}>{profileLocked ? "✅ 画像已保存" : "🌟 像写日记一样告诉 AI 你的世界，信息越真实越有趣！"}</div>
+                  <div style={S.setupHint}>{profileLocked ? "✅ 画像已保存" : "🌟 告诉 AI 你的世界——兴趣爱好、日常生活，越真实越有趣！"}</div>
                   {profileLocked ? (
                     <div><div style={S.profilePrev}>{profile.slice(0,250)}{profile.length>250?"...":""}</div><button style={S.smallBtn} onClick={() => setProfileLocked(false)}>✏️ 编辑</button></div>
                   ) : (
@@ -3732,7 +3743,7 @@ export default function App() {
           <h3 style={{fontSize:18, fontWeight:700, margin:"0 0 8px"}}>正在准备第 {batchGroupNo} 组学习内容</h3>
           {Math.floor(idx / 5) === 0 && (
             <p style={{fontSize:13, color:C.textSec, margin:"0 0 12px", lineHeight:1.65, padding:"10px 14px", background:C.tealLight, borderRadius:10, border:"1px solid rgba(42,122,110,0.12)"}}>
-              💡 首次加载会稍慢一些，AI 正在根据学生画像量身定制内容，请耐心稍等片刻～
+              💡 首次加载会稍慢一些，AI 正在根据你的画像量身定制内容，请耐心稍等片刻～
             </p>
           )}
           <div style={{display:"flex",flexWrap:"wrap",gap:6,justifyContent:"center",margin:"8px 0 16px"}}>
@@ -3918,8 +3929,8 @@ export default function App() {
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
           <div style={{background:C.card,borderRadius:16,padding:"32px 24px",maxWidth:420,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",textAlign:"center",fontFamily:FONT}}>
             <div style={{fontSize:48,marginBottom:8}}>☕</div>
-            <h3 style={{fontSize:20,fontWeight:700,margin:"0 0 8px"}}>喜欢 VocabSpark 吗？</h3>
-            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 20px"}}>这个工具由一位中国爸爸开发，希望帮助所有努力学习英语的孩子们。持续开发和 AI 运行都有成本，你的支持是最大的动力！</p>
+            <h3 style={{fontSize:20,fontWeight:700,margin:"0 0 8px"}}>喜欢 KnowU VocabSpark 吗？</h3>
+            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 20px"}}>最初为女儿写的学习工具，现在分享给每一位认真学英语的你。持续开发和 AI 运行都有成本，你的支持是最大的动力！</p>
             <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
               {[["☕ $10 — 一杯咖啡","10"],["🍕 $25 — 一顿午餐","25"],["🎁 $50 — 加满油","50"]].map(([label,amt]) => (
                 <button key={amt} onClick={()=>window.open("https://buymeacoffee.com/winstonwu1996?amount="+amt,"_blank")} style={{padding:"12px 16px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:10,fontFamily:FONT,fontSize:15,cursor:"pointer",fontWeight:600,textAlign:"left"}}>{label}</button>
@@ -3927,7 +3938,7 @@ export default function App() {
               <button onClick={()=>{ var a=prompt("自定义金额 ($):"); if(a) window.open("https://buymeacoffee.com/winstonwu1996?amount="+a,"_blank"); }} style={{padding:"12px 16px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:10,fontFamily:FONT,fontSize:15,cursor:"pointer",fontWeight:600,textAlign:"left"}}>💝 自定义金额</button>
             </div>
             <button onClick={()=>{ setShowTipJar(false); setTipDismissed(true); loadSave().then(d=>doSave({...(d||{}),tipDismissed:true})); window.scrollTo(0,0); }} style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:14,cursor:"pointer",padding:8}}>暂时跳过，继续学习 →</button>
-            <div style={{marginTop:8,fontSize:12,color:C.textSec,lineHeight:1.6}}>VocabSpark 由独立开发者维护，AI 调用有真实成本。<br/>你的支持让更多孩子能免费使用这个工具 ❤️</div>
+            <div style={{marginTop:8,fontSize:12,color:C.textSec,lineHeight:1.6}}>一个爸爸为女儿写的工具，现在服务每一位学习者。<br/>你的支持让这份用心走得更远 ❤️</div>
           </div>
         </div>
       )}
@@ -3971,7 +3982,7 @@ export default function App() {
           <div style={S.doneWords}>{wordList.map(w => <span key={w} style={S.doneTag} onClick={()=>speak(w)}>{w+" 🔊"}</span>)}</div>
 
           {!tipDismissed && <div style={{marginTop:20,padding:"16px 20px",background:C.goldLight,borderRadius:12,fontSize:14,lineHeight:1.7,textAlign:"center"}}>
-            <div style={{marginBottom:8}}>☕ 如果 VocabSpark 帮到了你，考虑请开发者喝杯咖啡？</div>
+            <div style={{marginBottom:8}}>☕ 如果 KnowU VocabSpark 帮到了你，考虑请开发者喝杯咖啡？</div>
             <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
               <button onClick={()=>window.open("https://buymeacoffee.com/winstonwu1996","_blank")} style={{padding:"8px 20px",background:C.gold,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:14,fontWeight:600,cursor:"pointer"}}>☕ 支持一下</button>
               <button onClick={()=>setShowShare(true)} style={{padding:"8px 20px",background:C.accent,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:14,fontWeight:600,cursor:"pointer"}}>🔗 推荐给朋友</button>
@@ -4059,24 +4070,24 @@ export default function App() {
 
             {/* QR Code — desktop 扫码，手机长按保存 */}
             <div style={{background:C.bg,borderRadius:12,padding:14,marginBottom:14,display:"inline-block"}}>
-              <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fvocabspark.vercel.app&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="QR Code" style={{display:"block",borderRadius:6}} />
+              <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fknowulearning.com&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="QR Code" style={{display:"block",borderRadius:6}} />
             </div>
             <div style={{fontSize:12,color:C.textSec,marginBottom:16}}>📱 手机扫码 / 长按保存发朋友圈</div>
 
             {/* 邀请文案 */}
             <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>
-              {"发现一个免费 AI 英语词汇 App，专为华人孩子设计！AI 用孩子自己的生活场景讲单词，我家娃超喜欢 🎉\n👉 vocabspark.vercel.app"}
+              {"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉\n👉 knowulearning.com"}
             </div>
 
             {/* 按钮区 */}
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {typeof navigator !== "undefined" && navigator.share && (
                 <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{
-                  try { await navigator.share({ title:"VocabSpark — AI 英语词汇导师", text:"发现一个免费 AI 英语词汇 App，专为华人孩子设计！👉 vocabspark.vercel.app", url:"https://vocabspark.vercel.app" }); } catch(e){}
+                  try { await navigator.share({ title:"KnowU VocabSpark — AI 英语词汇导师", text:"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉", url:"https://knowulearning.com" }); } catch(e){}
                 }}>📱 分享到微信 / 其他 App</button>
               )}
               <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{
-                navigator.clipboard?.writeText("发现一个免费 AI 英语词汇 App，专为华人孩子设计！AI 用孩子自己的生活场景讲单词，我家娃超喜欢 🎉 vocabspark.vercel.app").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接"));
+                navigator.clipboard?.writeText("发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接"));
               }}>📋 复制邀请文案</button>
               <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>关闭</button>
             </div>
@@ -4101,14 +4112,14 @@ export default function App() {
 
       <Disclaimer />
       <div style={{ textAlign:"center", padding:"24px 0 8px", fontSize:13, lineHeight:1.8, color:C.textSec }}>
-        <div>Made with ❤️ by Willow's 👨‍👧</div>
-        <div style={{ fontStyle:"italic" }}>献给 Willow 和所有征战复杂单词的孩子们，加油！</div>
+        <div>Made with ❤️ by a dad for his daughter, and for you.</div>
+        <div style={{ fontStyle:"italic" }}>为女儿而写，献给每一位认真学习的你</div>
         <div style={{ marginTop:6, fontSize:12 }}>问题反馈：<a href="mailto:Winstonwu1996@icloud.com" style={{ color:C.accent, textDecoration:"none" }}>Winstonwu1996@icloud.com</a> ✉️</div>
         <div style={{ marginTop:4, fontSize:12, display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap", alignItems:"center" }}>
           <a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a>
           <button onClick={()=>setShowShare(true)} style={{ background:"transparent", border:"none", color:C.accent, fontFamily:FONT, fontSize:12, fontWeight:600, cursor:"pointer", padding:0 }}>🔗 推荐给朋友</button>
         </div>
-        <div style={{ marginTop:4, fontSize:11, color:C.border }}>VocabSpark v3.1</div>
+        <div style={{ marginTop:4, fontSize:11, color:C.border }}>KnowU VocabSpark</div>
       </div>
       <PrivacyNotice />
 
