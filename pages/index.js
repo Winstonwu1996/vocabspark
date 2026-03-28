@@ -24,19 +24,17 @@ var DEEP_REVIEW_DAILY_KEY = 'vocabspark_deep_review_daily_v1';
 var PHOTO_LIMIT = 5;
 var PROFILE_MAX = 1000;
 var PROFILE_TEXTAREA_PLACEHOLDER =
-  "像写日记一样告诉 AI 你的世界 🌍\n\n" +
-  "先写几句基本情况（把名字换成孩子的即可）：\n" +
-  "• 年级、所在城市 / 学校简称\n" +
-  "• 好朋友的名字（例：Emily）\n" +
-  "• 教练或老师的称呼（例：网球教练 Ms. Lee、英语老师 Mr. Johnson）\n" +
-  "• 常一起打球、写作业或排练的伙伴\n\n" +
-  "例如（把 Willow 换成孩子的名字）：\n" +
-  "• Willow 今天和 Emily 打了一场超刺激的网球！\n" +
-  "• Willow 最近在追《鬼灭之刃》，超喜欢炭治郎\n" +
-  "• 上周末 Willow 去了 Irvine Spectrum，吃了抹茶冰淇淋\n" +
-  "• Willow 不喜欢香菜，一点都不行 😂\n" +
-  "• Willow 的偶像是 Taylor Swift，已经刷了 100 遍 Eras Tour\n\n" +
-  "写越多，AI 越了解你，学单词越有趣！";
+  "写几句孩子的情况，例如：年级、城市、好朋友、爱好、最近喜欢的动画或歌……写越多 AI 越了解孩子，学单词越有趣！";
+
+var PROFILE_GUIDE_EXAMPLES = [
+  "• 年级、所在城市 / 学校简称",
+  "• 好朋友的名字（例：Emily）",
+  "• 教练或老师的称呼（例：网球教练 Ms. Lee）",
+  "• Willow 今天和 Emily 打了一场超刺激的网球！",
+  "• Willow 最近在追《鬼灭之刃》，超喜欢炭治郎",
+  "• 上周末去了 Irvine Spectrum，吃了抹茶冰淇淋",
+  "• Willow 的偶像是 Taylor Swift，已刷了 100 遍 Eras Tour"
+];
 
 var WORD_STATUS_KEY = "vocabspark_word_status_v1";
 var REVIEW_WORD_DATA_KEY = "vocabspark_review_word_data_v1";
@@ -240,7 +238,7 @@ var speak = async (text) => {
         audio = audioCache[ch];
         audio.currentTime = 0;
       } else {
-        var r = await fetch("/api/tts?text=" + encodeURIComponent(ch));
+        var r = await fetch("/api/tts?text=" + encodeURIComponent(ch), { signal: AbortSignal.timeout(10000) });
         if (!r.ok) throw new Error("tts " + r.status);
         var blob = await r.blob();
         var blobUrl = URL.createObjectURL(blob);
@@ -327,33 +325,58 @@ var BrandSparkIcon = ({ size, marginBottom }) => {
 
 var AppHeroHeader = ({ stats }) => {
   var pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+  var hasStats = stats.xp > 0;
   return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 10px", marginBottom:10, gap:8 }}>
-      <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
-        <div style={{ transform: "scale(0.72)", transformOrigin: "left center" }}><BrandSparkIcon /></div>
-        <div style={{minWidth:0}}>
-          <h1 style={{ fontSize:20, margin:0, fontWeight:800, letterSpacing:"-0.02em", lineHeight:1.05 }}>
-            <span style={{ color: C.text }}>Vocab</span><span style={{ color: C.accent }}>Spark</span>
-            <span style={{fontSize:10,fontWeight:700,marginLeft:6,verticalAlign:"middle",color:C.teal}}>🔱V3.1</span>
-          </h1>
-          <p style={{ margin:"2px 0 0", fontSize:12, color:C.textSec, fontWeight:500, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>The AI that truly knows your child.</p>
+    <div style={{ background:"linear-gradient(135deg, "+C.card+" 0%, "+C.tealLight+" 50%, "+C.accentLight+" 100%)", borderRadius:16, padding:"18px 18px 14px", marginBottom:14, border:"1px solid "+C.border, boxShadow:"0 4px 20px rgba(44,36,32,0.08)" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:10 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12, minWidth:0 }}>
+          <BrandSparkIcon size={44} marginBottom={0} />
+          <div style={{minWidth:0}}>
+            <h1 style={{ fontSize:22, margin:0, fontWeight:800, letterSpacing:"-0.03em", lineHeight:1.1 }}>
+              <span style={{ color: C.text }}>Vocab</span><span style={{ color: C.accent }}>Spark</span>
+              <span style={{fontSize:9,fontWeight:600,marginLeft:5,verticalAlign:"middle",color:C.textSec,opacity:0.5}}>v3.1</span>
+            </h1>
+            <p style={{ margin:"3px 0 0", fontSize:12, color:C.textSec, fontWeight:500, fontStyle:"italic", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>The AI that truly knows your child.</p>
+          </div>
         </div>
       </div>
-      {stats.xp > 0 && (
-        <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0 }}>
-          <span style={{...S.heroStatPillGold, padding:"2px 6px", fontSize:11}}>{"⚡ " + stats.xp}</span>
-          <span style={{...S.heroStatPillAccent, padding:"2px 6px", fontSize:11}}>{"🔥 " + stats.bestStreak}</span>
-          <span style={{...S.heroStatPillGreen, padding:"2px 6px", fontSize:11}}>{"✅ " + pct + "%"}</span>
+      {hasStats && (
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:12 }}>
+          <span style={{...S.heroStatPillGold, padding:"5px 12px", fontSize:12}}>{"⚡ " + stats.xp + " XP"}</span>
+          <span style={{...S.heroStatPillAccent, padding:"5px 12px", fontSize:12}}>{"🔥 连对 " + stats.bestStreak}</span>
+          <span style={{...S.heroStatPillGreen, padding:"5px 12px", fontSize:12}}>{"✅ 正确率 " + pct + "%"}</span>
         </div>
       )}
     </div>
   );
 };
 
+/* ─── Resilience helpers ─── */
+var FETCH_TIMEOUT_MS = 25000; // 服务端 15s 超时 + 429 重试 3s + 5s 余量
+
+var fetchWithTimeout = function(url, options, timeoutMs) {
+  timeoutMs = timeoutMs || FETCH_TIMEOUT_MS;
+  var controller = new AbortController();
+  var timer = setTimeout(function() { controller.abort(); }, timeoutMs);
+  options = Object.assign({}, options, { signal: controller.signal });
+  return fetch(url, options).finally(function() { clearTimeout(timer); });
+};
+
+var callWithClientRetry = function(fn, maxRetries) {
+  maxRetries = maxRetries || 1;
+  return fn().catch(function(err) {
+    if (maxRetries > 0) {
+      return new Promise(function(resolve) { setTimeout(resolve, 1500); })
+        .then(function() { return callWithClientRetry(fn, maxRetries - 1); });
+    }
+    throw err;
+  });
+};
+
 /* ─── API Calls (server-side proxy, key hidden) ─── */
 var callAPI = async (sys, msg, opts) => {
   opts = opts || {};
-  const response = await fetch("/api/chat", {
+  const response = await fetchWithTimeout("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -370,7 +393,7 @@ var callAPI = async (sys, msg, opts) => {
 
 var callAPIFast = async (sys, msg, opts) => {
   opts = opts || {};
-  const response = await fetch("/api/chat", {
+  const response = await fetchWithTimeout("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -565,6 +588,8 @@ export default function App() {
   var [wordPageSize, setWordPageSize] = useState(120);
   var [wordDensity, setWordDensity] = useState("cozy");
   var [showTaskOrderHint, setShowTaskOrderHint] = useState(true);
+  var [showProfileGuide, setShowProfileGuide] = useState(false);
+  var [streakToast, setStreakToast] = useState(null);
   var [quickReviewQueue, setQuickReviewQueue] = useState([]);
   var [quickReviewIdx, setQuickReviewIdx] = useState(0);
   var [quickReviewFlipped, setQuickReviewFlipped] = useState(false);
@@ -624,6 +649,8 @@ export default function App() {
   var [loginEmail, setLoginEmail] = useState('');
   var [loginSent, setLoginSent] = useState(false);
   var [loginLoading, setLoginLoading] = useState(false);
+  var [otpCode, setOtpCode] = useState('');
+  var [otpError, setOtpError] = useState('');
   var [todayCount, setTodayCount] = useState(0);
   var [showLimitModal, setShowLimitModal] = useState(false);
 
@@ -649,6 +676,8 @@ export default function App() {
   var contentEndRef = useRef(null);
   var topRef = useRef(null);
   var photoRef = useRef(null);
+  var teachTimeoutRef = useRef(null);
+  var speedWaitAbortRef = useRef(false);
   var [photoLoading, setPhotoLoading] = useState(false);
 
   useEffect(function() { if (typeof window !== "undefined") window.speechSynthesis?.getVoices(); }, []);
@@ -868,6 +897,28 @@ export default function App() {
       setLoginSent(true);
     } catch(e) { alert('发送失败：' + e.message); }
     finally { setLoginLoading(false); }
+  };
+
+  var handleVerifyOtp = async function() {
+    if (!otpCode.trim() || otpCode.trim().length < 6) return;
+    setLoginLoading(true);
+    setOtpError('');
+    try {
+      var { error } = await supabase.auth.verifyOtp({
+        email: loginEmail.trim(),
+        token: otpCode.trim(),
+        type: 'email',
+      });
+      if (error) throw error;
+      setShowLogin(false);
+      setLoginSent(false);
+      setLoginEmail('');
+      setOtpCode('');
+    } catch(e) {
+      setOtpError('验证失败：' + (e.message === 'Token has expired or is invalid' ? '验证码已过期或不正确，请重新发送' : e.message));
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
   var handleLogout = async function() {
@@ -1175,12 +1226,12 @@ export default function App() {
     if (willReview && !dataCache.current["_review_" + endMilestone]) {
       callAPIFast(sysP, buildReviewPrompt(batchWords))
         .then(function(raw) { dataCache.current["_review_" + endMilestone] = tryJSON(raw) || null; })
-        .catch(function() {});
+        .catch(function(err) { console.warn("[loadBatch] review pre-fetch failed:", err.message); });
     }
     if (willCloze && !dataCache.current["_cloze_" + endMilestone]) {
       callAPIFast(sysP, buildClozePrompt([...lrn.slice(-5), ...batchWords]))
         .then(function(raw) { dataCache.current["_cloze_" + endMilestone] = tryJSON(raw) || null; })
-        .catch(function() {});
+        .catch(function(err) { console.warn("[loadBatch] cloze pre-fetch failed:", err.message); });
     }
 
     // ── Word audio pre-fetch: Free Dictionary API (fire and forget) ──
@@ -1240,27 +1291,41 @@ export default function App() {
         var preferred = providerHint ? [providerHint] : undefined;
         // Block on guess + teach; spectrum runs in background to preserve pack smoothness.
         tasks.push(function() {
-          return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
+          return callWithClientRetry(function() {
+            return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred });
+          }).then(function(raw) {
             dataCache.current[word].guess = raw ? tryJSON(raw) : null;
             dataCache.current[word].guessRaw = raw;
             if (dataCache.current[word].guess && dataCache.current[word].teach) {
               readyWordSet.add(word);
               tryResolveEarlyStart();
             }
-          }).catch(function() {});
+          }).catch(function(err) {
+            console.warn("[loadBatch] guess failed for " + word + ":", err.message);
+            dataCache.current[word].guessFailed = true;
+          });
         });
         tasks.push(function() {
-          return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred }).then(function(raw) {
+          return callWithClientRetry(function() {
+            return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred });
+          }).then(function(raw) {
             dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
             if (dataCache.current[word].guess && dataCache.current[word].teach) {
               readyWordSet.add(word);
               tryResolveEarlyStart();
             }
-          }).catch(function() {});
+          }).catch(function(err) {
+            console.warn("[loadBatch] teach failed for " + word + ":", err.message);
+            dataCache.current[word].teachFailed = true;
+          });
         });
-        callAPIFast(sysP, buildSpectrumPrompt(word), { preferredProviders: preferred }).then(function(raw) {
+        callWithClientRetry(function() {
+          return callAPIFast(sysP, buildSpectrumPrompt(word), { preferredProviders: preferred });
+        }).then(function(raw) {
           dataCache.current[word].spectrum = raw ? tryJSON(raw) : null;
-        }).catch(function() {});
+        }).catch(function(err) {
+          console.warn("[loadBatch] spectrum failed for " + word + ":", err.message);
+        });
       })(w, wLrn, shardProviders[i % shardProviders.length]);
     }
 
@@ -1338,10 +1403,22 @@ export default function App() {
     if (d?.guess?.context && d?.guess?.options) {
       setGuessData(d.guess);
       if (d.guess.phonetic) setPhonetic(d.guess.phonetic);
+    } else if (d?.guessFailed && !d?.guess) {
+      setGuessData({ context: "内容加载失败", options: null, _failed: true });
     } else {
       setGuessData({ context: (d?.guessRaw||"").substring(0,300) || "格式异常", options: null });
     }
-    if (d?.teach) setTeachContent(d.teach);
+    if (d?.teach) {
+      setTeachContent(d.teach);
+    } else if (d?.teachFailed) {
+      setTeachContent("__FAILED__");
+    } else {
+      // teach 数据可能还在加载中（streaming 模式），设置安全超时
+      if (teachTimeoutRef.current) clearTimeout(teachTimeoutRef.current);
+      teachTimeoutRef.current = setTimeout(function() {
+        setTeachContent(function(prev) { return prev || "__FAILED__"; });
+      }, 20000);
+    }
     if (d?.spectrum?.spectrum_words) setSpectrumData(d.spectrum);
     setPhaseDir(1); setPhase("guess");
   };
@@ -1354,7 +1431,14 @@ export default function App() {
     if (correct) { sfx.correct(); setBounceCorrect(true); setTimeout(function() { setBounceCorrect(false); }, 600); }
     else { sfx.wrong(); setShakeWrong(true); setTimeout(function() { setShakeWrong(false); }, 500); }
 
-    save({ ...stats, total: stats.total+1, correct: stats.correct+(correct?1:0), streak: correct ? stats.streak+1 : 0, bestStreak: correct ? Math.max(stats.bestStreak, stats.streak+1) : stats.bestStreak, xp: stats.xp+(correct?15:5) });
+    var newStreak = correct ? stats.streak+1 : 0;
+    save({ ...stats, total: stats.total+1, correct: stats.correct+(correct?1:0), streak: newStreak, bestStreak: correct ? Math.max(stats.bestStreak, newStreak) : stats.bestStreak, xp: stats.xp+(correct?15:5) });
+
+    if (correct && (newStreak === 3 || newStreak === 5 || newStreak === 10 || newStreak === 15 || newStreak === 20)) {
+      var msgs = { 3:"三连对！不错！", 5:"五连对！厉害了！", 10:"十连对！太强了！", 15:"十五连！学霸无疑！", 20:"二十连！无人能挡！" };
+      setStreakToast(msgs[newStreak] || ("连对 "+newStreak+"！"));
+      setTimeout(function(){ setStreakToast(null); }, 2000);
+    }
 
     setTimeout(function() { setPhaseDir(1); setPhase("teach"); }, 800);
   };
@@ -1466,14 +1550,17 @@ export default function App() {
 
     setPhase("speed_wait");
     setSpeedWaitSec(0);
+    speedWaitAbortRef.current = false;
 
     var start = Date.now();
-    while (!ready() && Date.now() - start < 18000) {
+    while (!ready() && !speedWaitAbortRef.current && Date.now() - start < 18000) {
       setSpeedWaitSec(Math.floor((Date.now() - start) / 1000));
       await new Promise(function(r) { setTimeout(r, 240); });
     }
 
-    if (!ready()) {
+    if (!ready() || speedWaitAbortRef.current) {
+      // 清除可能损坏的缓存并重新加载
+      dataCache.current[nextWord] = null;
       await loadBatch(nextIdx, learnedSnapshot, undefined, { streaming: true });
     }
 
@@ -2115,7 +2202,7 @@ export default function App() {
   if (screen === "quick_review") {
     var qr = quickReviewQueue[quickReviewIdx];
     return (
-      <div style={S.root}><div style={S.container}>
+      <div style={S.root}><div className="vs-desktop-container" style={S.container}>
         <div style={S.topBar}><button style={S.backBtn} onClick={() => setScreen("setup")}>←</button><div style={{fontSize:13,color:C.textSec}}>快速复习 {quickReviewIdx+1}/{quickReviewQueue.length}</div></div>
         <div style={{...S.card, textAlign:"center", padding:"30px 20px"}}>
           <div style={S.tag}>🔄 快速复习</div>
@@ -2141,18 +2228,22 @@ export default function App() {
   }
 
   if (screen === "quick_review_done") {
+    var qrTotal = (quickReviewStats.remembered||0) + (quickReviewStats.fuzzy||0) + (quickReviewStats.forgot||0);
+    var qrPct = qrTotal > 0 ? Math.round(((quickReviewStats.remembered||0) / qrTotal) * 100) : 0;
     return (
-      <div style={S.root}><div style={S.container}>
+      <div style={S.root}><div className="vs-desktop-container" style={S.container}>
         <div style={{...S.card,textAlign:"center",padding:"30px 20px"}}>
+          <div style={{fontSize:40,marginBottom:8,animation:"bounce 0.5s ease-out"}}>{qrPct >= 80 ? "🌟" : qrPct >= 50 ? "💪" : "📖"}</div>
           <div style={S.tag}>📊 复习完成</div>
-          <div style={{fontSize:15,lineHeight:2,margin:"10px 0 14px"}}>
-            <span style={{color:C.green,fontWeight:700}}>🟢 彻底掌握 {quickReviewStats.remembered} 个</span><br/>
-            <span style={{color:C.gold,fontWeight:700}}>🟡 仍不确定 {quickReviewStats.fuzzy} 个</span><br/>
-            <span style={{color:C.red,fontWeight:700}}>🔴 面临易错 {quickReviewStats.forgot} 个</span>
+          <p style={{fontSize:13,color:C.accent,fontWeight:600,margin:"6px 0 10px"}}>{qrPct >= 80 ? "记忆力超强！" : qrPct >= 50 ? "还不错，继续巩固！" : "多复习几次就好了！"}</p>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:14}}>
+            <div style={{background:C.greenLight,borderRadius:10,padding:"10px 6px"}}><div style={{fontSize:22,fontWeight:800,color:C.green}}>{quickReviewStats.remembered}</div><div style={{fontSize:11,color:C.textSec}}>彻底掌握</div></div>
+            <div style={{background:C.goldLight,borderRadius:10,padding:"10px 6px"}}><div style={{fontSize:22,fontWeight:800,color:C.gold}}>{quickReviewStats.fuzzy}</div><div style={{fontSize:11,color:C.textSec}}>仍不确定</div></div>
+            <div style={{background:C.redLight,borderRadius:10,padding:"10px 6px"}}><div style={{fontSize:22,fontWeight:800,color:C.red}}>{quickReviewStats.forgot}</div><div style={{fontSize:11,color:C.textSec}}>面临易错</div></div>
           </div>
           <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
-            <button style={{...S.primaryBtn,background:C.red}} onClick={startDeepReview}>🔴 重点攻克</button>
-            <button style={S.primaryBtn} onClick={() => setScreen("setup")}>← 返回词汇列表</button>
+            {(quickReviewStats.forgot > 0 || quickReviewStats.fuzzy > 0) && <button style={{...S.primaryBtn,background:C.red}} onClick={startDeepReview}>🔴 重点攻克</button>}
+            <button style={S.primaryBtn} onClick={() => setScreen("setup")}>← 返回主页</button>
           </div>
         </div>
       </div></div>
@@ -2177,12 +2268,19 @@ export default function App() {
       if (n >= deepReviewQueue.length) setScreen("deep_review_done"); else setDeepReviewIdx(n);
     };
     return (
-      <div style={S.root}><div style={S.container}>
+      <div style={S.root}><div className="vs-desktop-container" style={S.container}>
         <div style={S.topBar}><button style={S.backBtn} onClick={() => setScreen("setup")}>←</button><div style={{fontSize:13,color:C.textSec}}>重点攻克 {deepReviewIdx+1}/{deepReviewQueue.length}</div></div>
         <div style={{...S.card, padding:"24px 20px"}}>
           <div style={{...S.tag, background:C.redLight, color:C.red}}>🔴 深度复习</div>
           <h2 style={{fontSize:30,margin:"8px 0 10px"}}>{dw}</h2>
-          {deepReviewLoading ? <div style={S.loadingBox}><span style={S.spinner}/><div style={{textAlign:"center"}}><div>AI 正在生成复习讲解...</div><div style={{fontSize:12,color:C.textSec,marginTop:6}}>已等待 {deepLoadSec}s · {deepLoadSec < 4 ? "生成新场景" : deepLoadSec < 8 ? "生成对比点" : "生成SSAT仿真题"}</div></div></div> : <div style={{marginBottom:16}}><Md text={deepReviewContent || "暂无内容"} /></div>}
+          {deepReviewLoading ? <div style={{padding:"8px 0"}}>
+            <div style={{background:C.border,borderRadius:8,height:18,width:"60%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
+            <div style={{background:C.border,borderRadius:8,height:14,width:"100%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.1s"}}/>
+            <div style={{background:C.border,borderRadius:8,height:14,width:"85%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.2s"}}/>
+            <div style={{background:C.border,borderRadius:8,height:14,width:"92%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.3s"}}/>
+            <div style={{background:C.border,borderRadius:8,height:40,width:"100%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.4s"}}/>
+            <div style={{textAlign:"center",fontSize:13,color:C.textSec,marginTop:10}}>AI 正在生成复习讲解... 已等待 {deepLoadSec}s · {deepLoadSec < 4 ? "生成新场景" : deepLoadSec < 8 ? "生成对比点" : "生成SSAT仿真题"}</div>
+          </div> : <div style={{marginBottom:16}}><Md text={deepReviewContent || "暂无内容"} /></div>}
 
           {!deepReviewLoading && deepQuiz && (
             <div style={{border:"1px solid "+C.border,borderRadius:12,padding:"12px 12px",background:C.bg,marginBottom:12}}>
@@ -2215,14 +2313,18 @@ export default function App() {
   }
 
   if (screen === "deep_review_done") {
+    var drTotal = (deepSessionStats.remembered||0) + (deepSessionStats.fuzzy||0) + (deepSessionStats.forgot||0);
+    var drPct = drTotal > 0 ? Math.round(((deepSessionStats.remembered||0) / drTotal) * 100) : 0;
     return (
-      <div style={S.root}><div style={S.container}>
+      <div style={S.root}><div className="vs-desktop-container" style={S.container}>
         <div style={{...S.card,textAlign:"center",padding:"30px 20px"}}>
+          <div style={{fontSize:40,marginBottom:8,animation:"bounce 0.5s ease-out"}}>{drPct >= 80 ? "🏆" : drPct >= 50 ? "💪" : "🔥"}</div>
           <div style={{...S.tag,background:C.redLight,color:C.red}}>✅ 重点攻克完成</div>
-          <div style={{fontSize:15,lineHeight:2,margin:"10px 0 14px"}}>
-            <span style={{color:C.green,fontWeight:700}}>🟢 彻底掌握 {deepSessionStats.remembered} 个</span><br/>
-            <span style={{color:C.gold,fontWeight:700}}>🟡 仍不确定 {deepSessionStats.fuzzy} 个</span><br/>
-            <span style={{color:C.red,fontWeight:700}}>🔴 面临易错 {deepSessionStats.forgot} 个</span>
+          <p style={{fontSize:13,color:C.accent,fontWeight:600,margin:"6px 0 10px"}}>{drPct >= 80 ? "攻克效果显著！" : drPct >= 50 ? "有进步，再接再厉！" : "别灰心，难词需要多轮攻克！"}</p>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:14}}>
+            <div style={{background:C.greenLight,borderRadius:10,padding:"10px 6px"}}><div style={{fontSize:22,fontWeight:800,color:C.green}}>{deepSessionStats.remembered}</div><div style={{fontSize:11,color:C.textSec}}>彻底掌握</div></div>
+            <div style={{background:C.goldLight,borderRadius:10,padding:"10px 6px"}}><div style={{fontSize:22,fontWeight:800,color:C.gold}}>{deepSessionStats.fuzzy}</div><div style={{fontSize:11,color:C.textSec}}>仍不确定</div></div>
+            <div style={{background:C.redLight,borderRadius:10,padding:"10px 6px"}}><div style={{fontSize:22,fontWeight:800,color:C.red}}>{deepSessionStats.forgot}</div><div style={{fontSize:11,color:C.textSec}}>面临易错</div></div>
           </div>
           <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
             <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){startQuickReview("due");}}>继续今日复习</button>
@@ -2253,7 +2355,7 @@ export default function App() {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
       </Head>
-      <div style={S.container}>
+      <div className="vs-desktop-container" style={S.container}>
 
       {showWelcome && (
         <div style={{ position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.55)", zIndex:999, display:"flex", alignItems:"center", justifyContent:"center", padding:20, fontFamily:FONT }}>
@@ -2270,7 +2372,7 @@ export default function App() {
                 填写年级、爱好、常去的地方等。AI 会据此定制讲解和例句；也可以稍后用「照片日记」补充，越具体越有趣。
               </p>
             </div>
-            <button onClick={() => setShowWelcome(false)} style={{ ...S.bigBtn, marginTop:16, width:"100%" }}>👍 我知道了，开始设置</button>
+            <button onClick={() => { setShowWelcome(false); setSetupTab("profile"); setTimeout(function(){ var el = document.getElementById("vocabspark-profile-section"); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }, 120); }} style={{ ...S.bigBtn, marginTop:16, width:"100%" }}>👍 我知道了，开始设置</button>
             <Disclaimer />
           </div>
         </div>
@@ -2278,55 +2380,78 @@ export default function App() {
 
       <AppHeroHeader stats={stats} />
 
-      <div style={{...S.card, marginBottom:14, borderColor:C.teal, background:C.tealLight}}>
+      {(() => { var _hasWords = parseWordsFromInput(wordInput).length > 0; return <div style={{...S.card, marginBottom:14, borderColor:C.teal, background:C.tealLight}}>
         <div style={{fontWeight:800,fontSize:15,marginBottom:8,color:C.teal,display:"flex",justifyContent:"space-between"}}>
           <span>🏠 今日任务</span>
-          <span style={{fontSize:12,fontWeight:600}}>总计：约 {dailyPlan.totalMin} 分</span>
+          {_hasWords && <span style={{fontSize:12,fontWeight:600}}>总计：约 {dailyPlan.totalMin} 分钟</span>}
         </div>
-        {showTaskOrderHint && (
-          <div style={{fontSize:12,color:C.textSec,marginBottom:8,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"6px 8px"}}>
-            <span>建议顺序：先复习，再攻克，最后学新词</span>
-            <button style={{...S.smallBtn,padding:"2px 8px"}} onClick={function(){setShowTaskOrderHint(false);}}>跳过建议</button>
-          </div>
+
+        {!_hasWords ? (
+          <>
+            <div style={{background:C.card,border:"1px dashed "+C.teal,borderRadius:10,padding:"20px 16px",textAlign:"center"}}>
+              <div style={{fontSize:28,marginBottom:8}}>📚</div>
+              <div style={{fontWeight:700,fontSize:15,color:C.text,marginBottom:6}}>导入你的第一个词表，开始学习吧！</div>
+              <div style={{fontSize:13,color:C.textSec,marginBottom:14,lineHeight:1.6}}>在「词汇表」页签中粘贴单词（每行一个），AI 会为孩子量身定制学习内容。</div>
+              <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none",padding:"8px 20px",fontSize:14,fontWeight:600}} onClick={function(){ setSetupTab("words"); setTimeout(function(){ var el = document.getElementById("vocabspark-profile-section"); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }, 120); }}>前往词汇表 →</button>
+            </div>
+            <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"14px 16px",marginTop:10}}>
+              <div style={{fontSize:12,color:C.teal,fontWeight:700,marginBottom:6}}>AI 定制效果预览</div>
+              <div style={{fontSize:13,color:C.text,lineHeight:1.7,background:C.tealLight,borderRadius:8,padding:"10px 12px"}}>
+                <div style={{fontWeight:700,marginBottom:4}}>abandon</div>
+                <div>普通教材：<span style={{color:C.textSec}}>to leave completely and finally</span></div>
+                <div style={{marginTop:4}}>VocabSpark：<span style={{color:C.accent,fontWeight:600}}>Willow 正和 Emily 打网球，突然下暴雨 — they had to <u>abandon</u> the match and run to Irvine Spectrum for matcha ice cream!</span></div>
+              </div>
+              <div style={{fontSize:11,color:C.textSec,marginTop:6,textAlign:"center"}}>填写「画像」后，所有例句都会围绕孩子的真实生活</div>
+            </div>
+          </>
+        ) : (
+          <>
+            {showTaskOrderHint && (
+              <div style={{fontSize:12,color:C.textSec,marginBottom:8,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"6px 8px"}}>
+                <span>建议顺序：先复习，再攻克，最后学新词</span>
+                <button style={{...S.smallBtn,padding:"2px 8px"}} onClick={function(){setShowTaskOrderHint(false);}}>跳过建议</button>
+              </div>
+            )}
+
+            <div className="vs-task-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+              <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>① 快速复习</div>
+                  <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.quickMin} 分钟</div>
+                  <div style={{fontSize:11,color:dailyPlan.quickDone?C.green:C.textSec,fontWeight:dailyPlan.quickDone?600:500,minHeight:16}}>{dailyPlan.quickDone ? "✅ 已完成" : (dailyPlan.toReview.length === 0 ? "🎉 无到期" : "待审 " + dailyPlan.toReview.length)}</div>
+                </div>
+                <button style={{...S.smallBtn,background:dailyPlan.quickDone?C.card:C.teal,color:dailyPlan.quickDone?C.teal:"#fff",border:dailyPlan.quickDone?"1px solid "+C.teal:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} onClick={function(){startQuickReview("due");}}>{dailyPlan.quickDone?"再复习":"开始"}</button>
+              </div>
+
+              <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between",opacity:dailyPlan.deepLocked?0.7:1}}>
+                <div>
+                  <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>② 重点攻克</div>
+                  <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.deepMin} 分钟</div>
+                  <div style={{fontSize:11,color:dailyPlan.deepLocked?C.textSec:dailyPlan.deepDone?C.green:C.textSec,fontWeight:dailyPlan.deepDone?600:500,minHeight:16}}>
+                    {dailyPlan.deepLocked ? "🔒 待解锁" : (dailyPlan.deepDone ? "✅ 已完成" : dailyPlan.deepUsedToday + "/" + dailyPlan.deepCap + " 词")}
+                  </div>
+                </div>
+                <button style={{...S.smallBtn,background:dailyPlan.deepLocked?C.textSec:dailyPlan.deepDone?C.card:C.red,color:dailyPlan.deepDone?C.red:"#fff",border:dailyPlan.deepDone?"1px solid "+C.red:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} disabled={dailyPlan.deepLocked} onClick={startDeepReview}>
+                  {dailyPlan.deepLocked?"锁定":(dailyPlan.deepDone?"继续":"开始")}
+                </button>
+              </div>
+
+              <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
+                <div>
+                  <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>③ 学习新词</div>
+                  <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.newMin} 分钟</div>
+                  <div style={{fontSize:11,color:dailyPlan.newDone?C.green:C.textSec,fontWeight:dailyPlan.newDone?600:500,minHeight:16}}>
+                    {dailyPlan.newDone ? "✅ 已达标" : "可学 " + dailyPlan.newRemainingQuota}
+                  </div>
+                </div>
+                <button style={{...S.smallBtn,background:dailyPlan.newDone?C.card:C.accent,color:dailyPlan.newDone?C.accent:"#fff",border:dailyPlan.newDone?"1px solid "+C.accent:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} onClick={function(){startLearning(0);}}>
+                  {dailyPlan.newDone?"继续":"开始"}
+                </button>
+              </div>
+            </div>
+          </>
         )}
-
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-          <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
-            <div>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>① 快速复习</div>
-              <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.quickMin} 分</div>
-              <div style={{fontSize:11,color:dailyPlan.quickDone?C.green:C.textSec,fontWeight:dailyPlan.quickDone?600:500,minHeight:16}}>{dailyPlan.quickDone ? "✅ 已完成" : (dailyPlan.toReview.length === 0 ? "🎉 无到期" : "待审 " + dailyPlan.toReview.length)}</div>
-            </div>
-            <button style={{...S.smallBtn,background:dailyPlan.quickDone?C.card:C.teal,color:dailyPlan.quickDone?C.teal:"#fff",border:dailyPlan.quickDone?"1px solid "+C.teal:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} onClick={function(){startQuickReview("due");}}>{dailyPlan.quickDone?"再复习":"开始"}</button>
-          </div>
-
-          <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between",opacity:dailyPlan.deepLocked?0.7:1}}>
-            <div>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>② 重点攻克</div>
-              <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.deepMin} 分</div>
-              <div style={{fontSize:11,color:dailyPlan.deepLocked?C.textSec:dailyPlan.deepDone?C.green:C.textSec,fontWeight:dailyPlan.deepDone?600:500,minHeight:16}}>
-                {dailyPlan.deepLocked ? "🔒 待解锁" : (dailyPlan.deepDone ? "✅ 已完成" : dailyPlan.deepUsedToday + "/" + dailyPlan.deepCap + " 词")}
-              </div>
-            </div>
-            <button style={{...S.smallBtn,background:dailyPlan.deepLocked?C.textSec:dailyPlan.deepDone?C.card:C.red,color:dailyPlan.deepDone?C.red:"#fff",border:dailyPlan.deepDone?"1px solid "+C.red:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} disabled={dailyPlan.deepLocked} onClick={startDeepReview}>
-              {dailyPlan.deepLocked?"锁定":(dailyPlan.deepDone?"继续":"开始")}
-            </button>
-          </div>
-
-          <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
-            <div>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>③ 学习新词</div>
-              <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.newMin} 分</div>
-              <div style={{fontSize:11,color:dailyPlan.newDone?C.green:C.textSec,fontWeight:dailyPlan.newDone?600:500,minHeight:16}}>
-                {dailyPlan.newDone ? "✅ 已达标" : "可学 " + dailyPlan.newRemainingQuota}
-              </div>
-            </div>
-            <button style={{...S.smallBtn,background:dailyPlan.newDone?C.card:C.accent,color:dailyPlan.newDone?C.accent:"#fff",border:dailyPlan.newDone?"1px solid "+C.accent:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} onClick={function(){startLearning(0);}}>
-              {dailyPlan.newDone?"继续":"开始"}
-            </button>
-          </div>
-        </div>
-      </div>
+      </div>; })()}
 
       {hasSession && (
         <div style={{ ...S.card, background: C.tealLight, borderColor: C.teal, marginBottom: 14 }}>
@@ -2342,20 +2467,20 @@ export default function App() {
           <button onClick={handleLogout} style={{background:"transparent",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",fontFamily:FONT}}>退出</button>
         </div>
       ) : (
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:C.goldLight,border:"1px solid "+C.gold,borderRadius:10,padding:"10px 16px",marginBottom:12,fontSize:13,flexWrap:"wrap",gap:8}}>
-          <div style={{lineHeight:1.6}}>🎁 <strong>推广期</strong>：注册即可每日无限学习 &amp; 跨设备同步<br/><span style={{fontSize:12,color:C.textSec}}>非注册用户每日上限 {DAILY_LIMIT} 词，今日已学 {todayCount} 词</span></div>
-          <button onClick={() => setShowLogin(true)} style={{background:C.accent,color:"#fff",border:"none",borderRadius:8,padding:"7px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT,whiteSpace:"nowrap"}}>免费注册</button>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:todayCount>0?C.goldLight:C.tealLight,border:"1px solid "+(todayCount>0?C.gold:C.teal),borderRadius:10,padding:"10px 16px",marginBottom:12,fontSize:13,flexWrap:"wrap",gap:8}}>
+          <div style={{lineHeight:1.6}}>{todayCount > 0
+            ? <><strong>🎁 推广期免费</strong>：登录后无限学习 &amp; 跨设备同步<br/><span style={{fontSize:12,color:C.textSec}}>未登录用户每日上限 {DAILY_LIMIT} 词，今日已学 {todayCount} 词</span></>
+            : <><span style={{color:C.teal}}>☁️</span> 登录后可<strong>跨设备同步</strong>进度 &amp; 每日<strong>无限学习</strong><span style={{fontSize:12,color:C.textSec,marginLeft:4}}>（推广期免费）</span></>
+          }</div>
+          <button onClick={() => setShowLogin(true)} style={{background:C.accent,color:"#fff",border:"none",borderRadius:8,padding:"7px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT,whiteSpace:"nowrap"}}>登录 / 注册</button>
         </div>
       )}
 
-      <div style={{...S.tabBar, alignItems:"center", padding:"0 6px"}}>
-        <button style={{...(setupTab==="profile"?S.tabActive:S.tab), padding:"13px 6px", fontSize:13}} onClick={() => setSetupTab("profile")}>👤 画像</button>
-        <span style={{color:C.border, fontSize:12, fontWeight:700}}>➔</span>
-        <button style={{...(setupTab==="words"?S.tabActive:S.tab), padding:"13px 6px", fontSize:13}} onClick={() => setSetupTab("words")}>📝 词汇列表</button>
-        <span style={{color:C.border, fontSize:12, fontWeight:700}}>➔</span>
-        <button style={{...(setupTab==="plan"?S.tabActive:S.tab), padding:"13px 6px", fontSize:13}} onClick={() => setSetupTab("plan")}>🎯 学习计划</button>
-        <span style={{color:C.border, fontSize:12, fontWeight:700}}>➔</span>
-        <button style={{...(setupTab==="stats"?S.tabActive:S.tab), padding:"13px 6px", fontSize:13}} onClick={() => setSetupTab("stats")}>📊 统计</button>
+      <div id="vocabspark-profile-section" style={{...S.tabBar}}>
+        <button style={{...(setupTab==="profile"?S.tabActive:S.tab)}} onClick={() => setSetupTab("profile")}>👤 画像</button>
+        <button style={{...(setupTab==="words"?S.tabActive:S.tab)}} onClick={() => setSetupTab("words")}>📝 词汇表</button>
+        <button style={{...(setupTab==="plan"?S.tabActive:S.tab)}} onClick={() => setSetupTab("plan")}>🎯 计划</button>
+        <button style={{...(setupTab==="stats"?S.tabActive:S.tab)}} onClick={() => setSetupTab("stats")}>📊 统计</button>
       </div>
       {setupTab === "profile" && (
         <div style={S.setupCard}>
@@ -2369,7 +2494,18 @@ export default function App() {
                   return <button key={p} onClick={function() { setProfile(function(prev) { return prev + (prev && !prev.endsWith('\n') ? '\n' : '') + p + '：'; }); }} style={{background:C.accentLight,border:"1px solid "+C.accent+"44",borderRadius:20,padding:"4px 12px",fontSize:12,color:C.accent,cursor:"pointer",fontFamily:FONT,fontWeight:500}}>{p}</button>;
                 })}
               </div>
-              <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={12} placeholder={PROFILE_TEXTAREA_PLACEHOLDER} />
+              <div style={{marginBottom:8}}>
+                <button onClick={function(){ setShowProfileGuide(!showProfileGuide); }} style={{background:"transparent",border:"none",color:C.accent,fontSize:12,cursor:"pointer",fontFamily:FONT,fontWeight:600,padding:0}}>
+                  {showProfileGuide ? "▼ 收起写作示例" : "▶ 不知道写什么？看看示例"}
+                </button>
+                {showProfileGuide && (
+                  <div style={{background:C.accentLight,border:"1px solid "+C.accent+"33",borderRadius:8,padding:"10px 14px",marginTop:6,fontSize:12,color:C.text,lineHeight:1.8}}>
+                    <div style={{fontWeight:600,marginBottom:4}}>可以写这些（把名字换成孩子的）：</div>
+                    {PROFILE_GUIDE_EXAMPLES.map(function(ex, i) { return <div key={i}>{ex}</div>; })}
+                  </div>
+                )}
+              </div>
+              <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={8} placeholder={PROFILE_TEXTAREA_PLACEHOLDER} />
               <div style={{display:"flex",justifyContent:"flex-end",fontSize:12,marginTop:3,marginBottom:4,color:profile.length>PROFILE_MAX?C.red:profile.length>800?C.gold:C.textSec}}>
                 {profile.length} / {PROFILE_MAX} 字{profile.length>PROFILE_MAX?" · 已超出上限，请精简":profile.length>800?" · 建议精简":""}
               </div>
@@ -2452,6 +2588,10 @@ export default function App() {
                 })}
               </div>
 
+              {dueCount > 0 && <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:C.goldLight,border:"1px solid "+C.gold+"44",borderRadius:8,fontSize:12,color:C.gold,fontWeight:600,margin:"0 0 8px"}}>
+                <span>⏰ {dueCount} 个词到期待复习</span>
+                {focusCount > 0 && <span style={{color:C.red}}>· 🔴 {focusCount} 个重点词</span>}
+              </div>}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,margin:"0 0 10px"}}>
                 <input value={wordSearch} onChange={function(e){setWordSearch(e.target.value);}} placeholder="搜索单词/释义" style={{padding:"8px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
                 <select value={wordSortMode} onChange={function(e){setWordSortMode(e.target.value);}} style={{padding:"8px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13,background:C.card}}>
@@ -2565,6 +2705,13 @@ export default function App() {
           <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"2px 0 8px"}}>编辑词表</div>
           <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={5} placeholder="arduous\nbenevolent" />
           <div style={{fontSize:13,color:C.textSec,marginTop:4}}>{wordInput.trim() ? "共 "+parseWordsFromInput(wordInput).length+" 个词" : ""}</div>
+
+          {parseWordsFromInput(wordInput).length > 0 && (
+            <div style={{marginTop:14,padding:"16px",background:"linear-gradient(135deg, "+C.accentLight+" 0%, "+C.goldLight+" 100%)",border:"1.5px solid "+C.accent+"44",borderRadius:12,textAlign:"center"}}>
+              <div style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:8}}>词汇已就绪，准备开始？</div>
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0); }}>✨ 开始学习（{parseWordsFromInput(wordInput).length} 个词）</button>
+            </div>
+          )}
         </div>
       )}
 
@@ -2574,6 +2721,21 @@ export default function App() {
         var phaseView = getPhaseExecutionSnapshot();
         return <div style={S.setupCard}>
           <div style={S.setupHint}>学习统计中心：查看学习成效、复习量和当前词库健康度。</div>
+          {statsView.totalWords > 0 && (() => {
+            var masteredPct = Math.round(((statsView.statuses.mastered||0) / Math.max(1, statsView.totalWords)) * 100);
+            var healthColor = masteredPct >= 60 ? C.green : masteredPct >= 30 ? C.gold : C.accent;
+            var healthLabel = masteredPct >= 60 ? "优秀" : masteredPct >= 30 ? "良好" : "起步中";
+            return <div style={{display:"flex",alignItems:"center",gap:14,background:"linear-gradient(135deg, "+C.tealLight+" 0%, "+C.accentLight+" 100%)",border:"1px solid "+C.border,borderRadius:12,padding:"14px 16px",marginBottom:12}}>
+              <div style={{position:"relative",width:56,height:56,flexShrink:0}}>
+                <svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke={C.border} strokeWidth="5"/><circle cx="28" cy="28" r="24" fill="none" stroke={healthColor} strokeWidth="5" strokeLinecap="round" strokeDasharray={2*Math.PI*24} strokeDashoffset={2*Math.PI*24*(1-masteredPct/100)} transform="rotate(-90 28 28)"/></svg>
+                <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",fontSize:14,fontWeight:800,color:healthColor}}>{masteredPct}%</div>
+              </div>
+              <div>
+                <div style={{fontWeight:700,fontSize:14,color:C.text}}>词库健康度：<span style={{color:healthColor}}>{healthLabel}</span></div>
+                <div style={{fontSize:12,color:C.textSec,marginTop:2}}>{statsView.statuses.mastered||0} 个已掌握 / {statsView.totalWords} 个总词汇</div>
+              </div>
+            </div>;
+          })()}
           <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,marginBottom:12}}>
             <div style={S.statCard}><div style={S.statNum}>{statsView.totalWords}</div><div style={S.statLabel}>词库总数</div></div>
             <div style={S.statCard}><div style={S.statNum}>{statsView.dueCount}</div><div style={S.statLabel}>今日到期复习</div></div>
@@ -2625,7 +2787,7 @@ export default function App() {
         </div>;
       })()}
       {error && <div style={S.error}>{error}</div>}
-      <button style={S.bigBtn} onClick={() => startLearning(0)}>✨ 开始学习</button>
+      {parseWordsFromInput(wordInput).length > 0 && <button style={S.bigBtn} onClick={() => startLearning(0)}>✨ 开始学习</button>}
       <Disclaimer />
 
       <div style={{ textAlign:"center", padding:"24px 0 8px", fontSize:13, lineHeight:1.8, color:C.textSec }}>
@@ -2636,6 +2798,7 @@ export default function App() {
           <a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a>
           <button onClick={()=>setShowShare(true)} style={{ background:"transparent", border:"none", color:C.accent, fontFamily:FONT, fontSize:12, fontWeight:600, cursor:"pointer", padding:0 }}>🔗 推荐给朋友</button>
         </div>
+        <div style={{ marginTop:4, fontSize:11, color:C.border }}>VocabSpark v3.1</div>
       </div>
       <PrivacyNotice />
 
@@ -2643,31 +2806,34 @@ export default function App() {
 
       {/* ── LOGIN MODAL (setup screen) ── */}
       {showLogin && (
-        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{ if(!loginLoading){setShowLogin(false);setLoginSent(false);setLoginEmail('');} }}>
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{ if(!loginLoading){setShowLogin(false);setLoginSent(false);setLoginEmail('');setOtpCode('');setOtpError('');} }}>
           <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
             {!loginSent ? (
               <>
                 <div style={{fontSize:36,textAlign:"center",marginBottom:8}}>🔑</div>
-                <h3 style={{fontSize:19,fontWeight:700,textAlign:"center",margin:"0 0 4px"}}>免费注册 / 登录</h3>
-                <p style={{fontSize:13,color:C.textSec,textAlign:"center",lineHeight:1.6,margin:"0 0 20px"}}>推广期免费 · 注册即可每日无限学习 &amp; 跨设备同步</p>
+                <h3 style={{fontSize:19,fontWeight:700,textAlign:"center",margin:"0 0 4px"}}>登录 / 注册</h3>
+                <p style={{fontSize:13,color:C.textSec,textAlign:"center",lineHeight:1.6,margin:"0 0 20px"}}>新用户输入邮箱即自动注册，老用户同一邮箱直接登录</p>
                 <div style={{background:C.tealLight,borderRadius:10,padding:"12px 14px",marginBottom:20,fontSize:13,lineHeight:1.9,color:C.text}}>
-                  ✅ 每日无限学习（非注册用户 {DAILY_LIMIT} 词/天）<br/>
-                  ☁️ 进度云端同步，换手机不丢<br/>
-                  📊 完整学习历史记录
+                  ✅ 每日无限学习（未登录用户 {DAILY_LIMIT} 词/天）<br/>
+                  ☁️ 进度云端同步，换设备不丢<br/>
+                  📊 完整学习历史记录<br/>
+                  <span style={{fontSize:12,color:C.textSec}}>推广期完全免费，无需付费</span>
                 </div>
                 <div style={{fontSize:13,fontWeight:600,marginBottom:6,color:C.text}}>邮箱地址</div>
                 <input type="email" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') handleLoginEmail(); }} placeholder="your@email.com" style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:14,outline:"none",marginBottom:12,boxSizing:"border-box"}} />
-                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading?0.6:1}} onClick={handleLoginEmail} disabled={loginLoading||!loginEmail.trim()}>{loginLoading ? "发送中..." : "✉️ 发送登录链接"}</button>
-                <div style={{fontSize:12,color:C.textSec,textAlign:"center",marginTop:12,lineHeight:1.6}}>无需密码 · 点击邮件中的链接即可登录<br/>🔒 您的画像信息仅用于 AI 生成学习内容，不会被读取或共享</div>
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading?0.6:1}} onClick={handleLoginEmail} disabled={loginLoading||!loginEmail.trim()}>{loginLoading ? "发送中..." : "✉️ 发送验证码"}</button>
+                <div style={{fontSize:12,color:C.textSec,textAlign:"center",marginTop:12,lineHeight:1.6}}>无需密码 · 输入邮件中的 6 位验证码即可登录<br/>新老用户都用同一个邮箱，系统自动识别</div>
                 <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",width:"100%",marginTop:12,padding:"4px 0"}} onClick={()=>{setShowLogin(false);setLoginEmail('');}}>暂时不用</button>
               </>
             ) : (
               <>
                 <div style={{fontSize:48,textAlign:"center",marginBottom:12}}>📬</div>
-                <h3 style={{fontSize:18,fontWeight:700,textAlign:"center",margin:"0 0 8px"}}>邮件已发送！</h3>
-                <p style={{fontSize:14,color:C.textSec,textAlign:"center",lineHeight:1.7,margin:"0 0 20px"}}>请检查 <strong>{loginEmail}</strong> 的收件箱，点击邮件中的登录链接即可完成登录。</p>
-                <div style={{background:C.goldLight,borderRadius:10,padding:"10px 14px",fontSize:13,color:C.textSec,marginBottom:16}}>没收到？请检查垃圾邮件文件夹，或稍等 1-2 分钟后重试。</div>
-                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={()=>{setShowLogin(false);setLoginSent(false);setLoginEmail('');}}>好的，关闭</button>
+                <h3 style={{fontSize:18,fontWeight:700,textAlign:"center",margin:"0 0 8px"}}>验证码已发送</h3>
+                <p style={{fontSize:14,color:C.textSec,textAlign:"center",lineHeight:1.7,margin:"0 0 16px"}}>已发送 6 位验证码到 <strong>{loginEmail}</strong><br/>请在下方输入验证码完成登录</p>
+                <input type="text" inputMode="numeric" maxLength={6} value={otpCode} onChange={function(e){ setOtpCode(e.target.value.replace(/[^0-9]/g,'')); setOtpError(''); }} onKeyDown={function(e){ if(e.key==='Enter') handleVerifyOtp(); }} placeholder="输入 6 位验证码" style={{width:"100%",padding:"14px 16px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:22,fontWeight:700,textAlign:"center",letterSpacing:"0.3em",outline:"none",marginBottom:8,boxSizing:"border-box"}} autoFocus />
+                {otpError && <div style={{fontSize:12,color:C.red,textAlign:"center",marginBottom:8}}>{otpError}</div>}
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading||otpCode.length<6?0.6:1}} onClick={handleVerifyOtp} disabled={loginLoading||otpCode.length<6}>{loginLoading ? "验证中..." : "✓ 验证登录"}</button>
+                <div style={{background:C.bg,borderRadius:10,padding:"10px 14px",fontSize:12,color:C.textSec,marginTop:12,lineHeight:1.6,textAlign:"center"}}>没收到？请检查垃圾邮件文件夹<br/><button style={{background:"transparent",border:"none",color:C.accent,fontFamily:FONT,fontSize:12,fontWeight:600,cursor:"pointer",padding:0,marginTop:4}} onClick={function(){setLoginSent(false);setOtpCode('');setOtpError('');}}>← 重新发送</button></div>
               </>
             )}
           </div>
@@ -2711,7 +2877,7 @@ export default function App() {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
       </Head>
-      <div style={S.container}>
+      <div className="vs-desktop-container" style={S.container}>
       <div ref={topRef} />
       {/* Daily limit banner for guests */}
       {!user && todayCount > 0 && (
@@ -2720,7 +2886,7 @@ export default function App() {
         </div>
       )}
       <div style={S.topBar}>
-        <button style={S.backBtn} onClick={() => setScreen("setup")}>←</button>
+        <button style={S.backBtn} aria-label="返回主页" onClick={function(){ if (phase === "done" || confirm("确定要退出学习吗？进度已自动保存。")) setScreen("setup"); }}>←</button>
         <div style={S.progressWrap}>
           <div style={{...S.progressTrack, position:"relative", overflow:"visible"}}>
             <div style={{...S.progressFill, width: smoothLessonPct + "%", transition: "none"}} />
@@ -2731,10 +2897,10 @@ export default function App() {
               return <div key={i} style={{position:"absolute",top:"50%",left:pos+"%",transform:"translate(-50%,-50%)",width:8,height:8,borderRadius:"50%",background:isCloze?C.teal:C.purple,border:"1.5px solid "+C.card,zIndex:1}} />;
             })}
           </div>
-          <span style={S.progressText}>{Math.min(idx+1,wordList.length)}/{wordList.length}</span>
+          <span style={S.progressText}><strong>{Math.min(idx+1,wordList.length)}</strong>/{wordList.length}</span>
         </div>
         <div style={S.xpBadge}>{"⚡"+stats.xp}</div>
-        <button style={S.settingsBtn} onClick={() => setShowSettings(true)} title="设置">⚙️</button>
+        <button style={S.settingsBtn} onClick={() => setShowSettings(true)} title="设置" aria-label="打开设置">⚙️</button>
       </div>
 
       {/* ── SETTINGS MODAL ── */}
@@ -2765,7 +2931,7 @@ export default function App() {
                           return <button key={p} onClick={function() { setProfile(function(prev) { return prev + (prev && !prev.endsWith('\n') ? '\n' : '') + p + '：'; }); }} style={{background:C.accentLight,border:"1px solid "+C.accent+"44",borderRadius:20,padding:"3px 10px",fontSize:11,color:C.accent,cursor:"pointer",fontFamily:FONT}}>{p}</button>;
                         })}
                       </div>
-                      <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={12} placeholder={PROFILE_TEXTAREA_PLACEHOLDER} />
+                      <textarea style={S.textarea} value={profile} onChange={e => setProfile(e.target.value)} rows={8} placeholder={PROFILE_TEXTAREA_PLACEHOLDER} />
                       <div style={{display:"flex",justifyContent:"flex-end",fontSize:11,marginTop:3,marginBottom:4,color:profile.length>PROFILE_MAX?C.red:profile.length>800?C.gold:C.textSec}}>
                         {profile.length} / {PROFILE_MAX} 字{profile.length>PROFILE_MAX?" · 超出上限":profile.length>800?" · 建议精简":""}
                       </div>
@@ -2868,13 +3034,19 @@ export default function App() {
                           非注册用户每日上限 {DAILY_LIMIT} 词，今日已学 {todayCount} 词
                         </div>
                       </div>
-                      <button style={S.primaryBtn} onClick={() => { setShowSettings(false); setShowLogin(true); }}>免费注册 / 登录</button>
+                      <button style={S.primaryBtn} onClick={() => { setShowSettings(false); setShowLogin(true); }}>登录 / 注册</button>
                     </div>
                   )}
                 </div>
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {streakToast && (
+        <div style={{position:"fixed",top:80,left:"50%",transform:"translateX(-50%)",zIndex:1100,background:"linear-gradient(135deg, "+C.gold+" 0%, "+C.accent+" 100%)",color:"#fff",padding:"10px 24px",borderRadius:20,fontSize:15,fontWeight:800,boxShadow:"0 6px 24px rgba(0,0,0,0.2)",animation:"fadeUp 0.3s ease-out",whiteSpace:"nowrap"}}>
+          🔥 {streakToast}
         </div>
       )}
 
@@ -2900,6 +3072,12 @@ export default function App() {
               💡 首次加载会稍慢一些，AI 正在根据学生画像量身定制内容，请耐心稍等片刻～
             </p>
           )}
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,justifyContent:"center",margin:"8px 0 16px"}}>
+            {wordList.slice(idx, Math.min(idx+5, wordList.length)).map(function(w, i) {
+              var loaded = dataCache.current[w] && (dataCache.current[w].guess || dataCache.current[w].teach);
+              return <span key={w} style={{padding:"4px 12px",borderRadius:20,fontSize:12,fontWeight:600,border:"1px solid "+(loaded?C.green:C.border),background:loaded?C.greenLight:C.bg,color:loaded?C.green:C.textSec,transition:"all 0.3s ease"}}>{loaded?"✓ ":""}{w}</span>;
+            })}
+          </div>
           <p style={{fontSize:14, color:C.textSec, marginBottom:20, lineHeight:1.6}}>{batchTip}</p>
           <div style={{background:C.border, borderRadius:8, height:12, overflow:"hidden", marginBottom:12}}>
             <div style={{height:"100%", background:"linear-gradient(90deg, "+C.accent+", "+C.gold+")", borderRadius:8, transition:"none", width: batchUiPct + "%"}} />
@@ -2910,21 +3088,31 @@ export default function App() {
 
       {phase === "speed_wait" && (
         <div style={{...S.card, textAlign:"center", padding:"34px 24px"}}>
+          <div style={{fontSize:36,marginBottom:8,animation:"bounce 1s ease-in-out infinite"}}>{speedWaitSec < 3 ? "⚡" : speedWaitSec < 6 ? "🚀" : "🔧"}</div>
           <div style={S.tag}>⚡ 你太厉害了</div>
           <p style={{fontSize:14, color:C.textSec, marginBottom:14, lineHeight:1.7}}>
             你的学习速度比 AI 定制内容还快，正在补齐下一词，请稍等一下下哦～
           </p>
+          {wordList[idx+1] && <div style={{fontSize:16,fontWeight:700,color:C.accent,marginBottom:12}}>下一个词：{wordList[idx+1]}</div>}
           <div style={{background:C.border, borderRadius:999, height:10, overflow:"hidden", marginBottom:10}}>
             <div style={{height:"100%", width: (((speedWaitSec % 6) + 1) * 16) + "%", background:"linear-gradient(90deg, "+C.teal+", "+C.accent+")", borderRadius:999, transition:"width 0.42s ease"}} />
           </div>
           <div style={{fontSize:12, color:C.textSec}}>已等待 {speedWaitSec}s，马上进入</div>
+          {speedWaitSec >= 5 && <button style={{...S.ghostBtn, marginTop:12, fontSize:13}} onClick={function() { speedWaitAbortRef.current = true; }}>🔄 重新加载此词</button>}
         </div>
       )}
 
       {phase === "guess" && (
         <div style={{...S.card, animation: shakeWrong ? "shake 0.4s ease" : bounceCorrect ? "bounce 0.5s ease" : phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
           <div style={S.tag}>🎯 猜一猜</div>
-          {!guessData ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}><div>{loadingTip||"🧠 AI 老师正在备课..."}</div><div style={{fontSize:12,color:C.textSec,marginTop:6}}>正在为你生成专属学习内容，首次会稍慢，之后越来越快 ✨</div></div></div> : <>
+          {!guessData ? <div style={{padding:"8px 0"}}>
+            <div style={{background:C.border,borderRadius:8,height:60,marginBottom:12,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {[1,2,3,4].map(function(k){ return <div key={k} style={{background:C.border,borderRadius:8,height:38,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:k*0.1+"s"}}/>; })}
+            </div>
+            <div style={{textAlign:"center",marginTop:14,fontSize:13,color:C.textSec}}>{loadingTip||"🧠 AI 老师正在备课..."}</div>
+            <div style={{textAlign:"center",fontSize:12,color:C.textSec,marginTop:4}}>正在为你生成专属学习内容，首次会稍慢，之后越来越快 ✨</div>
+          </div> : <>
             <div style={S.contextBox}>
               <span style={{flex:1,lineHeight:1.8}}>
                 {guessData.context.replace(/_+/g, "\x00").split("\x00").map(function(seg, i, arr) {
@@ -2944,8 +3132,9 @@ export default function App() {
               var sel=selectedOption===k, ok=guessSubmitted&&k===guessData.answer, bad=guessSubmitted&&sel&&k!==guessData.answer;
               var bg=C.bg, bdr=C.border, clr=C.text;
               if(ok){bg=C.greenLight;bdr=C.green;clr=C.green;} else if(bad){bg=C.redLight;bdr=C.red;clr=C.red;} else if(sel){bg=C.accentLight;bdr=C.accent;clr=C.accent;}
-              return <button key={k} disabled={guessSubmitted} style={{...S.optionBtn,background:bg,borderColor:bdr,color:clr}} onClick={()=>setSelectedOption(k)}><span style={S.optionKey}>{k}</span>{v}{ok?" ✓":""}{bad?" ✗":""}</button>;
-            })}</div> : <div style={{fontSize:14,color:C.textSec,marginBottom:14}}>选项异常，请跳过</div>}
+              var shadow = ok ? "0 0 0 2px "+C.green+"33" : bad ? "0 0 0 2px "+C.red+"33" : sel ? "0 0 0 2px "+C.accent+"33" : "none";
+              return <button key={k} disabled={guessSubmitted} style={{...S.optionBtn,background:bg,borderColor:bdr,color:clr,boxShadow:shadow}} onClick={()=>setSelectedOption(k)}><span style={S.optionKey}>{k}</span>{v}{ok?" ✓":""}{bad?" ✗":""}</button>;
+            })}</div> : guessData._failed ? <div style={{textAlign:"center",padding:"12px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>猜题加载失败</div><button style={S.primaryBtn} onClick={function(){setGuessData(null);callWithClientRetry(function(){return callAPIFast(sysP,buildGuessPrompt(currentWord,learned));}).then(function(raw){var parsed=tryJSON(raw);if(parsed?.context&&parsed?.options){dataCache.current[currentWord].guess=parsed;dataCache.current[currentWord].guessFailed=false;setGuessData(parsed);}else{setGuessData({context:"格式异常",options:null});}}).catch(function(){setGuessData({context:"内容加载失败",options:null,_failed:true});});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={skipGuess}>直接学习 →</button></div> : <div style={{fontSize:14,color:C.textSec,marginBottom:14}}>选项异常，请跳过</div>}
             {!guessSubmitted && guessData.hint && <button style={S.hintBtn} onClick={()=>setShowHint(true)}>{showHint?"💡 "+guessData.hint:"💡 提示"}</button>}
             {guessSubmitted && <div style={{...S.resultBanner, background:selectedOption===guessData.answer?C.greenLight:C.goldLight, borderColor:selectedOption===guessData.answer?C.green:C.gold}}>{selectedOption===guessData.answer?"🎉 猜对了！+15 XP":"😯 正确答案："+guessData.answer+"—"+guessData.options[guessData.answer]}<div style={{fontSize:13,marginTop:4,color:C.textSec}}>✨ 即将进入学习...</div></div>}
             {!guessSubmitted && <div style={S.btnRow}>
@@ -2958,7 +3147,15 @@ export default function App() {
 
       {phase === "teach" && <div style={{...S.card, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
         <div style={{...S.tag,background:C.tealLight,color:C.teal}}>📖 学习笔记</div>
-        {!teachContent ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}>{loadingTip||"📖 正在用你的生活场景编写专属讲解..."}</div></div> : <>
+        {teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解内容加载失败</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");callWithClientRetry(function(){return callAPI(sysP,buildTeachPrompt(currentWord,learned));}).then(function(raw){var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
+        : !teachContent ? <div style={{padding:"8px 0"}}>
+          <div style={{background:C.border,borderRadius:8,height:20,width:"70%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
+          <div style={{background:C.border,borderRadius:8,height:14,width:"100%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.1s"}}/>
+          <div style={{background:C.border,borderRadius:8,height:14,width:"90%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.2s"}}/>
+          <div style={{background:C.border,borderRadius:8,height:14,width:"95%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.3s"}}/>
+          <div style={{background:C.border,borderRadius:8,height:14,width:"60%",marginBottom:12,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.4s"}}/>
+          <div style={{textAlign:"center",fontSize:13,color:C.textSec,marginTop:8}}>{loadingTip||"📖 正在用你的生活场景编写专属讲解..."}</div>
+        </div> : <>
           <div style={{marginBottom:20}}><Md text={teachContent} /></div>
           <button style={S.primaryBtn} onClick={teachToSpectrum} disabled={loading}>{spectrumData?"🎮 词义光谱挑战 →":"→ 下一个词"}</button>
         </>}
@@ -2988,7 +3185,12 @@ export default function App() {
 
       {phase === "review" && <div style={{...S.card, animation:"slideInRight 0.28s ease-out"}}>
         <div style={{...S.tag,background:C.purpleLight,color:C.purple}}>🏆 复习关卡</div>
-        {!reviewData?.questions ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}>{loadingTip||"🎮 设计互动复习挑战中..."}</div></div> : <>
+        {!reviewData?.questions ? <div style={{padding:"8px 0"}}>
+          <div style={{background:C.border,borderRadius:8,height:18,width:"55%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
+          <div style={{background:C.border,borderRadius:8,height:14,width:"80%",marginBottom:12,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.1s"}}/>
+          {[1,2,3].map(function(k){ return <div key={k} style={{marginBottom:12}}><div style={{background:C.border,borderRadius:8,height:14,width:"90%",marginBottom:6,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:k*0.1+"s"}}/><div style={{display:"flex",gap:8}}>{[1,2,3].map(function(j){return <div key={j} style={{background:C.border,borderRadius:8,height:32,flex:1,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:(k*0.1+j*0.05)+"s"}}/>;})}</div></div>; })}
+          <div style={{textAlign:"center",fontSize:13,color:C.textSec,marginTop:8}}>{loadingTip||"🎮 设计互动复习挑战中..."}</div>
+        </div> : <>
           <div style={{fontWeight:600,fontSize:17,marginBottom:4}}>{reviewData.title}</div>
           <div style={{color:C.textSec,fontSize:14,marginBottom:16}}>{reviewData.intro}</div>
           {reviewData.questions.map((q,qi) => {
@@ -3005,13 +3207,23 @@ export default function App() {
             </div>;
           })}
           {!reviewSubmitted ? <button style={S.primaryBtn} onClick={submitReview} disabled={Object.keys(reviewAnswers).length<reviewData.questions.length}>✓ 提交</button>
-          : <div><div style={S.reviewScore}>{"得分："+reviewData.questions.filter(q=>reviewAnswers[q.id]===q.answer).length+"/"+reviewData.questions.length+" · +"+reviewData.questions.filter(q=>reviewAnswers[q.id]===q.answer).length*10+" XP"}</div><button style={S.primaryBtn} onClick={afterReview}>{idx+1>=wordList.length?"🎉 完成！":"→ "+wordList[idx+1]}</button></div>}
+          : (() => { var rc=reviewData.questions.filter(q=>reviewAnswers[q.id]===q.answer).length, rt=reviewData.questions.length, rpct=Math.round(rc/rt*100); return <div>
+            <div style={{...S.reviewScore,animation:"fadeUp 0.3s ease-out"}}>
+              <div style={{fontSize:28,marginBottom:4}}>{rpct>=80?"🌟":rpct>=50?"👍":"💪"}</div>
+              {"得分："+rc+"/"+rt+" ("+rpct+"%) · +"+rc*10+" XP"}
+            </div>
+            <button style={S.primaryBtn} onClick={afterReview}>{idx+1>=wordList.length?"🎉 完成！":"→ "+wordList[idx+1]}</button></div>; })()}
         </>}
       </div>}
 
       {phase === "cloze" && <div style={{...S.card, animation:"slideInRight 0.28s ease-out"}}>
         <div style={{...S.tag,background:C.goldLight,color:C.gold}}>📝 阅读填空挑战</div>
-        {!clozeData?.questions ? <div style={S.loadingBox}><span style={S.spinner}/> <div style={{textAlign:"center"}}>{loadingTip||"📝 正在生成阅读理解短文..."}</div></div> : <>
+        {!clozeData?.questions ? <div style={{padding:"8px 0"}}>
+          <div style={{background:C.border,borderRadius:8,height:18,width:"50%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
+          <div style={{background:C.border,borderRadius:8,height:80,width:"100%",marginBottom:12,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.15s"}}/>
+          {[1,2].map(function(k){ return <div key={k} style={{marginBottom:10}}><div style={{background:C.border,borderRadius:8,height:14,width:"85%",marginBottom:6,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:k*0.12+"s"}}/><div style={{display:"flex",gap:8}}>{[1,2,3].map(function(j){return <div key={j} style={{background:C.border,borderRadius:8,height:32,flex:1,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:(k*0.1+j*0.05)+"s"}}/>;})}</div></div>; })}
+          <div style={{textAlign:"center",fontSize:13,color:C.textSec,marginTop:8}}>{loadingTip||"📝 正在生成阅读理解短文..."}</div>
+        </div> : <>
           <div style={{fontWeight:600,fontSize:17,marginBottom:8}}>{clozeData.title}</div>
           <div style={{background:C.bg,borderRadius:10,padding:"16px 18px",marginBottom:20,borderLeft:"3px solid "+C.gold,fontSize:15,lineHeight:2}}>
             {clozeData.passage}
@@ -3030,7 +3242,12 @@ export default function App() {
             </div>;
           })}
           {!clozeSubmitted ? <button style={S.primaryBtn} onClick={submitCloze} disabled={Object.keys(clozeAnswers).length<clozeData.questions.length}>✓ 提交</button>
-          : <div><div style={S.reviewScore}>{"得分："+clozeData.questions.filter(q=>clozeAnswers[q.id]===q.answer).length+"/"+clozeData.questions.length+" · +"+clozeData.questions.filter(q=>clozeAnswers[q.id]===q.answer).length*15+" XP"}</div><button style={S.primaryBtn} onClick={afterCloze}>{idx+1>=wordList.length?"🎉 完成！":"→ 继续学习"}</button></div>}
+          : (() => { var cc=clozeData.questions.filter(q=>clozeAnswers[q.id]===q.answer).length, ct=clozeData.questions.length, cpct=Math.round(cc/ct*100); return <div>
+            <div style={{...S.reviewScore,animation:"fadeUp 0.3s ease-out"}}>
+              <div style={{fontSize:28,marginBottom:4}}>{cpct>=80?"🌟":cpct>=50?"👍":"💪"}</div>
+              {"得分："+cc+"/"+ct+" ("+cpct+"%) · +"+cc*15+" XP"}
+            </div>
+            <button style={S.primaryBtn} onClick={afterCloze}>{idx+1>=wordList.length?"🎉 完成！":"→ 继续学习"}</button></div>; })()}
         </>}
       </div>}
 
@@ -3054,20 +3271,30 @@ export default function App() {
 
       {phase === "done" && (() => {
         var ts = getTimingStats();
+        var accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+        var encourageMsg = accuracy >= 80 ? "太棒了，正确率超高！" : accuracy >= 50 ? "不错的开始，继续加油！" : "没关系，多练几次就好了！";
         return <div style={{...S.card,textAlign:"center",padding:"40px 22px"}}>
-          <div style={{fontSize:56,marginBottom:12}}>🎉</div>
+          <div style={{fontSize:56,marginBottom:12,animation:"bounce 0.6s ease-out"}}>🎉</div>
           <h2 style={{fontSize:24,fontWeight:700,margin:"0 0 4px"}}>全部学完！</h2>
-          <p style={{color:C.textSec,marginBottom:16}}>{"今天学了 "+wordList.length+" 个词 · "+stats.xp+" XP"}</p>
-          <div style={S.doneStats}>
-            <div style={S.doneStat}><div style={S.doneStatNum}>{stats.correct}</div><div style={S.doneStatLabel}>猜对</div></div>
-            <div style={S.doneStat}><div style={S.doneStatNum}>{stats.total-stats.correct}</div><div style={S.doneStatLabel}>猜错</div></div>
-            <div style={S.doneStat}><div style={S.doneStatNum}>{stats.bestStreak}</div><div style={S.doneStatLabel}>最佳连对</div></div>
+          <p style={{color:C.textSec,marginBottom:4}}>{"今天学了 "+wordList.length+" 个词 · "+stats.xp+" XP"}</p>
+          <p style={{color:C.accent,fontSize:13,fontWeight:600,marginBottom:16}}>{encourageMsg}</p>
+
+          {/* 今日报告卡 */}
+          <div style={{background:"linear-gradient(135deg, "+C.tealLight+" 0%, "+C.accentLight+" 100%)",borderRadius:14,padding:"18px 16px",marginBottom:16,border:"1px solid "+C.border}}>
+            <div style={{fontWeight:800,fontSize:14,color:C.teal,marginBottom:12}}>📋 今日学习报告</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:12}}>
+              <div style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:C.green}}>{stats.correct}</div><div style={{fontSize:11,color:C.textSec}}>猜对</div></div>
+              <div style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:C.red}}>{stats.total-stats.correct}</div><div style={{fontSize:11,color:C.textSec}}>猜错</div></div>
+              <div style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:C.accent}}>{accuracy}%</div><div style={{fontSize:11,color:C.textSec}}>正确率</div></div>
+              <div style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:C.gold}}>{stats.bestStreak}</div><div style={{fontSize:11,color:C.textSec}}>最佳连对</div></div>
+            </div>
+            {ts && <div style={{background:"rgba(255,255,255,0.7)",borderRadius:10,padding:"10px 14px",textAlign:"left",fontSize:13,lineHeight:1.7}}>
+              <div>⚡ <strong>最快：</strong>{ts.fastest[0]} ({Math.round(ts.fastest[1].duration/1000)}s)</div>
+              <div>🐢 <strong>最慢：</strong>{ts.slowest[0]} ({Math.round(ts.slowest[1].duration/1000)}s)</div>
+              <div>📊 <strong>平均：</strong>{ts.avg}s/词</div>
+            </div>}
           </div>
-          {ts && <div style={{background:C.bg,borderRadius:10,padding:"14px 18px",marginBottom:16,textAlign:"left",fontSize:14,lineHeight:1.7}}>
-            <div>⚡ <strong>最快掌握：</strong>{ts.fastest[0]} ({Math.round(ts.fastest[1].duration/1000)}秒)</div>
-            <div>🐢 <strong>最耗时：</strong>{ts.slowest[0]} ({Math.round(ts.slowest[1].duration/1000)}秒)</div>
-            <div>📊 <strong>平均用时：</strong>{ts.avg}秒/词</div>
-          </div>}
+
           <div style={S.doneWords}>{wordList.map(w => <span key={w} style={S.doneTag} onClick={()=>speak(w)}>{w+" 🔊"}</span>)}</div>
 
           {!tipDismissed && <div style={{marginTop:20,padding:"16px 20px",background:C.goldLight,borderRadius:12,fontSize:14,lineHeight:1.7,textAlign:"center"}}>
@@ -3085,17 +3312,18 @@ export default function App() {
 
       {/* ── LOGIN MODAL ── */}
       {showLogin && (
-        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{ if(!loginLoading){setShowLogin(false);setLoginSent(false);setLoginEmail('');} }}>
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{ if(!loginLoading){setShowLogin(false);setLoginSent(false);setLoginEmail('');setOtpCode('');setOtpError('');} }}>
           <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
             {!loginSent ? (
               <>
                 <div style={{fontSize:36,textAlign:"center",marginBottom:8}}>🔑</div>
-                <h3 style={{fontSize:19,fontWeight:700,textAlign:"center",margin:"0 0 4px"}}>免费注册 / 登录</h3>
-                <p style={{fontSize:13,color:C.textSec,textAlign:"center",lineHeight:1.6,margin:"0 0 20px"}}>推广期免费 · 注册即可每日无限学习 &amp; 跨设备同步</p>
+                <h3 style={{fontSize:19,fontWeight:700,textAlign:"center",margin:"0 0 4px"}}>登录 / 注册</h3>
+                <p style={{fontSize:13,color:C.textSec,textAlign:"center",lineHeight:1.6,margin:"0 0 20px"}}>新用户输入邮箱即自动注册，老用户同一邮箱直接登录</p>
                 <div style={{background:C.tealLight,borderRadius:10,padding:"12px 14px",marginBottom:20,fontSize:13,lineHeight:1.9,color:C.text}}>
-                  ✅ 每日无限学习（免费版 {DAILY_LIMIT} 词/天）<br/>
-                  ☁️ 进度云端同步，换手机不丢<br/>
-                  📊 完整学习历史记录
+                  ✅ 每日无限学习（未登录用户 {DAILY_LIMIT} 词/天）<br/>
+                  ☁️ 进度云端同步，换设备不丢<br/>
+                  📊 完整学习历史记录<br/>
+                  <span style={{fontSize:12,color:C.textSec}}>推广期完全免费，无需付费</span>
                 </div>
                 <div style={{fontSize:13,fontWeight:600,marginBottom:6,color:C.text}}>邮箱地址</div>
                 <input
@@ -3106,7 +3334,7 @@ export default function App() {
                   style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:14,outline:"none",marginBottom:12,boxSizing:"border-box"}}
                 />
                 <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading?0.6:1}} onClick={handleLoginEmail} disabled={loginLoading||!loginEmail.trim()}>
-                  {loginLoading ? "发送中..." : "✉️ 发送登录链接"}
+                  {loginLoading ? "发送中..." : "✉️ 发送验证码"}
                 </button>
                 <div style={{fontSize:12,color:C.textSec,textAlign:"center",marginTop:12,lineHeight:1.6}}>
                   无需密码 · 点击邮件中的链接即可登录<br/>
@@ -3117,10 +3345,12 @@ export default function App() {
             ) : (
               <>
                 <div style={{fontSize:48,textAlign:"center",marginBottom:12}}>📬</div>
-                <h3 style={{fontSize:18,fontWeight:700,textAlign:"center",margin:"0 0 8px"}}>邮件已发送！</h3>
-                <p style={{fontSize:14,color:C.textSec,textAlign:"center",lineHeight:1.7,margin:"0 0 20px"}}>请检查 <strong>{loginEmail}</strong> 的收件箱，点击邮件中的登录链接即可完成登录。</p>
-                <div style={{background:C.goldLight,borderRadius:10,padding:"10px 14px",fontSize:13,color:C.textSec,marginBottom:16}}>没收到？请检查垃圾邮件文件夹，或稍等 1-2 分钟后重试。</div>
-                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={()=>{setShowLogin(false);setLoginSent(false);setLoginEmail('');}}>好的，关闭</button>
+                <h3 style={{fontSize:18,fontWeight:700,textAlign:"center",margin:"0 0 8px"}}>验证码已发送</h3>
+                <p style={{fontSize:14,color:C.textSec,textAlign:"center",lineHeight:1.7,margin:"0 0 16px"}}>已发送 6 位验证码到 <strong>{loginEmail}</strong><br/>请在下方输入验证码完成登录</p>
+                <input type="text" inputMode="numeric" maxLength={6} value={otpCode} onChange={function(e){ setOtpCode(e.target.value.replace(/[^0-9]/g,'')); setOtpError(''); }} onKeyDown={function(e){ if(e.key==='Enter') handleVerifyOtp(); }} placeholder="输入 6 位验证码" style={{width:"100%",padding:"14px 16px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:22,fontWeight:700,textAlign:"center",letterSpacing:"0.3em",outline:"none",marginBottom:8,boxSizing:"border-box"}} autoFocus />
+                {otpError && <div style={{fontSize:12,color:C.red,textAlign:"center",marginBottom:8}}>{otpError}</div>}
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading||otpCode.length<6?0.6:1}} onClick={handleVerifyOtp} disabled={loginLoading||otpCode.length<6}>{loginLoading ? "验证中..." : "✓ 验证登录"}</button>
+                <div style={{background:C.bg,borderRadius:10,padding:"10px 14px",fontSize:12,color:C.textSec,marginTop:12,lineHeight:1.6,textAlign:"center"}}>没收到？请检查垃圾邮件文件夹<br/><button style={{background:"transparent",border:"none",color:C.accent,fontFamily:FONT,fontSize:12,fontWeight:600,cursor:"pointer",padding:0,marginTop:4}} onClick={function(){setLoginSent(false);setOtpCode('');setOtpError('');}}>← 重新发送</button></div>
               </>
             )}
           </div>
@@ -3183,14 +3413,15 @@ export default function App() {
 
       {showConfetti && (
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"}}>
-          {Array.from({length:24}).map(function(_,i) {
-            var colors = [C.gold, C.accent, C.teal, C.purple, C.green, "#ff6b6b", "#ffd93d", "#6bcb77"];
+          {Array.from({length:40}).map(function(_,i) {
+            var colors = [C.gold, C.accent, C.teal, C.purple, C.green, "#ff6b6b", "#ffd93d", "#6bcb77", "#a78bfa", "#f472b6"];
             var col = colors[i % colors.length];
             var left = (Math.sin(i * 137.5 * Math.PI / 180) * 0.5 + 0.5) * 100;
-            var delay = (i % 8) * 0.12;
-            var dur = 1.8 + (i % 5) * 0.2;
-            var size = 8 + (i % 4) * 4;
-            return <div key={i} style={{position:"absolute",top:"-20px",left:left+"%",width:size,height:size,background:col,borderRadius:i%3===0?"50%":"2px",animation:"confettiFall "+dur+"s "+delay+"s ease-in forwards",transform:"rotate("+(i*53)+"deg)"}} />;
+            var delay = (i % 10) * 0.1;
+            var dur = 1.6 + (i % 6) * 0.25;
+            var size = 6 + (i % 5) * 4;
+            var shapes = ["50%", "2px", "0", "50% 0 50% 50%"];
+            return <div key={i} style={{position:"absolute",top:"-20px",left:left+"%",width:size,height:size*((i%3===2)?0.5:1),background:col,borderRadius:shapes[i%4],opacity:0.9,animation:"confettiFall "+dur+"s "+delay+"s ease-in forwards",transform:"rotate("+(i*53)+"deg)"}} />;
           })}
         </div>
       )}
@@ -3204,6 +3435,7 @@ export default function App() {
           <a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a>
           <button onClick={()=>setShowShare(true)} style={{ background:"transparent", border:"none", color:C.accent, fontFamily:FONT, fontSize:12, fontWeight:600, cursor:"pointer", padding:0 }}>🔗 推荐给朋友</button>
         </div>
+        <div style={{ marginTop:4, fontSize:11, color:C.border }}>VocabSpark v3.1</div>
       </div>
       <PrivacyNotice />
 
@@ -3224,10 +3456,16 @@ var globalCSS = [
   "@keyframes fillIn { from { opacity:0; transform:scale(1.15); } to { opacity:1; transform:scale(1); } }",
   "@keyframes glowPulse { 0%,100% { box-shadow:0 0 0 2px " + C.gold + ", 0 0 18px " + C.gold + "44; } 50% { box-shadow:0 0 0 3px " + C.gold + ", 0 0 28px " + C.gold + "77; } }",
   "@keyframes confettiFall { 0% { transform:translateY(0) rotate(0deg); opacity:1; } 100% { transform:translateY(105vh) rotate(720deg); opacity:0; } }",
-  "textarea:focus { border-color: " + C.accent + " !important; outline: none; }",
+  "textarea:focus, input:focus, select:focus { border-color: " + C.accent + " !important; outline: none; box-shadow: 0 0 0 2px " + C.accent + "22; }",
   "button:hover:not(:disabled) { filter: brightness(0.96); }",
+  "button:active:not(:disabled) { transform: scale(0.98); }",
+  "button { transition: transform 0.1s ease, filter 0.15s ease, box-shadow 0.15s ease; }",
   "button:disabled { opacity: 0.45; cursor: not-allowed !important; }",
-  "* { box-sizing: border-box; }"
+  "* { box-sizing: border-box; }",
+  "@media (max-width: 480px) { .vs-task-grid { grid-template-columns: 1fr !important; } }",
+  "@media (min-width: 768px) { .vs-desktop-container { max-width: 720px !important; padding-left: 24px !important; padding-right: 24px !important; } }",
+  "@media (min-width: 1024px) { .vs-desktop-container { max-width: 780px !important; } }",
+  "@keyframes skeletonPulse { 0% { opacity:0.4; } 50% { opacity:0.7; } 100% { opacity:0.4; } }"
 ].join("\n");
 
 var S = {

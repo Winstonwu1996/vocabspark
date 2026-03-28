@@ -11,6 +11,7 @@ export default async function handler(req, res) {
   try {
     var r = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
+      signal: AbortSignal.timeout(8000),
     });
     if (!r.ok) return res.status(502).json({ error: "tts upstream failed: " + r.status });
     var buf = await r.arrayBuffer();

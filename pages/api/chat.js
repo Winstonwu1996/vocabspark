@@ -43,6 +43,9 @@ const buildProviders = () => {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Soft pacing per provider to reduce burst spikes and smooth tail latency.
+// NOTE: This pacing is per-serverless-instance (in-memory). Vercel cold starts
+// create new instances with fresh state, so pacing does NOT coordinate across
+// concurrent users. The real rate-limit protection is callWithRetry's 429 handling.
 const providerPacing = {
   "deepseek-a": { nextAt: 0, gapMs: 180 },
   "deepseek-b": { nextAt: 0, gapMs: 180 },
