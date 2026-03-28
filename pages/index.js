@@ -44,7 +44,7 @@ var STUDY_GOAL_OPTIONS = [
   { key: "sat", label: "备考 SAT", desc: "SAT 高频核心词" },
   { key: "toefl", label: "备考 TOEFL", desc: "托福词汇与学术表达" },
   { key: "ielts", label: "备考 IELTS", desc: "雅思词汇与写作用词" },
-  { key: "other", label: "其他", desc: "自定义目标" },
+  { key: "other", label: "其他", desc: "有其他考试或学习目标" },
 ];
 
 var WORD_STATUS_KEY = "vocabspark_word_status_v1";
@@ -152,12 +152,16 @@ var sfx = {
 };
 
 /* ─── Prompt Builders ─── */
-var buildSys = (profile, goal) => {
+var buildSys = (profile, goal, goalCustom) => {
   var p = (profile || '').slice(0, PROFILE_MAX);
   var goalText = "";
   if (goal) {
-    var found = STUDY_GOAL_OPTIONS.find(function(o) { return o.key === goal; });
-    goalText = found ? "\n\n【学习目的】\n" + found.label + "（" + found.desc + "）\n请在教学中适当贴合该目标，例如选用与考试/阅读/写作相关的例句语境。" : "";
+    if (goal === "other" && goalCustom) {
+      goalText = "\n\n【学习目的】\n" + goalCustom.slice(0, 100) + "\n请在教学中适当贴合该目标，例如选用相关的例句语境。";
+    } else {
+      var found = STUDY_GOAL_OPTIONS.find(function(o) { return o.key === goal; });
+      goalText = found ? "\n\n【学习目的】\n" + found.label + "（" + found.desc + "）\n请在教学中适当贴合该目标，例如选用与考试/阅读/写作相关的例句语境。" : "";
+    }
   }
   return "你是一个幽默、有耐心且精通中英双语的词汇导师。风格像一个很酷的大姐姐——会用梗、会吐槽、偶尔抖机灵，但绝不油腻。\n\n【学生画像】\n" + p + goalText + "\n\n你必须深度利用上面的学生画像。每一个例句、每一个画面、每一个比喻，都必须和这个学生的具体爱好、常去的地方、日常生活紧密关联。让学生觉得\"这说的就是我的生活\"。";
 };
@@ -591,6 +595,7 @@ export default function App() {
   var [deepReviewDailyCap, setDeepReviewDailyCap] = useState(8);
   var [profile, setProfile] = useState("");
   var [studyGoal, setStudyGoal] = useState("");
+  var [studyGoalCustom, setStudyGoalCustom] = useState("");
   var [wordInput, setWordInput] = useState("");
   var [wordList, setWordList] = useState([]);
   var [fileLabel, setFileLabel] = useState("");
@@ -764,6 +769,7 @@ export default function App() {
         if (d?.settings?.deepReviewDailyCap) setDeepReviewDailyCap(d.settings.deepReviewDailyCap);
         if (d?.profile) { setProfile(d.profile); setProfileLocked(true); }
         if (d?.settings?.studyGoal) setStudyGoal(d.settings.studyGoal);
+        if (d?.settings?.studyGoalCustom) setStudyGoalCustom(d.settings.studyGoalCustom);
         if (d?.stats) setStats(function(s) { return {...s, ...(d.stats||{})}; });
         if (d?.profile) setShowWelcome(false);
         if (d?.tipDismissed) setTipDismissed(true);
@@ -1078,7 +1084,7 @@ export default function App() {
     return function() { subscription.unsubscribe(); };
   }, []);
 
-  var sysP = buildSys(profile, studyGoal);
+  var sysP = buildSys(profile, studyGoal, studyGoalCustom);
 
   var save = function(s, session) {
     setStats(s);
@@ -2601,14 +2607,27 @@ export default function App() {
               </button>;
             })}
           </div>
-          {studyGoal && (
+          {studyGoal === "other" && (
+            <div style={{marginBottom:14}}>
+              <div style={{fontSize:13,fontWeight:600,color:C.text,marginBottom:6}}>请输入你的学习目标：</div>
+              <input type="text" value={studyGoalCustom} onChange={function(e){ setStudyGoalCustom(e.target.value); }} placeholder="例如：备考 GRE、准备面试英语…" maxLength={100} style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:14,outline:"none",boxSizing:"border-box"}} />
+              <button style={{...S.tealBtn,marginTop:8,opacity:studyGoalCustom.trim()?1:0.5}} disabled={!studyGoalCustom.trim()} onClick={function(){
+                loadSave().then(function(d) {
+                  var nextData = {...(d||{}), settings: {...(d?.settings||{}), studyGoal: "other", studyGoalCustom: studyGoalCustom.trim()}};
+                  doSave(nextData);
+                  syncToCloud(nextData);
+                });
+              }}>💾 保存</button>
+            </div>
+          )}
+          {studyGoal && (studyGoal !== "other" || studyGoalCustom.trim()) && (
             <div style={{background:C.tealLight,border:"1px solid "+C.teal+"44",borderRadius:10,padding:"12px 14px",fontSize:13,color:C.teal,lineHeight:1.6}}>
-              ✅ 已设置目标：<strong>{STUDY_GOAL_OPTIONS.find(function(o){return o.key===studyGoal;})?.label}</strong>
+              ✅ 已设置目标：<strong>{studyGoal === "other" ? studyGoalCustom : STUDY_GOAL_OPTIONS.find(function(o){return o.key===studyGoal;})?.label}</strong>
               <br/><span style={{fontSize:12,color:C.textSec}}>AI 生成的教学内容会贴合此目标。随时可以更改。</span>
             </div>
           )}
           {!studyGoal && (
-            <div style={{fontSize:12,color:C.textSec,lineHeight:1.6}}>💡 选择一个最接近的目标即可，不确定就选"兴趣驱动"。设置后 AI 会在例句和教学中适当偏向该目标场景。</div>
+            <div style={{fontSize:12,color:C.textSec,lineHeight:1.6}}>💡 选择一个最接近的考试目标即可。设置后 AI 会在例句和教学中适当偏向该目标场景。</div>
           )}
         </div>
       )}
