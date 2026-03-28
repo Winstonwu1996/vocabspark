@@ -9,13 +9,13 @@ import * as XLSX from 'xlsx';
    ═══════════════════════════════════════════════════════ */
 
 var C = {
-  bg: "#faf7f2", card: "#ffffff", accent: "#d45d3c", accentLight: "#fef0ec",
-  teal: "#2a7a6e", tealLight: "#e8f5f2",
-  purple: "#6c5ce7", purpleLight: "#f0edff", gold: "#e6a817", goldLight: "#fef9e7",
-  text: "#2c2420", textSec: "#7a6e64", border: "#e8e0d6",
+  bg: "#f7f6f3", card: "#ffffff", accent: "#c46b30", accentLight: "#fdf1e8",
+  teal: "#4a6d8c", tealLight: "#f0f4f7",
+  purple: "#6c5ce7", purpleLight: "#f0edff", gold: "#c8922e", goldLight: "#fdf6ea",
+  text: "#2c2e33", textSec: "#6b7280", border: "#e5e2dd",
   green: "#22a06b", greenLight: "#e6fcf5", red: "#e53e3e", redLight: "#fef2f2",
   dark: "#161b22", darkPanel: "#1c2333", darkBorder: "#30363d", darkGreen: "#3fb950", darkBlue: "#2f81f7",
-  shadow: "0 2px 12px rgba(44,36,32,0.06)",
+  shadow: "0 2px 12px rgba(44,36,32,0.10)",
 };
 var FONT = "'DM Sans','Noto Sans SC',sans-serif";
 var DAILY_LIMIT = 10;
@@ -335,10 +335,10 @@ var BrandNavBar = ({ stats, studyStreak }) => {
   var hasStats = stats && stats.xp > 0;
   var hasStreak = studyStreak && studyStreak.streak > 0;
   return (
-  <div style={{ borderBottom:"1px solid "+C.border, background:C.card, marginBottom:0 }}>
+  <div style={{ background:C.card, marginBottom:0, borderRadius:"0 0 16px 16px", boxShadow:"0 4px 16px rgba(44,36,32,0.08)" }}>
     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px" }}>
       <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-        <BrandUIcon size={28} />
+        <BrandUIcon size={38} />
         <div>
           <div style={{ fontSize:15, letterSpacing:"-0.02em", lineHeight:1.1 }}><span style={{ fontWeight:800, color:C.text, textShadow:"0 1px 2px rgba(44,36,32,0.15)" }}>Know U.</span><span style={{ fontWeight:500, color:C.textSec, marginLeft:4, textShadow:"0 1px 1px rgba(44,36,32,0.08)" }}>Learning</span></div>
           <div style={{ fontSize:10, color:C.textSec, opacity:0.7, letterSpacing:"0.02em", marginTop:1 }}>Personal AI Language Tutor</div>
@@ -346,7 +346,7 @@ var BrandNavBar = ({ stats, studyStreak }) => {
       </div>
       <div style={{ display:"flex", alignItems:"center", gap:14, fontSize:13 }}>
         <span style={{ fontWeight:700, color:C.accent, borderBottom:"2px solid "+C.accent, paddingBottom:2 }}>Vocab</span>
-        <span style={{ color:C.textSec, fontSize:12, opacity:0.6 }}>Writing <sup style={{fontSize:9,fontWeight:600,color:C.teal}}>Soon</sup></span>
+        <span style={{ color:C.textSec, fontSize:12 }}>Writing <span style={{fontSize:9,fontWeight:700,color:"#fff",background:C.teal,borderRadius:4,padding:"1px 5px",marginLeft:2,verticalAlign:"middle"}}>Soon</span></span>
       </div>
     </div>
     {(hasStats || hasStreak) && (
@@ -2911,18 +2911,17 @@ export default function App() {
         }
       })()}
 
-      {(() => { var _hasWords = parseWordsFromInput(wordInput).length > 0; return <div style={{...S.card, marginBottom:14, borderColor:C.teal, background:C.tealLight}}>
-        <div style={{fontWeight:800,fontSize:15,marginBottom:8,color:C.teal,display:"flex",justifyContent:"space-between"}}>
-          <span>🏠 今日任务</span>
+      {(() => { var _hasWords = parseWordsFromInput(wordInput).length > 0; return <div style={{...S.card, marginBottom:14, borderColor:C.border, background:"#f3f2ef", borderLeft:"3px solid "+C.accent}}>
+        <div style={{fontWeight:800,fontSize:15,marginBottom:8,color:C.accent,display:"flex",justifyContent:"space-between"}}>
+          <span>⚡ 今日任务</span>
           {_hasWords && <span style={{fontSize:12,fontWeight:600}}>总计：约 {dailyPlan.totalMin} 分钟</span>}
         </div>
 
         {!_hasWords ? (
           <>
             <div style={{background:C.card,border:"1px dashed "+C.teal,borderRadius:10,padding:"20px 16px",textAlign:"center"}}>
-              <div style={{fontSize:28,marginBottom:8}}>📚</div>
-              <div style={{fontWeight:700,fontSize:15,color:C.text,marginBottom:6}}>导入你的第一个词表，开始学习吧！</div>
-              <div style={{fontSize:13,color:C.textSec,marginBottom:14,lineHeight:1.6}}>在「词汇表」页签中粘贴单词（每行一个），AI 会为你量身定制学习内容。</div>
+              <img src="/ai-illustration.png" alt="" style={{width:"60%",maxWidth:168,margin:"12px auto 16px",display:"block",opacity:0.9}} />
+              <div style={{fontWeight:700,fontSize:15,color:C.text,marginBottom:10}}>导入你的第一个词表，开始学习吧！</div>
               <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none",padding:"8px 20px",fontSize:14,fontWeight:600}} onClick={function(){ setSetupTab("words"); setTimeout(function(){ var el = document.getElementById("vocabspark-profile-section"); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }, 120); }}>前往词汇表 →</button>
             </div>
             <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"16px",marginTop:10}}>
@@ -4242,7 +4241,7 @@ var S = {
   heroStatPillGreen:{padding:"7px 14px",background:C.greenLight,borderRadius:999,fontSize:13,fontWeight:700,color:C.green,border:"1px solid rgba(34,160,107,0.28)",fontFamily:FONT},
   tabBar:{display:"flex",marginBottom:0,background:C.card,borderRadius:"12px 12px 0 0",border:"1px solid "+C.border,borderBottom:"none",overflow:"hidden"},
   tab:{flex:1,padding:"13px 4px",background:"transparent",border:"none",borderBottom:"2px solid transparent",fontFamily:FONT,fontSize:13,fontWeight:600,color:C.textSec,cursor:"pointer",textAlign:"center",whiteSpace:"nowrap"},
-  tabActive:{flex:1,padding:"13px 4px",background:"transparent",border:"none",borderBottom:"2px solid "+C.accent,fontFamily:FONT,fontSize:13,fontWeight:600,color:C.accent,cursor:"pointer",textAlign:"center",whiteSpace:"nowrap"},
+  tabActive:{flex:1,padding:"13px 4px",background:C.accentLight,border:"none",borderBottom:"2px solid "+C.accent,fontFamily:FONT,fontSize:13,fontWeight:600,color:C.accent,cursor:"pointer",textAlign:"center",whiteSpace:"nowrap"},
   setupCard:{background:C.card,borderRadius:"0 0 12px 12px",border:"1px solid "+C.border,padding:"18px 20px",marginBottom:14,boxShadow:C.shadow},
   setupHint:{fontSize:13,color:C.textSec,marginBottom:14,lineHeight:1.6},
   profilePrev:{background:C.bg,borderRadius:8,padding:"12px 14px",fontSize:13,lineHeight:1.7,color:C.textSec,marginBottom:10},
