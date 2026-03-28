@@ -21,6 +21,7 @@ var DAILY_LIMIT = 10;
 var DAILY_KEY = 'vocabspark_daily';
 var DAILY_NEW_QUOTA_KEY = 'vocabspark_daily_new_quota_v1';
 var DEEP_REVIEW_DAILY_KEY = 'vocabspark_deep_review_daily_v1';
+var STUDY_STREAK_KEY = 'vocabspark_study_streak_v1';
 var PHOTO_LIMIT = 5;
 var PROFILE_MAX = 1000;
 var PROFILE_TEXTAREA_PLACEHOLDER =
@@ -55,6 +56,7 @@ var WORD_STATUS_META = {
   mastered: { icon: "🟢", text: "已掌握", color: "#22a06b" },
   uncertain: { icon: "🟡", text: "不确定", color: "#e6a817" },
   error: { icon: "🔴", text: "易错", color: "#e53e3e" },
+  skipped: { icon: "⏭️", text: "已跳过", color: "#94a3b8" },
 };
 
 /** 缩小边长并转 JPEG base64，避免请求体过大（Next 默认 1MB）及加速上传 */
@@ -343,7 +345,7 @@ var BrandSparkIcon = ({ size, marginBottom }) => {
   );
 };
 
-var AppHeroHeader = ({ stats }) => {
+var AppHeroHeader = ({ stats, studyStreak }) => {
   var pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
   var hasStats = stats.xp > 0;
   return (
@@ -360,11 +362,11 @@ var AppHeroHeader = ({ stats }) => {
           </div>
         </div>
       </div>
-      {hasStats && (
+      {(hasStats || (studyStreak && studyStreak.streak > 0)) && (
         <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:12 }}>
-          <span style={{...S.heroStatPillGold, padding:"5px 12px", fontSize:12}}>{"⚡ " + stats.xp + " XP"}</span>
-          <span style={{...S.heroStatPillAccent, padding:"5px 12px", fontSize:12}}>{"🔥 连对 " + stats.bestStreak}</span>
-          <span style={{...S.heroStatPillGreen, padding:"5px 12px", fontSize:12}}>{"✅ 正确率 " + pct + "%"}</span>
+          {hasStats && <span style={{...S.heroStatPillGold, padding:"5px 12px", fontSize:12}}>{"⚡ " + stats.xp + " XP"}</span>}
+          {studyStreak && studyStreak.streak > 0 && <span style={{...S.heroStatPillAccent, padding:"5px 12px", fontSize:12}}>{"🔥 连续 " + studyStreak.streak + " 天" + (studyStreak.todayDone ? " ✓" : "")}</span>}
+          {hasStats && <span style={{...S.heroStatPillGreen, padding:"5px 12px", fontSize:12}}>{"✅ 正确率 " + pct + "%"}</span>}
         </div>
       )}
     </div>
@@ -892,6 +894,60 @@ export default function App() {
     return next;
   };
 
+  // ── Study Streak (consecutive days) helpers ──
+  var getStudyStreak = function() {
+    try {
+      var stored = JSON.parse(localStorage.getItem(STUDY_STREAK_KEY) || '{}');
+      // { lastDate: "2026-03-27", streak: 5, todayDone: true }
+      var today = getLocalDateKey();
+      if (!stored.lastDate) return { streak: 0, todayDone: false };
+      if (stored.lastDate === today) return { streak: stored.streak || 0, todayDone: !!stored.todayDone };
+      // Check if yesterday
+      var last = new Date(stored.lastDate + "T12:00:00");
+      var now = new Date(today + "T12:00:00");
+      var diffDays = Math.round((now - last) / 86400000);
+      if (diffDays === 1) return { streak: stored.streak || 0, todayDone: false }; // streak continues, today not yet done
+      return { streak: 0, todayDone: false }; // streak broken
+    } catch (e) { return { streak: 0, todayDone: false }; }
+  };
+
+  var markStudyStreakToday = function() {
+    try {
+      var today = getLocalDateKey();
+      var current = getStudyStreak();
+      if (current.todayDone) return current; // already marked today
+      var newStreak = current.streak + 1;
+      var next = { lastDate: today, streak: newStreak, todayDone: true };
+      localStorage.setItem(STUDY_STREAK_KEY, JSON.stringify(next));
+      return { streak: newStreak, todayDone: true };
+    } catch (e) { return { streak: 0, todayDone: false }; }
+  };
+
+  var STREAK_MILESTONES = {
+    1: { emoji: "🌱", msg: "第一天，好的开始！" },
+    3: { emoji: "🌿", msg: "连续 3 天！习惯正在养成" },
+    5: { emoji: "🌳", msg: "连续 5 天！了不起的坚持" },
+    7: { emoji: "🔥", msg: "整整一周！你太棒了" },
+    14: { emoji: "⭐", msg: "连续两周！学霸气质拉满" },
+    21: { emoji: "🏆", msg: "21 天习惯养成！" },
+    30: { emoji: "💎", msg: "连续一个月！传奇级坚持" },
+    50: { emoji: "👑", msg: "50 天！无人能挡" },
+    100: { emoji: "🏅", msg: "100 天！你是传说" },
+  };
+
+  var getStreakDisplay = function(days) {
+    if (days <= 0) return null;
+    // Find the highest milestone <= days
+    var milestones = [100,50,30,21,14,7,5,3,1];
+    for (var i = 0; i < milestones.length; i++) {
+      if (days >= milestones[i]) {
+        var m = STREAK_MILESTONES[milestones[i]];
+        return { emoji: m.emoji, msg: m.msg, days: days };
+      }
+    }
+    return { emoji: "🌱", msg: "继续加油！", days: days };
+  };
+
   // ── Cloud sync helpers ──
   var syncToCloud = async function(data) {
     var u = userRef.current;
@@ -969,6 +1025,7 @@ export default function App() {
         localStorage.removeItem(DAILY_KEY);
         localStorage.removeItem(DAILY_NEW_QUOTA_KEY);
         localStorage.removeItem(DEEP_REVIEW_DAILY_KEY);
+        localStorage.removeItem(STUDY_STREAK_KEY);
       }
     } catch (e) {}
     
@@ -1538,10 +1595,15 @@ export default function App() {
       if (unlearned.length === 0) unlearned = rawWords;
       var remainingQuota = getRemainingNewWordQuota();
       if (remainingQuota <= 0) {
-        setError("📘 今日新词配额已完成，先做复习任务或明天继续。");
-        return;
+        // 不硬挡，而是弹确认框让用户决定是否超额学习
+        if (!confirm("🎉 今日 " + (dailyNewWords||20) + " 个新词目标已完成！\n\n想继续超额学习吗？点「确定」继续。")) {
+          return;
+        }
+        // 超额模式：再给一批词
+        words = unlearned.slice(0, dailyNewWords || 20);
+      } else {
+        words = unlearned.slice(0, Math.min(dailyNewWords || 20, remainingQuota));
       }
-      words = unlearned.slice(0, Math.min(dailyNewWords || 20, remainingQuota));
     }
     
     var startLearned = startIdx > 0 ? words.slice(0, startIdx) : [];
@@ -1559,32 +1621,22 @@ export default function App() {
       setScreeningDef(screeningDefCache.current[word]);
       return;
     }
-    setScreeningDef({ zh: "", en: "", phonetic: "", loading: true });
-    // Parallel: Chinese translation + English definition
-    var zhPromise = fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(word) + "&langpair=en|zh-CN")
-      .then(function(r) { return r.json(); })
-      .then(function(data) { return data?.responseData?.translatedText || ""; })
-      .catch(function() { return ""; });
-    var enPromise = fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(word))
+    setScreeningDef({ zh: "", loading: true });
+    // Chinese translation only (faster for screening)
+    fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(word) + "&langpair=en|zh-CN")
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        var entry = data?.[0];
-        var phonetic = entry?.phonetic || entry?.phonetics?.find(function(p) { return p.text; })?.text || "";
-        var firstMeaning = entry?.meanings?.[0];
-        var pos = firstMeaning?.partOfSpeech || "";
-        var def = firstMeaning?.definitions?.[0]?.definition || "";
-        return { phonetic: phonetic, en: (pos ? pos + ": " : "") + def };
+        var zh = data?.responseData?.translatedText || "";
+        var cleanZh = (zh && zh.toLowerCase() !== word.toLowerCase()) ? zh : "";
+        var result = { zh: cleanZh, loading: false };
+        screeningDefCache.current[word] = result;
+        setScreeningDef(result);
       })
-      .catch(function() { return { phonetic: "", en: "" }; });
-    Promise.all([zhPromise, enPromise]).then(function(results) {
-      var zh = results[0];
-      var enData = results[1];
-      // Clean up: if zh is same as input word (translation failed), ignore it
-      var cleanZh = (zh && zh.toLowerCase() !== word.toLowerCase()) ? zh : "";
-      var result = { zh: cleanZh, en: enData.en, phonetic: enData.phonetic, loading: false };
-      screeningDefCache.current[word] = result;
-      setScreeningDef(result);
-    });
+      .catch(function() {
+        var result = { zh: "", loading: false };
+        screeningDefCache.current[word] = result;
+        setScreeningDef(result);
+      });
   };
 
   // Pre-fetch next words for smoother screening
@@ -1593,21 +1645,13 @@ export default function App() {
       var w = words[i];
       if (!screeningDefCache.current[w]) {
         (function(word) {
-          var zhP = fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(word) + "&langpair=en|zh-CN")
-            .then(function(r) { return r.json(); })
-            .then(function(d) { return d?.responseData?.translatedText || ""; })
-            .catch(function() { return ""; });
-          var enP = fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(word))
+          fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(word) + "&langpair=en|zh-CN")
             .then(function(r) { return r.json(); })
             .then(function(d) {
-              var e = d?.[0]; var p = e?.phonetic || ""; var m = e?.meanings?.[0];
-              return { phonetic: p, en: (m?.partOfSpeech ? m.partOfSpeech + ": " : "") + (m?.definitions?.[0]?.definition || "") };
+              var zh = d?.responseData?.translatedText || "";
+              screeningDefCache.current[word] = { zh: (zh && zh.toLowerCase() !== word.toLowerCase()) ? zh : "", loading: false };
             })
-            .catch(function() { return { phonetic: "", en: "" }; });
-          Promise.all([zhP, enP]).then(function(r) {
-            var zh = r[0]; var en = r[1];
-            screeningDefCache.current[word] = { zh: (zh && zh.toLowerCase() !== word.toLowerCase()) ? zh : "", en: en.en, phonetic: en.phonetic, loading: false };
-          });
+            .catch(function() { screeningDefCache.current[word] = { zh: "", loading: false }; });
         })(w);
       }
     }
@@ -1629,10 +1673,9 @@ export default function App() {
   var screeningMarkWord = function(known) {
     var word = screeningWords[screeningIdx];
     if (known) {
-      var next = { ...(wordStatusMap || {}), [word]: "mastered" };
+      var next = { ...(wordStatusMap || {}), [word]: "skipped" };
       setWordStatusMap(next);
       try { localStorage.setItem(WORD_STATUS_KEY, JSON.stringify(next)); } catch(e) {}
-      upsertReviewWordData(word, { reviewLevel: 99, nextReviewDate: null, screenedOut: true });
     }
     var newUnknown = known ? screeningStats.unknown : screeningStats.unknown + 1;
     var quota = dailyNewWords || 20;
@@ -1892,7 +1935,7 @@ export default function App() {
 
     var toReview = words.filter(function(w, i) {
       var s = getWordStatus(w, i, words);
-      if (s === "unlearned") return false;
+      if (s === "unlearned" || s === "skipped") return false;
       var d = reviewWordData[w] || {};
       return isDueDate(d.nextReviewDate);
     });
@@ -1972,40 +2015,48 @@ export default function App() {
   var getStudyPlanPrediction = function() {
     var words = parseWordsFromInput(wordInput);
     var totalWords = words.length;
-    var learnedCount = words.filter(function(w, i) {
-      return getWordStatus(w, i, words) !== "unlearned";
-    }).length;
+    var skippedCount = 0;
+    var learnedCount = 0; // actually learned via AI (not skipped)
+    var unlearnedCount = 0;
+    words.forEach(function(w, i) {
+      var s = getWordStatus(w, i, words);
+      if (s === "skipped") skippedCount++;
+      else if (s === "unlearned") unlearnedCount++;
+      else learnedCount++;
+    });
     var dueCount = words.filter(function(w, i) {
       var s = getWordStatus(w, i, words);
-      if (s === "unlearned") return false;
+      if (s === "unlearned" || s === "skipped") return false;
       var d = reviewWordData[w] || {};
       return d.nextReviewDate && isDueDate(d.nextReviewDate);
     }).length;
 
-    var daysLeft = null;
-    if (targetDate) {
-      var td = new Date(targetDate + "T23:59:59");
-      if (!Number.isNaN(td.getTime())) {
-        daysLeft = Math.ceil((td.getTime() - Date.now()) / 86400000);
-      }
-    }
-
-    var remainingWords = Math.max(0, totalWords - learnedCount);
-    var safeDays = daysLeft && daysLeft > 0 ? daysLeft : null;
-    var recommendedNewPerDay = safeDays ? Math.max(1, Math.ceil(remainingWords / safeDays)) : (dailyNewWords || 20);
     var deepUsedToday = getDeepReviewDailyState().count || 0;
     var deepLeftToday = Math.max(0, (deepReviewDailyCap || 8) - deepUsedToday);
+
+    // Prediction: use screening pass rate to estimate how many unscreened words need learning
+    var screenedTotal = skippedCount + learnedCount; // words that have been through some process
+    // Use screening stats if available (from current session), otherwise use wordStatusMap ratio
+    var allSkipped = words.filter(function(w) { return wordStatusMap[w] === "skipped"; }).length;
+    var allProcessed = words.filter(function(w) { return wordStatusMap[w] && wordStatusMap[w] !== "unlearned"; }).length;
+    var unknownRate = allProcessed > 0 ? Math.max(0, 1 - (allSkipped / allProcessed)) : 1;
+    var predictedNeedLearn = unlearnedCount > 0 && allSkipped > 0
+      ? Math.round(unlearnedCount * unknownRate)
+      : unlearnedCount;
+    var totalNeedLearn = learnedCount > 0 ? (unlearnedCount) : predictedNeedLearn; // if no AI learning yet, show prediction
+    var waitingForAI = unlearnedCount; // actual unlearned count
 
     return {
       totalWords: totalWords,
       learnedCount: learnedCount,
-      remainingWords: remainingWords,
+      skippedCount: skippedCount,
+      unlearnedCount: unlearnedCount,
       dueCount: dueCount,
-      daysLeft: daysLeft,
-      recommendedNewPerDay: recommendedNewPerDay,
       deepUsedToday: deepUsedToday,
       deepLeftToday: deepLeftToday,
-      targetDateSet: !!targetDate,
+      unknownRate: unknownRate,
+      predictedNeedLearn: predictedNeedLearn,
+      waitingForAI: waitingForAI,
     };
   };
 
@@ -2147,7 +2198,7 @@ export default function App() {
 
     var dueCount = words.filter(function(w, i) {
       var s = getWordStatus(w, i, words);
-      if (s === "unlearned") return false;
+      if (s === "unlearned" || s === "skipped") return false;
       var d = reviewWordData[w] || {};
       return d.nextReviewDate && isDueDate(d.nextReviewDate);
     }).length;
@@ -2173,9 +2224,9 @@ export default function App() {
     var queue = words
       .filter(function(w, i) {
         var s = getWordStatus(w, i, words);
-        if (s === "unlearned") return false;
+        if (s === "unlearned" || s === "skipped") return false;
         var d = reviewWordData[w] || {};
-        if (d.screenedOut) return false; // screened as "already known", skip review
+        // skipped words already filtered above by status check
         if (mode === "due") return isDueDate(d.nextReviewDate);
         if (mode === "focus") return s === "uncertain" || s === "error";
         return true;
@@ -2366,11 +2417,29 @@ export default function App() {
         <div style={S.topBar}>
           <button style={S.backBtn} onClick={function(){ if (scDone > 0 && !confirm("已筛选 " + scDone + " 个词，确定退出？进度会保留。")) return; setScreen("screening_done"); }}>←</button>
           <div style={{fontSize:13,color:C.textSec}}>快筛 {screeningIdx+1}/{scTotal}</div>
-          <div style={{fontSize:12,color:C.teal,fontWeight:600}}>✅{screeningStats.known} ❌{screeningStats.unknown}</div>
+          <div style={{fontSize:12,color:C.teal,fontWeight:600}}>⏭️{screeningStats.known} ❌{screeningStats.unknown}</div>
         </div>
-        <div style={{height:4,background:C.border,borderRadius:2,marginBottom:20,overflow:"hidden"}}>
+        <div style={{height:4,background:C.border,borderRadius:2,marginBottom:8,overflow:"hidden"}}>
           <div style={{height:"100%",width:scPct+"%",background:"linear-gradient(90deg,"+C.teal+","+C.green+")",borderRadius:2,transition:"width 0.3s ease"}} />
         </div>
+        {/* 实时待学习提示条 */}
+        {(() => {
+          var _quota = dailyNewWords || 20;
+          var _unk = screeningStats.unknown;
+          var _hasGoal = !!dailyNewWords;
+          var _reachedGoal = _unk >= _quota;
+          var _nearGoal = _unk >= _quota - 3 && _unk < _quota;
+          return <div style={{background:_reachedGoal ? C.accentLight : _nearGoal ? C.goldLight : C.tealLight, border:"1px solid " + (_reachedGoal ? C.accent+"44" : _nearGoal ? C.gold+"44" : C.teal+"44"), borderRadius:8, padding:"6px 12px", marginBottom:12, fontSize:12, color:_reachedGoal ? C.accent : C.text, display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+            <span>
+              {_hasGoal
+                ? (_reachedGoal
+                    ? "🎯 已筛出 " + _unk + " 个待学词，达到今日目标！"
+                    : "📝 待学习：" + _unk + " / " + _quota + "（今日目标）")
+                : "📝 已筛出 " + _unk + " 个待学习的词"}
+            </span>
+            {_unk > 0 && <button onClick={function(){ setScreen("screening_done"); }} style={{background:"none",border:"none",color:_reachedGoal ? C.accent : C.teal,fontFamily:FONT,fontSize:12,fontWeight:700,cursor:"pointer",padding:"2px 6px",whiteSpace:"nowrap"}}>开始学习 →</button>}
+          </div>;
+        })()}
         <div style={{...S.card, textAlign:"center", padding:"36px 24px"}}>
           {!screeningFlipped ? (
             <>
@@ -2382,16 +2451,14 @@ export default function App() {
             </>
           ) : (
             <>
-              <h2 style={{fontSize:32,margin:"0 0 4px",letterSpacing:1,color:C.text}}>{scWord}</h2>
-              {screeningDef?.phonetic && <div style={{fontSize:14,color:C.textSec,marginBottom:10}}>{screeningDef.phonetic}</div>}
+              <h2 style={{fontSize:32,margin:"0 0 8px",letterSpacing:1,color:C.text}}>{scWord}</h2>
               <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"14px 16px",marginBottom:20,textAlign:"center",minHeight:50}}>
                 {screeningDef?.loading ? (
                   <div style={{color:C.textSec,fontSize:13}}>加载释义中...</div>
                 ) : (
                   <>
-                    {screeningDef?.zh && <div style={{fontSize:20,fontWeight:700,color:C.text,marginBottom:screeningDef?.en ? 6 : 0}}>{screeningDef.zh}</div>}
-                    {screeningDef?.en && <div style={{fontSize:12,color:C.textSec,lineHeight:1.5}}>{screeningDef.en}</div>}
-                    {!screeningDef?.zh && !screeningDef?.en && <div style={{fontSize:14,color:C.textSec}}>暂无释义，请根据自己的判断标记</div>}
+                    {screeningDef?.zh && <div style={{fontSize:20,fontWeight:700,color:C.text}}>{screeningDef.zh}</div>}
+                    {!screeningDef?.zh && <div style={{fontSize:14,color:C.textSec}}>暂无释义，请根据自己的判断标记</div>}
                   </>
                 )}
               </div>
@@ -2403,7 +2470,7 @@ export default function App() {
             </>
           )}
         </div>
-        {scDone > 10 && (
+        {screeningStats.unknown > 0 && scDone >= 5 && (
           <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",marginTop:16,background:C.teal}} onClick={function(){ setScreen("screening_done"); }}>⏩ 够了，开始学习不认识的词</button>
         )}
       </div></div>
@@ -2423,7 +2490,7 @@ export default function App() {
             正好是你设定的每日精读数量。
           </div>
           <div style={{background:C.tealLight,border:"1px solid "+C.teal+"44",borderRadius:10,padding:"14px",fontSize:13,color:C.teal,lineHeight:1.6,marginBottom:20,textAlign:"left"}}>
-            ✅ 已认识 <strong>{screeningStats.known}</strong> 个（标为已掌握，不再出现）<br/>
+            ✅ 已认识 <strong>{screeningStats.known}</strong> 个（已跳过，不再出现）<br/>
             ❌ 不认识 <strong>{screeningStats.unknown}</strong> 个（等待 AI 精读）<br/>
             📋 未筛选 <strong>{_sqRemaining}</strong> 个（下次继续）
           </div>
@@ -2470,7 +2537,7 @@ export default function App() {
           </div>
           {scKnown > 0 && (
             <div style={{background:C.tealLight,border:"1px solid "+C.teal+"44",borderRadius:10,padding:"12px 14px",fontSize:13,color:C.teal,lineHeight:1.6,marginBottom:16,textAlign:"left"}}>
-              ✅ <strong>{scKnown}</strong> 个已认识的词已标为「已掌握」，不会出现在学习和复习中。
+              ✅ <strong>{scKnown}</strong> 个已认识的词已标为「已跳过」，不会出现在学习和复习中。
             </div>
           )}
           <div style={{fontSize:14,color:C.text,marginBottom:20,lineHeight:1.7}}>
@@ -2669,7 +2736,33 @@ export default function App() {
         </div>
       )}
 
-      <AppHeroHeader stats={stats} />
+      <AppHeroHeader stats={stats} studyStreak={getStudyStreak()} />
+
+      {/* 连续学习激励条 */}
+      {(() => {
+        var _sk = getStudyStreak();
+        var _disp = getStreakDisplay(_sk.streak);
+        if (!_disp) return null;
+        if (_sk.todayDone) {
+          // 今天已完成，显示鼓励
+          return <div style={{background:"linear-gradient(135deg, "+C.goldLight+" 0%, "+C.greenLight+" 100%)",border:"1px solid "+C.green+"44",borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:24}}>{_disp.emoji}</span>
+            <div>
+              <div style={{fontSize:13,fontWeight:700,color:C.green}}>✅ 今日目标已完成！连续 {_disp.days} 天</div>
+              <div style={{fontSize:11,color:C.textSec}}>{_disp.msg}  还想学可以继续~</div>
+            </div>
+          </div>;
+        } else {
+          // 今天还没完成，提醒保持连续
+          return <div style={{background:"linear-gradient(135deg, "+C.goldLight+" 0%, "+C.accentLight+" 100%)",border:"1px solid "+C.gold+"44",borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:24}}>🔥</span>
+            <div>
+              <div style={{fontSize:13,fontWeight:700,color:C.accent}}>已连续 {_disp.days} 天，别断了！</div>
+              <div style={{fontSize:11,color:C.textSec}}>今天还没完成学习，完成后连续天数 +1</div>
+            </div>
+          </div>;
+        }
+      })()}
 
       {(() => { var _hasWords = parseWordsFromInput(wordInput).length > 0; return <div style={{...S.card, marginBottom:14, borderColor:C.teal, background:C.tealLight}}>
         <div style={{fontWeight:800,fontSize:15,marginBottom:8,color:C.teal,display:"flex",justifyContent:"space-between"}}>
@@ -2876,27 +2969,31 @@ export default function App() {
       )}
       {setupTab === "plan" && (() => {
         var planView = getStudyPlanPrediction();
-        var _estDays = planView.remainingWords > 0 ? Math.ceil(planView.remainingWords / (dailyNewWords || 20)) : 0;
+        var _needLearn = planView.predictedNeedLearn + (planView.learnedCount > 0 ? 0 : 0);
+        var _totalToStudy = planView.learnedCount + planView.predictedNeedLearn;
+        var _estDays = _totalToStudy > planView.learnedCount ? Math.ceil((_totalToStudy - planView.learnedCount) / (dailyNewWords || 20)) : 0;
         var _estDate = _estDays > 0 ? new Date(Date.now() + _estDays * 86400000) : null;
         var _estDateStr = _estDate ? (_estDate.getMonth()+1) + " 月 " + _estDate.getDate() + " 日" : null;
-        var _targetTooTight = planView.daysLeft != null && planView.daysLeft > 0 && planView.recommendedNewPerDay > (dailyNewWords || 20);
+        var _hasScreeningData = planView.skippedCount > 0;
+        var _unknownPct = Math.round(planView.unknownRate * 100);
         return <div style={S.setupCard}>
           <div style={S.setupHint}>控制每天的学习节奏，系统会自动安排任务。</div>
 
           {/* 词库概览 */}
-          {(() => {
-            var _screenedCount = Object.values(reviewWordData).filter(function(d) { return d.screenedOut; }).length;
-            return <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",fontSize:13,lineHeight:1.8,marginBottom:14}}>
-              <div>📚 词库：<strong>{planView.totalWords}</strong> 个词（已学 {planView.learnedCount}，剩余 <strong>{planView.remainingWords}</strong>）</div>
-              {_screenedCount > 0 && <div>🃏 快筛已跳过：<strong>{_screenedCount}</strong> 个（标为已掌握）</div>}
-              <div>📅 今日到期复习：<strong>{planView.dueCount}</strong> 个</div>
-              {planView.remainingWords > 50 && (
-                <div style={{marginTop:6}}>
-                  <button style={{background:C.teal,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:FONT}} onClick={function(){ startScreening(); }}>🃏 用快筛过滤已认识的词 →</button>
-                </div>
-              )}
-            </div>;
-          })()}
+          <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",fontSize:13,lineHeight:1.8,marginBottom:14}}>
+            <div>📚 词库：<strong>{planView.totalWords}</strong> 个词</div>
+            {planView.learnedCount > 0 && <div>📖 已通过 AI 学习：<strong>{planView.learnedCount}</strong> 个</div>}
+            {planView.skippedCount > 0 && <div>⏭️ 快筛已跳过：<strong>{planView.skippedCount}</strong> 个（不参与学习和复习）</div>}
+            <div>📝 待学习：<strong>{planView.unlearnedCount}</strong> 个
+              {_hasScreeningData && planView.unlearnedCount > 0 && <span style={{color:C.textSec}}>（预估其中约 <strong style={{color:C.accent}}>{planView.predictedNeedLearn}</strong> 个需要学习，基于 {_unknownPct}% 不认识率）</span>}
+            </div>
+            <div>📅 今日到期复习：<strong>{planView.dueCount}</strong> 个</div>
+            {planView.unlearnedCount > 50 && (
+              <div style={{marginTop:6}}>
+                <button style={{background:C.teal,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:FONT}} onClick={function(){ startScreening(); }}>🃏 用快筛过滤已认识的词 →</button>
+              </div>
+            )}
+          </div>
 
           {/* 每日精读数 — 主控 */}
           <div style={{marginBottom:16}}>
@@ -2905,26 +3002,14 @@ export default function App() {
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
               {[5,10,15,20,25,30,50].map(function(n) { return <button key={n} onClick={function(){updateDailyNewWords(n);}} style={dailyNewWords===n ? {...S.ghostBtn, background:C.accent, color:"#fff", borderColor:C.accent, padding:"8px 14px"} : {...S.ghostBtn, padding:"8px 14px"}}>{n}</button>; })}
             </div>
-            {planView.remainingWords > 0 && _estDateStr && (
+            {planView.predictedNeedLearn > 0 && _estDateStr && (
               <div style={{fontSize:12,color:C.teal,marginTop:8,lineHeight:1.6}}>
-                📈 按每天 {dailyNewWords || 20} 个新词的速度，<strong>预计 {_estDays} 天后（{_estDateStr}）</strong>可完成全部词汇
+                📈 按每天 {dailyNewWords || 20} 个新词，<strong>预计 {_estDays} 天后（{_estDateStr}）</strong>可完成
+                {_hasScreeningData && <span style={{color:C.textSec}}>（基于快筛 {_unknownPct}% 不认识率推算）</span>}
               </div>
             )}
-          </div>
-
-          {/* 计划完成日期 — 可选 */}
-          <div style={{marginBottom:16}}>
-            <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:4}}>想提前完成？设一个目标日期 <span style={{fontSize:11,fontWeight:400,color:C.textSec}}>（可选）</span></div>
-            <input type="date" value={targetDate} onChange={function(e){updateTargetDate(e.target.value);}} style={{width:"100%",maxWidth:200,padding:"9px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
-            {planView.daysLeft != null && planView.daysLeft > 0 && (
-              <div style={{fontSize:12,color:_targetTooTight ? C.gold : C.teal,marginTop:6,lineHeight:1.6}}>
-                {_targetTooTight
-                  ? "⚠️ 距目标还有 " + planView.daysLeft + " 天，需每天学 " + planView.recommendedNewPerDay + " 个新词才能按时完成（当前设置 " + (dailyNewWords||20) + " 个）"
-                  : "✅ 距目标还有 " + planView.daysLeft + " 天，按当前速度可以按时完成"}
-              </div>
-            )}
-            {planView.daysLeft != null && planView.daysLeft <= 0 && (
-              <div style={{fontSize:12,color:C.red,marginTop:6}}>⏰ 目标日期已过，建议更新或清除</div>
+            {planView.predictedNeedLearn === 0 && planView.unlearnedCount === 0 && planView.learnedCount > 0 && (
+              <div style={{fontSize:12,color:C.green,marginTop:8}}>🎉 所有词汇已学完！继续复习巩固吧。</div>
             )}
           </div>
 
@@ -3146,7 +3231,8 @@ export default function App() {
         return <div style={S.setupCard}>
           <div style={S.setupHint}>学习统计中心：查看学习成效、复习量和当前词库健康度。</div>
           {statsView.totalWords > 0 && (() => {
-            var masteredPct = Math.round(((statsView.statuses.mastered||0) / Math.max(1, statsView.totalWords)) * 100);
+            var _nonSkippedTotal = Math.max(1, statsView.totalWords - (statsView.statuses.skipped||0));
+            var masteredPct = Math.round(((statsView.statuses.mastered||0) / _nonSkippedTotal) * 100);
             var healthColor = masteredPct >= 60 ? C.green : masteredPct >= 30 ? C.gold : C.accent;
             var healthLabel = masteredPct >= 60 ? "优秀" : masteredPct >= 30 ? "良好" : "起步中";
             return <div style={{display:"flex",alignItems:"center",gap:14,background:"linear-gradient(135deg, "+C.tealLight+" 0%, "+C.accentLight+" 100%)",border:"1px solid "+C.border,borderRadius:12,padding:"14px 16px",marginBottom:12}}>
@@ -3156,7 +3242,7 @@ export default function App() {
               </div>
               <div>
                 <div style={{fontWeight:700,fontSize:14,color:C.text}}>词库健康度：<span style={{color:healthColor}}>{healthLabel}</span></div>
-                <div style={{fontSize:12,color:C.textSec,marginTop:2}}>{statsView.statuses.mastered||0} 个已掌握 / {statsView.totalWords} 个总词汇</div>
+                <div style={{fontSize:12,color:C.textSec,marginTop:2}}>{statsView.statuses.mastered||0} 个已掌握 / {_nonSkippedTotal} 个词汇{(statsView.statuses.skipped||0) > 0 ? "（不含 " + (statsView.statuses.skipped||0) + " 个快筛跳过）" : ""}</div>
               </div>
             </div>;
           })()}
@@ -3168,9 +3254,9 @@ export default function App() {
             <div style={S.statCard}><div style={S.statNum}>{statsView.bestStreak}</div><div style={S.statLabel}>最佳连对</div></div>
             <div style={S.statCard}><div style={S.statNum}>{statsView.totalReviews}</div><div style={S.statLabel}>总复习次数</div></div>
             <div style={S.statCard}><div style={S.statNum}>{planView.deepUsedToday}/{deepReviewDailyCap}</div><div style={S.statLabel}>深度攻克今日用量</div></div>
-            <div style={S.statCard}><div style={S.statNum}>{planView.recommendedNewPerDay}</div><div style={S.statLabel}>建议每日新词</div></div>
-            <div style={S.statCard}><div style={S.statNum}>{targetDate ? (planView.daysLeft==null?"-":planView.daysLeft) : "未设"}</div><div style={S.statLabel}>距目标日期(天)</div></div>
-            <div style={S.statCard}><div style={S.statNum}>{planView.remainingWords}</div><div style={S.statLabel}>待学习词数</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{planView.skippedCount}</div><div style={S.statLabel}>快筛已跳过</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{planView.unlearnedCount}</div><div style={S.statLabel}>待学习词数</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{planView.skippedCount > 0 ? Math.round(planView.unknownRate*100)+"%" : "-"}</div><div style={S.statLabel}>预估不认识率</div></div>
           </div>
           <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
             <div style={{fontWeight:700,fontSize:13,marginBottom:8}}>词汇状态分布</div>
@@ -3199,7 +3285,7 @@ export default function App() {
             <ul style={{margin:0,paddingLeft:20}}>
               {statsView.dueCount > 0 && <li><strong>有 {statsView.dueCount} 个到期词待复习</strong>，建议先做快速复习清空队列。</li>}
               {(statsView.statuses.uncertain||0) + (statsView.statuses.error||0) > 0 && <li><strong>你的易错/不确定词有 {(statsView.statuses.uncertain||0) + (statsView.statuses.error||0)} 个</strong>，请在精力充沛时优先点击“深度攻克”。</li>}
-              {planView.remainingWords > 0 && <li><strong>待学习新词还有 {planView.remainingWords} 个</strong>，按照目前的每日 {planView.recommendedNewPerDay} 个的目标前进吧！</li>}
+              {planView.unlearnedCount > 0 && <li><strong>待学习新词还有 {planView.unlearnedCount} 个</strong>{planView.skippedCount > 0 ? "（预估约 " + planView.predictedNeedLearn + " 个需要学习）" : ""}，每天 {dailyNewWords || 20} 个继续加油！</li>}
               {statsView.dueCount === 0 && ((statsView.statuses.uncertain||0) + (statsView.statuses.error||0)) === 0 && <li><strong>太棒了！</strong>今天的复习压力已清空，尽情探索新单词吧。</li>}
             </ul>
           </div>
@@ -3373,7 +3459,8 @@ export default function App() {
               )}
               {setupTab === "plan" && (() => {
                 var _pv = getStudyPlanPrediction();
-                var _ed = _pv.remainingWords > 0 ? Math.ceil(_pv.remainingWords / (dailyNewWords || 20)) : 0;
+                var _needLearn = _pv.predictedNeedLearn;
+                var _ed = _needLearn > 0 ? Math.ceil(_needLearn / (dailyNewWords || 20)) : 0;
                 return <div>
                   <div style={S.setupHint}>控制学习节奏，系统自动安排每日任务。</div>
                   <div style={{marginBottom:12}}>
@@ -3381,11 +3468,7 @@ export default function App() {
                     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                       {[5,10,15,20,25,30].map(function(n){ return <button key={n} onClick={function(){updateDailyNewWords(n);}} style={dailyNewWords===n ? {...S.ghostBtn, background:C.accent, color:"#fff", borderColor:C.accent, padding:"6px 12px"} : {...S.ghostBtn, padding:"6px 12px"}}>{n}</button>; })}
                     </div>
-                    {_pv.remainingWords > 0 && <div style={{fontSize:11,color:C.teal,marginTop:6}}>剩余 {_pv.remainingWords} 词，按此速度约 {_ed} 天完成</div>}
-                  </div>
-                  <div style={{marginBottom:12}}>
-                    <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>目标完成日期 <span style={{fontSize:11,fontWeight:400,color:C.textSec}}>（可选）</span></div>
-                    <input type="date" value={targetDate} onChange={function(e){updateTargetDate(e.target.value);}} style={{width:"100%",maxWidth:200,padding:"8px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
+                    {_needLearn > 0 && <div style={{fontSize:11,color:C.teal,marginTop:6}}>预估还需学习约 {_needLearn} 词{_pv.skippedCount > 0 ? "（基于快筛推算）" : ""}，按此速度约 {_ed} 天完成</div>}
                   </div>
                   <div style={{marginBottom:12}}>
                     <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>每日深度攻克上限</div>
@@ -3433,8 +3516,8 @@ export default function App() {
                     <div style={S.statCard}><div style={S.statNum}>{sv.dueCount}</div><div style={S.statLabel}>到期词</div></div>
                     <div style={S.statCard}><div style={S.statNum}>{sv.quickReviews}</div><div style={S.statLabel}>快速复习</div></div>
                     <div style={S.statCard}><div style={S.statNum}>{sv.deepReviews}</div><div style={S.statLabel}>深度复习</div></div>
-                    <div style={S.statCard}><div style={S.statNum}>{pv.recommendedNewPerDay}</div><div style={S.statLabel}>建议每日新词</div></div>
-                    <div style={S.statCard}><div style={S.statNum}>{pv.remainingWords}</div><div style={S.statLabel}>待学习词数</div></div>
+                    <div style={S.statCard}><div style={S.statNum}>{pv.skippedCount}</div><div style={S.statLabel}>快筛跳过</div></div>
+                    <div style={S.statCard}><div style={S.statNum}>{pv.unlearnedCount}</div><div style={S.statLabel}>待学习词数</div></div>
                   </div>
                   <div style={{fontSize:12,color:C.textSec,marginBottom:10}}>阶段概览：P0 {ph.P0?"✅":"⏳"} · P1 {ph.P1?"✅":"⏳"} · P2 {ph.P2?"✅":"⏳"}</div>
                   <button style={{...S.primaryBtn,background:C.teal}} onClick={() => { setShowSettings(false); setScreen("setup"); setSetupTab("stats"); }}>打开完整统计页</button>
@@ -3708,11 +3791,21 @@ export default function App() {
         var ts = getTimingStats();
         var accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
         var encourageMsg = accuracy >= 80 ? "太棒了，正确率超高！" : accuracy >= 50 ? "不错的开始，继续加油！" : "没关系，多练几次就好了！";
+        // Mark daily streak on completion
+        var _streakInfo = markStudyStreakToday();
+        var _streakDisp = getStreakDisplay(_streakInfo.streak);
         return <div style={{...S.card,textAlign:"center",padding:"40px 22px"}}>
           <div style={{fontSize:56,marginBottom:12,animation:"bounce 0.6s ease-out"}}>🎉</div>
           <h2 style={{fontSize:24,fontWeight:700,margin:"0 0 4px"}}>全部学完！</h2>
           <p style={{color:C.textSec,marginBottom:4}}>{"今天学了 "+wordList.length+" 个词 · "+stats.xp+" XP"}</p>
-          <p style={{color:C.accent,fontSize:13,fontWeight:600,marginBottom:16}}>{encourageMsg}</p>
+          <p style={{color:C.accent,fontSize:13,fontWeight:600,marginBottom:_streakDisp ? 8 : 16}}>{encourageMsg}</p>
+          {_streakDisp && (
+            <div style={{background:"linear-gradient(135deg, "+C.goldLight+" 0%, "+C.accentLight+" 100%)",borderRadius:12,padding:"12px 16px",marginBottom:16,border:"1px solid "+C.gold+"44"}}>
+              <div style={{fontSize:28,marginBottom:4}}>{_streakDisp.emoji}</div>
+              <div style={{fontSize:15,fontWeight:800,color:C.text}}>🔥 连续学习第 {_streakDisp.days} 天</div>
+              <div style={{fontSize:13,color:C.accent,fontWeight:600,marginTop:2}}>{_streakDisp.msg}</div>
+            </div>
+          )}
 
           {/* 今日报告卡 */}
           <div style={{background:"linear-gradient(135deg, "+C.tealLight+" 0%, "+C.accentLight+" 100%)",borderRadius:14,padding:"18px 16px",marginBottom:16,border:"1px solid "+C.border}}>
