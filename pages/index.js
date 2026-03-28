@@ -612,6 +612,9 @@ export default function App() {
   var [showTaskOrderHint, setShowTaskOrderHint] = useState(true);
   var [showProfileGuide, setShowProfileGuide] = useState(false);
   var [streakToast, setStreakToast] = useState(null);
+  var [screeningWords, setScreeningWords] = useState([]);
+  var [screeningIdx, setScreeningIdx] = useState(0);
+  var [screeningStats, setScreeningStats] = useState({ known: 0, unknown: 0 });
   var [quickReviewQueue, setQuickReviewQueue] = useState([]);
   var [quickReviewIdx, setQuickReviewIdx] = useState(0);
   var [quickReviewFlipped, setQuickReviewFlipped] = useState(false);
@@ -1547,6 +1550,38 @@ export default function App() {
     applyWordData(words[startIdx]);
   };
 
+  // ── Quick Screening Mode ──
+  var startScreening = function() {
+    var allWords = parseWordsFromInput(wordInput);
+    // Only screen words that are currently "unlearned"
+    var toScreen = allWords.filter(function(w) { return !wordStatusMap[w] || wordStatusMap[w] === "unlearned"; });
+    if (toScreen.length === 0) { setError("没有未学习的词需要筛选"); return; }
+    setScreeningWords(toScreen);
+    setScreeningIdx(0);
+    setScreeningStats({ known: 0, unknown: 0 });
+    setScreen("screening");
+  };
+
+  var screeningMarkWord = function(known) {
+    var word = screeningWords[screeningIdx];
+    if (known) {
+      // Mark as mastered, NO review needed (skip review pipeline)
+      var next = { ...(wordStatusMap || {}), [word]: "mastered" };
+      setWordStatusMap(next);
+      try { localStorage.setItem(WORD_STATUS_KEY, JSON.stringify(next)); } catch(e) {}
+      // Set reviewLevel high so it won't be scheduled for review
+      upsertReviewWordData(word, { reviewLevel: 99, nextReviewDate: null, screenedOut: true });
+    }
+    setScreeningStats(function(prev) {
+      return known ? { ...prev, known: prev.known + 1 } : { ...prev, unknown: prev.unknown + 1 };
+    });
+    if (screeningIdx + 1 >= screeningWords.length) {
+      setScreen("screening_done");
+    } else {
+      setScreeningIdx(screeningIdx + 1);
+    }
+  };
+
   var teachToSpectrum = () => {
     if (spectrumData?.spectrum_words) {
       setSpecPool(shuffle(spectrumData.spectrum_words));
@@ -2068,6 +2103,7 @@ export default function App() {
         var s = getWordStatus(w, i, words);
         if (s === "unlearned") return false;
         var d = reviewWordData[w] || {};
+        if (d.screenedOut) return false; // screened as "already known", skip review
         if (mode === "due") return isDueDate(d.nextReviewDate);
         if (mode === "focus") return s === "uncertain" || s === "error";
         return true;
@@ -2246,6 +2282,87 @@ export default function App() {
     entries.sort((a,b) => a[1].duration - b[1].duration);
     return { fastest: entries[0], slowest: entries[entries.length-1], avg: Math.round(entries.reduce((s,e) => s+e[1].duration, 0) / entries.length / 1000) };
   };
+
+  // ── SCREENING MODE ──
+  if (screen === "screening") {
+    var scWord = screeningWords[screeningIdx];
+    var scTotal = screeningWords.length;
+    var scDone = screeningStats.known + screeningStats.unknown;
+    var scPct = Math.round((scDone / scTotal) * 100);
+    return (
+      <div style={S.root}><div className="vs-desktop-container" style={S.container}>
+        <div style={S.topBar}>
+          <button style={S.backBtn} onClick={function(){ if (scDone > 0 && !confirm("已筛选 " + scDone + " 个词，确定退出？进度会保留。")) return; setScreen("screening_done"); }}>←</button>
+          <div style={{fontSize:13,color:C.textSec}}>快筛 {screeningIdx+1}/{scTotal}</div>
+          <div style={{fontSize:12,color:C.teal,fontWeight:600}}>✅{screeningStats.known} ❌{screeningStats.unknown}</div>
+        </div>
+        {/* Progress bar */}
+        <div style={{height:4,background:C.border,borderRadius:2,marginBottom:20,overflow:"hidden"}}>
+          <div style={{height:"100%",width:scPct+"%",background:"linear-gradient(90deg,"+C.teal+","+C.green+")",borderRadius:2,transition:"width 0.3s ease"}} />
+        </div>
+        <div style={{...S.card, textAlign:"center", padding:"40px 24px"}}>
+          <div style={{fontSize:12,color:C.textSec,marginBottom:12,fontWeight:600}}>这个词你认识吗？</div>
+          <h2 style={{fontSize:38,margin:"0 0 8px",letterSpacing:1,color:C.text}}>{scWord}</h2>
+          <div style={{fontSize:13,color:C.textSec,marginBottom:32}}>第 {screeningIdx+1} / {scTotal} 个</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+            <button onClick={function(){ screeningMarkWord(true); }} style={{padding:"18px 16px",background:C.greenLight,border:"2px solid "+C.green,borderRadius:14,cursor:"pointer",fontFamily:FONT,fontSize:16,fontWeight:700,color:C.green,transition:"transform 0.1s"}}>✅ 认识</button>
+            <button onClick={function(){ screeningMarkWord(false); }} style={{padding:"18px 16px",background:C.redLight,border:"2px solid "+C.red,borderRadius:14,cursor:"pointer",fontFamily:FONT,fontSize:16,fontWeight:700,color:C.red,transition:"transform 0.1s"}}>❌ 不认识</button>
+          </div>
+          <div style={{fontSize:12,color:C.textSec,marginTop:16,lineHeight:1.6}}>「认识」→ 直接标为已掌握，不再出现<br/>「不认识」→ 留在学习列表，AI 帮你深度记忆</div>
+        </div>
+        {scDone > 10 && (
+          <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",marginTop:16,background:C.teal}} onClick={function(){ setScreen("screening_done"); }}>⏩ 够了，开始学习不认识的词</button>
+        )}
+      </div></div>
+    );
+  }
+
+  if (screen === "screening_done") {
+    var scKnown = screeningStats.known;
+    var scUnknown = screeningStats.unknown;
+    var scScreened = scKnown + scUnknown;
+    var scRemaining = screeningWords.length - scScreened;
+    var unlearnedNow = parseWordsFromInput(wordInput).filter(function(w) { return !wordStatusMap[w] || wordStatusMap[w] === "unlearned"; }).length;
+    return (
+      <div style={S.root}><div className="vs-desktop-container" style={S.container}>
+        <div style={{...S.card, textAlign:"center", padding:"32px 24px"}}>
+          <div style={{fontSize:48,marginBottom:8}}>🎯</div>
+          <h2 style={{fontSize:22,margin:"0 0 16px",color:C.text}}>快筛完成！</h2>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20}}>
+            <div style={{background:C.greenLight,borderRadius:10,padding:"14px 10px"}}>
+              <div style={{fontSize:26,fontWeight:800,color:C.green}}>{scKnown}</div>
+              <div style={{fontSize:12,color:C.textSec}}>已认识</div>
+            </div>
+            <div style={{background:C.redLight,borderRadius:10,padding:"14px 10px"}}>
+              <div style={{fontSize:26,fontWeight:800,color:C.red}}>{scUnknown}</div>
+              <div style={{fontSize:12,color:C.textSec}}>不认识</div>
+            </div>
+            <div style={{background:C.bg,borderRadius:10,padding:"14px 10px"}}>
+              <div style={{fontSize:26,fontWeight:800,color:C.textSec}}>{scRemaining}</div>
+              <div style={{fontSize:12,color:C.textSec}}>未筛选</div>
+            </div>
+          </div>
+          {scKnown > 0 && (
+            <div style={{background:C.tealLight,border:"1px solid "+C.teal+"44",borderRadius:10,padding:"12px 14px",fontSize:13,color:C.teal,lineHeight:1.6,marginBottom:16,textAlign:"left"}}>
+              ✅ <strong>{scKnown}</strong> 个已认识的词已标为「已掌握」，不会出现在学习和复习中。
+            </div>
+          )}
+          <div style={{fontSize:14,color:C.text,marginBottom:20,lineHeight:1.7}}>
+            当前词库还有 <strong style={{color:C.accent}}>{unlearnedNow}</strong> 个未学习的词等待 AI 深度教学
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {unlearnedNow > 0 && (
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ setScreen("setup"); startLearning(0); }}>✨ 开始学习不认识的词</button>
+            )}
+            {scRemaining > 0 && (
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={function(){ startScreening(); }}>🔄 继续筛选剩余 {scRemaining} 个词</button>
+            )}
+            <button style={{...S.ghostBtn,width:"100%",justifyContent:"center"}} onClick={function(){ setScreen("setup"); }}>← 返回首页</button>
+          </div>
+        </div>
+      </div></div>
+    );
+  }
 
   if (screen === "quick_review") {
     var qr = quickReviewQueue[quickReviewIdx];
@@ -2851,16 +2968,30 @@ export default function App() {
           <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={5} placeholder="arduous\nbenevolent" />
           <div style={{fontSize:13,color:C.textSec,marginTop:4}}>{wordInput.trim() ? "共 "+parseWordsFromInput(wordInput).length+" 个词" : ""}</div>
 
-          {parseWordsFromInput(wordInput).length > 0 && (
-            <div style={{marginTop:14,padding:"16px",background:"linear-gradient(135deg, "+C.accentLight+" 0%, "+C.goldLight+" 100%)",border:"1.5px solid "+C.accent+"44",borderRadius:12,textAlign:"center"}}>
-              <div style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:8}}>词汇已就绪，准备开始？</div>
-              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0); }}>✨ 开始学习（{parseWordsFromInput(wordInput).length} 个词）</button>
+          {(() => {
+            var _allWords = parseWordsFromInput(wordInput);
+            var _unlearnedCount = _allWords.filter(function(w){ return !wordStatusMap[w] || wordStatusMap[w] === "unlearned"; }).length;
+            var _showScreening = _unlearnedCount > 50;
+            if (_allWords.length === 0) return null;
+            return <div style={{marginTop:14,padding:"16px",background:"linear-gradient(135deg, "+C.accentLight+" 0%, "+C.goldLight+" 100%)",border:"1.5px solid "+C.accent+"44",borderRadius:12,textAlign:"center"}}>
+              {_showScreening && (
+                <div style={{background:C.goldLight,border:"1px solid "+C.gold+"55",borderRadius:10,padding:"12px 14px",marginBottom:14,textAlign:"left",fontSize:13,lineHeight:1.7}}>
+                  <div style={{fontWeight:700,color:C.text,marginBottom:4}}>💡 词库较大（{_unlearnedCount} 个未学习）</div>
+                  <div style={{color:C.textSec}}>建议先用「快筛模式」翻牌标记熟悉度——认识的词直接跳过，不认识的才进入 AI 深度学习，效率更高！</div>
+                  <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:15,padding:"12px 20px",marginTop:10,background:C.teal}} onClick={function(){ startScreening(); }}>🃏 快筛模式：翻牌标记（{_unlearnedCount} 个词）</button>
+                </div>
+              )}
+              <div style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:8}}>{_showScreening ? "或者直接开始学习：" : "词汇已就绪，准备开始？"}</div>
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0); }}>✨ 开始学习（{_unlearnedCount} 个未学词）</button>
+              {!_showScreening && _unlearnedCount > 10 && (
+                <button style={{background:"transparent",border:"1px solid "+C.teal+"66",color:C.teal,fontFamily:FONT,fontSize:13,fontWeight:600,cursor:"pointer",borderRadius:8,padding:"8px 16px",marginTop:10}} onClick={function(){ startScreening(); }}>🃏 先快筛：翻牌标记认识/不认识</button>
+              )}
               <div style={{marginTop:12,paddingTop:12,borderTop:"1px dashed "+C.border}}>
                 <div style={{fontSize:12,color:C.textSec,lineHeight:1.6,marginBottom:8}}>想控制学习节奏？可以先设置每天学多少个、什么时候学完</div>
-                <button style={{background:"transparent",border:"1px solid "+C.teal+"66",color:C.teal,fontFamily:FONT,fontSize:13,fontWeight:600,cursor:"pointer",borderRadius:8,padding:"8px 16px"}} onClick={function(){ setSetupTab("plan"); }}>🎯 去设置学习计划 →</button>
+                <button style={{background:"transparent",border:"1px solid "+C.teal+"66",color:C.teal,fontFamily:FONT,fontSize:13,fontWeight:600,cursor:"pointer",borderRadius:8,padding:"8px 16px"}} onClick={function(){ setSetupTab("plan"); }}>📅 去设置学习计划 →</button>
               </div>
-            </div>
-          )}
+            </div>;
+          })()}
         </div>
       )}
 
