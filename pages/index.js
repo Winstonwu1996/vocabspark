@@ -417,14 +417,13 @@ var callAPI = async (sys, msg, opts) => {
 
 var callAPIStream = async (sys, msg, opts, onChunk) => {
   opts = opts || {};
-  var response = await fetchWithTimeout("/api/chat", {
+  var response = await fetchWithTimeout("/api/chat-stream", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       system: sys,
       message: msg,
       maxTokens: 900,
-      stream: true,
       preferredProviders: opts.preferredProviders || undefined,
     }),
   }, FETCH_TIMEOUT_LONG_MS);
