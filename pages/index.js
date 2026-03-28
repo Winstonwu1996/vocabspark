@@ -1589,25 +1589,28 @@ export default function App() {
 
   var handleFile = async (e) => {
     var file = e.target.files?.[0]; if (!file) return;
-    setFileLabel(file.name);
+    setFileLabel("⏳ 正在解析 " + file.name + " ...");
+    setError("");
     try {
       var words = [];
       if (/\.(xlsx|xls)$/i.test(file.name)) {
-        var XLSX = (await import('xlsx')).default;
+        var xlsxMod = await import('xlsx');
+        var XLSX = xlsxMod.default || xlsxMod;
         var buf = await file.arrayBuffer();
-        var wb = XLSX.read(buf, {type:'buffer'});
+        var wb = XLSX.read(buf, {type:'array'});
         var ws = wb.Sheets[wb.SheetNames[0]];
         var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
         words = rows.flat()
           .map(function(c) { return String(c).trim().toLowerCase(); })
           .filter(function(w) { return /^[a-z][a-z\s'\-]{0,30}$/.test(w); });
-        if (!words.length) { setError("未能从 Excel 提取英文单词。请确认表格中有一列英文单词，或将文件另存为 CSV 后上传。"); return; }
+        if (!words.length) { setError("未能从 Excel 提取英文单词。请确认表格中有一列英文单词，或将文件另存为 CSV 后上传。"); setFileLabel(file.name); return; }
       } else {
         words = await parseFile(file);
-        if (!words.length) { setError("未能提取词汇，请确认文件每行一个英文单词。"); return; }
+        if (!words.length) { setError("未能提取词汇，请确认文件每行一个英文单词。"); setFileLabel(file.name); return; }
       }
       setWordInput(words.join("\n")); setError(""); setSetupTab("words");
-    } catch (err) { setError("文件解析失败: " + err.message); }
+      setFileLabel("✅ " + file.name + "（" + words.length + " 个词）");
+    } catch (err) { setError("文件解析失败: " + err.message); setFileLabel(file.name); }
     if (fileRef.current) fileRef.current.value = "";
   };
 
