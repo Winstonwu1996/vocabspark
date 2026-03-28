@@ -3520,7 +3520,6 @@ export default function App() {
         </div>;
       })()}
       {error && <div style={S.error}>{error}</div>}
-      {parseWordsFromInput(wordInput).length > 0 && <button style={S.bigBtn} onClick={() => startLearning(0)}>✨ 开始学习</button>}
       <Disclaimer />
 
       <div style={{ textAlign:"center", padding:"24px 0 8px", fontSize:13, lineHeight:1.8, color:C.textSec }}>
