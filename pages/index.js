@@ -914,6 +914,7 @@ export default function App() {
       setLoginSent(false);
       setLoginEmail('');
       setOtpCode('');
+      window.scrollTo(0, 0);
     } catch(e) {
       setOtpError('验证失败：' + (e.message === 'Token has expired or is invalid' ? '验证码已过期或不正确，请重新发送' : e.message));
     } finally {
@@ -2523,27 +2524,62 @@ export default function App() {
       )}
       {setupTab === "plan" && (() => {
         var planView = getStudyPlanPrediction();
+        var _estDays = planView.remainingWords > 0 ? Math.ceil(planView.remainingWords / (dailyNewWords || 20)) : 0;
+        var _estDate = _estDays > 0 ? new Date(Date.now() + _estDays * 86400000) : null;
+        var _estDateStr = _estDate ? (_estDate.getMonth()+1) + " 月 " + _estDate.getDate() + " 日" : null;
+        var _targetTooTight = planView.daysLeft != null && planView.daysLeft > 0 && planView.recommendedNewPerDay > (dailyNewWords || 20);
         return <div style={S.setupCard}>
-          <div style={S.setupHint}>设定目标日期，系统会自动安排每天任务。</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-            <div>
-              <div style={{fontSize:12,color:C.textSec,fontWeight:700,marginBottom:6}}>目标日期 / Target Date</div>
-              <input type="date" value={targetDate} onChange={function(e){updateTargetDate(e.target.value);}} style={{width:"100%",padding:"9px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
-            </div>
-            <div>
-              <div style={{fontSize:12,color:C.textSec,fontWeight:700,marginBottom:6}}>每日深度攻克上限</div>
-              <input type="number" min={1} max={30} value={deepReviewDailyCap} onChange={function(e){updateDeepReviewDailyCap(e.target.value);}} style={{width:"100%",padding:"9px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
-            </div>
+          <div style={S.setupHint}>控制每天的学习节奏，系统会自动安排任务。</div>
+
+          {/* 词库概览 */}
+          <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",fontSize:13,lineHeight:1.8,marginBottom:14}}>
+            <div>📚 词库：<strong>{planView.totalWords}</strong> 个词（已学 {planView.learnedCount}，剩余 <strong>{planView.remainingWords}</strong>）</div>
+            <div>📅 今日到期复习：<strong>{planView.dueCount}</strong> 个</div>
           </div>
-          <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",fontSize:13,lineHeight:1.8}}>
-            <div>📚 词库总量：<strong>{planView.totalWords}</strong>（已学习 {planView.learnedCount}，剩余 {planView.remainingWords}）</div>
-            <div>📅 今日到期复习：<strong>{planView.dueCount}</strong></div>
-            <div>🔴 今日深度攻克剩余：<strong>{planView.deepLeftToday}</strong> / {deepReviewDailyCap}</div>
-            <div>🎯 建议每日新词目标：<strong>{planView.recommendedNewPerDay}</strong>{planView.daysLeft != null ? "（距目标日期 " + planView.daysLeft + " 天）" : "（未设置目标日期）"}</div>
+
+          {/* 每日新词数 — 主控 */}
+          <div style={{marginBottom:16}}>
+            <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:6}}>每天学几个新词？</div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              {[5,10,15,20,25,30,50].map(function(n) { return <button key={n} onClick={function(){updateDailyNewWords(n);}} style={dailyNewWords===n ? {...S.ghostBtn, background:C.accent, color:"#fff", borderColor:C.accent, padding:"8px 14px"} : {...S.ghostBtn, padding:"8px 14px"}}>{n}</button>; })}
+            </div>
+            {planView.remainingWords > 0 && _estDateStr && (
+              <div style={{fontSize:12,color:C.teal,marginTop:8,lineHeight:1.6}}>
+                📈 按每天 {dailyNewWords || 20} 个新词的速度，<strong>预计 {_estDays} 天后（{_estDateStr}）</strong>可完成全部词汇
+              </div>
+            )}
           </div>
+
+          {/* 计划完成日期 — 可选 */}
+          <div style={{marginBottom:16}}>
+            <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:4}}>想提前完成？设一个目标日期 <span style={{fontSize:11,fontWeight:400,color:C.textSec}}>（可选）</span></div>
+            <input type="date" value={targetDate} onChange={function(e){updateTargetDate(e.target.value);}} style={{width:"100%",maxWidth:200,padding:"9px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
+            {planView.daysLeft != null && planView.daysLeft > 0 && (
+              <div style={{fontSize:12,color:_targetTooTight ? C.gold : C.teal,marginTop:6,lineHeight:1.6}}>
+                {_targetTooTight
+                  ? "⚠️ 距目标还有 " + planView.daysLeft + " 天，需每天学 " + planView.recommendedNewPerDay + " 个新词才能按时完成（当前设置 " + (dailyNewWords||20) + " 个）"
+                  : "✅ 距目标还有 " + planView.daysLeft + " 天，按当前速度可以按时完成"}
+              </div>
+            )}
+            {planView.daysLeft != null && planView.daysLeft <= 0 && (
+              <div style={{fontSize:12,color:C.red,marginTop:6}}>⏰ 目标日期已过，建议更新或清除</div>
+            )}
+          </div>
+
+          {/* 深度攻克上限 — 附说明 */}
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:4}}>每日深度攻克上限</div>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <input type="number" min={1} max={30} value={deepReviewDailyCap} onChange={function(e){updateDeepReviewDailyCap(e.target.value);}} style={{width:80,padding:"9px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
+              <span style={{fontSize:12,color:C.textSec}}>个/天</span>
+            </div>
+            <div style={{fontSize:11,color:C.textSec,marginTop:4,lineHeight:1.5}}>💡 深度攻克 = 对易错词、不确定词的强化复习（和新词学习互不影响）。建议 5~10 个/天，避免疲劳。</div>
+            <div style={{fontSize:12,color:C.text,marginTop:4}}>🔴 今日已攻克 {planView.deepUsedToday}，剩余 <strong>{planView.deepLeftToday}</strong></div>
+          </div>
+
           <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:12}}>
-            <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){setSetupTab("words");}}>去执行词汇管理 →</button>
-            <button style={{...S.primaryBtn,background:C.red}} onClick={startDeepReview}>开始深度攻克</button>
+            <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){setSetupTab("words");}}>📝 去管理词汇 →</button>
+            <button style={{...S.primaryBtn,background:C.red}} onClick={startDeepReview}>🔴 开始深度攻克</button>
           </div>
         </div>;
       })()}
@@ -2710,6 +2746,10 @@ export default function App() {
             <div style={{marginTop:14,padding:"16px",background:"linear-gradient(135deg, "+C.accentLight+" 0%, "+C.goldLight+" 100%)",border:"1.5px solid "+C.accent+"44",borderRadius:12,textAlign:"center"}}>
               <div style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:8}}>词汇已就绪，准备开始？</div>
               <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0); }}>✨ 开始学习（{parseWordsFromInput(wordInput).length} 个词）</button>
+              <div style={{marginTop:12,paddingTop:12,borderTop:"1px dashed "+C.border}}>
+                <div style={{fontSize:12,color:C.textSec,lineHeight:1.6,marginBottom:8}}>想控制学习节奏？可以先设置每天学多少个、什么时候学完</div>
+                <button style={{background:"transparent",border:"1px solid "+C.teal+"66",color:C.teal,fontFamily:FONT,fontSize:13,fontWeight:600,cursor:"pointer",borderRadius:8,padding:"8px 16px"}} onClick={function(){ setSetupTab("plan"); }}>🎯 去设置学习计划 →</button>
+              </div>
             </div>
           )}
         </div>
@@ -2806,7 +2846,7 @@ export default function App() {
 
       {/* ── LOGIN MODAL (setup screen) ── */}
       {showLogin && (
-        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{ if(!loginLoading){setShowLogin(false);setLoginSent(false);setLoginEmail('');setOtpCode('');setOtpError('');} }}>
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{ if(!loginLoading){setShowLogin(false);setLoginSent(false);setLoginEmail('');setOtpCode('');setOtpError('');window.scrollTo(0,0);} }}>
           <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
             {!loginSent ? (
               <>
@@ -2823,7 +2863,7 @@ export default function App() {
                 <input type="email" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') handleLoginEmail(); }} placeholder="your@email.com" style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:14,outline:"none",marginBottom:12,boxSizing:"border-box"}} />
                 <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading?0.6:1}} onClick={handleLoginEmail} disabled={loginLoading||!loginEmail.trim()}>{loginLoading ? "发送中..." : "✉️ 发送验证码"}</button>
                 <div style={{fontSize:12,color:C.textSec,textAlign:"center",marginTop:12,lineHeight:1.6}}>无需密码 · 输入邮件中的 6 位验证码即可登录<br/>新老用户都用同一个邮箱，系统自动识别</div>
-                <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",width:"100%",marginTop:12,padding:"4px 0"}} onClick={()=>{setShowLogin(false);setLoginEmail('');}}>暂时不用</button>
+                <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",width:"100%",marginTop:12,padding:"4px 0"}} onClick={()=>{setShowLogin(false);setLoginEmail('');window.scrollTo(0,0);}}>暂时不用</button>
               </>
             ) : (
               <>
@@ -2947,22 +2987,33 @@ export default function App() {
                   )}
                 </div>
               )}
-              {setupTab === "plan" && (
-                <div>
-                  <div style={S.setupHint}>设置目标日期 / Target Date 与深度攻克上限，系统会按此自动约束每日节奏。</div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-                    <div>
-                      <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>目标日期 / Target Date</div>
-                      <input type="date" value={targetDate} onChange={function(e){updateTargetDate(e.target.value);}} style={{width:"100%",padding:"8px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
+              {setupTab === "plan" && (() => {
+                var _pv = getStudyPlanPrediction();
+                var _ed = _pv.remainingWords > 0 ? Math.ceil(_pv.remainingWords / (dailyNewWords || 20)) : 0;
+                return <div>
+                  <div style={S.setupHint}>控制学习节奏，系统自动安排每日任务。</div>
+                  <div style={{marginBottom:12}}>
+                    <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>每天学几个新词？</div>
+                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                      {[5,10,15,20,25,30].map(function(n){ return <button key={n} onClick={function(){updateDailyNewWords(n);}} style={dailyNewWords===n ? {...S.ghostBtn, background:C.accent, color:"#fff", borderColor:C.accent, padding:"6px 12px"} : {...S.ghostBtn, padding:"6px 12px"}}>{n}</button>; })}
                     </div>
-                    <div>
-                      <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>每日深度攻克上限</div>
-                      <input type="number" min={1} max={30} value={deepReviewDailyCap} onChange={function(e){updateDeepReviewDailyCap(e.target.value);}} style={{width:"100%",padding:"8px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
-                    </div>
+                    {_pv.remainingWords > 0 && <div style={{fontSize:11,color:C.teal,marginTop:6}}>剩余 {_pv.remainingWords} 词，按此速度约 {_ed} 天完成</div>}
                   </div>
-                  <button style={{...S.primaryBtn,background:C.teal}} onClick={() => { setShowSettings(false); setScreen("setup"); setSetupTab("plan"); }}>打开完整计划页</button>
-                </div>
-              )}
+                  <div style={{marginBottom:12}}>
+                    <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>目标完成日期 <span style={{fontSize:11,fontWeight:400,color:C.textSec}}>（可选）</span></div>
+                    <input type="date" value={targetDate} onChange={function(e){updateTargetDate(e.target.value);}} style={{width:"100%",maxWidth:200,padding:"8px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
+                  </div>
+                  <div style={{marginBottom:12}}>
+                    <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>每日深度攻克上限</div>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <input type="number" min={1} max={30} value={deepReviewDailyCap} onChange={function(e){updateDeepReviewDailyCap(e.target.value);}} style={{width:80,padding:"8px 10px",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13}} />
+                      <span style={{fontSize:12,color:C.textSec}}>个/天</span>
+                    </div>
+                    <div style={{fontSize:11,color:C.textSec,marginTop:4}}>💡 强化易错词复习，建议 5~10 个/天</div>
+                  </div>
+                  <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){ setShowSettings(false); setScreen("setup"); setSetupTab("plan"); }}>查看完整计划 →</button>
+                </div>;
+              })()}
               {setupTab === "words" && (
                 <div>
                   <div style={S.setupHint}>学习中如需做标记/复习，建议进入「词汇状态面板」。修改词表后可重新开始。</div>
@@ -3312,7 +3363,7 @@ export default function App() {
 
       {/* ── LOGIN MODAL ── */}
       {showLogin && (
-        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{ if(!loginLoading){setShowLogin(false);setLoginSent(false);setLoginEmail('');setOtpCode('');setOtpError('');} }}>
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.55)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{ if(!loginLoading){setShowLogin(false);setLoginSent(false);setLoginEmail('');setOtpCode('');setOtpError('');window.scrollTo(0,0);} }}>
           <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
             {!loginSent ? (
               <>
@@ -3340,7 +3391,7 @@ export default function App() {
                   无需密码 · 点击邮件中的链接即可登录<br/>
                   注册即表示同意服务条款
                 </div>
-                <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",width:"100%",marginTop:12,padding:"4px 0"}} onClick={()=>{setShowLogin(false);setLoginEmail('');}}>暂时不用</button>
+                <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",width:"100%",marginTop:12,padding:"4px 0"}} onClick={()=>{setShowLogin(false);setLoginEmail('');window.scrollTo(0,0);}}>暂时不用</button>
               </>
             ) : (
               <>
