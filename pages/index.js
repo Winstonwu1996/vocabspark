@@ -4,8 +4,8 @@ import { supabase } from '../lib/supabase';
 import * as XLSX from 'xlsx';
 
 /* ═══════════════════════════════════════════════════════
-   KnowU VocabSpark — AI 词汇导师
-   KnowU Learning 系列产品
+   Vocab by Know U. — AI 词汇导师
+   Know U. Learning 系列产品
    ═══════════════════════════════════════════════════════ */
 
 var C = {
@@ -312,79 +312,58 @@ var SpeakWordBtn = ({ text, size }) => {
   return <button onClick={() => speakWord(text)} title={"朗读单词: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
 };
 
+/* ─── Brand: Know U. Learning ─── */
+var BrandUIcon = ({ size }) => {
+  var s = size || 36;
+  return (
+    <img src="/logo.svg" width={s} height={Math.round(s * 1.1)} alt="Know U." style={{ objectFit:"contain" }} />
+  );
+};
+
 var BrandSparkIcon = ({ size, marginBottom }) => {
-  var box = size != null ? size : 56;
-  var radius = Math.max(12, Math.round(box * 0.286));
-  var icon = Math.round(box * 0.5);
   var mb = marginBottom != null ? marginBottom : 14;
   var mbStr = typeof mb === "number" ? mb + "px" : mb;
   return (
-    <div
-      aria-hidden
-      style={{
-        width: box,
-        height: box,
-        borderRadius: radius,
-        background: "linear-gradient(145deg, " + C.teal + " 0%, " + C.accent + " 100%)",
-        boxShadow: "0 6px 20px rgba(42, 122, 110, 0.25), inset 0 1px 0 rgba(255,255,255,0.2)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        margin: "0 auto " + mbStr,
-      }}
-    >
-      <svg width={icon} height={icon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-        <path
-          d="M13 2L4 14.5h6.5L11 22l8.5-12.5H13L13 2z"
-          fill="#fff"
-          stroke="#fff"
-          strokeWidth="0.6"
-          strokeLinejoin="round"
-        />
-      </svg>
+    <div style={{ margin:"0 auto " + mbStr, display:"flex", justifyContent:"center" }}>
+      <BrandUIcon size={size || 56} />
     </div>
   );
 };
 
-var BrandLogo = ({ layout }) => {
-  // layout: "horizontal" (header) or "vertical" (welcome modal / loading)
-  var isV = layout === "vertical";
-  return (
-    <div style={{ display:"flex", flexDirection:isV?"column":"row", alignItems:"center", gap:isV?2:0 }}>
-      <div style={{ display:"flex", alignItems:"baseline", gap:0 }}>
-        {isV && <BrandSparkIcon size={52} marginBottom={8} />}
-      </div>
-      <div style={{ textAlign:isV?"center":"left" }}>
-        <div style={{ fontSize:isV?11:10, fontWeight:700, color:C.teal, letterSpacing:"0.12em", textTransform:"uppercase", lineHeight:1, marginBottom:isV?4:2 }}>KnowU</div>
-        <div style={{ display:"flex", alignItems:"center", gap:3 }}>
-          {!isV && <BrandSparkIcon size={32} marginBottom={0} />}
-          <span style={{ fontSize:isV?28:22, fontWeight:800, letterSpacing:"-0.03em", lineHeight:1 }}>
-            <span style={{ color:C.text }}>Vocab</span><span style={{ color:C.accent }}>Spark</span>
-          </span>
-        </div>
-      </div>
+var BrandNavBar = () => (
+  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px", borderBottom:"1px solid "+C.border, background:C.card, marginBottom:0 }}>
+    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+      <BrandUIcon size={28} />
+      <span style={{ fontSize:14, fontWeight:700, color:C.text, letterSpacing:"-0.01em" }}>Know U. Learning</span>
     </div>
-  );
-};
+    <div style={{ display:"flex", alignItems:"center", gap:14, fontSize:13 }}>
+      <span style={{ fontWeight:700, color:C.accent, borderBottom:"2px solid "+C.accent, paddingBottom:2 }}>Vocab</span>
+      <span style={{ color:C.textSec, fontSize:12, opacity:0.6 }}>Writing <sup style={{fontSize:9,fontWeight:600,color:C.teal}}>Soon</sup></span>
+    </div>
+  </div>
+);
 
 var AppHeroHeader = ({ stats, studyStreak }) => {
   var pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
   var hasStats = stats.xp > 0;
   return (
-    <div style={{ background:"linear-gradient(135deg, "+C.card+" 0%, "+C.tealLight+" 50%, "+C.accentLight+" 100%)", borderRadius:16, padding:"18px 18px 14px", marginBottom:14, border:"1px solid "+C.border, boxShadow:"0 4px 20px rgba(44,36,32,0.08)" }}>
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:10 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:0, minWidth:0 }}>
-          <BrandLogo layout="horizontal" />
-        </div>
+    <>
+    <BrandNavBar />
+    <div style={{ background:"linear-gradient(135deg, "+C.card+" 0%, "+C.tealLight+" 50%, "+C.accentLight+" 100%)", padding:"24px 20px 18px", marginBottom:14, border:"1px solid "+C.border, borderTop:"none", borderRadius:"0 0 16px 16px", boxShadow:"0 4px 20px rgba(44,36,32,0.06)" }}>
+      <div style={{ marginBottom:hasStats || (studyStreak && studyStreak.streak > 0) ? 14 : 0 }}>
+        <h1 style={{ fontSize:36, fontWeight:900, margin:0, letterSpacing:"-0.04em", lineHeight:1, color:C.text }}>Vocab</h1>
+        <p style={{ fontSize:18, fontWeight:600, color:C.teal, margin:"6px 0 0", letterSpacing:"-0.01em", lineHeight:1.2 }}>Truly Know U.</p>
+        <p style={{ fontSize:13, color:C.textSec, margin:"4px 0 0", fontWeight:500 }}>Personal AI Language Tutor.</p>
       </div>
       {(hasStats || (studyStreak && studyStreak.streak > 0)) && (
-        <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:12 }}>
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
           {hasStats && <span style={{...S.heroStatPillGold, padding:"5px 12px", fontSize:12}}>{"⚡ " + stats.xp + " XP"}</span>}
           {studyStreak && studyStreak.streak > 0 && <span style={{...S.heroStatPillAccent, padding:"5px 12px", fontSize:12}}>{"🔥 连续 " + studyStreak.streak + " 天" + (studyStreak.todayDone ? " ✓" : "")}</span>}
           {hasStats && <span style={{...S.heroStatPillGreen, padding:"5px 12px", fontSize:12}}>{"✅ 正确率 " + pct + "%"}</span>}
         </div>
       )}
     </div>
+    </>
   );
 };
 
@@ -475,7 +454,7 @@ var shuffle = (a) => { a = [...a]; for (var i = a.length-1; i > 0; i--) { var j 
 
 var Disclaimer = () => (
   <div style={{ textAlign:"center", fontSize:12, color:C.textSec, padding:"10px 0 4px", lineHeight:1.7, borderTop:"1px solid "+C.border, marginTop:8 }}>
-    KnowU VocabSpark 专注于理解与记忆 · 拼写练习推荐搭配<strong>百词斩</strong>等工具
+    Vocab by Know U. 专注于理解与记忆 · 拼写练习推荐搭配<strong>百词斩</strong>等工具
   </div>
 );
 
@@ -2836,10 +2815,10 @@ export default function App() {
     return (
     <div style={S.root}>
       <Head>
-        <title>KnowU VocabSpark — AI 词汇导师</title>
+        <title>Vocab by Know U. — AI 词汇导师</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="description" content="AI 驱动的英语词汇学习工具，用你自己的生活场景讲单词，猜→教→练，过目不忘 🎉" />
-        <meta property="og:title" content="KnowU VocabSpark — AI 英语词汇导师" />
+        <meta property="og:title" content="Vocab by Know U. — AI 英语词汇导师" />
         <meta property="og:description" content="AI 用你自己的生活场景讲单词，猜→教→练，过目不忘。免费试用！" />
         <meta property="og:url" content="https://knowulearning.com" />
         <meta property="og:type" content="website" />
@@ -2854,10 +2833,12 @@ export default function App() {
       {showWelcome && (
         <div style={{ position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.55)", zIndex:999, display:"flex", alignItems:"center", justifyContent:"center", padding:20, fontFamily:FONT }}>
           <div style={{ background:C.card, borderRadius:20, padding:"32px 28px", maxWidth:480, width:"100%", boxShadow:"0 20px 60px rgba(0,0,0,0.25)", animation:"fadeUp 0.25s ease-out" }}>
-            <BrandLogo layout="vertical" />
-            <p style={{ fontSize:13, color:C.textSec, fontStyle:"italic", textAlign:"center", margin:"6px 0 18px", letterSpacing:"0.02em" }}>The AI that truly knows you.</p>
+            <BrandSparkIcon size={52} marginBottom={8} />
+            <h2 style={{ fontSize:32, fontWeight:900, textAlign:"center", margin:"0 0 2px", letterSpacing:"-0.04em", lineHeight:1, color:C.text }}>Vocab</h2>
+            <p style={{ fontSize:16, fontWeight:600, color:C.teal, textAlign:"center", margin:"6px 0 2px", letterSpacing:"-0.01em" }}>Truly Know U.</p>
+            <p style={{ fontSize:12, color:C.textSec, textAlign:"center", margin:"0 0 18px", fontWeight:500 }}>Personal AI Language Tutor.</p>
             <div style={{ fontSize:14, lineHeight:1.85, color:C.text }}>
-              <p style={{ margin:"0 0 12px" }}><strong>KnowU VocabSpark</strong> 是 AI 驱动的英语词汇学习工具，通过<strong>猜 → 讲 → 光谱排序 → 复习</strong>帮你把单词记牢。</p>
+              <p style={{ margin:"0 0 12px" }}><strong>Vocab</strong> 是 Know U. Learning 旗下 AI 驱动的英语词汇学习工具，通过<strong>猜 → 讲 → 光谱排序 → 复习</strong>帮你把单词记牢。</p>
               <p style={{ margin:0, padding:"12px 14px", background:C.tealLight, borderRadius:12, fontSize:13, lineHeight:1.75, border:"1px solid rgba(42,122,110,0.12)" }}>
                 <strong>开始前请先设置「学习画像」</strong><br/>
                 填写你的兴趣爱好、常去的地方等。AI 会据此定制讲解和例句；也可以稍后用「照片日记」补充，越具体越有趣。
@@ -2925,7 +2906,7 @@ export default function App() {
                   </div>
                   <div style={{fontSize:13,color:C.textSec,lineHeight:1.6}}>to leave completely and finally; forsake</div>
                 </div>
-                <div style={{fontSize:11,color:C.teal,fontWeight:700,textAlign:"center",margin:"-2px 0"}}>⬇️ KnowU 加持后</div>
+                <div style={{fontSize:11,color:C.teal,fontWeight:700,textAlign:"center",margin:"-2px 0"}}>⬇️ Know U. 加持后</div>
                 <div style={{background:C.accentLight,borderRadius:8,padding:"10px 12px",border:"1px solid "+C.accent+"33"}}>
                   <div style={{fontWeight:700,fontSize:13,color:C.accent,marginBottom:4}}>abandon</div>
                   <div style={{fontSize:13,color:C.text,lineHeight:1.7}}>Willow 和 Emily 在 Irvine Spectrum 的网球场打到正嗨，突然暴雨 — they had to <strong style={{color:C.accent}}>abandon</strong> the match and run for matcha ice cream! 🍵</div>
@@ -3473,7 +3454,7 @@ export default function App() {
           <a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a>
           <button onClick={()=>setShowShare(true)} style={{ background:"transparent", border:"none", color:C.accent, fontFamily:FONT, fontSize:12, fontWeight:600, cursor:"pointer", padding:0 }}>🔗 推荐给朋友</button>
         </div>
-        <div style={{ marginTop:4, fontSize:11, color:C.border }}>KnowU VocabSpark</div>
+        <div style={{ marginTop:4, fontSize:11, color:C.border }}>Vocab by Know U.</div>
       </div>
       <PrivacyNotice />
 
@@ -3529,7 +3510,7 @@ export default function App() {
             <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>{"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉\n👉 knowulearning.com"}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {typeof navigator !== "undefined" && navigator.share && (
-                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{ try { await navigator.share({ title:"KnowU VocabSpark — AI 英语词汇导师", text:"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉", url:"https://knowulearning.com" }); } catch(e){} }}>📱 分享到微信 / 其他 App</button>
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{ try { await navigator.share({ title:"Vocab by Know U. — AI 英语词汇导师", text:"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉", url:"https://knowulearning.com" }); } catch(e){} }}>📱 分享到微信 / 其他 App</button>
               )}
               <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{ navigator.clipboard?.writeText("发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接")); }}>📋 复制邀请文案</button>
               <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>关闭</button>
@@ -3552,7 +3533,7 @@ export default function App() {
   return (
     <div style={S.root}>
       <Head>
-        <title>KnowU VocabSpark — {currentWord || "学习中"}</title>
+        <title>Vocab by Know U. — {currentWord || "学习中"}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -3950,7 +3931,7 @@ export default function App() {
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
           <div style={{background:C.card,borderRadius:16,padding:"32px 24px",maxWidth:420,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",textAlign:"center",fontFamily:FONT}}>
             <div style={{fontSize:48,marginBottom:8}}>☕</div>
-            <h3 style={{fontSize:20,fontWeight:700,margin:"0 0 8px"}}>喜欢 KnowU VocabSpark 吗？</h3>
+            <h3 style={{fontSize:20,fontWeight:700,margin:"0 0 8px"}}>喜欢 Vocab by Know U. 吗？</h3>
             <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 20px"}}>最初为女儿写的学习工具，现在分享给每一位认真学英语的你。持续开发和 AI 运行都有成本，你的支持是最大的动力！</p>
             <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
               {[["☕ $10 — 一杯咖啡","10"],["🍕 $25 — 一顿午餐","25"],["🎁 $50 — 加满油","50"]].map(([label,amt]) => (
@@ -4003,7 +3984,7 @@ export default function App() {
           <div style={S.doneWords}>{wordList.map(w => <span key={w} style={S.doneTag} onClick={()=>speak(w)}>{w+" 🔊"}</span>)}</div>
 
           {!tipDismissed && <div style={{marginTop:20,padding:"16px 20px",background:C.goldLight,borderRadius:12,fontSize:14,lineHeight:1.7,textAlign:"center"}}>
-            <div style={{marginBottom:8}}>☕ 如果 KnowU VocabSpark 帮到了你，考虑请开发者喝杯咖啡？</div>
+            <div style={{marginBottom:8}}>☕ 如果 Vocab by Know U. 帮到了你，考虑请开发者喝杯咖啡？</div>
             <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
               <button onClick={()=>window.open("https://buymeacoffee.com/winstonwu1996","_blank")} style={{padding:"8px 20px",background:C.gold,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:14,fontWeight:600,cursor:"pointer"}}>☕ 支持一下</button>
               <button onClick={()=>setShowShare(true)} style={{padding:"8px 20px",background:C.accent,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:14,fontWeight:600,cursor:"pointer"}}>🔗 推荐给朋友</button>
@@ -4104,7 +4085,7 @@ export default function App() {
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {typeof navigator !== "undefined" && navigator.share && (
                 <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{
-                  try { await navigator.share({ title:"KnowU VocabSpark — AI 英语词汇导师", text:"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉", url:"https://knowulearning.com" }); } catch(e){}
+                  try { await navigator.share({ title:"Vocab by Know U. — AI 英语词汇导师", text:"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉", url:"https://knowulearning.com" }); } catch(e){}
                 }}>📱 分享到微信 / 其他 App</button>
               )}
               <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{
@@ -4140,7 +4121,7 @@ export default function App() {
           <a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a>
           <button onClick={()=>setShowShare(true)} style={{ background:"transparent", border:"none", color:C.accent, fontFamily:FONT, fontSize:12, fontWeight:600, cursor:"pointer", padding:0 }}>🔗 推荐给朋友</button>
         </div>
-        <div style={{ marginTop:4, fontSize:11, color:C.border }}>KnowU VocabSpark</div>
+        <div style={{ marginTop:4, fontSize:11, color:C.border }}>Vocab by Know U.</div>
       </div>
       <PrivacyNotice />
 
