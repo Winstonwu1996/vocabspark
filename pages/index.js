@@ -417,47 +417,50 @@ var callAPI = async (sys, msg, opts) => {
 
 var callAPIStream = async (sys, msg, opts, onChunk) => {
   opts = opts || {};
-  var response = await fetchWithTimeout("/api/chat-stream", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      system: sys,
-      message: msg,
-      maxTokens: 900,
-      preferredProviders: opts.preferredProviders || undefined,
-    }),
-  }, FETCH_TIMEOUT_LONG_MS);
-  if (!response.ok) {
-    var errData = null;
-    try { errData = await response.json(); } catch(e) {}
-    throw new Error((errData && errData.error) || "Stream request failed");
-  }
-  var reader = response.body.getReader();
-  var decoder = new TextDecoder();
-  var fullText = "";
-  var buffer = "";
-  while (true) {
-    var result = await reader.read();
-    if (result.done) break;
-    buffer += decoder.decode(result.value, { stream: true });
-    var lines = buffer.split("\n");
-    buffer = lines.pop() || "";
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i].trim();
-      if (!line || !line.startsWith("data: ")) continue;
-      var payload = line.slice(6);
-      if (payload === "[DONE]") continue;
-      try {
-        var json = JSON.parse(payload);
-        var delta = json.choices && json.choices[0] && json.choices[0].delta && json.choices[0].delta.content;
-        if (delta) {
-          fullText += delta;
-          if (onChunk) onChunk(fullText);
-        }
-      } catch (e) {}
+  // Try streaming endpoint first; fall back to regular API if unavailable (404, error)
+  try {
+    var response = await fetchWithTimeout("/api/chat-stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: sys,
+        message: msg,
+        maxTokens: 900,
+        preferredProviders: opts.preferredProviders || undefined,
+      }),
+    }, FETCH_TIMEOUT_LONG_MS);
+    if (!response.ok) throw new Error("stream " + response.status);
+    var reader = response.body.getReader();
+    var decoder = new TextDecoder();
+    var fullText = "";
+    var buffer = "";
+    while (true) {
+      var result = await reader.read();
+      if (result.done) break;
+      buffer += decoder.decode(result.value, { stream: true });
+      var lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line || !line.startsWith("data: ")) continue;
+        var payload = line.slice(6);
+        if (payload === "[DONE]") continue;
+        try {
+          var json = JSON.parse(payload);
+          var delta = json.choices && json.choices[0] && json.choices[0].delta && json.choices[0].delta.content;
+          if (delta) {
+            fullText += delta;
+            if (onChunk) onChunk(fullText);
+          }
+        } catch (e) {}
+      }
     }
+    return fullText;
+  } catch (streamErr) {
+    // Fallback: use regular non-streaming API
+    console.warn("[callAPIStream] streaming failed, falling back:", streamErr.message);
+    return callAPI(sys, msg, opts);
   }
-  return fullText;
 };
 
 var callAPIFast = async (sys, msg, opts) => {
