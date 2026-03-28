@@ -710,6 +710,7 @@ export default function App() {
   var topRef = useRef(null);
   var photoRef = useRef(null);
   var teachTimeoutRef = useRef(null);
+  var teachPollRef = useRef(null);
   var speedWaitAbortRef = useRef(false);
   var [photoLoading, setPhotoLoading] = useState(false);
 
@@ -1562,6 +1563,8 @@ export default function App() {
 
   var applyWordData = function(word) {
     var d = dataCache.current[word];
+    if (teachPollRef.current) clearInterval(teachPollRef.current);
+    if (teachTimeoutRef.current) clearTimeout(teachTimeoutRef.current);
     setGuessData(null); setSelectedOption(""); setGuessSubmitted(false);
     setShowHint(false); setTeachContent(""); setSpectrumData(null);
     setSpecSlots([null,null,null]); setSpecPool([]); setSpecStatus("idle");
@@ -1583,9 +1586,24 @@ export default function App() {
     } else if (d?.teachFailed) {
       setTeachContent("__FAILED__");
     } else {
-      // teach 数据可能还在加载中（streaming 模式），设置安全超时
+      // teach 数据可能还在加载中（streaming 模式），轮询等待到达
       if (teachTimeoutRef.current) clearTimeout(teachTimeoutRef.current);
+      if (teachPollRef.current) clearInterval(teachPollRef.current);
+      var pollWord = word;
+      teachPollRef.current = setInterval(function() {
+        var cached = dataCache.current[pollWord];
+        if (cached?.teach) {
+          setTeachContent(cached.teach);
+          clearInterval(teachPollRef.current);
+          clearTimeout(teachTimeoutRef.current);
+        } else if (cached?.teachFailed) {
+          setTeachContent("__FAILED__");
+          clearInterval(teachPollRef.current);
+          clearTimeout(teachTimeoutRef.current);
+        }
+      }, 500);
       teachTimeoutRef.current = setTimeout(function() {
+        if (teachPollRef.current) clearInterval(teachPollRef.current);
         setTeachContent(function(prev) { return prev || "__FAILED__"; });
       }, 20000);
     }
