@@ -316,7 +316,7 @@ var SpeakWordBtn = ({ text, size }) => {
 var BrandUIcon = ({ size }) => {
   var s = size || 36;
   return (
-    <img src="/logo.png" width={s} height={s} alt="Know U." style={{ objectFit:"contain", borderRadius:s > 40 ? 10 : 6 }} />
+    <img src="/logo.png" width={s} height={s} alt="Know U." style={{ objectFit:"contain", borderRadius:s > 40 ? 10 : 6, filter:"drop-shadow(0 2px 4px rgba(61,90,153,0.35)) drop-shadow(0 1px 2px rgba(204,107,40,0.2))" }} />
   );
 };
 
@@ -330,42 +330,39 @@ var BrandSparkIcon = ({ size, marginBottom }) => {
   );
 };
 
-var BrandNavBar = () => (
-  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px", borderBottom:"1px solid "+C.border, background:C.card, marginBottom:0 }}>
-    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-      <BrandUIcon size={28} />
-      <span style={{ fontSize:15, letterSpacing:"-0.02em" }}><span style={{ fontWeight:800, color:C.text }}>Know U.</span><span style={{ fontWeight:400, color:C.textSec, marginLeft:4 }}>Learning</span></span>
-    </div>
-    <div style={{ display:"flex", alignItems:"center", gap:14, fontSize:13 }}>
-      <span style={{ fontWeight:700, color:C.accent, borderBottom:"2px solid "+C.accent, paddingBottom:2 }}>Vocab</span>
-      <span style={{ color:C.textSec, fontSize:12, opacity:0.6 }}>Writing <sup style={{fontSize:9,fontWeight:600,color:C.teal}}>Soon</sup></span>
-    </div>
-  </div>
-);
-
-var AppHeroHeader = ({ stats, studyStreak }) => {
-  var pct = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
-  var hasStats = stats.xp > 0;
+var BrandNavBar = ({ stats, studyStreak }) => {
+  var pct = stats && stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+  var hasStats = stats && stats.xp > 0;
+  var hasStreak = studyStreak && studyStreak.streak > 0;
   return (
-    <>
-    <BrandNavBar />
-    <div style={{ background:"linear-gradient(135deg, "+C.card+" 0%, "+C.tealLight+" 50%, "+C.accentLight+" 100%)", padding:"24px 20px 18px", marginBottom:14, border:"1px solid "+C.border, borderTop:"none", borderRadius:"0 0 16px 16px", boxShadow:"0 4px 20px rgba(44,36,32,0.06)" }}>
-      <div style={{ marginBottom:hasStats || (studyStreak && studyStreak.streak > 0) ? 14 : 0 }}>
-        <h1 style={{ fontSize:36, fontWeight:900, margin:0, letterSpacing:"-0.04em", lineHeight:1, color:C.text }}>Vocab</h1>
-        <p style={{ fontSize:18, fontWeight:600, color:C.teal, margin:"6px 0 0", letterSpacing:"-0.01em", lineHeight:1.2 }}>Truly Know U.</p>
-        <p style={{ fontSize:13, color:C.textSec, margin:"4px 0 0", fontWeight:500 }}>Personal AI Language Tutor.</p>
-      </div>
-      {(hasStats || (studyStreak && studyStreak.streak > 0)) && (
-        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-          {hasStats && <span style={{...S.heroStatPillGold, padding:"5px 12px", fontSize:12}}>{"⚡ " + stats.xp + " XP"}</span>}
-          {studyStreak && studyStreak.streak > 0 && <span style={{...S.heroStatPillAccent, padding:"5px 12px", fontSize:12}}>{"🔥 连续 " + studyStreak.streak + " 天" + (studyStreak.todayDone ? " ✓" : "")}</span>}
-          {hasStats && <span style={{...S.heroStatPillGreen, padding:"5px 12px", fontSize:12}}>{"✅ 正确率 " + pct + "%"}</span>}
+  <div style={{ borderBottom:"1px solid "+C.border, background:C.card, marginBottom:0 }}>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+        <BrandUIcon size={28} />
+        <div>
+          <div style={{ fontSize:15, letterSpacing:"-0.02em", lineHeight:1.1 }}><span style={{ fontWeight:800, color:C.text, textShadow:"0 1px 2px rgba(44,36,32,0.15)" }}>Know U.</span><span style={{ fontWeight:500, color:C.textSec, marginLeft:4, textShadow:"0 1px 1px rgba(44,36,32,0.08)" }}>Learning</span></div>
+          <div style={{ fontSize:10, color:C.textSec, opacity:0.7, letterSpacing:"0.02em", marginTop:1 }}>Personal AI Language Tutor</div>
         </div>
-      )}
+      </div>
+      <div style={{ display:"flex", alignItems:"center", gap:14, fontSize:13 }}>
+        <span style={{ fontWeight:700, color:C.accent, borderBottom:"2px solid "+C.accent, paddingBottom:2 }}>Vocab</span>
+        <span style={{ color:C.textSec, fontSize:12, opacity:0.6 }}>Writing <sup style={{fontSize:9,fontWeight:600,color:C.teal}}>Soon</sup></span>
+      </div>
     </div>
-    </>
+    {(hasStats || hasStreak) && (
+      <div style={{ display:"flex", gap:6, flexWrap:"wrap", padding:"0 16px 10px" }}>
+        {hasStats && <span style={{...S.heroStatPillGold, padding:"4px 10px", fontSize:11}}>{"⚡ " + stats.xp + " XP"}</span>}
+        {hasStreak && <span style={{...S.heroStatPillAccent, padding:"4px 10px", fontSize:11}}>{"🔥 连续 " + studyStreak.streak + " 天" + (studyStreak.todayDone ? " ✓" : "")}</span>}
+        {hasStats && <span style={{...S.heroStatPillGreen, padding:"4px 10px", fontSize:11}}>{"✅ 正确率 " + pct + "%"}</span>}
+      </div>
+    )}
+  </div>
   );
 };
+
+var AppHeroHeader = ({ stats, studyStreak }) => (
+  <BrandNavBar stats={stats} studyStreak={studyStreak} />
+);
 
 /* ─── Resilience helpers ─── */
 var FETCH_TIMEOUT_MS = 35000; // guess/spectrum 短内容
@@ -2833,9 +2830,10 @@ export default function App() {
       {showWelcome && (
         <div style={{ position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.55)", zIndex:999, display:"flex", alignItems:"center", justifyContent:"center", padding:20, fontFamily:FONT }}>
           <div style={{ background:C.card, borderRadius:20, padding:"32px 28px", maxWidth:480, width:"100%", boxShadow:"0 20px 60px rgba(0,0,0,0.25)", animation:"fadeUp 0.25s ease-out" }}>
-            <BrandSparkIcon size={52} marginBottom={8} />
-            <h2 style={{ fontSize:32, fontWeight:900, textAlign:"center", margin:"0 0 2px", letterSpacing:"-0.04em", lineHeight:1, color:C.text }}>Vocab</h2>
-            <p style={{ fontSize:16, fontWeight:600, color:C.teal, textAlign:"center", margin:"6px 0 2px", letterSpacing:"-0.01em" }}>Truly Know U.</p>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:12, marginBottom:4 }}>
+              <BrandUIcon size={44} />
+              <h2 style={{ fontSize:32, fontWeight:900, margin:0, letterSpacing:"-0.04em", lineHeight:1, color:C.text, textShadow:"0 2px 4px rgba(44,36,32,0.15)" }}>Vocab</h2>
+            </div>
             <p style={{ fontSize:12, color:C.textSec, textAlign:"center", margin:"0 0 18px", fontWeight:500 }}>Personal AI Language Tutor.</p>
             <div style={{ fontSize:14, lineHeight:1.85, color:C.text }}>
               <p style={{ margin:"0 0 12px" }}><strong>Vocab</strong> 是 Know U. Learning 旗下 AI 驱动的英语词汇学习工具，通过<strong>猜 → 讲 → 光谱排序 → 复习</strong>帮你把单词记牢。</p>
