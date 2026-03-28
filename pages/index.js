@@ -1279,16 +1279,15 @@ export default function App() {
     var earlyStartResolved = false;
     var resolveEarlyStart = null;
     var earlyStartPromise = enableStreaming ? new Promise(function(r) { resolveEarlyStart = r; }) : null;
-    var tryResolveEarlyStart = function() {
+    var tryResolveEarlyStart = function(force) {
       if (!enableStreaming || earlyStartResolved) return;
-      if (readyWordSet.size >= streamStartThreshold) {
+      if (force || readyWordSet.size >= streamStartThreshold) {
         earlyStartResolved = true;
-        // UX-only smoothing: finish visual progress to 100 before entering learning
-        setBatchTip("✅ 首词已就绪，正在为你打开学习页面...");
+        setBatchTip(readyWordSet.size > 0 ? "✅ 首词已就绪，正在为你打开学习页面..." : "⏳ 加载完成，正在进入学习...");
         setBatchProgress(function() { return batchTotalR.current || 0; });
         setTimeout(function() {
           if (resolveEarlyStart) resolveEarlyStart();
-        }, 520);
+        }, readyWordSet.size > 0 ? 400 : 200);
       }
     };
     var dynamicCap = 3;
@@ -1302,7 +1301,7 @@ export default function App() {
       var w = batchWords[i];
       if (dataCache.current[w]) {
         completed += 2;
-        if (dataCache.current[w].guess && dataCache.current[w].teach) readyWordSet.add(w);
+        if (dataCache.current[w].teach || dataCache.current[w].guess) readyWordSet.add(w);
         continue;
       }
       dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
@@ -1316,13 +1315,19 @@ export default function App() {
           }).then(function(raw) {
             dataCache.current[word].guess = raw ? tryJSON(raw) : null;
             dataCache.current[word].guessRaw = raw;
-            if (dataCache.current[word].guess && dataCache.current[word].teach) {
+            // Word is ready if teach is done (guess can be null — UI handles gracefully)
+            if (dataCache.current[word].teach && (dataCache.current[word].guess || dataCache.current[word].guessRaw)) {
               readyWordSet.add(word);
               tryResolveEarlyStart();
             }
           }).catch(function(err) {
             console.warn("[loadBatch] guess failed for " + word + ":", err.message);
             dataCache.current[word].guessFailed = true;
+            // Even if guess failed, if teach is ready, consider the word ready
+            if (dataCache.current[word].teach) {
+              readyWordSet.add(word);
+              tryResolveEarlyStart();
+            }
           });
         });
         tasks.push(function() {
@@ -1330,13 +1335,19 @@ export default function App() {
             return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred });
           }).then(function(raw) {
             dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
-            if (dataCache.current[word].guess && dataCache.current[word].teach) {
+            // Word is ready if teach loaded (guess can be partial or failed)
+            if (dataCache.current[word].teach && (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed)) {
               readyWordSet.add(word);
               tryResolveEarlyStart();
             }
           }).catch(function(err) {
             console.warn("[loadBatch] teach failed for " + word + ":", err.message);
             dataCache.current[word].teachFailed = true;
+            // If guess is done/attempted, word is as ready as it'll get
+            if (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed) {
+              readyWordSet.add(word);
+              tryResolveEarlyStart();
+            }
           });
         });
         callWithClientRetry(function() {
@@ -1400,8 +1411,20 @@ export default function App() {
     };
 
     if (enableStreaming) {
-      runAllPromise.then(function() { finalizeBatch(); }).catch(function() {});
+      // Safety: when ALL tasks finish, always resolve earlyStartPromise
+      // to prevent deadlock if no word had both guess+teach succeed
+      runAllPromise.then(function() {
+        finalizeBatch();
+        tryResolveEarlyStart(true); // force resolve
+      }).catch(function() {
+        tryResolveEarlyStart(true); // force resolve even on error
+      });
+      // Safety timeout: if nothing resolves within 35s, force enter learning
+      var safetyTimer = setTimeout(function() {
+        tryResolveEarlyStart(true);
+      }, 35000);
       await earlyStartPromise;
+      clearTimeout(safetyTimer);
       return;
     }
 
