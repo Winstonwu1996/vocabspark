@@ -1559,28 +1559,58 @@ export default function App() {
       setScreeningDef(screeningDefCache.current[word]);
       return;
     }
-    setScreeningDef({ meaning: "", phonetic: "", loading: true });
-    fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(word))
+    setScreeningDef({ zh: "", en: "", phonetic: "", loading: true });
+    // Parallel: Chinese translation + English definition
+    var zhPromise = fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(word) + "&langpair=en|zh-CN")
+      .then(function(r) { return r.json(); })
+      .then(function(data) { return data?.responseData?.translatedText || ""; })
+      .catch(function() { return ""; });
+    var enPromise = fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(word))
       .then(function(r) { return r.json(); })
       .then(function(data) {
         var entry = data?.[0];
         var phonetic = entry?.phonetic || entry?.phonetics?.find(function(p) { return p.text; })?.text || "";
-        var defs = [];
-        (entry?.meanings || []).forEach(function(m) {
-          var pos = m.partOfSpeech || "";
-          (m.definitions || []).slice(0, 2).forEach(function(d) {
-            defs.push((pos ? pos + ": " : "") + d.definition);
-          });
-        });
-        var result = { meaning: defs.slice(0, 3).join("\n") || "No definition found", phonetic: phonetic, loading: false };
-        screeningDefCache.current[word] = result;
-        setScreeningDef(result);
+        var firstMeaning = entry?.meanings?.[0];
+        var pos = firstMeaning?.partOfSpeech || "";
+        var def = firstMeaning?.definitions?.[0]?.definition || "";
+        return { phonetic: phonetic, en: (pos ? pos + ": " : "") + def };
       })
-      .catch(function() {
-        var result = { meaning: "释义加载失败，请根据自己的判断标记", phonetic: "", loading: false };
-        screeningDefCache.current[word] = result;
-        setScreeningDef(result);
-      });
+      .catch(function() { return { phonetic: "", en: "" }; });
+    Promise.all([zhPromise, enPromise]).then(function(results) {
+      var zh = results[0];
+      var enData = results[1];
+      // Clean up: if zh is same as input word (translation failed), ignore it
+      var cleanZh = (zh && zh.toLowerCase() !== word.toLowerCase()) ? zh : "";
+      var result = { zh: cleanZh, en: enData.en, phonetic: enData.phonetic, loading: false };
+      screeningDefCache.current[word] = result;
+      setScreeningDef(result);
+    });
+  };
+
+  // Pre-fetch next words for smoother screening
+  var prefetchScreeningDefs = function(words, startIdx) {
+    for (var i = startIdx; i < Math.min(startIdx + 3, words.length); i++) {
+      var w = words[i];
+      if (!screeningDefCache.current[w]) {
+        (function(word) {
+          var zhP = fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(word) + "&langpair=en|zh-CN")
+            .then(function(r) { return r.json(); })
+            .then(function(d) { return d?.responseData?.translatedText || ""; })
+            .catch(function() { return ""; });
+          var enP = fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(word))
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+              var e = d?.[0]; var p = e?.phonetic || ""; var m = e?.meanings?.[0];
+              return { phonetic: p, en: (m?.partOfSpeech ? m.partOfSpeech + ": " : "") + (m?.definitions?.[0]?.definition || "") };
+            })
+            .catch(function() { return { phonetic: "", en: "" }; });
+          Promise.all([zhP, enP]).then(function(r) {
+            var zh = r[0]; var en = r[1];
+            screeningDefCache.current[word] = { zh: (zh && zh.toLowerCase() !== word.toLowerCase()) ? zh : "", en: en.en, phonetic: en.phonetic, loading: false };
+          });
+        })(w);
+      }
+    }
   };
 
   var startScreening = function() {
@@ -1593,6 +1623,7 @@ export default function App() {
     setScreeningDef(null);
     setScreeningStats({ known: 0, unknown: 0 });
     setScreen("screening");
+    prefetchScreeningDefs(toScreen, 0);
   };
 
   var screeningMarkWord = function(known) {
@@ -1603,15 +1634,23 @@ export default function App() {
       try { localStorage.setItem(WORD_STATUS_KEY, JSON.stringify(next)); } catch(e) {}
       upsertReviewWordData(word, { reviewLevel: 99, nextReviewDate: null, screenedOut: true });
     }
+    var newUnknown = known ? screeningStats.unknown : screeningStats.unknown + 1;
+    var quota = dailyNewWords || 20;
     setScreeningStats(function(prev) {
       return known ? { ...prev, known: prev.known + 1 } : { ...prev, unknown: prev.unknown + 1 };
     });
+    // Smart quota alert: unknown count reached daily learning target
+    if (!known && newUnknown === quota && screeningIdx + 1 < screeningWords.length) {
+      setScreen("screening_quota");
+      return;
+    }
     if (screeningIdx + 1 >= screeningWords.length) {
       setScreen("screening_done");
     } else {
       setScreeningIdx(screeningIdx + 1);
       setScreeningFlipped(false);
       setScreeningDef(null);
+      prefetchScreeningDefs(screeningWords, screeningIdx + 2);
     }
   };
 
@@ -2344,26 +2383,62 @@ export default function App() {
           ) : (
             <>
               <h2 style={{fontSize:32,margin:"0 0 4px",letterSpacing:1,color:C.text}}>{scWord}</h2>
-              {screeningDef?.phonetic && <div style={{fontSize:14,color:C.textSec,marginBottom:8}}>{screeningDef.phonetic}</div>}
-              <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"14px 16px",marginBottom:20,textAlign:"left",minHeight:60}}>
+              {screeningDef?.phonetic && <div style={{fontSize:14,color:C.textSec,marginBottom:10}}>{screeningDef.phonetic}</div>}
+              <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"14px 16px",marginBottom:20,textAlign:"center",minHeight:50}}>
                 {screeningDef?.loading ? (
                   <div style={{color:C.textSec,fontSize:13}}>加载释义中...</div>
                 ) : (
-                  <div style={{fontSize:14,color:C.text,lineHeight:1.7,whiteSpace:"pre-line"}}>{screeningDef?.meaning || "No definition available"}</div>
+                  <>
+                    {screeningDef?.zh && <div style={{fontSize:20,fontWeight:700,color:C.text,marginBottom:screeningDef?.en ? 6 : 0}}>{screeningDef.zh}</div>}
+                    {screeningDef?.en && <div style={{fontSize:12,color:C.textSec,lineHeight:1.5}}>{screeningDef.en}</div>}
+                    {!screeningDef?.zh && !screeningDef?.en && <div style={{fontSize:14,color:C.textSec}}>暂无释义，请根据自己的判断标记</div>}
+                  </>
                 )}
               </div>
-              <div style={{fontSize:13,fontWeight:600,color:C.textSec,marginBottom:10}}>看了释义后，你确认认识这个词吗？</div>
+              <div style={{fontSize:13,fontWeight:600,color:C.textSec,marginBottom:10}}>看了释义，你确认认识这个词吗？</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
                 <button onClick={function(){ screeningMarkWord(true); }} style={{padding:"16px 14px",background:C.greenLight,border:"2px solid "+C.green,borderRadius:14,cursor:"pointer",fontFamily:FONT,fontSize:15,fontWeight:700,color:C.green}}>✅ 确认认识</button>
                 <button onClick={function(){ screeningMarkWord(false); }} style={{padding:"16px 14px",background:C.redLight,border:"2px solid "+C.red,borderRadius:14,cursor:"pointer",fontFamily:FONT,fontSize:15,fontWeight:700,color:C.red}}>❌ 不认识</button>
               </div>
-              <div style={{fontSize:11,color:C.textSec,marginTop:12,lineHeight:1.5}}>「确认认识」→ 标为已掌握，不再出现　|　「不认识」→ 进入 AI 深度学习</div>
             </>
           )}
         </div>
         {scDone > 10 && (
           <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",marginTop:16,background:C.teal}} onClick={function(){ setScreen("screening_done"); }}>⏩ 够了，开始学习不认识的词</button>
         )}
+      </div></div>
+    );
+  }
+
+  if (screen === "screening_quota") {
+    var _sqQuota = dailyNewWords || 20;
+    var _sqRemaining = screeningWords.length - screeningIdx - 1;
+    return (
+      <div style={S.root}><div className="vs-desktop-container" style={S.container}>
+        <div style={{...S.card, textAlign:"center", padding:"32px 24px"}}>
+          <div style={{fontSize:48,marginBottom:8}}>🎯</div>
+          <h2 style={{fontSize:20,margin:"0 0 8px",color:C.text}}>今日学习目标已达成！</h2>
+          <div style={{fontSize:14,color:C.textSec,lineHeight:1.7,marginBottom:20}}>
+            你已筛出 <strong style={{color:C.accent,fontSize:18}}>{_sqQuota}</strong> 个不认识的词，<br/>
+            正好是你设定的每日精读数量。
+          </div>
+          <div style={{background:C.tealLight,border:"1px solid "+C.teal+"44",borderRadius:10,padding:"14px",fontSize:13,color:C.teal,lineHeight:1.6,marginBottom:20,textAlign:"left"}}>
+            ✅ 已认识 <strong>{screeningStats.known}</strong> 个（标为已掌握，不再出现）<br/>
+            ❌ 不认识 <strong>{screeningStats.unknown}</strong> 个（等待 AI 精读）<br/>
+            📋 未筛选 <strong>{_sqRemaining}</strong> 个（下次继续）
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ setScreen("setup"); startLearning(0); }}>✨ 开始 AI 精读（{_sqQuota} 个词）</button>
+            <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={function(){
+              setScreeningIdx(screeningIdx + 1);
+              setScreeningFlipped(false);
+              setScreeningDef(null);
+              setScreen("screening");
+              prefetchScreeningDefs(screeningWords, screeningIdx + 2);
+            }}>🔄 继续筛选剩余 {_sqRemaining} 个词</button>
+            <button style={{...S.ghostBtn,width:"100%",justifyContent:"center"}} onClick={function(){ setScreen("screening_done"); }}>查看筛选结果</button>
+          </div>
+        </div>
       </div></div>
     );
   }
@@ -2809,14 +2884,24 @@ export default function App() {
           <div style={S.setupHint}>控制每天的学习节奏，系统会自动安排任务。</div>
 
           {/* 词库概览 */}
-          <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",fontSize:13,lineHeight:1.8,marginBottom:14}}>
-            <div>📚 词库：<strong>{planView.totalWords}</strong> 个词（已学 {planView.learnedCount}，剩余 <strong>{planView.remainingWords}</strong>）</div>
-            <div>📅 今日到期复习：<strong>{planView.dueCount}</strong> 个</div>
-          </div>
+          {(() => {
+            var _screenedCount = Object.values(reviewWordData).filter(function(d) { return d.screenedOut; }).length;
+            return <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",fontSize:13,lineHeight:1.8,marginBottom:14}}>
+              <div>📚 词库：<strong>{planView.totalWords}</strong> 个词（已学 {planView.learnedCount}，剩余 <strong>{planView.remainingWords}</strong>）</div>
+              {_screenedCount > 0 && <div>🃏 快筛已跳过：<strong>{_screenedCount}</strong> 个（标为已掌握）</div>}
+              <div>📅 今日到期复习：<strong>{planView.dueCount}</strong> 个</div>
+              {planView.remainingWords > 50 && (
+                <div style={{marginTop:6}}>
+                  <button style={{background:C.teal,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:FONT}} onClick={function(){ startScreening(); }}>🃏 用快筛过滤已认识的词 →</button>
+                </div>
+              )}
+            </div>;
+          })()}
 
-          {/* 每日新词数 — 主控 */}
+          {/* 每日精读数 — 主控 */}
           <div style={{marginBottom:16}}>
-            <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:6}}>每天学几个新词？</div>
+            <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:6}}>每天 AI 精读几个新词？</div>
+            <div style={{fontSize:11,color:C.textSec,marginBottom:6}}>快筛时，筛出这么多不认识的词就会提醒你开始精读</div>
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
               {[5,10,15,20,25,30,50].map(function(n) { return <button key={n} onClick={function(){updateDailyNewWords(n);}} style={dailyNewWords===n ? {...S.ghostBtn, background:C.accent, color:"#fff", borderColor:C.accent, padding:"8px 14px"} : {...S.ghostBtn, padding:"8px 14px"}}>{n}</button>; })}
             </div>
