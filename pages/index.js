@@ -2312,7 +2312,10 @@ export default function App() {
 
   var getStatsSnapshot = function() {
     var words = parseWordsFromInput(wordInput);
-    var reviewRecords = Object.values(reviewWordData || {});
+    var wordSet = new Set(words.map(function(w) { return w.toLowerCase(); }));
+    var reviewRecords = Object.keys(reviewWordData || {}).filter(function(k) {
+      return wordSet.has(k.toLowerCase());
+    }).map(function(k) { return reviewWordData[k]; });
     var totalReviews = reviewRecords.reduce(function(acc, item) {
       return acc + ((item.reviewHistory || []).length || 0);
     }, 0);
