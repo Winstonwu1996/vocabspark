@@ -375,7 +375,8 @@ var AppHeroHeader = ({ stats, studyStreak }) => {
 };
 
 /* ─── Resilience helpers ─── */
-var FETCH_TIMEOUT_MS = 25000; // 服务端 15s 超时 + 429 重试 3s + 5s 余量
+var FETCH_TIMEOUT_MS = 35000; // guess/spectrum 短内容
+var FETCH_TIMEOUT_LONG_MS = 55000; // teach 长内容（400-500字生成需要更多时间）
 
 var fetchWithTimeout = function(url, options, timeoutMs) {
   timeoutMs = timeoutMs || FETCH_TIMEOUT_MS;
@@ -408,7 +409,7 @@ var callAPI = async (sys, msg, opts) => {
       maxTokens: 1200,
       preferredProviders: opts.preferredProviders || undefined,
     }),
-  });
+  }, FETCH_TIMEOUT_LONG_MS);
   const data = await response.json();
   if (data.error) throw new Error(data.error);
   return data.text;
@@ -711,6 +712,7 @@ export default function App() {
   var photoRef = useRef(null);
   var teachTimeoutRef = useRef(null);
   var teachPollRef = useRef(null);
+  var spectrumPollRef = useRef(null);
   var speedWaitAbortRef = useRef(false);
   var [photoLoading, setPhotoLoading] = useState(false);
 
@@ -1565,6 +1567,7 @@ export default function App() {
     var d = dataCache.current[word];
     if (teachPollRef.current) clearInterval(teachPollRef.current);
     if (teachTimeoutRef.current) clearTimeout(teachTimeoutRef.current);
+    if (spectrumPollRef.current) clearInterval(spectrumPollRef.current);
     setGuessData(null); setSelectedOption(""); setGuessSubmitted(false);
     setShowHint(false); setTeachContent(""); setSpectrumData(null);
     setSpecSlots([null,null,null]); setSpecPool([]); setSpecStatus("idle");
@@ -1605,9 +1608,26 @@ export default function App() {
       teachTimeoutRef.current = setTimeout(function() {
         if (teachPollRef.current) clearInterval(teachPollRef.current);
         setTeachContent(function(prev) { return prev || "__FAILED__"; });
-      }, 20000);
+      }, 60000);
     }
-    if (d?.spectrum?.spectrum_words) setSpectrumData(d.spectrum);
+    if (spectrumPollRef.current) clearInterval(spectrumPollRef.current);
+    if (d?.spectrum?.spectrum_words) {
+      setSpectrumData(d.spectrum);
+    } else {
+      // spectrum 数据可能还在加载中，轮询等待
+      var specWord = word;
+      spectrumPollRef.current = setInterval(function() {
+        var cached = dataCache.current[specWord];
+        if (cached?.spectrum?.spectrum_words) {
+          setSpectrumData(cached.spectrum);
+          clearInterval(spectrumPollRef.current);
+        }
+      }, 500);
+      // 45 秒后停止轮询（spectrum 不是必须的，超时就跳过）
+      setTimeout(function() {
+        if (spectrumPollRef.current) clearInterval(spectrumPollRef.current);
+      }, 45000);
+    }
     setPhaseDir(1); setPhase("guess");
   };
 

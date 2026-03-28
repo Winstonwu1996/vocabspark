@@ -126,7 +126,7 @@ export default async function handler(req, res) {
   }
 
   const tokens = maxTokens || 2000;
-  const timeoutMs = Number(process.env.CHAT_PROVIDER_TIMEOUT_MS || 15000);
+  const timeoutMs = Number(process.env.CHAT_PROVIDER_TIMEOUT_MS || 30000);
   const errors = [];
   const providers = buildProviders();
   if (!providers.length) {
