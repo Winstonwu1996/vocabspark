@@ -2911,14 +2911,35 @@ export default function App() {
               <div style={{fontSize:13,color:C.textSec,marginBottom:14,lineHeight:1.6}}>在「词汇表」页签中粘贴单词（每行一个），AI 会为你量身定制学习内容。</div>
               <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none",padding:"8px 20px",fontSize:14,fontWeight:600}} onClick={function(){ setSetupTab("words"); setTimeout(function(){ var el = document.getElementById("vocabspark-profile-section"); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }, 120); }}>前往词汇表 →</button>
             </div>
-            <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"14px 16px",marginTop:10}}>
-              <div style={{fontSize:12,color:C.teal,fontWeight:700,marginBottom:6}}>AI 定制效果预览</div>
-              <div style={{fontSize:13,color:C.text,lineHeight:1.7,background:C.tealLight,borderRadius:8,padding:"10px 12px"}}>
-                <div style={{fontWeight:700,marginBottom:4}}>abandon</div>
-                <div>普通教材：<span style={{color:C.textSec}}>to leave completely and finally</span></div>
-                <div style={{marginTop:4}}>KnowU：<span style={{color:C.accent,fontWeight:600}}>Willow 正和 Emily 打网球，突然下暴雨 — they had to <u>abandon</u> the match and run to Irvine Spectrum for matcha ice cream!</span></div>
+            <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"16px",marginTop:10}}>
+              <div style={{fontSize:13,color:C.teal,fontWeight:800,marginBottom:10,textAlign:"center"}}>✨ AI 如何为你定制学习？</div>
+              <div style={{background:"linear-gradient(135deg,"+C.tealLight+" 0%,"+C.accentLight+" 100%)",borderRadius:10,padding:"12px 14px",marginBottom:10,border:"1px solid "+C.teal+"22"}}>
+                <div style={{fontSize:11,color:C.teal,fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:4}}>📝 画像示例</div>
+                <div style={{fontSize:12,color:C.text,lineHeight:1.7,fontStyle:"italic"}}>Willow，6年级，住在 Irvine<br/>好朋友 Emily · 网球教练 Ms. Lee<br/>最爱逛 Irvine Spectrum · 抹茶冰淇淋控<br/>追《鬼灭之刃》· 偶像 Taylor Swift</div>
               </div>
-              <div style={{fontSize:11,color:C.textSec,marginTop:6,textAlign:"center"}}>填写「画像」后，所有例句都会围绕你的真实生活</div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                <div style={{background:C.bg,borderRadius:8,padding:"10px 12px",border:"1px solid "+C.border}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                    <span style={{fontWeight:700,fontSize:13}}>abandon</span>
+                    <span style={{fontSize:10,color:C.textSec,background:C.border+"88",borderRadius:4,padding:"1px 6px"}}>普通教材</span>
+                  </div>
+                  <div style={{fontSize:13,color:C.textSec,lineHeight:1.6}}>to leave completely and finally; forsake</div>
+                </div>
+                <div style={{fontSize:11,color:C.teal,fontWeight:700,textAlign:"center",margin:"-2px 0"}}>⬇️ KnowU 加持后</div>
+                <div style={{background:C.accentLight,borderRadius:8,padding:"10px 12px",border:"1px solid "+C.accent+"33"}}>
+                  <div style={{fontWeight:700,fontSize:13,color:C.accent,marginBottom:4}}>abandon</div>
+                  <div style={{fontSize:13,color:C.text,lineHeight:1.7}}>Willow 和 Emily 在 Irvine Spectrum 的网球场打到正嗨，突然暴雨 — they had to <strong style={{color:C.accent}}>abandon</strong> the match and run for matcha ice cream! 🍵</div>
+                </div>
+                <div style={{background:C.purpleLight,borderRadius:8,padding:"10px 12px",border:"1px solid "+C.purple+"33"}}>
+                  <div style={{fontWeight:700,fontSize:13,color:C.purple,marginBottom:4}}>resilient</div>
+                  <div style={{fontSize:13,color:C.text,lineHeight:1.7}}>Ms. Lee 说过："A <strong style={{color:C.purple}}>resilient</strong> player doesn't quit after losing the first set." — Willow 记住了，下一场她翻盘了 🎾</div>
+                </div>
+                <div style={{background:C.goldLight,borderRadius:8,padding:"10px 12px",border:"1px solid "+C.gold+"33"}}>
+                  <div style={{fontWeight:700,fontSize:13,color:"#b8860b",marginBottom:4}}>euphoria</div>
+                  <div style={{fontSize:13,color:C.text,lineHeight:1.7}}>The <strong style={{color:"#b8860b"}}>euphoria</strong> Willow felt when Taylor Swift played "Shake It Off" live — 全场尖叫，她激动到快哭 🎤</div>
+                </div>
+              </div>
+              <div style={{fontSize:12,color:C.teal,marginTop:10,textAlign:"center",fontWeight:600,lineHeight:1.6}}>每个单词都是你的故事<br/><span style={{fontWeight:400,color:C.textSec,fontSize:11}}>填写「画像」后，AI 会用你的真实生活编织例句</span></div>
             </div>
           </>
         ) : (
