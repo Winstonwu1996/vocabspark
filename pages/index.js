@@ -3359,28 +3359,19 @@ export default function App() {
                 </div>
                 <div style={{fontSize:13,fontWeight:600,marginBottom:6,color:C.text}}>邮箱地址</div>
                 <input type="email" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') handleLoginEmail(); }} placeholder="your@email.com" style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:14,outline:"none",marginBottom:12,boxSizing:"border-box"}} />
-                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading?0.6:1}} onClick={handleLoginEmail} disabled={loginLoading||!loginEmail.trim()}>{loginLoading ? "发送中..." : "✉️ 发送登录邮件"}</button>
-                <div style={{fontSize:12,color:C.textSec,textAlign:"center",marginTop:12,lineHeight:1.6}}>无需密码 · 点击邮件中的按钮即可登录<br/>新老用户都用同一个邮箱，系统自动识别</div>
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading?0.6:1}} onClick={handleLoginEmail} disabled={loginLoading||!loginEmail.trim()}>{loginLoading ? "发送中..." : "✉️ 发送验证码"}</button>
+                <div style={{fontSize:12,color:C.textSec,textAlign:"center",marginTop:12,lineHeight:1.6}}>无需密码 · 输入邮件中的 6 位验证码即可登录<br/>新老用户都用同一个邮箱，系统自动识别</div>
                 <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",width:"100%",marginTop:12,padding:"4px 0"}} onClick={()=>{setShowLogin(false);setLoginEmail('');window.scrollTo(0,0);}}>暂时不用</button>
               </>
             ) : (
               <>
                 <div style={{fontSize:48,textAlign:"center",marginBottom:12}}>📬</div>
-                <h3 style={{fontSize:18,fontWeight:700,textAlign:"center",margin:"0 0 8px"}}>登录邮件已发送</h3>
-                <p style={{fontSize:14,color:C.textSec,textAlign:"center",lineHeight:1.7,margin:"0 0 16px"}}>已发送登录邮件到 <strong>{loginEmail}</strong></p>
-                <div style={{background:C.tealLight,border:"1px solid "+C.teal+"44",borderRadius:10,padding:"14px 16px",marginBottom:16,textAlign:"left",fontSize:13,lineHeight:1.8,color:C.text}}>
-                  <div style={{fontWeight:700,marginBottom:4}}>📩 请查看邮箱：</div>
-                  <div>1. 打开邮件，点击「<strong>Confirm your signup</strong>」或「<strong>Log In</strong>」按钮</div>
-                  <div>2. 页面跳转后自动完成登录</div>
-                  <div style={{fontSize:11,color:C.textSec,marginTop:6}}>⚠️ 如果没收到，请检查垃圾邮件文件夹</div>
-                </div>
-                <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",marginBottom:12}}>
-                  <div style={{fontSize:12,color:C.textSec,marginBottom:6}}>或者输入邮件中的 6 位验证码：</div>
-                  <input type="text" inputMode="numeric" maxLength={6} value={otpCode} onChange={function(e){ setOtpCode(e.target.value.replace(/[^0-9]/g,'')); setOtpError(''); }} onKeyDown={function(e){ if(e.key==='Enter') handleVerifyOtp(); }} placeholder="000000" style={{width:"100%",padding:"12px 16px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:22,fontWeight:700,textAlign:"center",letterSpacing:"0.3em",outline:"none",boxSizing:"border-box"}} />
-                </div>
+                <h3 style={{fontSize:18,fontWeight:700,textAlign:"center",margin:"0 0 8px"}}>验证码已发送</h3>
+                <p style={{fontSize:14,color:C.textSec,textAlign:"center",lineHeight:1.7,margin:"0 0 16px"}}>已发送 6 位验证码到 <strong>{loginEmail}</strong><br/>请查看邮箱（含垃圾邮件文件夹）</p>
+                <input type="text" inputMode="numeric" maxLength={6} value={otpCode} onChange={function(e){ setOtpCode(e.target.value.replace(/[^0-9]/g,'')); setOtpError(''); }} onKeyDown={function(e){ if(e.key==='Enter') handleVerifyOtp(); }} placeholder="输入 6 位验证码" style={{width:"100%",padding:"14px 16px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:22,fontWeight:700,textAlign:"center",letterSpacing:"0.3em",outline:"none",marginBottom:8,boxSizing:"border-box"}} autoFocus />
                 {otpError && <div style={{fontSize:12,color:C.red,textAlign:"center",marginBottom:8}}>{otpError}</div>}
-                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading||otpCode.length<6?0.6:1}} onClick={handleVerifyOtp} disabled={loginLoading||otpCode.length<6}>{loginLoading ? "验证中..." : "✓ 用验证码登录"}</button>
-                <div style={{fontSize:12,color:C.textSec,marginTop:12,lineHeight:1.6,textAlign:"center"}}><button style={{background:"transparent",border:"none",color:C.accent,fontFamily:FONT,fontSize:12,fontWeight:600,cursor:"pointer",padding:0}} onClick={function(){setLoginSent(false);setOtpCode('');setOtpError('');}}>← 换个邮箱 / 重新发送</button></div>
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading||otpCode.length<6?0.6:1}} onClick={handleVerifyOtp} disabled={loginLoading||otpCode.length<6}>{loginLoading ? "验证中..." : "✓ 验证登录"}</button>
+                <div style={{background:C.bg,borderRadius:10,padding:"10px 14px",fontSize:12,color:C.textSec,marginTop:12,lineHeight:1.6,textAlign:"center"}}>没收到？请检查垃圾邮件文件夹<br/><button style={{background:"transparent",border:"none",color:C.accent,fontFamily:FONT,fontSize:12,fontWeight:600,cursor:"pointer",padding:0,marginTop:4}} onClick={function(){setLoginSent(false);setOtpCode('');setOtpError('');}}>← 重新发送</button></div>
               </>
             )}
           </div>
@@ -3911,10 +3902,10 @@ export default function App() {
                   style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:14,outline:"none",marginBottom:12,boxSizing:"border-box"}}
                 />
                 <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading?0.6:1}} onClick={handleLoginEmail} disabled={loginLoading||!loginEmail.trim()}>
-                  {loginLoading ? "发送中..." : "✉️ 发送登录邮件"}
+                  {loginLoading ? "发送中..." : "✉️ 发送验证码"}
                 </button>
                 <div style={{fontSize:12,color:C.textSec,textAlign:"center",marginTop:12,lineHeight:1.6}}>
-                  无需密码 · 点击邮件中的按钮即可登录<br/>
+                  无需密码 · 输入邮件中的 6 位验证码即可登录<br/>
                   注册即表示同意服务条款
                 </div>
                 <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",width:"100%",marginTop:12,padding:"4px 0"}} onClick={()=>{setShowLogin(false);setLoginEmail('');window.scrollTo(0,0);}}>暂时不用</button>
@@ -3922,21 +3913,12 @@ export default function App() {
             ) : (
               <>
                 <div style={{fontSize:48,textAlign:"center",marginBottom:12}}>📬</div>
-                <h3 style={{fontSize:18,fontWeight:700,textAlign:"center",margin:"0 0 8px"}}>登录邮件已发送</h3>
-                <p style={{fontSize:14,color:C.textSec,textAlign:"center",lineHeight:1.7,margin:"0 0 16px"}}>已发送登录邮件到 <strong>{loginEmail}</strong></p>
-                <div style={{background:C.tealLight,border:"1px solid "+C.teal+"44",borderRadius:10,padding:"14px 16px",marginBottom:16,textAlign:"left",fontSize:13,lineHeight:1.8,color:C.text}}>
-                  <div style={{fontWeight:700,marginBottom:4}}>📩 请查看邮箱：</div>
-                  <div>1. 打开邮件，点击「<strong>Confirm your signup</strong>」或「<strong>Log In</strong>」按钮</div>
-                  <div>2. 页面跳转后自动完成登录</div>
-                  <div style={{fontSize:11,color:C.textSec,marginTop:6}}>⚠️ 如果没收到，请检查垃圾邮件文件夹</div>
-                </div>
-                <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",marginBottom:12}}>
-                  <div style={{fontSize:12,color:C.textSec,marginBottom:6}}>或者输入邮件中的 6 位验证码：</div>
-                  <input type="text" inputMode="numeric" maxLength={6} value={otpCode} onChange={function(e){ setOtpCode(e.target.value.replace(/[^0-9]/g,'')); setOtpError(''); }} onKeyDown={function(e){ if(e.key==='Enter') handleVerifyOtp(); }} placeholder="000000" style={{width:"100%",padding:"12px 16px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:22,fontWeight:700,textAlign:"center",letterSpacing:"0.3em",outline:"none",boxSizing:"border-box"}} />
-                </div>
+                <h3 style={{fontSize:18,fontWeight:700,textAlign:"center",margin:"0 0 8px"}}>验证码已发送</h3>
+                <p style={{fontSize:14,color:C.textSec,textAlign:"center",lineHeight:1.7,margin:"0 0 16px"}}>已发送 6 位验证码到 <strong>{loginEmail}</strong><br/>请查看邮箱（含垃圾邮件文件夹）</p>
+                <input type="text" inputMode="numeric" maxLength={6} value={otpCode} onChange={function(e){ setOtpCode(e.target.value.replace(/[^0-9]/g,'')); setOtpError(''); }} onKeyDown={function(e){ if(e.key==='Enter') handleVerifyOtp(); }} placeholder="输入 6 位验证码" style={{width:"100%",padding:"14px 16px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:22,fontWeight:700,textAlign:"center",letterSpacing:"0.3em",outline:"none",marginBottom:8,boxSizing:"border-box"}} autoFocus />
                 {otpError && <div style={{fontSize:12,color:C.red,textAlign:"center",marginBottom:8}}>{otpError}</div>}
-                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading||otpCode.length<6?0.6:1}} onClick={handleVerifyOtp} disabled={loginLoading||otpCode.length<6}>{loginLoading ? "验证中..." : "✓ 用验证码登录"}</button>
-                <div style={{fontSize:12,color:C.textSec,marginTop:12,lineHeight:1.6,textAlign:"center"}}><button style={{background:"transparent",border:"none",color:C.accent,fontFamily:FONT,fontSize:12,fontWeight:600,cursor:"pointer",padding:0}} onClick={function(){setLoginSent(false);setOtpCode('');setOtpError('');}}>← 换个邮箱 / 重新发送</button></div>
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading||otpCode.length<6?0.6:1}} onClick={handleVerifyOtp} disabled={loginLoading||otpCode.length<6}>{loginLoading ? "验证中..." : "✓ 验证登录"}</button>
+                <div style={{background:C.bg,borderRadius:10,padding:"10px 14px",fontSize:12,color:C.textSec,marginTop:12,lineHeight:1.6,textAlign:"center"}}>没收到？请检查垃圾邮件文件夹<br/><button style={{background:"transparent",border:"none",color:C.accent,fontFamily:FONT,fontSize:12,fontWeight:600,cursor:"pointer",padding:0,marginTop:4}} onClick={function(){setLoginSent(false);setOtpCode('');setOtpError('');}}>← 重新发送</button></div>
               </>
             )}
           </div>
