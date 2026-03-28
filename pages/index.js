@@ -166,7 +166,7 @@ var buildSys = (profile, goal, goalCustom) => {
       goalText = found ? "\n\n【学习目的】\n" + found.label + "（" + found.desc + "）\n请在教学中适当贴合该目标，例如选用与考试/阅读/写作相关的例句语境。" : "";
     }
   }
-  return "你是一个幽默、有耐心且精通中英双语的词汇导师。风格像一个很酷的大姐姐——会用梗、会吐槽、偶尔抖机灵，但绝不油腻。\n\n【学生画像】\n" + p + goalText + "\n\n你必须深度利用上面的学生画像。每一个例句、每一个画面、每一个比喻，都必须和这个学生的具体爱好、常去的地方、日常生活紧密关联。让学生觉得\"这说的就是我的生活\"。";
+  return "你是幽默有耐心的中英双语词汇导师，风格像很酷的大姐姐——会用梗、偶尔吐槽抖机灵。\n\n【学生画像】\n" + p + goalText + "\n\n深度利用画像：例句、画面、比喻必须紧扣学生的爱好、常去地方、日常生活。让学生觉得\"说的就是我\"。";
 };
 
 var buildGuessPrompt = (word, learned) => {
@@ -175,8 +175,8 @@ var buildGuessPrompt = (word, learned) => {
 };
 
 var buildTeachPrompt = (word, learned) => {
-  var ctx = learned.length > 0 ? "\n学生之前学过：" + learned.join(", ") + "。请在\"连\"环节与这些词建立联系。" : "";
-  return "单词：" + word + ctx + "\n\n请依次执行 3 个环节。\n\n重要格式规则：[🔊] 标记只能放在完整英文例句的最末尾（紧跟在句号/感叹号之后），绝对不要插在句子中间或单词后面。\n\n【教 · Teach】\n从以下方法中挑最适合的 3 种，每种 2-4 句话：\n1. 词根词缀解剖 🧩\n2. 趣味谐音/联想 🧠（仅在巧妙时用）\n3. 画面感记忆 🖼️（用学生画像场景）\n4. 近义词找茬 🔍\n5. 词义光谱法 📶\n6. 词源故事 📖\n\n【连 · Connect】\n与学过的词建立联系。\n\n【练 · Apply】\n- 2 个高频搭配，格式：搭配词组 [🔊]\n- 2 个情景造句，格式：完整英文句。 [🔊]（中文翻译）\n每个造句需结合学生画像不同爱好/场景。\n\n要求：400-500字，朋友聊天语气，释义用中文，例句用英文，多换行。统一用直引号\"\"，不要用花引号或反引号。";
+  var ctx = learned.length > 0 ? "\n学过的词：" + learned.join(", ") + "。\"连\"环节与它们建立联系。" : "";
+  return "单词：" + word + ctx + "\n\n依次执行3环节。[🔊]只放在完整英文句末尾（句号/感叹号后）。\n\n【教】挑最适合的2种，每种2-3句：\n1.词根词缀🧩 2.谐音联想🧠 3.画面记忆🖼️ 4.近义词找茬🔍 5.词义光谱📶 6.词源故事📖\n\n【连】与学过的词建立联系。\n\n【练】2个高频搭配（词组 [🔊]）+ 2个情景造句（英文句。[🔊]（中文））。造句结合画像不同场景。\n\n要求：300-400字，朋友聊天语气，释义中文，例句英文，多换行，用直引号\"\"。";
 };
 
 var buildSpectrumPrompt = (word) => {
@@ -406,13 +406,59 @@ var callAPI = async (sys, msg, opts) => {
     body: JSON.stringify({
       system: sys,
       message: msg,
-      maxTokens: 1200,
+      maxTokens: 900,
       preferredProviders: opts.preferredProviders || undefined,
     }),
   }, FETCH_TIMEOUT_LONG_MS);
   const data = await response.json();
   if (data.error) throw new Error(data.error);
   return data.text;
+};
+
+var callAPIStream = async (sys, msg, opts, onChunk) => {
+  opts = opts || {};
+  var response = await fetchWithTimeout("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      system: sys,
+      message: msg,
+      maxTokens: 900,
+      stream: true,
+      preferredProviders: opts.preferredProviders || undefined,
+    }),
+  }, FETCH_TIMEOUT_LONG_MS);
+  if (!response.ok) {
+    var errData = null;
+    try { errData = await response.json(); } catch(e) {}
+    throw new Error((errData && errData.error) || "Stream request failed");
+  }
+  var reader = response.body.getReader();
+  var decoder = new TextDecoder();
+  var fullText = "";
+  var buffer = "";
+  while (true) {
+    var result = await reader.read();
+    if (result.done) break;
+    buffer += decoder.decode(result.value, { stream: true });
+    var lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line || !line.startsWith("data: ")) continue;
+      var payload = line.slice(6);
+      if (payload === "[DONE]") continue;
+      try {
+        var json = JSON.parse(payload);
+        var delta = json.choices && json.choices[0] && json.choices[0].delta && json.choices[0].delta.content;
+        if (delta) {
+          fullText += delta;
+          if (onChunk) onChunk(fullText);
+        }
+      } catch (e) {}
+    }
+  }
+  return fullText;
 };
 
 var callAPIFast = async (sys, msg, opts) => {
@@ -1360,14 +1406,17 @@ export default function App() {
     var batchWords = wl.slice(startIdx, endIdx);
     var total = batchWords.length;
     if (total === 0) return;
+    var silent = opts.silent || false; // silent = background pre-load, no UI changes
     // Streaming mode: start as soon as first word is ready
-    var enableStreaming = true;
+    var enableStreaming = !silent && opts.streaming !== false;
     var streamStartThreshold = 1; // Always start after 1 word ready
-    setBatchTotal(total * 2);
-    setBatchProgress(0);
-    setBatchGroupNo(Math.floor(startIdx / 5) + 1);
-    setPhase("batch_loading");
-    setBatchTip(makeBatchTip(0, batchWords[0], total));
+    if (!silent) {
+      setBatchTotal(total * 2);
+      setBatchProgress(0);
+      setBatchGroupNo(Math.floor(startIdx / 5) + 1);
+      setPhase("batch_loading");
+      setBatchTip(makeBatchTip(0, batchWords[0], total));
+    }
 
     // ── Phase B: fire review/cloze pre-fetch independently (doesn't affect progress bar) ──
     var endMilestone = lrn.length + batchWords.length;
@@ -1462,9 +1511,13 @@ export default function App() {
         });
         tasks.push(function() {
           return callWithClientRetry(function() {
-            return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred });
+            dataCache.current[word].teachPartial = null;
+            return callAPIStream(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred }, function(partial) {
+              dataCache.current[word].teachPartial = addSpeakMarkers(partial);
+            });
           }).then(function(raw) {
             dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
+            dataCache.current[word].teachPartial = null;
             // Word is ready if teach loaded (guess can be partial or failed)
             if (dataCache.current[word].teach && (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed)) {
               readyWordSet.add(word);
@@ -1473,6 +1526,7 @@ export default function App() {
           }).catch(function(err) {
             console.warn("[loadBatch] teach failed for " + word + ":", err.message);
             dataCache.current[word].teachFailed = true;
+            dataCache.current[word].teachPartial = null;
             // If guess is done/attempted, word is as ready as it'll get
             if (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed) {
               readyWordSet.add(word);
@@ -1493,8 +1547,7 @@ export default function App() {
     tryResolveEarlyStart();
 
     var totalTasks = completed + tasks.length;
-    setBatchTotal(totalTasks);
-    setBatchProgress(completed);
+    if (!silent) { setBatchTotal(totalTasks); setBatchProgress(completed); }
 
     var running = 0;
     var taskIdx = 0;
@@ -1507,11 +1560,13 @@ export default function App() {
           t().finally(function() {
             running--;
             completed++;
-            setBatchProgress(completed);
-            if (completed % 2 === 0) {
-              tipWordIdx++;
-              if (tipWordIdx < batchWords.length) {
-                setBatchTip(makeBatchTip(tipWordIdx, batchWords[tipWordIdx], total));
+            if (!silent) {
+              setBatchProgress(completed);
+              if (completed % 2 === 0) {
+                tipWordIdx++;
+                if (tipWordIdx < batchWords.length) {
+                  setBatchTip(makeBatchTip(tipWordIdx, batchWords[tipWordIdx], total));
+                }
               }
             }
             if (completed >= totalTasks) {
@@ -1526,8 +1581,10 @@ export default function App() {
     });
 
     var finalizeBatch = function() {
-      setBatchProgress(totalTasks);
-      setBatchTip("✅ " + total + " 个词全部就绪，开始学习！");
+      if (!silent) {
+        setBatchProgress(totalTasks);
+        setBatchTip("✅ " + total + " 个词全部就绪，开始学习！");
+      }
       try {
         if (typeof window !== "undefined") {
           var elapsedMs = Date.now() - batchStartedAtMs;
@@ -1560,7 +1617,7 @@ export default function App() {
 
     await runAllPromise;
     finalizeBatch();
-    await new Promise(function(r) { setTimeout(r, 400); });
+    if (!silent) await new Promise(function(r) { setTimeout(r, 400); });
   };
 
   var applyWordData = function(word) {
@@ -1603,8 +1660,10 @@ export default function App() {
           setTeachContent("__FAILED__");
           clearInterval(teachPollRef.current);
           clearTimeout(teachTimeoutRef.current);
+        } else if (cached?.teachPartial) {
+          setTeachContent(cached.teachPartial);
         }
-      }, 500);
+      }, 400);
       teachTimeoutRef.current = setTimeout(function() {
         if (teachPollRef.current) clearInterval(teachPollRef.current);
         setTeachContent(function(prev) { return prev || "__FAILED__"; });
@@ -1967,6 +2026,24 @@ export default function App() {
     if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); saveSession(wordList, nextIdx, newLearned); return; }
 
     if (userRef.current && newLearned.length === 10 && !tipDismissed) { setShowTipJar(true); }
+
+    // Pre-generate next batch: when at word 3 of current batch (0-indexed within batch),
+    // start loading the next 5 words in background so they're ready when needed
+    var posInBatch = nextIdx % 5;
+    if (posInBatch === 3) {
+      var nextBatchStart = Math.floor(nextIdx / 5) * 5 + 5;
+      if (nextBatchStart < wordList.length) {
+        var nbEnd = Math.min(nextBatchStart + 5, wordList.length);
+        var needsLoad = false;
+        for (var nbi = nextBatchStart; nbi < nbEnd; nbi++) {
+          if (!dataCache.current[wordList[nbi]]) { needsLoad = true; break; }
+        }
+        if (needsLoad) {
+          // Fire and forget — silent background pre-load, no UI change
+          loadBatch(nextBatchStart, newLearned, undefined, { streaming: false, silent: true }).catch(function() {});
+        }
+      }
+    }
 
     await waitAndEnterNextWord(nextIdx, newLearned);
   };
@@ -3786,7 +3863,7 @@ export default function App() {
 
       {phase === "teach" && <div style={{...S.card, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
         <div style={{...S.tag,background:C.tealLight,color:C.teal}}>📖 学习笔记</div>
-        {teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解内容加载失败</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");callWithClientRetry(function(){return callAPI(sysP,buildTeachPrompt(currentWord,learned));}).then(function(raw){var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
+        {teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解内容加载失败</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");callAPIStream(sysP,buildTeachPrompt(currentWord,learned),{},function(partial){setTeachContent(addSpeakMarkers(partial));}).then(function(raw){var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
         : !teachContent ? <div style={{padding:"8px 0"}}>
           <div style={{background:C.border,borderRadius:8,height:20,width:"70%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
           <div style={{background:C.border,borderRadius:8,height:14,width:"100%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.1s"}}/>

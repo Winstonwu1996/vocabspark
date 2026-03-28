@@ -114,12 +114,82 @@ async function callWithRetry(provider, system, message, maxTokens, timeoutMs) {
   }
 }
 
+async function streamProvider(provider, system, message, maxTokens, timeoutMs, res) {
+  const response = await fetch(provider.url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${provider.apiKey()}`,
+    },
+    body: JSON.stringify({
+      model: provider.model,
+      max_tokens: maxTokens,
+      stream: true,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: message },
+      ],
+    }),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+
+  if (response.status === 429) {
+    const err = new Error("rate_limited");
+    err.status = 429;
+    throw err;
+  }
+
+  if (!response.ok) {
+    const body = await response.text();
+    const err = new Error(`${provider.name} error ${response.status}: ${body}`);
+    err.status = response.status;
+    throw err;
+  }
+
+  // Set SSE headers before streaming
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Provider": provider.name,
+    "X-Provider-Family": provider.family || provider.name,
+  });
+
+  const reader = response.body.getReader();
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(Buffer.from(value));
+    }
+  } finally {
+    res.end();
+  }
+}
+
+async function streamWithRetry(provider, system, message, maxTokens, timeoutMs, res) {
+  for (let attempt = 0; attempt <= 2; attempt++) {
+    try {
+      await applyProviderPacing(provider.name);
+      await streamProvider(provider, system, message, maxTokens, timeoutMs, res);
+      return;
+    } catch (err) {
+      if (res.headersSent) throw err; // Can't retry once streaming started
+      if (err.status === 429 && attempt < 2) {
+        await sleep(1000 * Math.pow(2, attempt));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { system, message, maxTokens, preferredProviders } = req.body;
+  const { system, message, maxTokens, preferredProviders, stream } = req.body;
 
   if (!system || !message) {
     return res.status(400).json({ error: "Missing system or message" });
@@ -153,6 +223,34 @@ export default async function handler(req, res) {
     const preferred = orderedProviders.filter((p) => prefSet.has(p.name));
     const rest = orderedProviders.filter((p) => !prefSet.has(p.name));
     orderedProviders = preferred.concat(rest);
+  }
+
+  // Time-based: during DeepSeek peak (China daytime UTC 0-14), prefer Gemini
+  if (!Array.isArray(preferredProviders) || preferredProviders.length === 0) {
+    const utcHour = new Date().getUTCHours();
+    if (utcHour >= 0 && utcHour < 14) {
+      const gemini = orderedProviders.filter((p) => p.family === "gemini");
+      const rest = orderedProviders.filter((p) => p.family !== "gemini");
+      if (gemini.length > 0) orderedProviders = gemini.concat(rest);
+    }
+  }
+
+  // Streaming path: pipe SSE from provider to client
+  if (stream) {
+    for (const provider of orderedProviders) {
+      try {
+        await streamWithRetry(provider, system, message, tokens, timeoutMs, res);
+        return; // streamProvider already ended the response
+      } catch (err) {
+        if (res.headersSent) return; // Can't recover mid-stream
+        console.error(`[${provider.name}] stream failed:`, err.message);
+        errors.push(`${provider.name}: ${err.message}`);
+      }
+    }
+    if (!res.headersSent) {
+      return res.status(500).json({ error: "All providers failed", details: errors });
+    }
+    return;
   }
 
   for (const provider of orderedProviders) {
