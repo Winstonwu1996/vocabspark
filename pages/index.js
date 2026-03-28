@@ -614,6 +614,7 @@ export default function App() {
   var [showTaskOrderHint, setShowTaskOrderHint] = useState(true);
   var [showProfileGuide, setShowProfileGuide] = useState(false);
   var [streakToast, setStreakToast] = useState(null);
+  var [loginToast, setLoginToast] = useState(null);
   var [screeningWords, setScreeningWords] = useState([]);
   var [screeningIdx, setScreeningIdx] = useState(0);
   var [screeningStats, setScreeningStats] = useState({ known: 0, unknown: 0 });
@@ -979,6 +980,7 @@ export default function App() {
         email: loginEmail.trim(),
         options: {
           shouldCreateUser: true,
+          emailRedirectTo: window.location.origin,
         }
       });
       if (error) throw error;
@@ -1122,29 +1124,46 @@ export default function App() {
   };
 
   // ── Auth state listener ──
+  var handleAuthUser = async function(u, event) {
+    setUser(u); userRef.current = u;
+    if (u && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) {
+      // Close login modal if still open & show success toast
+      if (event === 'SIGNED_IN') {
+        setLoginToast("✅ 登录成功！" + (u.email || ""));
+        setTimeout(function() { setLoginToast(null); }, 4000);
+      }
+      setShowLogin(false); setLoginSent(false); setLoginEmail(''); setOtpCode('');
+      var cloudData = await loadFromCloud(u.id);
+      if (cloudData) {
+        var localData = await loadSave();
+        var localTs = new Date(localData?.updatedAt || 0).getTime() || 0;
+        var cloudTs = new Date(cloudData?.updatedAt || 0).getTime() || 0;
+        var useCloud = cloudTs > localTs || (!localTs && (cloudData?.stats?.xp||0) >= (localData?.stats?.xp||0));
+        if (useCloud) {
+          await doSave(cloudData);
+          if (cloudData.stats) setStats(function(s) { return {...s, ...cloudData.stats}; });
+        } else {
+          await syncToCloud(localData);
+        }
+      } else {
+        var localData = await loadSave();
+        if (localData) await syncToCloud(localData);
+      }
+    }
+  };
+
   useEffect(function() {
     setTodayCount(getDailyState().count);
+
+    // Explicitly check for existing session on mount (handles Magic Link redirect)
+    supabase.auth.getSession().then(function(result) {
+      var u = result?.data?.session?.user || null;
+      if (u) handleAuthUser(u, 'INITIAL_SESSION');
+    });
+
     var {data: {subscription}} = supabase.auth.onAuthStateChange(async function(event, session) {
       var u = session?.user || null;
-      setUser(u); userRef.current = u;
-      if (u && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-        var cloudData = await loadFromCloud(u.id);
-        if (cloudData) {
-          var localData = await loadSave();
-          var localTs = new Date(localData?.updatedAt || 0).getTime() || 0;
-          var cloudTs = new Date(cloudData?.updatedAt || 0).getTime() || 0;
-          var useCloud = cloudTs > localTs || (!localTs && (cloudData?.stats?.xp||0) >= (localData?.stats?.xp||0));
-          if (useCloud) {
-            await doSave(cloudData);
-            if (cloudData.stats) setStats(function(s) { return {...s, ...cloudData.stats}; });
-          } else {
-            await syncToCloud(localData);
-          }
-        } else {
-          var localData = await loadSave();
-          if (localData) await syncToCloud(localData);
-        }
-      }
+      await handleAuthUser(u, event);
     });
     return function() { subscription.unsubscribe(); };
   }, []);
@@ -3384,6 +3403,12 @@ export default function App() {
         </div>
       )}
 
+      {loginToast && (
+        <div style={{position:"fixed",top:80,left:"50%",transform:"translateX(-50%)",zIndex:1200,background:C.green,color:"#fff",padding:"12px 28px",borderRadius:20,fontSize:15,fontWeight:700,boxShadow:"0 6px 24px rgba(0,0,0,0.2)",animation:"fadeUp 0.3s ease-out",whiteSpace:"nowrap"}}>
+          {loginToast}
+        </div>
+      )}
+
       <style>{globalCSS}</style>
     </div>
   );}
@@ -3576,6 +3601,12 @@ export default function App() {
       {streakToast && (
         <div style={{position:"fixed",top:80,left:"50%",transform:"translateX(-50%)",zIndex:1100,background:"linear-gradient(135deg, "+C.gold+" 0%, "+C.accent+" 100%)",color:"#fff",padding:"10px 24px",borderRadius:20,fontSize:15,fontWeight:800,boxShadow:"0 6px 24px rgba(0,0,0,0.2)",animation:"fadeUp 0.3s ease-out",whiteSpace:"nowrap"}}>
           🔥 {streakToast}
+        </div>
+      )}
+
+      {loginToast && (
+        <div style={{position:"fixed",top:80,left:"50%",transform:"translateX(-50%)",zIndex:1200,background:C.green,color:"#fff",padding:"12px 28px",borderRadius:20,fontSize:15,fontWeight:700,boxShadow:"0 6px 24px rgba(0,0,0,0.2)",animation:"fadeUp 0.3s ease-out",whiteSpace:"nowrap"}}>
+          {loginToast}
         </div>
       )}
 
