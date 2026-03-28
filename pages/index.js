@@ -614,6 +614,7 @@ export default function App() {
   var [wordDensity, setWordDensity] = useState("cozy");
   var [showTaskOrderHint, setShowTaskOrderHint] = useState(true);
   var [showProfileGuide, setShowProfileGuide] = useState(false);
+  var [helpTip, setHelpTip] = useState(null);
   var [streakToast, setStreakToast] = useState(null);
   var [loginToast, setLoginToast] = useState(null);
   var [screeningWords, setScreeningWords] = useState([]);
@@ -1223,6 +1224,26 @@ export default function App() {
 
   var saveSession = function(wl, i, lrn) {
     loadSave().then(function(d) { doSave({...(d||{}), profile, stats, session: { wordList: wl, idx: i, learned: lrn }}); });
+  };
+
+  var resetLearningProgress = function() {
+    if (!confirm("⚠️ 确认重置学习进度？\n\n将清除：\n· 所有单词的学习状态\n· 复习记录与复习计划\n· 统计数据（XP、正确率等）\n· 今日学习配额\n\n不会清除：\n· 词表内容\n· 学生画像\n· 每日目标设置\n· 连续学习天数\n\n此操作不可撤销。")) return;
+    setWordStatusMap({});
+    setReviewWordData({});
+    var newStats = { correct:0, total:0, streak:0, bestStreak:0, xp:0 };
+    setStats(newStats);
+    setTodayCount(0);
+    localStorage.removeItem(WORD_STATUS_KEY);
+    localStorage.removeItem(REVIEW_WORD_DATA_KEY);
+    localStorage.removeItem(DAILY_KEY);
+    localStorage.removeItem(DAILY_NEW_QUOTA_KEY);
+    localStorage.removeItem(DEEP_REVIEW_DAILY_KEY);
+    loadSave().then(function(d) {
+      var nextData = {...(d||{}), stats: newStats, completedWords: [], session: null, wordStatusMap: {}, reviewWordData: {}};
+      doSave(nextData);
+      syncToCloud(nextData);
+    });
+    alert("✅ 学习进度已重置，可以重新开始了！");
   };
 
   var currentWord = wordList[idx] || "";
@@ -3064,11 +3085,22 @@ export default function App() {
       {setupTab === "words" && (
         <div style={S.setupCard}>
           <div style={S.setupHint}>词库管理：导入、筛选、状态维护与批量操作。</div>
-          <div style={S.uploadRow}>
-            <button style={S.uploadBtn} onClick={() => fileRef.current?.click()}>📁 上传</button>
-            <span style={{fontSize:13,color:C.textSec}}>{fileLabel||".xlsx .csv .txt 均支持"}</span>
-            <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" style={{display:"none"}} onChange={handleFile} />
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+            <div style={S.uploadRow}>
+              <button style={S.uploadBtn} onClick={() => fileRef.current?.click()}>📁 上传</button>
+              <span style={{fontSize:13,color:C.textSec}}>{fileLabel||".xlsx .csv .txt 均支持"}</span>
+              <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" style={{display:"none"}} onChange={handleFile} />
+            </div>
+            <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:4}}>
+              <button onClick={resetLearningProgress} style={{padding:"5px 10px",background:C.red+"18",color:C.red,border:"1px solid "+C.red+"33",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>🔄 重置进度</button>
+              <span onClick={function(){setHelpTip(helpTip==="reset"?null:"reset");}} style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:18,height:18,borderRadius:999,background:C.border,color:C.textSec,fontSize:11,fontWeight:700,cursor:"pointer",userSelect:"none",flexShrink:0}}>?</span>
+            </div>
           </div>
+          {helpTip === "reset" && <div style={{background:C.accentLight,border:"1px solid "+C.accent+"33",borderRadius:10,padding:"10px 14px",fontSize:12,color:C.text,lineHeight:1.7,marginBottom:10}}>
+            <strong>重置进度</strong>：换词表后建议重置，清除旧词的学习状态和统计数据，从零开始。<br/>
+            <span style={{color:C.textSec}}>会清除：单词状态、复习记录、XP 和正确率、今日配额<br/>不会清除：词表内容、学生画像、每日目标、连续学习天数</span>
+            <div style={{textAlign:"right",marginTop:4}}><span onClick={function(){setHelpTip(null);}} style={{color:C.accent,cursor:"pointer",fontWeight:600}}>收起</span></div>
+          </div>}
           <div style={S.presetRow}>{Object.keys(PRESETS).map(n => <button key={n} style={S.presetBtn} onClick={() => setWordInput(PRESETS[n])}>{n}</button>)}</div>
 
           {(() => {
@@ -4057,7 +4089,7 @@ var S = {
   profilePrev:{background:C.bg,borderRadius:8,padding:"12px 14px",fontSize:13,lineHeight:1.7,color:C.textSec,marginBottom:10},
   smallBtn:{padding:"6px 14px",background:"transparent",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13,cursor:"pointer",color:C.textSec},
   tealBtn:{padding:"10px 20px",background:C.teal,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:14,fontWeight:600,cursor:"pointer",marginTop:8},
-  uploadRow:{display:"flex",alignItems:"center",gap:10,marginBottom:10},
+  uploadRow:{display:"flex",alignItems:"center",gap:10},
   uploadBtn:{padding:"7px 14px",background:C.tealLight,color:C.teal,border:"1px solid "+C.teal+"33",borderRadius:8,fontFamily:FONT,fontSize:13,fontWeight:600,cursor:"pointer"},
   presetRow:{display:"flex",flexWrap:"wrap",gap:8,marginBottom:12},
   presetBtn:{padding:"6px 14px",background:C.purpleLight,color:C.purple,border:"none",borderRadius:20,fontFamily:FONT,fontSize:13,fontWeight:600,cursor:"pointer"},
