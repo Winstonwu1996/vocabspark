@@ -985,7 +985,14 @@ export default function App() {
       });
       if (error) throw error;
       setLoginSent(true);
-    } catch(e) { alert('发送失败：' + e.message); }
+    } catch(e) {
+      var msg = (e.message || '').toLowerCase();
+      if (msg.includes('rate limit')) {
+        alert('📬 邮件发送太频繁了，请等 1~2 分钟后再试。\n\n如果刚才已经发过，请检查邮箱（包括垃圾邮件），点击邮件中的按钮即可登录。');
+      } else {
+        alert('发送失败：' + e.message);
+      }
+    }
     finally { setLoginLoading(false); }
   };
 
