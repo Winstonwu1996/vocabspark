@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "task_id": "vocabspark-phase2b",
+  "goal": "Complete Phase 2b by adding a Study Plan page centered on Target Date, enforcing deep-review daily cap with priority-based sorting, and finalizing statistics/vocabulary management consistency including renaming all '考试日期' language to '目标日期/Target Date'.",
+  "scope": [
+    "Study Plan page UI and state flow (Target Date inputs, daily plan summary, progress-to-target calculations)",
+    "Global copy and label normalization for date concept (replace any exam-specific wording with Target Date terminology)",
+    "Deep review daily cap logic and gating behavior",
+    "Priority sorter logic for review queue ordering",
+    "Statistics page alignment with Study Plan/deep-review cap metrics",
+    "Vocabulary management updates needed to support priority and cap-aware workflows"
+  ],
+  "constraints": [
+    "Use existing app architecture/components/state patterns; avoid major refactor or new backend service unless strictly required.",
+    "Do not introduce exam-specific assumptions or wording; date semantics must remain generic and goal-oriented.",
+    "Keep backward compatibility for existing localStorage/supabase progress data; no destructive schema changes.",
+    "Deep-review cap must be deterministic per local day boundary and must not block non-deep-review flows.",
+    "Scope is Phase 2b only; avoid implementing unrelated monetization/auth redesign/API rewrites.",
+    "All user-visible copy changes must be consistent across Setup, Settings, Statistics, and learning-related prompts."
+  ],
+  "acceptance_tests": [
+    "Study Plan page is accessible and displays Target Date fields/summary correctly with valid and empty states.",
+    "All prior '考试日期' text is replaced with '目标日期' and/or 'Target Date' in UI and related user-facing messages.",
+    "Deep review can only process up to configured daily cap; when cap is reached, UI shows clear guidance and prevents additional deep-review starts.",
+    "Priority sorter places highest-priority review words first (e.g., error/uncertain/due-weighted) and ordering is stable/reproducible.",
+    "Statistics page reflects cap usage and Target Date-related planning metrics without breaking existing accuracy/XP/status metrics.",
+    "Vocabulary management remains fully functional (search/filter/sort/bulk status) and integrates correctly with priority/deep-review constraints.",
+    "Production build and core learning regression (guess→teach→spectrum→review/cloze) pass unchanged after Phase 2b integration."
+  ],
+  "implementation_steps": [
+    "Audit current Phase 2 code paths to locate date labels, review pipeline entry points, and stats/vocab dependencies; define exact insertion points for Study Plan and cap logic.",
+    "Implement Study Plan page/state with Target Date model, including validation, persistence, and plan summary calculations.",
+    "Apply comprehensive copy migration from exam-specific wording to Target Date terminology in all user-facing surfaces.",
+    "Add deep-review daily cap counters/checks and wire gating/UX feedback at deep-review entry and completion points.",
+    "Implement priority sorter for review candidates and integrate it into quick/deep review queue construction.",
+    "Update statistics and vocabulary management displays so plan/cap/priority data are visible and behavior remains coherent.",
+    "Run build + regression checks, then finalize with targeted verification for rename consistency, cap enforcement, and queue ordering."
+  ],
+  "summary": "Phase 2b will extend Phase 2 with a Target Date-driven Study Plan surface and robust review-control mechanics (daily deep-review cap + priority ordering), while polishing terminology consistency and preserving existing learning flow stability."
+}

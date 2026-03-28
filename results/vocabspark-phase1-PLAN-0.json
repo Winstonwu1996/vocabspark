@@ -1,0 +1,37 @@
+{
+  "status": "PASS",
+  "task_id": "vocabspark-phase1",
+  "goal": "Implement PRD v2 Phase 1 for VocabSpark by delivering the Today task page, vocabulary filtering, review scheduling, and enforceable daily quota behavior.",
+  "scope": [
+    "Today task page UI and related state flow",
+    "Vocabulary filter logic and filter controls",
+    "Review scheduler logic and persistence wiring",
+    "Daily quota calculation, enforcement, and reset behavior",
+    "Relevant API/service layer and tests for Phase 1 features"
+  ],
+  "constraints": [
+    "Limit changes to Phase 1 surfaces only; do not expand into Phase 2+ features.",
+    "Preserve existing data models and public APIs unless a minimal backward-compatible extension is required.",
+    "Avoid introducing schema-breaking migrations without explicit fallback handling.",
+    "Keep scheduler and quota logic deterministic and timezone-aware for daily reset semantics.",
+    "Do not degrade existing learning/review flows unrelated to Today page and filters.",
+    "Ensure filtering and quota enforcement are applied consistently across UI and backend/service boundaries."
+  ],
+  "acceptance_tests": [
+    "Today page renders today's workload correctly and updates after completing or skipping an item.",
+    "Vocab filters (e.g., status/tag/difficulty if defined in PRD) return the expected subset and persist expected UI state during session.",
+    "Review scheduler selects due items according to PRD rules and does not include non-due items.",
+    "Daily quota caps new/review actions at configured limit and blocks excess actions with correct UX messaging.",
+    "Daily quota resets at day boundary in configured timezone and allows new actions after reset.",
+    "Regression checks confirm pre-existing study flows still work when no filters are active and quota is not reached."
+  ],
+  "implementation_steps": [
+    "Audit PRD v2 Phase 1 requirements and map each requirement to existing modules, identifying gaps in Today page, filters, scheduler, and quota logic.",
+    "Implement/adjust domain logic for review scheduling and daily quota enforcement in service layer with clear pure-function boundaries where possible.",
+    "Wire Today page and vocab filter UI to new/updated selectors and actions, ensuring consistent empty/loading/error states.",
+    "Integrate backend/service responses so quota and scheduling outcomes are reflected immediately in UI interactions.",
+    "Add/extend automated tests for scheduler correctness, quota boundary/reset behavior, filter correctness, and Today-page end-to-end user flows.",
+    "Run full regression and polish edge cases (timezone rollover, no due items, quota reached mid-session), then finalize implementation notes."
+  ],
+  "summary": "Phase 1 will be delivered by aligning UI and service logic around deterministic review scheduling, strict daily quota enforcement, and a reliable Today workflow, validated by focused functional and regression tests."
+}

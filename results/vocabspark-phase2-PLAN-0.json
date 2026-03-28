@@ -1,0 +1,37 @@
+{
+  "status": "PASS",
+  "task_id": "vocabspark-phase2",
+  "goal": "Deliver PRD v2 Phase 2 by adding a usable statistics page, completing vocabulary management overhaul, and hardening the app for production-ready UX and reliability.",
+  "scope": [
+    "Statistics page UI and data aggregation pipeline",
+    "Vocabulary management module (status editing, filtering, due review visibility, bulk actions where PRD defines)",
+    "State persistence/sync paths used by stats and vocabulary management (local + cloud paths)",
+    "Production polish areas: loading/empty/error states, interaction feedback, copy consistency, and guardrails",
+    "Regression-safe updates in main app flow and any supporting API/client utilities"
+  ],
+  "constraints": [
+    "Stay within PRD v2 Phase 2 boundaries; do not implement Phase 3/payment/major backend redesign unless explicitly required.",
+    "Prefer extending existing files/components and state models; avoid unnecessary file proliferation or architecture churn.",
+    "Maintain backward compatibility of existing localStorage/supabase progress data to prevent user data loss.",
+    "Do not break current learning loop (guess/teach/spectrum/review/cloze) while introducing stats and management changes.",
+    "Keep UI performance acceptable on mobile (avoid heavy synchronous recomputation during render).",
+    "Use deterministic date/time handling for daily/weekly statistics and due-review logic."
+  ],
+  "acceptance_tests": [
+    "Statistics page renders key metrics defined in PRD (e.g., learned counts, accuracy, streak, review outcomes) and values match underlying stored session/progress data.",
+    "Statistics filters/time windows (if defined) update metrics correctly and do not produce inconsistent totals.",
+    "Vocabulary management supports status edits and filters with immediate UI reflection and persistence after refresh/reopen.",
+    "Due-review and priority indicators in vocabulary management are accurate for sample words across unlearned/learning/mastered/uncertain/error cases.",
+    "Production polish checks: loading, empty, and error states are shown appropriately for stats and vocab sections; no dead-end actions.",
+    "Regression pass confirms existing Phase 1/learning flows remain functional and build succeeds in production mode."
+  ],
+  "implementation_steps": [
+    "Map PRD Phase 2 requirements to current code paths, identifying exact gaps in stats calculations, vocab management UX, and production polish behaviors.",
+    "Implement/normalize derived data selectors for statistics and vocabulary status summaries, ensuring consistent date-boundary and due-review logic.",
+    "Build the statistics page/section UI using existing styling system and wire it to persisted data sources with clear empty/loading states.",
+    "Overhaul vocabulary management interactions (filtering, status updates, due/priority cues, and any PRD-defined management actions) while preserving existing state semantics.",
+    "Apply production-ready polish: validation messages, button disabled states, edge-case handling, and consistent copy/visual feedback across primary user journeys.",
+    "Add/extend verification coverage and run full regression/build validation, then finalize with concise release-ready behavior checks."
+  ],
+  "summary": "Phase 2 will be executed by adding a trustworthy stats surface, strengthening vocabulary management into an operational control panel, and polishing reliability/UX so the current app is production-ready without expanding scope beyond PRD v2 Phase 2."
+}

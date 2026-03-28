@@ -1,0 +1,178 @@
+{
+  "task_id": "vocabspark-p0-p1-p2",
+  "project": "VocabSpark",
+  "goal": "正式执行 P0，P1 和 P2 全部推进 / Execute P0 -> P1 -> P2\n\nCRITICAL CONSTRAINT: 只是 UI 方面的调整，不要改动任何已经实现的功能 (UI adjustments only, do not modify or break any already implemented logic/features).",
+  "state": "DONE",
+  "last_agent": "reviewer",
+  "started_at": "2026-03-27T05:34:57Z",
+  "updated_at": "2026-03-27T05:43:34Z",
+  "attempts": {
+    "PLAN": 0,
+    "CODE": 0,
+    "TEST": 0,
+    "REVIEW": 0
+  },
+  "max_attempts_per_stage": 2,
+  "run_lock": {
+    "is_running": false,
+    "run_id": null,
+    "pid": null,
+    "started_at": null
+  },
+  "model_map_source": "global",
+  "model_map": {},
+  "timeouts": {
+    "PLAN": 300,
+    "CODE": 1800,
+    "TEST": 900,
+    "REVIEW": 600
+  },
+  "metrics": {
+    "model_call_count": 7,
+    "total_runtime_seconds": 330.8234796524048,
+    "retry_count": 0
+  },
+  "result_dir": "results/",
+  "artifacts": [
+    "/Users/williamai/projects/vocabspark/results/vocabspark-p0-p1-p2-CODE-0.json",
+    "/Users/williamai/projects/vocabspark/results/vocabspark-p0-p1-p2-TEST-0.json",
+    "/Users/williamai/projects/vocabspark/results/vocabspark-p0-p1-p2-REVIEW-0.json",
+    "/Users/williamai/projects/vocabspark/results/vocabspark-p0-p1-p2-DONE-0.json"
+  ],
+  "history": [
+    {
+      "from": "PLAN",
+      "to": "CODE",
+      "status": "PASS",
+      "failure_type": null,
+      "timestamp": "2026-03-27T05:35:58Z",
+      "attempt": 0,
+      "model": "openai-codex/gpt-5.3-codex",
+      "fallback_used": false,
+      "model_candidates": [
+        "openai-codex/gpt-5.3-codex",
+        "google/gemini-2.5-flash",
+        "anthropic/claude-sonnet-4-20250514"
+      ],
+      "selection_reason": "primary",
+      "failure_reason": null
+    },
+    {
+      "from": "CODE",
+      "to": "TEST",
+      "status": "PASS",
+      "failure_type": null,
+      "timestamp": "2026-03-27T05:37:06Z",
+      "attempt": 0,
+      "model": "openai-codex/gpt-5.3-codex",
+      "fallback_used": false,
+      "model_candidates": [
+        "openai-codex/gpt-5.3-codex",
+        "google/gemini-2.5-flash",
+        "anthropic/claude-sonnet-4-20250514"
+      ],
+      "selection_reason": "primary",
+      "failure_reason": null
+    },
+    {
+      "from": "TEST",
+      "to": "REVIEW",
+      "status": "PASS",
+      "failure_type": null,
+      "timestamp": "2026-03-27T05:37:54Z",
+      "attempt": 0,
+      "model": "openai-codex/gpt-5.3-codex",
+      "fallback_used": false,
+      "model_candidates": [
+        "openai-codex/gpt-5.3-codex",
+        "kimi/moonshot-v1-128k",
+        "google/gemini-2.5-flash"
+      ],
+      "selection_reason": "primary",
+      "failure_reason": null
+    },
+    {
+      "from": "REVIEW",
+      "to": "CODE",
+      "status": "FAIL",
+      "failure_type": "RETURN_TO_CODE",
+      "timestamp": "2026-03-27T05:38:34Z",
+      "attempt": 1,
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "fallback_used": false,
+      "model_candidates": [
+        "anthropic/claude-sonnet-4-20250514",
+        "openai-codex/gpt-5.3-codex",
+        "google/gemini-2.5-flash"
+      ],
+      "selection_reason": "primary",
+      "failure_reason": null
+    },
+    {
+      "from": "PLAN",
+      "to": "CODE",
+      "status": "PASS",
+      "failure_type": null,
+      "timestamp": "2026-03-27T05:38:55Z",
+      "attempt": 0,
+      "model": "openai-codex/gpt-5.3-codex",
+      "fallback_used": false,
+      "model_candidates": [],
+      "selection_reason": null,
+      "failure_reason": null
+    },
+    {
+      "from": "CODE",
+      "to": "TEST",
+      "status": "PASS",
+      "failure_type": null,
+      "timestamp": "2026-03-27T05:41:34Z",
+      "attempt": 0,
+      "model": "openai-codex/gpt-5.3-codex",
+      "fallback_used": false,
+      "model_candidates": [
+        "openai-codex/gpt-5.3-codex",
+        "google/gemini-2.5-flash",
+        "anthropic/claude-sonnet-4-20250514"
+      ],
+      "selection_reason": "primary",
+      "failure_reason": null
+    },
+    {
+      "from": "TEST",
+      "to": "REVIEW",
+      "status": "PASS",
+      "failure_type": null,
+      "timestamp": "2026-03-27T05:42:28Z",
+      "attempt": 0,
+      "model": "openai-codex/gpt-5.3-codex",
+      "fallback_used": false,
+      "model_candidates": [
+        "openai-codex/gpt-5.3-codex",
+        "kimi/moonshot-v1-128k",
+        "google/gemini-2.5-flash"
+      ],
+      "selection_reason": "primary",
+      "failure_reason": null
+    },
+    {
+      "from": "REVIEW",
+      "to": "DONE",
+      "status": "PASS",
+      "failure_type": null,
+      "timestamp": "2026-03-27T05:43:04Z",
+      "attempt": 0,
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "fallback_used": false,
+      "model_candidates": [
+        "anthropic/claude-sonnet-4-20250514",
+        "openai-codex/gpt-5.3-codex",
+        "google/gemini-2.5-flash"
+      ],
+      "selection_reason": "primary",
+      "failure_reason": null
+    }
+  ],
+  "project_context": null,
+  "ui_test": false
+}

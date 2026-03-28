@@ -1,0 +1,33 @@
+{
+  "status": "PASS",
+  "task_id": "vocabspark-phase2-3",
+  "goal": "Complete remaining Phase 2-3 product work by making study-plan prediction actionable, enforcing priority-based review ordering, finishing vocabulary management overhaul, and integrating statistics into a coherent user workflow.",
+  "scope": [
+    "/Users/williamai/projects/vocabspark/pages/index.js (study plan, review queue ordering, vocab management UI/actions, stats integration)",
+    "/Users/williamai/projects/vocabspark/results/ (stage artifacts only; no unrelated project files)"
+  ],
+  "constraints": [
+    "Keep implementation inside existing app architecture (single-page flow in pages/index.js); avoid introducing new backend endpoints unless absolutely required.",
+    "Do not regress existing learning loop (guess -> teach -> spectrum -> review/deep review) and current persistence behavior.",
+    "Use current terminology consistently: planning language must be target-date oriented, not exam-specific.",
+    "No scope creep into unrelated refactors, dependency upgrades, auth changes, or styling overhauls beyond what is needed for Phase 2-3 UX completion.",
+    "Preserve compatibility with current local/cloud save schema where possible; additive settings/state fields are acceptable."
+  ],
+  "acceptance_tests": [
+    "Study plan prediction: with and without Target Date set, plan panel shows deterministic daily recommendation (e.g., suggested new words/day) and updates when date or vocabulary size changes.",
+    "Priority sorter: quick/deep review queues are ordered by explicit priority rules (error/uncertain/due before lower priority), and ordering is stable for equal-priority items.",
+    "Vocab management overhaul: user can search/filter/sort vocabulary, perform key bulk operations (status/selection actions), and see immediate reflected state in list and downstream review queues.",
+    "Statistics integration: stats view reflects current data after study/review actions (counts, accuracy/progress/review metrics) and includes plan-related indicators needed by Phase 2-3.",
+    "Cross-flow integrity: after vocab edits and plan changes, start learning/review/deep-review flows still launch correctly and use updated state.",
+    "Build validation: `npm run build` succeeds in /Users/williamai/projects/vocabspark with no compile/runtime blocking errors."
+  ],
+  "implementation_steps": [
+    "Define/lock Phase 2-3 data contracts in current client state: study-plan prediction inputs/outputs, priority scoring fields, vocab management actions, and stats dependencies.",
+    "Implement study-plan prediction logic and UI wiring so recommendations react to Target Date, due workload, deep-review cap usage, and total vocabulary profile.",
+    "Unify and apply priority sorter across review entry points (quick/deep/related queues) with a single ranking function to prevent inconsistent ordering.",
+    "Complete vocab management overhaul UI behavior (search/filter/sort/bulk actions/state sync) and ensure manual status edits propagate to review/planning/statistics layers.",
+    "Integrate/refresh statistics panel so it consumes the same source-of-truth state and displays Phase 2-3 required metrics without duplicated logic.",
+    "Run regression + build checks, then produce CODE/TEST artifacts with any discovered edge-case notes and non-blocking follow-up suggestions."
+  ],
+  "summary": "Phase 2-3 will be finished by consolidating shared state/priority logic, making study-plan prediction fully reactive, finalizing vocabulary management operations, and ensuring statistics consume synchronized data across all learning flows."
+}

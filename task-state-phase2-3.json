@@ -1,0 +1,114 @@
+{
+  "task_id": "vocabspark-phase2-3",
+  "project": "VocabSpark",
+  "goal": "Complete Phase 2 remaining items (Phase 2-3): Study plan prediction, priority sorter, full vocab management overhaul, statistics page integration",
+  "state": "DONE",
+  "last_agent": "reviewer",
+  "started_at": "2026-03-27T02:59:01Z",
+  "updated_at": "2026-03-27T03:06:06Z",
+  "attempts": {
+    "PLAN": 0,
+    "CODE": 0,
+    "TEST": 0,
+    "REVIEW": 0
+  },
+  "max_attempts_per_stage": 2,
+  "run_lock": {
+    "is_running": false,
+    "run_id": null,
+    "pid": null,
+    "started_at": null
+  },
+  "model_map_source": "global",
+  "model_map": {},
+  "timeouts": {
+    "PLAN": 300,
+    "CODE": 1800,
+    "TEST": 900,
+    "REVIEW": 600
+  },
+  "metrics": {
+    "model_call_count": 4,
+    "total_runtime_seconds": 312.6683678627014,
+    "retry_count": 0
+  },
+  "result_dir": "results/",
+  "artifacts": [
+    "/Users/williamai/projects/vocabspark/results/vocabspark-phase2-3-CODE-0.json",
+    "/Users/williamai/projects/vocabspark/results/vocabspark-phase2-3-TEST-0.json",
+    "/Users/williamai/projects/vocabspark/results/vocabspark-phase2-3-REVIEW-0.json",
+    "/Users/williamai/projects/vocabspark/results/vocabspark-phase2-3-DONE-0.json"
+  ],
+  "history": [
+    {
+      "from": "PLAN",
+      "to": "CODE",
+      "status": "PASS",
+      "failure_type": null,
+      "timestamp": "2026-03-27T02:59:41Z",
+      "attempt": 0,
+      "model": "openai-codex/gpt-5.3-codex",
+      "fallback_used": false,
+      "model_candidates": [
+        "openai-codex/gpt-5.3-codex",
+        "google/gemini-2.5-flash",
+        "anthropic/claude-sonnet-4-20250514"
+      ],
+      "selection_reason": "primary",
+      "failure_reason": null
+    },
+    {
+      "from": "CODE",
+      "to": "TEST",
+      "status": "PASS",
+      "failure_type": null,
+      "timestamp": "2026-03-27T03:03:31Z",
+      "attempt": 0,
+      "model": "openai-codex/gpt-5.3-codex",
+      "fallback_used": false,
+      "model_candidates": [
+        "openai-codex/gpt-5.3-codex",
+        "google/gemini-2.5-flash",
+        "anthropic/claude-sonnet-4-20250514"
+      ],
+      "selection_reason": "primary",
+      "failure_reason": null
+    },
+    {
+      "from": "TEST",
+      "to": "REVIEW",
+      "status": "PASS",
+      "failure_type": null,
+      "timestamp": "2026-03-27T03:04:24Z",
+      "attempt": 0,
+      "model": "openai-codex/gpt-5.3-codex",
+      "fallback_used": false,
+      "model_candidates": [
+        "openai-codex/gpt-5.3-codex",
+        "kimi/moonshot-v1-128k",
+        "google/gemini-2.5-flash"
+      ],
+      "selection_reason": "primary",
+      "failure_reason": null
+    },
+    {
+      "from": "REVIEW",
+      "to": "DONE",
+      "status": "PASS",
+      "failure_type": null,
+      "timestamp": "2026-03-27T03:05:03Z",
+      "attempt": 0,
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "fallback_used": false,
+      "model_candidates": [
+        "anthropic/claude-sonnet-4-20250514",
+        "openai-codex/gpt-5.3-codex",
+        "google/gemini-2.5-flash"
+      ],
+      "selection_reason": "primary",
+      "failure_reason": null
+    }
+  ],
+  "project_context": null,
+  "ui_test": false
+}

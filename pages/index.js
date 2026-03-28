@@ -415,54 +415,6 @@ var callAPI = async (sys, msg, opts) => {
   return data.text;
 };
 
-var callAPIStream = async (sys, msg, opts, onChunk) => {
-  opts = opts || {};
-  // Try streaming endpoint first; fall back to regular API if unavailable (404, error)
-  try {
-    var response = await fetchWithTimeout("/api/chat-stream", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system: sys,
-        message: msg,
-        maxTokens: 900,
-        preferredProviders: opts.preferredProviders || undefined,
-      }),
-    }, FETCH_TIMEOUT_LONG_MS);
-    if (!response.ok) throw new Error("stream " + response.status);
-    var reader = response.body.getReader();
-    var decoder = new TextDecoder();
-    var fullText = "";
-    var buffer = "";
-    while (true) {
-      var result = await reader.read();
-      if (result.done) break;
-      buffer += decoder.decode(result.value, { stream: true });
-      var lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i].trim();
-        if (!line || !line.startsWith("data: ")) continue;
-        var payload = line.slice(6);
-        if (payload === "[DONE]") continue;
-        try {
-          var json = JSON.parse(payload);
-          var delta = json.choices && json.choices[0] && json.choices[0].delta && json.choices[0].delta.content;
-          if (delta) {
-            fullText += delta;
-            if (onChunk) onChunk(fullText);
-          }
-        } catch (e) {}
-      }
-    }
-    return fullText;
-  } catch (streamErr) {
-    // Fallback: use regular non-streaming API
-    console.warn("[callAPIStream] streaming failed, falling back:", streamErr.message);
-    return callAPI(sys, msg, opts);
-  }
-};
-
 var callAPIFast = async (sys, msg, opts) => {
   opts = opts || {};
   const response = await fetchWithTimeout("/api/chat", {
@@ -1513,13 +1465,9 @@ export default function App() {
         });
         tasks.push(function() {
           return callWithClientRetry(function() {
-            dataCache.current[word].teachPartial = null;
-            return callAPIStream(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred }, function(partial) {
-              dataCache.current[word].teachPartial = addSpeakMarkers(partial);
-            });
+            return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred });
           }).then(function(raw) {
             dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
-            dataCache.current[word].teachPartial = null;
             // Word is ready if teach loaded (guess can be partial or failed)
             if (dataCache.current[word].teach && (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed)) {
               readyWordSet.add(word);
@@ -1528,7 +1476,6 @@ export default function App() {
           }).catch(function(err) {
             console.warn("[loadBatch] teach failed for " + word + ":", err.message);
             dataCache.current[word].teachFailed = true;
-            dataCache.current[word].teachPartial = null;
             // If guess is done/attempted, word is as ready as it'll get
             if (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed) {
               readyWordSet.add(word);
@@ -1662,10 +1609,8 @@ export default function App() {
           setTeachContent("__FAILED__");
           clearInterval(teachPollRef.current);
           clearTimeout(teachTimeoutRef.current);
-        } else if (cached?.teachPartial) {
-          setTeachContent(cached.teachPartial);
         }
-      }, 400);
+      }, 500);
       teachTimeoutRef.current = setTimeout(function() {
         if (teachPollRef.current) clearInterval(teachPollRef.current);
         setTeachContent(function(prev) { return prev || "__FAILED__"; });
@@ -3865,7 +3810,7 @@ export default function App() {
 
       {phase === "teach" && <div style={{...S.card, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
         <div style={{...S.tag,background:C.tealLight,color:C.teal}}>📖 学习笔记</div>
-        {teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解内容加载失败</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");callAPIStream(sysP,buildTeachPrompt(currentWord,learned),{},function(partial){setTeachContent(addSpeakMarkers(partial));}).then(function(raw){var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
+        {teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解内容加载失败</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");callWithClientRetry(function(){return callAPI(sysP,buildTeachPrompt(currentWord,learned));}).then(function(raw){var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
         : !teachContent ? <div style={{padding:"8px 0"}}>
           <div style={{background:C.border,borderRadius:8,height:20,width:"70%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
           <div style={{background:C.border,borderRadius:8,height:14,width:"100%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.1s"}}/>

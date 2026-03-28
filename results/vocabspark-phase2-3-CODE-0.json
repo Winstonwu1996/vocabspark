@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "task_id": "vocabspark-phase2-3",
+  "changed_files": [
+    "/Users/williamai/projects/vocabspark/pages/index.js"
+  ],
+  "summary": "Completed Phase 2-3 implementation in the existing app flow: added a unified study-plan prediction model (`getStudyPlanPrediction`) that factors remaining words, due workload, target-date days-left, and deep-review daily-cap usage; unified priority scoring usage in vocabulary rows and review queues; expanded vocabulary management sorting with explicit priority mode and due-date ordering; improved bulk workflow with select-all/clear for filtered results; and integrated plan-derived indicators (recommended daily new words, remaining words, deep cap usage) into both full statistics and settings statistics surfaces.",
+  "risks": [
+    "Study-plan recommendation remains heuristic (remaining words / days left) and may need tuning with real user behavior data.",
+    "Priority sorting relies on current status taxonomy and due-date boost assumptions; future status model changes require score recalibration.",
+    "Bulk selection currently applies to filtered view only; user expectations for cross-filter persistent selection should be validated in UX testing."
+  ],
+  "suggested_tests": [
+    "Set/clear Target Date and verify suggested daily new words + days-left + remaining words update consistently in Plan and Stats tabs.",
+    "Create mixed-status vocabulary (error/uncertain/learning/mastered, due/not due) and verify '按复习优先级' sort ranks high-priority words first with stable tie ordering.",
+    "Switch sort mode to '按到期时间' and verify earliest due dates appear first; undated words appear last.",
+    "Use search/filter then click '全选筛选结果', apply bulk status updates, and verify status chips, row icons, and review queue composition update immediately.",
+    "Run quick/deep review entry points after bulk edits and confirm queues still obey priority + deep cap constraints.",
+    "Build regression: `npm run build` in /Users/williamai/projects/vocabspark should succeed (already validated)."
+  ]
+}

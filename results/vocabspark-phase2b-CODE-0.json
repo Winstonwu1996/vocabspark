@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "task_id": "vocabspark-phase2b",
+  "changed_files": [
+    "/Users/williamai/projects/vocabspark/pages/index.js"
+  ],
+  "summary": "Implemented Phase 2b in the existing single-page app: added a new Study Plan tab/page centered on 目标日期 / Target Date with daily plan summary and deep-review cap settings; added deep-review daily cap persistence/enforcement with cap-aware queue slicing and completion counting; introduced priority-based review ordering for quick/deep review queues; extended statistics with deep-cap usage and Target Date countdown; and wired Settings modal with the same Plan controls. Verified no exam-specific '考试日期' wording remains.",
+  "risks": [
+    "Deep-review daily usage currently persists in localStorage, so cap usage is device/browser-local unless future cloud sync is added.",
+    "Priority sorting uses heuristic status+due weighting; future PRD changes may require explicit configurable weights.",
+    "Target Date countdown depends on client local timezone and date parsing, which can differ slightly around day boundaries."
+  ],
+  "suggested_tests": [
+    "Set Target Date in Plan tab and verify stats/plan countdown updates correctly; clear date and verify fallback state.",
+    "Set deep-review daily cap to a low number (e.g., 2), complete deep reviews, and confirm further deep-review starts are blocked with guidance.",
+    "Verify quick/deep review queues prioritize error/uncertain and due items before lower-priority entries.",
+    "Check Today task deep section displays cap usage (used/cap) and updates after each deep review completion.",
+    "Open Settings modal Plan tab, change Target Date/cap, reload page, and confirm persistence.",
+    "Run full regression of learning flow (guess→teach→spectrum→review/cloze) and confirm no break; production build remains green."
+  ]
+}

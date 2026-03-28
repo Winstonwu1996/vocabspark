@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "task_id": "vocabspark-phase1",
+  "changed_files": [
+    "/Users/williamai/projects/vocabspark/pages/index.js"
+  ],
+  "summary": "Implemented Phase 1 wiring in existing app flow: strengthened Today task page with explicit daily new-word quota visibility, kept/extended vocab status filtering UI, stabilized review scheduler/day-boundary behavior by using local-date keys, and enforced daily new-word quota in learning flow (including consume-on-first-learn persistence and start guard when quota is exhausted). Also preserved existing guest daily limit behavior and verified build success.",
+  "risks": [
+    "Daily quota state is currently localStorage-based; it is per-browser/device unless later synchronized to backend.",
+    "Existing historical firstLearnedAt timestamps remain unchanged, so quota tracking starts cleanly from the new quota key and may differ from prior inferred counts.",
+    "Review due-date comparisons still rely on stored ISO timestamps; mixed historical timezone formats could create edge behavior around midnight for legacy records."
+  ],
+  "suggested_tests": [
+    "Today page: verify it shows daily quota, learned count, and remaining quota, and updates after each newly learned word.",
+    "Quota enforcement: set daily new-word quota to a small value (e.g., 2), learn 2 new words, then confirm starting new learning shows the quota-complete guard.",
+    "First-learn consumption: relearning previously learned words should not consume additional new-word quota.",
+    "Scheduler due behavior: mark words with nextReviewDate at today/past/future boundaries and verify due queue includes only due items.",
+    "Filter behavior: switch among all/unlearned/learning/mastered/uncertain/error and verify listed words match expected statuses.",
+    "Regression: run full learning cycle (guess→teach→spectrum→review/cloze) and ensure no flow break; build passes with npm run build."
+  ]
+}
