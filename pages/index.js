@@ -316,7 +316,7 @@ var SpeakWordBtn = ({ text, size }) => {
 var BrandUIcon = ({ size }) => {
   var s = size || 36;
   return (
-    <img src="/logo.svg" width={s} height={Math.round(s * 1.1)} alt="Know U." style={{ objectFit:"contain" }} />
+    <img src="/logo.png" width={s} height={s} alt="Know U." style={{ objectFit:"contain", borderRadius:s > 40 ? 10 : 6 }} />
   );
 };
 
@@ -334,7 +334,7 @@ var BrandNavBar = () => (
   <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px", borderBottom:"1px solid "+C.border, background:C.card, marginBottom:0 }}>
     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
       <BrandUIcon size={28} />
-      <span style={{ fontSize:14, fontWeight:700, color:C.text, letterSpacing:"-0.01em" }}>Know U. Learning</span>
+      <span style={{ fontSize:15, letterSpacing:"-0.02em" }}><span style={{ fontWeight:800, color:C.text }}>Know U.</span><span style={{ fontWeight:400, color:C.textSec, marginLeft:4 }}>Learning</span></span>
     </div>
     <div style={{ display:"flex", alignItems:"center", gap:14, fontSize:13 }}>
       <span style={{ fontWeight:700, color:C.accent, borderBottom:"2px solid "+C.accent, paddingBottom:2 }}>Vocab</span>
