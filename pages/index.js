@@ -483,6 +483,25 @@ var PRESETS = {
   "SSAT 情感词": "elated\nmelancholy\nindignant\napprehensive\ncontrite\njubilant\ndespondent\nexuberant\nserene\nvexed",
   "SSAT 动作词": "implore\nadmonish\ncompel\nrebuke\nmollify\npacify\nvenerate\nabhor\ndiscern\nrelinquish",
 };
+var PRESETS_BY_GOAL = {
+  ssat: PRESETS,
+  isee: {
+    "ISEE 核心词 30": "abstract\naccumulate\nacknowledge\nadversity\nalleviate\nambiguous\nanalyze\nbeneficial\ncomprehensive\nconsequence\ncontribute\nconventional\ncritical\ndemonstrate\ndiverse\nemphasize\nevidence\nflexible\nfundamental\ngenerate\nidentify\ninfluence\ninnovate\njustify\nmaintain\nobserve\nperspective\nsignificant\nstrategy\nvalid",
+    "ISEE 阅读词": "allude\ncompelling\ninfer\nnarrative\npersuasive\nsynthesis\nthematic\nunderlying\nconvey\ndepict",
+  },
+  sat: {
+    "SAT 高频 30 词": "ambivalent\nanachronism\naudacious\nbolster\ncandor\nconvivial\ndeference\nenigmatic\nflagrant\ngregarious\nhypothetical\ninherent\njuxtapose\nlethargic\nmeticulous\nnuance\nobstinate\nprecarious\nquandary\nrecalcitrant\nsagacious\ntangible\nubiquitous\nvenerable\nwhimsical\nzealot\npragmatic\nambiguous\nbenevolent\nvolatile",
+    "SAT 写作高频": "advocate\nassert\nconcede\ncorroborate\ndelineate\nelaborate\nexemplify\nimplicate\nsubstantiate\nundermine",
+  },
+  toefl: {
+    "TOEFL 学术词 30": "abstract\nacademic\naccess\naccumulate\nachieve\nacknowledge\nadapt\nadequate\nadjacent\nadjust\nadminister\nadvocate\naffect\naggregate\nallocate\nalternative\nambiguous\namend\nanalogy\nanalyze\nannual\nanticipate\napparent\nappend\napproximate\narbitrary\nassess\nassume\nattribute\nbenefit",
+    "TOEFL 听力场景词": "faculty\nsyllabus\nhypothesis\nmethodology\nempirical\nqualitative\nquantitative\ndissertation\ncurriculum\nprerequisite",
+  },
+  ielts: {
+    "IELTS 写作词 30": "albeit\nalleviate\naugment\ncategorize\ncircumstance\ncomprise\nconcur\nconsiderable\ncontemporary\ncontrast\nconvene\ncorrelate\ndemonstrate\ndeplete\ndesignate\ndetermine\ndiminish\ndiscrepancy\ndistinct\ndominate\nentail\nenvisage\nerode\nevaluate\nexacerbate\nexhibit\nfluctuate\nhinder\nillustrate\nincidence",
+    "IELTS 口语表达词": "absolutely\nactually\nbasically\ncertainly\ndefinitely\nfrankly\ngenerally\nhonestly\noccasionally\nultimately",
+  },
+};
 
 /* ─── Storage: localStorage ─── */
 var SKEY = "vocabspark_v1";         // permanent key — never change this
@@ -584,7 +603,7 @@ export default function App() {
   var [showTipJar, setShowTipJar] = useState(false);
   var [tipDismissed, setTipDismissed] = useState(false);
   var [showSettings, setShowSettings] = useState(false);
-  var [dailyNewWords, setDailyNewWords] = useState(20);
+  var [dailyNewWords, setDailyNewWords] = useState(10);
   var [targetDate, setTargetDate] = useState("");
   var [deepReviewDailyCap, setDeepReviewDailyCap] = useState(8);
   var [profile, setProfile] = useState("");
@@ -606,6 +625,7 @@ export default function App() {
   var [showTaskOrderHint, setShowTaskOrderHint] = useState(true);
   var [showProfileGuide, setShowProfileGuide] = useState(false);
   var [helpTip, setHelpTip] = useState(null);
+  var [reviewFeedback, setReviewFeedback] = useState(null);
   var [streakToast, setStreakToast] = useState(null);
   var [loginToast, setLoginToast] = useState(null);
   var [screeningWords, setScreeningWords] = useState([]);
@@ -1680,7 +1700,11 @@ export default function App() {
   var startLearning = async function(resumeIdx) {
     var rawWords = wordInput.trim().split(/[\n,，、]+/).map(function(w) { return w.trim().toLowerCase(); }).filter(Boolean);
     if (!rawWords.length) { setError("请输入至少一个单词"); return; }
-    if (!profile.trim()) { setError("请先填写并保存「学习画像」"); return; }
+    if (!profile.trim()) {
+      if (!confirm("还没有填写「学习画像」，AI 例句暂时不会个性化。\n\n建议先填写画像，效果更好！\n\n点「确定」继续学习，「取消」去填画像。")) {
+        setSetupTab("profile"); setScreen("setup"); return;
+      }
+    }
     
     var startIdx = typeof resumeIdx === "number" ? resumeIdx : 0;
     var words = rawWords;
@@ -2385,6 +2409,11 @@ export default function App() {
     var hist = [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "quick", result: result }];
     upsertReviewWordData(item.word, { reviewHistory: hist, reviewLevel: nextLevel, nextReviewDate: nextReviewDate });
 
+    var _intervalDays = REVIEW_INTERVAL_DAYS[nextLevel];
+    var _fbText = result === "remembered" ? "✅ 下次复习在 " + _intervalDays + " 天后" : result === "forgot" ? "🔄 明天再复习" : "📝 " + _intervalDays + " 天后复习";
+    setReviewFeedback({ text: _fbText, color: result === "remembered" ? C.green : result === "forgot" ? C.red : C.gold });
+    setTimeout(function(){ setReviewFeedback(null); }, 1500);
+
     setQuickReviewStats(function(prev){ return { ...prev, [result]: (prev[result] || 0) + 1 }; });
 
     var nextIdx = quickReviewIdx + 1;
@@ -2607,7 +2636,7 @@ export default function App() {
             📋 未筛选 <strong>{_sqRemaining}</strong> 个（下次继续）
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ setScreen("setup"); startLearning(0); }}>✨ 开始 AI 精读（{_sqQuota} 个词）</button>
+            <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0); }}>✨ 开始 AI 精读（{_sqQuota} 个词）</button>
             <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={function(){
               setScreeningIdx(screeningIdx + 1);
               setScreeningFlipped(false);
@@ -2657,7 +2686,7 @@ export default function App() {
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
             {unlearnedNow > 0 && (
-              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ setScreen("setup"); startLearning(0); }}>✨ 开始学习不认识的词</button>
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0); }}>✨ 开始学习不认识的词</button>
             )}
             {scRemaining > 0 && (
               <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={function(){ startScreening(); }}>🔄 继续筛选剩余 {scRemaining} 个词</button>
@@ -2690,6 +2719,7 @@ export default function App() {
                 <button style={{...S.primaryBtn,background:C.gold,borderColor:C.gold,justifyContent:"center",padding:"10px 8px"}} onClick={() => markQuickReview("fuzzy")}>🟡 仍不确定</button>
                 <button style={{...S.primaryBtn,background:C.red,borderColor:C.red,justifyContent:"center",padding:"10px 8px"}} onClick={() => markQuickReview("forgot")}>🔴 面临易错</button>
               </div>
+              {reviewFeedback && <div style={{textAlign:"center",padding:"8px 0",fontSize:14,fontWeight:700,color:reviewFeedback.color,transition:"opacity 0.3s"}}>{reviewFeedback.text}</div>}
             </>
           )}
         </div>
@@ -2731,6 +2761,10 @@ export default function App() {
       var statusMap = { remembered: "mastered", fuzzy: "uncertain", forgot: "error" };
       var hist = [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "deep", result: result }];
       upsertReviewWordData(dw, { reviewHistory: hist, reviewLevel: nextLevel, nextReviewDate: addDaysISO(REVIEW_INTERVAL_DAYS[nextLevel]) });
+      var _dIntervalDays = REVIEW_INTERVAL_DAYS[nextLevel];
+      var _dFbText = result === "remembered" ? "✅ 下次复习在 " + _dIntervalDays + " 天后" : result === "forgot" ? "🔄 明天再复习" : "📝 " + _dIntervalDays + " 天后复习";
+      setReviewFeedback({ text: _dFbText, color: result === "remembered" ? C.green : result === "forgot" ? C.red : C.gold });
+      setTimeout(function(){ setReviewFeedback(null); }, 1500);
       updateManualWordStatus(dw, statusMap[result] || "uncertain");
       incrementDeepReviewDailyCount();
       setDeepSessionStats(function(prev){ return { ...prev, [result]: (prev[result] || 0) + 1 }; });
@@ -2777,6 +2811,7 @@ export default function App() {
             <button style={{...S.primaryBtn,background:C.gold,borderColor:C.gold,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("fuzzy");}}>🟡 仍不确定</button>
             <button style={{...S.primaryBtn,background:C.red,borderColor:C.red,justifyContent:"center",padding:"10px 8px"}} onClick={function(){finishDeep("forgot");}}>🔴 面临易错</button>
           </div>
+          {reviewFeedback && <div style={{textAlign:"center",padding:"8px 0",fontSize:14,fontWeight:700,color:reviewFeedback.color,transition:"opacity 0.3s"}}>{reviewFeedback.text}</div>}
         </div>
       </div></div>
     );
@@ -2935,7 +2970,7 @@ export default function App() {
                 <div>
                   <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>① 快速复习</div>
                   <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.quickMin} 分钟</div>
-                  <div style={{fontSize:11,color:dailyPlan.quickDone?C.green:C.textSec,fontWeight:dailyPlan.quickDone?600:500,minHeight:16}}>{dailyPlan.quickDone ? "✅ 已完成" : (dailyPlan.toReview.length === 0 ? "🎉 无到期" : "待审 " + dailyPlan.toReview.length)}</div>
+                  <div style={{fontSize:dailyPlan.toReview.length > 0 && !dailyPlan.quickDone ? 13 : 11,color:dailyPlan.quickDone?C.green:dailyPlan.toReview.length > 0 ? C.accent : C.textSec,fontWeight:dailyPlan.quickDone||dailyPlan.toReview.length > 0?700:500,minHeight:16}}>{dailyPlan.quickDone ? "✅ 已完成" : (dailyPlan.toReview.length === 0 ? "🎉 无到期" : "⏰ " + dailyPlan.toReview.length + " 词待复习")}</div>
                 </div>
                 <button style={{...S.smallBtn,background:dailyPlan.quickDone?C.card:C.teal,color:dailyPlan.quickDone?C.teal:"#fff",border:dailyPlan.quickDone?"1px solid "+C.teal:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} onClick={function(){startQuickReview("due");}}>{dailyPlan.quickDone?"再复习":"开始"}</button>
               </div>
@@ -3042,7 +3077,7 @@ export default function App() {
                 <span style={{fontSize:12,color:C.textSec,lineHeight:1.5,flex:1,minWidth:0}}>懒得逐字写？选几张这几天有意思的照片也行，AI 会解析画面并写入画像，用来生成后面的课件与例句。</span>
                 <input ref={photoRef} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhotoUpload} />
               </div>
-              <button style={{...S.tealBtn,opacity:profile.length>PROFILE_MAX?0.45:1,cursor:profile.length>PROFILE_MAX?"not-allowed":"pointer"}} disabled={profile.length>PROFILE_MAX} onClick={() => { setProfileLocked(true); loadSave().then(d => doSave({...(d||{}), profile, stats})); }}>💾 保存画像</button>
+              <button style={{...S.tealBtn,opacity:profile.length>PROFILE_MAX?0.45:1,cursor:profile.length>PROFILE_MAX?"not-allowed":"pointer"}} disabled={profile.length>PROFILE_MAX} onClick={() => { setProfileLocked(true); loadSave().then(d => doSave({...(d||{}), profile, stats})); if (!wordInput.trim()) { setTimeout(function(){ setSetupTab("words"); }, 300); } }}>💾 保存画像</button>
             </div>
           )}
         </div>
@@ -3166,7 +3201,32 @@ export default function App() {
 
       {setupTab === "words" && (
         <div style={S.setupCard}>
-          <div style={S.setupHint}>词库管理：导入、筛选、状态维护与批量操作。</div>
+          {(() => {
+            var _allWords = parseWordsFromInput(wordInput);
+            var _unlearnedCount = _allWords.filter(function(w){ return !wordStatusMap[w] || wordStatusMap[w] === "unlearned"; }).length;
+            if (_allWords.length === 0) return <div style={S.setupHint}>👇 先导入词表或选择预设词库，开始你的学习之旅！</div>;
+            return <div style={{marginBottom:14}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                <button style={{background:C.tealLight,border:"1.5px solid "+C.teal+"66",borderRadius:12,padding:"14px 10px",textAlign:"center",cursor:"pointer",fontFamily:FONT}} onClick={function(){ startScreening(); }}>
+                  <div style={{fontSize:22,marginBottom:4}}>🃏</div>
+                  <div style={{fontSize:14,fontWeight:700,color:C.teal,marginBottom:2}}>快筛模式</div>
+                  <div style={{fontSize:11,color:C.textSec,lineHeight:1.4,marginBottom:8}}>认识的跳过，不认识的留给 AI</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.teal}}>{_unlearnedCount} 词待筛</div>
+                </button>
+                <button style={{background:C.accentLight,border:"1.5px solid "+C.accent+"66",borderRadius:12,padding:"14px 10px",textAlign:"center",cursor:"pointer",fontFamily:FONT}} onClick={function(){ startLearning(0); }}>
+                  <div style={{fontSize:22,marginBottom:4}}>✨</div>
+                  <div style={{fontSize:14,fontWeight:700,color:C.accent,marginBottom:2}}>精读模式</div>
+                  <div style={{fontSize:11,color:C.textSec,lineHeight:1.4,marginBottom:8}}>AI 定制：猜→讲→练→复习</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.accent}}>{Math.min(_unlearnedCount, dailyNewWords||10)} 词精读</div>
+                </button>
+              </div>
+              {_unlearnedCount > 50 && (
+                <div style={{background:C.goldLight,border:"1px solid "+C.gold+"44",borderRadius:8,padding:"8px 12px",fontSize:12,color:C.textSec,lineHeight:1.5,marginBottom:10}}>
+                  💡 词库 <strong>{_unlearnedCount}</strong> 个未学词，建议先快筛再精读
+                </div>
+              )}
+            </div>;
+          })()}
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
             <div style={S.uploadRow}>
               <button style={S.uploadBtn} onClick={() => fileRef.current?.click()}>📁 上传</button>
@@ -3183,7 +3243,22 @@ export default function App() {
             <span style={{color:C.textSec}}>会清除：单词状态、复习记录、XP 和正确率、今日配额<br/>不会清除：词表内容、学习画像、每日目标、连续学习天数</span>
             <div style={{textAlign:"right",marginTop:4}}><span onClick={function(){setHelpTip(null);}} style={{color:C.accent,cursor:"pointer",fontWeight:600}}>收起</span></div>
           </div>}
-          <div style={S.presetRow}>{Object.keys(PRESETS).map(n => <button key={n} style={S.presetBtn} onClick={() => setWordInput(PRESETS[n])}>{n}</button>)}</div>
+          {(() => {
+            var hasUserWords = wordInput.trim().length > 0;
+            if (hasUserWords) return null;
+            var goalPresets = (studyGoal && PRESETS_BY_GOAL[studyGoal]) ? PRESETS_BY_GOAL[studyGoal] : PRESETS;
+            var goalLabel = studyGoal && STUDY_GOAL_OPTIONS.find(function(o){return o.key===studyGoal;});
+            return <div style={{marginBottom:10}}>
+              <div style={{fontSize:12,color:C.textSec,fontWeight:700,marginBottom:6}}>
+                {goalLabel ? "📋 推荐词表（" + goalLabel.label + "）" : "📋 预设词表（设置「学习目的」可获得针对性推荐）"}
+              </div>
+              <div style={S.presetRow}>{Object.keys(goalPresets).map(function(n) {
+                return <button key={n} style={S.presetBtn} onClick={function(){
+                  setWordInput(goalPresets[n]);
+                }}>{n}</button>;
+              })}</div>
+            </div>;
+          })()}
 
           {(() => {
             var words = parseWordsFromInput(wordInput);
@@ -3241,17 +3316,6 @@ export default function App() {
                 <span>筛选后 {totalRows} 个词</span>
               </div>
 
-              <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"0 0 8px"}}>复习入口</div>
-              {dueCount > 0 && (
-                <div style={{background:C.tealLight,border:"1px solid "+C.teal,borderRadius:10,padding:"9px 12px",fontSize:13,margin:"0 0 10px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-                  <span style={{color:C.teal,fontWeight:700}}>📅 今天有 {dueCount} 个词需要复习</span>
-                  <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none"}} onClick={function(){startQuickReview("due");}}>开始快速复习 →</button>
-                </div>
-              )}
-              <div style={{display:"flex",gap:10,margin:"0 0 12px",flexWrap:"wrap"}}>
-                <button style={{...S.primaryBtn,background:C.teal}} onClick={function(){startQuickReview("all");}}>🔄 快速复习已学词</button>
-                <button style={{...S.primaryBtn,background:C.red}} onClick={startDeepReview}>🔴 重点攻克 {focusCount}</button>
-              </div>
 
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",margin:"0 0 8px",gap:8,flexWrap:"wrap"}}>
                 <div style={{fontSize:12,color:C.textSec,fontWeight:700}}>词汇状态（可多选批量标注）</div>
@@ -3313,12 +3377,17 @@ export default function App() {
                       <div style={{minWidth:0}}>
                         {wordDensity === "compact" ? (
                           <div style={{fontWeight:700,fontSize:13,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:220,color:m.color}}>
-                            {w} · {m.text}{overdue ? " ⚠️" : ""}
+                            {w} · {m.text}{Number.isFinite(d.reviewLevel) && d.reviewLevel > 0 ? " L"+d.reviewLevel : ""}{overdue ? " ⚠️" : ""}
                           </div>
                         ) : (
                           <>
                             <div style={{fontWeight:700,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:180}}>{w}</div>
-                            <div style={{fontSize:11,color:m.color,fontWeight:700}}>{m.text} · {reviewAgeText(d.lastReviewDate)} {overdue ? "⚠️" : ""}</div>
+                            <div style={{fontSize:11,color:m.color,fontWeight:700}}>
+                              {m.text}
+                              {Number.isFinite(d.reviewLevel) && d.reviewLevel > 0 && <span style={{marginLeft:4,fontSize:10,color:C.textSec}}>{"▪".repeat(Math.min(d.reviewLevel, 5))}</span>}
+                              {" · "}{reviewAgeText(d.lastReviewDate)} {overdue ? "⚠️" : ""}
+                              {d.nextReviewDate && !overdue && s !== "unlearned" && <span style={{fontSize:10,color:C.textSec,marginLeft:4}}>{"→ " + Math.max(0, Math.ceil((new Date(d.nextReviewDate).getTime() - new Date().setHours(0,0,0,0)) / 86400000)) + "天后"}</span>}
+                            </div>
                           </>
                         )}
                       </div>
@@ -3333,38 +3402,6 @@ export default function App() {
           <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={5} placeholder="arduous\nbenevolent" />
           <div style={{fontSize:13,color:C.textSec,marginTop:4}}>{wordInput.trim() ? "共 "+parseWordsFromInput(wordInput).length+" 个词" : ""}</div>
 
-          {(() => {
-            var _allWords = parseWordsFromInput(wordInput);
-            var _unlearnedCount = _allWords.filter(function(w){ return !wordStatusMap[w] || wordStatusMap[w] === "unlearned"; }).length;
-            if (_allWords.length === 0) return null;
-            return <div style={{marginTop:14}}>
-              <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:10}}>选择学习方式</div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
-                {/* 快筛模式 */}
-                <div style={{background:C.tealLight,border:"1.5px solid "+C.teal+"66",borderRadius:14,padding:"18px 14px",textAlign:"center"}}>
-                  <div style={{fontSize:28,marginBottom:6}}>🃏</div>
-                  <div style={{fontSize:15,fontWeight:700,color:C.teal,marginBottom:4}}>快筛模式</div>
-                  <div style={{fontSize:12,color:C.textSec,lineHeight:1.5,marginBottom:12}}>翻牌看释义，认识的跳过<br/>不认识的留给 AI 教<br/><strong>适合大量词汇快速过滤</strong></div>
-                  <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",padding:"10px 16px",background:C.teal,fontSize:14}} onClick={function(){ startScreening(); }}>开始快筛（{_unlearnedCount} 词）</button>
-                </div>
-                {/* 精读模式 */}
-                <div style={{background:C.accentLight,border:"1.5px solid "+C.accent+"66",borderRadius:14,padding:"18px 14px",textAlign:"center"}}>
-                  <div style={{fontSize:28,marginBottom:6}}>✨</div>
-                  <div style={{fontSize:15,fontWeight:700,color:C.accent,marginBottom:4}}>精读模式</div>
-                  <div style={{fontSize:12,color:C.textSec,lineHeight:1.5,marginBottom:12}}>AI 量身定制教学内容<br/>猜 → 讲 → 练 → 复习<br/><strong>适合重点深度记忆</strong></div>
-                  <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",padding:"10px 16px",fontSize:14}} onClick={function(){ startLearning(0); }}>开始精读（{Math.min(_unlearnedCount, dailyNewWords||20)} 词）</button>
-                </div>
-              </div>
-              {_unlearnedCount > 50 && (
-                <div style={{background:C.goldLight,border:"1px solid "+C.gold+"44",borderRadius:10,padding:"10px 14px",fontSize:12,color:C.textSec,lineHeight:1.6,marginBottom:12}}>
-                  💡 词库有 <strong>{_unlearnedCount}</strong> 个未学词，建议先用「快筛模式」过滤掉已认识的，再用「精读模式」深度学习不认识的词，效率更高！
-                </div>
-              )}
-              <div style={{textAlign:"center"}}>
-                <button style={{background:"transparent",border:"1px solid "+C.border,color:C.textSec,fontFamily:FONT,fontSize:12,cursor:"pointer",borderRadius:8,padding:"6px 14px"}} onClick={function(){ setSetupTab("plan"); }}>📅 学习计划设置 →</button>
-              </div>
-            </div>;
-          })()}
         </div>
       )}
 
@@ -3415,6 +3452,48 @@ export default function App() {
               </div>;
             })}
           </div>
+          {(() => {
+            var _words = parseWordsFromInput(wordInput);
+            var _upcoming = { today: 0, tomorrow: 0, thisWeek: 0, later: 0 };
+            var _now = new Date(); _now.setHours(0,0,0,0);
+            var _todayMs = _now.getTime();
+            var _tomorrowMs = _todayMs + 86400000;
+            var _weekMs = _todayMs + 7 * 86400000;
+            _words.forEach(function(w) {
+              var d = reviewWordData[w] || {};
+              if (!d.nextReviewDate) return;
+              var t = new Date(d.nextReviewDate).getTime();
+              if (!Number.isFinite(t)) return;
+              if (t <= _todayMs) _upcoming.today++;
+              else if (t <= _tomorrowMs) _upcoming.tomorrow++;
+              else if (t <= _weekMs) _upcoming.thisWeek++;
+              else _upcoming.later++;
+            });
+            var _hasAny = _upcoming.today + _upcoming.tomorrow + _upcoming.thisWeek + _upcoming.later > 0;
+            if (!_hasAny) return null;
+            return <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+              <div style={{fontWeight:700,fontSize:13,marginBottom:8}}>📅 复习日程概览</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>
+                <div style={{textAlign:"center",padding:"8px 4px",background:_upcoming.today > 0 ? C.redLight : C.card,borderRadius:8,border:"1px solid "+(_upcoming.today > 0 ? C.red+"44" : C.border)}}>
+                  <div style={{fontSize:18,fontWeight:800,color:_upcoming.today > 0 ? C.red : C.textSec}}>{_upcoming.today}</div>
+                  <div style={{fontSize:11,color:C.textSec}}>今天到期</div>
+                </div>
+                <div style={{textAlign:"center",padding:"8px 4px",background:C.card,borderRadius:8,border:"1px solid "+C.border}}>
+                  <div style={{fontSize:18,fontWeight:800,color:C.gold}}>{_upcoming.tomorrow}</div>
+                  <div style={{fontSize:11,color:C.textSec}}>明天</div>
+                </div>
+                <div style={{textAlign:"center",padding:"8px 4px",background:C.card,borderRadius:8,border:"1px solid "+C.border}}>
+                  <div style={{fontSize:18,fontWeight:800,color:C.teal}}>{_upcoming.thisWeek}</div>
+                  <div style={{fontSize:11,color:C.textSec}}>本周内</div>
+                </div>
+                <div style={{textAlign:"center",padding:"8px 4px",background:C.card,borderRadius:8,border:"1px solid "+C.border}}>
+                  <div style={{fontSize:18,fontWeight:800,color:C.textSec}}>{_upcoming.later}</div>
+                  <div style={{fontSize:11,color:C.textSec}}>更远</div>
+                </div>
+              </div>
+              <div style={{fontSize:11,color:C.textSec,marginTop:8,lineHeight:1.5}}>间隔重复规则：答对后按 1→3→7→14→30 天递增复习间隔，答错则重置为 1 天。</div>
+            </div>;
+          })()}
           <div style={{background:C.bg,border:"1px dashed "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
             <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>🚦 P0 / P1 / P2 阶段看板</div>
             <div style={{display:"flex",gap:8,flexWrap:"wrap",fontSize:12,marginBottom:6}}>
@@ -3650,7 +3729,6 @@ export default function App() {
                     <button style={{...S.ghostBtn,borderColor:C.red,color:C.red}} onClick={() => { setShowSettings(false); startDeepReview(); }}>🔴 重点攻克</button>
                   </div>
 
-                  <div style={S.presetRow}>{Object.keys(PRESETS).map(n => <button key={n} style={S.presetBtn} onClick={() => setWordInput(PRESETS[n])}>{n}</button>)}</div>
                   <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={8} placeholder="arduous\nbenevolent" />
                   <div style={{fontSize:13,color:C.textSec,margin:"6px 0 12px"}}>{wordInput.trim() ? "共 "+wordInput.trim().split(/[\n,，、]+/).filter(w=>w.trim()).length+" 个词" : ""}</div>
                   <button style={S.primaryBtn} onClick={() => { setShowSettings(false); startLearning(0); }}>✨ 重新开始</button>
