@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { C, FONT, globalCSS, S } from '../lib/theme';
 import { BrandNavBar, BrandSparkIcon } from '../components/BrandNavBar';
+import { supabase } from '../lib/supabase';
 
 /* Plan & Pricing */
 
@@ -71,6 +72,58 @@ export default function PlanPage() {
   var [showBYO, setShowBYO] = useState(false);
   var [expandedFAQ, setExpandedFAQ] = useState(null);
   var [showCalc, setShowCalc] = useState(false);
+  var [user, setUser] = useState(null);
+  var [currentSub, setCurrentSub] = useState(null);
+  var [checkoutLoading, setCheckoutLoading] = useState(null);
+  var [successMsg, setSuccessMsg] = useState(false);
+
+  useEffect(function() {
+    // Check for success redirect
+    if (typeof window !== 'undefined' && window.location.search.includes('success=1')) {
+      setSuccessMsg(true);
+      window.history.replaceState({}, '', '/plan');
+    }
+    // Auth
+    supabase.auth.getSession().then(function(r) {
+      var u = r?.data?.session?.user || null;
+      setUser(u);
+      if (u) checkSub(u.id);
+    });
+    var { data: { subscription } } = supabase.auth.onAuthStateChange(function(ev, session) {
+      var u = session?.user || null;
+      setUser(u);
+      if (u) checkSub(u.id);
+    });
+    return function() { subscription.unsubscribe(); };
+  }, []);
+
+  var checkSub = async function(userId) {
+    try {
+      var r = await fetch('/api/stripe/check-subscription?userId=' + userId);
+      var data = await r.json();
+      if (data.isActive) setCurrentSub(data);
+    } catch(e) {}
+  };
+
+  var handleCheckout = async function(tier) {
+    if (!user) { alert("请先登录后再订阅"); return; }
+    setCheckoutLoading(tier);
+    try {
+      var r = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier: tier, billing: billing, byoKey: showBYO, userId: user.id, userEmail: user.email }),
+      });
+      var data = await r.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("创建支付失败：" + (data.error || "未知错误"));
+      }
+    } catch(e) {
+      alert("网络错误，请重试");
+    } finally { setCheckoutLoading(null); }
+  };
 
   var getPrice = function(plan) {
     if (!plan.price) return { display: "免费", note: "" };
@@ -102,6 +155,13 @@ export default function PlanPage() {
       <BrandNavBar activeTab="plan" />
 
       <div style={S.container}>
+        {/* 支付成功提示 */}
+        {successMsg && (
+          <div style={{ background:C.green, color:"#fff", padding:"14px 18px", borderRadius:12, marginBottom:14, textAlign:"center", fontSize:14, fontWeight:600, animation:"fadeUp 0.3s ease-out" }}>
+            {"🎉 支付成功！你的 AI 私教课已激活。开始学习吧！"}
+          </div>
+        )}
+
         {/* Hero */}
         <div style={{ textAlign:"center", marginBottom:20, animation:"fadeUp 0.3s ease-out" }}>
           <BrandSparkIcon size={48} marginBottom={8} />
@@ -214,9 +274,19 @@ export default function PlanPage() {
                   })}
                 </div>
 
-                <button style={{ ...S.bigBtn, margin:0, background: plan.key === "free" ? C.teal : plan.color, fontSize:15 }}>
-                  {plan.cta}
-                </button>
+                {currentSub && currentSub.tier === plan.key ? (
+                  <div style={{ ...S.bigBtn, margin:0, background:C.green, textAlign:"center", cursor:"default" }}>
+                    {"当前方案 \u2714 \u00B7 " + new Date(currentSub.expiresAt).toLocaleDateString() + " 到期"}
+                  </div>
+                ) : (
+                  <button
+                    onClick={function() { plan.key === "free" ? null : handleCheckout(plan.key); }}
+                    disabled={checkoutLoading === plan.key}
+                    style={{ ...S.bigBtn, margin:0, background: plan.key === "free" ? C.teal : plan.color, fontSize:15, opacity: checkoutLoading === plan.key ? 0.6 : 1 }}
+                  >
+                    {checkoutLoading === plan.key ? "跳转支付中..." : plan.cta}
+                  </button>
+                )}
               </div>
             );
           })}
