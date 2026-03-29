@@ -67,50 +67,83 @@ var PHILOSOPHY_ITEMS = [
     detail: "我们的六维脑力系统基于认知心理学的能力模型，每篇作文都会量化你在六个维度上的成长。这不是抽象的分数——它对应着你大脑中真实的神经通路的强化。就像健身记录你的卧推重量、跑步配速一样，我们记录你的思维\u201c力量\u201d。" },
 ];
 
-/* ─── 初始测评题目 ─── */
-var ASSESSMENT_TASKS = [
-  { dim: "observation", icon: "🔍", title: "观察力",
-    instruction: "Look around you right now. Pick one small object and describe it in 1-2 sentences. Include at least 2 sensory details (what it looks like, feels like, sounds like, etc.)",
-    hint: "观察你身边的一个小物品，用 1-2 句话描述它，尽量包含 2 个感官细节。可以中英混合。",
-    placeholder: "例：My water bottle is transparent blue with tiny scratches on the surface. It feels cold and smooth when I hold it.",
-    minWords: 8 },
-  { dim: "creativity", icon: "🎨", title: "创意力",
-    instruction: "Imagine an animal that doesn't exist. Describe what it looks like and one special thing it can do.",
-    hint: "想象一种不存在的动物，描述它的样子和一个特殊能力。",
-    placeholder: "例：It's a tiny fox with butterfly wings. It can turn invisible when it's scared.",
-    minWords: 8 },
-  { dim: "logic", icon: "🧩", title: "逻辑力",
-    instruction: "Break down this topic into 3 clear steps: How to prepare for a trip.",
-    hint: "把\u201c如何准备一次旅行\u201d分解成 3 个清晰的步骤。",
-    placeholder: "例：Step 1: Decide where to go and check the weather. Step 2: Pack clothes and...",
-    minWords: 10 },
-  { dim: "empathy", icon: "💛", title: "共情力",
-    instruction: "Your best friend just failed an important exam and feels terrible. What would you say to them?",
-    hint: "你的好朋友考试没考好，很难过。你会对他/她说什么？",
-    placeholder: "例：I know you feel disappointed, but one test doesn't define you. Remember when you...",
-    minWords: 8 },
-  { dim: "critical", icon: "⚖️", title: "思辨力",
-    instruction: "Some people say: Homework is a waste of time. Do you agree or disagree? Give ONE reason.",
-    hint: "\u201c作业浪费时间\u201d——你同意还是不同意？给出一个理由。",
-    placeholder: "例：I partially agree because... However, some homework like...",
-    minWords: 8 },
-  { dim: "expression", icon: "✍️", title: "表达力",
-    instruction: "Describe today's weather AND how it makes you feel in one sentence.",
-    hint: "用一句英文描述今天的天气和你的感受。",
-    placeholder: "例：The grey sky and cold rain make me want to stay in bed with a warm blanket.",
-    minWords: 5 },
-];
+/* ─── 初始测评题目（支持根据画像个性化） ─── */
+var buildAssessmentTasks = function(profile) {
+  // 从画像中提取个性化元素
+  var name = "";
+  var hobby = "";
+  var friend = "";
+  if (profile) {
+    var p = profile.toLowerCase();
+    // 尝试提取关键信息用于出题
+    var hobbyMatch = p.match(/(?:喜欢|爱好|hobby|love|like)\s*[:：]?\s*([^\n,，。.]+)/);
+    if (hobbyMatch) hobby = hobbyMatch[1].trim();
+    var friendMatch = p.match(/(?:朋友|好友|friend)\s*[:：]?\s*([^\n,，。.]+)/);
+    if (friendMatch) friend = friendMatch[1].trim();
+  }
 
-var VOCAB_CHECK_WORDS = [
-  { word: "abandon", level: 1 },
-  { word: "contribute", level: 1 },
-  { word: "significant", level: 2 },
-  { word: "perspective", level: 2 },
-  { word: "resilient", level: 3 },
-  { word: "ambiguous", level: 3 },
-  { word: "pragmatic", level: 4 },
-  { word: "ubiquitous", level: 4 },
-];
+  return [
+    { dim: "observation", icon: "🔍", title: "观察力",
+      instruction: hobby
+        ? "Think about when you " + hobby + ". Describe one specific moment or detail from that experience using at least 2 senses."
+        : "Look around you right now. Pick one small object and describe it in 1-2 sentences. Include at least 2 sensory details.",
+      hint: hobby ? "回想你" + hobby + "的一个具体瞬间，用至少 2 个感官描述它。" : "观察你身边的一个小物品，用 1-2 句话描述它。",
+      placeholder: "先把你想表达的写出来，不会的词可以用中文...",
+      minWords: 8 },
+    { dim: "creativity", icon: "🎨", title: "创意力",
+      instruction: hobby
+        ? "Imagine a magical version of " + hobby + ". What would be different? Describe it in 1-2 sentences."
+        : "Imagine an animal that doesn't exist. Describe what it looks like and one special thing it can do.",
+      hint: hobby ? "想象一个魔法版的" + hobby + "，会有什么不同？" : "想象一种不存在的动物，描述它的样子和一个特殊能力。",
+      placeholder: "尽情发挥想象力，中英混合完全没问题...",
+      minWords: 8 },
+    { dim: "logic", icon: "🧩", title: "逻辑力",
+      instruction: hobby
+        ? "If you wanted to teach someone how to " + hobby + ", break it down into 3 clear steps."
+        : "Break down this topic into 3 clear steps: How to prepare for a trip.",
+      hint: hobby ? "如果要教别人" + hobby + "，你会分成哪 3 步？" : "把准备旅行分解成 3 个步骤。",
+      placeholder: "Step 1: ... Step 2: ... Step 3: ...",
+      minWords: 10 },
+    { dim: "empathy", icon: "💛", title: "共情力",
+      instruction: friend
+        ? "Imagine " + friend + " is feeling sad because something didn't go well. What would you say to make them feel better?"
+        : "Your best friend just failed an important exam and feels terrible. What would you say to them?",
+      hint: friend ? "如果" + friend + "因为什么事情很难过，你会怎么安慰？" : "你的好朋友考试没考好，你会对他/她说什么？",
+      placeholder: "想想你真的会说什么，真实最重要...",
+      minWords: 8 },
+    { dim: "critical", icon: "⚖️", title: "思辨力",
+      instruction: "Some people say: Students learn more from the internet than from school. Do you agree or disagree? Give ONE reason.",
+      hint: "\u201c学生从网上学到的比学校多\u201d——你同意还是不同意？给一个理由。",
+      placeholder: "I think... because...",
+      minWords: 8 },
+    { dim: "expression", icon: "✍️", title: "表达力",
+      instruction: "Describe today's weather AND how it makes you feel, all in one sentence.",
+      hint: "用一句话描述今天的天气和你的心情。尽量用英文，不会的词用中文。",
+      placeholder: "例：The warm sunshine makes me feel...",
+      minWords: 5 },
+  ];
+};
+
+/* ─── 中文使用量分析（用于词汇水平评估） ─── */
+var analyzeChineseUsage = function(answers) {
+  var totalChars = 0;
+  var chineseChars = 0;
+  var chineseWords = [];
+  Object.values(answers).forEach(function(text) {
+    if (!text) return;
+    for (var i = 0; i < text.length; i++) {
+      totalChars++;
+      if (text.charCodeAt(i) > 0x4e00 && text.charCodeAt(i) < 0x9fff) {
+        chineseChars++;
+      }
+    }
+    // 提取中文词组
+    var matches = text.match(/[\u4e00-\u9fff]+/g);
+    if (matches) chineseWords = chineseWords.concat(matches);
+  });
+  var chineseRatio = totalChars > 0 ? chineseChars / totalChars : 0;
+  return { totalChars: totalChars, chineseChars: chineseChars, chineseRatio: chineseRatio, chineseWords: chineseWords };
+};
 
 /* ─── 写作技巧框架 ─── */
 var WRITING_SKILLS_FRAMEWORK = [
@@ -340,11 +373,11 @@ export default function WritingApp() {
   var [userAge, setUserAge] = useState(null);
 
   // 初始测评状态
-  var [assessStep, setAssessStep] = useState(0); // 0-5: tasks, 6: vocab, 7: submitting
+  var [assessStep, setAssessStep] = useState(0); // 0-5: tasks, 6: submitting
   var [assessAnswers, setAssessAnswers] = useState({});
-  var [vocabChecked, setVocabChecked] = useState({});
   var [assessResult, setAssessResult] = useState(null);
   var [assessLoading, setAssessLoading] = useState(false);
+  var [userProfile, setUserProfile] = useState(''); // 从 Vocab 读取的画像
 
   // 当前写作会话
   var [selectedCategory, setSelectedCategory] = useState(null);
@@ -366,6 +399,11 @@ export default function WritingApp() {
     setWritingData(data);
     setVocabWords(loadVocabWords());
     try { var savedAge = localStorage.getItem('vocabspark_user_age'); if (savedAge) setUserAge(parseInt(savedAge)); } catch(e) {}
+    // 读取 Vocab 用户画像
+    try {
+      var vocabRaw = localStorage.getItem(VOCAB_SKEY);
+      if (vocabRaw) { var vd = JSON.parse(vocabRaw); if (vd.profile) setUserProfile(vd.profile); }
+    } catch(e) {}
     // 首次用户自动进入测评
     if (!data.assessmentDone) setScreen("assessment");
 
@@ -566,37 +604,47 @@ export default function WritingApp() {
   // ─── 初始测评提交 ───
   var submitAssessment = async function() {
     setAssessLoading(true);
-    setAssessStep(7);
+    setAssessStep(6);
     try {
-      var answersText = ASSESSMENT_TASKS.map(function(t) {
+      var tasks = buildAssessmentTasks(userProfile);
+      var answersText = tasks.map(function(t) {
         return t.title + " (" + t.dim + "): " + (assessAnswers[t.dim] || "(empty)");
       }).join("\n\n");
-      var vocabKnown = Object.keys(vocabChecked).filter(function(w) { return vocabChecked[w]; });
-      var sys = "你是英语写作能力评估专家。根据以下学生的 6 道简答测试（允许中英混合），为每个维度打分 1-10。"
+      var chineseAnalysis = analyzeChineseUsage(assessAnswers);
+      var profileContext = userProfile ? "\n\n学生画像：" + userProfile.slice(0, 300) : "";
+      var sys = "你是一位温暖而专业的英语写作能力评估教练。根据以下学生的 6 道简答测试（中英混合），为每个维度打分 1-10。"
         + "\n维度：creativity, logic, observation, empathy, critical, expression"
         + "\n评分标准：1-3 基础，4-6 中等，7-8 良好，9-10 优秀"
-        + "\n考虑因素：英文使用比例、表达精准度、思维深度、细节丰富度"
-        + "\n\n同时根据词汇认识情况评估词汇水平（vocabLevel 1-4，1=基础 4=高级）。"
-        + "\n学生认识的词：" + (vocabKnown.length > 0 ? vocabKnown.join(", ") : "none")
-        + "\n\n输出 JSON："
-        + '{"scores":{"creativity":N,"logic":N,"observation":N,"empathy":N,"critical":N,"expression":N},"vocabLevel":N,"summary":"一句话总评(中文)","strengths":["强项1"],"tips":["建议1"]}';
-      var text = await callAPI(sys, "学生测试答案：\n\n" + answersText, { maxTokens: 600 });
+        + "\n考虑因素：思维深度（最重要）、表达精准度、细节丰富度、英文使用比例"
+        + "\n\n词汇评估：学生在 6 道题中使用了 " + chineseAnalysis.chineseWords.length + " 个中文词组"
+        + "（中文占比 " + Math.round(chineseAnalysis.chineseRatio * 100) + "%）。"
+        + " 中文词包括：" + (chineseAnalysis.chineseWords.length > 0 ? chineseAnalysis.chineseWords.slice(0, 15).join("、") : "无")
+        + "\n根据中文使用量评估 vocabLevel（1=大量中文 2=中英混合 3=主要英文偶尔中文 4=几乎全英文）"
+        + profileContext
+        + "\n\n请用温暖鼓励的语气。输出 JSON："
+        + '{"scores":{"creativity":N,"logic":N,"observation":N,"empathy":N,"critical":N,"expression":N},'
+        + '"vocabLevel":N,'
+        + '"summary":"鼓励性总评(中文,2-3句,要具体提到学生答案中的亮点)",'
+        + '"strengths":["具体的强项描述,引用学生的回答"],'
+        + '"potential":"一段话(中文),像健身教练一样告诉学生经过训练可以达到什么水平,要给信心",'
+        + '"tips":["具体可行的第一步建议"],'
+        + '"personalNote":"根据学生画像给出的个性化鼓励(如果有画像信息)"}';
+      var text = await callAPI(sys, "学生测试答案：\n\n" + answersText, { maxTokens: 800 });
       var parsed = tryJSON(text);
       if (parsed && parsed.scores) {
         setAssessResult(parsed);
-        // 将初始分数转换为 brainStats 基础值
         updateAndSave(function(prev) {
           var bs = {};
           BRAIN_DIMS.forEach(function(dim) { bs[dim.key] = parsed.scores[dim.key] || 3; });
-          return { ...prev, brainStats: bs, assessmentDone: true, assessmentResult: parsed };
+          return { ...prev, brainStats: bs, assessmentDone: true, assessmentResult: parsed, vocabLevel: parsed.vocabLevel || 2 };
         });
       } else {
-        var fallback = { scores: { creativity: 5, logic: 5, observation: 5, empathy: 5, critical: 5, expression: 5 }, vocabLevel: 2, summary: "测评完成，已生成初始分数。", strengths: [], tips: [] };
+        var fallback = { scores: { creativity: 5, logic: 5, observation: 5, empathy: 5, critical: 5, expression: 5 }, vocabLevel: 2, summary: "测评完成！你已经迈出了最重要的第一步。", strengths: ["你愿意尝试，这本身就是最大的优势"], potential: "每个人的写作能力都可以通过练习大幅提升。坚持每周写 2-3 篇，一个月后你会看到明显的变化！", tips: ["从你最感兴趣的话题开始写起"], personalNote: "" };
         setAssessResult(fallback);
         updateAndSave(function(prev) { return { ...prev, brainStats: fallback.scores, assessmentDone: true, assessmentResult: fallback }; });
       }
     } catch(e) {
-      var fallback = { scores: { creativity: 5, logic: 5, observation: 5, empathy: 5, critical: 5, expression: 5 }, vocabLevel: 2, summary: "AI 评估暂时不可用，已使用默认初始分数。", strengths: [], tips: [] };
+      var fallback = { scores: { creativity: 5, logic: 5, observation: 5, empathy: 5, critical: 5, expression: 5 }, vocabLevel: 2, summary: "测评完成！你已经迈出了最重要的第一步。", strengths: ["你愿意尝试，这本身就是最大的优势"], potential: "坚持每周写 2-3 篇，一个月后你会看到明显的变化！", tips: ["从你最感兴趣的话题开始写起"], personalNote: "" };
       setAssessResult(fallback);
       updateAndSave(function(prev) { return { ...prev, brainStats: fallback.scores, assessmentDone: true, assessmentResult: fallback }; });
     } finally { setAssessLoading(false); }
@@ -631,38 +679,54 @@ export default function WritingApp() {
         )}
 
         {/* ═══ ASSESSMENT ═══ */}
-        {screen === "assessment" && (
+        {screen === "assessment" && (function() {
+          var tasks = buildAssessmentTasks(userProfile);
+          return (
           <div style={{ animation:"fadeUp 0.3s ease-out" }}>
-            {/* 标题和说明 */}
-            {assessStep <= 6 && !assessResult && (
+            {/* 答题阶段 */}
+            {assessStep < 6 && !assessResult && (
               <div>
                 <div style={{ textAlign:"center", marginBottom:16 }}>
                   <BrandSparkIcon size={48} marginBottom={8} />
                   <div style={{ fontSize:18, fontWeight:800, marginBottom:4 }}>写作能力初始测评</div>
-                  <div style={{ fontSize:13, color:C.textSec, lineHeight:1.6, maxWidth:340, margin:"0 auto" }}>
-                    {assessStep < 6 ? "6 道小题，每题 1-2 句话就够了。可以中英混合，尽量用英文。不会的词用中文没关系！" : "最后一步：勾选你认识的单词"}
+                  <div style={{ fontSize:13, color:C.textSec, lineHeight:1.6, maxWidth:360, margin:"0 auto" }}>
+                    6 道小题，每题 1-2 句话就够了
+                  </div>
+                  <div style={{ fontSize:12, color:C.accent, fontWeight:600, marginTop:6, lineHeight:1.5 }}>
+                    🎯 最重要的是表达你真实的想法！<br />在这个前提下，尽量用英文，不会的词用中文完全没问题。
                   </div>
                 </div>
 
                 {/* 进度条 */}
                 <div style={{ display:"flex", gap:3, marginBottom:16 }}>
-                  {ASSESSMENT_TASKS.map(function(_, i) {
+                  {tasks.map(function(_, i) {
                     return <div key={i} style={{ flex:1, height:4, borderRadius:2, background: i < assessStep ? C.accent : i === assessStep ? C.gold : C.border, transition:"background 0.3s" }} />;
                   })}
-                  <div style={{ flex:1, height:4, borderRadius:2, background: assessStep >= 6 ? C.accent : C.border, transition:"background 0.3s" }} />
                 </div>
 
                 {/* 当前题目 */}
-                {assessStep < 6 && (function() {
-                  var task = ASSESSMENT_TASKS[assessStep];
+                {(function() {
+                  var task = tasks[assessStep];
+                  // 每题一句小鼓励
+                  var encouragements = [
+                    "放轻松，没有对错之分 😊",
+                    "你的想象力比你想象的更好 ✨",
+                    "条理清晰就很棒了 👍",
+                    "真心话最打动人 💛",
+                    "有自己的观点就是最大的能力 💪",
+                    "最后一题啦！你太棒了 🎉",
+                  ];
                   return (
                     <div style={S.card}>
-                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-                        <span style={{ fontSize:20 }}>{task.icon}</span>
-                        <div>
-                          <div style={{ fontSize:14, fontWeight:700 }}>{task.title}</div>
-                          <div style={{ fontSize:11, color:C.textSec }}>第 {assessStep + 1} / 6 题</div>
+                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                          <span style={{ fontSize:20 }}>{task.icon}</span>
+                          <div>
+                            <div style={{ fontSize:14, fontWeight:700 }}>{task.title}</div>
+                            <div style={{ fontSize:11, color:C.textSec }}>第 {assessStep + 1} / 6 题</div>
+                          </div>
                         </div>
+                        <span style={{ fontSize:11, color:C.gold, fontWeight:600 }}>{encouragements[assessStep]}</span>
                       </div>
                       <div style={{ fontSize:14, fontWeight:600, lineHeight:1.6, marginBottom:6 }}>{task.instruction}</div>
                       <div style={{ fontSize:12, color:C.teal, marginBottom:10 }}>💡 {task.hint}</div>
@@ -672,53 +736,35 @@ export default function WritingApp() {
                         placeholder={task.placeholder}
                         style={{ ...S.textarea, minHeight:80, fontSize:14 }}
                       />
-                      <div style={{ display:"flex", justifyContent:"space-between", marginTop:10 }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:10 }}>
                         <button onClick={function() { if (assessStep > 0) setAssessStep(assessStep - 1); }} disabled={assessStep === 0} style={S.ghostBtn}>← 上一题</button>
-                        <button onClick={function() { setAssessStep(assessStep + 1); }}
-                          disabled={!(assessAnswers[task.dim] || '').trim()}
-                          style={{ ...S.primaryBtn, opacity: (assessAnswers[task.dim] || '').trim() ? 1 : 0.5 }}>
-                          下一题 →
-                        </button>
+                        {assessStep < 5 ? (
+                          <button onClick={function() { setAssessStep(assessStep + 1); }}
+                            disabled={!(assessAnswers[task.dim] || '').trim()}
+                            style={{ ...S.primaryBtn, opacity: (assessAnswers[task.dim] || '').trim() ? 1 : 0.5 }}>
+                            下一题 →
+                          </button>
+                        ) : (
+                          <button onClick={submitAssessment} disabled={assessLoading || !(assessAnswers[task.dim] || '').trim()}
+                            style={{ ...S.primaryBtn, background:C.teal, opacity: (assessAnswers[task.dim] || '').trim() ? 1 : 0.5 }}>
+                            📊 生成我的脑力图
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
                 })()}
-
-                {/* 词汇检查 */}
-                {assessStep === 6 && (
-                  <div style={S.card}>
-                    <div style={{ fontSize:14, fontWeight:700, marginBottom:4 }}>📚 词汇水平快速检测</div>
-                    <div style={{ fontSize:12, color:C.textSec, marginBottom:12 }}>勾选你认识的单词（知道意思就行，不需要完全掌握）</div>
-                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-                      {VOCAB_CHECK_WORDS.map(function(w) {
-                        var checked = vocabChecked[w.word] || false;
-                        return (
-                          <button key={w.word} onClick={function() { setVocabChecked(function(prev) { var n = {...prev}; n[w.word] = !checked; return n; }); }}
-                            style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 12px", background: checked ? C.accentLight : C.bg, border:"1.5px solid " + (checked ? C.accent : C.border), borderRadius:8, cursor:"pointer", fontFamily:FONT, fontSize:14, fontWeight: checked ? 600 : 400, color: checked ? C.accent : C.text, textAlign:"left" }}>
-                            <span style={{ width:20, height:20, borderRadius:4, border:"2px solid " + (checked ? C.accent : C.border), background: checked ? C.accent : "transparent", display:"inline-flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:12, flexShrink:0 }}>
-                              {checked ? "✓" : ""}
-                            </span>
-                            {w.word}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div style={{ display:"flex", justifyContent:"space-between", marginTop:14 }}>
-                      <button onClick={function() { setAssessStep(5); }} style={S.ghostBtn}>← 上一题</button>
-                      <button onClick={submitAssessment} disabled={assessLoading} style={S.primaryBtn}>
-                        📊 生成我的脑力图
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
             {/* AI 评估中 */}
-            {assessStep === 7 && assessLoading && (
-              <div style={{ ...S.loadingBox, flexDirection:"column", padding:"60px 20px" }}>
-                <span style={{ ...S.spinner, width:32, height:32 }} />
-                <div style={{ marginTop:12 }}>AI 正在分析你的写作能力...</div>
+            {assessStep === 6 && assessLoading && (
+              <div style={{ textAlign:"center", padding:"60px 20px" }}>
+                <span style={{ ...S.spinner, width:32, height:32, display:"inline-block" }} />
+                <div style={{ marginTop:16, fontSize:15, fontWeight:600 }}>AI 教练正在分析你的写作能力...</div>
+                <div style={{ marginTop:8, fontSize:12, color:C.textSec, lineHeight:1.6 }}>
+                  正在评估你的思维深度、表达精准度和词汇运用
+                </div>
               </div>
             )}
 
@@ -726,8 +772,9 @@ export default function WritingApp() {
             {assessResult && (
               <div style={{ animation:"fadeUp 0.3s ease-out" }}>
                 <div style={{ textAlign:"center", marginBottom:16 }}>
-                  <div style={{ fontSize:20, fontWeight:800, marginBottom:4 }}>🎉 测评完成！</div>
-                  <div style={{ fontSize:13, color:C.textSec }}>这是你的初始写作脑力图</div>
+                  <div style={{ fontSize:24, marginBottom:4 }}>🎉</div>
+                  <div style={{ fontSize:20, fontWeight:800, marginBottom:4 }}>测评完成！</div>
+                  <div style={{ fontSize:13, color:C.textSec }}>这是你的初始写作脑力图——你的起点，不是终点</div>
                 </div>
 
                 <div style={{ ...S.card, textAlign:"center", padding:"20px 16px" }}>
@@ -756,24 +803,58 @@ export default function WritingApp() {
                   })}
                 </div>
 
-                {/* 总评 */}
-                <div style={S.card}>
-                  <div style={{ fontSize:14, lineHeight:1.6, marginBottom:8 }}>{assessResult.summary}</div>
+                {/* AI 教练总评（鼓励性） */}
+                <div style={{ ...S.card, background:C.accentLight, borderColor:C.accent + "33" }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:C.accent, marginBottom:6 }}>🏋️ AI 教练的话</div>
+                  <div style={{ fontSize:14, lineHeight:1.7, marginBottom:10 }}>{assessResult.summary}</div>
                   {assessResult.strengths && assessResult.strengths.length > 0 && (
-                    <div style={{ marginBottom:6 }}>
-                      <span style={{ fontSize:12, fontWeight:600, color:C.green }}>💪 强项：</span>
-                      <span style={{ fontSize:12, color:C.text }}>{assessResult.strengths.join("、")}</span>
+                    <div style={{ marginBottom:8 }}>
+                      {assessResult.strengths.map(function(s, i) {
+                        return <div key={i} style={{ fontSize:13, color:C.green, marginBottom:4, display:"flex", gap:4 }}><span>💪</span><span>{s}</span></div>;
+                      })}
                     </div>
                   )}
-                  {assessResult.tips && assessResult.tips.length > 0 && (
-                    <div>
-                      <span style={{ fontSize:12, fontWeight:600, color:C.teal }}>🎯 建议：</span>
-                      <span style={{ fontSize:12, color:C.text }}>{assessResult.tips.join("、")}</span>
+                  {assessResult.potential && (
+                    <div style={{ background:"rgba(255,255,255,0.6)", borderRadius:8, padding:"10px 14px", marginBottom:8, borderLeft:"3px solid " + C.accent }}>
+                      <div style={{ fontSize:13, lineHeight:1.6, color:C.text }}>{assessResult.potential}</div>
+                    </div>
+                  )}
+                  {assessResult.personalNote && (
+                    <div style={{ fontSize:13, color:C.teal, fontStyle:"italic", lineHeight:1.5 }}>
+                      {"✨ " + assessResult.personalNote}
                     </div>
                   )}
                 </div>
 
-                {/* 年龄输入（如果还没有） */}
+                {/* 词汇水平 */}
+                {assessResult.vocabLevel && (
+                  <div style={S.card}>
+                    <div style={{ fontSize:13, fontWeight:700, marginBottom:4 }}>📚 词汇运用水平</div>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <div style={{ flex:1, height:8, background:C.border, borderRadius:4 }}>
+                        <div style={{ width: (assessResult.vocabLevel * 25) + "%", height:"100%", background:C.purple, borderRadius:4 }} />
+                      </div>
+                      <span style={{ fontSize:12, color:C.purple, fontWeight:600 }}>
+                        {["", "入门", "进阶", "熟练", "精通"][assessResult.vocabLevel] || ""}
+                      </span>
+                    </div>
+                    <div style={{ fontSize:11, color:C.textSec, marginTop:6 }}>
+                      基于你测试中英文与中文的使用比例评估。每次写作都是提升词汇的机会！
+                    </div>
+                  </div>
+                )}
+
+                {/* 建议 */}
+                {assessResult.tips && assessResult.tips.length > 0 && (
+                  <div style={S.card}>
+                    <div style={{ fontSize:13, fontWeight:700, marginBottom:6 }}>🎯 你的第一步</div>
+                    {assessResult.tips.map(function(tip, i) {
+                      return <div key={i} style={{ fontSize:13, color:C.text, lineHeight:1.5, marginBottom:4, paddingLeft:10, borderLeft:"2px solid " + C.teal }}>{tip}</div>;
+                    })}
+                  </div>
+                )}
+
+                {/* 年龄输入 */}
                 {!userAge && (
                   <div style={{ ...S.card, display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"14px" }}>
                     <span style={{ fontSize:13, color:C.textSec }}>输入年龄，解锁同龄对比：</span>
@@ -784,16 +865,17 @@ export default function WritingApp() {
                   </div>
                 )}
 
-                <button onClick={function() { setScreen("dashboard"); }} style={{ ...S.bigBtn, marginBottom:14 }}>
+                <button onClick={function() { setScreen("dashboard"); }} style={{ ...S.bigBtn, marginBottom:8 }}>
                   🚀 开始写作之旅
                 </button>
-                <div style={{ textAlign:"center", fontSize:11, color:C.textSec, lineHeight:1.5 }}>
-                  每次写作都会更新你的脑力图，初始分数只是起点
+                <div style={{ textAlign:"center", fontSize:12, color:C.textSec, lineHeight:1.6, marginBottom:20 }}>
+                  每次写作都会更新你的脑力图。<br />就像健身一样，坚持就有回报 💪
                 </div>
               </div>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {/* ═══ DASHBOARD ═══ */}
         {screen === "dashboard" && (function() {
