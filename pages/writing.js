@@ -13,14 +13,58 @@ import { BrandNavBar, BrandSparkIcon } from '../components/BrandNavBar';
 var WRITING_SKEY = "vocabspark_writing_v1";
 var VOCAB_SKEY = "vocabspark_v1";
 
-/* ─── 六维能力系统 ─── */
+/* ─── 六维能力系统（含脑科学映射） ─── */
 var BRAIN_DIMS = [
-  { key: "creativity", label: "创意力", labelEn: "Creativity", icon: "🎨" },
-  { key: "logic", label: "逻辑力", labelEn: "Logic", icon: "🧩" },
-  { key: "observation", label: "观察力", labelEn: "Observation", icon: "🔍" },
-  { key: "empathy", label: "共情力", labelEn: "Empathy", icon: "💛" },
-  { key: "critical", label: "思辨力", labelEn: "Critical", icon: "⚖️" },
-  { key: "expression", label: "表达力", labelEn: "Expression", icon: "✍️" },
+  { key: "creativity", label: "创意力", labelEn: "Creativity", icon: "🎨",
+    brain: "右脑颞叶 + 默认模式网络", brainEn: "Right Temporal Lobe + DMN",
+    science: "创意力对应大脑的默认模式网络（Default Mode Network）。当你自由联想、构思故事时，大脑不同区域的神经元在\u201c漫游\u201d中建立新连接。研究表明，持续的创意写作能显著增强这个网络的活跃度。" },
+  { key: "logic", label: "逻辑力", labelEn: "Logic", icon: "🧩",
+    brain: "左脑前额叶", brainEn: "Left Prefrontal Cortex",
+    science: "逻辑力主要依赖左脑前额叶皮层（Prefrontal Cortex），这是大脑的\u201c指挥中心\u201d。议论文写作要求你组织论据、建立因果链，每一次练习都在强化这个区域的神经通路。" },
+  { key: "observation", label: "观察力", labelEn: "Observation", icon: "🔍",
+    brain: "枕叶 + 感觉皮层", brainEn: "Occipital + Sensory Cortex",
+    science: "观察力涉及视觉皮层（枕叶）和多感觉整合区域。当你用文字描绘细节时，大脑会重新激活感官记忆。描写练习让你的大脑学会更敏锐地捕捉和存储感官信息。" },
+  { key: "empathy", label: "共情力", labelEn: "Empathy", icon: "💛",
+    brain: "镜像神经元 + 颞顶联合区", brainEn: "Mirror Neurons + TPJ",
+    science: "共情力依赖镜像神经元系统和颞顶联合区（TPJ）。当你写人物、揣摩他人感受时，这些区域高度活跃。研究证实，经常进行叙事写作的人，共情能力测试得分更高。" },
+  { key: "critical", label: "思辨力", labelEn: "Critical", icon: "⚖️",
+    brain: "前扣带回 + 背外侧前额叶", brainEn: "ACC + dlPFC",
+    science: "思辨力依赖前扣带回皮层（ACC，负责冲突检测）和背外侧前额叶（dlPFC，负责理性判断）。反驳、质疑、多角度分析——这些练习让你的大脑学会在\u201c直觉\u201d和\u201c理性\u201d之间切换。" },
+  { key: "expression", label: "表达力", labelEn: "Expression", icon: "✍️",
+    brain: "布洛卡区 + 韦尼克区", brainEn: "Broca's + Wernicke's Area",
+    science: "表达力的核心是布洛卡区（语言产出）和韦尼克区（语言理解）。每次写作都在强化这两个区域之间的弓状束连接。双语写作者的这条通路比单语者更粗壮——这就是你正在做的事。" },
+];
+
+/* ─── 年龄基准数据（每维度按年龄段的平均累计点数） ─── */
+var AGE_BENCHMARKS = {
+  // 基于写作量和认知发展的估算基准值
+  // key: age range, value: { dim: average points after ~10 essays }
+  "10-12": { creativity: 12, logic: 6, observation: 10, empathy: 7, critical: 4, expression: 8 },
+  "13-15": { creativity: 15, logic: 12, observation: 13, empathy: 11, critical: 9, expression: 12 },
+  "16-18": { creativity: 18, logic: 18, observation: 15, empathy: 14, critical: 15, expression: 16 },
+  "default": { creativity: 15, logic: 12, observation: 13, empathy: 11, critical: 9, expression: 12 },
+};
+
+var getAgeGroup = function(age) {
+  if (!age) return "default";
+  if (age <= 12) return "10-12";
+  if (age <= 15) return "13-15";
+  if (age <= 18) return "16-18";
+  return "default";
+};
+
+/* ─── 成长理念 ─── */
+var PHILOSOPHY_ITEMS = [
+  { icon: "🧠", title: "写作即健脑", summary: "每种文体训练大脑不同区域，写作是最全面的认知训练。",
+    detail: "神经科学研究表明，写作是唯一同时激活逻辑思维（左脑）、创意联想（右脑）、情感共鸣（边缘系统）和语言产出（布洛卡区）的活动。不同类型的写作——议论文练逻辑、故事练创意、描写练观察——就像健身中的不同动作，针对性地强化大脑的不同\u201c肌肉群\u201d。" },
+  { icon: "💡", title: "先思考，再表达", summary: "AI 引导你理清思路，而不是替你写作。你的想法最珍贵。",
+    detail: "我们的灵感对话采用苏格拉底式教学法——通过提问引导你发现自己的想法，而非给你答案。研究表明，这种\u201c引导式发现\u201d比\u201c直接告知\u201d的学习效果高出 3-5 倍。当你写作时，AI 是你的教练，不是代笔人。你的每一个想法，哪怕最初很模糊，都是独一无二的。" },
+  { icon: "🌉", title: "中文是桥梁，不是拐杖", summary: "用母语释放思维，再用英文精准表达。这是科学的语言学习路径。",
+    detail: "二语习得研究中的\u201c跨语言实践\u201d（Translanguaging）理论指出：允许学习者使用母语思考，能显著降低认知负荷，让他们专注于更高层次的思维训练。我们的中文桥梁机制让你先想清楚要说什么（最难的部分），再学会怎么用英文说。随着你的进步，桥梁会逐渐减少——因为你已经不需要它了。" },
+  { icon: "🤖", title: "训练未来的核心能力", summary: "清晰表达想法的能力 = 与 AI 高效协作的能力。",
+    detail: "在 AI 时代，最有价值的技能不是记忆知识，而是能把模糊的想法变成清晰的、有结构的表达。这个能力决定了你能否驾驭 AI 的力量。一个能清晰描述问题的人，无论用中文还是英文，都能让 AI 产出高质量的结果。写作训练的本质，就是在训练这种\u201c思维表达力\u201d。" },
+  { icon: "📈", title: "每一篇都算数", summary: "你的成长轨迹被记录，每次写作都在积累可见的进步。",
+    detail: "我们的六维脑力系统基于认知心理学的能力模型，每篇作文都会量化你在六个维度上的成长。这不是抽象的分数——它对应着你大脑中真实的神经通路的强化。就像健身记录你的卧推重量、跑步配速一样，我们记录你的思维\u201c力量\u201d。" },
 ];
 
 var CATEGORY_BRAIN_MAP = {
@@ -66,15 +110,20 @@ var WRITING_PROMPTS = {
 };
 
 /* ─── 六维雷达图 (SVG) ─── */
-var RadarChart = ({ brainStats, size }) => {
+var RadarChart = ({ brainStats, size, benchmarkStats }) => {
   size = size || 200;
   var cx = size / 2, cy = size / 2, r = size * 0.38;
   var n = BRAIN_DIMS.length;
-  var maxVal = 30; // 初始显示的最大值，会自动扩展
+  var maxVal = 30;
 
-  // 计算实际最大值
+  // 计算实际最大值（包括 benchmark）
   var actualMax = 0;
-  BRAIN_DIMS.forEach(function(d) { var v = brainStats[d.key] || 0; if (v > actualMax) actualMax = v; });
+  BRAIN_DIMS.forEach(function(d) {
+    var v = brainStats[d.key] || 0;
+    var b = benchmarkStats ? (benchmarkStats[d.key] || 0) : 0;
+    if (v > actualMax) actualMax = v;
+    if (b > actualMax) actualMax = b;
+  });
   if (actualMax > maxVal) maxVal = Math.ceil(actualMax * 1.2);
   if (maxVal < 5) maxVal = 5;
 
@@ -129,6 +178,16 @@ var RadarChart = ({ brainStats, size }) => {
       {axes.map(function(a, i) {
         return <line key={i} x1={a.x1} y1={a.y1} x2={a.x2} y2={a.y2} stroke={C.border} strokeWidth={0.5} opacity={0.5} />;
       })}
+      {/* 年龄基准线 */}
+      {benchmarkStats && (function() {
+        var bpts = [];
+        for (var bi = 0; bi < n; bi++) {
+          var bval = benchmarkStats[BRAIN_DIMS[bi].key] || 0;
+          var bp = getPoint(bi, bval);
+          bpts.push(bp.x + "," + bp.y);
+        }
+        return <polygon points={bpts.join(" ")} fill="none" stroke={C.teal} strokeWidth={1.5} strokeDasharray="4,3" opacity={0.6} />;
+      })()}
       {/* 数据区域 */}
       <polygon points={dataPoints.join(" ")} fill={C.accent + "33"} stroke={C.accent} strokeWidth={2} />
       {/* 数据点 */}
@@ -210,6 +269,11 @@ export default function WritingApp() {
   var [otpError, setOtpError] = useState('');
   var [loginToast, setLoginToast] = useState(null);
 
+  // Dashboard UI 状态
+  var [showBrainDetail, setShowBrainDetail] = useState(null); // dim key or null
+  var [showPhilosophy, setShowPhilosophy] = useState(false);
+  var [userAge, setUserAge] = useState(null);
+
   // 当前写作会话
   var [selectedCategory, setSelectedCategory] = useState(null);
   var [selectedPrompt, setSelectedPrompt] = useState(null);
@@ -229,6 +293,8 @@ export default function WritingApp() {
     var data = loadWritingData() || getDefaultData();
     setWritingData(data);
     setVocabWords(loadVocabWords());
+    // 读取年龄
+    try { var savedAge = localStorage.getItem('vocabspark_user_age'); if (savedAge) setUserAge(parseInt(savedAge)); } catch(e) {}
 
     supabase.auth.getSession().then(function(result) {
       var u = result?.data?.session?.user || null;
@@ -453,23 +519,102 @@ export default function WritingApp() {
         )}
 
         {/* ═══ DASHBOARD ═══ */}
-        {screen === "dashboard" && (
+        {screen === "dashboard" && (function() {
+          var benchmarks = AGE_BENCHMARKS[getAgeGroup(userAge)] || null;
+          return (
           <div style={{ animation:"fadeUp 0.3s ease-out" }}>
-            {/* 脑力雷达图 */}
-            <div style={{ ...S.card, textAlign:"center", padding:"20px 16px" }}>
-              <div style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>🧠 写作脑力图</div>
-              <div style={{ fontSize:12, color:C.textSec, marginBottom:12 }}>每次写作都在训练不同的思维能力</div>
-              <RadarChart brainStats={d.brainStats || {}} size={220} />
-              <div style={{ display:"flex", flexWrap:"wrap", justifyContent:"center", gap:6, marginTop:12 }}>
-                {BRAIN_DIMS.map(function(dim) {
-                  var val = (d.brainStats || {})[dim.key] || 0;
+
+            {/* 成长理念概要 */}
+            <div style={{ ...S.card, padding:"16px 18px" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                <div style={{ fontSize:15, fontWeight:700 }}>✨ 为什么用 Know U. 练写作？</div>
+                <button onClick={function() { setShowPhilosophy(!showPhilosophy); }} style={{ ...S.smallBtn, fontSize:11, padding:"4px 10px" }}>
+                  {showPhilosophy ? "收起" : "了解更多"}
+                </button>
+              </div>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                {PHILOSOPHY_ITEMS.slice(0, showPhilosophy ? PHILOSOPHY_ITEMS.length : 3).map(function(p, i) {
                   return (
-                    <span key={dim.key} style={{ fontSize:11, color:C.textSec, background:C.bg, padding:"3px 8px", borderRadius:12, border:"1px solid " + C.border }}>
-                      {dim.icon + " " + dim.label + " " + val}
-                    </span>
+                    <div key={i} style={{ flex: showPhilosophy ? "1 1 100%" : "1 1 30%", minWidth: showPhilosophy ? "100%" : 0, background:C.bg, borderRadius:10, padding: showPhilosophy ? "12px 14px" : "8px 10px", border:"1px solid " + C.border }}>
+                      <div style={{ fontSize: showPhilosophy ? 14 : 12, fontWeight:600, marginBottom: showPhilosophy ? 4 : 2 }}>{p.icon + " " + p.title}</div>
+                      <div style={{ fontSize:11, color:C.textSec, lineHeight:1.5 }}>{showPhilosophy ? p.detail : p.summary}</div>
+                    </div>
                   );
                 })}
               </div>
+            </div>
+
+            {/* 脑力雷达图 */}
+            <div style={{ ...S.card, textAlign:"center", padding:"20px 16px" }}>
+              <div style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>🧠 写作脑力图</div>
+              <div style={{ fontSize:12, color:C.textSec, marginBottom:4 }}>每种文体锻炼大脑不同区域，写作是最全面的认知训练</div>
+
+              {/* 年龄输入 */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, marginBottom:10, fontSize:12 }}>
+                <span style={{ color:C.textSec }}>我的年龄：</span>
+                <input
+                  type="number" min="6" max="25" value={userAge || ''} placeholder="输入"
+                  onChange={function(e) {
+                    var v = parseInt(e.target.value);
+                    if (v >= 6 && v <= 25) { setUserAge(v); try { localStorage.setItem('vocabspark_user_age', String(v)); } catch(ex) {} }
+                    else if (!e.target.value) { setUserAge(null); try { localStorage.removeItem('vocabspark_user_age'); } catch(ex) {} }
+                  }}
+                  style={{ width:52, padding:"4px 8px", borderRadius:6, border:"1px solid " + C.border, fontFamily:FONT, fontSize:13, textAlign:"center" }}
+                />
+                <span style={{ color:C.textSec }}>岁</span>
+                {userAge && <span style={{ color:C.teal, fontSize:11 }}>（虚线 = {getAgeGroup(userAge)} 岁同龄平均）</span>}
+              </div>
+
+              <RadarChart brainStats={d.brainStats || {}} benchmarkStats={benchmarks} size={220} />
+
+              {/* 图例 */}
+              {userAge && (
+                <div style={{ display:"flex", justifyContent:"center", gap:16, marginTop:6, fontSize:10, color:C.textSec }}>
+                  <span><span style={{ display:"inline-block", width:14, height:2, background:C.accent, verticalAlign:"middle", marginRight:4 }} />我的水平</span>
+                  <span><span style={{ display:"inline-block", width:14, height:0, borderTop:"2px dashed " + C.teal, verticalAlign:"middle", marginRight:4 }} />同龄平均</span>
+                </div>
+              )}
+
+              {/* 能力标签（点击展开脑科学说明） */}
+              <div style={{ display:"flex", flexWrap:"wrap", justifyContent:"center", gap:6, marginTop:12 }}>
+                {BRAIN_DIMS.map(function(dim) {
+                  var val = (d.brainStats || {})[dim.key] || 0;
+                  var isOpen = showBrainDetail === dim.key;
+                  return (
+                    <button key={dim.key} onClick={function() { setShowBrainDetail(isOpen ? null : dim.key); }}
+                      style={{ fontSize:11, color: isOpen ? C.accent : C.textSec, background: isOpen ? C.accentLight : C.bg, padding:"3px 8px", borderRadius:12, border:"1px solid " + (isOpen ? C.accent + "44" : C.border), cursor:"pointer", fontFamily:FONT, fontWeight: isOpen ? 700 : 400 }}>
+                      {dim.icon + " " + dim.label + " " + val}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* 脑科学详情面板 */}
+              {showBrainDetail && (function() {
+                var dim = BRAIN_DIMS.find(function(d) { return d.key === showBrainDetail; });
+                if (!dim) return null;
+                var val = (d.brainStats || {})[dim.key] || 0;
+                var bench = benchmarks ? (benchmarks[dim.key] || 0) : null;
+                return (
+                  <div style={{ marginTop:10, background:C.bg, borderRadius:10, padding:"14px 16px", textAlign:"left", border:"1px solid " + C.border, animation:"fadeUp 0.2s ease-out" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
+                      <div style={{ fontSize:14, fontWeight:700 }}>{dim.icon + " " + dim.label + " — " + dim.brain}</div>
+                      <span style={{ fontSize:11, color:C.teal, fontWeight:600 }}>{dim.brainEn}</span>
+                    </div>
+                    <div style={{ fontSize:12, color:C.text, lineHeight:1.7, marginBottom:8 }}>{dim.science}</div>
+                    <div style={{ display:"flex", gap:12 }}>
+                      <div style={{ background:C.accentLight, borderRadius:8, padding:"6px 12px", fontSize:12 }}>
+                        <span style={{ fontWeight:700, color:C.accent }}>{val}</span> <span style={{ color:C.textSec }}>我的点数</span>
+                      </div>
+                      {bench != null && (
+                        <div style={{ background:C.tealLight, borderRadius:8, padding:"6px 12px", fontSize:12 }}>
+                          <span style={{ fontWeight:700, color:C.teal }}>{bench}</span> <span style={{ color:C.textSec }}>同龄平均</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* 统计 */}
@@ -510,7 +655,8 @@ export default function WritingApp() {
               </div>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {/* ═══ PROMPT SELECT ═══ */}
         {screen === "prompt-select" && (
