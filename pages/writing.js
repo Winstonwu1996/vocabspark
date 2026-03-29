@@ -35,22 +35,42 @@ var BRAIN_DIMS = [
     science: "表达力的核心是布洛卡区（语言产出）和韦尼克区（语言理解）。每次写作都在强化这两个区域之间的弓状束连接。双语写作者的这条通路比单语者更粗壮——这就是你正在做的事。" },
 ];
 
-/* ─── 年龄基准数据（每维度按年龄段的平均累计点数） ─── */
-var AGE_BENCHMARKS = {
-  // 基于写作量和认知发展的估算基准值
-  // key: age range, value: { dim: average points after ~10 essays }
+/* ─── 年龄基准（六维为约 10 篇后的累计点数量级，非精确常模） ─── */
+/* 英语母语同龄（参考偏高，勿与二语初学者硬比） */
+var AGE_BENCHMARKS_NATIVE_EN = {
   "10-12": { creativity: 12, logic: 6, observation: 10, empathy: 7, critical: 4, expression: 8 },
   "13-15": { creativity: 15, logic: 12, observation: 13, empathy: 11, critical: 9, expression: 12 },
   "16-18": { creativity: 18, logic: 18, observation: 15, empathy: 14, critical: 15, expression: 16 },
-  "default": { creativity: 15, logic: 12, observation: 13, empathy: 11, critical: 9, expression: 12 },
+  "19-25": { creativity: 20, logic: 20, observation: 17, empathy: 16, critical: 18, expression: 18 },
+  adult: { creativity: 19, logic: 19, observation: 16, empathy: 15, critical: 17, expression: 17 },
+  default: { creativity: 15, logic: 12, observation: 13, empathy: 11, critical: 9, expression: 12 },
+};
+/* 中国 K12/二语写作者同龄参考（更贴近多数用户，便于「追」） */
+var AGE_BENCHMARKS_CN_STUDENT = {
+  "10-12": { creativity: 8, logic: 4, observation: 7, empathy: 5, critical: 3, expression: 5 },
+  "13-15": { creativity: 10, logic: 8, observation: 9, empathy: 8, critical: 6, expression: 8 },
+  "16-18": { creativity: 12, logic: 12, observation: 10, empathy: 10, critical: 10, expression: 11 },
+  "19-25": { creativity: 14, logic: 14, observation: 12, empathy: 11, critical: 12, expression: 12 },
+  adult: { creativity: 13, logic: 13, observation: 11, empathy: 10, critical: 11, expression: 11 },
+  default: { creativity: 10, logic: 8, observation: 9, empathy: 8, critical: 6, expression: 8 },
 };
 
 var getAgeGroup = function(age) {
-  if (!age) return "default";
+  if (!age || age < 6) return "default";
   if (age <= 12) return "10-12";
   if (age <= 15) return "13-15";
   if (age <= 18) return "16-18";
-  return "default";
+  if (age <= 25) return "19-25";
+  return "adult";
+};
+
+var AGE_GROUP_LABELS = {
+  "10-12": "10–12 岁",
+  "13-15": "13–15 岁",
+  "16-18": "16–18 岁",
+  "19-25": "19–25 岁",
+  adult: "26 岁及以上",
+  default: "未指定年龄段",
 };
 
 /* ─── 成长理念 ─── */
@@ -207,19 +227,21 @@ var WRITING_PROMPTS = {
 };
 
 /* ─── 六维雷达图 (SVG) ─── */
-var RadarChart = ({ brainStats, size, benchmarkStats }) => {
+var RadarChart = ({ brainStats, size, benchmarkStats, benchmarkStatsCn }) => {
   size = size || 200;
   var cx = size / 2, cy = size / 2, r = size * 0.38;
   var n = BRAIN_DIMS.length;
   var maxVal = 30;
 
-  // 计算实际最大值（包括 benchmark）
+  // 计算实际最大值（含双基准）
   var actualMax = 0;
   BRAIN_DIMS.forEach(function(d) {
     var v = brainStats[d.key] || 0;
     var b = benchmarkStats ? (benchmarkStats[d.key] || 0) : 0;
+    var c = benchmarkStatsCn ? (benchmarkStatsCn[d.key] || 0) : 0;
     if (v > actualMax) actualMax = v;
     if (b > actualMax) actualMax = b;
+    if (c > actualMax) actualMax = c;
   });
   if (actualMax > maxVal) maxVal = Math.ceil(actualMax * 1.2);
   if (maxVal < 5) maxVal = 5;
@@ -275,7 +297,7 @@ var RadarChart = ({ brainStats, size, benchmarkStats }) => {
       {axes.map(function(a, i) {
         return <line key={i} x1={a.x1} y1={a.y1} x2={a.x2} y2={a.y2} stroke={C.border} strokeWidth={0.5} opacity={0.5} />;
       })}
-      {/* 年龄基准线 */}
+      {/* 基准：英语母语同龄（偏高参考） */}
       {benchmarkStats && (function() {
         var bpts = [];
         for (var bi = 0; bi < n; bi++) {
@@ -283,7 +305,17 @@ var RadarChart = ({ brainStats, size, benchmarkStats }) => {
           var bp = getPoint(bi, bval);
           bpts.push(bp.x + "," + bp.y);
         }
-        return <polygon points={bpts.join(" ")} fill="none" stroke={C.teal} strokeWidth={1.5} strokeDasharray="4,3" opacity={0.6} />;
+        return <polygon points={bpts.join(" ")} fill="none" stroke={C.teal} strokeWidth={1.5} strokeDasharray="4,3" opacity={0.55} />;
+      })()}
+      {/* 基准：中国学生/二语同龄（更贴近多数用户） */}
+      {benchmarkStatsCn && (function() {
+        var cpts = [];
+        for (var ci = 0; ci < n; ci++) {
+          var cval = benchmarkStatsCn[BRAIN_DIMS[ci].key] || 0;
+          var cp = getPoint(ci, cval);
+          cpts.push(cp.x + "," + cp.y);
+        }
+        return <polygon points={cpts.join(" ")} fill="none" stroke={C.purple} strokeWidth={1.5} strokeDasharray="2,4" opacity={0.65} />;
       })()}
       {/* 数据区域 */}
       <polygon points={dataPoints.join(" ")} fill={C.accent + "33"} stroke={C.accent} strokeWidth={2} />
@@ -404,8 +436,7 @@ export default function WritingApp() {
       var vocabRaw = localStorage.getItem(VOCAB_SKEY);
       if (vocabRaw) { var vd = JSON.parse(vocabRaw); if (vd.profile) setUserProfile(vd.profile); }
     } catch(e) {}
-    // 首次用户自动进入测评
-    if (!data.assessmentDone) setScreen("assessment");
+    // 新用户也直接进 Dashboard，在 Dashboard 内引导选年龄和测评
 
     supabase.auth.getSession().then(function(result) {
       var u = result?.data?.session?.user || null;
@@ -612,10 +643,16 @@ export default function WritingApp() {
       }).join("\n\n");
       var chineseAnalysis = analyzeChineseUsage(assessAnswers);
       var profileContext = userProfile ? "\n\n学生画像：" + userProfile.slice(0, 300) : "";
+      var ag = userAge ? getAgeGroup(userAge) : "default";
+      var ageCalib = userAge
+        ? ("\n\n【分龄校准】学生年龄 " + userAge + " 岁，年龄段：" + (AGE_GROUP_LABELS[ag] || ag)
+          + "。请严格按该年龄段调整期望：不得用成人标准苛求少儿，也不得用幼儿标准迁就成人；与英语母语同龄的对比仅作参考，中国学生/二语写作者常见表现可能略低，评分应公平、鼓励为主。")
+        : "\n\n【分龄校准】未提供年龄，请按约 14–16 岁二语学习者常见水平评估，并在总结中温和提示可补充年龄以获得更贴合的解读。";
       var sys = "你是一位温暖而专业的英语写作能力评估教练。根据以下学生的 6 道简答测试（中英混合），为每个维度打分 1-10。"
         + "\n维度：creativity, logic, observation, empathy, critical, expression"
         + "\n评分标准：1-3 基础，4-6 中等，7-8 良好，9-10 优秀"
-        + "\n考虑因素：思维深度（最重要）、表达精准度、细节丰富度、英文使用比例"
+        + "\n考虑因素：思维深度（最重要）、表达精准度、细节丰富度、英文使用比例（须结合年龄与二语背景，勿与母语者硬比）"
+        + ageCalib
         + "\n\n词汇评估：学生在 6 道题中使用了 " + chineseAnalysis.chineseWords.length + " 个中文词组"
         + "（中文占比 " + Math.round(chineseAnalysis.chineseRatio * 100) + "%）。"
         + " 中文词包括：" + (chineseAnalysis.chineseWords.length > 0 ? chineseAnalysis.chineseWords.slice(0, 15).join("、") : "无")
@@ -692,6 +729,9 @@ export default function WritingApp() {
                   <div style={{ fontSize:13, color:C.textSec, lineHeight:1.6, maxWidth:360, margin:"0 auto" }}>
                     6 道小题，每题 1-2 句话就够了
                   </div>
+                  {userAge ? (
+                    <div style={{ fontSize:12, color:C.teal, fontWeight:600, marginTop:8 }}>已按 {userAge} 岁（{AGE_GROUP_LABELS[getAgeGroup(userAge)] || getAgeGroup(userAge)}）分龄评估</div>
+                  ) : null}
                   <div style={{ fontSize:12, color:C.accent, fontWeight:600, marginTop:6, lineHeight:1.5 }}>
                     🎯 最重要的是表达你真实的想法！<br />在这个前提下，尽量用英文，不会的词用中文完全没问题。
                   </div>
@@ -778,11 +818,17 @@ export default function WritingApp() {
                 </div>
 
                 <div style={{ ...S.card, textAlign:"center", padding:"20px 16px" }}>
-                  <RadarChart brainStats={assessResult.scores} benchmarkStats={userAge ? AGE_BENCHMARKS[getAgeGroup(userAge)] : null} size={220} />
+                  <RadarChart
+                    brainStats={assessResult.scores}
+                    benchmarkStats={userAge ? (AGE_BENCHMARKS_NATIVE_EN[getAgeGroup(userAge)] || AGE_BENCHMARKS_NATIVE_EN.default) : null}
+                    benchmarkStatsCn={userAge ? (AGE_BENCHMARKS_CN_STUDENT[getAgeGroup(userAge)] || AGE_BENCHMARKS_CN_STUDENT.default) : null}
+                    size={220}
+                  />
                   {userAge && (
-                    <div style={{ display:"flex", justifyContent:"center", gap:16, marginTop:6, fontSize:10, color:C.textSec }}>
+                    <div style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:10, marginTop:8, fontSize:10, color:C.textSec }}>
                       <span><span style={{ display:"inline-block", width:14, height:2, background:C.accent, verticalAlign:"middle", marginRight:4 }} />我的水平</span>
-                      <span><span style={{ display:"inline-block", width:14, height:0, borderTop:"2px dashed " + C.teal, verticalAlign:"middle", marginRight:4 }} />同龄平均</span>
+                      <span><span style={{ display:"inline-block", width:14, height:0, borderTop:"2px dashed " + C.teal, verticalAlign:"middle", marginRight:4 }} />英语母语同龄</span>
+                      <span><span style={{ display:"inline-block", width:14, height:0, borderTop:"2px dashed " + C.purple, verticalAlign:"middle", marginRight:4 }} />中国学生同龄</span>
                     </div>
                   )}
                 </div>
@@ -854,12 +900,12 @@ export default function WritingApp() {
                   </div>
                 )}
 
-                {/* 年龄输入 */}
+                {/* 老数据未带年龄时可补填 */}
                 {!userAge && (
-                  <div style={{ ...S.card, display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"14px" }}>
-                    <span style={{ fontSize:13, color:C.textSec }}>输入年龄，解锁同龄对比：</span>
-                    <input type="number" min="6" max="25" placeholder="年龄"
-                      onChange={function(e) { var v = parseInt(e.target.value); if (v >= 6 && v <= 25) { setUserAge(v); try { localStorage.setItem('vocabspark_user_age', String(v)); } catch(ex) {} } }}
+                  <div style={{ ...S.card, display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"14px", flexWrap:"wrap" }}>
+                    <span style={{ fontSize:13, color:C.textSec }}>补填年龄以显示两条同龄参考线：</span>
+                    <input type="number" min="6" max="99" placeholder="年龄"
+                      onChange={function(e) { var v = parseInt(e.target.value, 10); if (v >= 6 && v <= 99) { setUserAge(v); try { localStorage.setItem('vocabspark_user_age', String(v)); } catch(ex) {} } }}
                       style={{ width:52, padding:"4px 8px", borderRadius:6, border:"1px solid " + C.border, fontFamily:FONT, fontSize:13, textAlign:"center" }} />
                     <span style={{ fontSize:13, color:C.textSec }}>岁</span>
                   </div>
@@ -879,7 +925,9 @@ export default function WritingApp() {
 
         {/* ═══ DASHBOARD ═══ */}
         {screen === "dashboard" && (function() {
-          var benchmarks = AGE_BENCHMARKS[getAgeGroup(userAge)] || null;
+          var agKey = getAgeGroup(userAge);
+          var benchmarks = userAge ? (AGE_BENCHMARKS_NATIVE_EN[agKey] || AGE_BENCHMARKS_NATIVE_EN.default) : null;
+          var benchmarksCn = userAge ? (AGE_BENCHMARKS_CN_STUDENT[agKey] || AGE_BENCHMARKS_CN_STUDENT.default) : null;
           return (
           <div style={{ animation:"fadeUp 0.3s ease-out" }}>
 
@@ -909,28 +957,29 @@ export default function WritingApp() {
               <div style={{ fontSize:12, color:C.textSec, marginBottom:4 }}>每种文体锻炼大脑不同区域，写作是最全面的认知训练</div>
 
               {/* 年龄输入 */}
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, marginBottom:10, fontSize:12 }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, marginBottom:10, fontSize:12, flexWrap:"wrap" }}>
                 <span style={{ color:C.textSec }}>我的年龄：</span>
                 <input
-                  type="number" min="6" max="25" value={userAge || ''} placeholder="输入"
+                  type="number" min="6" max="99" value={userAge || ''} placeholder="输入"
                   onChange={function(e) {
-                    var v = parseInt(e.target.value);
-                    if (v >= 6 && v <= 25) { setUserAge(v); try { localStorage.setItem('vocabspark_user_age', String(v)); } catch(ex) {} }
+                    var v = parseInt(e.target.value, 10);
+                    if (v >= 6 && v <= 99) { setUserAge(v); try { localStorage.setItem('vocabspark_user_age', String(v)); } catch(ex) {} }
                     else if (!e.target.value) { setUserAge(null); try { localStorage.removeItem('vocabspark_user_age'); } catch(ex) {} }
                   }}
                   style={{ width:52, padding:"4px 8px", borderRadius:6, border:"1px solid " + C.border, fontFamily:FONT, fontSize:13, textAlign:"center" }}
                 />
                 <span style={{ color:C.textSec }}>岁</span>
-                {userAge && <span style={{ color:C.teal, fontSize:11 }}>（虚线 = {getAgeGroup(userAge)} 岁同龄平均）</span>}
+                {userAge && <span style={{ color:C.teal, fontSize:11 }}>（{AGE_GROUP_LABELS[agKey] || agKey} · 青虚线母语参考 · 紫虚线中国学生参考）</span>}
               </div>
 
-              <RadarChart brainStats={d.brainStats || {}} benchmarkStats={benchmarks} size={220} />
+              <RadarChart brainStats={d.brainStats || {}} benchmarkStats={benchmarks} benchmarkStatsCn={benchmarksCn} size={220} />
 
               {/* 图例 */}
               {userAge && (
-                <div style={{ display:"flex", justifyContent:"center", gap:16, marginTop:6, fontSize:10, color:C.textSec }}>
+                <div style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:10, marginTop:8, fontSize:10, color:C.textSec }}>
                   <span><span style={{ display:"inline-block", width:14, height:2, background:C.accent, verticalAlign:"middle", marginRight:4 }} />我的水平</span>
-                  <span><span style={{ display:"inline-block", width:14, height:0, borderTop:"2px dashed " + C.teal, verticalAlign:"middle", marginRight:4 }} />同龄平均</span>
+                  <span><span style={{ display:"inline-block", width:14, height:0, borderTop:"2px dashed " + C.teal, verticalAlign:"middle", marginRight:4 }} />英语母语同龄</span>
+                  <span><span style={{ display:"inline-block", width:14, height:0, borderTop:"2px dashed " + C.purple, verticalAlign:"middle", marginRight:4 }} />中国学生同龄</span>
                 </div>
               )}
 
@@ -954,6 +1003,7 @@ export default function WritingApp() {
                 if (!dim) return null;
                 var val = (d.brainStats || {})[dim.key] || 0;
                 var bench = benchmarks ? (benchmarks[dim.key] || 0) : null;
+                var benchCn = benchmarksCn ? (benchmarksCn[dim.key] || 0) : null;
                 return (
                   <div style={{ marginTop:10, background:C.bg, borderRadius:10, padding:"14px 16px", textAlign:"left", border:"1px solid " + C.border, animation:"fadeUp 0.2s ease-out" }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
@@ -961,13 +1011,18 @@ export default function WritingApp() {
                       <span style={{ fontSize:11, color:C.teal, fontWeight:600 }}>{dim.brainEn}</span>
                     </div>
                     <div style={{ fontSize:12, color:C.text, lineHeight:1.7, marginBottom:8 }}>{dim.science}</div>
-                    <div style={{ display:"flex", gap:12 }}>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
                       <div style={{ background:C.accentLight, borderRadius:8, padding:"6px 12px", fontSize:12 }}>
                         <span style={{ fontWeight:700, color:C.accent }}>{val}</span> <span style={{ color:C.textSec }}>我的点数</span>
                       </div>
                       {bench != null && (
                         <div style={{ background:C.tealLight, borderRadius:8, padding:"6px 12px", fontSize:12 }}>
-                          <span style={{ fontWeight:700, color:C.teal }}>{bench}</span> <span style={{ color:C.textSec }}>同龄平均</span>
+                          <span style={{ fontWeight:700, color:C.teal }}>{bench}</span> <span style={{ color:C.textSec }}>母语同龄参考</span>
+                        </div>
+                      )}
+                      {benchCn != null && (
+                        <div style={{ background:"rgba(124,58,237,0.08)", borderRadius:8, padding:"6px 12px", fontSize:12 }}>
+                          <span style={{ fontWeight:700, color:C.purple }}>{benchCn}</span> <span style={{ color:C.textSec }}>中国学生参考</span>
                         </div>
                       )}
                     </div>
@@ -983,10 +1038,46 @@ export default function WritingApp() {
               <div style={S.statCard}><div style={{...S.statNum, color:C.gold}}>{d.stats.avgScore || "-"}</div><div style={S.statLabel}>平均分</div></div>
             </div>
 
-            {/* 开始写作 */}
-            <button onClick={function() { setScreen("prompt-select"); }} style={{ ...S.bigBtn, marginBottom:14 }}>
-              ✍️ 开始写作
-            </button>
+            {/* 开始写作 or 开始测评 */}
+            {d.assessmentDone ? (
+              <button onClick={function() { setScreen("prompt-select"); }} style={{ ...S.bigBtn, marginBottom:14 }}>
+                ✍️ 开始写作
+              </button>
+            ) : (
+              <div style={{ ...S.card, textAlign:"center", padding:"20px 18px", borderColor:C.accent + "44", background:C.accentLight }}>
+                <div style={{ fontSize:15, fontWeight:700, marginBottom:6 }}>🧠 开始前，先做一次写作能力测评</div>
+                <div style={{ fontSize:12, color:C.textSec, lineHeight:1.6, marginBottom:12 }}>
+                  6 道小题，每题 1-2 句话。AI 会生成你的初始脑力图。<br />
+                  测评按年龄分档，不会拿孩子和大人比。
+                </div>
+                {!userAge && (
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:12 }}>
+                    <span style={{ fontSize:13, fontWeight:600 }}>请先选择年龄：</span>
+                    <input type="number" min={6} max={25} placeholder="年龄" value={userAge || ""}
+                      onChange={function(e) {
+                        var v = parseInt(e.target.value, 10);
+                        if (v >= 6 && v <= 25) { setUserAge(v); try { localStorage.setItem("vocabspark_user_age", String(v)); } catch(ex) {} }
+                        else if (!e.target.value) { setUserAge(null); try { localStorage.removeItem("vocabspark_user_age"); } catch(ex) {} }
+                      }}
+                      style={{ width:56, padding:"6px 10px", borderRadius:8, border:"1px solid " + C.border, fontFamily:FONT, fontSize:15, textAlign:"center" }}
+                    />
+                    <span style={{ fontSize:13 }}>岁</span>
+                  </div>
+                )}
+                {userAge && <div style={{ fontSize:12, color:C.teal, marginBottom:10 }}>已选：{getAgeGroup(userAge)} 岁年龄段</div>}
+                <button
+                  onClick={function() {
+                    if (!userAge) { alert("请先填写年龄再开始测评"); return; }
+                    setAssessStep(0); setAssessAnswers({}); setAssessResult(null);
+                    setScreen("assessment");
+                  }}
+                  disabled={!userAge}
+                  style={{ ...S.bigBtn, margin:0, opacity: userAge ? 1 : 0.45 }}
+                >
+                  📝 开始初始测评
+                </button>
+              </div>
+            )}
 
             {/* 写作技巧框架 */}
             <div style={{ ...S.card, padding:"16px 18px" }}>
