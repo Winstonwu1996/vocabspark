@@ -302,11 +302,18 @@ export default function PlanPage() {
         </div>
 
         {/* BYO Key 开关 */}
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:16 }}>
-          <span style={{ fontSize:12, color:C.textSec }}>自带 API Key（半价）</span>
-          <button onClick={function() { setShowBYO(!showBYO); }} style={{ width:40, height:22, borderRadius:11, border:"none", background: showBYO ? C.teal : C.border, cursor:"pointer", position:"relative", transition:"background 0.2s" }}>
-            <div style={{ width:18, height:18, borderRadius:9, background:"#fff", position:"absolute", top:2, left: showBYO ? 20 : 2, transition:"left 0.2s", boxShadow:"0 1px 3px rgba(0,0,0,0.2)" }} />
-          </button>
+        <div style={{ textAlign:"center", marginBottom:16 }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:4 }}>
+            <span style={{ fontSize:12, color:C.textSec }}>自带 API Key（半价）</span>
+            <button onClick={function() { setShowBYO(!showBYO); }} style={{ width:40, height:22, borderRadius:11, border:"none", background: showBYO ? C.teal : C.border, cursor:"pointer", position:"relative", transition:"background 0.2s" }}>
+              <div style={{ width:18, height:18, borderRadius:9, background:"#fff", position:"absolute", top:2, left: showBYO ? 20 : 2, transition:"left 0.2s", boxShadow:"0 1px 3px rgba(0,0,0,0.2)" }} />
+            </button>
+          </div>
+          {showBYO && (
+            <div style={{ fontSize:11, color:C.teal, lineHeight:1.5 }}>
+              {"订阅后在 Writing 页面点 ⚙️ 设置，填入你的 DeepSeek 或 Gemini API Key"}
+            </div>
+          )}
         </div>
 
         {/* 套餐卡片 */}
@@ -363,7 +370,7 @@ export default function PlanPage() {
                     disabled={checkoutLoading === plan.key}
                     style={{ ...S.bigBtn, margin:0, background: plan.key === "free" ? C.teal : plan.color, fontSize:15, opacity: checkoutLoading === plan.key ? 0.6 : 1 }}
                   >
-                    {checkoutLoading === plan.key ? "跳转支付中..." : (user && plan.key === "free" ? "当前方案" : plan.cta)}
+                    {checkoutLoading === plan.key ? "跳转支付中..." : (user && plan.key === "free" && !currentSub ? "当前方案" : user && plan.key === "free" && currentSub ? "已升级" : plan.cta)}
                   </button>
                 )}
               </div>
