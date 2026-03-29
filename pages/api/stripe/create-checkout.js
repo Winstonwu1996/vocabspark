@@ -24,7 +24,6 @@ export default async function handler(req, res) {
   var params = new URLSearchParams();
   params.append('mode', 'payment');
   params.append('payment_method_types[0]', 'card');
-  params.append('payment_method_types[1]', 'alipay');
   params.append('line_items[0][price]', priceId);
   params.append('line_items[0][quantity]', '1');
   params.append('metadata[userId]', userId);
