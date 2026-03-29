@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { C, FONT, globalCSS, S } from '../lib/theme';
 import { callAPI, callAPIFast, tryJSON } from '../lib/api';
 import { BrandNavBar, BrandSparkIcon } from '../components/BrandNavBar';
+import { loadLearningTime, addMinute, calcSavings, formatTime } from '../lib/learningTimer';
 
 /* ═══════════════════════════════════════════════════════
    Writing by Know U. — AI 写作教练
@@ -409,6 +410,7 @@ var calcBridgeQuota = function(wordCount, level) {
 export default function WritingApp() {
   // ─── 状态 ───
   var [screen, setScreen] = useState("dashboard");
+  var [learningTime, setLearningTime] = useState({ totalMinutes: 0, todayMinutes: 0 });
   var [writingData, setWritingData] = useState(null);
   var [user, setUser] = useState(null);
   var userRef = useRef(null);
@@ -449,6 +451,14 @@ export default function WritingApp() {
 
   // ─── 初始化 ───
   useEffect(function() {
+    setLearningTime(loadLearningTime());
+    // 学习计时器
+    var timerInterval = setInterval(function() {
+      if (document.hidden) return;
+      var d = addMinute();
+      setLearningTime({ totalMinutes: d.totalMinutes, todayMinutes: d.todayMinutes });
+    }, 60000);
+
     var data = loadWritingData() || getDefaultData();
     setWritingData(data);
     setVocabWords(loadVocabWords());
@@ -474,7 +484,7 @@ export default function WritingApp() {
         setShowLogin(false); setLoginSent(false); setLoginEmail(''); setOtpCode('');
       }
     });
-    return function() { subscription.unsubscribe(); };
+    return function() { subscription.unsubscribe(); clearInterval(timerInterval); };
   }, []);
 
   // ─── Auth ───
@@ -1040,11 +1050,42 @@ export default function WritingApp() {
               })()}
             </div>
 
-            {/* 统计 */}
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:10 }}>
+            {/* 统计 + 学习时间 */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:4 }}>
               <div style={S.statCard}><div style={S.statNum}>{d.stats.totalEssays || 0}</div><div style={S.statLabel}>总篇数</div></div>
               <div style={S.statCard}><div style={S.statNum}>{d.stats.totalWords || 0}</div><div style={S.statLabel}>总词数</div></div>
               <div style={S.statCard}><div style={{...S.statNum, color:C.gold}}>{d.stats.avgScore || "-"}</div><div style={S.statLabel}>平均分</div></div>
+            </div>
+
+            {/* 节省费用 */}
+            {learningTime.totalMinutes > 0 && (function() {
+              var sv = calcSavings(learningTime.totalMinutes);
+              return (
+                <div style={{ background:"linear-gradient(135deg, " + C.goldLight + " 0%, " + C.accentLight + " 100%)", borderRadius:12, padding:"12px 16px", marginBottom:10, border:"1px solid " + C.gold + "33" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                    <div>
+                      <div style={{ fontSize:12, color:C.gold, fontWeight:700 }}>{"🏆 累计学习 " + formatTime(learningTime.totalMinutes)}</div>
+                      <div style={{ fontSize:11, color:C.textSec, marginTop:2 }}>{"今日 " + formatTime(learningTime.todayMinutes)}</div>
+                    </div>
+                    <div style={{ textAlign:"right" }}>
+                      <div style={{ fontSize:16, fontWeight:800, color:C.accent }}>{"$" + sv.usd}</div>
+                      <div style={{ fontSize:10, color:C.textSec }}>{"≈ ¥" + sv.cny + " 私教费"}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* 私教对比 */}
+            <div style={{ ...S.card, padding:"14px 16px", marginBottom:10 }}>
+              <div style={{ fontSize:13, fontWeight:700, marginBottom:8 }}>为什么 Know U. 比传统私教更好？</div>
+              <div style={{ fontSize:12, color:C.textSec, lineHeight:1.8 }}>
+                <div style={{ display:"flex", justifyContent:"space-between" }}><span>🎯 真正 1 对 1</span><span style={{ color:C.border }}>大班 1 对 20-40</span></div>
+                <div style={{ display:"flex", justifyContent:"space-between" }}><span>🧠 越学越懂你（数据驱动）</span><span style={{ color:C.border }}>私教每周见一次</span></div>
+                <div style={{ display:"flex", justifyContent:"space-between" }}><span>💰 $20/月 起</span><span style={{ color:C.border }}>私教 $50+/小时</span></div>
+                <div style={{ display:"flex", justifyContent:"space-between" }}><span>🕐 24/7 随时可学</span><span style={{ color:C.border }}>私教要约时间</span></div>
+                <div style={{ display:"flex", justifyContent:"space-between" }}><span>📊 六维量化成长</span><span style={{ color:C.border }}>私教凭感觉</span></div>
+              </div>
             </div>
 
             {/* 开始写作 or 开始测评 */}
