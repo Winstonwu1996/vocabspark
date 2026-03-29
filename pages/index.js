@@ -895,21 +895,19 @@ export default function App() {
   };
 
   // ── Cloud sync helpers ──
-  var syncToCloud = async function(data) {
+  var syncToCloud = async function() {
     var u = userRef.current;
-    if (!u) { console.warn('[SYNC] no user, skip'); return; }
+    if (!u) return;
     try {
-      var existing = await loadFromCloud(u.id);
-      var merged = existing ? deepMergeProgress(data, existing) : data;
-      merged.updatedAt = new Date().toISOString();
-      console.log('[SYNC] writing to cloud, wordInput len:', (merged.wordInput||'').length, 'xp:', merged.stats?.xp);
-      var { error } = await supabase.from('user_progress').upsert(
-        {user_id: u.id, progress_data: merged, updated_at: merged.updatedAt},
+      // 永远从 localStorage 读完整数据再写云端
+      var fullData = await loadSave();
+      if (!fullData) return;
+      fullData.updatedAt = new Date().toISOString();
+      await supabase.from('user_progress').upsert(
+        {user_id: u.id, progress_data: fullData, updated_at: fullData.updatedAt},
         {onConflict: 'user_id'}
       );
-      if (error) console.error('[SYNC] upsert error:', JSON.stringify(error));
-      else console.log('[SYNC] success');
-    } catch(e) { console.error('[SYNC] exception:', e.message); }
+    } catch(e) {}
   };
 
   var loadFromCloud = async function(userId) {
@@ -1013,7 +1011,7 @@ export default function App() {
       updatedAt: new Date().getTime()
     };
     if (userRef.current) {
-      await syncToCloud(emptyData);
+      await syncToCloud();
     }
     
     alert('✅ 所有记录已清除，应用已重置为初始状态。');
@@ -1096,7 +1094,7 @@ export default function App() {
       var merged = deepMergeProgress(localData, cloudData);
       if (merged) {
         await doSave(merged);
-        await syncToCloud(merged);
+        await syncToCloud();
         if (merged.stats) setStats(function(s) { return {...s, ...merged.stats}; });
         if (merged.wordInput) setWordInput(merged.wordInput);
         if (merged.profile) setProfile(merged.profile);
@@ -1139,7 +1137,7 @@ export default function App() {
     loadSave().then(function(d) {
       var data = {...(d||{}), profile, stats: s, session: session || d?.session};
       doSave(data);
-      syncToCloud(data);
+      syncToCloud();
     });
   };
 
@@ -1148,7 +1146,7 @@ export default function App() {
     loadSave().then(d => {
       var nextData = {...(d||{}), settings: {...(d?.settings||{}), dailyNewWords: n}};
       doSave(nextData);
-      syncToCloud(nextData);
+      syncToCloud();
     });
     var quotaState = getNewWordQuotaState();
     saveNewWordQuotaState({
@@ -1163,7 +1161,7 @@ export default function App() {
     loadSave().then(function(d) {
       var nextData = { ...(d || {}), settings: { ...(d?.settings || {}), targetDate: v || "" } };
       doSave(nextData);
-      syncToCloud(nextData);
+      syncToCloud();
     });
   };
 
@@ -1173,7 +1171,7 @@ export default function App() {
     loadSave().then(function(d) {
       var nextData = { ...(d || {}), settings: { ...(d?.settings || {}), deepReviewDailyCap: cap } };
       doSave(nextData);
-      syncToCloud(nextData);
+      syncToCloud();
     });
   };
 
@@ -1203,7 +1201,7 @@ export default function App() {
     loadSave().then(function(d) {
       var nextData = {...(d||{}), stats: newStats, completedWords: [], session: null, wordStatusMap: {}, reviewWordData: {}};
       doSave(nextData);
-      syncToCloud(nextData);
+      syncToCloud();
     });
     // 成功提示
     setLoginToast("✅ 学习进度已重置");
@@ -1640,7 +1638,7 @@ export default function App() {
       var d = await loadSave() || {};
       d.wordInput = newWordInput;
       await doSave(d);
-      if (userRef.current) syncToCloud(d);
+      if (userRef.current) syncToCloud();
     } catch (err) { setError("文件解析失败: " + err.message); setFileLabel(file.name); }
     if (fileRef.current) fileRef.current.value = "";
   };
@@ -3043,7 +3041,7 @@ export default function App() {
                 loadSave().then(function(d) {
                   var nextData = {...(d||{}), settings: {...(d?.settings||{}), studyGoal: newGoal}};
                   doSave(nextData);
-                  syncToCloud(nextData);
+                  syncToCloud();
                 });
               }} style={{
                 background: selected ? C.tealLight : C.card,
@@ -3068,7 +3066,7 @@ export default function App() {
                 loadSave().then(function(d) {
                   var nextData = {...(d||{}), settings: {...(d?.settings||{}), studyGoal: "other", studyGoalCustom: studyGoalCustom.trim()}};
                   doSave(nextData);
-                  syncToCloud(nextData);
+                  syncToCloud();
                 });
               }}>💾 保存</button>
             </div>
@@ -3205,7 +3203,7 @@ export default function App() {
                 return <button key={n} style={S.presetBtn} onClick={function(){
                   setWordInput(goalPresets[n]);
                   // 立即保存预设词库
-                  loadSave().then(function(d) { d = d || {}; d.wordInput = goalPresets[n]; doSave(d); if (userRef.current) syncToCloud(d); });
+                  loadSave().then(function(d) { d = d || {}; d.wordInput = goalPresets[n]; doSave(d); if (userRef.current) syncToCloud(); });
                 }}>{n}</button>;
               })}</div>
             </div>;
