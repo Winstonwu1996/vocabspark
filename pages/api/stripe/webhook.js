@@ -1,9 +1,6 @@
-import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
-var stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-// 需要 Service Role Key 来绕过 RLS 写入
 var supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
@@ -17,6 +14,22 @@ async function getRawBody(req) {
   return Buffer.concat(chunks);
 }
 
+function verifyStripeSignature(rawBody, sig, secret) {
+  if (!sig || !secret) return null;
+  var parts = {};
+  sig.split(',').forEach(function(s) {
+    var kv = s.split('=');
+    parts[kv[0]] = kv[1];
+  });
+  var timestamp = parts['t'];
+  var signature = parts['v1'];
+  if (!timestamp || !signature) return null;
+  var payload = timestamp + '.' + rawBody.toString();
+  var expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  if (expected !== signature) return null;
+  return JSON.parse(rawBody.toString());
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -24,15 +37,13 @@ export default async function handler(req, res) {
   var sig = req.headers['stripe-signature'];
 
   var event;
-  try {
-    if (process.env.STRIPE_WEBHOOK_SECRET) {
-      event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    } else {
-      event = JSON.parse(rawBody.toString());
+  if (process.env.STRIPE_WEBHOOK_SECRET) {
+    event = verifyStripeSignature(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    if (!event) {
+      return res.status(400).json({ error: 'Invalid signature' });
     }
-  } catch (e) {
-    console.error('Webhook signature verification failed:', e.message);
-    return res.status(400).json({ error: 'Invalid signature' });
+  } else {
+    try { event = JSON.parse(rawBody.toString()); } catch(e) { return res.status(400).json({ error: 'Invalid JSON' }); }
   }
 
   if (event.type === 'checkout.session.completed') {
@@ -44,7 +55,6 @@ export default async function handler(req, res) {
     var byoKey = meta.byoKey === 'true';
 
     if (userId && tier) {
-      // 计算到期时间
       var now = new Date();
       var expiresAt = new Date(now);
       if (billing === 'yearly') {
@@ -54,7 +64,7 @@ export default async function handler(req, res) {
       }
 
       try {
-        await supabaseAdmin.from('user_subscriptions').insert({
+        var { error } = await supabaseAdmin.from('user_subscriptions').insert({
           user_id: userId,
           stripe_session_id: session.id,
           stripe_customer_id: session.customer || null,
@@ -68,9 +78,9 @@ export default async function handler(req, res) {
           starts_at: now.toISOString(),
           expires_at: expiresAt.toISOString(),
         });
-        console.log('Subscription created for user:', userId, tier, billing);
+        if (error) console.error('Supabase insert error:', JSON.stringify(error));
       } catch (e) {
-        console.error('Failed to save subscription:', e.message);
+        console.error('DB error:', e.message);
       }
     }
   }
