@@ -322,7 +322,7 @@ var shuffle = (a) => { a = [...a]; for (var i = a.length-1; i > 0; i--) { var j 
 
 var Disclaimer = () => (
   <div style={{ textAlign:"center", fontSize:12, color:C.textSec, padding:"10px 0 4px", lineHeight:1.7, borderTop:"1px solid "+C.border, marginTop:8 }}>
-    Vocab by Know U. 专注于理解与记忆 · 拼写练习推荐搭配<strong>百词斩</strong>等工具
+    Vocab by Know U. 专注于理解与记忆 · 拼写练习推荐搭配<strong>百词斩</strong>等工具<br/><span style={{fontSize:10,opacity:0.5}}>v3.29</span>
   </div>
 );
 
@@ -847,6 +847,53 @@ export default function App() {
     return { emoji: "🌱", msg: "继续加油！", days: days };
   };
 
+  // ─── 深度合并：取两端各字段最丰富的数据，不丢失任何一方 ───
+  var deepMergeProgress = function(local, cloud) {
+    if (!local) return cloud;
+    if (!cloud) return local;
+    var merged = {};
+    ['wordInput', 'profile', 'studyGoal'].forEach(function(k) {
+      var lv = local[k] || '';
+      var cv = cloud[k] || '';
+      merged[k] = lv.length >= cv.length ? lv : cv;
+    });
+    var ls = local.stats || {};
+    var cs = cloud.stats || {};
+    merged.stats = {
+      xp: Math.max(ls.xp || 0, cs.xp || 0),
+      total: Math.max(ls.total || 0, cs.total || 0),
+      correct: Math.max(ls.correct || 0, cs.correct || 0),
+      streak: Math.max(ls.streak || 0, cs.streak || 0),
+      bestStreak: Math.max(ls.bestStreak || 0, cs.bestStreak || 0),
+    };
+    var lm = local.wordStatusMap || {};
+    var cm = cloud.wordStatusMap || {};
+    var statusPriority = { mastered: 4, error: 3, uncertain: 3, learning: 2, skipped: 1, unlearned: 0 };
+    merged.wordStatusMap = { ...lm };
+    Object.keys(cm).forEach(function(w) {
+      var lp = statusPriority[lm[w]] || 0;
+      var cp = statusPriority[cm[w]] || 0;
+      if (cp > lp) merged.wordStatusMap[w] = cm[w];
+    });
+    var lr = local.reviewWordData || {};
+    var cr = cloud.reviewWordData || {};
+    merged.reviewWordData = { ...lr };
+    Object.keys(cr).forEach(function(w) {
+      if (!merged.reviewWordData[w]) { merged.reviewWordData[w] = cr[w]; return; }
+      var lStage = (merged.reviewWordData[w] || {}).stage || 0;
+      var cStage = (cr[w] || {}).stage || 0;
+      if (cStage > lStage) merged.reviewWordData[w] = cr[w];
+    });
+    merged.settings = local.settings || cloud.settings;
+    merged.dailyNewWords = local.dailyNewWords || cloud.dailyNewWords;
+    merged.session = (local.session && local.session.wordList) ? local.session : cloud.session;
+    ['schemaVersion', 'completedWords', 'tipDismissed'].forEach(function(k) {
+      merged[k] = local[k] != null ? local[k] : cloud[k];
+    });
+    merged.updatedAt = new Date().toISOString();
+    return merged;
+  };
+
   // ── Cloud sync helpers ──
   var syncToCloud = async function(data) {
     var u = userRef.current;
@@ -1033,60 +1080,6 @@ export default function App() {
   };
 
   // ── Auth state listener ──
-  // ─── 深度合并：取两端各字段最丰富的数据，不丢失任何一方 ───
-  var deepMergeProgress = function(local, cloud) {
-    if (!local) return cloud;
-    if (!cloud) return local;
-    var merged = {};
-    // 字符串/数组字段：取更长或有内容的
-    ['wordInput', 'profile', 'studyGoal'].forEach(function(k) {
-      var lv = local[k] || '';
-      var cv = cloud[k] || '';
-      merged[k] = lv.length >= cv.length ? lv : cv;
-    });
-    // stats：取更高的值
-    var ls = local.stats || {};
-    var cs = cloud.stats || {};
-    merged.stats = {
-      xp: Math.max(ls.xp || 0, cs.xp || 0),
-      total: Math.max(ls.total || 0, cs.total || 0),
-      correct: Math.max(ls.correct || 0, cs.correct || 0),
-      streak: Math.max(ls.streak || 0, cs.streak || 0),
-      bestStreak: Math.max(ls.bestStreak || 0, cs.bestStreak || 0),
-    };
-    // wordStatusMap：合并，优先保留已学习的状态
-    var lm = local.wordStatusMap || {};
-    var cm = cloud.wordStatusMap || {};
-    var statusPriority = { mastered: 4, error: 3, uncertain: 3, learning: 2, skipped: 1, unlearned: 0 };
-    merged.wordStatusMap = { ...lm };
-    Object.keys(cm).forEach(function(w) {
-      var lp = statusPriority[lm[w]] || 0;
-      var cp = statusPriority[cm[w]] || 0;
-      if (cp > lp) merged.wordStatusMap[w] = cm[w];
-    });
-    // reviewWordData：合并，取更高 stage 或更新的 nextReviewDate
-    var lr = local.reviewWordData || {};
-    var cr = cloud.reviewWordData || {};
-    merged.reviewWordData = { ...lr };
-    Object.keys(cr).forEach(function(w) {
-      if (!merged.reviewWordData[w]) { merged.reviewWordData[w] = cr[w]; return; }
-      var lStage = (merged.reviewWordData[w] || {}).stage || 0;
-      var cStage = (cr[w] || {}).stage || 0;
-      if (cStage > lStage) merged.reviewWordData[w] = cr[w];
-    });
-    // settings：取本地（用户最近的设置优先）
-    merged.settings = local.settings || cloud.settings;
-    merged.dailyNewWords = local.dailyNewWords || cloud.dailyNewWords;
-    // session：取有内容的
-    merged.session = (local.session && local.session.wordList) ? local.session : cloud.session;
-    // 其他字段：取有值的
-    ['schemaVersion', 'completedWords', 'tipDismissed'].forEach(function(k) {
-      merged[k] = local[k] != null ? local[k] : cloud[k];
-    });
-    merged.updatedAt = new Date().toISOString();
-    return merged;
-  };
-
   var handleAuthUser = async function(u, event) {
     setUser(u); userRef.current = u;
     if (u && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) {
