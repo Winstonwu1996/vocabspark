@@ -916,11 +916,9 @@ export default function App() {
 
   var loadFromCloud = async function(userId) {
     try {
-      var {data} = await supabase
-        .from('user_progress').select('progress_data, updated_at')
-        .eq('user_id', userId).single();
-      if (!data?.progress_data) return null;
-      return { ...data.progress_data, updatedAt: data.updated_at || data.progress_data.updatedAt };
+      var r = await fetch('/api/load?userId=' + userId);
+      var json = await r.json();
+      return json.data || null;
     } catch(e) { return null; }
   };
 
