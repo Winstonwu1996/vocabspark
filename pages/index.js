@@ -398,7 +398,18 @@ var loadSave = async () => {
 var doSave = async (d) => {
   try {
     if (typeof window === "undefined") return;
-    localStorage.setItem(SKEY, JSON.stringify({ schemaVersion: 1, completedWords: [], updatedAt: new Date().toISOString(), ...d }));
+    // 读现有数据，合并后写入，防止丢字段
+    var existing = null;
+    try { var raw = localStorage.getItem(SKEY); if (raw) existing = JSON.parse(raw); } catch(e) {}
+    var merged = { schemaVersion: 1, completedWords: [], ...(existing || {}), ...d, updatedAt: new Date().toISOString() };
+    // 确保关键字段不被空值覆盖
+    if (existing) {
+      if (existing.wordInput && !d.wordInput) merged.wordInput = existing.wordInput;
+      if (existing.profile && !d.profile) merged.profile = existing.profile;
+      if (existing.wordStatusMap && !d.wordStatusMap) merged.wordStatusMap = existing.wordStatusMap;
+      if (existing.reviewWordData && !d.reviewWordData) merged.reviewWordData = existing.reviewWordData;
+    }
+    localStorage.setItem(SKEY, JSON.stringify(merged));
   } catch(e) {}
 };
 
@@ -841,8 +852,12 @@ export default function App() {
     var u = userRef.current;
     if (!u) return;
     try {
+      // 先读云端现有数据，合并后再写入，防止覆盖
+      var existing = await loadFromCloud(u.id);
+      var merged = existing ? deepMergeProgress(data, existing) : data;
+      merged.updatedAt = new Date().toISOString();
       await supabase.from('user_progress').upsert(
-        {user_id: u.id, progress_data: data, updated_at: new Date().toISOString()},
+        {user_id: u.id, progress_data: merged, updated_at: merged.updatedAt},
         {onConflict: 'user_id'}
       );
     } catch(e) { console.warn('sync error', e); }
