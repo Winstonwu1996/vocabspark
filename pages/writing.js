@@ -1079,11 +1079,12 @@ export default function WritingApp() {
             <div style={{ ...S.card, padding:"14px 16px", marginBottom:10 }}>
               <div style={{ fontSize:13, fontWeight:700, marginBottom:8 }}>为什么 Know U. 比传统私教更好？</div>
               <div style={{ fontSize:12, color:C.textSec, lineHeight:1.8 }}>
-                <div style={{ display:"flex", justifyContent:"space-between" }}><span>🎯 真正 1 对 1</span><span style={{ color:C.border }}>大班 1 对 20-40</span></div>
-                <div style={{ display:"flex", justifyContent:"space-between" }}><span>🧠 越学越懂你（数据驱动）</span><span style={{ color:C.border }}>私教每周见一次</span></div>
-                <div style={{ display:"flex", justifyContent:"space-between" }}><span>💰 $20/月 起</span><span style={{ color:C.border }}>私教 $50+/小时</span></div>
-                <div style={{ display:"flex", justifyContent:"space-between" }}><span>🕐 24/7 随时可学</span><span style={{ color:C.border }}>私教要约时间</span></div>
-                <div style={{ display:"flex", justifyContent:"space-between" }}><span>📊 六维量化成长</span><span style={{ color:C.border }}>私教凭感觉</span></div>
+                <div style={{ display:"flex", justifyContent:"space-between" }}><span>🎯 真正 1 对 1</span><span style={{ color:C.border }}>大班 1:20-40</span></div>
+                <div style={{ display:"flex", justifyContent:"space-between" }}><span>🧠 数据驱动，越学越懂你</span><span style={{ color:C.border }}>每周见一次</span></div>
+                <div style={{ display:"flex", justifyContent:"space-between" }}><span>💰 $20/月 起</span><span style={{ color:C.border }}>$100+/小时</span></div>
+                <div style={{ display:"flex", justifyContent:"space-between" }}><span>🕐 24/7 随时可学</span><span style={{ color:C.border }}>要预约时间</span></div>
+                <div style={{ display:"flex", justifyContent:"space-between" }}><span>📊 六维量化成长追踪</span><span style={{ color:C.border }}>凭经验感觉</span></div>
+                <div style={{ display:"flex", justifyContent:"space-between" }}><span>🌐 中英渐进（30%→80%+）</span><span style={{ color:C.border }}>语言比例不可控</span></div>
               </div>
             </div>
 

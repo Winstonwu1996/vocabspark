@@ -50,7 +50,7 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak }) => {
       <div style={{ display:"flex", alignItems:"center", gap:12 }}>
         <Link href="/" style={tabStyle("vocab")}>Vocab</Link>
         <Link href="/writing" style={tabStyle("writing")}>Writing <span style={{fontSize:8,fontWeight:700,color:"#fff",background:C.accent,borderRadius:3,padding:"1px 4px",marginLeft:2,verticalAlign:"middle"}}>Beta</span></Link>
-        <Link href="/plan" style={{...tabStyle("plan"), fontSize:12}}>Plan</Link>
+        <Link href="/plan" style={{ textDecoration:"none", fontSize:11, fontWeight:600, color: activeTab === "plan" ? "#fff" : C.gold, background: activeTab === "plan" ? C.gold : C.goldLight, padding:"3px 8px", borderRadius:6, border:"1px solid " + C.gold + "44" }}>Pro</Link>
       </div>
     </div>
     {(hasStats || hasStreak) && (

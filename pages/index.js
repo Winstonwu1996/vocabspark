@@ -4011,7 +4011,7 @@ export default function App() {
             <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 16px"}}>{user ? "今日 "+DAILY_LIMIT_REGISTERED+" 词已学完，明天继续加油！" : "你刚才体验了 AI 1 对 1 的私教效果："}</p>
             {!user && <div style={{background:C.bg,borderRadius:10,padding:"12px 14px",marginBottom:12,fontSize:13,lineHeight:1.7,textAlign:"left"}}>
               {"🎯 AI 根据你的兴趣和生活定制了讲解"}<br/>
-              {"🧠 这种个性化教学，传统私教每小时 $50+"}<br/>
+              {"🧠 这种个性化教学，传统私教每小时 $100+"}<br/>
               {"📊 你的学习画像会越来越精准"}
             </div>}
             <div style={{background:C.accentLight,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:13,lineHeight:1.7,textAlign:"left"}}>

@@ -4,93 +4,95 @@ import Link from "next/link";
 import { C, FONT, globalCSS, S } from '../lib/theme';
 import { BrandNavBar, BrandSparkIcon } from '../components/BrandNavBar';
 
-/* ═══════════════════════════════════════════════════════
-   Plan — Know U. Learning \u4f1a\u5458\u65b9\u6848
-   ═══════════════════════════════════════════════════════ */
+/* Plan & Pricing */
+
+var CNY_RATE = 7;
 
 var PLANS = [
   {
-    key: "free",
-    name: "\u514d\u8d39\u4f53\u9a8c",
-    nameEn: "Free",
-    price: null,
-    priceLabel: "\u514d\u8d39",
-    desc: "\u6bcf\u5929\u514d\u8d39\u4f53\u9a8c AI \u79c1\u6559\u7684\u6548\u679c",
+    key: "free", name: "Free", nameCn: "免费体验",
+    price: null, priceLabel: "免费",
+    desc: "每天免费体验 AI 私教的效果",
     features: [
-      { text: "Vocab\uff1a\u6e38\u5ba2\u6bcf\u65e5 5 \u8bcd\uff0c\u6ce8\u518c\u540e 10 \u8bcd", included: true },
-      { text: "Writing\uff1a\u67e5\u770b Dashboard + \u80fd\u529b\u6d4b\u8bc4", included: true },
-      { text: "\u6ce8\u518c\u540e\uff1a\u4e91\u540c\u6b65 + \u5b66\u4e60\u5386\u53f2", included: true },
-      { text: "\u6ce8\u518c\u540e\uff1a\u6bcf\u5468 2 \u7bc7\u5199\u4f5c\u7ec3\u4e60", included: true },
-      { text: "\u6bcf\u5929 1 \u5c0f\u65f6\u6b63\u5f0f\u5b66\u4e60", included: false },
-      { text: "\u65e0\u9650\u5b66\u4e60\u65f6\u95f4", included: false },
+      { text: "Vocab：游客每日 5 词，注册后 10 词", ok: true },
+      { text: "Writing：查看 Dashboard + 能力测评", ok: true },
+      { text: "注册后：云同步 + 学习历史", ok: true },
+      { text: "注册后：每周 2 篇写作练习", ok: true },
+      { text: "每天 1 小时正式学习", ok: false },
+      { text: "无限学习时间", ok: false },
     ],
-    color: C.teal,
-    bg: C.tealLight,
-    cta: "\u514d\u8d39\u6ce8\u518c",
-    popular: false,
+    color: C.teal, cta: "免费注册", popular: false,
   },
   {
-    key: "basic",
-    name: "Basic \u79c1\u6559\u8bfe",
-    nameEn: "Basic",
-    price: { monthly: 20, yearly: 192, monthlyBYO: 10, yearlyBYO: 96 },
-    priceLabel: "$20/\u6708",
-    desc: "\u6bcf\u5929 1 \u5c0f\u65f6 AI \u79c1\u6559\u8bfe\uff0c\u8986\u76d6\u8bcd\u6c47 + \u5199\u4f5c",
+    key: "basic", name: "Basic", nameCn: "私教课",
+    price: { m: 20, y: 192, mBYO: 10, yBYO: 96 },
+    desc: "每天 1 小时 AI 私教课，覆盖词汇 + 写作",
     features: [
-      { text: "Vocab\uff1a\u5168\u90e8\u529f\u80fd\u65e0\u9650\u5236", included: true },
-      { text: "Writing\uff1a\u5168\u90e8\u529f\u80fd\u65e0\u9650\u5236", included: true },
-      { text: "\u6bcf\u5929 1 \u5c0f\u65f6\u6b63\u5f0f\u5b66\u4e60\u65f6\u95f4", included: true },
-      { text: "\u4e91\u540c\u6b65 + \u5b66\u4e60\u5386\u53f2 + \u6210\u957f\u62a5\u544a", included: true },
-      { text: "AI \u79c1\u6559\u8d8a\u5b66\u8d8a\u61c2\u4f60\uff08\u4e2a\u6027\u5316\u753b\u50cf\uff09", included: true },
-      { text: "\u65e0\u9650\u5b66\u4e60\u65f6\u95f4", included: false },
+      { text: "Vocab + Writing 全部功能", ok: true },
+      { text: "每天 1 小时正式学习时间", ok: true },
+      { text: "云同步 + 学习历史 + 成长报告", ok: true },
+      { text: "AI 私教越学越懂你（个性化画像）", ok: true },
+      { text: "中英双语渐进式教学", ok: true },
+      { text: "无限学习时间", ok: false },
     ],
-    color: C.accent,
-    bg: C.accentLight,
-    cta: "\u5f00\u59cb Basic \u79c1\u6559\u8bfe",
-    popular: true,
+    color: C.accent, cta: "开始 Basic 私教课", popular: true,
   },
   {
-    key: "pro",
-    name: "Pro \u65e0\u9650\u79c1\u6559",
-    nameEn: "Pro",
-    price: { monthly: 50, yearly: 480, monthlyBYO: 25, yearlyBYO: 240 },
-    priceLabel: "$50/\u6708",
-    desc: "\u65e0\u9650\u5b66\u4e60\u65f6\u95f4\uff0c\u6700\u5927\u5316 AI \u79c1\u6559\u4ef7\u503c",
+    key: "pro", name: "Pro", nameCn: "无限私教",
+    price: { m: 50, y: 480, mBYO: 25, yBYO: 240 },
+    desc: "无限学习时间，最大化 AI 私教价值",
     features: [
-      { text: "Vocab\uff1a\u5168\u90e8\u529f\u80fd\u65e0\u9650\u5236", included: true },
-      { text: "Writing\uff1a\u5168\u90e8\u529f\u80fd\u65e0\u9650\u5236", included: true },
-      { text: "\u65e0\u9650\u5b66\u4e60\u65f6\u95f4\uff0c\u4e0d\u9650\u5236\u6bcf\u65e5\u65f6\u957f", included: true },
-      { text: "\u4e91\u540c\u6b65 + \u5b66\u4e60\u5386\u53f2 + \u6210\u957f\u62a5\u544a", included: true },
-      { text: "AI \u79c1\u6559\u8d8a\u5b66\u8d8a\u61c2\u4f60\uff08\u4e2a\u6027\u5316\u753b\u50cf\uff09", included: true },
-      { text: "\u4f18\u5148\u4f53\u9a8c\u65b0\u529f\u80fd", included: true },
+      { text: "Vocab + Writing 全部功能", ok: true },
+      { text: "无限学习时间，不限每日时长", ok: true },
+      { text: "云同步 + 学习历史 + 成长报告", ok: true },
+      { text: "AI 私教越学越懂你（个性化画像）", ok: true },
+      { text: "中英双语渐进式教学", ok: true },
+      { text: "优先体验新功能", ok: true },
     ],
-    color: C.purple,
-    bg: C.purpleLight,
-    cta: "\u5f00\u59cb Pro \u79c1\u6559\u8bfe",
-    popular: false,
+    color: C.purple, cta: "开始 Pro 私教课", popular: false,
   },
 ];
 
-var FAQ = [
-  { q: "\u4e0e\u771f\u4eba\u79c1\u6559\u76f8\u6bd4\uff0cKnow U. \u6709\u4ec0\u4e48\u4f18\u52bf\uff1f",
-    a: "\u771f\u4eba\u79c1\u6559\u6bcf\u5c0f\u65f6 $50+\uff0c\u6bcf\u5468\u89c1\u4e00\u6b21\uff0c\u65e0\u6cd5\u6301\u7eed\u8ffd\u8e2a\u4f60\u7684\u6bcf\u4e00\u6b65\u8fdb\u6b65\u3002Know U. \u7684 AI \u79c1\u6559 24/7 \u5728\u7ebf\uff0c\u7528\u6570\u636e\u9a71\u52a8\u7684\u4e2a\u6027\u5316\u753b\u50cf\u8d8a\u5b66\u8d8a\u61c2\u4f60\uff0c\u800c\u4ef7\u683c\u4e0d\u5230\u79c1\u6559\u4e00\u8282\u8bfe\u7684\u94b1\u3002" },
-  { q: "\u201c\u6bcf\u5929 1 \u5c0f\u65f6\u201d\u662f\u600e\u4e48\u8ba1\u65f6\u7684\uff1f",
-    a: "\u53ea\u6709\u5f53\u4f60\u5728\u79ef\u6781\u5b66\u4e60\u65f6\u624d\u8ba1\u65f6\uff08\u70b9\u51fb\u3001\u6253\u5b57\u3001\u6ed1\u52a8\u7b49\u64cd\u4f5c\uff09\u3002\u6d4f\u89c8\u9996\u9875\u3001\u67e5\u770b\u8bbe\u7f6e\u4e0d\u8ba1\u65f6\u3002\u5982\u679c\u4f60\u79bb\u5f00\u8d85\u8fc7 60 \u79d2\u6ca1\u6709\u64cd\u4f5c\uff0c\u8ba1\u65f6\u81ea\u52a8\u6682\u505c\u3002\u786e\u4fdd\u6bcf\u4e00\u5206\u949f\u90fd\u662f\u771f\u5b9e\u7684\u5b66\u4e60\u65f6\u95f4\u3002" },
-  { q: "\u201c\u81ea\u5e26 API Key\u201d\u662f\u4ec0\u4e48\u610f\u601d\uff1f",
-    a: "\u4f60\u53ef\u4ee5\u4f7f\u7528\u81ea\u5df1\u7684 DeepSeek \u6216 Google Gemini API Key\uff0c\u8fd9\u6837 AI \u8c03\u7528\u8d39\u7528\u7531\u4f60\u81ea\u5df1\u627f\u62c5\uff0c\u6211\u4eec\u7684\u4f1a\u5458\u8d39\u5c31\u53ef\u4ee5\u6253\u534a\u6298\u3002\u6211\u4eec\u91cd\u89c6\u9690\u79c1\uff1aAPI Key \u4ec5\u5b58\u50a8\u5728\u4f60\u7684\u8bbe\u5907\u4e0a\uff0c\u4ec5\u5728\u8c03\u7528 AI \u65f6\u52a0\u5bc6\u4f20\u8f93\uff0c\u5e73\u53f0\u4e0d\u8bb0\u5f55\u3001\u4e0d\u5b58\u50a8\u3002\u8bf7\u81ea\u884c\u5984\u5584\u4fdd\u7ba1\u4f60\u7684 Key\u3002" },
-  { q: "\u5982\u4f55\u53d6\u6d88\uff1f",
-    a: "\u968f\u65f6\u53ef\u4ee5\u53d6\u6d88\uff0c\u4e0d\u6536\u4efb\u4f55\u989d\u5916\u8d39\u7528\u3002\u53d6\u6d88\u540e\u4f60\u7684\u5b66\u4e60\u6570\u636e\u6c38\u4e45\u4fdd\u7559\uff0c\u53ef\u4ee5\u7ee7\u7eed\u4f7f\u7528\u514d\u8d39\u529f\u80fd\u3002" },
+var FAQ_DATA = [
+  { q: "与真人私教相比，Know U. 有什么优势？",
+    a: "真人私教每小时 $100+（国内和加州行情），每周见一次，无法持续追踪你的每一步进步。Know U. 的 AI 私教 24/7 在线，用数据驱动的个性化画像越学越懂你，而价格不到私教一节课的钱。" },
+  { q: "每天 1 小时是怎么计时的？",
+    a: "只有当你在积极学习时才计时（点击、打字、滑动等操作）。浏览首页、查看设置不计时。如果你离开超过 60 秒没有操作，计时自动暂停。确保每一分钟都是真实的学习时间。" },
+  { q: "自带 API Key 是什么意思？",
+    a: "你可以使用自己的 DeepSeek 或 Google Gemini API Key，这样 AI 调用费用由你自己承担，我们的会员费就可以打半折。我们重视你的隐私：API Key 仅存储在你的设备上，仅在调用 AI 时加密传输，平台不记录、不存储。请自行妥善保管你的 Key。" },
+  { q: "中英双语教学是怎么实现的？",
+    a: "初期教学会以中文引导为主，帮助你先把思维理清楚。随着你的英语能力提升，AI 会自动提高英文比例——从 30% 逐步过渡到 80%+。这种渐进式双语教学比纯英文私教更科学，因为它保证了思维深度不被语言门槛限制。" },
+  { q: "如何取消？",
+    a: "随时可以取消，不收任何额外费用。取消后你的学习数据永久保留，可以继续使用免费功能。" },
 ];
 
 export default function PlanPage() {
-  var [billing, setBilling] = useState("monthly"); // "monthly" | "yearly"
+  var [billing, setBilling] = useState("monthly");
   var [showBYO, setShowBYO] = useState(false);
   var [expandedFAQ, setExpandedFAQ] = useState(null);
+
+  var getPrice = function(plan) {
+    if (!plan.price) return { display: "免费", note: "" };
+    var p = plan.price;
+    var monthly, note;
+    if (showBYO) {
+      monthly = billing === "yearly" ? Math.round(p.yBYO / 12) : p.mBYO;
+      note = billing === "yearly"
+        ? "年付 $" + p.yBYO + "（省 $" + (p.mBYO * 12 - p.yBYO) + "）"
+        : "= " + String.fromCharCode(165) + (monthly * CNY_RATE) + "/月";
+    } else {
+      monthly = billing === "yearly" ? Math.round(p.y / 12) : p.m;
+      note = billing === "yearly"
+        ? "年付 $" + p.y + "（省 $" + (p.m * 12 - p.y) + "）"
+        : "= " + String.fromCharCode(165) + (monthly * CNY_RATE) + "/月";
+    }
+    return { display: "$" + monthly + "/月", note: note };
+  };
 
   return (
     <div style={S.root}>
       <Head>
-        <title>Plan & Pricing \u2014 Know U. Learning</title>
+        <title>{"Plan & Pricing \u2014 Know U. Learning"}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </Head>
@@ -99,121 +101,97 @@ export default function PlanPage() {
       <BrandNavBar activeTab="plan" />
 
       <div style={S.container}>
-        {/* \u6807\u9898 */}
+        {/* Hero */}
         <div style={{ textAlign:"center", marginBottom:20, animation:"fadeUp 0.3s ease-out" }}>
           <BrandSparkIcon size={48} marginBottom={8} />
-          <div style={{ fontSize:22, fontWeight:800, marginBottom:4 }}>{"\u4f60\u7684 AI \u82f1\u8bed\u79c1\u6559\u65b9\u6848"}</div>
-          <div style={{ fontSize:13, color:C.textSec, lineHeight:1.6 }}>
-            {"\u4e00\u4e2a\u6708\u7684 AI \u79c1\u6559\uff0c\u4e0d\u5230\u771f\u4eba\u79c1\u6559\u4e00\u8282\u8bfe\u7684\u4ef7\u683c"}
+          <div style={{ fontSize:22, fontWeight:800, marginBottom:6 }}>你的 AI 英语私教方案</div>
+          <div style={{ fontSize:14, color:C.textSec, lineHeight:1.6 }}>
+            一个月的 AI 私教，不到真人私教一节课的价格
           </div>
         </div>
 
-        {/* \u5bf9\u6bd4\u6570\u636e */}
-        <div style={{ ...S.card, padding:"14px 16px", marginBottom:16, background:"linear-gradient(135deg, " + C.goldLight + " 0%, " + C.accentLight + " 100%)", borderColor:C.gold + "33" }}>
-          <div style={{ display:"flex", justifyContent:"space-around", textAlign:"center", fontSize:12 }}>
+        {/* 对比数据 */}
+        <div style={{ background:"linear-gradient(135deg, " + C.goldLight + " 0%, " + C.accentLight + " 100%)", borderRadius:14, padding:"14px 16px", marginBottom:16, border:"1px solid " + C.gold + "33" }}>
+          <div style={{ display:"flex", justifyContent:"space-around", textAlign:"center" }}>
             <div>
-              <div style={{ fontSize:20, fontWeight:800, color:C.accent }}>1:1</div>
-              <div style={{ color:C.textSec }}>{"\u771f\u6b63\u4e00\u5bf9\u4e00"}</div>
+              <div style={{ fontSize:22, fontWeight:800, color:C.accent }}>1:1</div>
+              <div style={{ fontSize:11, color:C.textSec }}>真正一对一</div>
             </div>
             <div>
-              <div style={{ fontSize:20, fontWeight:800, color:C.accent }}>24/7</div>
-              <div style={{ color:C.textSec }}>{"\u968f\u65f6\u53ef\u5b66"}</div>
+              <div style={{ fontSize:22, fontWeight:800, color:C.accent }}>24/7</div>
+              <div style={{ fontSize:11, color:C.textSec }}>随时可学</div>
             </div>
             <div>
-              <div style={{ fontSize:20, fontWeight:800, color:C.accent }}>90%</div>
-              <div style={{ color:C.textSec }}>{"\u6bd4\u79c1\u6559\u4fbf\u5b9c"}</div>
+              <div style={{ fontSize:22, fontWeight:800, color:C.accent }}>1/5</div>
+              <div style={{ fontSize:11, color:C.textSec }}>私教价格</div>
             </div>
           </div>
         </div>
 
-        {/* \u6708\u4ed8/\u5e74\u4ed8\u5207\u6362 */}
-        <div style={{ display:"flex", justifyContent:"center", gap:4, marginBottom:16, background:C.bg, borderRadius:10, padding:4, border:"1px solid " + C.border }}>
-          <button onClick={function() { setBilling("monthly"); }} style={{ flex:1, padding:"8px 0", borderRadius:8, border:"none", fontFamily:FONT, fontSize:13, fontWeight:600, cursor:"pointer", background: billing === "monthly" ? C.accent : "transparent", color: billing === "monthly" ? "#fff" : C.textSec }}>{"\u6708\u4ed8"}</button>
-          <button onClick={function() { setBilling("yearly"); }} style={{ flex:1, padding:"8px 0", borderRadius:8, border:"none", fontFamily:FONT, fontSize:13, fontWeight:600, cursor:"pointer", background: billing === "yearly" ? C.accent : "transparent", color: billing === "yearly" ? "#fff" : C.textSec }}>
-            {"\u5e74\u4ed8"} <span style={{ fontSize:10, fontWeight:700, background: billing === "yearly" ? "rgba(255,255,255,0.3)" : C.accentLight, color: billing === "yearly" ? "#fff" : C.accent, padding:"1px 5px", borderRadius:4, marginLeft:4 }}>8\u6298</span>
+        {/* 月付/年付切换 */}
+        <div style={{ display:"flex", gap:0, marginBottom:12, background:C.bg, borderRadius:10, padding:3, border:"1px solid " + C.border }}>
+          <button onClick={function() { setBilling("monthly"); }} style={{ flex:1, padding:"9px 0", borderRadius:8, border:"none", fontFamily:FONT, fontSize:13, fontWeight:600, cursor:"pointer", background: billing === "monthly" ? C.accent : "transparent", color: billing === "monthly" ? "#fff" : C.textSec }}>
+            月付
+          </button>
+          <button onClick={function() { setBilling("yearly"); }} style={{ flex:1, padding:"9px 0", borderRadius:8, border:"none", fontFamily:FONT, fontSize:13, fontWeight:600, cursor:"pointer", background: billing === "yearly" ? C.accent : "transparent", color: billing === "yearly" ? "#fff" : C.textSec }}>
+            {"年付 "}
+            <span style={{ fontSize:10, fontWeight:700, background: billing === "yearly" ? "rgba(255,255,255,0.3)" : C.accentLight, color: billing === "yearly" ? "#fff" : C.accent, padding:"2px 6px", borderRadius:4, marginLeft:3 }}>省 20%</span>
           </button>
         </div>
 
-        {/* BYO Key \u5f00\u5173 */}
+        {/* BYO Key 开关 */}
         <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:16 }}>
-          <span style={{ fontSize:12, color:C.textSec }}>{"\u81ea\u5e26 API Key\uff08\u534a\u4ef7\uff09"}</span>
+          <span style={{ fontSize:12, color:C.textSec }}>自带 API Key（半价）</span>
           <button onClick={function() { setShowBYO(!showBYO); }} style={{ width:40, height:22, borderRadius:11, border:"none", background: showBYO ? C.teal : C.border, cursor:"pointer", position:"relative", transition:"background 0.2s" }}>
             <div style={{ width:18, height:18, borderRadius:9, background:"#fff", position:"absolute", top:2, left: showBYO ? 20 : 2, transition:"left 0.2s", boxShadow:"0 1px 3px rgba(0,0,0,0.2)" }} />
           </button>
         </div>
 
-        {/* \u5957\u9910\u5361\u7247 */}
-        <div style={{ display:"flex", flexDirection:"column", gap:12, marginBottom:20 }}>
+        {/* 套餐卡片 */}
+        <div style={{ display:"flex", flexDirection:"column", gap:12, marginBottom:24 }}>
           {PLANS.map(function(plan) {
-            var priceDisplay = "";
-            var priceNote = "";
-            if (plan.price) {
-              if (showBYO) {
-                priceDisplay = billing === "yearly"
-                  ? "$" + Math.round(plan.price.yearlyBYO / 12) + "/\u6708"
-                  : "$" + plan.price.monthlyBYO + "/\u6708";
-                priceNote = billing === "yearly"
-                  ? "\u5e74\u4ed8 $" + plan.price.yearlyBYO + "\uff08\u7701 $" + (plan.price.monthlyBYO * 12 - plan.price.yearlyBYO) + "\uff09"
-                  : "\u2248 \u00a5" + Math.round(plan.price.monthlyBYO * 7.3) + "/\u6708";
-              } else {
-                priceDisplay = billing === "yearly"
-                  ? "$" + Math.round(plan.price.yearly / 12) + "/\u6708"
-                  : "$" + plan.price.monthly + "/\u6708";
-                priceNote = billing === "yearly"
-                  ? "\u5e74\u4ed8 $" + plan.price.yearly + "\uff08\u7701 $" + (plan.price.monthly * 12 - plan.price.yearly) + "\uff09"
-                  : "\u2248 \u00a5" + Math.round(plan.price.monthly * 7.3) + "/\u6708";
-              }
-            }
-
+            var pr = getPrice(plan);
             return (
               <div key={plan.key} style={{
-                background: C.card,
-                borderRadius: 16,
+                background: C.card, borderRadius: 16,
                 border: plan.popular ? "2px solid " + plan.color : "1px solid " + C.border,
                 padding: "20px 18px",
                 boxShadow: plan.popular ? "0 4px 20px " + plan.color + "22" : C.shadow,
                 position: "relative",
-                animation: "fadeUp 0.3s ease-out",
               }}>
                 {plan.popular && (
-                  <div style={{ position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)", background:plan.color, color:"#fff", fontSize:11, fontWeight:700, padding:"3px 14px", borderRadius:10 }}>{"\u6700\u53d7\u6b22\u8fce"}</div>
+                  <div style={{ position:"absolute", top:-11, left:"50%", transform:"translateX(-50%)", background:plan.color, color:"#fff", fontSize:11, fontWeight:700, padding:"3px 14px", borderRadius:10 }}>最受欢迎</div>
                 )}
 
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12 }}>
                   <div>
-                    <div style={{ fontSize:17, fontWeight:800, color:plan.color }}>{plan.name}</div>
+                    <div style={{ fontSize:17, fontWeight:800, color:plan.color }}>{plan.name} <span style={{ fontWeight:600, fontSize:13, color:C.text }}>{plan.nameCn}</span></div>
                     <div style={{ fontSize:12, color:C.textSec, marginTop:2 }}>{plan.desc}</div>
                   </div>
-                  <div style={{ textAlign:"right" }}>
+                  <div style={{ textAlign:"right", flexShrink:0, marginLeft:12 }}>
                     {plan.price ? (
                       <>
-                        <div style={{ fontSize:24, fontWeight:800, color:C.text }}>{priceDisplay}</div>
-                        <div style={{ fontSize:10, color:C.textSec }}>{priceNote}</div>
+                        <div style={{ fontSize:24, fontWeight:800, color:C.text }}>{pr.display}</div>
+                        <div style={{ fontSize:10, color:C.textSec }}>{pr.note}</div>
                       </>
                     ) : (
-                      <div style={{ fontSize:20, fontWeight:800, color:C.teal }}>{plan.priceLabel}</div>
+                      <div style={{ fontSize:22, fontWeight:800, color:C.teal }}>{pr.display}</div>
                     )}
                   </div>
                 </div>
 
-                {/* \u529f\u80fd\u5217\u8868 */}
                 <div style={{ marginBottom:14 }}>
                   {plan.features.map(function(f, i) {
                     return (
-                      <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"5px 0", fontSize:13, color: f.included ? C.text : C.border }}>
-                        <span style={{ fontSize:14, flexShrink:0 }}>{f.included ? "\u2705" : "\u2014"}</span>
-                        <span style={{ textDecoration: f.included ? "none" : "line-through" }}>{f.text}</span>
+                      <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"5px 0", fontSize:13, color: f.ok ? C.text : C.border }}>
+                        <span style={{ fontSize:13, flexShrink:0, width:18, textAlign:"center" }}>{f.ok ? "\u2705" : "\u2014"}</span>
+                        <span style={{ textDecoration: f.ok ? "none" : "line-through" }}>{f.text}</span>
                       </div>
                     );
                   })}
                 </div>
 
-                <button style={{
-                  ...S.bigBtn,
-                  margin: 0,
-                  background: plan.key === "free" ? C.teal : plan.color,
-                  fontSize: 15,
-                }}>
+                <button style={{ ...S.bigBtn, margin:0, background: plan.key === "free" ? C.teal : plan.color, fontSize:15 }}>
                   {plan.cta}
                 </button>
               </div>
@@ -221,38 +199,49 @@ export default function PlanPage() {
           })}
         </div>
 
-        {/* \u79c1\u6559\u5bf9\u6bd4 */}
+        {/* 私教对比表 */}
         <div style={{ ...S.card, padding:"16px 18px", marginBottom:16 }}>
-          <div style={{ fontSize:15, fontWeight:700, marginBottom:10 }}>{"\u4e0e\u771f\u4eba\u79c1\u6559\u7684\u5bf9\u6bd4"}</div>
-          <div style={{ fontSize:12, lineHeight:2 }}>
-            {[
-              ["\ud83c\udfaf \u771f\u6b63 1 \u5bf9 1", "\u5927\u73ed 1 \u5bf9 20-40"],
-              ["\ud83e\udde0 \u8d8a\u5b66\u8d8a\u61c2\u4f60\uff08\u6570\u636e\u753b\u50cf\uff09", "\u79c1\u6559\u6bcf\u5468\u89c1\u4e00\u6b21"],
-              ["\ud83d\udcb0 $20/\u6708 \u8d77", "\u79c1\u6559 $50+/\u5c0f\u65f6"],
-              ["\ud83d\udd50 24/7 \u968f\u65f6\u53ef\u5b66", "\u79c1\u6559\u8981\u7ea6\u65f6\u95f4"],
-              ["\ud83d\udcca \u516d\u7ef4\u91cf\u5316\u6210\u957f", "\u79c1\u6559\u51ed\u611f\u89c9"],
-              ["\ud83c\udf10 \u4e2d\u82f1\u53cc\u8bed\u601d\u7ef4\u8bad\u7ec3", "\u79c1\u6559\u53ea\u7528\u82f1\u6587"],
-            ].map(function(row, i) {
-              return (
-                <div key={i} style={{ display:"flex", justifyContent:"space-between", color:C.text }}>
-                  <span style={{ fontWeight:600 }}>{row[0]}</span>
-                  <span style={{ color:C.border, fontSize:11 }}>{row[1]}</span>
-                </div>
-              );
-            })}
+          <div style={{ fontSize:15, fontWeight:700, marginBottom:12 }}>与真人私教的对比</div>
+          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign:"left", padding:"6px 0", borderBottom:"2px solid " + C.accent, fontWeight:700, color:C.accent }}>Know U. AI</th>
+                <th style={{ textAlign:"right", padding:"6px 0", borderBottom:"2px solid " + C.border, fontWeight:600, color:C.textSec }}>传统私教</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ["\uD83C\uDFAF 真正 1 对 1", "大班 1:20-40"],
+                ["\uD83E\uDDE0 数据驱动，越学越懂你", "每周见一次，了解有限"],
+                ["\uD83D\uDCB0 $20/月起", "$100+/小时"],
+                ["\uD83D\uDD50 24/7 随时可学", "要预约时间"],
+                ["\uD83D\uDCCA 六维量化成长追踪", "凭经验感觉"],
+                ["\uD83C\uDF10 中英渐进（30%\u219280%+）", "语言比例不可控"],
+              ].map(function(row, i) {
+                return (
+                  <tr key={i}>
+                    <td style={{ padding:"8px 0", borderBottom:"1px solid " + C.border, fontWeight:600 }}>{row[0]}</td>
+                    <td style={{ padding:"8px 0", borderBottom:"1px solid " + C.border, textAlign:"right", color:C.textSec }}>{row[1]}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <div style={{ marginTop:12, padding:"10px 14px", background:C.accentLight, borderRadius:10, textAlign:"center", fontSize:13, fontWeight:600, color:C.accent }}>
+            {"一年 AI 私教 $192 = 真人私教 2 小时的价格"}
           </div>
         </div>
 
         {/* FAQ */}
-        <div style={{ marginBottom:20 }}>
-          <div style={{ fontSize:15, fontWeight:700, marginBottom:10 }}>{"\u2753 \u5e38\u89c1\u95ee\u9898"}</div>
-          {FAQ.map(function(item, i) {
+        <div style={{ marginBottom:24 }}>
+          <div style={{ fontSize:15, fontWeight:700, marginBottom:10 }}>常见问题</div>
+          {FAQ_DATA.map(function(item, i) {
             var isOpen = expandedFAQ === i;
             return (
               <div key={i} style={{ ...S.card, padding:"12px 16px", marginBottom:6, cursor:"pointer" }} onClick={function() { setExpandedFAQ(isOpen ? null : i); }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                  <div style={{ fontSize:13, fontWeight:600 }}>{item.q}</div>
-                  <span style={{ fontSize:16, color:C.textSec, transform: isOpen ? "rotate(180deg)" : "none", transition:"transform 0.2s" }}>{"\u25bc"}</span>
+                  <div style={{ fontSize:13, fontWeight:600, flex:1 }}>{item.q}</div>
+                  <span style={{ fontSize:12, color:C.textSec, marginLeft:8, transform: isOpen ? "rotate(180deg)" : "none", transition:"transform 0.2s" }}>{"\u25BC"}</span>
                 </div>
                 {isOpen && <div style={{ fontSize:12, color:C.textSec, lineHeight:1.7, marginTop:8, paddingTop:8, borderTop:"1px solid " + C.border }}>{item.a}</div>}
               </div>
@@ -260,10 +249,24 @@ export default function PlanPage() {
           })}
         </div>
 
-        {/* \u5e95\u90e8 CTA */}
-        <div style={{ textAlign:"center", marginBottom:30 }}>
-          <div style={{ fontSize:13, color:C.textSec, marginBottom:8 }}>{"\u4e0d\u786e\u5b9a\uff1f\u5148\u514d\u8d39\u4f53\u9a8c\uff0c\u611f\u53d7 AI \u79c1\u6559\u7684\u6548\u679c"}</div>
-          <Link href="/writing" style={{ ...S.primaryBtn, textDecoration:"none", display:"inline-flex" }}>{"\u2728 \u514d\u8d39\u5f00\u59cb\u4f53\u9a8c"}</Link>
+        {/* 底部 CTA */}
+        <div style={{ textAlign:"center", marginBottom:40 }}>
+          <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>不确定？先免费体验，感受 AI 私教的效果</div>
+          <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
+            <Link href="/" style={{ ...S.ghostBtn, textDecoration:"none", display:"inline-flex", alignItems:"center", gap:4 }}>词汇课体验</Link>
+            <Link href="/writing" style={{ ...S.primaryBtn, textDecoration:"none", display:"inline-flex" }}>写作课体验</Link>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ borderTop:"1px solid " + C.border, padding:"20px 0 10px", textAlign:"center", fontSize:11, color:C.textSec, lineHeight:1.8 }}>
+          <div style={{ marginBottom:6 }}>
+            <Link href="/" style={{ color:C.textSec, textDecoration:"none", marginRight:16 }}>Vocab 词汇课</Link>
+            <Link href="/writing" style={{ color:C.textSec, textDecoration:"none", marginRight:16 }}>Writing 写作课</Link>
+            <Link href="/plan" style={{ color:C.accent, textDecoration:"none", fontWeight:600 }}>Plan 方案</Link>
+          </div>
+          <div>Know U. Learning &mdash; Your 1-on-1 AI English Tutor</div>
+          <div>&copy; {new Date().getFullYear()} Know U. Learning. All rights reserved.</div>
         </div>
       </div>
     </div>
