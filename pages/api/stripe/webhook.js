@@ -36,9 +36,24 @@ export default async function handler(req, res) {
   var rawBody = await getRawBody(req);
   var sig = req.headers['stripe-signature'];
 
-  // 暂时跳过签名验证，先确认数据流通 (TODO: 上线前恢复)
   var event;
-  try { event = JSON.parse(rawBody.toString()); } catch(e) { return res.status(400).json({ error: 'Invalid JSON' }); }
+  var webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (webhookSecret && sig) {
+    try {
+      var parts = {};
+      sig.split(',').forEach(function(s) { var kv = s.split('='); parts[kv[0]] = kv[1]; });
+      var timestamp = parts['t'];
+      var expected = crypto.createHmac('sha256', webhookSecret).update(timestamp + '.' + rawBody.toString()).digest('hex');
+      if (expected !== parts['v1']) {
+        return res.status(400).json({ error: 'Signature mismatch' });
+      }
+      event = JSON.parse(rawBody.toString());
+    } catch(e) {
+      return res.status(400).json({ error: 'Verification failed: ' + e.message });
+    }
+  } else {
+    try { event = JSON.parse(rawBody.toString()); } catch(e) { return res.status(400).json({ error: 'Invalid JSON' }); }
+  }
 
   if (event.type === 'checkout.session.completed') {
     var session = event.data.object;
