@@ -10,6 +10,28 @@ import { BrandNavBar, BrandSparkIcon } from '../components/BrandNavBar';
    思维表达力训练平台
    ═══════════════════════════════════════════════════════ */
 
+/* ─── 年龄选择器（手机友好，+/- 按钮） ─── */
+var AgeStepper = ({ value, onChange, style }) => {
+  var age = value || 13;
+  var setAge = function(v) {
+    if (v < 6) v = 6;
+    if (v > 25) v = 25;
+    onChange(v);
+    try { localStorage.setItem("vocabspark_user_age", String(v)); } catch(e) {}
+  };
+  var btnS = { width:36, height:36, borderRadius:"50%", border:"1.5px solid " + C.border, background:C.card, fontSize:18, fontWeight:700, color:C.accent, cursor:"pointer", display:"inline-flex", alignItems:"center", justifyContent:"center", fontFamily:FONT, flexShrink:0 };
+  return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:12, ...(style || {}) }}>
+      <button onClick={function() { setAge(age - 1); }} style={btnS}>−</button>
+      <div style={{ textAlign:"center", minWidth:50 }}>
+        <div style={{ fontSize:28, fontWeight:800, color:C.text, lineHeight:1 }}>{age}</div>
+        <div style={{ fontSize:11, color:C.textSec, marginTop:2 }}>岁</div>
+      </div>
+      <button onClick={function() { setAge(age + 1); }} style={btnS}>+</button>
+    </div>
+  );
+};
+
 var WRITING_SKEY = "vocabspark_writing_v1";
 var VOCAB_SKEY = "vocabspark_v1";
 
@@ -902,12 +924,9 @@ export default function WritingApp() {
 
                 {/* 老数据未带年龄时可补填 */}
                 {!userAge && (
-                  <div style={{ ...S.card, display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"14px", flexWrap:"wrap" }}>
-                    <span style={{ fontSize:13, color:C.textSec }}>补填年龄以显示两条同龄参考线：</span>
-                    <input type="number" min="6" max="99" placeholder="年龄"
-                      onChange={function(e) { var v = parseInt(e.target.value, 10); if (v >= 6 && v <= 99) { setUserAge(v); try { localStorage.setItem('vocabspark_user_age', String(v)); } catch(ex) {} } }}
-                      style={{ width:52, padding:"4px 8px", borderRadius:6, border:"1px solid " + C.border, fontFamily:FONT, fontSize:13, textAlign:"center" }} />
-                    <span style={{ fontSize:13, color:C.textSec }}>岁</span>
+                  <div style={{ ...S.card, textAlign:"center", padding:"16px" }}>
+                    <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>选择年龄以显示同龄参考线</div>
+                    <AgeStepper value={userAge || 13} onChange={setUserAge} />
                   </div>
                 )}
 
@@ -939,11 +958,12 @@ export default function WritingApp() {
                   {showPhilosophy ? "收起" : "了解更多"}
                 </button>
               </div>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 {PHILOSOPHY_ITEMS.slice(0, showPhilosophy ? PHILOSOPHY_ITEMS.length : 3).map(function(p, i) {
                   return (
-                    <div key={i} style={{ flex: showPhilosophy ? "1 1 100%" : "1 1 30%", minWidth: showPhilosophy ? "100%" : 0, background:C.bg, borderRadius:10, padding: showPhilosophy ? "12px 14px" : "8px 10px", border:"1px solid " + C.border }}>
-                      <div style={{ fontSize: showPhilosophy ? 14 : 12, fontWeight:600, marginBottom: showPhilosophy ? 4 : 2 }}>{p.icon + " " + p.title}</div>
+                    <div key={i} style={{ background:C.bg, borderRadius:10, padding: showPhilosophy ? "12px 14px" : "10px 12px", border:"1px solid " + C.border, display: showPhilosophy ? "block" : "flex", alignItems:"baseline", gap:6 }}>
+                      {!showPhilosophy && <span style={{ fontSize:12, fontWeight:700, whiteSpace:"nowrap" }}>{p.icon + " " + p.title}</span>}
+                      {showPhilosophy && <div style={{ fontSize:13, fontWeight:700, marginBottom:4 }}>{p.icon + " " + p.title}</div>}
                       <div style={{ fontSize:11, color:C.textSec, lineHeight:1.5 }}>{showPhilosophy ? p.detail : p.summary}</div>
                     </div>
                   );
@@ -956,20 +976,10 @@ export default function WritingApp() {
               <div style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>🧠 写作脑力图</div>
               <div style={{ fontSize:12, color:C.textSec, marginBottom:4 }}>每种文体锻炼大脑不同区域，写作是最全面的认知训练</div>
 
-              {/* 年龄输入 */}
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, marginBottom:10, fontSize:12, flexWrap:"wrap" }}>
-                <span style={{ color:C.textSec }}>我的年龄：</span>
-                <input
-                  type="number" min="6" max="99" value={userAge || ''} placeholder="输入"
-                  onChange={function(e) {
-                    var v = parseInt(e.target.value, 10);
-                    if (v >= 6 && v <= 99) { setUserAge(v); try { localStorage.setItem('vocabspark_user_age', String(v)); } catch(ex) {} }
-                    else if (!e.target.value) { setUserAge(null); try { localStorage.removeItem('vocabspark_user_age'); } catch(ex) {} }
-                  }}
-                  style={{ width:52, padding:"4px 8px", borderRadius:6, border:"1px solid " + C.border, fontFamily:FONT, fontSize:13, textAlign:"center" }}
-                />
-                <span style={{ color:C.textSec }}>岁</span>
-                {userAge && <span style={{ color:C.teal, fontSize:11 }}>（{AGE_GROUP_LABELS[agKey] || agKey} · 青虚线母语参考 · 紫虚线中国学生参考）</span>}
+              {/* 年龄选择 */}
+              <div style={{ marginBottom:10 }}>
+                <AgeStepper value={userAge || 13} onChange={setUserAge} />
+                {userAge && <div style={{ textAlign:"center", fontSize:11, color:C.teal, marginTop:6 }}>{AGE_GROUP_LABELS[agKey] || agKey} · 虚线为同龄参考</div>}
               </div>
 
               <RadarChart brainStats={d.brainStats || {}} benchmarkStats={benchmarks} benchmarkStatsCn={benchmarksCn} size={220} />
@@ -1050,29 +1060,17 @@ export default function WritingApp() {
                   6 道小题，每题 1-2 句话。AI 会生成你的初始脑力图。<br />
                   测评按年龄分档，不会拿孩子和大人比。
                 </div>
-                {!userAge && (
-                  <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:12 }}>
-                    <span style={{ fontSize:13, fontWeight:600 }}>请先选择年龄：</span>
-                    <input type="number" min={6} max={25} placeholder="年龄" value={userAge || ""}
-                      onChange={function(e) {
-                        var v = parseInt(e.target.value, 10);
-                        if (v >= 6 && v <= 25) { setUserAge(v); try { localStorage.setItem("vocabspark_user_age", String(v)); } catch(ex) {} }
-                        else if (!e.target.value) { setUserAge(null); try { localStorage.removeItem("vocabspark_user_age"); } catch(ex) {} }
-                      }}
-                      style={{ width:56, padding:"6px 10px", borderRadius:8, border:"1px solid " + C.border, fontFamily:FONT, fontSize:15, textAlign:"center" }}
-                    />
-                    <span style={{ fontSize:13 }}>岁</span>
-                  </div>
-                )}
-                {userAge && <div style={{ fontSize:12, color:C.teal, marginBottom:10 }}>已选：{getAgeGroup(userAge)} 岁年龄段</div>}
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontSize:13, fontWeight:600, textAlign:"center", marginBottom:8 }}>选择年龄</div>
+                  <AgeStepper value={userAge || 13} onChange={setUserAge} />
+                </div>
                 <button
                   onClick={function() {
-                    if (!userAge) { alert("请先填写年龄再开始测评"); return; }
+                    if (!userAge) setUserAge(13);
                     setAssessStep(0); setAssessAnswers({}); setAssessResult(null);
                     setScreen("assessment");
                   }}
-                  disabled={!userAge}
-                  style={{ ...S.bigBtn, margin:0, opacity: userAge ? 1 : 0.45 }}
+                  style={{ ...S.bigBtn, margin:0 }}
                 >
                   📝 开始初始测评
                 </button>
