@@ -598,7 +598,9 @@ export default function WritingApp() {
       var text = await callAPIFast(sys, "对话记录：\n" + chatHistory + "\n\n请继续引导学生思考。", { maxTokens: 400 });
       setIdeaChat(function(prev) { return [...prev, { role: "assistant", content: text }]; });
     } catch(e) {
-      setIdeaChat(function(prev) { return [...prev, { role: "assistant", content: "抱歉，AI 暂时无法回复，请稍后重试。" }]; });
+      var hasUserKey = false; try { hasUserKey = !!localStorage.getItem('knowu_byo_keys'); } catch(ex) {}
+      var errMsg = "抱歉，AI 暂时无法回复。" + (hasUserKey ? " 如果你使用了自带 API Key，请检查 Key 是否有效、余额是否充足（点 ⚙️ 修改）。" : " 请稍后重试。");
+      setIdeaChat(function(prev) { return [...prev, { role: "assistant", content: errMsg }]; });
     } finally {
       setIdeaLoading(false);
     }
@@ -1783,25 +1785,59 @@ export default function WritingApp() {
 
         {/* ═══ SETTINGS (BYO Key) ═══ */}
         {showSettings && (
-          <div style={{ position:"fixed", top:0, left:0, width:"100%", height:"100%", background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)", zIndex:9998, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={function() { setShowSettings(false); }}>
-            <div style={{ background:C.card, borderRadius:16, padding:"24px 20px", maxWidth:400, width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,0.3)" }} onClick={function(e) { e.stopPropagation(); }}>
-              <div style={{ fontSize:17, fontWeight:700, marginBottom:4 }}>{"设置"}</div>
-              <div style={{ fontSize:12, color:C.textSec, marginBottom:16 }}>{"配置你的 API Key 可享受会员半价"}</div>
+          <div style={{ position:"fixed", top:0, left:0, width:"100%", height:"100%", background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)", zIndex:9998, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }} onClick={function() { setShowSettings(false); }}>
+            <div style={{ background:C.card, borderRadius:16, padding:"24px 20px", maxWidth:420, width:"100%", boxShadow:"0 20px 60px rgba(0,0,0,0.3)", maxHeight:"90vh", overflowY:"auto" }} onClick={function(e) { e.stopPropagation(); }}>
+              <div style={{ fontSize:17, fontWeight:700, marginBottom:4 }}>{"API Key 设置"}</div>
+              <div style={{ fontSize:12, color:C.textSec, marginBottom:12 }}>{"自带 Key 可享受会员半价。至少配置一个即可。"}</div>
 
+              {/* 推荐说明 */}
+              <div style={{ background:C.accentLight, borderRadius:10, padding:"10px 14px", marginBottom:14, fontSize:12, lineHeight:1.6 }}>
+                <div style={{ fontWeight:700, color:C.accent, marginBottom:4 }}>{"推荐配置"}</div>
+                <div style={{ color:C.text }}>{"🇨🇳 国内用户推荐 DeepSeek — 速度快、中文理解强、价格低"}</div>
+                <div style={{ color:C.text }}>{"🌏 海外用户推荐 Gemini — 全球稳定、英文能力强"}</div>
+                <div style={{ color:C.textSec, marginTop:4 }}>{"两个都填则自动轮询，一个出问题时切换到另一个"}</div>
+              </div>
+
+              {/* DeepSeek */}
               <div style={{ marginBottom:12 }}>
-                <div style={{ fontSize:13, fontWeight:600, marginBottom:4 }}>DeepSeek API Key</div>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                  <div style={{ fontSize:13, fontWeight:600 }}>{"DeepSeek API Key"}</div>
+                  {byoDeepseek && <span style={{ fontSize:10, color:C.green, fontWeight:600 }}>{"已配置 ✓"}</span>}
+                </div>
                 <input value={byoDeepseek} onChange={function(e) { setByoDeepseek(e.target.value); }} placeholder="sk-..." type="password"
                   style={{ ...S.textarea, padding:"10px 12px", fontSize:13, background:C.card }} />
+                <div style={{ fontSize:10, color:C.textSec, marginTop:3 }}>
+                  {"获取方式："}
+                  <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener" style={{ color:C.teal }}>{"platform.deepseek.com"}</a>
+                  {" → 创建 API Key"}
+                </div>
               </div>
 
-              <div style={{ marginBottom:12 }}>
-                <div style={{ fontSize:13, fontWeight:600, marginBottom:4 }}>Google Gemini API Key</div>
+              {/* Gemini */}
+              <div style={{ marginBottom:14 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                  <div style={{ fontSize:13, fontWeight:600 }}>{"Google Gemini API Key"}</div>
+                  {byoGemini && <span style={{ fontSize:10, color:C.green, fontWeight:600 }}>{"已配置 ✓"}</span>}
+                </div>
                 <input value={byoGemini} onChange={function(e) { setByoGemini(e.target.value); }} placeholder="AIza..." type="password"
                   style={{ ...S.textarea, padding:"10px 12px", fontSize:13, background:C.card }} />
+                <div style={{ fontSize:10, color:C.textSec, marginTop:3 }}>
+                  {"获取方式："}
+                  <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style={{ color:C.teal }}>{"aistudio.google.com"}</a>
+                  {" → 创建 API Key"}
+                </div>
               </div>
 
+              {/* 重要提醒 */}
+              <div style={{ background:C.goldLight, borderRadius:8, padding:"10px 12px", marginBottom:10, fontSize:11, color:C.text, lineHeight:1.6, borderLeft:"3px solid " + C.gold }}>
+                <div style={{ fontWeight:700, color:C.gold, marginBottom:2 }}>{"⚠️ 重要提醒"}</div>
+                {"请确保你的 Key 已充值并可用。如果 Key 无效或余额不足，AI 功能将无法使用。"}
+                <br />{"出现问题时，你可以随时回到这里修改或清除 Key，系统会自动切换回平台 Key。"}
+              </div>
+
+              {/* 隐私 */}
               <div style={{ background:C.tealLight, borderRadius:8, padding:"10px 12px", marginBottom:14, fontSize:11, color:C.teal, lineHeight:1.6 }}>
-                {"🔒 隐私保护：API Key 仅存储在你的设备上，仅在调用 AI 时加密传输，平台不记录、不存储。请自行妥善保管你的 Key。"}
+                {"🔒 隐私保护：Key 仅存储在你的设备上，仅在调用 AI 时加密传输。平台不记录、不存储。请自行妥善保管。"}
               </div>
 
               <div style={{ display:"flex", gap:8 }}>
@@ -1810,14 +1846,30 @@ export default function WritingApp() {
                   if (byoDeepseek.trim()) keys.deepseek = byoDeepseek.trim();
                   if (byoGemini.trim()) keys.gemini = byoGemini.trim();
                   if (Object.keys(keys).length > 0) {
+                    // 二次确认
+                    var confirmMsg = "确认保存 API Key？\n\n";
+                    if (keys.deepseek) confirmMsg += "DeepSeek: sk-..." + keys.deepseek.slice(-4) + "\n";
+                    if (keys.gemini) confirmMsg += "Gemini: AIza..." + keys.gemini.slice(-4) + "\n";
+                    confirmMsg += "\n请确保 Key 已充值，否则 AI 功能将不可用。\n随时可以回来修改。";
+                    if (!confirm(confirmMsg)) return;
                     localStorage.setItem('knowu_byo_keys', JSON.stringify(keys));
-                    alert("已保存！AI 调用将使用你的 Key。");
+                    alert("已保存！AI 调用将使用你的 Key。如遇到问题请回来修改。");
                   } else {
                     localStorage.removeItem('knowu_byo_keys');
                     alert("已清除自定义 Key，将使用平台 Key。");
                   }
                   setShowSettings(false);
-                }} style={S.primaryBtn}>{"保存"}</button>
+                }} style={S.primaryBtn}>{"保存 Key"}</button>
+                {(byoDeepseek || byoGemini) && (
+                  <button onClick={function() {
+                    if (confirm("确认清除所有自定义 Key？将恢复使用平台 Key。")) {
+                      setByoDeepseek(''); setByoGemini('');
+                      localStorage.removeItem('knowu_byo_keys');
+                      alert("已清除，已恢复使用平台 Key。");
+                      setShowSettings(false);
+                    }
+                  }} style={{ ...S.ghostBtn, color:C.red, borderColor:C.red + "44" }}>{"清除"}</button>
+                )}
                 <button onClick={function() { setShowSettings(false); }} style={S.ghostBtn}>{"取消"}</button>
               </div>
             </div>
