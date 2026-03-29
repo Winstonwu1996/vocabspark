@@ -7,10 +7,11 @@ import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../compo
 import * as XLSX from 'xlsx';
 
 /* ═══════════════════════════════════════════════════════
-   Vocab by Know U. — AI 词汇导师
+   Vocab by Know U. — AI 英语私教 · 词汇课
    Know U. Learning 系列产品
    ═══════════════════════════════════════════════════════ */
-var DAILY_LIMIT = 10;
+var DAILY_LIMIT_GUEST = 5;
+var DAILY_LIMIT_REGISTERED = 10;
 var DAILY_KEY = 'vocabspark_daily';
 var DAILY_NEW_QUOTA_KEY = 'vocabspark_daily_new_quota_v1';
 var DEEP_REVIEW_DAILY_KEY = 'vocabspark_deep_review_daily_v1';
@@ -1754,12 +1755,11 @@ export default function App() {
   };
 
   var goNextWord = async function() {
-    // Check daily limit for guests
-    if (!userRef.current) {
-      var ds = getDailyState();
-      if (ds.count >= DAILY_LIMIT) { setShowLimitModal(true); return; }
-      incrementDailyCount();
-    }
+    // Check daily limit (guests: 5, registered: 10)
+    var ds = getDailyState();
+    var limit = userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST;
+    if (ds.count >= limit) { setShowLimitModal(true); return; }
+    incrementDailyCount();
     if (wordStart) {
       setWordTimings(function(prev) { return { ...prev, [currentWord]: { start: wordStart, end: Date.now(), duration: Date.now() - wordStart } }; });
     }
@@ -2719,11 +2719,11 @@ export default function App() {
     return (
     <div style={S.root}>
       <Head>
-        <title>Vocab by Know U. — AI 词汇导师</title>
+        <title>Vocab by Know U. — AI 英语私教 · 词汇课</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="AI 驱动的英语词汇学习工具，用你自己的生活场景讲单词，猜→教→练，过目不忘 🎉" />
-        <meta property="og:title" content="Vocab by Know U. — AI 英语词汇导师" />
-        <meta property="og:description" content="AI 用你自己的生活场景讲单词，猜→教→练，过目不忘。免费试用！" />
+        <meta name="description" content="像私教一样懂你的 AI 英语老师，用你的生活场景教单词，真正的 1 对 1 因材施教 🎉" />
+        <meta property="og:title" content="Vocab by Know U. — AI 英语私教" />
+        <meta property="og:description" content="像私教一样懂你的 AI 英语老师，1 对 1 因材施教。每天免费体验！" />
         <meta property="og:url" content="https://knowulearning.com" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="https://knowulearning.com/og-cover.png" />
@@ -2741,9 +2741,9 @@ export default function App() {
               <BrandUIcon size={44} />
               <h2 style={{ fontSize:32, fontWeight:900, margin:0, letterSpacing:"-0.04em", lineHeight:1, color:C.text, textShadow:"0 2px 4px rgba(44,36,32,0.15)" }}>Vocab</h2>
             </div>
-            <p style={{ fontSize:12, color:C.textSec, textAlign:"center", margin:"0 0 18px", fontWeight:500 }}>Personal AI Language Tutor.</p>
+            <p style={{ fontSize:12, color:C.textSec, textAlign:"center", margin:"0 0 18px", fontWeight:500 }}>Your 1-on-1 AI English Tutor.</p>
             <div style={{ fontSize:14, lineHeight:1.85, color:C.text }}>
-              <p style={{ margin:"0 0 12px" }}><strong>Vocab</strong> 是 Know U. Learning 旗下 AI 驱动的英语词汇学习工具，通过<strong>猜 → 讲 → 光谱排序 → 复习</strong>帮你把单词记牢。</p>
+              <p style={{ margin:"0 0 12px" }}><strong>Know U.</strong> 是你的 AI 英语私教。它像最好的 1 对 1 老师一样，了解你的兴趣和生活，用你最容易理解的方式教英语。通过<strong>猜 → 讲 → 排序 → 复习</strong>，真正记住每个词。</p>
               <p style={{ margin:0, padding:"12px 14px", background:C.tealLight, borderRadius:12, fontSize:13, lineHeight:1.75, border:"1px solid rgba(42,122,110,0.12)" }}>
                 <strong>开始前请先设置「学习画像」</strong><br/>
                 填写你的兴趣爱好、常去的地方等。AI 会据此定制讲解和例句；也可以稍后用「照片日记」补充，越具体越有趣。
@@ -2892,8 +2892,8 @@ export default function App() {
       ) : (
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:todayCount>0?C.goldLight:C.tealLight,border:"1px solid "+(todayCount>0?C.gold:C.teal),borderRadius:10,padding:"10px 16px",marginBottom:12,fontSize:13,flexWrap:"wrap",gap:8}}>
           <div style={{lineHeight:1.6}}>{todayCount > 0
-            ? <><strong>🎁 推广期免费</strong>：登录后无限学习 &amp; 跨设备同步<br/><span style={{fontSize:12,color:C.textSec}}>未登录用户每日上限 {DAILY_LIMIT} 词，今日已学 {todayCount} 词</span></>
-            : <><span style={{color:C.teal}}>☁️</span> 登录后可<strong>跨设备同步</strong>进度 &amp; 每日<strong>无限学习</strong><span style={{fontSize:12,color:C.textSec,marginLeft:4}}>（推广期免费）</span></>
+            ? <><strong>🎓 AI 私教体验</strong>：注册后每天学 {DAILY_LIMIT_REGISTERED} 词 + 云同步<br/><span style={{fontSize:12,color:C.textSec}}>游客每日 {DAILY_LIMIT_GUEST} 词，今日已学 {todayCount} 词</span></>
+            : <><span style={{color:C.teal}}>🎓</span> 注册后享受 <strong>AI 私教</strong>完整体验 + <strong>云同步</strong><span style={{fontSize:12,color:C.textSec,marginLeft:4}}>（免费）</span></>
           }</div>
           <button onClick={() => setShowLogin(true)} style={{background:C.accent,color:"#fff",border:"none",borderRadius:8,padding:"7px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT,whiteSpace:"nowrap"}}>登录 / 注册</button>
         </div>
@@ -3417,10 +3417,10 @@ export default function App() {
                 <h3 style={{fontSize:19,fontWeight:700,textAlign:"center",margin:"0 0 4px"}}>登录 / 注册</h3>
                 <p style={{fontSize:13,color:C.textSec,textAlign:"center",lineHeight:1.6,margin:"0 0 20px"}}>新用户输入邮箱即自动注册，老用户同一邮箱直接登录</p>
                 <div style={{background:C.tealLight,borderRadius:10,padding:"12px 14px",marginBottom:20,fontSize:13,lineHeight:1.9,color:C.text}}>
-                  ✅ 每日无限学习（未登录用户 {DAILY_LIMIT} 词/天）<br/>
+                  ✅ 每日无限学习（未登录用户 {DAILY_LIMIT_GUEST} 词/天）<br/>
                   ☁️ 进度云端同步，换设备不丢<br/>
                   📊 完整学习历史记录<br/>
-                  <span style={{fontSize:12,color:C.textSec}}>推广期完全免费，无需付费</span>
+                  <span style={{fontSize:12,color:C.textSec}}>注册免费，基础功能永久可用</span>
                 </div>
                 <div style={{fontSize:13,fontWeight:600,marginBottom:6,color:C.text}}>邮箱地址</div>
                 <input type="email" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') handleLoginEmail(); }} placeholder="your@email.com" style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:14,outline:"none",marginBottom:12,boxSizing:"border-box"}} />
@@ -3454,12 +3454,12 @@ export default function App() {
               <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fknowulearning.com&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="QR Code" style={{display:"block",borderRadius:6}} />
             </div>
             <div style={{fontSize:12,color:C.textSec,marginBottom:16}}>📱 手机扫码 / 长按保存发朋友圈</div>
-            <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>{"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉\n👉 knowulearning.com"}</div>
+            <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>{"AI 英语私教，比真人私教便宜 90%，用你的生活场景 1 对 1 教英语，效果超赞 🎉\n👉 knowulearning.com"}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {typeof navigator !== "undefined" && navigator.share && (
-                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{ try { await navigator.share({ title:"Vocab by Know U. — AI 英语词汇导师", text:"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉", url:"https://knowulearning.com" }); } catch(e){} }}>📱 分享到微信 / 其他 App</button>
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{ try { await navigator.share({ title:"Vocab by Know U. — AI 英语私教", text:"AI 英语私教，比真人私教便宜 90%，用你的生活场景 1 对 1 教英语，效果超赞 🎉", url:"https://knowulearning.com" }); } catch(e){} }}>📱 分享到微信 / 其他 App</button>
               )}
-              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{ navigator.clipboard?.writeText("发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接")); }}>📋 复制邀请文案</button>
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{ navigator.clipboard?.writeText("AI 英语私教，比真人私教便宜 90%，用你的生活场景 1 对 1 教英语，效果超赞 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接")); }}>📋 复制邀请文案</button>
               <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>关闭</button>
             </div>
           </div>
@@ -3490,8 +3490,8 @@ export default function App() {
       <div ref={topRef} />
       {/* Daily limit banner for guests */}
       {!user && todayCount > 0 && (
-        <div onClick={() => setShowLogin(true)} style={{fontSize:12,textAlign:"center",padding:"5px 12px",cursor:"pointer",borderRadius:8,margin:"4px 0",background: todayCount>=DAILY_LIMIT ? C.redLight : todayCount>=7 ? C.goldLight : C.accentLight,color: todayCount>=DAILY_LIMIT ? C.red : todayCount>=7 ? C.gold : C.accent,fontFamily:FONT,fontWeight:600}}>
-          {todayCount>=DAILY_LIMIT ? "非注册用户今日 "+DAILY_LIMIT+" 词已学完 · 注册后无限继续 →" : "今日已学 "+todayCount+" / "+DAILY_LIMIT+" 词（非注册用户上限）· 注册后无限学习 →"}
+        <div onClick={() => setShowLogin(true)} style={{fontSize:12,textAlign:"center",padding:"5px 12px",cursor:"pointer",borderRadius:8,margin:"4px 0",background: todayCount>=DAILY_LIMIT_GUEST ? C.redLight : todayCount>=7 ? C.goldLight : C.accentLight,color: todayCount>=DAILY_LIMIT_GUEST ? C.red : todayCount>=7 ? C.gold : C.accent,fontFamily:FONT,fontWeight:600}}>
+          {todayCount>=DAILY_LIMIT_GUEST ? "非注册用户今日 "+DAILY_LIMIT+" 词已学完 · 注册后无限继续 →" : "今日已学 "+todayCount+" / "+DAILY_LIMIT+" 词（非注册用户上限）· 注册后无限学习 →"}
         </div>
       )}
       <div style={S.topBar}>
@@ -3642,12 +3642,12 @@ export default function App() {
                         <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>🎁 推广期福利</div>
                         <div style={{fontSize:13,color:C.text,lineHeight:1.9,marginBottom:12}}>
                           注册账号，现在完全免费：<br/>
-                          ✅ 每日<strong>无限</strong>学习（免费版每日 {DAILY_LIMIT} 词）<br/>
+                          ✅ 每日<strong>无限</strong>学习（免费版每日 {DAILY_LIMIT_GUEST} 词）<br/>
                           ☁️ 学习进度云端同步，换手机不丢<br/>
                           📊 完整学习历史记录
                         </div>
                         <div style={{background:C.bg,borderRadius:8,padding:"8px 12px",fontSize:13,color:C.textSec}}>
-                          非注册用户每日上限 {DAILY_LIMIT} 词，今日已学 {todayCount} 词
+                          非注册用户每日上限 {DAILY_LIMIT_GUEST} 词，今日已学 {todayCount} 词
                         </div>
                       </div>
                       <button style={S.primaryBtn} onClick={() => { setShowSettings(false); setShowLogin(true); }}>登录 / 注册</button>
@@ -3952,10 +3952,10 @@ export default function App() {
                 <h3 style={{fontSize:19,fontWeight:700,textAlign:"center",margin:"0 0 4px"}}>登录 / 注册</h3>
                 <p style={{fontSize:13,color:C.textSec,textAlign:"center",lineHeight:1.6,margin:"0 0 20px"}}>新用户输入邮箱即自动注册，老用户同一邮箱直接登录</p>
                 <div style={{background:C.tealLight,borderRadius:10,padding:"12px 14px",marginBottom:20,fontSize:13,lineHeight:1.9,color:C.text}}>
-                  ✅ 每日无限学习（未登录用户 {DAILY_LIMIT} 词/天）<br/>
+                  ✅ 每日无限学习（未登录用户 {DAILY_LIMIT_GUEST} 词/天）<br/>
                   ☁️ 进度云端同步，换设备不丢<br/>
                   📊 完整学习历史记录<br/>
-                  <span style={{fontSize:12,color:C.textSec}}>推广期完全免费，无需付费</span>
+                  <span style={{fontSize:12,color:C.textSec}}>注册免费，基础功能永久可用</span>
                 </div>
                 <div style={{fontSize:13,fontWeight:600,marginBottom:6,color:C.text}}>邮箱地址</div>
                 <input
@@ -3993,16 +3993,18 @@ export default function App() {
       {showLimitModal && (
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{setShowLimitModal(false);window.scrollTo(0,0);}}>
           <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:360,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
-            <div style={{fontSize:48,marginBottom:8}}>🌟</div>
-            <h3 style={{fontSize:19,fontWeight:700,margin:"0 0 8px"}}>今天表现很棒！</h3>
-            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 20px"}}>今日 {DAILY_LIMIT} 词（非注册用户上限）已学完<br/>注册账号，每日无限继续学习 🚀</p>
-            <div style={{background:C.goldLight,borderRadius:10,padding:"12px 14px",marginBottom:20,fontSize:13,lineHeight:1.9,textAlign:"left"}}>
-              🎁 <strong>推广期福利</strong><br/>
-              ✅ 每日无限学习<br/>
-              ☁️ 进度同步，换手机不丢<br/>
-              📊 学习历史记录
+            <div style={{fontSize:48,marginBottom:8}}>🎓</div>
+            <h3 style={{fontSize:19,fontWeight:700,margin:"0 0 8px"}}>{user ? "今日学习完成！" : "今天的体验课结束了"}</h3>
+            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 16px"}}>{user ? "今日 "+DAILY_LIMIT_REGISTERED+" 词已学完，明天继续加油！" : "你刚才体验了 AI 1 对 1 的私教效果："}</p>
+            {!user && <div style={{background:C.bg,borderRadius:10,padding:"12px 14px",marginBottom:12,fontSize:13,lineHeight:1.7,textAlign:"left"}}>
+              {"🎯 AI 根据你的兴趣和生活定制了讲解"}<br/>
+              {"🧠 这种个性化教学，传统私教每小时 $50+"}<br/>
+              {"📊 你的学习画像会越来越精准"}
+            </div>}
+            <div style={{background:C.accentLight,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:13,lineHeight:1.7,textAlign:"left"}}>
+              {user ? <><strong>想要更深入的学习？</strong><br/>{"升级 Basic 会员：每天 1 小时正式学习"}<br/>{"仅 $20/月（¥145）— 不到一节真人私教的价格"}<br/>{"自带 API Key？仅需 $10/月"}</> : <><strong>注册后每天可学 {DAILY_LIMIT_REGISTERED} 词，完全免费</strong><br/>{"☁️ 进度云端同步，换设备不丢"}<br/>{"📊 完整学习历史记录"}</>}
             </div>
-            <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",marginBottom:10}} onClick={()=>{setShowLimitModal(false);setShowLogin(true);window.scrollTo(0,0);}}>🔑 免费注册，继续学习</button>
+            <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",marginBottom:10}} onClick={()=>{setShowLimitModal(false);if(!user)setShowLogin(true);window.scrollTo(0,0);}}>{user ? "👍 知道了" : "🔑 免费注册，继续学习"}</button>
             <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>{setShowLimitModal(false);window.scrollTo(0,0);}}>明天再来</button>
           </div>
         </div>
@@ -4024,18 +4026,18 @@ export default function App() {
 
             {/* 邀请文案 */}
             <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>
-              {"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉\n👉 knowulearning.com"}
+              {"AI 英语私教，比真人私教便宜 90%，用你的生活场景 1 对 1 教英语，效果超赞 🎉\n👉 knowulearning.com"}
             </div>
 
             {/* 按钮区 */}
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {typeof navigator !== "undefined" && navigator.share && (
                 <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{
-                  try { await navigator.share({ title:"Vocab by Know U. — AI 英语词汇导师", text:"发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉", url:"https://knowulearning.com" }); } catch(e){}
+                  try { await navigator.share({ title:"Vocab by Know U. — AI 英语私教", text:"AI 英语私教，比真人私教便宜 90%，用你的生活场景 1 对 1 教英语，效果超赞 🎉", url:"https://knowulearning.com" }); } catch(e){}
                 }}>📱 分享到微信 / 其他 App</button>
               )}
               <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{
-                navigator.clipboard?.writeText("发现一个免费 AI 英语词汇 App，用你自己的生活场景讲单词，学起来超有趣 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接"));
+                navigator.clipboard?.writeText("AI 英语私教，比真人私教便宜 90%，用你的生活场景 1 对 1 教英语，效果超赞 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接"));
               }}>📋 复制邀请文案</button>
               <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>关闭</button>
             </div>

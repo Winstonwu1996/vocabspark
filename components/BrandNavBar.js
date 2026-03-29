@@ -44,7 +44,7 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak }) => {
         <BrandUIcon size={38} />
         <div>
           <div style={{ fontSize:15, letterSpacing:"-0.02em", lineHeight:1.1 }}><span style={{ fontWeight:800, color:C.text, textShadow:"0 1px 2px rgba(44,36,32,0.15)" }}>Know U.</span><span style={{ fontWeight:500, color:C.textSec, marginLeft:4, textShadow:"0 1px 1px rgba(44,36,32,0.08)" }}>Learning</span></div>
-          <div style={{ fontSize:10, color:C.textSec, opacity:0.7, letterSpacing:"0.02em", marginTop:1 }}>Personal AI Language Tutor</div>
+          <div style={{ fontSize:10, color:C.textSec, opacity:0.7, letterSpacing:"0.02em", marginTop:1 }}>Your 1-on-1 AI English Tutor</div>
         </div>
       </div>
       <div style={{ display:"flex", alignItems:"center", gap:14 }}>

@@ -720,7 +720,7 @@ export default function WritingApp() {
   return (
     <div style={S.root}>
       <Head>
-        <title>Writing — Know U. Learning</title>
+        <title>AI 写作私教 — Know U. Learning</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </Head>
