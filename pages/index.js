@@ -895,25 +895,35 @@ export default function App() {
   };
 
   // ── Cloud sync helpers ──
-  var _syncCount = 0;
-  var syncToCloud = async function() {
-    var u = userRef.current;
-    _syncCount++;
-    var n = _syncCount;
-    if (!u) { console.log('[sync#'+n+'] skip: no user'); return; }
-    try {
-      var fullData = await loadSave();
-      if (!fullData) { console.log('[sync#'+n+'] skip: no local data'); return; }
-      fullData.updatedAt = new Date().toISOString();
-      var wLen = (fullData.wordInput||'').length;
-      console.log('[sync#'+n+'] writing... wordInput:'+wLen+' user:'+u.id.slice(0,8));
-      var { error } = await supabase.from('user_progress').upsert(
-        {user_id: u.id, progress_data: fullData, updated_at: fullData.updatedAt},
-        {onConflict: 'user_id'}
-      );
-      if (error) console.error('[sync#'+n+'] ERROR:', error.message, error.code);
-      else console.log('[sync#'+n+'] OK');
-    } catch(e) { console.error('[sync#'+n+'] EXCEPTION:', e.message); }
+  var _syncTimer = null;
+  var syncToCloud = function() {
+    // 防抖：300ms 内多次调用只执行最后一次
+    if (_syncTimer) clearTimeout(_syncTimer);
+    _syncTimer = setTimeout(async function() {
+      var u = userRef.current;
+      if (!u) return;
+      try {
+        var fullData = await loadSave();
+        if (!fullData) return;
+        fullData.updatedAt = new Date().toISOString();
+        // 用原生 fetch 替代 Supabase client（大 payload 更稳定）
+        var url = process.env.NEXT_PUBLIC_SUPABASE_URL + '/rest/v1/user_progress?user_id=eq.' + u.id;
+        var session = await supabase.auth.getSession();
+        var token = session?.data?.session?.access_token;
+        if (!token) return;
+        await fetch(url, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + token,
+            'Prefer': 'return=minimal',
+          },
+          body: JSON.stringify({ progress_data: fullData, updated_at: fullData.updatedAt }),
+        });
+      } catch(e) {}
+    }, 300);
+  };
   };
 
   var loadFromCloud = async function(userId) {
