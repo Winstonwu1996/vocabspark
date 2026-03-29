@@ -924,7 +924,6 @@ export default function App() {
       } catch(e) {}
     }, 300);
   };
-  };
 
   var loadFromCloud = async function(userId) {
     try {
