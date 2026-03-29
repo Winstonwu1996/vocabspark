@@ -1,23 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { supabase } from '../lib/supabase';
+import { C, FONT, globalCSS, S } from '../lib/theme';
+import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, tryJSON } from '../lib/api';
+import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import * as XLSX from 'xlsx';
 
 /* ═══════════════════════════════════════════════════════
    Vocab by Know U. — AI 词汇导师
    Know U. Learning 系列产品
    ═══════════════════════════════════════════════════════ */
-
-var C = {
-  bg: "#f7f6f3", card: "#ffffff", accent: "#c46b30", accentLight: "#fdf1e8",
-  teal: "#4a6d8c", tealLight: "#f0f4f7",
-  purple: "#6c5ce7", purpleLight: "#f0edff", gold: "#c8922e", goldLight: "#fdf6ea",
-  text: "#2c2e33", textSec: "#6b7280", border: "#e5e2dd",
-  green: "#22a06b", greenLight: "#e6fcf5", red: "#e53e3e", redLight: "#fef2f2",
-  dark: "#161b22", darkPanel: "#1c2333", darkBorder: "#30363d", darkGreen: "#3fb950", darkBlue: "#2f81f7",
-  shadow: "0 2px 12px rgba(44,36,32,0.10)",
-};
-var FONT = "'DM Sans','Noto Sans SC',sans-serif";
 var DAILY_LIMIT = 10;
 var DAILY_KEY = 'vocabspark_daily';
 var DAILY_NEW_QUOTA_KEY = 'vocabspark_daily_new_quota_v1';
@@ -312,132 +304,9 @@ var SpeakWordBtn = ({ text, size }) => {
   return <button onClick={() => speakWord(text)} title={"朗读单词: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
 };
 
-/* ─── Brand: Know U. Learning ─── */
-var BrandUIcon = ({ size }) => {
-  var s = size || 36;
-  return (
-    <img src="/logo.png" width={s} height={s} alt="Know U." style={{ objectFit:"contain", borderRadius:s > 40 ? 10 : 6, filter:"drop-shadow(0 2px 4px rgba(61,90,153,0.35)) drop-shadow(0 1px 2px rgba(204,107,40,0.2))" }} />
-  );
-};
+/* ─── Brand: imported from components/BrandNavBar.js ─── */
 
-var BrandSparkIcon = ({ size, marginBottom }) => {
-  var mb = marginBottom != null ? marginBottom : 14;
-  var mbStr = typeof mb === "number" ? mb + "px" : mb;
-  return (
-    <div style={{ margin:"0 auto " + mbStr, display:"flex", justifyContent:"center" }}>
-      <BrandUIcon size={size || 56} />
-    </div>
-  );
-};
-
-var BrandNavBar = ({ stats, studyStreak }) => {
-  var pct = stats && stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
-  var hasStats = stats && stats.xp > 0;
-  var hasStreak = studyStreak && studyStreak.streak > 0;
-  return (
-  <div style={{ background:C.card, marginBottom:0, borderRadius:"0 0 16px 16px", boxShadow:"0 4px 16px rgba(44,36,32,0.08)" }}>
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-        <BrandUIcon size={38} />
-        <div>
-          <div style={{ fontSize:15, letterSpacing:"-0.02em", lineHeight:1.1 }}><span style={{ fontWeight:800, color:C.text, textShadow:"0 1px 2px rgba(44,36,32,0.15)" }}>Know U.</span><span style={{ fontWeight:500, color:C.textSec, marginLeft:4, textShadow:"0 1px 1px rgba(44,36,32,0.08)" }}>Learning</span></div>
-          <div style={{ fontSize:10, color:C.textSec, opacity:0.7, letterSpacing:"0.02em", marginTop:1 }}>Personal AI Language Tutor</div>
-        </div>
-      </div>
-      <div style={{ display:"flex", alignItems:"center", gap:14, fontSize:13 }}>
-        <span style={{ fontWeight:700, color:C.accent, borderBottom:"2px solid "+C.accent, paddingBottom:2 }}>Vocab</span>
-        <span style={{ color:C.textSec, fontSize:12 }}>Writing <span style={{fontSize:9,fontWeight:700,color:"#fff",background:C.teal,borderRadius:4,padding:"1px 5px",marginLeft:2,verticalAlign:"middle"}}>Soon</span></span>
-      </div>
-    </div>
-    {(hasStats || hasStreak) && (
-      <div style={{ display:"flex", gap:6, flexWrap:"wrap", padding:"0 16px 10px" }}>
-        {hasStats && <span style={{...S.heroStatPillGold, padding:"4px 10px", fontSize:11}}>{"⚡ " + stats.xp + " XP"}</span>}
-        {hasStreak && <span style={{...S.heroStatPillAccent, padding:"4px 10px", fontSize:11}}>{"🔥 连续 " + studyStreak.streak + " 天" + (studyStreak.todayDone ? " ✓" : "")}</span>}
-        {hasStats && <span style={{...S.heroStatPillGreen, padding:"4px 10px", fontSize:11}}>{"✅ 正确率 " + pct + "%"}</span>}
-      </div>
-    )}
-  </div>
-  );
-};
-
-var AppHeroHeader = ({ stats, studyStreak }) => (
-  <BrandNavBar stats={stats} studyStreak={studyStreak} />
-);
-
-/* ─── Resilience helpers ─── */
-var FETCH_TIMEOUT_MS = 35000; // guess/spectrum 短内容
-var FETCH_TIMEOUT_LONG_MS = 55000; // teach 长内容（400-500字生成需要更多时间）
-
-var fetchWithTimeout = function(url, options, timeoutMs) {
-  timeoutMs = timeoutMs || FETCH_TIMEOUT_MS;
-  var controller = new AbortController();
-  var timer = setTimeout(function() { controller.abort(); }, timeoutMs);
-  options = Object.assign({}, options, { signal: controller.signal });
-  return fetch(url, options).finally(function() { clearTimeout(timer); });
-};
-
-var callWithClientRetry = function(fn, maxRetries) {
-  maxRetries = maxRetries || 1;
-  return fn().catch(function(err) {
-    if (maxRetries > 0) {
-      return new Promise(function(resolve) { setTimeout(resolve, 1500); })
-        .then(function() { return callWithClientRetry(fn, maxRetries - 1); });
-    }
-    throw err;
-  });
-};
-
-/* ─── API Calls (server-side proxy, key hidden) ─── */
-var callAPI = async (sys, msg, opts) => {
-  opts = opts || {};
-  const response = await fetchWithTimeout("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      system: sys,
-      message: msg,
-      maxTokens: 900,
-      preferredProviders: opts.preferredProviders || undefined,
-    }),
-  }, FETCH_TIMEOUT_LONG_MS);
-  const data = await response.json();
-  if (data.error) throw new Error(data.error);
-  return data.text;
-};
-
-var callAPIFast = async (sys, msg, opts) => {
-  opts = opts || {};
-  const response = await fetchWithTimeout("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      system: sys,
-      message: msg,
-      maxTokens: 1500,
-      preferredProviders: opts.preferredProviders || undefined,
-    }),
-  });
-  const data = await response.json();
-  if (data.error) throw new Error(data.error);
-  return data.text;
-};
-
-var tryJSON = (text) => {
-  try {
-    var c = text.replace(/```\w*\s*/g, "").replace(/```/g, "").trim();
-    try { return JSON.parse(c); } catch(e) {}
-    var start = c.indexOf("{");
-    var end = c.lastIndexOf("}");
-    if (start !== -1 && end > start) {
-      var jsonStr = c.substring(start, end + 1);
-      jsonStr = jsonStr.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]");
-      try { return JSON.parse(jsonStr); } catch(e) {}
-      jsonStr = jsonStr.replace(/\n/g, "\\n").replace(/\r/g, "");
-      try { return JSON.parse(jsonStr); } catch(e) {}
-    }
-    return null;
-  } catch(e) { return null; }
-};
+/* ─── Resilience helpers & API: imported from lib/api.js ─── */
 
 var parseFile = async (file) => {
   var text = await file.text();
@@ -4209,100 +4078,4 @@ export default function App() {
   );
 }
 
-/* ─── CSS ─── */
-var globalCSS = [
-  "@keyframes spin { to { transform: rotate(360deg); } }",
-  "@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }",
-  "@keyframes slideInRight { from { opacity:0; transform:translateX(36px); } to { opacity:1; transform:translateX(0); } }",
-  "@keyframes shake { 0%,100% { transform:translateX(0); } 20% { transform:translateX(-8px); } 40% { transform:translateX(8px); } 60% { transform:translateX(-5px); } 80% { transform:translateX(5px); } }",
-  "@keyframes bounce { 0% { transform:scale(1); } 30% { transform:scale(1.04); } 60% { transform:scale(0.98); } 100% { transform:scale(1); } }",
-  "@keyframes fillIn { from { opacity:0; transform:scale(1.15); } to { opacity:1; transform:scale(1); } }",
-  "@keyframes glowPulse { 0%,100% { box-shadow:0 0 0 2px " + C.gold + ", 0 0 18px " + C.gold + "44; } 50% { box-shadow:0 0 0 3px " + C.gold + ", 0 0 28px " + C.gold + "77; } }",
-  "@keyframes confettiFall { 0% { transform:translateY(0) rotate(0deg); opacity:1; } 100% { transform:translateY(105vh) rotate(720deg); opacity:0; } }",
-  "textarea:focus, input:focus, select:focus { border-color: " + C.accent + " !important; outline: none; box-shadow: 0 0 0 2px " + C.accent + "22; }",
-  "button:hover:not(:disabled) { filter: brightness(0.96); }",
-  "button:active:not(:disabled) { transform: scale(0.98); }",
-  "button { transition: transform 0.1s ease, filter 0.15s ease, box-shadow 0.15s ease; }",
-  "button:disabled { opacity: 0.45; cursor: not-allowed !important; }",
-  "* { box-sizing: border-box; }",
-  "@media (max-width: 480px) { .vs-task-grid { grid-template-columns: 1fr !important; } }",
-  "@media (min-width: 768px) { .vs-desktop-container { max-width: 720px !important; padding-left: 24px !important; padding-right: 24px !important; } }",
-  "@media (min-width: 1024px) { .vs-desktop-container { max-width: 780px !important; } }",
-  "@keyframes skeletonPulse { 0% { opacity:0.4; } 50% { opacity:0.7; } 100% { opacity:0.4; } }"
-].join("\n");
-
-var S = {
-  root:{background:C.bg,minHeight:"100vh",fontFamily:FONT,color:C.text},
-  container:{maxWidth:660,margin:"0 auto",padding:"12px 16px 60px"},
-  header:{textAlign:"center"},
-  heroTitle:{fontSize:34,fontWeight:800,margin:"0 0 10px",letterSpacing:"-0.03em",lineHeight:1.05},
-  heroTaglineCn:{fontSize:15,fontWeight:500,color:C.text,margin:0,lineHeight:1.5,maxWidth:360,marginLeft:"auto",marginRight:"auto"},
-  heroTaglineEn:{fontSize:13,color:C.textSec,fontStyle:"italic",margin:"10px 0 0",fontFamily:FONT,letterSpacing:"0.02em"},
-  heroStatRow:{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:8,marginTop:18},
-  heroStatPillGold:{padding:"7px 14px",background:C.goldLight,borderRadius:999,fontSize:13,fontWeight:700,color:"#9a7209",border:"1px solid rgba(230,168,23,0.35)",fontFamily:FONT},
-  heroStatPillAccent:{padding:"7px 14px",background:C.accentLight,borderRadius:999,fontSize:13,fontWeight:700,color:C.accent,border:"1px solid rgba(212,93,60,0.28)",fontFamily:FONT},
-  heroStatPillGreen:{padding:"7px 14px",background:C.greenLight,borderRadius:999,fontSize:13,fontWeight:700,color:C.green,border:"1px solid rgba(34,160,107,0.28)",fontFamily:FONT},
-  tabBar:{display:"flex",marginBottom:0,background:C.card,borderRadius:"12px 12px 0 0",border:"1px solid "+C.border,borderBottom:"none",overflow:"hidden"},
-  tab:{flex:1,padding:"13px 4px",background:"transparent",border:"none",borderBottom:"2px solid transparent",fontFamily:FONT,fontSize:13,fontWeight:600,color:C.textSec,cursor:"pointer",textAlign:"center",whiteSpace:"nowrap"},
-  tabActive:{flex:1,padding:"13px 4px",background:C.accentLight,border:"none",borderBottom:"2px solid "+C.accent,fontFamily:FONT,fontSize:13,fontWeight:600,color:C.accent,cursor:"pointer",textAlign:"center",whiteSpace:"nowrap"},
-  setupCard:{background:C.card,borderRadius:"0 0 12px 12px",border:"1px solid "+C.border,padding:"18px 20px",marginBottom:14,boxShadow:C.shadow},
-  setupHint:{fontSize:13,color:C.textSec,marginBottom:14,lineHeight:1.6},
-  profilePrev:{background:C.bg,borderRadius:8,padding:"12px 14px",fontSize:13,lineHeight:1.7,color:C.textSec,marginBottom:10},
-  smallBtn:{padding:"6px 14px",background:"transparent",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:13,cursor:"pointer",color:C.textSec},
-  tealBtn:{padding:"10px 20px",background:C.teal,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:14,fontWeight:600,cursor:"pointer",marginTop:8},
-  uploadRow:{display:"flex",alignItems:"center",gap:10},
-  uploadBtn:{padding:"7px 14px",background:C.tealLight,color:C.teal,border:"1px solid "+C.teal+"33",borderRadius:8,fontFamily:FONT,fontSize:13,fontWeight:600,cursor:"pointer"},
-  presetRow:{display:"flex",flexWrap:"wrap",gap:8,marginBottom:12},
-  presetBtn:{padding:"6px 14px",background:C.purpleLight,color:C.purple,border:"none",borderRadius:20,fontFamily:FONT,fontSize:13,fontWeight:600,cursor:"pointer"},
-  textarea:{width:"100%",padding:"12px 14px",fontFamily:FONT,fontSize:14,lineHeight:1.7,color:C.text,background:C.bg,border:"1px solid "+C.border,borderRadius:10,resize:"vertical"},
-  bigBtn:{display:"block",width:"100%",padding:"15px",background:C.accent,color:"#fff",border:"none",borderRadius:12,fontFamily:FONT,fontSize:17,fontWeight:700,cursor:"pointer",marginTop:8},
-  error:{padding:"10px 14px",background:C.redLight,color:C.red,borderRadius:8,fontSize:14,marginBottom:10,lineHeight:1.5},
-  retryBtn:{display:"block",marginTop:8,padding:"8px 16px",background:C.accent,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:14,fontWeight:600,cursor:"pointer"},
-  topBar:{display:"flex",alignItems:"center",gap:10,padding:"6px 0 14px"},
-  backBtn:{padding:"5px 12px",background:"transparent",border:"1px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:16,color:C.textSec,cursor:"pointer"},
-  progressWrap:{flex:1,display:"flex",alignItems:"center",gap:8},
-  progressTrack:{flex:1,height:6,background:C.border,borderRadius:3},
-  progressFill:{height:"100%",background:C.accent,borderRadius:3,transition:"width 0.4s ease"},
-  progressText:{fontSize:13,color:C.textSec,fontWeight:600},
-  xpBadge:{padding:"4px 10px",background:C.goldLight,borderRadius:12,fontSize:13,fontWeight:700,color:C.gold},
-  settingsBtn:{padding:"5px 8px",background:"transparent",border:"1px solid "+C.border,borderRadius:8,fontSize:18,cursor:"pointer",color:C.textSec,lineHeight:1},
-  wordHeader:{background:C.card,borderRadius:14,border:"1px solid "+C.border,padding:"18px 20px 14px",marginBottom:10,boxShadow:C.shadow,animation:"fadeUp 0.3s ease-out",display:"flex",justifyContent:"space-between",alignItems:"center"},
-  wordTitle:{fontSize:30,fontWeight:700,margin:0},
-  phoneticText:{fontSize:16,color:C.textSec,fontWeight:400,fontStyle:"italic"},
-  streakBadge:{padding:"4px 12px",background:C.goldLight,borderRadius:16,fontSize:13,fontWeight:700,color:C.gold},
-  card:{background:C.card,borderRadius:14,border:"1px solid "+C.border,padding:"20px",boxShadow:C.shadow,animation:"fadeUp 0.3s ease-out",marginBottom:10},
-  tag:{display:"inline-block",padding:"4px 14px",background:C.accentLight,color:C.accent,borderRadius:20,fontSize:14,fontWeight:700,marginBottom:14},
-  contextBox:{background:C.bg,borderRadius:10,padding:"16px 18px",marginBottom:16,borderLeft:"3px solid "+C.accent,fontSize:16,lineHeight:1.8,display:"flex",alignItems:"flex-start",gap:8},
-  optionGrid:{display:"flex",flexDirection:"column",gap:8,marginBottom:14},
-  optionBtn:{display:"flex",alignItems:"center",gap:10,padding:"12px 16px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:10,fontFamily:FONT,fontSize:15,cursor:"pointer",textAlign:"left",transition:"all 0.15s",lineHeight:1.5},
-  optionKey:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:26,height:26,borderRadius:"50%",background:C.border,fontWeight:700,fontSize:13,flexShrink:0},
-  hintBtn:{padding:"8px 16px",background:C.goldLight,border:"none",borderRadius:8,fontFamily:FONT,fontSize:14,cursor:"pointer",color:C.gold,fontWeight:600,marginBottom:14},
-  resultBanner:{padding:"14px 18px",borderRadius:10,border:"1.5px solid",marginBottom:14,fontWeight:600,fontSize:15,animation:"fadeUp 0.3s ease-out"},
-  btnRow:{display:"flex",gap:10,flexWrap:"wrap"},
-  primaryBtn:{padding:"12px 24px",background:C.accent,color:"#fff",border:"none",borderRadius:10,fontFamily:FONT,fontSize:15,fontWeight:600,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:8},
-  ghostBtn:{padding:"12px 18px",background:"transparent",color:C.textSec,border:"1px solid "+C.border,borderRadius:10,fontFamily:FONT,fontSize:14,cursor:"pointer"},
-  specCard:{background:C.darkPanel,borderRadius:14,border:"1px solid "+C.darkBorder,padding:"22px",boxShadow:"0 10px 30px rgba(0,0,0,0.3)",animation:"fadeUp 0.3s ease-out",marginBottom:10,color:"#c9d1d9",fontFamily:"'Courier New',Courier,monospace"},
-  specTag:{display:"inline-block",padding:"4px 14px",background:C.darkGreen+"22",color:C.darkGreen,borderRadius:20,fontSize:14,fontWeight:700,marginBottom:10,fontFamily:FONT},
-  specHint:{fontSize:14,color:C.darkBlue,marginBottom:14,fontWeight:600},
-  specScenario:{padding:"14px 16px",borderLeft:"2px solid "+C.darkBorder,marginBottom:20,lineHeight:1.7,fontSize:15},
-  specSlotRow:{display:"flex",gap:10,marginBottom:16},
-  specSlot:{flex:1,height:56,display:"flex",alignItems:"center",justifyContent:"center",border:"1px dashed "+C.darkBorder,background:C.dark,borderRadius:6,fontSize:15,fontWeight:700,color:"#c9d1d9",transition:"all 0.2s"},
-  specPoolRow:{display:"flex",gap:10,marginBottom:16,minHeight:48},
-  specPoolBtn:{flex:1,background:C.darkPanel,border:"1px solid "+C.darkBorder,color:"#c9d1d9",padding:"12px 0",borderRadius:6,cursor:"pointer",fontSize:15,fontWeight:700,fontFamily:"'Courier New',Courier,monospace"},
-  specCheckBtn:{width:"100%",background:C.darkBlue,color:"#fff",border:"none",padding:"14px",borderRadius:6,fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"'Courier New',Courier,monospace"},
-  specDecoded:{background:C.dark,padding:"16px",borderRadius:6,borderLeft:"3px solid "+C.darkGreen,marginTop:16,lineHeight:1.7},
-  loadingBox:{display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"28px",color:C.textSec,fontSize:15},
-  spinner:{display:"inline-block",width:20,height:20,border:"2px solid "+C.border,borderTopColor:C.accent,borderRadius:"50%",animation:"spin 0.7s linear infinite"},
-  reviewQ:{padding:"14px 0",borderBottom:"1px solid "+C.border,marginBottom:4},
-  reviewOpt:{padding:"8px 16px",background:C.bg,border:"1.5px solid "+C.border,borderRadius:8,fontFamily:FONT,fontSize:14,cursor:"pointer",fontWeight:600,transition:"all 0.15s"},
-  reviewScore:{padding:"12px 16px",background:C.goldLight,borderRadius:10,fontSize:16,fontWeight:700,color:C.gold,textAlign:"center",marginBottom:14},
-  doneStats:{display:"flex",justifyContent:"center",gap:24,marginBottom:16},
-  doneStat:{textAlign:"center"},
-  doneStatNum:{fontSize:28,fontWeight:700,color:C.accent},
-  doneStatLabel:{fontSize:13,color:C.textSec},
-  doneWords:{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center",marginTop:8},
-  doneTag:{padding:"6px 14px",background:C.accentLight,color:C.accent,borderRadius:20,fontSize:14,fontWeight:600,cursor:"pointer"},
-  statCard:{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",textAlign:"center"},
-  statNum:{fontSize:22,fontWeight:800,color:C.accent,lineHeight:1.1},
-  statLabel:{fontSize:12,color:C.textSec,marginTop:4},
-};
+/* ─── CSS & Styles: imported from lib/theme.js ─── */
