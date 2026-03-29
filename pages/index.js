@@ -402,12 +402,12 @@ var doSave = async (d) => {
     var existing = null;
     try { var raw = localStorage.getItem(SKEY); if (raw) existing = JSON.parse(raw); } catch(e) {}
     var merged = { schemaVersion: 1, completedWords: [], ...(existing || {}), ...d, updatedAt: new Date().toISOString() };
-    // 确保关键字段不被空值覆盖
+    // 保护：只在字段完全缺失（undefined）时保留旧值
+    // 用户主动设为空字符串""是允许的（比如清空词库重新上传）
     if (existing) {
-      if (existing.wordInput && !d.wordInput) merged.wordInput = existing.wordInput;
-      if (existing.profile && !d.profile) merged.profile = existing.profile;
-      if (existing.wordStatusMap && !d.wordStatusMap) merged.wordStatusMap = existing.wordStatusMap;
-      if (existing.reviewWordData && !d.reviewWordData) merged.reviewWordData = existing.reviewWordData;
+      ['wordInput', 'profile', 'wordStatusMap', 'reviewWordData'].forEach(function(k) {
+        if (d[k] === undefined && existing[k]) merged[k] = existing[k];
+      });
     }
     localStorage.setItem(SKEY, JSON.stringify(merged));
   } catch(e) {}
