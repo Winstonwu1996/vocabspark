@@ -1638,8 +1638,14 @@ export default function App() {
         words = await parseFile(file);
         if (!words.length) { setError("未能提取词汇，请确认文件每行一个英文单词。"); setFileLabel(file.name); return; }
       }
-      setWordInput(words.join("\n")); setError(""); setSetupTab("words");
+      var newWordInput = words.join("\n");
+      setWordInput(newWordInput); setError(""); setSetupTab("words");
       setFileLabel("✅ " + file.name + "（" + words.length + " 个词）");
+      // 立即保存词库到本地和云端
+      var d = await loadSave() || {};
+      d.wordInput = newWordInput;
+      await doSave(d);
+      if (userRef.current) syncToCloud(d);
     } catch (err) { setError("文件解析失败: " + err.message); setFileLabel(file.name); }
     if (fileRef.current) fileRef.current.value = "";
   };
@@ -3203,6 +3209,8 @@ export default function App() {
               <div style={S.presetRow}>{Object.keys(goalPresets).map(function(n) {
                 return <button key={n} style={S.presetBtn} onClick={function(){
                   setWordInput(goalPresets[n]);
+                  // 立即保存预设词库
+                  loadSave().then(function(d) { d = d || {}; d.wordInput = goalPresets[n]; doSave(d); if (userRef.current) syncToCloud(d); });
                 }}>{n}</button>;
               })}</div>
             </div>;
