@@ -895,19 +895,25 @@ export default function App() {
   };
 
   // ── Cloud sync helpers ──
+  var _syncCount = 0;
   var syncToCloud = async function() {
     var u = userRef.current;
-    if (!u) return;
+    _syncCount++;
+    var n = _syncCount;
+    if (!u) { console.log('[sync#'+n+'] skip: no user'); return; }
     try {
-      // 永远从 localStorage 读完整数据再写云端
       var fullData = await loadSave();
-      if (!fullData) return;
+      if (!fullData) { console.log('[sync#'+n+'] skip: no local data'); return; }
       fullData.updatedAt = new Date().toISOString();
-      await supabase.from('user_progress').upsert(
+      var wLen = (fullData.wordInput||'').length;
+      console.log('[sync#'+n+'] writing... wordInput:'+wLen+' user:'+u.id.slice(0,8));
+      var { error } = await supabase.from('user_progress').upsert(
         {user_id: u.id, progress_data: fullData, updated_at: fullData.updatedAt},
         {onConflict: 'user_id'}
       );
-    } catch(e) {}
+      if (error) console.error('[sync#'+n+'] ERROR:', error.message, error.code);
+      else console.log('[sync#'+n+'] OK');
+    } catch(e) { console.error('[sync#'+n+'] EXCEPTION:', e.message); }
   };
 
   var loadFromCloud = async function(userId) {
