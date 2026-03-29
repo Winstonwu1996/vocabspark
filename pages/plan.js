@@ -76,6 +76,13 @@ export default function PlanPage() {
   var [currentSub, setCurrentSub] = useState(null);
   var [checkoutLoading, setCheckoutLoading] = useState(null);
   var [successMsg, setSuccessMsg] = useState(false);
+  var [showLogin, setShowLogin] = useState(false);
+  var [loginEmail, setLoginEmail] = useState('');
+  var [loginSent, setLoginSent] = useState(false);
+  var [loginLoading, setLoginLoading] = useState(false);
+  var [otpCode, setOtpCode] = useState('');
+  var [otpError, setOtpError] = useState('');
+  var [pendingTier, setPendingTier] = useState(null); // 登录后自动跳转支付
 
   useEffect(function() {
     // Check for success redirect
@@ -92,10 +99,24 @@ export default function PlanPage() {
     var { data: { subscription } } = supabase.auth.onAuthStateChange(function(ev, session) {
       var u = session?.user || null;
       setUser(u);
-      if (u) checkSub(u.id);
+      if (u) {
+        checkSub(u.id);
+        if (ev === 'SIGNED_IN') {
+          setShowLogin(false); setLoginSent(false); setLoginEmail(''); setOtpCode('');
+        }
+      }
     });
     return function() { subscription.unsubscribe(); };
   }, []);
+
+  // 登录成功后自动跳转支付
+  useEffect(function() {
+    if (user && pendingTier) {
+      var tier = pendingTier;
+      setPendingTier(null);
+      if (tier !== 'free') handleCheckout(tier);
+    }
+  }, [user, pendingTier]);
 
   var checkSub = async function(userId) {
     try {
@@ -105,8 +126,43 @@ export default function PlanPage() {
     } catch(e) {}
   };
 
+  var handleLogin = async function() {
+    if (!loginEmail.trim()) return;
+    setLoginLoading(true);
+    try {
+      var { error } = await supabase.auth.signInWithOtp({ email: loginEmail.trim(), options: { shouldCreateUser: true, emailRedirectTo: window.location.origin + '/plan' } });
+      if (error) throw error;
+      setLoginSent(true);
+    } catch(e) {
+      var msg = (e.message || '').toLowerCase();
+      if (msg.includes('rate limit')) alert("邮件发送太频繁，请等 1-2 分钟");
+      else alert("发送失败：" + e.message);
+    } finally { setLoginLoading(false); }
+  };
+
+  var handleVerifyOtp = async function() {
+    if (!otpCode.trim() || otpCode.trim().length < 6) return;
+    setLoginLoading(true); setOtpError('');
+    try {
+      var { error } = await supabase.auth.verifyOtp({ email: loginEmail.trim(), token: otpCode.trim(), type: 'email' });
+      if (error) throw error;
+    } catch(e) {
+      setOtpError(e.message === 'Token has expired or is invalid' ? "验证码已过期或不正确" : e.message);
+    } finally { setLoginLoading(false); }
+  };
+
+  var handlePlanClick = function(tier) {
+    if (!user) {
+      setPendingTier(tier);
+      setShowLogin(true);
+      return;
+    }
+    if (tier === 'free') return;
+    handleCheckout(tier);
+  };
+
   var handleCheckout = async function(tier) {
-    if (!user) { alert("请先登录后再订阅"); return; }
+    if (!user) { setPendingTier(tier); setShowLogin(true); return; }
     setCheckoutLoading(tier);
     try {
       var r = await fetch('/api/stripe/create-checkout', {
@@ -280,11 +336,11 @@ export default function PlanPage() {
                   </div>
                 ) : (
                   <button
-                    onClick={function() { plan.key === "free" ? null : handleCheckout(plan.key); }}
+                    onClick={function() { handlePlanClick(plan.key); }}
                     disabled={checkoutLoading === plan.key}
                     style={{ ...S.bigBtn, margin:0, background: plan.key === "free" ? C.teal : plan.color, fontSize:15, opacity: checkoutLoading === plan.key ? 0.6 : 1 }}
                   >
-                    {checkoutLoading === plan.key ? "跳转支付中..." : plan.cta}
+                    {checkoutLoading === plan.key ? "跳转支付中..." : (user && plan.key === "free" ? "当前方案" : plan.cta)}
                   </button>
                 )}
               </div>
@@ -361,6 +417,32 @@ export default function PlanPage() {
           <div>Know U. Learning &mdash; Your 1-on-1 AI English Tutor</div>
           <div>&copy; {new Date().getFullYear()} Know U. Learning. All rights reserved.</div>
         </div>
+        {/* 登录弹窗 */}
+        {showLogin && (
+          <div style={{ position:"fixed", top:0, left:0, width:"100%", height:"100%", background:C.overlay, backdropFilter:"blur(4px)", WebkitBackdropFilter:"blur(4px)", zIndex:9998, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={function() { setShowLogin(false); setPendingTier(null); }}>
+            <div style={{ background:C.card, borderRadius:16, padding:"28px 24px", maxWidth:380, width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,0.3)" }} onClick={function(e) { e.stopPropagation(); }}>
+              <div style={{ textAlign:"center", marginBottom:16 }}>
+                <div style={{ fontSize:17, fontWeight:700 }}>{pendingTier && pendingTier !== 'free' ? "登录后开始 " + pendingTier.charAt(0).toUpperCase() + pendingTier.slice(1) + " 私教课" : "登录 / 注册 Know U."}</div>
+                <div style={{ fontSize:12, color:C.textSec, marginTop:4 }}>输入邮箱，我们会发送验证码</div>
+              </div>
+              {!loginSent ? (
+                <div>
+                  <input value={loginEmail} onChange={function(e) { setLoginEmail(e.target.value); }} onKeyDown={function(e) { if (e.key === "Enter") handleLogin(); }} placeholder="your@email.com" type="email" style={{ width:"100%", padding:"12px 14px", borderRadius:10, border:"1.5px solid " + C.border, fontFamily:FONT, fontSize:14, marginBottom:10, boxSizing:"border-box" }} />
+                  <button onClick={handleLogin} disabled={loginLoading} style={{ ...S.bigBtn, margin:0, width:"100%" }}>{loginLoading ? "发送中..." : "发送验证码"}</button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ fontSize:13, color:C.textSec, marginBottom:10, textAlign:"center" }}>{"验证码已发送至 "}<strong>{loginEmail}</strong></div>
+                  <input value={otpCode} onChange={function(e) { setOtpCode(e.target.value.replace(/[^0-9]/g, '')); setOtpError(''); }} onKeyDown={function(e) { if (e.key === "Enter") handleVerifyOtp(); }} placeholder="输入 6 位验证码" maxLength={6} style={{ width:"100%", padding:"14px", borderRadius:10, border:"1.5px solid " + C.border, fontFamily:FONT, fontSize:22, fontWeight:700, textAlign:"center", letterSpacing:"0.3em", marginBottom:8, boxSizing:"border-box" }} />
+                  {otpError && <div style={{ fontSize:12, color:C.red, textAlign:"center", marginBottom:8 }}>{otpError}</div>}
+                  <button onClick={handleVerifyOtp} disabled={loginLoading || otpCode.length < 6} style={{ ...S.bigBtn, margin:0, width:"100%", opacity: otpCode.length < 6 ? 0.5 : 1 }}>{loginLoading ? "验证中..." : "验证登录"}</button>
+                  <button onClick={function() { setLoginSent(false); setOtpCode(''); setOtpError(''); }} style={{ ...S.ghostBtn, width:"100%", marginTop:8, textAlign:"center" }}>{"重新输入邮箱"}</button>
+                </div>
+              )}
+              <button onClick={function() { setShowLogin(false); setPendingTier(null); setLoginSent(false); setOtpCode(''); }} style={{ ...S.ghostBtn, width:"100%", marginTop:8, textAlign:"center" }}>取消</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
