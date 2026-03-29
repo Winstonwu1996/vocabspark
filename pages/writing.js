@@ -395,6 +395,22 @@ var getDefaultData = function() {
   };
 };
 
+/* ─── Level 系统（渐进式 AI 辅助递减） ─── */
+var LEVEL_THRESHOLDS = [
+  { level: 1, name: "新手", nameEn: "Beginner", minEssays: 0, aiHelp: "全程引导", bridgeCoeff: 50 },
+  { level: 2, name: "进阶", nameEn: "Intermediate", minEssays: 4, aiHelp: "关键节点引导", bridgeCoeff: 80 },
+  { level: 3, name: "熟练", nameEn: "Advanced", minEssays: 11, aiHelp: "按需介入", bridgeCoeff: 120 },
+  { level: 4, name: "独立", nameEn: "Expert", minEssays: 21, aiHelp: "仅终稿评改", bridgeCoeff: 200 },
+];
+
+var getUserLevel = function(totalEssays) {
+  var lv = LEVEL_THRESHOLDS[0];
+  for (var i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
+    if (totalEssays >= LEVEL_THRESHOLDS[i].minEssays) { lv = LEVEL_THRESHOLDS[i]; break; }
+  }
+  return lv;
+};
+
 /* ─── 中文桥梁额度计算 ─── */
 var calcBridgeQuota = function(wordCount, level) {
   // level: 1-4, wordCount: current word count
@@ -427,6 +443,11 @@ export default function WritingApp() {
   var [showPhilosophy, setShowPhilosophy] = useState(false);
   var [showSkillsFramework, setShowSkillsFramework] = useState(false);
   var [userAge, setUserAge] = useState(null);
+  var [historyTab, setHistoryTab] = useState("essays");
+  var [historyDetail, setHistoryDetail] = useState(null);
+  var [showSettings, setShowSettings] = useState(false);
+  var [byoDeepseek, setByoDeepseek] = useState('');
+  var [byoGemini, setByoGemini] = useState('');
 
   // 初始测评状态
   var [assessStep, setAssessStep] = useState(0); // 0-5: tasks, 6: submitting
@@ -452,6 +473,8 @@ export default function WritingApp() {
   // ─── 初始化 ───
   useEffect(function() {
     setLearningTime(loadLearningTime());
+    // Load BYO API keys
+    try { var bk = localStorage.getItem('knowu_byo_keys'); if (bk) { var k = JSON.parse(bk); setByoDeepseek(k.deepseek || ''); setByoGemini(k.gemini || ''); } } catch(e) {}
     var activityCleanup = installActivityListeners();
     var timerInterval = setInterval(function() {
       var d = tickIfActive();
@@ -611,8 +634,10 @@ export default function WritingApp() {
         + '"vocabHighlights":{"used":["用对的词"],"suggestions":["可以用的词"]},'
         + '"improvements":["建议1","建议2","建议3"],'
         + '"goldenQuotes":["从作文中选出1-2句最有灵性或最漂亮的表达"],'
-        + '"brainGains":{"creativity":N,"logic":N,"observation":N,"empathy":N,"critical":N,"expression":N}}'
-        + "\nbrainGains 中每个维度 0-3 分，根据文章在该维度的表现打分。";
+        + '"brainGains":{"creativity":N,"logic":N,"observation":N,"empathy":N,"critical":N,"expression":N},'
+        + '"bridgeTranslations":[{"chinese":"原文中文","english":"对应英文单词或短语","explanation":"简短解释(中文)"}]}'
+        + "\nbrainGains 中每个维度 0-3 分，根据文章在该维度的表现打分。"
+        + '\n如果作文中有【中文】标记的词，在 bridgeTranslations 中给出英文翻译和解释。';
       var msg = "写作题目：" + (selectedPrompt ? selectedPrompt.prompt : "自由写作")
         + "\n写作类型：" + (selectedCategory || "general")
         + vocabNote
@@ -655,6 +680,29 @@ export default function WritingApp() {
           }
           return { ...prev, essays: essays, brainStats: bs, goldenQuotes: gq, stats: { totalEssays: totalEssays, totalWords: totalWords, avgScore: avgScore, bestScore: bestScore, streak: prev.stats.streak || 0, lastWritingDate: new Date().toISOString() } };
         });
+        // ─── Vocab 闭环：桥梁词写入 Vocab 生词本 ───
+        if (parsed.bridgeTranslations && parsed.bridgeTranslations.length > 0) {
+          try {
+            var vocabRaw = localStorage.getItem(VOCAB_SKEY);
+            var vocabData = vocabRaw ? JSON.parse(vocabRaw) : {};
+            var currentWords = (vocabData.wordInput || "").trim();
+            var currentMap = vocabData.wordStatusMap || {};
+            var newWords = [];
+            parsed.bridgeTranslations.forEach(function(bt) {
+              var eng = (bt.english || "").trim().toLowerCase();
+              if (eng && !currentMap[eng]) {
+                newWords.push(eng);
+                currentMap[eng] = "unlearned";
+              }
+            });
+            if (newWords.length > 0) {
+              vocabData.wordInput = currentWords + (currentWords ? "\n" : "") + newWords.join("\n");
+              vocabData.wordStatusMap = currentMap;
+              vocabData.updatedAt = new Date().toISOString();
+              localStorage.setItem(VOCAB_SKEY, JSON.stringify(vocabData));
+            }
+          } catch(e) { console.warn("bridge→vocab sync error", e); }
+        }
       } else {
         setFeedback({ scores: { grammar: 5, structure: 5, vocabulary: 5, content: 5, coherence: 5 }, overall: 5, summary: "AI 评改暂时不可用，请稍后重试。", annotations: [], improvements: [], goldenQuotes: [], brainGains: {} });
       }
@@ -721,7 +769,8 @@ export default function WritingApp() {
   // ─── 中文桥梁处理 ───
   var bridgeCount = (essayText.match(/【[^】]+】/g) || []).length;
   var wordCount = essayText.trim() ? essayText.trim().split(/\s+/).length : 0;
-  var bridgeQuota = calcBridgeQuota(Math.max(wordCount, 150), 1); // TODO: use actual level
+  var userLevel = getUserLevel(d && d.stats ? d.stats.totalEssays || 0 : 0);
+  var bridgeQuota = calcBridgeQuota(Math.max(wordCount, 150), userLevel.level);
 
   // ─── 渲染 ───
   var d = getData();
@@ -1049,11 +1098,22 @@ export default function WritingApp() {
               })()}
             </div>
 
-            {/* 统计 + 学习时间 */}
+            {/* Level + 统计 */}
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8, padding:"10px 14px", background:userLevel.level >= 3 ? C.purpleLight : userLevel.level >= 2 ? C.accentLight : C.tealLight, borderRadius:10, border:"1px solid " + (userLevel.level >= 3 ? C.purple : userLevel.level >= 2 ? C.accent : C.teal) + "33" }}>
+              <div style={{ fontSize:24, fontWeight:800, color: userLevel.level >= 3 ? C.purple : userLevel.level >= 2 ? C.accent : C.teal }}>{"L" + userLevel.level}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:13, fontWeight:700 }}>{userLevel.name + " " + userLevel.nameEn}</div>
+                <div style={{ fontSize:11, color:C.textSec }}>{"AI 模式：" + userLevel.aiHelp + " · 下一级需 " + (LEVEL_THRESHOLDS[Math.min(userLevel.level, 3)].minEssays) + " 篇"}</div>
+              </div>
+              <div style={{ textAlign:"right" }}>
+                <div style={{ fontSize:18, fontWeight:800, color:C.accent }}>{d.stats.totalEssays || 0}</div>
+                <div style={{ fontSize:10, color:C.textSec }}>{"篇作文"}</div>
+              </div>
+            </div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:4 }}>
-              <div style={S.statCard}><div style={S.statNum}>{d.stats.totalEssays || 0}</div><div style={S.statLabel}>总篇数</div></div>
-              <div style={S.statCard}><div style={S.statNum}>{d.stats.totalWords || 0}</div><div style={S.statLabel}>总词数</div></div>
-              <div style={S.statCard}><div style={{...S.statNum, color:C.gold}}>{d.stats.avgScore || "-"}</div><div style={S.statLabel}>平均分</div></div>
+              <div style={S.statCard}><div style={S.statNum}>{d.stats.totalWords || 0}</div><div style={S.statLabel}>{"总词数"}</div></div>
+              <div style={S.statCard}><div style={{...S.statNum, color:C.gold}}>{d.stats.avgScore || "-"}</div><div style={S.statLabel}>{"平均分"}</div></div>
+              <div style={S.statCard}><div style={{...S.statNum, color:C.teal}}>{formatTime(learningTime.todayMinutes)}</div><div style={S.statLabel}>{"今日学习"}</div></div>
             </div>
 
             {/* 节省费用 */}
@@ -1150,16 +1210,19 @@ export default function WritingApp() {
               )}
             </div>
 
-            {/* 最近作文 */}
+            {/* 最近作文 + 历史入口 */}
             {d.essays && d.essays.length > 0 && (
               <div style={S.card}>
-                <div style={{ fontSize:14, fontWeight:700, marginBottom:10 }}>📝 最近作文</div>
-                {d.essays.slice(0, 5).map(function(essay) {
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                  <div style={{ fontSize:14, fontWeight:700 }}>{"📝 最近作文"}</div>
+                  <button onClick={function() { setHistoryTab("essays"); setHistoryDetail(null); setScreen("history"); }} style={{ ...S.smallBtn, fontSize:11, padding:"3px 10px" }}>{"查看全部 →"}</button>
+                </div>
+                {d.essays.slice(0, 3).map(function(essay) {
                   return (
                     <div key={essay.id} style={{ padding:"10px 0", borderBottom:"1px solid " + C.border, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div>
                         <div style={{ fontSize:13, fontWeight:600 }}>{essay.prompt ? essay.prompt.title : "自由写作"}</div>
-                        <div style={{ fontSize:11, color:C.textSec }}>{new Date(essay.createdAt).toLocaleDateString()} · {essay.wordCount} 词</div>
+                        <div style={{ fontSize:11, color:C.textSec }}>{new Date(essay.createdAt).toLocaleDateString() + " · " + (essay.wordCount || 0) + " 词"}</div>
                       </div>
                       {essay.feedback && <span style={{ fontSize:18, fontWeight:800, color:C.accent }}>{essay.feedback.overall}</span>}
                     </div>
@@ -1168,13 +1231,29 @@ export default function WritingApp() {
               </div>
             )}
 
-            {/* 登录提示 */}
-            {!user && (
-              <div style={{ ...S.card, textAlign:"center" }}>
-                <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>登录后数据自动云同步，换设备不丢失</div>
-                <button onClick={function() { setShowLogin(true); }} style={S.tealBtn}>📧 登录 / 注册</button>
+            {/* 金句快览 */}
+            {d.goldenQuotes && d.goldenQuotes.length > 0 && (
+              <div style={{ ...S.card, background:C.goldLight, borderColor:C.gold + "33", padding:"14px 16px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:C.gold }}>{"✨ 金句库"}</div>
+                  <button onClick={function() { setHistoryTab("quotes"); setHistoryDetail(null); setScreen("history"); }} style={{ ...S.smallBtn, fontSize:11, padding:"3px 10px", color:C.gold, borderColor:C.gold + "44" }}>{"查看全部 →"}</button>
+                </div>
+                <div style={{ fontSize:14, fontStyle:"italic", color:C.text, lineHeight:1.6 }}>
+                  {'"' + d.goldenQuotes[0].text + '"'}
+                </div>
               </div>
             )}
+
+            {/* 登录 + 设置 */}
+            <div style={{ display:"flex", gap:8, marginBottom:10 }}>
+              {!user && (
+                <button onClick={function() { setShowLogin(true); }} style={{ ...S.tealBtn, flex:1, textAlign:"center" }}>{"📧 登录 / 注册"}</button>
+              )}
+              {user && (
+                <button onClick={function() { handleLogout(); }} style={{ ...S.ghostBtn, flex:1, textAlign:"center", fontSize:12 }}>{"退出登录 (" + (user.email || "").split("@")[0] + ")"}</button>
+              )}
+              <button onClick={function() { setShowSettings(true); }} style={{ ...S.ghostBtn, padding:"10px 14px" }}>{"⚙️"}</button>
+            </div>
           </div>
           );
         })()}
@@ -1514,13 +1593,179 @@ export default function WritingApp() {
                   </div>
                 )}
 
+                {/* 桥梁词翻译 → Vocab */}
+                {feedback.bridgeTranslations && feedback.bridgeTranslations.length > 0 && (
+                  <div style={S.card}>
+                    <div style={{ fontSize:14, fontWeight:700, marginBottom:8 }}>{"🌉 中文桥梁 → 生词本"}</div>
+                    <div style={{ fontSize:12, color:C.teal, marginBottom:10 }}>{"以下词已自动加入 Vocab 生词本，可以去词汇课复习"}</div>
+                    {feedback.bridgeTranslations.map(function(bt, i) {
+                      return (
+                        <div key={i} style={{ display:"flex", alignItems:"baseline", gap:8, padding:"8px 0", borderBottom: i < feedback.bridgeTranslations.length - 1 ? "1px solid " + C.border : "none" }}>
+                          <span style={{ fontSize:13, color:C.textSec }}>{"【" + bt.chinese + "】"}</span>
+                          <span style={{ fontSize:14, fontWeight:700, color:C.accent }}>{bt.english}</span>
+                          <span style={{ fontSize:11, color:C.textSec, flex:1 }}>{bt.explanation}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {/* 操作按钮 */}
                 <div style={{ ...S.btnRow, marginTop:12, marginBottom:20 }}>
-                  <button onClick={function() { setScreen("writing-editor"); }} style={S.ghostBtn}>📝 继续修改</button>
-                  <button onClick={function() { setEssayText(''); setIdeaChat([]); setOutline(null); setFeedback(null); setScreen("prompt-select"); }} style={S.primaryBtn}>📝 写下一篇</button>
+                  <button onClick={function() { setScreen("writing-editor"); }} style={S.ghostBtn}>{"📝 继续修改"}</button>
+                  <button onClick={function() { setEssayText(''); setIdeaChat([]); setOutline(null); setFeedback(null); setScreen("prompt-select"); }} style={S.primaryBtn}>{"📝 写下一篇"}</button>
                 </div>
               </div>
             ) : null}
+          </div>
+        )}
+
+        {/* ═══ HISTORY + 金句库 ═══ */}
+        {screen === "history" && (
+          <div style={{ animation:"fadeUp 0.3s ease-out" }}>
+            <div style={S.topBar}>
+              <button onClick={function() { setScreen("dashboard"); }} style={S.backBtn}>{"←"}</button>
+              <div style={{ fontSize:15, fontWeight:700 }}>{"📚 学习记录"}</div>
+            </div>
+
+            {/* Tab: 作文 / 金句 */}
+            <div style={{ display:"flex", gap:0, marginBottom:14, background:C.bg, borderRadius:10, padding:3, border:"1px solid " + C.border }}>
+              <button onClick={function() { setHistoryTab("essays"); }} style={{ flex:1, padding:"9px 0", borderRadius:8, border:"none", fontFamily:FONT, fontSize:13, fontWeight:600, cursor:"pointer", background: historyTab === "essays" ? C.accent : "transparent", color: historyTab === "essays" ? "#fff" : C.textSec }}>
+                {"📝 作文 (" + (d.essays || []).length + ")"}
+              </button>
+              <button onClick={function() { setHistoryTab("quotes"); }} style={{ flex:1, padding:"9px 0", borderRadius:8, border:"none", fontFamily:FONT, fontSize:13, fontWeight:600, cursor:"pointer", background: historyTab === "quotes" ? C.gold : "transparent", color: historyTab === "quotes" ? "#fff" : C.textSec }}>
+                {"✨ 金句 (" + (d.goldenQuotes || []).length + ")"}
+              </button>
+            </div>
+
+            {/* 作文列表 */}
+            {historyTab === "essays" && (
+              <div>
+                {(!d.essays || d.essays.length === 0) ? (
+                  <div style={{ ...S.card, textAlign:"center", padding:"40px 20px", color:C.textSec }}>
+                    <div style={{ fontSize:32, marginBottom:8 }}>{"📝"}</div>
+                    <div style={{ fontSize:14 }}>{"还没有作文，开始写第一篇吧！"}</div>
+                  </div>
+                ) : d.essays.map(function(essay) {
+                  var isOpen = historyDetail === essay.id;
+                  return (
+                    <div key={essay.id} style={{ ...S.card, padding:"14px 16px", marginBottom:8, cursor:"pointer" }} onClick={function() { setHistoryDetail(isOpen ? null : essay.id); }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontSize:14, fontWeight:700 }}>{essay.prompt ? essay.prompt.title : "自由写作"}</div>
+                          <div style={{ fontSize:11, color:C.textSec, marginTop:2 }}>
+                            {new Date(essay.createdAt).toLocaleDateString() + " · " + (essay.wordCount || 0) + " 词" + (essay.category ? " · " + essay.category : "")}
+                          </div>
+                        </div>
+                        {essay.feedback && <div style={{ fontSize:22, fontWeight:800, color:C.accent, marginLeft:12 }}>{essay.feedback.overall}</div>}
+                      </div>
+                      {isOpen && (
+                        <div style={{ marginTop:12, paddingTop:12, borderTop:"1px solid " + C.border, animation:"fadeUp 0.2s ease-out" }}>
+                          {/* 作文内容 */}
+                          <div style={{ fontSize:13, lineHeight:1.8, color:C.text, marginBottom:10, background:C.bg, padding:"12px 14px", borderRadius:8 }}>
+                            {essay.content}
+                          </div>
+                          {/* 评分 */}
+                          {essay.feedback && essay.feedback.scores && (
+                            <div style={{ marginBottom:10 }}>
+                              <div style={{ fontSize:12, fontWeight:600, marginBottom:6 }}>{"评分详情"}</div>
+                              {Object.entries(essay.feedback.scores).map(function(entry) {
+                                var labels = { grammar:"语法", structure:"结构", vocabulary:"词汇", content:"内容", coherence:"连贯" };
+                                return (
+                                  <div key={entry[0]} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4 }}>
+                                    <span style={{ width:36, fontSize:11, color:C.textSec }}>{labels[entry[0]] || entry[0]}</span>
+                                    <div style={{ flex:1, height:6, background:C.border, borderRadius:3 }}>
+                                      <div style={{ width:entry[1] * 10 + "%", height:"100%", background: entry[1] >= 7 ? C.green : entry[1] >= 5 ? C.gold : C.red, borderRadius:3 }} />
+                                    </div>
+                                    <span style={{ width:16, fontSize:11, fontWeight:700, textAlign:"right" }}>{entry[1]}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                          {/* 总评 */}
+                          {essay.feedback && essay.feedback.summary && (
+                            <div style={{ fontSize:12, color:C.textSec, lineHeight:1.6 }}>{essay.feedback.summary}</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 金句库 */}
+            {historyTab === "quotes" && (
+              <div>
+                {(!d.goldenQuotes || d.goldenQuotes.length === 0) ? (
+                  <div style={{ ...S.card, textAlign:"center", padding:"40px 20px", color:C.textSec }}>
+                    <div style={{ fontSize:32, marginBottom:8 }}>{"✨"}</div>
+                    <div style={{ fontSize:14 }}>{"AI 会从你的作文中提炼金句，写作后就能看到"}</div>
+                  </div>
+                ) : d.goldenQuotes.map(function(q, i) {
+                  return (
+                    <div key={i} style={{ ...S.card, padding:"16px 18px", marginBottom:8, background:C.goldLight, borderColor:C.gold + "33" }}>
+                      <div style={{ fontSize:15, fontStyle:"italic", color:C.text, lineHeight:1.7, marginBottom:6 }}>
+                        {'"' + q.text + '"'}
+                      </div>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                        <span style={{ fontSize:11, color:C.gold }}>{new Date(q.date).toLocaleDateString() + (q.theme ? " · " + q.theme : "")}</span>
+                        <button onClick={function(e) {
+                          e.stopPropagation();
+                          if (navigator.clipboard) {
+                            navigator.clipboard.writeText(q.text).then(function() { alert("已复制金句！"); });
+                          }
+                        }} style={{ ...S.smallBtn, fontSize:11, padding:"3px 10px", color:C.gold, borderColor:C.gold + "44" }}>{"📋 复制"}</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══ SETTINGS (BYO Key) ═══ */}
+        {showSettings && (
+          <div style={{ position:"fixed", top:0, left:0, width:"100%", height:"100%", background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)", zIndex:9998, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={function() { setShowSettings(false); }}>
+            <div style={{ background:C.card, borderRadius:16, padding:"24px 20px", maxWidth:400, width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,0.3)" }} onClick={function(e) { e.stopPropagation(); }}>
+              <div style={{ fontSize:17, fontWeight:700, marginBottom:4 }}>{"设置"}</div>
+              <div style={{ fontSize:12, color:C.textSec, marginBottom:16 }}>{"配置你的 API Key 可享受会员半价"}</div>
+
+              <div style={{ marginBottom:12 }}>
+                <div style={{ fontSize:13, fontWeight:600, marginBottom:4 }}>DeepSeek API Key</div>
+                <input value={byoDeepseek} onChange={function(e) { setByoDeepseek(e.target.value); }} placeholder="sk-..." type="password"
+                  style={{ ...S.textarea, padding:"10px 12px", fontSize:13, background:C.card }} />
+              </div>
+
+              <div style={{ marginBottom:12 }}>
+                <div style={{ fontSize:13, fontWeight:600, marginBottom:4 }}>Google Gemini API Key</div>
+                <input value={byoGemini} onChange={function(e) { setByoGemini(e.target.value); }} placeholder="AIza..." type="password"
+                  style={{ ...S.textarea, padding:"10px 12px", fontSize:13, background:C.card }} />
+              </div>
+
+              <div style={{ background:C.tealLight, borderRadius:8, padding:"10px 12px", marginBottom:14, fontSize:11, color:C.teal, lineHeight:1.6 }}>
+                {"🔒 隐私保护：API Key 仅存储在你的设备上，仅在调用 AI 时加密传输，平台不记录、不存储。请自行妥善保管你的 Key。"}
+              </div>
+
+              <div style={{ display:"flex", gap:8 }}>
+                <button onClick={function() {
+                  var keys = {};
+                  if (byoDeepseek.trim()) keys.deepseek = byoDeepseek.trim();
+                  if (byoGemini.trim()) keys.gemini = byoGemini.trim();
+                  if (Object.keys(keys).length > 0) {
+                    localStorage.setItem('knowu_byo_keys', JSON.stringify(keys));
+                    alert("已保存！AI 调用将使用你的 Key。");
+                  } else {
+                    localStorage.removeItem('knowu_byo_keys');
+                    alert("已清除自定义 Key，将使用平台 Key。");
+                  }
+                  setShowSettings(false);
+                }} style={S.primaryBtn}>{"保存"}</button>
+                <button onClick={function() { setShowSettings(false); }} style={S.ghostBtn}>{"取消"}</button>
+              </div>
+            </div>
           </div>
         )}
 

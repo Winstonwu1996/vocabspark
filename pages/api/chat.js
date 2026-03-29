@@ -119,7 +119,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { system, message, maxTokens, preferredProviders } = req.body;
+  const { system, message, maxTokens, preferredProviders, userApiKeys } = req.body;
 
   if (!system || !message) {
     return res.status(400).json({ error: "Missing system or message" });
@@ -128,7 +128,32 @@ export default async function handler(req, res) {
   const tokens = maxTokens || 2000;
   const timeoutMs = Number(process.env.CHAT_PROVIDER_TIMEOUT_MS || 30000);
   const errors = [];
-  const providers = buildProviders();
+
+  // BYO API Key: 如果用户提供了自己的 key，优先使用
+  let providers;
+  if (userApiKeys && (userApiKeys.deepseek || userApiKeys.gemini)) {
+    providers = [];
+    if (userApiKeys.deepseek) {
+      providers.push({
+        name: "user-deepseek",
+        family: "deepseek",
+        url: "https://api.deepseek.com/v1/chat/completions",
+        apiKey: () => userApiKeys.deepseek,
+        model: "deepseek-chat",
+      });
+    }
+    if (userApiKeys.gemini) {
+      providers.push({
+        name: "user-gemini",
+        family: "gemini",
+        url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        apiKey: () => userApiKeys.gemini,
+        model: "gemini-2.5-flash-lite",
+      });
+    }
+  } else {
+    providers = buildProviders();
+  }
   if (!providers.length) {
     return res.status(500).json({ error: "No provider API keys configured" });
   }
