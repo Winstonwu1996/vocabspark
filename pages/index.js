@@ -897,17 +897,19 @@ export default function App() {
   // ── Cloud sync helpers ──
   var syncToCloud = async function(data) {
     var u = userRef.current;
-    if (!u) return;
+    if (!u) { console.warn('[SYNC] no user, skip'); return; }
     try {
-      // 先读云端现有数据，合并后再写入，防止覆盖
       var existing = await loadFromCloud(u.id);
       var merged = existing ? deepMergeProgress(data, existing) : data;
       merged.updatedAt = new Date().toISOString();
-      await supabase.from('user_progress').upsert(
+      console.log('[SYNC] writing to cloud, wordInput len:', (merged.wordInput||'').length, 'xp:', merged.stats?.xp);
+      var { error } = await supabase.from('user_progress').upsert(
         {user_id: u.id, progress_data: merged, updated_at: merged.updatedAt},
         {onConflict: 'user_id'}
       );
-    } catch(e) { console.warn('sync error', e); }
+      if (error) console.error('[SYNC] upsert error:', JSON.stringify(error));
+      else console.log('[SYNC] success');
+    } catch(e) { console.error('[SYNC] exception:', e.message); }
   };
 
   var loadFromCloud = async function(userId) {
