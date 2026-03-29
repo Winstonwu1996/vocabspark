@@ -760,9 +760,9 @@ export default function WritingApp() {
                 </div>
 
                 {/* 进度条 */}
-                <div style={{ display:"flex", gap:3, marginBottom:16 }}>
+                <div style={{ display:"flex", gap:4, marginBottom:16 }}>
                   {tasks.map(function(_, i) {
-                    return <div key={i} style={{ flex:1, height:4, borderRadius:2, background: i < assessStep ? C.accent : i === assessStep ? C.gold : C.border, transition:"background 0.3s" }} />;
+                    return <div key={i} style={{ flex:1, height:6, borderRadius:3, background: i < assessStep ? C.accent : i === assessStep ? C.gold : C.border, transition:"background 0.3s" }} />;
                   })}
                 </div>
 
@@ -961,10 +961,9 @@ export default function WritingApp() {
               <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 {PHILOSOPHY_ITEMS.slice(0, showPhilosophy ? PHILOSOPHY_ITEMS.length : 3).map(function(p, i) {
                   return (
-                    <div key={i} style={{ background:C.bg, borderRadius:10, padding: showPhilosophy ? "12px 14px" : "10px 12px", border:"1px solid " + C.border, display: showPhilosophy ? "block" : "flex", alignItems:"baseline", gap:6 }}>
-                      {!showPhilosophy && <span style={{ fontSize:12, fontWeight:700, whiteSpace:"nowrap" }}>{p.icon + " " + p.title}</span>}
-                      {showPhilosophy && <div style={{ fontSize:13, fontWeight:700, marginBottom:4 }}>{p.icon + " " + p.title}</div>}
-                      <div style={{ fontSize:11, color:C.textSec, lineHeight:1.5 }}>{showPhilosophy ? p.detail : p.summary}</div>
+                    <div key={i} style={{ background:C.bg, borderRadius:10, padding:"10px 14px", border:"1px solid " + C.border }}>
+                      <div style={{ fontSize:13, fontWeight:700, marginBottom:3 }}>{p.icon + " " + p.title}</div>
+                      <div style={{ fontSize:12, color:C.textSec, lineHeight:1.6 }}>{showPhilosophy ? p.detail : p.summary}</div>
                     </div>
                   );
                 })}
@@ -1248,15 +1247,15 @@ export default function WritingApp() {
             </div>
 
             {/* 输入框 */}
-            <div style={{ display:"flex", gap:8, position:"sticky", bottom:16, background:C.bg, padding:"8px 0" }}>
+            <div style={{ display:"flex", gap:8, position:"sticky", bottom:0, background:C.bg, padding:"12px 0 16px", boxShadow:"0 -4px 12px rgba(44,36,32,0.06)" }}>
               <input
                 value={ideaInput}
                 onChange={function(e) { setIdeaInput(e.target.value); }}
                 onKeyDown={function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendIdeaMessage(); } }}
                 placeholder="说说你的想法..."
-                style={{ flex:1, padding:"10px 14px", borderRadius:10, border:"1px solid " + C.border, fontFamily:FONT, fontSize:14, background:C.card }}
+                style={{ flex:1, padding:"12px 16px", borderRadius:12, border:"1.5px solid " + C.border, fontFamily:FONT, fontSize:15, background:C.card }}
               />
-              <button onClick={sendIdeaMessage} disabled={ideaLoading || !ideaInput.trim()} style={{ ...S.primaryBtn, padding:"10px 16px" }}>发送</button>
+              <button onClick={sendIdeaMessage} disabled={ideaLoading || !ideaInput.trim()} style={{ ...S.primaryBtn, padding:"12px 18px", borderRadius:12 }}>发送</button>
             </div>
 
             {/* 生成大纲按钮 */}
@@ -1394,10 +1393,12 @@ export default function WritingApp() {
             ) : feedback ? (
               <div>
                 {/* 总分 */}
-                <div style={{ ...S.card, textAlign:"center", padding:"24px" }}>
-                  <div style={{ fontSize:48, fontWeight:800, color:C.accent }}>{feedback.overall}</div>
-                  <div style={{ fontSize:12, color:C.textSec }}>/ 10</div>
-                  <div style={{ fontSize:14, color:C.text, marginTop:8, lineHeight:1.6 }}>{feedback.summary}</div>
+                <div style={{ ...S.card, textAlign:"center", padding:"28px 20px" }}>
+                  <div style={{ display:"inline-flex", alignItems:"baseline", justifyContent:"center", background:C.accentLight, borderRadius:16, padding:"8px 24px", marginBottom:10 }}>
+                    <span style={{ fontSize:48, fontWeight:800, color:C.accent, lineHeight:1 }}>{feedback.overall}</span>
+                    <span style={{ fontSize:16, color:C.textSec, marginLeft:4, fontWeight:600 }}>/ 10</span>
+                  </div>
+                  <div style={{ fontSize:14, color:C.text, marginTop:6, lineHeight:1.7 }}>{feedback.summary}</div>
                 </div>
 
                 {/* 五维评分 */}
@@ -1465,9 +1466,9 @@ export default function WritingApp() {
                 {/* 金句 */}
                 {feedback.goldenQuotes && feedback.goldenQuotes.length > 0 && (
                   <div style={{ ...S.card, background:C.goldLight, borderColor:C.gold + "33" }}>
-                    <div style={{ fontSize:14, fontWeight:700, color:"#9a7209", marginBottom:8 }}>✨ 金句亮点</div>
+                    <div style={{ fontSize:14, fontWeight:700, color:C.gold, marginBottom:8 }}>✨ 金句亮点</div>
                     {feedback.goldenQuotes.map(function(q, i) {
-                      return <div key={i} style={{ fontSize:14, fontStyle:"italic", color:"#9a7209", lineHeight:1.6, marginBottom:4 }}>"{q}"</div>;
+                      return <div key={i} style={{ fontSize:14, fontStyle:"italic", color:C.gold, lineHeight:1.6, marginBottom:4 }}>"{q}"</div>;
                     })}
                   </div>
                 )}
@@ -1484,7 +1485,7 @@ export default function WritingApp() {
 
         {/* ═══ LOGIN MODAL ═══ */}
         {showLogin && (
-          <div style={{ position:"fixed", top:0, left:0, width:"100%", height:"100%", background:"rgba(0,0,0,0.4)", zIndex:9998, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div style={{ position:"fixed", top:0, left:0, width:"100%", height:"100%", background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)", zIndex:9998, display:"flex", alignItems:"center", justifyContent:"center" }}>
             <div style={{ background:C.card, borderRadius:16, padding:"28px 24px", maxWidth:380, width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,0.3)" }}>
               <div style={{ textAlign:"center", marginBottom:16 }}>
                 <BrandSparkIcon size={48} marginBottom={8} />
