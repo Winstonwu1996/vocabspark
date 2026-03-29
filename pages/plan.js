@@ -122,8 +122,8 @@ export default function PlanPage() {
               <div style={{ fontSize:11, color:C.textSec }}>随时可学</div>
             </div>
             <div>
-              <div style={{ fontSize:22, fontWeight:800, color:C.accent }}>1/5</div>
-              <div style={{ fontSize:11, color:C.textSec }}>私教价格</div>
+              <div style={{ fontSize:22, fontWeight:800, color:C.accent }}>1%</div>
+              <div style={{ fontSize:11, color:C.textSec }}>私教月费用</div>
             </div>
           </div>
         </div>
