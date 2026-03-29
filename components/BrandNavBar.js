@@ -47,9 +47,10 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak }) => {
           <div style={{ fontSize:10, color:C.textSec, opacity:0.7, letterSpacing:"0.02em", marginTop:1 }}>Your 1-on-1 AI English Tutor</div>
         </div>
       </div>
-      <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
         <Link href="/" style={tabStyle("vocab")}>Vocab</Link>
         <Link href="/writing" style={tabStyle("writing")}>Writing <span style={{fontSize:8,fontWeight:700,color:"#fff",background:C.accent,borderRadius:3,padding:"1px 4px",marginLeft:2,verticalAlign:"middle"}}>Beta</span></Link>
+        <Link href="/plan" style={{...tabStyle("plan"), fontSize:12}}>Plan</Link>
       </div>
     </div>
     {(hasStats || hasStreak) && (

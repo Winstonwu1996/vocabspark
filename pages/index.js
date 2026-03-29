@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { C, FONT, globalCSS, S } from '../lib/theme';
 import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, tryJSON } from '../lib/api';
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
-import { loadLearningTime, addMinute, calcSavings, formatTime } from '../lib/learningTimer';
+import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 import * as XLSX from 'xlsx';
 
 /* ═══════════════════════════════════════════════════════
@@ -1046,16 +1046,15 @@ export default function App() {
     }
   };
 
-  // ─── 学习计时器（每分钟累加，仅在学习屏幕活跃时） ───
+  // ─── 学习计时器（用户活跃时才计时：click/keydown/scroll/touch） ───
   useEffect(function() {
     setLearningTime(loadLearningTime());
+    var cleanup = installActivityListeners();
     var interval = setInterval(function() {
-      // 只在正式学习屏幕计时（非 setup/dashboard）
-      if (document.hidden) return;
-      var d = addMinute();
-      setLearningTime({ totalMinutes: d.totalMinutes, todayMinutes: d.todayMinutes });
+      var d = tickIfActive();
+      if (d) setLearningTime({ totalMinutes: d.totalMinutes, todayMinutes: d.todayMinutes });
     }, 60000);
-    return function() { clearInterval(interval); };
+    return function() { cleanup(); clearInterval(interval); };
   }, []);
 
   useEffect(function() {

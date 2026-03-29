@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { C, FONT, globalCSS, S } from '../lib/theme';
 import { callAPI, callAPIFast, tryJSON } from '../lib/api';
 import { BrandNavBar, BrandSparkIcon } from '../components/BrandNavBar';
-import { loadLearningTime, addMinute, calcSavings, formatTime } from '../lib/learningTimer';
+import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 
 /* ═══════════════════════════════════════════════════════
    Writing by Know U. — AI 写作教练
@@ -452,11 +452,10 @@ export default function WritingApp() {
   // ─── 初始化 ───
   useEffect(function() {
     setLearningTime(loadLearningTime());
-    // 学习计时器
+    var activityCleanup = installActivityListeners();
     var timerInterval = setInterval(function() {
-      if (document.hidden) return;
-      var d = addMinute();
-      setLearningTime({ totalMinutes: d.totalMinutes, todayMinutes: d.todayMinutes });
+      var d = tickIfActive();
+      if (d) setLearningTime({ totalMinutes: d.totalMinutes, todayMinutes: d.todayMinutes });
     }, 60000);
 
     var data = loadWritingData() || getDefaultData();
@@ -484,7 +483,7 @@ export default function WritingApp() {
         setShowLogin(false); setLoginSent(false); setLoginEmail(''); setOtpCode('');
       }
     });
-    return function() { subscription.unsubscribe(); clearInterval(timerInterval); };
+    return function() { subscription.unsubscribe(); clearInterval(timerInterval); activityCleanup(); };
   }, []);
 
   // ─── Auth ───
