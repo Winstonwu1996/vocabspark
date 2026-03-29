@@ -32,6 +32,7 @@ export default async function handler(req, res) {
   params.append('metadata[billing]', billing);
   params.append('metadata[byoKey]', byoKey ? 'true' : 'false');
   if (userEmail) params.append('customer_email', userEmail);
+  params.append('allow_promotion_codes', 'true');
   params.append('success_url', 'https://knowulearning.com/plan?success=1&session_id={CHECKOUT_SESSION_ID}');
   params.append('cancel_url', 'https://knowulearning.com/plan?canceled=1');
 

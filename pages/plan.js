@@ -211,6 +211,29 @@ export default function PlanPage() {
       <BrandNavBar activeTab="plan" />
 
       <div style={S.container}>
+        {/* 早鸟优惠横幅 */}
+        {!currentSub && (
+          <div style={{ background:"linear-gradient(135deg, #e53e3e 0%, " + C.accent + " 100%)", borderRadius:14, padding:"16px 18px", marginBottom:14, color:"#fff", animation:"fadeUp 0.3s ease-out" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+              <div style={{ fontSize:15, fontWeight:800 }}>{"🔥 早鸟限时优惠"}</div>
+              <div style={{ background:"rgba(255,255,255,0.25)", padding:"3px 10px", borderRadius:8, fontSize:12, fontWeight:700 }}>{"首月 5 折"}</div>
+            </div>
+            <div style={{ fontSize:13, lineHeight:1.6, marginBottom:10, opacity:0.95 }}>
+              {"前 100 名付费用户专享首月半价。结账时输入优惠码："}
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+              <div style={{ background:"rgba(255,255,255,0.2)", border:"1px dashed rgba(255,255,255,0.5)", borderRadius:8, padding:"8px 16px", fontSize:18, fontWeight:800, letterSpacing:"0.1em", fontFamily:FONT }}>{"EARLYBIRD"}</div>
+              <button onClick={function() { if (navigator.clipboard) { navigator.clipboard.writeText("EARLYBIRD"); alert("已复制优惠码！"); } }} style={{ background:"rgba(255,255,255,0.25)", border:"none", borderRadius:8, padding:"8px 12px", color:"#fff", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:FONT }}>{"复制"}</button>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <div style={{ flex:1, height:6, background:"rgba(255,255,255,0.2)", borderRadius:3 }}>
+                <div style={{ width:"92%", height:"100%", background:"#fff", borderRadius:3 }} />
+              </div>
+              <span style={{ fontSize:12, fontWeight:700, whiteSpace:"nowrap" }}>{"仅剩 8%"}</span>
+            </div>
+          </div>
+        )}
+
         {/* 支付成功提示 */}
         {successMsg && (
           <div style={{ background:C.green, color:"#fff", padding:"14px 18px", borderRadius:12, marginBottom:14, textAlign:"center", fontSize:14, fontWeight:600, animation:"fadeUp 0.3s ease-out" }}>
