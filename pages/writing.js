@@ -576,12 +576,24 @@ export default function WritingApp() {
       var catInfo = CATEGORIES.find(function(c) { return c.key === selectedCategory; });
       var chatHistory = newChat.map(function(m) { return (m.role === "user" ? "学生: " : "教练: ") + m.content; }).join("\n");
 
+      // 写作画像个性化
+      var profileContext = "";
+      if (d.writingProfile && d.writingProfile.topics && d.writingProfile.topics.length > 0) {
+        profileContext = "\n\n【学生画像】关注话题：" + d.writingProfile.topics.join("、")
+          + (d.writingProfile.style ? "；风格：" + d.writingProfile.style : "")
+          + (d.writingProfile.personality ? "；性格：" + d.writingProfile.personality : "")
+          + "\n请结合学生的兴趣引导思考。";
+      }
+      var vocabProfileContext = userProfile ? "\n\n【生活画像】" + userProfile.slice(0, 200) : "";
+
       var sys = "你是苏格拉底式的英语写作教练。通过提问引导学生思考，绝不直接写内容或给出完整段落。学生可以用中文回答。"
         + "\n你的目标是帮学生找到想说什么，提炼出核心主题。在对话中自然地给出相关英文关键词（用括号标注）。"
+        + "\n在引导过程中，适时分享一个写作技巧（如 Show don't tell、论据+证据结构等），让学生感受到在学习写作方法。"
         + "\n每次回复控制在 2-3 句话以内，以一个引导性问题结尾。"
         + "\n当你觉得学生已经思考充分（通常 3-5 轮对话后），在回复末尾加上标记 [READY]。"
         + "\n\n写作类型：" + (catInfo ? catInfo.label : selectedCategory)
-        + "\n写作题目：" + selectedPrompt.prompt;
+        + "\n写作题目：" + selectedPrompt.prompt
+        + profileContext + vocabProfileContext;
 
       var text = await callAPIFast(sys, "对话记录：\n" + chatHistory + "\n\n请继续引导学生思考。", { maxTokens: 400 });
       setIdeaChat(function(prev) { return [...prev, { role: "assistant", content: text }]; });
@@ -701,8 +713,32 @@ export default function WritingApp() {
               vocabData.updatedAt = new Date().toISOString();
               localStorage.setItem(VOCAB_SKEY, JSON.stringify(vocabData));
             }
-          } catch(e) { console.warn("bridge→vocab sync error", e); }
+          } catch(e) { console.warn("bridge\u2192vocab sync error", e); }
         }
+        // ─── 写作画像提取（后台异步，不阻塞 UI） ───
+        (async function() {
+          try {
+            var profileSys = "根据以下学生作文，更新他的写作画像。输出 JSON："
+              + '{"topics":["学生关注的话题(最多5个)"],"style":"叙事风格倾向(一句话)","strengths":["写作强项(最多3个)"],"growthAreas":["成长空间(最多3个)"],"personality":"一句话性格/价值观总结"}';
+            var profileMsg = "作文题目：" + (selectedPrompt ? selectedPrompt.prompt : "") + "\n作文内容：" + essayText.slice(0, 500);
+            var profileText = await callAPIFast(profileSys, profileMsg, { maxTokens: 400 });
+            var profileParsed = tryJSON(profileText);
+            if (profileParsed && profileParsed.topics) {
+              updateAndSave(function(prev) {
+                var existing = prev.writingProfile || { topics: [], style: "", strengths: [], growthAreas: [], personality: "" };
+                // 合并话题（去重，保留最新 8 个）
+                var mergedTopics = [...new Set([...(profileParsed.topics || []), ...(existing.topics || [])])].slice(0, 8);
+                return { ...prev, writingProfile: {
+                  topics: mergedTopics,
+                  style: profileParsed.style || existing.style,
+                  strengths: profileParsed.strengths || existing.strengths,
+                  growthAreas: profileParsed.growthAreas || existing.growthAreas,
+                  personality: profileParsed.personality || existing.personality,
+                }};
+              });
+            }
+          } catch(e) { /* 画像提取失败不影响主流程 */ }
+        })();
       } else {
         setFeedback({ scores: { grammar: 5, structure: 5, vocabulary: 5, content: 5, coherence: 5 }, overall: 5, summary: "AI 评改暂时不可用，请稍后重试。", annotations: [], improvements: [], goldenQuotes: [], brainGains: {} });
       }
@@ -1241,6 +1277,25 @@ export default function WritingApp() {
                 <div style={{ fontSize:14, fontStyle:"italic", color:C.text, lineHeight:1.6 }}>
                   {'"' + d.goldenQuotes[0].text + '"'}
                 </div>
+              </div>
+            )}
+
+            {/* 写作画像 */}
+            {d.writingProfile && d.writingProfile.topics && d.writingProfile.topics.length > 0 && (
+              <div style={S.card}>
+                <div style={{ fontSize:14, fontWeight:700, marginBottom:8 }}>{"🎭 AI 对你的了解"}</div>
+                {d.writingProfile.personality && (
+                  <div style={{ fontSize:13, color:C.text, marginBottom:8, fontStyle:"italic", lineHeight:1.5 }}>{'"' + d.writingProfile.personality + '"'}</div>
+                )}
+                <div style={{ display:"flex", flexWrap:"wrap", gap:4, marginBottom:8 }}>
+                  {d.writingProfile.topics.map(function(t, i) {
+                    return <span key={i} style={{ fontSize:11, background:C.tealLight, color:C.teal, padding:"3px 8px", borderRadius:10, fontWeight:600 }}>{t}</span>;
+                  })}
+                </div>
+                {d.writingProfile.style && (
+                  <div style={{ fontSize:12, color:C.textSec, lineHeight:1.5 }}>{"风格：" + d.writingProfile.style}</div>
+                )}
+                <div style={{ fontSize:11, color:C.textSec, marginTop:6 }}>{"写得越多，AI 越懂你，推荐的题目越精准"}</div>
               </div>
             )}
 
