@@ -70,6 +70,7 @@ export default function PlanPage() {
   var [billing, setBilling] = useState("monthly");
   var [showBYO, setShowBYO] = useState(false);
   var [expandedFAQ, setExpandedFAQ] = useState(null);
+  var [showCalc, setShowCalc] = useState(false);
 
   var getPrice = function(plan) {
     if (!plan.price) return { display: "免费", note: "" };
@@ -121,9 +122,31 @@ export default function PlanPage() {
               <div style={{ fontSize:22, fontWeight:800, color:C.accent }}>24/7</div>
               <div style={{ fontSize:11, color:C.textSec }}>随时可学</div>
             </div>
-            <div>
-              <div style={{ fontSize:22, fontWeight:800, color:C.accent }}>1%</div>
-              <div style={{ fontSize:11, color:C.textSec }}>私教月费用</div>
+            <div style={{ position:"relative" }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:3 }}>
+                <span style={{ fontSize:22, fontWeight:800, color:C.accent }}>{"<1%"}</span>
+                <button onClick={function(e) { e.stopPropagation(); setShowCalc(!showCalc); }} style={{ width:16, height:16, borderRadius:"50%", border:"1px solid " + C.gold, background:showCalc ? C.gold : "transparent", color:showCalc ? "#fff" : C.gold, fontSize:10, fontWeight:700, cursor:"pointer", display:"inline-flex", alignItems:"center", justifyContent:"center", padding:0, fontFamily:FONT, lineHeight:1 }}>?</button>
+              </div>
+              <div style={{ fontSize:11, color:C.textSec }}>私教费用</div>
+              {showCalc && (
+                <div style={{ position:"absolute", top:"100%", right:-40, marginTop:8, background:C.card, borderRadius:12, padding:"14px 16px", boxShadow:"0 8px 30px rgba(0,0,0,0.15)", border:"1px solid " + C.border, width:260, zIndex:10, fontSize:12, lineHeight:1.7, color:C.text, textAlign:"left" }}>
+                  <div style={{ fontWeight:700, marginBottom:6, color:C.accent }}>费用对比计算</div>
+                  <div style={{ marginBottom:8 }}>
+                    <div style={{ fontWeight:600 }}>真人私教：</div>
+                    <div style={{ color:C.textSec }}>每天 1 小时 x 30 天 x $100/小时</div>
+                    <div style={{ fontWeight:700, color:C.red }}>= $3,000/月</div>
+                  </div>
+                  <div style={{ marginBottom:8 }}>
+                    <div style={{ fontWeight:600 }}>Know U. Basic：</div>
+                    <div style={{ color:C.textSec }}>每天 1 小时 AI 私教课</div>
+                    <div style={{ fontWeight:700, color:C.green }}>= $20/月</div>
+                  </div>
+                  <div style={{ borderTop:"1px solid " + C.border, paddingTop:8, fontWeight:700, color:C.accent }}>
+                    {"Basic 仅为私教费用的 0.7%"}
+                  </div>
+                  <div style={{ fontSize:10, color:C.textSec, marginTop:4 }}>*按国内/加州 1v1 私教 $100/小时计算</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
