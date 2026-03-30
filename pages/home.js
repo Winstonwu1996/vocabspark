@@ -232,6 +232,68 @@ export default function HomePage() {
         </section>
       </FadeInSection>
 
+      {/* ═══ PARENT TESTIMONIALS — WeChat Style ═══ */}
+      <FadeInSection>
+        <section style={{ ...container, padding: "40px 20px" }}>
+          <h2 style={{ fontSize: 22, fontWeight: 800, textAlign: "center", marginBottom: 6 }}>家长们怎么说</h2>
+          <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 24 }}>来自妈妈群的真实反馈</p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 480, margin: "0 auto" }}>
+
+            {/* Conversation 1: Vocab feedback */}
+            {(() => {
+              var WxBubble = ({ name, avatar, text, time, isRight }) => (
+                <div style={{ display: "flex", flexDirection: isRight ? "row-reverse" : "row", gap: 8, alignItems: "flex-start", marginBottom: 4 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 6, background: isRight ? "linear-gradient(135deg, #f093fb, #f5576c)" : "linear-gradient(135deg, #4facfe, #00f2fe)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#fff", fontWeight: 700, flexShrink: 0 }}>{avatar}</div>
+                  <div style={{ maxWidth: "75%" }}>
+                    <div style={{ fontSize: 11, color: C.textSec, marginBottom: 3, textAlign: isRight ? "right" : "left" }}>{name}</div>
+                    <div style={{ background: isRight ? "#95EC69" : "#fff", color: C.text, padding: "9px 12px", borderRadius: isRight ? "12px 4px 12px 12px" : "4px 12px 12px 12px", fontSize: 14, lineHeight: 1.7, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>{text}</div>
+                  </div>
+                </div>
+              );
+              var WxTime = ({ text }) => (
+                <div style={{ textAlign: "center", fontSize: 11, color: C.textSec, opacity: 0.6, margin: "8px 0" }}>{text}</div>
+              );
+
+              return (
+                <>
+                  {/* Thread 1 */}
+                  <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0" }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>📖 SSAT 备考妈妈群</div>
+                    <WxTime text="昨天 21:32" />
+                    <WxBubble name="Emily妈" avatar="E" text="你们试了那个 Know U. 没？我家 Emily 昨天背 abandon，居然笑了说「这不就是上周我们在网球场那件事吗」" />
+                    <WxBubble name="Sophia妈" avatar="S" text="对对对！我女儿也是，以前背单词要催，现在自己打开，说 AI 写的故事太搞笑了 😂" isRight />
+                    <WxBubble name="Emily妈" avatar="E" text="关键是间隔重复帮她安排复习，不用我操心了。上周模考词汇涨了 40 分" />
+                    <WxBubble name="Lily妈" avatar="L" text="真人私教一小时 $100+，这个 AI 私教免费的效果居然差不多… 性价比太高了 💰" isRight />
+                  </div>
+
+                  {/* Thread 2 */}
+                  <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0" }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>✍️ 英语写作交流群</div>
+                    <WxTime text="今天 09:15" />
+                    <WxBubble name="Jason妈" avatar="J" text="Writing 那个模块太厉害了，AI 不直接给答案，一直问问题引导孩子自己想。我儿子说像在跟一个超有耐心的老师聊天" />
+                    <WxBubble name="Mia妈" avatar="M" text="我女儿最喜欢那个「六维雷达图」！每次写完作文都要看自己哪个维度涨了。上周逻辑力从 62 涨到 78，开心了一整天" isRight />
+                    <WxBubble name="Jason妈" avatar="J" text="对！跟健身打卡一样，孩子每天关注自己的「脑力进化」得分。以前最怕写作文，现在主动要求多写一篇 🧠" />
+                    <WxBubble name="Mia妈" avatar="M" text="而且 AI 会根据进度加难度。Mia 说一开始很简单，现在挑战变多了，但她反而更有成就感。跟游戏升级一样 🎮" isRight />
+                  </div>
+
+                  {/* Thread 3 */}
+                  <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0" }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>💡 AI 教育讨论群</div>
+                    <WxTime text="今天 14:08" />
+                    <WxBubble name="David妈" avatar="D" text="我找了个真人外教每周上一次课，然后平时用 Know U. 做每日练习。真人老师负责口语和互动，AI 私教负责词汇和写作训练 🤝" />
+                    <WxBubble name="Olivia妈" avatar="O" text="这个组合绝了！真人私教 $400/月 4 节课，Know U. 免费每天练，加起来效果比单请私教好太多" isRight />
+                    <WxBubble name="David妈" avatar="D" text="最惊喜的是，单词、阅读、写作是打通的。阅读里遇到的生词直接进词汇课，写作时还能引用阅读里收藏的好句子 🔄" />
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+
+          <p style={{ fontSize: 12, color: C.textSec, textAlign: "center", marginTop: 16, opacity: 0.5 }}>* 以上为模拟场景，基于真实用户反馈改编</p>
+        </section>
+      </FadeInSection>
+
       {/* ═══ ORIGIN STORY ═══ */}
       <FadeInSection>
         <section style={{ background: "linear-gradient(135deg, " + C.goldLight + " 0%, " + C.accentLight + " 100%)", padding: "48px 20px", margin: "20px 0" }}>
