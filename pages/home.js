@@ -257,33 +257,34 @@ export default function HomePage() {
 
               return (
                 <>
-                  {/* Thread 1 */}
+                  {/* Thread 1: 单词 */}
                   <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0" }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>📖 SSAT 备考妈妈群</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>📖 SSAT 妈妈群</div>
                     <WxTime text="昨天 21:32" />
-                    <WxBubble name="Emily妈" avatar="E" text="你们试了那个 Know U. 没？我家 Emily 昨天背 abandon，居然笑了说「这不就是上周我们在网球场那件事吗」" />
-                    <WxBubble name="Sophia妈" avatar="S" text="对对对！我女儿也是，以前背单词要催，现在自己打开，说 AI 写的故事太搞笑了 😂" isRight />
-                    <WxBubble name="Emily妈" avatar="E" text="关键是间隔重复帮她安排复习，不用我操心了。上周模考词汇涨了 40 分" />
-                    <WxBubble name="Lily妈" avatar="L" text="真人私教一小时 $100+，这个 AI 私教免费的效果居然差不多… 性价比太高了 💰" isRight />
+                    <WxBubble name="Emily妈" avatar="E" text="有人试过那个 Know U 吗 我家娃昨天背 abandon 居然在笑 说这不就是上周网球场那事吗😂" />
+                    <WxBubble name="Sophia妈" avatar="S" text="哈哈哈 我女儿也是 以前背单词跟要命似的 现在自己打开的" isRight />
+                    <WxBubble name="Emily妈" avatar="E" text="就是有些词的例句有点长 不过孩子倒不介意 说比干巴巴的释义有意思多了" />
+                    <WxBubble name="Sophia妈" avatar="S" text="主要是它会自动安排复习 我不用盯了 省心" isRight />
                   </div>
 
-                  {/* Thread 2 */}
+                  {/* Thread 2: 写作 */}
                   <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0" }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>✍️ 英语写作交流群</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>✍️ 英语写作群</div>
                     <WxTime text="今天 09:15" />
-                    <WxBubble name="Jason妈" avatar="J" text="Writing 那个模块太厉害了，AI 不直接给答案，一直问问题引导孩子自己想。我儿子说像在跟一个超有耐心的老师聊天" />
-                    <WxBubble name="Mia妈" avatar="M" text="我女儿最喜欢那个「六维雷达图」！每次写完作文都要看自己哪个维度涨了。上周逻辑力从 62 涨到 78，开心了一整天" isRight />
-                    <WxBubble name="Jason妈" avatar="J" text="对！跟健身打卡一样，孩子每天关注自己的「脑力进化」得分。以前最怕写作文，现在主动要求多写一篇 🧠" />
-                    <WxBubble name="Mia妈" avatar="M" text="而且 AI 会根据进度加难度。Mia 说一开始很简单，现在挑战变多了，但她反而更有成就感。跟游戏升级一样 🎮" isRight />
+                    <WxBubble name="Jason妈" avatar="J" text="那个写作课挺有意思 AI 不给答案 就一直问问题 Jason 说有点烦但是确实得自己想" />
+                    <WxBubble name="Mia妈" avatar="M" text="对 Mia 喜欢看那个雷达图 每次写完看哪个涨了 跟健身似的哈哈" isRight />
+                    <WxBubble name="Jason妈" avatar="J" text="嗯 而且难度会慢慢加上去 一开始挺简单的 现在他偶尔会说有点难 但没放弃 这对我儿子来说已经很不容易了" />
+                    <WxBubble name="Mia妈" avatar="M" text="是的 能坚持用下去就行 慢慢来呗" isRight />
                   </div>
 
-                  {/* Thread 3 */}
+                  {/* Thread 3: 组合使用 */}
                   <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0" }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>💡 AI 教育讨论群</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>💬 家长闲聊</div>
                     <WxTime text="今天 14:08" />
-                    <WxBubble name="David妈" avatar="D" text="我找了个真人外教每周上一次课，然后平时用 Know U. 做每日练习。真人老师负责口语和互动，AI 私教负责词汇和写作训练 🤝" />
-                    <WxBubble name="Olivia妈" avatar="O" text="这个组合绝了！真人私教 $400/月 4 节课，Know U. 免费每天练，加起来效果比单请私教好太多" isRight />
-                    <WxBubble name="David妈" avatar="D" text="最惊喜的是，单词、阅读、写作是打通的。阅读里遇到的生词直接进词汇课，写作时还能引用阅读里收藏的好句子 🔄" />
+                    <WxBubble name="David妈" avatar="D" text="我们是外教每周一次课 平时用这个练 外教管口语 AI 管单词和写作 搭着用还行" />
+                    <WxBubble name="Olivia妈" avatar="O" text="这思路好 外教太贵了一周只能一次 平时总不能空着" isRight />
+                    <WxBubble name="David妈" avatar="D" text="对 而且它单词和写作好像是通的 写作里遇到不会的词可以直接去背 这个设计蛮好" />
+                    <WxBubble name="Olivia妈" avatar="O" text="反正免费 让孩子先用着呗 能养成每天学一点的习惯就赚了" isRight />
                   </div>
                 </>
               );
