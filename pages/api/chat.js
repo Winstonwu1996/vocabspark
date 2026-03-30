@@ -2,8 +2,6 @@ export const config = {
   maxDuration: 60,
 };
 
-let providerStartCursor = 0;
-
 const buildProviders = () => {
   const providers = [];
 
@@ -33,7 +31,7 @@ const buildProviders = () => {
       family: "gemini",
       url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
       apiKey: () => process.env.GOOGLE_AI_API_KEY,
-      model: "gemini-2.5-flash-lite",
+      model: process.env.GEMINI_MODEL || "gemini-2.5-flash-lite",
     });
   }
 
@@ -43,9 +41,7 @@ const buildProviders = () => {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Soft pacing per provider to reduce burst spikes and smooth tail latency.
-// NOTE: This pacing is per-serverless-instance (in-memory). Vercel cold starts
-// create new instances with fresh state, so pacing does NOT coordinate across
-// concurrent users. The real rate-limit protection is callWithRetry's 429 handling.
+// NOTE: per-serverless-instance only. The real rate-limit protection is 429 handling.
 const providerPacing = {
   "deepseek-a": { nextAt: 0, gapMs: 180 },
   "deepseek-b": { nextAt: 0, gapMs: 180 },
@@ -99,14 +95,14 @@ async function callProvider(provider, system, message, maxTokens, timeoutMs) {
 }
 
 async function callWithRetry(provider, system, message, maxTokens, timeoutMs) {
-  // For 429 errors, retry up to 2 times with exponential backoff (1s, 2s)
   for (let attempt = 0; attempt <= 2; attempt++) {
     try {
       await applyProviderPacing(provider.name);
       return await callProvider(provider, system, message, maxTokens, timeoutMs);
     } catch (err) {
-      if (err.status === 429 && attempt < 2) {
-        await sleep(1000 * Math.pow(2, attempt)); // 1s, 2s
+      const isRetryable = err.status === 429 || err.name === "AbortError";
+      if (isRetryable && attempt < 2) {
+        await sleep(1000 * Math.pow(2, attempt));
         continue;
       }
       throw err;
@@ -126,7 +122,6 @@ export default async function handler(req, res) {
   }
 
   const tokens = maxTokens || 2000;
-  const timeoutMs = Number(process.env.CHAT_PROVIDER_TIMEOUT_MS || 30000);
   const errors = [];
 
   // BYO API Key: 如果用户提供了自己的 key，优先使用
@@ -148,7 +143,7 @@ export default async function handler(req, res) {
         family: "gemini",
         url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
         apiKey: () => userApiKeys.gemini,
-        model: "gemini-2.5-flash-lite",
+        model: process.env.GEMINI_MODEL || "gemini-2.5-flash-lite",
       });
     }
   } else {
@@ -158,13 +153,20 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "No provider API keys configured" });
   }
 
+  // Calculate per-provider timeout: leave 5s buffer for Vercel, divide remaining among providers
+  const totalBudgetMs = 55000;
+  const timeoutMs = Math.min(
+    Number(process.env.CHAT_PROVIDER_TIMEOUT_MS || 20000),
+    Math.floor(totalBudgetMs / providers.length)
+  );
+
   const deepseekProviders = providers.filter((p) => p.family === "deepseek");
   const fallbackProviders = providers.filter((p) => p.family !== "deepseek");
 
   let orderedProviders;
   if (deepseekProviders.length > 0) {
-    const start = providerStartCursor % deepseekProviders.length;
-    providerStartCursor = (providerStartCursor + 1) % deepseekProviders.length;
+    // Use timestamp-based rotation instead of mutable counter to avoid race conditions
+    const start = Math.floor(Date.now() / 1000) % deepseekProviders.length;
     orderedProviders = deepseekProviders
       .slice(start)
       .concat(deepseekProviders.slice(0, start))
@@ -204,8 +206,8 @@ export default async function handler(req, res) {
     }
   }
 
+  // Generic error message to client; details logged server-side above
   return res.status(500).json({
-    error: "All providers failed",
-    details: errors,
+    error: "AI 服务暂时不可用，请稍后重试",
   });
 }

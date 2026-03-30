@@ -1024,7 +1024,7 @@ export default function App() {
     var file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
     if (!userRef.current) {
-      alert('📷 照片上传功能需要注册账号\n\n注册免费，还可解锁每日无限学习 🎉');
+      alert('📷 照片上传功能需要注册账号\n\n注册免费，还可解锁每日 '+DAILY_LIMIT_REGISTERED+' 词学习 + 云同步 🎉');
       if (photoRef.current) photoRef.current.value = '';
       return;
     }
@@ -1892,7 +1892,7 @@ export default function App() {
       try {
         var raw = await callAPIFast(sysP, buildClozePrompt(newLearned.slice(-10)));
         var parsed = tryJSON(raw);
-        if (parsed?.questions) {
+        if (parsed?.questions && Array.isArray(parsed.questions) && parsed.questions.length > 0 && parsed.questions.every(function(q) { return q.answer && q.options; })) {
           setClozeData(parsed); setClozeAnswers({}); setClozeSubmitted(false);
         } else {
           if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
@@ -1909,7 +1909,7 @@ export default function App() {
     if (newLearned.length > 0 && newLearned.length % 5 === 0) {
       // Phase B: instant if pre-fetched during batch loading
       var cachedReview = dataCache.current["_review_" + newLearned.length];
-      if (cachedReview?.questions) {
+      if (cachedReview?.questions && Array.isArray(cachedReview.questions) && cachedReview.questions.length > 0) {
         setReviewData(cachedReview); setReviewAnswers({}); setReviewSubmitted(false); setPhase("review"); return;
       }
       // Phase A: switch phase immediately so spinner shows, then fetch
@@ -1917,7 +1917,7 @@ export default function App() {
       try {
         var raw = await callAPIFast(sysP, buildReviewPrompt(newLearned.slice(-5)));
         var parsed = tryJSON(raw);
-        if (parsed?.questions) {
+        if (parsed?.questions && Array.isArray(parsed.questions) && parsed.questions.length > 0 && parsed.questions.every(function(q) { return q.answer && q.options; })) {
           setReviewData(parsed); setReviewAnswers({}); setReviewSubmitted(false);
         } else {
           if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
@@ -3497,7 +3497,7 @@ export default function App() {
                 <h3 style={{fontSize:19,fontWeight:700,textAlign:"center",margin:"0 0 4px"}}>登录 / 注册</h3>
                 <p style={{fontSize:13,color:C.textSec,textAlign:"center",lineHeight:1.6,margin:"0 0 20px"}}>新用户输入邮箱即自动注册，老用户同一邮箱直接登录</p>
                 <div style={{background:C.tealLight,borderRadius:10,padding:"12px 14px",marginBottom:20,fontSize:13,lineHeight:1.9,color:C.text}}>
-                  ✅ 每日无限学习（未登录用户 {DAILY_LIMIT_GUEST} 词/天）<br/>
+                  ✅ 每日 {DAILY_LIMIT_REGISTERED} 词（未登录仅 {DAILY_LIMIT_GUEST} 词/天）<br/>
                   ☁️ 进度云端同步，换设备不丢<br/>
                   📊 完整学习历史记录<br/>
                   <span style={{fontSize:12,color:C.textSec}}>注册免费，基础功能永久可用</span>
@@ -3571,7 +3571,7 @@ export default function App() {
       {/* Daily limit banner for guests */}
       {!user && todayCount > 0 && (
         <div onClick={() => setShowLogin(true)} style={{fontSize:12,textAlign:"center",padding:"5px 12px",cursor:"pointer",borderRadius:8,margin:"4px 0",background: todayCount>=DAILY_LIMIT_GUEST ? C.redLight : todayCount>=7 ? C.goldLight : C.accentLight,color: todayCount>=DAILY_LIMIT_GUEST ? C.red : todayCount>=7 ? C.gold : C.accent,fontFamily:FONT,fontWeight:600}}>
-          {todayCount>=DAILY_LIMIT_GUEST ? "非注册用户今日 "+DAILY_LIMIT+" 词已学完 · 注册后无限继续 →" : "今日已学 "+todayCount+" / "+DAILY_LIMIT+" 词（非注册用户上限）· 注册后无限学习 →"}
+          {todayCount>=DAILY_LIMIT_GUEST ? "非注册用户今日 "+DAILY_LIMIT_GUEST+" 词已学完 · 注册后每日 10 词 →" : "今日已学 "+todayCount+" / "+DAILY_LIMIT_GUEST+" 词（非注册用户上限）· 注册后每日 10 词 →"}
         </div>
       )}
       <div style={S.topBar}>
@@ -3709,7 +3709,7 @@ export default function App() {
                         <div style={{fontWeight:700,fontSize:15,marginBottom:4,color:C.teal}}>✅ 已登录</div>
                         <div style={{fontSize:13,color:C.textSec,marginBottom:12}}>{user.email}</div>
                         <div style={{fontSize:13,color:C.text,lineHeight:1.9}}>
-                          🎉 <strong>推广期</strong> · 每日无限学习<br/>
+                          🎉 <strong>推广期</strong> · 每日 {DAILY_LIMIT_REGISTERED} 词<br/>
                           ☁️ 学习进度自动云端同步<br/>
                           📱 跨设备继续学习
                         </div>
@@ -4032,7 +4032,7 @@ export default function App() {
                 <h3 style={{fontSize:19,fontWeight:700,textAlign:"center",margin:"0 0 4px"}}>登录 / 注册</h3>
                 <p style={{fontSize:13,color:C.textSec,textAlign:"center",lineHeight:1.6,margin:"0 0 20px"}}>新用户输入邮箱即自动注册，老用户同一邮箱直接登录</p>
                 <div style={{background:C.tealLight,borderRadius:10,padding:"12px 14px",marginBottom:20,fontSize:13,lineHeight:1.9,color:C.text}}>
-                  ✅ 每日无限学习（未登录用户 {DAILY_LIMIT_GUEST} 词/天）<br/>
+                  ✅ 每日 {DAILY_LIMIT_REGISTERED} 词（未登录仅 {DAILY_LIMIT_GUEST} 词/天）<br/>
                   ☁️ 进度云端同步，换设备不丢<br/>
                   📊 完整学习历史记录<br/>
                   <span style={{fontSize:12,color:C.textSec}}>注册免费，基础功能永久可用</span>
