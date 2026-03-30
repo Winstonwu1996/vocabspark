@@ -432,7 +432,7 @@ export default function PlanPage() {
         <div style={{ textAlign:"center", marginBottom:40 }}>
           <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>不确定？先免费体验，感受 AI 私教的效果</div>
           <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
-            <Link href="/" style={{ ...S.ghostBtn, textDecoration:"none", display:"inline-flex", alignItems:"center", gap:4 }}>词汇课体验</Link>
+            <Link href="/vocab" style={{ ...S.ghostBtn, textDecoration:"none", display:"inline-flex", alignItems:"center", gap:4 }}>词汇课体验</Link>
             <Link href="/writing" style={{ ...S.primaryBtn, textDecoration:"none", display:"inline-flex" }}>写作课体验</Link>
           </div>
         </div>
@@ -440,7 +440,7 @@ export default function PlanPage() {
         {/* Footer */}
         <div style={{ borderTop:"1px solid " + C.border, padding:"20px 0 10px", textAlign:"center", fontSize:11, color:C.textSec, lineHeight:1.8 }}>
           <div style={{ marginBottom:6 }}>
-            <Link href="/" style={{ color:C.textSec, textDecoration:"none", marginRight:16 }}>Vocab 词汇课</Link>
+            <Link href="/vocab" style={{ color:C.textSec, textDecoration:"none", marginRight:16 }}>Vocab 词汇课</Link>
             <Link href="/writing" style={{ color:C.textSec, textDecoration:"none", marginRight:16 }}>Writing 写作课</Link>
             <Link href="/plan" style={{ color:C.accent, textDecoration:"none", fontWeight:600 }}>Plan 方案</Link>
           </div>

@@ -483,6 +483,12 @@ export default function App() {
   var [screen, setScreen] = useState("setup");
   var [learningTime, setLearningTime] = useState({ totalMinutes: 0, todayMinutes: 0 });
   var [showWelcome, setShowWelcome] = useState(true);
+  useEffect(function() {
+    if (typeof window !== "undefined") {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get("from") === "home") setShowWelcome(false);
+    }
+  }, []);
   var [showTipJar, setShowTipJar] = useState(false);
   var [tipDismissed, setTipDismissed] = useState(false);
   var [showSettings, setShowSettings] = useState(false);
@@ -2854,7 +2860,7 @@ export default function App() {
           return <div style={{background:"linear-gradient(135deg, "+C.goldLight+" 0%, "+C.accentLight+" 100%)",border:"1px solid "+C.gold+"44",borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
             <span style={{fontSize:24}}>🔥</span>
             <div>
-              <div style={{fontSize:13,fontWeight:700,color:C.accent}}>已连续 {_disp.days} 天，别断了！</div>
+              <div style={{fontSize:13,fontWeight:700,color:C.accent}}>已连续 {_disp.days} 天！再来一把？</div>
               <div style={{fontSize:11,color:C.textSec}}>今天还没完成学习，完成后连续天数 +1</div>
             </div>
           </div>;
@@ -3446,7 +3452,7 @@ export default function App() {
             </div>;
           })()}
           <div style={{background:C.bg,border:"1px dashed "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>🚦 P0 / P1 / P2 阶段看板</div>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>📋 学习进度看板</div>
             <div style={{display:"flex",gap:8,flexWrap:"wrap",fontSize:12,marginBottom:6}}>
               <span style={{padding:"2px 8px",borderRadius:999,background:phaseView.P0?C.greenLight:C.redLight,color:phaseView.P0?C.green:C.red,fontWeight:700}}>P0 基础学习 {phaseView.P0?"✅":"⏳"}</span>
               <span style={{padding:"2px 8px",borderRadius:999,background:phaseView.P1?C.greenLight:C.redLight,color:phaseView.P1?C.green:C.red,fontWeight:700}}>P1 复习与计划 {phaseView.P1?"✅":"⏳"}</span>
@@ -3455,7 +3461,7 @@ export default function App() {
             <div style={{fontSize:12,color:C.textSec,lineHeight:1.7}}>当前进度：已学习 {phaseView.learnedCount}/{phaseView.totalWords}，到期 {phaseView.dueCount}，重点词 {phaseView.focusCount}。</div>
           </div>
           <div style={{background:C.goldLight,border:"1px solid "+C.gold,borderRadius:10,padding:"12px 14px",fontSize:13,lineHeight:1.6,color:C.text}}>
-            <div style={{fontWeight:700,marginBottom:4}}>⚡ 行动建议 (Action Items)</div>
+            <div style={{fontWeight:700,marginBottom:4}}>⚡ 学习建议</div>
             <ul style={{margin:0,paddingLeft:20}}>
               {statsView.dueCount > 0 && <li><strong>有 {statsView.dueCount} 个到期词待复习</strong>，建议先做快速复习清空队列。</li>}
               {(statsView.statuses.uncertain||0) + (statsView.statuses.error||0) > 0 && <li><strong>你的易错/不确定词有 {(statsView.statuses.uncertain||0) + (statsView.statuses.error||0)} 个</strong>，请在精力充沛时优先点击“深度攻克”。</li>}
@@ -3464,7 +3470,7 @@ export default function App() {
             </ul>
           </div>
           <div style={{marginTop:16,padding:"16px",background:C.redLight,border:"1px dashed "+C.red,borderRadius:10,textAlign:"center"}}>
-            <div style={{fontWeight:700,fontSize:14,color:C.red,marginBottom:8}}>🚨 危险区域 (Danger Zone)</div>
+            <div style={{fontWeight:700,fontSize:14,color:C.red,marginBottom:8}}>⚠️ 数据管理</div>
             <div style={{fontSize:12,color:C.textSec,marginBottom:12,lineHeight:1.6}}>清空当前账号的所有学习进度、单词本、画像与积分，从零开始。<br/><strong>注意：此操作不可逆！</strong></div>
             <button onClick={handleFactoryReset} style={{...S.smallBtn,background:C.red,color:"#fff",border:"none",padding:"8px 16px",fontWeight:600}}>⚠️ 初始化（清除所有记录）</button>
           </div>
@@ -3534,12 +3540,12 @@ export default function App() {
               <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fknowulearning.com&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="QR Code" style={{display:"block",borderRadius:6}} />
             </div>
             <div style={{fontSize:12,color:C.textSec,marginBottom:16}}>📱 手机扫码 / 长按保存发朋友圈</div>
-            <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>{"AI 英语私教，比真人私教便宜 90%，用你的生活场景 1 对 1 教英语，效果超赞 🎉\n👉 knowulearning.com"}</div>
+            <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>{"AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉\n👉 knowulearning.com"}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {typeof navigator !== "undefined" && navigator.share && (
-                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{ try { await navigator.share({ title:"Vocab by Know U. — AI 英语私教", text:"AI 英语私教，比真人私教便宜 90%，用你的生活场景 1 对 1 教英语，效果超赞 🎉", url:"https://knowulearning.com" }); } catch(e){} }}>📱 分享到微信 / 其他 App</button>
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{ try { await navigator.share({ title:"Vocab by Know U. — AI 英语私教", text:"AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉", url:"https://knowulearning.com" }); } catch(e){} }}>📱 分享到微信 / 其他 App</button>
               )}
-              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{ navigator.clipboard?.writeText("AI 英语私教，比真人私教便宜 90%，用你的生活场景 1 对 1 教英语，效果超赞 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接")); }}>📋 复制邀请文案</button>
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{ navigator.clipboard?.writeText("AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接")); }}>📋 复制邀请文案</button>
               <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>关闭</button>
             </div>
           </div>
@@ -3697,7 +3703,7 @@ export default function App() {
                     <div style={S.statCard}><div style={S.statNum}>{pv.skippedCount}</div><div style={S.statLabel}>快筛跳过</div></div>
                     <div style={S.statCard}><div style={S.statNum}>{pv.unlearnedCount}</div><div style={S.statLabel}>待学习词数</div></div>
                   </div>
-                  <div style={{fontSize:12,color:C.textSec,marginBottom:10}}>阶段概览：P0 {ph.P0?"✅":"⏳"} · P1 {ph.P1?"✅":"⏳"} · P2 {ph.P2?"✅":"⏳"}</div>
+                  <div style={{fontSize:12,color:C.textSec,marginBottom:10}}>进度：基础学习 {ph.P0?"✅":"⏳"} · 复习计划 {ph.P1?"✅":"⏳"} · 统计管理 {ph.P2?"✅":"⏳"}</div>
                   <button style={{...S.primaryBtn,background:C.teal}} onClick={() => { setShowSettings(false); setScreen("setup"); setSetupTab("stats"); }}>打开完整统计页</button>
                 </div>;
               })()}
@@ -3719,7 +3725,7 @@ export default function App() {
                   ) : (
                     <div>
                       <div style={{background:C.goldLight,border:"1px solid "+C.gold,borderRadius:12,padding:"16px 18px",marginBottom:16}}>
-                        <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>🎁 推广期福利</div>
+                        <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>🎁 推广期免费体验</div>
                         <div style={{fontSize:13,color:C.text,lineHeight:1.9,marginBottom:12}}>
                           注册账号，现在完全免费：<br/>
                           ✅ 每日<strong>无限</strong>学习（免费版每日 {DAILY_LIMIT_GUEST} 词）<br/>
@@ -4115,18 +4121,18 @@ export default function App() {
 
             {/* 邀请文案 */}
             <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>
-              {"AI 英语私教，比真人私教便宜 90%，用你的生活场景 1 对 1 教英语，效果超赞 🎉\n👉 knowulearning.com"}
+              {"AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉\n👉 knowulearning.com"}
             </div>
 
             {/* 按钮区 */}
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {typeof navigator !== "undefined" && navigator.share && (
                 <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{
-                  try { await navigator.share({ title:"Vocab by Know U. — AI 英语私教", text:"AI 英语私教，比真人私教便宜 90%，用你的生活场景 1 对 1 教英语，效果超赞 🎉", url:"https://knowulearning.com" }); } catch(e){}
+                  try { await navigator.share({ title:"Vocab by Know U. — AI 英语私教", text:"AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉", url:"https://knowulearning.com" }); } catch(e){}
                 }}>📱 分享到微信 / 其他 App</button>
               )}
               <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{
-                navigator.clipboard?.writeText("AI 英语私教，比真人私教便宜 90%，用你的生活场景 1 对 1 教英语，效果超赞 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接"));
+                navigator.clipboard?.writeText("AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接"));
               }}>📋 复制邀请文案</button>
               <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>关闭</button>
             </div>

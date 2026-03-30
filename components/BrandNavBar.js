@@ -1,6 +1,7 @@
 /* ─── Know U. Learning — 共享导航栏组件 ─── */
 import Link from 'next/link';
 import { C, S, FONT } from '../lib/theme';
+import { UserAvatar } from './UserCenter';
 
 export var BrandUIcon = ({ size }) => {
   var s = size || 36;
@@ -19,7 +20,7 @@ export var BrandSparkIcon = ({ size, marginBottom }) => {
   );
 };
 
-export var BrandNavBar = ({ activeTab, stats, studyStreak }) => {
+export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterClick }) => {
   activeTab = activeTab || "vocab";
   var pct = stats && stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
   var hasStats = stats && stats.xp > 0;
@@ -40,17 +41,20 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak }) => {
   return (
   <div style={{ background:C.card, marginBottom:0, borderRadius:"0 0 16px 16px", boxShadow:"0 4px 16px rgba(44,36,32,0.08)" }}>
     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+      <Link href="/" style={{ display:"flex", alignItems:"center", gap:8, textDecoration:"none" }}>
         <BrandUIcon size={38} />
         <div>
           <div style={{ fontSize:15, letterSpacing:"-0.02em", lineHeight:1.1 }}><span style={{ fontWeight:800, color:C.text, textShadow:"0 1px 2px rgba(44,36,32,0.15)" }}>Know U.</span><span style={{ fontWeight:500, color:C.textSec, marginLeft:4, textShadow:"0 1px 1px rgba(44,36,32,0.08)" }}>Learning</span></div>
-          <div style={{ fontSize:10, color:C.textSec, opacity:0.7, letterSpacing:"0.02em", marginTop:1 }}>Your 1-on-1 AI English Tutor</div>
+          <div style={{ fontSize:10, color:C.textSec, opacity:0.7, letterSpacing:"0.02em", marginTop:1 }}>Personal AI Language Tutor</div>
         </div>
-      </div>
-      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-        <Link href="/" style={tabStyle("vocab")}>Vocab</Link>
-        <Link href="/writing" style={tabStyle("writing")}>Writing <span style={{fontSize:8,fontWeight:700,color:"#fff",background:C.accent,borderRadius:3,padding:"1px 4px",marginLeft:2,verticalAlign:"middle"}}>Beta</span></Link>
-        <Link href="/plan" style={{ textDecoration:"none", fontSize:11, fontWeight:600, color: activeTab === "plan" ? "#fff" : C.gold, background: activeTab === "plan" ? C.gold : C.goldLight, padding:"3px 8px", borderRadius:6, border:"1px solid " + C.gold + "44" }}>Pro</Link>
+      </Link>
+      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+        <Link href="/vocab" style={tabStyle("vocab")}>Vocab</Link>
+        <Link href="/writing" style={tabStyle("writing")}>Writing</Link>
+        <span style={{ fontSize:12, color:C.textSec, opacity:0.5 }}>Reading<sup style={{fontSize:8,color:C.teal,fontWeight:700}}>Soon</sup></span>
+        <div onClick={onUserCenterClick} style={{ marginLeft:4, cursor:"pointer" }}>
+          <UserAvatar user={user} size={30} />
+        </div>
       </div>
     </div>
     {(hasStats || hasStreak) && (
@@ -64,6 +68,6 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak }) => {
   );
 };
 
-export var AppHeroHeader = ({ stats, studyStreak }) => (
-  <BrandNavBar activeTab="vocab" stats={stats} studyStreak={studyStreak} />
+export var AppHeroHeader = ({ stats, studyStreak, user, onUserCenterClick }) => (
+  <BrandNavBar activeTab="vocab" stats={stats} studyStreak={studyStreak} user={user} onUserCenterClick={onUserCenterClick} />
 );
