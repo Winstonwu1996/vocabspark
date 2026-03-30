@@ -111,13 +111,15 @@ export default function UserCenter({ open, onClose, user, stats, studyStreak, st
               <div style={{ textAlign:"center", marginBottom:20 }}>
                 <UserAvatar size={64} />
                 <h3 style={{ fontSize:18, fontWeight:700, margin:"12px 0 4px", color:C.text }}>登录 / 注册</h3>
-                <p style={{ fontSize:13, color:C.textSec, margin:0 }}>注册后享受完整 AI 私教体验</p>
+                <p style={{ fontSize:13, color:C.textSec, margin:0 }}>免费注册，解锁完整学习体验</p>
               </div>
 
               <div style={{ background:C.tealLight, borderRadius:10, padding:"12px 14px", marginBottom:20, fontSize:13, lineHeight:1.8, color:C.text }}>
-                ✅ 每日 10 词学习<br/>
+                <div style={{ fontSize:12, color:C.teal, fontWeight:700, marginBottom:4 }}>注册后解锁</div>
+                📖 词汇·阅读·写作 三合一 AI 私教<br/>
+                🔓 每日学习量翻倍（游客仅 5 词/天）<br/>
                 ☁️ 进度云端同步，换设备不丢<br/>
-                📊 完整学习统计与复习日程
+                📊 完整学习统计与智能复习日程
               </div>
 
               <button onClick={onLogin} style={{ ...S.bigBtn, marginBottom:16 }}>登录 / 注册</button>

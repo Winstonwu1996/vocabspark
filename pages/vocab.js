@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { C, FONT, globalCSS, S } from '../lib/theme';
 import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, tryJSON } from '../lib/api';
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
+import UserCenter from '../components/UserCenter';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 import * as XLSX from 'xlsx';
 
@@ -483,6 +484,7 @@ export default function App() {
   var [screen, setScreen] = useState("setup");
   var [learningTime, setLearningTime] = useState({ totalMinutes: 0, todayMinutes: 0 });
   var [showWelcome, setShowWelcome] = useState(true);
+  var [showUserCenter, setShowUserCenter] = useState(false);
   useEffect(function() {
     if (typeof window !== "undefined") {
       var params = new URLSearchParams(window.location.search);
@@ -2503,6 +2505,9 @@ export default function App() {
     return { fastest: entries[0], slowest: entries[entries.length-1], avg: Math.round(entries.reduce((s,e) => s+e[1].duration, 0) / entries.length / 1000) };
   };
 
+  // ── USER CENTER (rendered on ALL screens) ──
+  var userCenterEl = <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} stats={stats} studyStreak={getStudyStreak()} studyGoal={studyGoal} dailyNewWords={dailyNewWords} deepReviewDailyCap={deepReviewDailyCap} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={function(){ handleLogout(); setShowUserCenter(false); }} />;
+
   // ── SCREENING MODE ──
   if (screen === "screening") {
     var scWord = screeningWords[screeningIdx];
@@ -2839,7 +2844,7 @@ export default function App() {
         </div>
       )}
 
-      <AppHeroHeader stats={stats} studyStreak={getStudyStreak()} />
+      <AppHeroHeader stats={stats} studyStreak={getStudyStreak()} user={user} onUserCenterClick={function(){ setShowUserCenter(true); }} />
 
       {/* 连续学习激励条 */}
       {(() => {
@@ -3558,6 +3563,7 @@ export default function App() {
         </div>
       )}
 
+      {userCenterEl}
       <style>{globalCSS}</style>
     </div>
   );}
@@ -4170,6 +4176,7 @@ export default function App() {
 
       <div ref={contentEndRef} />
       </div>
+      <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} stats={stats} studyStreak={getStudyStreak()} studyGoal={studyGoal} dailyNewWords={dailyNewWords} deepReviewDailyCap={deepReviewDailyCap} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={function(){ handleLogout(); setShowUserCenter(false); }} />
       <style>{globalCSS}</style>
     </div>
   );

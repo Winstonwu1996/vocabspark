@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { C, FONT, globalCSS, S } from '../lib/theme';
 import { callAPI, callAPIFast, tryJSON } from '../lib/api';
 import { BrandNavBar, BrandSparkIcon } from '../components/BrandNavBar';
+import UserCenter from '../components/UserCenter';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 
 /* ═══════════════════════════════════════════════════════
@@ -431,6 +432,7 @@ export default function WritingApp() {
   var [user, setUser] = useState(null);
   var userRef = useRef(null);
   var [showLogin, setShowLogin] = useState(false);
+  var [showUserCenter, setShowUserCenter] = useState(false);
   var [loginEmail, setLoginEmail] = useState('');
   var [loginSent, setLoginSent] = useState(false);
   var [loginLoading, setLoginLoading] = useState(false);
@@ -822,7 +824,7 @@ export default function WritingApp() {
       </Head>
       <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
 
-      <BrandNavBar activeTab="writing" stats={d.stats} />
+      <BrandNavBar activeTab="writing" stats={d.stats} user={user} onUserCenterClick={function(){ setShowUserCenter(true); }} />
 
       <div style={S.container}>
 
@@ -1905,6 +1907,7 @@ export default function WritingApp() {
         )}
 
       </div>
+      <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={async function(){ await supabase.auth.signOut(); setUser(null); userRef.current = null; setShowUserCenter(false); }} />
     </div>
   );
 }

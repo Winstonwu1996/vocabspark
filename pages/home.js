@@ -66,14 +66,17 @@ export default function HomePage() {
         </div>
         <h1 style={{ fontSize: 36, fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.03em", lineHeight: 1.1 }}>Know U. Learning</h1>
         <p style={{ fontSize: 14, color: C.textSec, fontStyle: "italic", margin: "0 0 24px" }}>Personal AI Language Tutor</p>
-        <div style={{ fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 10, lineHeight: 1.4 }}>每个单词都是你的故事</div>
-        <p style={{ fontSize: 15, color: C.textSec, lineHeight: 1.8, maxWidth: 480, margin: "0 auto 28px" }}>
-          AI 了解你的生活、朋友、爱好，为你定制每一个例句。<br/>
-          不再是冷冰冰的释义，而是属于你的记忆。
+        <div style={{ fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 10, lineHeight: 1.4 }}>读、写、词汇 — 一个懂你的 AI 英语私教</div>
+        <p style={{ fontSize: 15, color: C.textSec, lineHeight: 1.8, maxWidth: 520, margin: "0 auto 28px" }}>
+          AI 了解你的生活、朋友、爱好，用你最熟悉的场景教英语。<br/>
+          词汇理解、阅读输入、写作表达 — 三位一体，形成闭环。
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 24 }}>
-          <Link href="/vocab?from=home" style={{ ...S.bigBtn, display: "inline-block", width: "auto", padding: "14px 32px", fontSize: 16, textDecoration: "none" }}>免费体验 →</Link>
-          <a href="#why" style={{ ...S.ghostBtn, display: "inline-block", padding: "14px 24px", textDecoration: "none", color: C.textSec }}>了解教学理念 ↓</a>
+          <Link href="/vocab?from=home" style={{ ...S.bigBtn, display: "inline-block", width: "auto", padding: "14px 32px", fontSize: 16, textDecoration: "none" }}>免费体验词汇课 →</Link>
+          <Link href="/writing" style={{ ...S.primaryBtn, display: "inline-block", padding: "14px 24px", fontSize: 14, textDecoration: "none", background: C.purple }}>体验写作课 →</Link>
+        </div>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 24 }}>
+          <a href="#ecosystem" style={{ fontSize: 13, color: C.textSec, textDecoration: "none" }}>了解三位一体学习法 ↓</a>
         </div>
         <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
           {EXAMS.map(function(e) { return <span key={e} style={{ padding: "4px 12px", background: C.goldLight, borderRadius: 20, fontSize: 12, fontWeight: 700, color: C.gold, border: "1px solid " + C.gold + "33" }}>{e}</span>; })}
@@ -126,7 +129,7 @@ export default function HomePage() {
 
       {/* ═══ ECOSYSTEM LOOP ═══ */}
       <FadeInSection>
-        <section style={{ ...container, padding: "40px 20px" }}>
+        <section id="ecosystem" style={{ ...container, padding: "40px 20px" }}>
           <h2 style={{ fontSize: 22, fontWeight: 800, textAlign: "center", marginBottom: 6 }}>三位一体 · 学习闭环</h2>
           <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 28 }}>读、写、词汇不再是孤立的练习 — 它们相互赋能</p>
 
