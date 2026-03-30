@@ -174,7 +174,7 @@ var buildTeachPrompt = (word, learned) => {
 };
 
 var buildSpectrumPrompt = (word) => {
-  return "单词：" + word + "\n\n设计\"词义光谱排序\"游戏。找2个含义相近但程度不同的常见词，组成从弱到强的3词光谱。写2-3句沉浸式场景描述（用学习画像场景），及排序正确后的解读。\n\nIMPORTANT: 直接输出JSON：\n" + '{"spectrum_words":["弱","中","强(目标词)"],"scenario":"场景","decoded":"解读"}';
+  return "单词：" + word + "\n\n设计\"词义光谱排序\"游戏。找2个含义相近但程度/强度不同的常见词，组成从弱到强的3词光谱。写2-3句沉浸式场景描述（用学习画像场景），场景中必须按从弱到强的顺序展示三个词的用法。排序正确后给出解读。\n\n注意：spectrum_words 数组必须严格按照程度从弱到强排列，确保语义强度递增。例如 dislike < hate < loathe，或 smile < grin < beam。\n\nIMPORTANT: 直接输出JSON：\n" + '{"spectrum_words":["最弱","中等","最强"],"scenario":"场景（必须按弱→中→强顺序描述）","decoded":"解读（解释为什么这个顺序正确）"}';
 };
 
 var buildReviewPrompt = (words) => {
@@ -182,7 +182,7 @@ var buildReviewPrompt = (words) => {
 };
 
 var buildClozePrompt = (words) => {
-  return "刚学完10个词：" + words.join(", ") + "\n\n请写一篇120-150词的英文小短文（故事/日记/场景描述），深度结合学习画像的生活场景。短文中自然嵌入这10个词中的5个，将这5个词替换为 _____(1), _____(2) 等编号空格。\n\n在短文后给出5个填空题，每题3个选项（从10个词中选）。\n\nIMPORTANT: 直接输出JSON：\n" + '{"title":"短文标题","passage":"短文正文，含_____(1)等空格","questions":[{"id":1,"blank":"_____(1)","options":["词1","词2","词3"],"answer":"正确词","explanation":"为什么选这个词"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
+  return "刚学完的词：" + words.join(", ") + "\n\n请写一篇120-150词的英文小短文，深度结合学习画像。短文中必须恰好包含5个编号空格 _____(1) 到 _____(5)，每个空格对应一个词。\n\n严格要求：\n1. 短文中必须恰好有5个空格，编号从(1)到(5)\n2. questions 数组必须恰好有5个元素\n3. 每个 question 的 answer 必须在对应的 options 中\n4. 短文中的空格数量 = questions 数量 = 5\n\nIMPORTANT: 直接输出JSON：\n" + '{"title":"短文标题","passage":"短文正文，必须含_____(1)到_____(5)共5个空格","questions":[{"id":1,"blank":"_____(1)","options":["词1","词2","词3"],"answer":"正确词","explanation":"为什么选这个词"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
 };
 
 var buildReviewTeachPrompt = (word, learned, reviewCount) => {
@@ -4084,8 +4084,17 @@ export default function App() {
             <div style={{background:C.accentLight,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:13,lineHeight:1.7,textAlign:"left"}}>
               {user ? <><strong>想要更深入的学习？</strong><br/>{"升级 Basic 会员：每天 1 小时正式学习"}<br/>{"仅 $20/月（¥145）— 不到一节真人私教的价格"}<br/>{"自带 API Key？仅需 $10/月"}</> : <><strong>注册后每天可学 {DAILY_LIMIT_REGISTERED} 词，完全免费</strong><br/>{"☁️ 进度云端同步，换设备不丢"}<br/>{"📊 完整学习历史记录"}</>}
             </div>
-            <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",marginBottom:10}} onClick={()=>{setShowLimitModal(false);if(!user)setShowLogin(true);window.scrollTo(0,0);}}>{user ? "👍 知道了" : "🔑 免费注册，继续学习"}</button>
-            <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>{setShowLimitModal(false);window.scrollTo(0,0);}}>明天再来</button>
+            {user ? (
+              <>
+                <a href="/plan" style={{...S.primaryBtn,width:"100%",justifyContent:"center",marginBottom:8,textDecoration:"none",display:"flex"}}>{"🚀 查看 AI 私教方案"}</a>
+                <button style={{...S.ghostBtn,width:"100%",justifyContent:"center",textAlign:"center"}} onClick={()=>{setShowLimitModal(false);window.scrollTo(0,0);}}>{"明天继续免费学习"}</button>
+              </>
+            ) : (
+              <>
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",marginBottom:8}} onClick={()=>{setShowLimitModal(false);setShowLogin(true);window.scrollTo(0,0);}}>{"🔑 免费注册，每天学 " + DAILY_LIMIT_REGISTERED + " 词"}</button>
+                <a href="/plan" style={{...S.ghostBtn,width:"100%",justifyContent:"center",textAlign:"center",textDecoration:"none",display:"flex"}}>{"查看 AI 私教方案"}</a>
+              </>
+            )}
           </div>
         </div>
       )}
