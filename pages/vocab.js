@@ -688,11 +688,13 @@ export default function App() {
         if (d?.stats) setStats(function(s) { return {...s, ...(d.stats||{})}; });
         if (d?.profile) setShowWelcome(false);
         if (d?.tipDismissed) setTipDismissed(true);
+        // 恢复词表：优先从 wordInput 字段，其次从 session.wordList
+        if (d?.wordInput) setWordInput(d.wordInput);
         if (d?.session?.wordList?.length > 0 && d?.session?.idx < d.session.wordList.length) {
           setWordList(d.session.wordList);
           setIdx(d.session.idx);
           setLearned(d.session.learned || []);
-          setWordInput(d.session.wordList.join("\n"));
+          if (!d.wordInput) setWordInput(d.session.wordList.join("\n"));
         }
       } catch(e) {}
     }).catch(function() {});
@@ -707,6 +709,25 @@ export default function App() {
       if (rawReviewData) setReviewWordData(JSON.parse(rawReviewData) || {});
     } catch (e) {}
   }, []);
+
+  // ── 词表自动保存（防止 textarea 编辑后未持久化） ──
+  var wordInputSaveTimer = useRef(null);
+  useEffect(function() {
+    if (wordInputSaveTimer.current) clearTimeout(wordInputSaveTimer.current);
+    wordInputSaveTimer.current = setTimeout(function() {
+      if (wordInput && wordInput.trim()) {
+        loadSave().then(function(d) {
+          d = d || {};
+          if (d.wordInput !== wordInput) {
+            d.wordInput = wordInput;
+            doSave(d);
+            if (userRef.current) syncToCloud();
+          }
+        });
+      }
+    }, 2000);
+    return function() { if (wordInputSaveTimer.current) clearTimeout(wordInputSaveTimer.current); };
+  }, [wordInput]);
 
   // ── Daily count helpers ──
   var getLocalDateKey = function() {

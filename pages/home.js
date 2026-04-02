@@ -291,7 +291,7 @@ export default function HomePage() {
             })()}
           </div>
 
-          <p style={{ fontSize: 12, color: C.textSec, textAlign: "center", marginTop: 16, opacity: 0.5 }}>* 以上为模拟场景，基于真实用户反馈改编</p>
+          <p style={{ fontSize: 12, color: C.textSec, textAlign: "center", marginTop: 16, opacity: 0.5 }}>* 为保护隐私，已去除用户名和头像，基于真实对话生成</p>
         </section>
       </FadeInSection>
 
