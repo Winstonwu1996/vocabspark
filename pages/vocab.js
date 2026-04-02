@@ -892,6 +892,10 @@ export default function App() {
   var deepMergeProgress = function(local, cloud) {
     if (!local) return cloud;
     if (!cloud) return local;
+    // 检测新设备场景：本地几乎为空，云端有丰富数据 → 直接用云端
+    var localRichness = Object.keys(local.wordStatusMap || {}).length + Object.keys(local.reviewWordData || {}).length + (local.stats?.total || 0);
+    var cloudRichness = Object.keys(cloud.wordStatusMap || {}).length + Object.keys(cloud.reviewWordData || {}).length + (cloud.stats?.total || 0);
+    if (localRichness === 0 && cloudRichness > 0) return cloud;
     var merged = {};
     ['wordInput', 'profile', 'studyGoal'].forEach(function(k) {
       var lv = local[k] || '';
@@ -950,13 +954,18 @@ export default function App() {
   };
 
   // ── Cloud sync helpers ──
+  // ── 串行同步队列：防止并发覆盖，确保最新数据到达云端 ──
   var _syncTimer = null;
+  var _syncInFlight = false;
+  var _syncPending = false;
   var syncToCloud = function() {
     if (_syncTimer) clearTimeout(_syncTimer);
     _syncTimer = setTimeout(async function() {
-      var u = userRef.current;
-      if (!u) return;
+      if (_syncInFlight) { _syncPending = true; return; }
+      _syncInFlight = true;
       try {
+        var u = userRef.current;
+        if (!u) return;
         var fullData = await loadSave();
         if (!fullData) return;
         fullData.updatedAt = new Date().toISOString();
@@ -965,7 +974,11 @@ export default function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: u.id, data: fullData }),
         });
-      } catch(e) {}
+      } catch(e) { console.warn('[sync] failed:', e.message); }
+      finally {
+        _syncInFlight = false;
+        if (_syncPending) { _syncPending = false; syncToCloud(); }
+      }
     }, 500);
   };
 
@@ -1026,8 +1039,35 @@ export default function App() {
   };
 
   var handleLogout = async function() {
+    // 先同步最新数据到云端
+    if (userRef.current) {
+      try {
+        var fullData = await loadSave();
+        if (fullData) {
+          fullData.updatedAt = new Date().toISOString();
+          await fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: userRef.current.id, data: fullData }) });
+        }
+      } catch(e) {}
+    }
     await supabase.auth.signOut();
+    // 清理本地数据，防止下一个用户看到
+    try {
+      localStorage.removeItem(SKEY);
+      localStorage.removeItem(SKEY_OLD);
+      localStorage.removeItem(WORD_STATUS_KEY);
+      localStorage.removeItem(REVIEW_WORD_DATA_KEY);
+      localStorage.removeItem(DAILY_KEY);
+      localStorage.removeItem(DAILY_NEW_QUOTA_KEY);
+      localStorage.removeItem(DEEP_REVIEW_DAILY_KEY);
+      localStorage.removeItem(STUDY_STREAK_KEY);
+    } catch(e) {}
     setUser(null); userRef.current = null;
+    // 重置 React 状态
+    setWordInput(""); setProfile(""); setProfileLocked(false);
+    setStats({ correct:0, total:0, streak:0, bestStreak:0, xp:0 });
+    setWordStatusMap({}); setReviewWordData({});
+    setStudyGoal(""); setStudyGoalCustom("");
+    setShowWelcome(true);
   };
 
   var handleFactoryReset = async function() {
@@ -1171,6 +1211,38 @@ export default function App() {
     return function() { cleanup(); clearInterval(interval); };
   }, []);
 
+  // ── 页面关闭/隐藏时强制同步，防止数据丢失 ──
+  useEffect(function() {
+    var flushSync = function() {
+      if (!userRef.current) return;
+      // 清除 debounce 定时器，立即同步
+      if (_syncTimer) { clearTimeout(_syncTimer); _syncTimer = null; }
+      var fullData = null;
+      try {
+        var raw = localStorage.getItem(SKEY);
+        if (raw) fullData = JSON.parse(raw);
+      } catch(e) {}
+      if (!fullData) return;
+      fullData.updatedAt = new Date().toISOString();
+      // 用 fetch+keepalive 保证页面关闭时也能发出请求（比 sendBeacon 支持更大 body）
+      try {
+        var body = JSON.stringify({ userId: userRef.current.id, data: fullData });
+        fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(function(){});
+      } catch(e) {
+        // keepalive 不可用时用 sendBeacon
+        try { navigator.sendBeacon('/api/sync', new Blob([JSON.stringify({ userId: userRef.current.id, data: fullData })], { type: 'application/json' })); } catch(e2) {}
+      }
+    };
+    var handleBeforeUnload = function() { flushSync(); };
+    var handleVisChange = function() { if (document.visibilityState === 'hidden') flushSync(); };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisChange);
+    return function() {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisChange);
+    };
+  }, []);
+
   useEffect(function() {
     setTodayCount(getDailyState().count);
 
@@ -1233,7 +1305,10 @@ export default function App() {
   };
 
   var saveSession = function(wl, i, lrn) {
-    loadSave().then(function(d) { doSave({...(d||{}), profile, stats, session: { wordList: wl, idx: i, learned: lrn }}); });
+    loadSave().then(function(d) {
+      doSave({...(d||{}), profile, stats, session: { wordList: wl, idx: i, learned: lrn }});
+      if (userRef.current) syncToCloud();
+    });
   };
 
   var resetLearningProgress = function() {
@@ -1932,6 +2007,7 @@ export default function App() {
       var existing = d?.completedWords || [];
       if (!existing.includes(currentWord)) {
         doSave({ ...(d||{}), completedWords: [...existing, currentWord] });
+        if (userRef.current) syncToCloud();
       }
     });
     saveSession(wordList, nextIdx, newLearned);

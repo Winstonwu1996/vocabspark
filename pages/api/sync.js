@@ -5,7 +5,7 @@ var supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 );
 
-export const config = { api: { bodyParser: { sizeLimit: '1mb' } } };
+export const config = { api: { bodyParser: { sizeLimit: '4mb' } } };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
