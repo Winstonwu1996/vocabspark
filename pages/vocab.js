@@ -1207,13 +1207,18 @@ export default function App() {
       } catch(e) {}
       if (!fullData) return;
       fullData.updatedAt = new Date().toISOString();
-      // 用 fetch+keepalive 保证页面关闭时也能发出请求（比 sendBeacon 支持更大 body）
+      // 用 fetch+keepalive 保证页面关闭时也能发出请求
+      var payload = { userId: userRef.current.id, data: fullData, clientVersion: syncVersionRef.current };
       try {
-        var body = JSON.stringify({ userId: userRef.current.id, data: fullData });
-        fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(function(){});
+        var body = JSON.stringify(payload);
+        // keepalive fetch 有 64KB 限制，大数据时退回 sendBeacon
+        if (body.length < 60000) {
+          fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(function(){});
+        } else {
+          navigator.sendBeacon('/api/sync', new Blob([body], { type: 'application/json' }));
+        }
       } catch(e) {
-        // keepalive 不可用时用 sendBeacon
-        try { navigator.sendBeacon('/api/sync', new Blob([JSON.stringify({ userId: userRef.current.id, data: fullData })], { type: 'application/json' })); } catch(e2) {}
+        try { navigator.sendBeacon('/api/sync', new Blob([JSON.stringify(payload)], { type: 'application/json' })); } catch(e2) {}
       }
     };
     var handleBeforeUnload = function() { flushSync(); };
