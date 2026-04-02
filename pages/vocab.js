@@ -403,11 +403,22 @@ var doSave = async (d) => {
     var existing = null;
     try { var raw = localStorage.getItem(SKEY); if (raw) existing = JSON.parse(raw); } catch(e) {}
     var merged = { schemaVersion: 1, completedWords: [], ...(existing || {}), ...d, updatedAt: new Date().toISOString() };
-    // 保护：只在字段完全缺失（undefined）时保留旧值
-    // 用户主动设为空字符串""是允许的（比如清空词库重新上传）
+    // 保护：不用空数据覆盖已有数据
+    // 用户主动清空（显式调用 resetLearningProgress）时会直接操作 localStorage
     if (existing) {
-      ['wordInput', 'profile', 'wordStatusMap', 'reviewWordData'].forEach(function(k) {
-        if (d[k] === undefined && existing[k]) merged[k] = existing[k];
+      ['wordInput', 'profile'].forEach(function(k) {
+        // 字符串字段：空字符串或 undefined 时保留旧值
+        if ((!d[k] && d[k] !== undefined) || d[k] === undefined) {
+          if (existing[k]) merged[k] = existing[k];
+        }
+      });
+      ['wordStatusMap', 'reviewWordData'].forEach(function(k) {
+        // 对象字段：空对象 {} 或 undefined 时保留旧值
+        var dVal = d[k];
+        var isEmpty = !dVal || (typeof dVal === 'object' && Object.keys(dVal).length === 0);
+        if (isEmpty && existing[k] && Object.keys(existing[k]).length > 0) {
+          merged[k] = existing[k];
+        }
       });
     }
     localStorage.setItem(SKEY, JSON.stringify(merged));
@@ -877,6 +888,7 @@ export default function App() {
   };
 
   // ─── 深度合并：取两端各字段最丰富的数据，不丢失任何一方 ───
+  // 核心原则：永远不用空数据覆盖非空数据
   var deepMergeProgress = function(local, cloud) {
     if (!local) return cloud;
     if (!cloud) return local;
@@ -897,22 +909,36 @@ export default function App() {
     };
     var lm = local.wordStatusMap || {};
     var cm = cloud.wordStatusMap || {};
+    var lmCount = Object.keys(lm).length;
+    var cmCount = Object.keys(cm).length;
     var statusPriority = { mastered: 4, error: 3, uncertain: 3, learning: 2, skipped: 1, unlearned: 0 };
-    merged.wordStatusMap = { ...lm };
-    Object.keys(cm).forEach(function(w) {
-      var lp = statusPriority[lm[w]] || 0;
-      var cp = statusPriority[cm[w]] || 0;
-      if (cp > lp) merged.wordStatusMap[w] = cm[w];
-    });
+    // 如果一方为空，直接取另一方（防止空覆盖非空）
+    if (lmCount === 0 && cmCount > 0) { merged.wordStatusMap = { ...cm }; }
+    else if (cmCount === 0 && lmCount > 0) { merged.wordStatusMap = { ...lm }; }
+    else {
+      merged.wordStatusMap = { ...lm };
+      Object.keys(cm).forEach(function(w) {
+        var lp = statusPriority[lm[w]] || 0;
+        var cp = statusPriority[cm[w]] || 0;
+        if (cp > lp) merged.wordStatusMap[w] = cm[w];
+      });
+    }
     var lr = local.reviewWordData || {};
     var cr = cloud.reviewWordData || {};
-    merged.reviewWordData = { ...lr };
-    Object.keys(cr).forEach(function(w) {
-      if (!merged.reviewWordData[w]) { merged.reviewWordData[w] = cr[w]; return; }
-      var lStage = (merged.reviewWordData[w] || {}).stage || 0;
-      var cStage = (cr[w] || {}).stage || 0;
-      if (cStage > lStage) merged.reviewWordData[w] = cr[w];
-    });
+    var lrCount = Object.keys(lr).length;
+    var crCount = Object.keys(cr).length;
+    // 如果一方为空，直接取另一方
+    if (lrCount === 0 && crCount > 0) { merged.reviewWordData = { ...cr }; }
+    else if (crCount === 0 && lrCount > 0) { merged.reviewWordData = { ...lr }; }
+    else {
+      merged.reviewWordData = { ...lr };
+      Object.keys(cr).forEach(function(w) {
+        if (!merged.reviewWordData[w]) { merged.reviewWordData[w] = cr[w]; return; }
+        var lStage = (merged.reviewWordData[w] || {}).stage || 0;
+        var cStage = (cr[w] || {}).stage || 0;
+        if (cStage > lStage) merged.reviewWordData[w] = cr[w];
+      });
+    }
     merged.settings = local.settings || cloud.settings;
     merged.dailyNewWords = local.dailyNewWords || cloud.dailyNewWords;
     merged.session = (local.session && local.session.wordList) ? local.session : cloud.session;
