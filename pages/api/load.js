@@ -12,11 +12,14 @@ export default async function handler(req, res) {
 
   try {
     var { data, error } = await supabase
-      .from('user_progress').select('progress_data, updated_at')
+      .from('user_progress').select('progress_data, updated_at, version')
       .eq('user_id', userId).single();
-    if (error || !data) return res.status(200).json({ data: null });
-    res.status(200).json({ data: { ...data.progress_data, updatedAt: data.updated_at } });
+    if (error || !data) return res.status(200).json({ data: null, version: 0 });
+    res.status(200).json({
+      data: { ...data.progress_data, updatedAt: data.updated_at },
+      version: data.version || 0,
+    });
   } catch(e) {
-    res.status(200).json({ data: null });
+    res.status(200).json({ data: null, version: 0 });
   }
 }

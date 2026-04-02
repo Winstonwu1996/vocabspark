@@ -379,48 +379,33 @@ var PRESETS_BY_GOAL = {
 var SKEY = "vocabspark_v1";         // permanent key — never change this
 var SKEY_OLD = "vocabspark_release_2"; // migration source
 var CONC_KEY = "vocabspark_concurrency_cap_v1";
+/* ─── 本地存储层（统一到 SKEY，不再用独立 key） ─── */
 var loadSave = async () => {
   try {
     if (typeof window === "undefined") return null;
-    // Migrate from old key if present
+    // 一次性迁移：从旧 key 和独立 key 合并到 SKEY
     var oldRaw = localStorage.getItem(SKEY_OLD);
     if (oldRaw) {
-      try {
-        var oldData = JSON.parse(oldRaw);
-        var migrated = { schemaVersion: 1, completedWords: [], ...oldData };
-        localStorage.setItem(SKEY, JSON.stringify(migrated));
-        localStorage.removeItem(SKEY_OLD);
-      } catch(e) {}
+      try { var od = JSON.parse(oldRaw); localStorage.setItem(SKEY, JSON.stringify({ schemaVersion: 2, completedWords: [], ...od })); localStorage.removeItem(SKEY_OLD); } catch(e) {}
     }
     var r = localStorage.getItem(SKEY);
-    return r ? JSON.parse(r) : null;
+    var d = r ? JSON.parse(r) : null;
+    // 迁移独立 key 到 SKEY（只做一次）
+    if (d && d.schemaVersion < 2) {
+      try { var ws = localStorage.getItem(WORD_STATUS_KEY); if (ws) { d.wordStatusMap = JSON.parse(ws); localStorage.removeItem(WORD_STATUS_KEY); } } catch(e) {}
+      try { var rd = localStorage.getItem(REVIEW_WORD_DATA_KEY); if (rd) { d.reviewWordData = JSON.parse(rd); localStorage.removeItem(REVIEW_WORD_DATA_KEY); } } catch(e) {}
+      d.schemaVersion = 2;
+      localStorage.setItem(SKEY, JSON.stringify(d));
+    }
+    return d;
   } catch(e) { return null; }
 };
 var doSave = async (d) => {
   try {
     if (typeof window === "undefined") return;
-    // 读现有数据，合并后写入，防止丢字段
     var existing = null;
     try { var raw = localStorage.getItem(SKEY); if (raw) existing = JSON.parse(raw); } catch(e) {}
-    var merged = { schemaVersion: 1, completedWords: [], ...(existing || {}), ...d, updatedAt: new Date().toISOString() };
-    // 保护：不用空数据覆盖已有数据
-    // 用户主动清空（显式调用 resetLearningProgress）时会直接操作 localStorage
-    if (existing) {
-      ['wordInput', 'profile'].forEach(function(k) {
-        // 字符串字段：空字符串或 undefined 时保留旧值
-        if ((!d[k] && d[k] !== undefined) || d[k] === undefined) {
-          if (existing[k]) merged[k] = existing[k];
-        }
-      });
-      ['wordStatusMap', 'reviewWordData'].forEach(function(k) {
-        // 对象字段：空对象 {} 或 undefined 时保留旧值
-        var dVal = d[k];
-        var isEmpty = !dVal || (typeof dVal === 'object' && Object.keys(dVal).length === 0);
-        if (isEmpty && existing[k] && Object.keys(existing[k]).length > 0) {
-          merged[k] = existing[k];
-        }
-      });
-    }
+    var merged = { schemaVersion: 2, completedWords: [], ...(existing || {}), ...d, updatedAt: new Date().toISOString() };
     localStorage.setItem(SKEY, JSON.stringify(merged));
   } catch(e) {}
 };
@@ -517,6 +502,8 @@ export default function App() {
   var [wordStatusMap, setWordStatusMap] = useState({});
   var [reviewWordData, setReviewWordData] = useState({});
   var [wordStatusFilter, setWordStatusFilter] = useState("all");
+  var [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
+  var syncVersionRef = useRef(0); // 服务端版本号
   var [wordSearch, setWordSearch] = useState("");
   var [showDueOnly, setShowDueOnly] = useState(false);
   var [wordSortMode, setWordSortMode] = useState("default");
@@ -710,15 +697,11 @@ export default function App() {
       } catch(e) {}
     }).catch(function() {});
 
-    try {
-      var rawStatus = localStorage.getItem(WORD_STATUS_KEY);
-      if (rawStatus) setWordStatusMap(JSON.parse(rawStatus) || {});
-    } catch (e) {}
-
-    try {
-      var rawReviewData = localStorage.getItem(REVIEW_WORD_DATA_KEY);
-      if (rawReviewData) setReviewWordData(JSON.parse(rawReviewData) || {});
-    } catch (e) {}
+    // wordStatusMap 和 reviewWordData 现在统一从 SKEY 加载（loadSave 负责迁移）
+    loadSave().then(function(d2) {
+      if (d2?.wordStatusMap) setWordStatusMap(d2.wordStatusMap);
+      if (d2?.reviewWordData) setReviewWordData(d2.reviewWordData);
+    }).catch(function() {});
   }, []);
 
   // ── 词表自动保存（防止 textarea 编辑后未持久化） ──
@@ -889,105 +872,98 @@ export default function App() {
 
   // ─── 深度合并：取两端各字段最丰富的数据，不丢失任何一方 ───
   // 核心原则：永远不用空数据覆盖非空数据
-  var deepMergeProgress = function(local, cloud) {
-    if (!local) return cloud;
-    if (!cloud) return local;
-    // 检测新设备场景：本地几乎为空，云端有丰富数据 → 直接用云端
-    var localRichness = Object.keys(local.wordStatusMap || {}).length + Object.keys(local.reviewWordData || {}).length + (local.stats?.total || 0);
-    var cloudRichness = Object.keys(cloud.wordStatusMap || {}).length + Object.keys(cloud.reviewWordData || {}).length + (cloud.stats?.total || 0);
-    if (localRichness === 0 && cloudRichness > 0) return cloud;
-    var merged = {};
-    ['wordInput', 'profile', 'studyGoal'].forEach(function(k) {
-      var lv = local[k] || '';
-      var cv = cloud[k] || '';
-      merged[k] = lv.length >= cv.length ? lv : cv;
-    });
-    var ls = local.stats || {};
-    var cs = cloud.stats || {};
-    merged.stats = {
-      xp: Math.max(ls.xp || 0, cs.xp || 0),
-      total: Math.max(ls.total || 0, cs.total || 0),
-      correct: Math.max(ls.correct || 0, cs.correct || 0),
-      streak: Math.max(ls.streak || 0, cs.streak || 0),
-      bestStreak: Math.max(ls.bestStreak || 0, cs.bestStreak || 0),
-    };
-    var lm = local.wordStatusMap || {};
-    var cm = cloud.wordStatusMap || {};
-    var lmCount = Object.keys(lm).length;
-    var cmCount = Object.keys(cm).length;
-    var statusPriority = { mastered: 4, error: 3, uncertain: 3, learning: 2, skipped: 1, unlearned: 0 };
-    // 如果一方为空，直接取另一方（防止空覆盖非空）
-    if (lmCount === 0 && cmCount > 0) { merged.wordStatusMap = { ...cm }; }
-    else if (cmCount === 0 && lmCount > 0) { merged.wordStatusMap = { ...lm }; }
-    else {
-      merged.wordStatusMap = { ...lm };
-      Object.keys(cm).forEach(function(w) {
-        var lp = statusPriority[lm[w]] || 0;
-        var cp = statusPriority[cm[w]] || 0;
-        if (cp > lp) merged.wordStatusMap[w] = cm[w];
-      });
-    }
-    var lr = local.reviewWordData || {};
-    var cr = cloud.reviewWordData || {};
-    var lrCount = Object.keys(lr).length;
-    var crCount = Object.keys(cr).length;
-    // 如果一方为空，直接取另一方
-    if (lrCount === 0 && crCount > 0) { merged.reviewWordData = { ...cr }; }
-    else if (crCount === 0 && lrCount > 0) { merged.reviewWordData = { ...lr }; }
-    else {
-      merged.reviewWordData = { ...lr };
-      Object.keys(cr).forEach(function(w) {
-        if (!merged.reviewWordData[w]) { merged.reviewWordData[w] = cr[w]; return; }
-        var lStage = (merged.reviewWordData[w] || {}).stage || 0;
-        var cStage = (cr[w] || {}).stage || 0;
-        if (cStage > lStage) merged.reviewWordData[w] = cr[w];
-      });
-    }
-    merged.settings = local.settings || cloud.settings;
-    merged.dailyNewWords = local.dailyNewWords || cloud.dailyNewWords;
-    merged.session = (local.session && local.session.wordList) ? local.session : cloud.session;
-    ['schemaVersion', 'completedWords', 'tipDismissed'].forEach(function(k) {
-      merged[k] = local[k] != null ? local[k] : cloud[k];
-    });
-    merged.updatedAt = new Date().toISOString();
-    return merged;
-  };
+  /* ═══════════════════════════════════════════════════════
+     云端同步层 v2 — 服务端权威 + 版本号冲突检测
 
-  // ── Cloud sync helpers ──
-  // ── 串行同步队列：防止并发覆盖，确保最新数据到达云端 ──
+     核心原则：
+     1. 每次变更 → 立即写 localStorage → debounce 推云端
+     2. 服务端有版本号，客户端带版本号推送
+     3. 版本冲突时拉取服务端数据（服务端赢）
+     4. 新设备登录 → 直接拉云端数据覆盖本地
+     5. visibilitychange/beforeunload → 强制刷新
+     ═══════════════════════════════════════════════════════ */
+
   var _syncTimer = null;
   var _syncInFlight = false;
   var _syncPending = false;
+  var _syncRetryCount = 0;
+  var MAX_SYNC_RETRIES = 3;
+
   var syncToCloud = function() {
     if (_syncTimer) clearTimeout(_syncTimer);
-    _syncTimer = setTimeout(async function() {
-      if (_syncInFlight) { _syncPending = true; return; }
-      _syncInFlight = true;
-      try {
-        var u = userRef.current;
-        if (!u) return;
-        var fullData = await loadSave();
-        if (!fullData) return;
-        fullData.updatedAt = new Date().toISOString();
-        await fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: u.id, data: fullData }),
-        });
-      } catch(e) { console.warn('[sync] failed:', e.message); }
-      finally {
-        _syncInFlight = false;
-        if (_syncPending) { _syncPending = false; syncToCloud(); }
+    _syncTimer = setTimeout(function() { _doSync(); }, 500);
+  };
+
+  var _doSync = async function() {
+    if (_syncInFlight) { _syncPending = true; return; }
+    var u = userRef.current;
+    if (!u) return;
+    _syncInFlight = true;
+    setSyncStatus("syncing");
+    try {
+      var fullData = await loadSave();
+      if (!fullData) { _syncInFlight = false; setSyncStatus("idle"); return; }
+      fullData.updatedAt = new Date().toISOString();
+      var r = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: u.id, data: fullData, clientVersion: syncVersionRef.current }),
+      });
+      if (r.status === 409) {
+        // 版本冲突 — 服务端有更新的数据，拉取并应用
+        var conflict = await r.json();
+        console.warn('[sync] version conflict: client=' + syncVersionRef.current + ' server=' + conflict.serverVersion);
+        if (conflict.serverData) {
+          syncVersionRef.current = conflict.serverVersion;
+          await doSave(conflict.serverData);
+          _applyCloudData(conflict.serverData);
+          setSyncStatus("synced");
+        }
+        _syncRetryCount = 0;
+      } else if (r.ok) {
+        var result = await r.json();
+        syncVersionRef.current = result.version;
+        _syncRetryCount = 0;
+        setSyncStatus("synced");
+      } else {
+        throw new Error('sync failed: ' + r.status);
       }
-    }, 500);
+    } catch(e) {
+      console.warn('[sync] error:', e.message);
+      _syncRetryCount++;
+      if (_syncRetryCount <= MAX_SYNC_RETRIES) {
+        // 指数退避重试
+        setTimeout(function() { _doSync(); }, 1000 * Math.pow(2, _syncRetryCount));
+        setSyncStatus("syncing");
+      } else {
+        setSyncStatus("error");
+      }
+    } finally {
+      _syncInFlight = false;
+      if (_syncPending) { _syncPending = false; syncToCloud(); }
+    }
   };
 
   var loadFromCloud = async function(userId) {
     try {
       var r = await fetch('/api/load?userId=' + userId);
       var json = await r.json();
+      syncVersionRef.current = json.version || 0;
       return json.data || null;
     } catch(e) { return null; }
+  };
+
+  // 将云端数据应用到 React state
+  var _applyCloudData = function(d) {
+    if (!d) return;
+    if (d.wordInput) setWordInput(d.wordInput);
+    if (d.profile) { setProfile(d.profile); setProfileLocked(true); }
+    if (d.stats) setStats(function(s) { return {...s, ...d.stats}; });
+    if (d.wordStatusMap) setWordStatusMap(d.wordStatusMap);
+    if (d.reviewWordData) setReviewWordData(d.reviewWordData);
+    if (d.settings?.studyGoal) setStudyGoal(d.settings.studyGoal);
+    if (d.settings?.dailyNewWords) setDailyNewWords(d.settings.dailyNewWords);
+    if (d.settings?.deepReviewDailyCap) setDeepReviewDailyCap(d.settings.deepReviewDailyCap);
   };
 
   // ── Auth actions ──
@@ -1177,25 +1153,32 @@ export default function App() {
   };
 
   // ── Auth state listener ──
+  // ── Auth handler: 服务端权威，云端数据覆盖本地 ──
+  var _authHandled = useRef(false);
   var handleAuthUser = async function(u, event) {
     setUser(u); userRef.current = u;
     if (u && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) {
+      // 防止 getSession + onAuthStateChange 双重触发
+      if (_authHandled.current) return;
+      _authHandled.current = true;
+      setTimeout(function() { _authHandled.current = false; }, 3000);
+
       if (event === 'SIGNED_IN') {
         setLoginToast("✅ 登录成功！" + (u.email || ""));
         setTimeout(function() { setLoginToast(null); }, 4000);
       }
       setShowLogin(false); setLoginSent(false); setLoginEmail(''); setOtpCode('');
+
+      // 服务端权威：拉取云端数据
       var cloudData = await loadFromCloud(u.id);
-      var localData = await loadSave();
-      // 深度合并：两端数据都不丢失
-      var merged = deepMergeProgress(localData, cloudData);
-      if (merged) {
-        await doSave(merged);
-        await syncToCloud();
-        if (merged.stats) setStats(function(s) { return {...s, ...merged.stats}; });
-        if (merged.wordInput) setWordInput(merged.wordInput);
-        if (merged.profile) setProfile(merged.profile);
-        if (merged.wordStatusMap) setWordStatusMap(merged.wordStatusMap);
+      if (cloudData) {
+        // 云端有数据 → 直接应用（服务端赢）
+        await doSave(cloudData);
+        _applyCloudData(cloudData);
+        setShowWelcome(false);
+      } else {
+        // 云端无数据（新用户）→ 把本地数据推到云端
+        syncToCloud();
       }
     }
   };
@@ -1394,7 +1377,8 @@ export default function App() {
     if (!nextStatus) delete next[word];
     else next[word] = nextStatus;
     setWordStatusMap(next);
-    try { localStorage.setItem(WORD_STATUS_KEY, JSON.stringify(next)); } catch(e) {}
+    doSave({ wordStatusMap: next });
+    if (userRef.current) syncToCloud();
   };
 
   var upsertReviewWordData = function(word, patch) {
@@ -1402,7 +1386,8 @@ export default function App() {
     setReviewWordData(function(prev) {
       var base = prev[word] || { word: word, reviewHistory: [] };
       var next = { ...prev, [word]: { ...base, ...patch } };
-      try { localStorage.setItem(REVIEW_WORD_DATA_KEY, JSON.stringify(next)); } catch(e) {}
+      doSave({ reviewWordData: next });
+      if (userRef.current) syncToCloud();
       return next;
     });
   };
@@ -1871,7 +1856,7 @@ export default function App() {
     if (known) {
       var next = { ...(wordStatusMap || {}), [word]: "skipped" };
       setWordStatusMap(next);
-      try { localStorage.setItem(WORD_STATUS_KEY, JSON.stringify(next)); } catch(e) {}
+      doSave({ wordStatusMap: next });
     }
     var newUnknown = known ? screeningStats.unknown : screeningStats.unknown + 1;
     var quota = dailyNewWords || 20;
@@ -2384,7 +2369,8 @@ export default function App() {
       else next[w] = nextStatus;
     });
     setWordStatusMap(next);
-    try { localStorage.setItem(WORD_STATUS_KEY, JSON.stringify(next)); } catch (e) {}
+    doSave({ wordStatusMap: next });
+    if (userRef.current) syncToCloud();
     setSelectedWords({});
   };
 
@@ -2967,7 +2953,7 @@ export default function App() {
         </div>
       )}
 
-      <AppHeroHeader stats={stats} studyStreak={getStudyStreak()} user={user} onUserCenterClick={function(){ setShowUserCenter(true); }} />
+      <AppHeroHeader stats={stats} studyStreak={getStudyStreak()} user={user} onUserCenterClick={function(){ setShowUserCenter(true); }} syncStatus={syncStatus} />
 
       {/* 连续学习激励条 */}
       {(() => {

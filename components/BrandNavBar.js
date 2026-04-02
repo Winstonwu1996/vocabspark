@@ -20,7 +20,7 @@ export var BrandSparkIcon = ({ size, marginBottom }) => {
   );
 };
 
-export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterClick }) => {
+export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterClick, syncStatus }) => {
   activeTab = activeTab || "vocab";
   var pct = stats && stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
   var hasStats = stats && stats.xp > 0;
@@ -52,7 +52,12 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
         <Link href="/vocab" style={tabStyle("vocab")}>Vocab</Link>
         <Link href="/writing" style={tabStyle("writing")}>Writing</Link>
         <span style={{ fontSize:12, color:C.textSec, opacity:0.5 }}>Reading<sup style={{fontSize:8,color:C.teal,fontWeight:700}}>Soon</sup></span>
-        <button onClick={onUserCenterClick} style={{ marginLeft:4, cursor:"pointer", background:"transparent", border:"none", padding:0, lineHeight:0 }} aria-label="用户中心">
+        {syncStatus && syncStatus !== "idle" && user && (
+          <span style={{ fontSize:10, color: syncStatus === "error" ? "#e53e3e" : syncStatus === "synced" ? "#22a06b" : C.textSec, fontWeight:600, opacity: syncStatus === "synced" ? 0.6 : 1 }}>
+            {syncStatus === "syncing" ? "⟳" : syncStatus === "synced" ? "✓" : syncStatus === "error" ? "⚠" : ""}
+          </span>
+        )}
+        <button onClick={onUserCenterClick} style={{ marginLeft:2, cursor:"pointer", background:"transparent", border:"none", padding:0, lineHeight:0 }} aria-label="用户中心">
           <UserAvatar user={user} size={30} />
         </button>
       </div>
@@ -68,6 +73,6 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
   );
 };
 
-export var AppHeroHeader = ({ stats, studyStreak, user, onUserCenterClick }) => (
-  <BrandNavBar activeTab="vocab" stats={stats} studyStreak={studyStreak} user={user} onUserCenterClick={onUserCenterClick} />
+export var AppHeroHeader = ({ stats, studyStreak, user, onUserCenterClick, syncStatus }) => (
+  <BrandNavBar activeTab="vocab" stats={stats} studyStreak={studyStreak} user={user} onUserCenterClick={onUserCenterClick} syncStatus={syncStatus} />
 );
