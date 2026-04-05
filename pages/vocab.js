@@ -1258,7 +1258,11 @@ export default function App() {
     // Explicitly check for existing session on mount (handles Magic Link redirect)
     supabase.auth.getSession().then(function(result) {
       var u = result?.data?.session?.user || null;
-      if (u) handleAuthUser(u, 'INITIAL_SESSION');
+      if (u) {
+        handleAuthUser(u, 'INITIAL_SESSION');
+        // 独立加载 tier（不依赖 handleAuthUser 的 _authHandled 锁）
+        _loadTier(u.id);
+      }
     });
 
     var {data: {subscription}} = supabase.auth.onAuthStateChange(async function(event, session) {
@@ -1974,10 +1978,12 @@ export default function App() {
   };
 
   var goNextWord = async function() {
-    // Check daily limit (guests: 5, registered: 10, basic/pro: unlimited)
+    // Check daily limit (guests: 5, free registered: 10, basic/pro: unlimited)
     var ds = getDailyState();
     var isPaid = userTier === "basic" || userTier === "pro";
-    var limit = isPaid ? Infinity : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
+    // 已登录用户如果 tier 还没加载完，也按 Infinity 处理（宁可多给不限制）
+    var tierLoading = userRef.current && userTier === "free" && !localStorage.getItem("vocabspark_tier");
+    var limit = (isPaid || tierLoading) ? Infinity : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
     if (ds.count >= limit) { setShowLimitModal(true); return; }
     incrementDailyCount();
     if (wordStart) {
