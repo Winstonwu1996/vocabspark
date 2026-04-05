@@ -578,7 +578,13 @@ export default function App() {
   // ── Auth & Daily Limit ──
   var [user, setUser] = useState(null);
   var userRef = useRef(null);
-  var [userTier, setUserTier] = useState("free"); // free | basic | pro
+  var [userTier, setUserTier] = useState(function() {
+    // 从 localStorage 恢复上次的 tier，避免每次刷新都默认 free
+    if (typeof window !== "undefined") {
+      try { return localStorage.getItem("vocabspark_tier") || "free"; } catch(e) {}
+    }
+    return "free";
+  });
   var [showLogin, setShowLogin] = useState(false);
   var [loginEmail, setLoginEmail] = useState('');
   var [loginSent, setLoginSent] = useState(false);
@@ -1037,8 +1043,10 @@ export default function App() {
       localStorage.removeItem(DAILY_NEW_QUOTA_KEY);
       localStorage.removeItem(DEEP_REVIEW_DAILY_KEY);
       localStorage.removeItem(STUDY_STREAK_KEY);
+      localStorage.removeItem("vocabspark_tier");
     } catch(e) {}
     setUser(null); userRef.current = null;
+    setUserTier("free");
     // 重置 React 状态
     setWordInput(""); setProfile(""); setProfileLocked(false);
     setStats({ correct:0, total:0, streak:0, bestStreak:0, xp:0 });
@@ -1182,12 +1190,18 @@ export default function App() {
         syncToCloud();
       }
       // 加载订阅状态
-      try {
-        var subR = await fetch('/api/stripe/check-subscription?userId=' + u.id);
-        var subJ = await subR.json();
-        setUserTier(subJ.isActive ? subJ.tier : "free");
-      } catch(e) { setUserTier("free"); }
+      _loadTier(u.id);
     }
+  };
+
+  var _loadTier = async function(userId) {
+    try {
+      var r = await fetch('/api/stripe/check-subscription?userId=' + userId);
+      var j = await r.json();
+      var t = j.isActive ? j.tier : "free";
+      setUserTier(t);
+      try { localStorage.setItem("vocabspark_tier", t); } catch(e) {}
+    } catch(e) {}
   };
 
   // ─── 学习计时器（用户活跃时才计时：click/keydown/scroll/touch） ───
