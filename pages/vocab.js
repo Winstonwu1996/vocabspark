@@ -578,6 +578,7 @@ export default function App() {
   // ── Auth & Daily Limit ──
   var [user, setUser] = useState(null);
   var userRef = useRef(null);
+  var [userTier, setUserTier] = useState("free"); // free | basic | pro
   var [showLogin, setShowLogin] = useState(false);
   var [loginEmail, setLoginEmail] = useState('');
   var [loginSent, setLoginSent] = useState(false);
@@ -1180,6 +1181,12 @@ export default function App() {
         // 云端无数据（新用户）→ 把本地数据推到云端
         syncToCloud();
       }
+      // 加载订阅状态
+      try {
+        var subR = await fetch('/api/stripe/check-subscription?userId=' + u.id);
+        var subJ = await subR.json();
+        setUserTier(subJ.isActive ? subJ.tier : "free");
+      } catch(e) { setUserTier("free"); }
     }
   };
 
@@ -1953,9 +1960,10 @@ export default function App() {
   };
 
   var goNextWord = async function() {
-    // Check daily limit (guests: 5, registered: 10)
+    // Check daily limit (guests: 5, registered: 10, basic/pro: unlimited)
     var ds = getDailyState();
-    var limit = userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST;
+    var isPaid = userTier === "basic" || userTier === "pro";
+    var limit = isPaid ? Infinity : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
     if (ds.count >= limit) { setShowLimitModal(true); return; }
     incrementDailyCount();
     if (wordStart) {
