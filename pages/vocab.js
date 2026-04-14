@@ -194,7 +194,14 @@ var buildReviewTeachPrompt = (word, learned, reviewCount) => {
     "\n1) 2-3句生动场景（结合学习画像）" +
     "\n2) 一个易混词对比" +
     "\n3) 一个简短记忆口诀" +
-    "\n4) 一道SSAT风格单选题（含答案与解释）" +
+    "\n4) 一道SSAT风格单选题，格式必须如下：" +
+    "\n   ✏️ SSAT 仿真题" +
+    "\n   题干句子" +
+    "\n   A) 选项" +
+    "\n   B) 选项" +
+    "\n   C) 选项" +
+    "\n   D) 选项" +
+    "\n   答案：X" +
     "\n\n输出格式：Markdown，200-250字，朋友聊天语气。";
 };
 
@@ -2568,10 +2575,32 @@ export default function App() {
     var pool = startIdx >= 0 ? lines.slice(startIdx) : lines;
     var opts = pool.filter(function(l){ return /^[A-D][\).、:：\s]/i.test(l); }).slice(0,4);
     if (opts.length < 2) return null;
-    var stem = pool.find(function(l){ return !/^[A-D][\).、:：\s]/i.test(l) && !/答案|answer/i.test(l) && !/ssat|选择题|single choice|question/i.test(l); }) || "请选择最合适选项";
-    var answerLine = pool.find(function(l){ return /答案|answer/i.test(l); }) || "";
-    var answerMatch = answerLine.match(/[A-D]/i);
-    var answer = answerMatch ? answerMatch[0].toUpperCase() : "";
+    var stem = pool.find(function(l){ return !/^[A-D][\).、:：\s]/i.test(l) && !/答案|answer/i.test(l) && !/ssat|选择题|single choice|question|仿真题/i.test(l); }) || "请选择最合适选项";
+    // 多种格式提取答案：
+    // "答案：B" / "Answer: B" / "正确答案是B" / "答案是 B" / "**B**" at end of line
+    var answer = "";
+    for (var i = 0; i < pool.length; i++) {
+      var l = pool[i];
+      // 明确的"答案"行
+      if (/答案|answer|正确/i.test(l)) {
+        var m = l.match(/[A-D]/i);
+        if (m) { answer = m[0].toUpperCase(); break; }
+      }
+    }
+    // 兜底：如果没找到答案行，扫描全文找 "答案是X" / "(X)" 等模式
+    if (!answer) {
+      var fullText = pool.join(" ");
+      var fallback = fullText.match(/答案[是为：:\s]*([A-D])/i) || fullText.match(/correct[^A-D]*([A-D])/i) || fullText.match(/\*\*([A-D])\*\*/);
+      if (fallback) answer = fallback[1].toUpperCase();
+    }
+    // 最终兜底：如果题目中有加粗/标记的选项，取第一个
+    if (!answer && opts.length > 0) {
+      var boldOpt = opts.find(function(l){ return /\*\*/.test(l) || /✓|✅|√/.test(l); });
+      if (boldOpt) {
+        var bm = boldOpt.match(/^([A-D])/i);
+        if (bm) answer = bm[1].toUpperCase();
+      }
+    }
     var mapped = opts.map(function(l){
       var m = l.match(/^([A-D])[\).、:：\s]*(.*)$/i);
       return { key: m ? m[1].toUpperCase() : "", text: m ? m[2] : l };
@@ -2904,7 +2933,7 @@ export default function App() {
               {!deepQuizSubmitted ? (
                 <div style={{marginTop:10}}><button style={S.primaryBtn} disabled={!deepQuizSelect} onClick={function(){setDeepQuizSubmitted(true);}}>提交答案</button></div>
               ) : (
-                <div style={{marginTop:10,fontSize:13,color:C.textSec}}>正确答案：<b>{deepQuiz.answer || "未提供"}</b></div>
+                <div style={{marginTop:10,fontSize:13,color:C.textSec}}>{deepQuiz.answer ? <>正确答案：<b>{deepQuiz.answer}</b></> : <span style={{color:C.gold}}>AI 未明确标注答案，请根据讲解内容判断</span>}</div>
               )}
             </div>
           )}
