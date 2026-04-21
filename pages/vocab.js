@@ -2703,7 +2703,7 @@ export default function App() {
   };
 
   // ── USER CENTER (rendered on ALL screens) ──
-  var userCenterEl = <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} stats={stats} studyStreak={getStudyStreak()} studyGoal={studyGoal} dailyNewWords={dailyNewWords} deepReviewDailyCap={deepReviewDailyCap} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={function(){ handleLogout(); setShowUserCenter(false); }} />;
+  var userCenterEl = <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} stats={stats} studyStreak={getStudyStreak()} studyGoal={studyGoal} dailyNewWords={dailyNewWords} deepReviewDailyCap={deepReviewDailyCap} userTier={userTier} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={function(){ handleLogout(); setShowUserCenter(false); }} />;
 
   // ── SCREENING MODE ──
   if (screen === "screening") {
@@ -3172,7 +3172,7 @@ export default function App() {
       {/* Account status banner */}
       {user ? (
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:C.tealLight,border:"1px solid "+C.teal,borderRadius:10,padding:"10px 16px",marginBottom:12,fontSize:13}}>
-          <div><span style={{color:C.teal,fontWeight:700}}>✅ 已登录</span><span style={{color:C.textSec,marginLeft:8}}>{user.email}</span><span style={{color:C.teal,marginLeft:8,fontSize:12}}>· 每日 {DAILY_LIMIT_REGISTERED} 词</span></div>
+          <div><span style={{color:C.teal,fontWeight:700}}>✅ 已登录</span><span style={{color:C.textSec,marginLeft:8}}>{user.email}</span><span style={{color:userTier==="pro"||userTier==="basic"?C.gold:C.teal,marginLeft:8,fontSize:12,fontWeight:600}}>{userTier==="pro" ? "· ✨ Pro 无限" : userTier==="basic" ? "· 🎯 Basic 无限" : "· 每日 "+DAILY_LIMIT_REGISTERED+" 词"}</span></div>
           <button onClick={handleLogout} style={{background:"transparent",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",fontFamily:FONT}}>退出</button>
         </div>
       ) : (
@@ -3585,46 +3585,76 @@ export default function App() {
         return <div style={S.setupCard}>
           <div style={S.setupHint}>学习统计中心：查看学习成效、复习量和当前词库健康度。</div>
           {statsView.totalWords > 0 && (() => {
-            var _nonSkippedTotal = Math.max(1, statsView.totalWords - (statsView.statuses.skipped||0));
-            var masteredPct = Math.round(((statsView.statuses.mastered||0) / _nonSkippedTotal) * 100);
-            var healthColor = masteredPct >= 60 ? C.green : masteredPct >= 30 ? C.gold : C.accent;
-            var healthLabel = masteredPct >= 60 ? "优秀" : masteredPct >= 30 ? "良好" : "起步中";
+            // 学习进度 = 已接触的词 / 已接触的词总数（不是全词库！这样才公平）
+            var _touched = (statsView.statuses.mastered||0) + (statsView.statuses.uncertain||0) + (statsView.statuses.error||0) + (statsView.statuses.learning||0);
+            var _mastered = statsView.statuses.mastered || 0;
+            var _skipped = statsView.statuses.skipped || 0;
+            var _engaged = _touched + _skipped; // 已做过任何处理的词
+            var masteredPct = _touched > 0 ? Math.round((_mastered / _touched) * 100) : 0;
+            var healthColor = masteredPct >= 70 ? C.green : masteredPct >= 40 ? C.gold : C.accent;
+            var healthLabel = masteredPct >= 70 ? "优秀" : masteredPct >= 40 ? "良好" : _touched > 0 ? "进步中" : "待开始";
             return <div style={{display:"flex",alignItems:"center",gap:14,background:"linear-gradient(135deg, "+C.tealLight+" 0%, "+C.accentLight+" 100%)",border:"1px solid "+C.border,borderRadius:12,padding:"14px 16px",marginBottom:12}}>
               <div style={{position:"relative",width:56,height:56,flexShrink:0}}>
                 <svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke={C.border} strokeWidth="5"/><circle cx="28" cy="28" r="24" fill="none" stroke={healthColor} strokeWidth="5" strokeLinecap="round" strokeDasharray={2*Math.PI*24} strokeDashoffset={2*Math.PI*24*(1-masteredPct/100)} transform="rotate(-90 28 28)"/></svg>
                 <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",fontSize:14,fontWeight:800,color:healthColor}}>{masteredPct}%</div>
               </div>
               <div>
-                <div style={{fontWeight:700,fontSize:14,color:C.text}}>词库健康度：<span style={{color:healthColor}}>{healthLabel}</span></div>
-                <div style={{fontSize:12,color:C.textSec,marginTop:2}}>{statsView.statuses.mastered||0} 个已掌握 / {_nonSkippedTotal} 个词汇{(statsView.statuses.skipped||0) > 0 ? "（不含 " + (statsView.statuses.skipped||0) + " 个快筛跳过）" : ""}</div>
+                <div style={{fontWeight:700,fontSize:14,color:C.text}}>学过词掌握率：<span style={{color:healthColor}}>{healthLabel}</span></div>
+                <div style={{fontSize:12,color:C.textSec,marginTop:2}}>在 {_touched} 个学过的词中掌握 {_mastered} 个{_skipped > 0 ? "，快筛认识 " + _skipped + " 个" : ""}</div>
               </div>
             </div>;
           })()}
+
+          {/* 学习成就总览 - 突出真实数据 */}
+          <div style={{background:"linear-gradient(135deg, "+C.goldLight+" 0%, "+C.accentLight+" 100%)",border:"1px solid "+C.gold+"33",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
+            <div style={{fontSize:12,fontWeight:700,color:C.gold,marginBottom:8}}>🏆 累计学习成就</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4, 1fr)",gap:8}}>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:20,fontWeight:800,color:C.accent}}>{statsView.xp}</div>
+                <div style={{fontSize:10,color:C.textSec}}>累计 XP</div>
+              </div>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:20,fontWeight:800,color:C.green}}>{statsView.statuses.mastered || 0}</div>
+                <div style={{fontSize:10,color:C.textSec}}>已掌握</div>
+              </div>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:20,fontWeight:800,color:C.teal}}>{statsView.answered}</div>
+                <div style={{fontSize:10,color:C.textSec}}>累计答题</div>
+              </div>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:20,fontWeight:800,color:C.gold}}>{statsView.bestStreak}</div>
+                <div style={{fontSize:10,color:C.textSec}}>最佳连对</div>
+              </div>
+            </div>
+          </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,marginBottom:12}}>
             <div style={S.statCard}><div style={S.statNum}>{statsView.totalWords}</div><div style={S.statLabel}>词库总数</div></div>
             <div style={S.statCard}><div style={S.statNum}>{statsView.dueCount}</div><div style={S.statLabel}>今日到期复习</div></div>
-            <div style={S.statCard}><div style={S.statNum}>{statsView.accuracy}%</div><div style={S.statLabel}>猜词正确率</div></div>
-            <div style={S.statCard}><div style={S.statNum}>{statsView.xp}</div><div style={S.statLabel}>累计 XP</div></div>
-            <div style={S.statCard}><div style={S.statNum}>{statsView.bestStreak}</div><div style={S.statLabel}>最佳连对</div></div>
-            <div style={S.statCard}><div style={S.statNum}>{statsView.totalReviews}</div><div style={S.statLabel}>总复习次数</div></div>
-            <div style={S.statCard}><div style={S.statNum}>{planView.deepUsedToday}/{deepReviewDailyCap}</div><div style={S.statLabel}>深度攻克今日用量</div></div>
-            <div style={S.statCard}><div style={S.statNum}>{planView.skippedCount}</div><div style={S.statLabel}>快筛已跳过</div></div>
-            <div style={S.statCard}><div style={S.statNum}>{planView.unlearnedCount}</div><div style={S.statLabel}>待学习词数</div></div>
-            <div style={S.statCard}><div style={S.statNum}>{planView.skippedCount > 0 ? Math.round(planView.unknownRate*100)+"%" : "-"}</div><div style={S.statLabel}>预估不认识率</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{statsView.accuracy}%</div><div style={S.statLabel}>答题正确率</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{statsView.totalReviews}</div><div style={S.statLabel}>累计复习次数</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{planView.deepUsedToday}/{deepReviewDailyCap}</div><div style={S.statLabel}>今日已复习</div></div>
+            <div style={S.statCard}><div style={S.statNum}>{planView.skippedCount}</div><div style={S.statLabel}>快筛认识</div></div>
           </div>
-          <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:8}}>词汇状态分布</div>
-            {Object.keys(WORD_STATUS_META).map(function(k){
-              var m = WORD_STATUS_META[k];
-              var c = statsView.statuses[k] || 0;
-              var total = Math.max(1, statsView.totalWords);
-              var pct = Math.round((c / total) * 100);
-              return <div key={k} style={{marginBottom:8}}>
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}><span style={{color:m.color,fontWeight:700}}>{m.icon} {m.text}</span><span>{c} ({pct}%)</span></div>
-                <div style={{height:6,background:C.border,borderRadius:999,overflow:"hidden"}}><div style={{height:"100%",width:pct+"%",background:m.color,borderRadius:999}}/></div>
-              </div>;
-            })}
-          </div>
+          {(() => {
+            // 大词库用户（>500 词）隐藏"未学"条，只看学过的词的状态分布
+            var _touched = (statsView.statuses.mastered||0) + (statsView.statuses.uncertain||0) + (statsView.statuses.error||0) + (statsView.statuses.learning||0) + (statsView.statuses.skipped||0);
+            var isBigLibrary = statsView.totalWords > 500;
+            var denom = isBigLibrary ? Math.max(1, _touched) : Math.max(1, statsView.totalWords);
+            var keysToShow = isBigLibrary ? Object.keys(WORD_STATUS_META).filter(function(k){ return k !== "unlearned"; }) : Object.keys(WORD_STATUS_META);
+            return <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+              <div style={{fontWeight:700,fontSize:13,marginBottom:8}}>{isBigLibrary ? "学过词的状态分布（" + _touched + " 个）" : "词汇状态分布"}</div>
+              {keysToShow.map(function(k){
+                var m = WORD_STATUS_META[k];
+                var c = statsView.statuses[k] || 0;
+                var pct = Math.round((c / denom) * 100);
+                return <div key={k} style={{marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}><span style={{color:m.color,fontWeight:700}}>{m.icon} {m.text}</span><span>{c} ({pct}%)</span></div>
+                  <div style={{height:6,background:C.border,borderRadius:999,overflow:"hidden"}}><div style={{height:"100%",width:pct+"%",background:m.color,borderRadius:999}}/></div>
+                </div>;
+              })}
+              {isBigLibrary && <div style={{fontSize:11,color:C.textSec,marginTop:6,opacity:0.8}}>💡 大词库模式：只显示已接触过的词，不会被"未学"淹没</div>}
+            </div>;
+          })()}
           {(() => {
             var _words = parseWordsFromInput(wordInput);
             var _upcoming = { today: 0, tomorrow: 0, thisWeek: 0, later: 0 };
@@ -3932,7 +3962,7 @@ export default function App() {
                         <div style={{fontWeight:700,fontSize:15,marginBottom:4,color:C.teal}}>✅ 已登录</div>
                         <div style={{fontSize:13,color:C.textSec,marginBottom:12}}>{user.email}</div>
                         <div style={{fontSize:13,color:C.text,lineHeight:1.9}}>
-                          🎉 <strong>推广期</strong> · 每日 {DAILY_LIMIT_REGISTERED} 词<br/>
+                          {userTier==="pro" ? <>✨ <strong>Pro 会员</strong> · 每日无限学习<br/></> : userTier==="basic" ? <>🎯 <strong>Basic 会员</strong> · 每日无限学习<br/></> : <>🎉 <strong>推广期</strong> · 每日 {DAILY_LIMIT_REGISTERED} 词<br/></>}
                           ☁️ 学习进度自动云端同步<br/>
                           📱 跨设备继续学习
                         </div>
@@ -4387,7 +4417,7 @@ export default function App() {
 
       <div ref={contentEndRef} />
       </div>
-      <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} stats={stats} studyStreak={getStudyStreak()} studyGoal={studyGoal} dailyNewWords={dailyNewWords} deepReviewDailyCap={deepReviewDailyCap} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={function(){ handleLogout(); setShowUserCenter(false); }} />
+      <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} stats={stats} studyStreak={getStudyStreak()} studyGoal={studyGoal} dailyNewWords={dailyNewWords} deepReviewDailyCap={deepReviewDailyCap} userTier={userTier} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={function(){ handleLogout(); setShowUserCenter(false); }} />
       <style>{globalCSS}</style>
     </div>
   );

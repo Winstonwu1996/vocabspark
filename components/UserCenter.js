@@ -15,12 +15,22 @@ var UserAvatar = ({ user, size }) => {
 
 export { UserAvatar };
 
-export default function UserCenter({ open, onClose, user, stats, studyStreak, studyGoal, dailyNewWords, deepReviewDailyCap, onLogin, onLogout }) {
+export default function UserCenter({ open, onClose, user, stats, studyStreak, studyGoal, dailyNewWords, deepReviewDailyCap, userTier, onLogin, onLogout }) {
   if (!open) return null;
   var pct = stats && stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
   var goalLabel = "";
   var GOALS = { ssat:"备考 SSAT", isee:"备考 ISEE", sat:"备考 SAT", toefl:"备考 TOEFL", ielts:"备考 IELTS", other:"其他目标" };
   if (studyGoal) goalLabel = GOALS[studyGoal] || studyGoal;
+
+  // 根据订阅等级显示 Badge
+  var tier = userTier || "free";
+  var tierConfig = {
+    pro: { label: "✨ Pro 会员", bg: "linear-gradient(135deg, #c46b30 0%, #c8922e 100%)", color: "#fff", border: "transparent" },
+    basic: { label: "🎯 Basic 会员", bg: C.goldLight, color: C.gold, border: C.gold + "44" },
+    free: { label: "Free · 推广期", bg: C.accentLight, color: C.accent, border: C.accent + "33" },
+  };
+  var badge = tierConfig[tier] || tierConfig.free;
+  var isPaid = tier === "pro" || tier === "basic";
 
   var Section = ({ title, children }) => (
     <div style={{ marginBottom:16 }}>
@@ -62,7 +72,8 @@ export default function UserCenter({ open, onClose, user, stats, studyStreak, st
               </div>
 
               {/* Level Badge */}
-              <div style={{ display:"inline-block", padding:"4px 12px", borderRadius:20, fontSize:12, fontWeight:700, background:C.accentLight, color:C.accent, border:"1px solid "+C.accent+"33", marginBottom:16 }}>Free · 推广期</div>
+              <div style={{ display:"inline-block", padding:"4px 12px", borderRadius:20, fontSize:12, fontWeight:700, background:badge.bg, color:badge.color, border:"1px solid "+badge.border, marginBottom:16 }}>{badge.label}</div>
+              {isPaid && <div style={{ fontSize:11, color:C.textSec, marginBottom:16, marginTop:-10 }}>每日学习无限制 · 谢谢你的支持 ❤️</div>}
 
               {/* Quick Stats */}
               <div style={{ display:"flex", gap:8, marginBottom:20 }}>
@@ -82,9 +93,9 @@ export default function UserCenter({ open, onClose, user, stats, studyStreak, st
 
               {/* Learning Settings */}
               <Section title="学习设定">
-                <Row icon="🎯" label="学习目标" value={goalLabel || "未设置"} href="/vocab" />
-                <Row icon="📖" label="每日新词" value={(dailyNewWords || 10) + " 词"} />
-                <Row icon="🔴" label="每日攻克" value={(deepReviewDailyCap || 5) + " 词"} />
+                <Row icon="🎯" label="考试方向" value={goalLabel || "未设置"} href="/vocab" />
+                <Row icon="📖" label="每日新词目标" value={(dailyNewWords || 10) + " 词"} />
+                <Row icon="🔴" label="每日复习目标" value={(deepReviewDailyCap || 5) + " 词"} />
               </Section>
 
               {/* Courses */}
