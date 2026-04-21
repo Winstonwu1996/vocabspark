@@ -15,7 +15,7 @@ var UserAvatar = ({ user, size }) => {
 
 export { UserAvatar };
 
-export default function UserCenter({ open, onClose, user, stats, studyStreak, studyGoal, dailyNewWords, deepReviewDailyCap, userTier, onLogin, onLogout }) {
+export default function UserCenter({ open, onClose, user, stats, studyStreak, studyGoal, dailyNewWords, deepReviewDailyCap, userTier, newLearnedToday, onLogin, onLogout }) {
   if (!open) return null;
   var pct = stats && stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
   var goalLabel = "";
@@ -90,6 +90,23 @@ export default function UserCenter({ open, onClose, user, stats, studyStreak, st
                   <div style={{ fontSize:10, color:C.textSec }}>正确率</div>
                 </div>
               </div>
+
+              {/* Today's Progress */}
+              {(dailyNewWords || 0) > 0 && (
+                <div style={{ background:C.accentLight, border:"1px solid "+C.accent+"33", borderRadius:10, padding:"10px 12px", marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:C.accent, marginBottom:6 }}>📅 今日新词进度</div>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <div style={{ flex:1, height:8, background:"#fff", borderRadius:4, overflow:"hidden" }}>
+                      <div style={{ height:"100%", width:Math.min(100, ((newLearnedToday||0)/Math.max(1,dailyNewWords))*100)+"%", background:"linear-gradient(90deg,"+C.accent+","+C.gold+")", borderRadius:4, transition:"width 0.3s" }} />
+                    </div>
+                    <div style={{ fontSize:13, fontWeight:700, color:C.accent, minWidth:50, textAlign:"right" }}>
+                      {newLearnedToday||0} / {dailyNewWords}
+                    </div>
+                  </div>
+                  {(newLearnedToday||0) < dailyNewWords && <div style={{ fontSize:10, color:C.textSec, marginTop:4 }}>还差 {dailyNewWords - (newLearnedToday||0)} 词达成今日目标 💪</div>}
+                  {(newLearnedToday||0) >= dailyNewWords && <div style={{ fontSize:10, color:C.green, marginTop:4, fontWeight:600 }}>✨ 今日目标已达成，超额学习会记录为额外进度</div>}
+                </div>
+              )}
 
               {/* Learning Settings */}
               <Section title="学习设定">

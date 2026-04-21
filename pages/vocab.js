@@ -801,7 +801,16 @@ export default function App() {
       if (typeof window === "undefined") {
         return { date: today, quota: dailyNewWords || 20, consumed: 0 };
       }
-      var stored = JSON.parse(localStorage.getItem(DAILY_NEW_QUOTA_KEY) || '{}');
+      // 优先从 SKEY 读（跨设备同步），fallback 到独立 key（向后兼容）
+      var stored = null;
+      try {
+        var sraw = localStorage.getItem(SKEY);
+        var sdata = sraw ? JSON.parse(sraw) : null;
+        if (sdata?.dailyNewQuotaState) stored = sdata.dailyNewQuotaState;
+      } catch(e) {}
+      if (!stored) {
+        try { stored = JSON.parse(localStorage.getItem(DAILY_NEW_QUOTA_KEY) || '{}'); } catch(e) { stored = {}; }
+      }
       if (stored.date === today) {
         return {
           date: today,
@@ -818,7 +827,10 @@ export default function App() {
   var saveNewWordQuotaState = function(state) {
     try {
       if (typeof window === "undefined") return;
+      // 同时写入独立 key（向后兼容）和 SKEY（云同步）
       localStorage.setItem(DAILY_NEW_QUOTA_KEY, JSON.stringify(state));
+      doSave({ dailyNewQuotaState: state });
+      if (userRef.current) syncToCloud();
     } catch (e) {}
   };
 
@@ -2713,7 +2725,7 @@ export default function App() {
   };
 
   // ── USER CENTER (rendered on ALL screens) ──
-  var userCenterEl = <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} stats={stats} studyStreak={getStudyStreak()} studyGoal={studyGoal} dailyNewWords={dailyNewWords} deepReviewDailyCap={deepReviewDailyCap} userTier={userTier} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={function(){ handleLogout(); setShowUserCenter(false); }} />;
+  var userCenterEl = <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} stats={stats} studyStreak={getStudyStreak()} studyGoal={studyGoal} dailyNewWords={dailyNewWords} deepReviewDailyCap={deepReviewDailyCap} userTier={userTier} newLearnedToday={getNewWordQuotaState().consumed || 0} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={function(){ handleLogout(); setShowUserCenter(false); }} />;
 
   // ── SCREENING MODE ──
   if (screen === "screening") {
@@ -3160,7 +3172,7 @@ export default function App() {
                   <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>③ 学习新词</div>
                   <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.newMin} 分钟</div>
                   <div style={{fontSize:11,color:dailyPlan.newDone?C.green:C.textSec,fontWeight:dailyPlan.newDone?600:500,minHeight:16}}>
-                    {dailyPlan.newDone ? "✅ 已达标" : "可学 " + dailyPlan.newRemainingQuota}
+                    {dailyPlan.newDone ? "✅ " + dailyPlan.newLearnedToday + "/" + dailyPlan.newQuota + " 已达标" : (dailyPlan.newLearnedToday || 0) + "/" + dailyPlan.newQuota + " 词"}
                   </div>
                 </div>
                 <button style={{...S.smallBtn,background:dailyPlan.newDone?C.card:C.accent,color:dailyPlan.newDone?C.accent:"#fff",border:dailyPlan.newDone?"1px solid "+C.accent:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} onClick={function(){startLearning(0);}}>
@@ -4427,7 +4439,7 @@ export default function App() {
 
       <div ref={contentEndRef} />
       </div>
-      <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} stats={stats} studyStreak={getStudyStreak()} studyGoal={studyGoal} dailyNewWords={dailyNewWords} deepReviewDailyCap={deepReviewDailyCap} userTier={userTier} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={function(){ handleLogout(); setShowUserCenter(false); }} />
+      <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} stats={stats} studyStreak={getStudyStreak()} studyGoal={studyGoal} dailyNewWords={dailyNewWords} deepReviewDailyCap={deepReviewDailyCap} userTier={userTier} newLearnedToday={getNewWordQuotaState().consumed || 0} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={function(){ handleLogout(); setShowUserCenter(false); }} />
       <style>{globalCSS}</style>
     </div>
   );
