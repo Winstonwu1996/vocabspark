@@ -700,13 +700,13 @@ export default function App() {
         if (d?.stats) setStats(function(s) { return {...s, ...(d.stats||{})}; });
         if (d?.profile) setShowWelcome(false);
         if (d?.tipDismissed) setTipDismissed(true);
-        // 恢复词表：优先从 wordInput 字段，其次从 session.wordList
+        // 恢复词表：严格仅从 wordInput 字段恢复
+        // 绝不使用 session.wordList 回填 wordInput —— session 只是学习中的子集，不是全量词表
         if (d?.wordInput) setWordInput(d.wordInput);
         if (d?.session?.wordList?.length > 0 && d?.session?.idx < d.session.wordList.length) {
           setWordList(d.session.wordList);
           setIdx(d.session.idx);
           setLearned(d.session.learned || []);
-          if (!d.wordInput) setWordInput(d.session.wordList.join("\n"));
         }
       } catch(e) {}
     }).catch(function() {});
@@ -727,6 +727,14 @@ export default function App() {
         loadSave().then(function(d) {
           d = d || {};
           if (d.wordInput !== wordInput) {
+            // 防大数据丢失：如果旧词表明显比新词表大（差距 >100 词），拒绝保存
+            // 这种情况通常是 bug（session 回填、状态错乱等）导致的意外缩减
+            var oldCount = (d.wordInput || '').split('\n').filter(Boolean).length;
+            var newCount = wordInput.split('\n').filter(Boolean).length;
+            if (oldCount > 100 && newCount < oldCount / 2) {
+              console.warn('[wordInput autosave] blocked: oldCount=' + oldCount + ' newCount=' + newCount + ' (too much shrinkage)');
+              return;
+            }
             d.wordInput = wordInput;
             doSave(d);
             if (userRef.current) syncToCloud();
@@ -1786,11 +1794,29 @@ export default function App() {
         if (!words.length) { setError("未能提取词汇，请确认文件每行一个英文单词。"); setFileLabel(file.name); return; }
       }
       var newWordInput = words.join("\n");
-      setWordInput(newWordInput); setError(""); setSetupTab("words");
-      setFileLabel("✅ " + file.name + "（" + words.length + " 个词）");
+      // 如果已有词表（>50 词），给用户合并/替换的选择
+      var existingCount = (wordInput || '').split('\n').filter(Boolean).length;
+      var finalWordInput = newWordInput;
+      if (existingCount > 50) {
+        var choice = confirm("检测到你已有 " + existingCount + " 个词的词表。\n\n点「确定」：合并新词到现有词表（推荐，不丢旧词）\n点「取消」：放弃上传");
+        if (!choice) { setFileLabel(file.name); return; }
+        // 合并去重
+        var existingWords = (wordInput || '').split('\n').map(w => w.trim().toLowerCase()).filter(Boolean);
+        var seen = new Set(existingWords);
+        var mergedList = [...existingWords];
+        words.forEach(w => {
+          var lw = w.trim().toLowerCase();
+          if (lw && !seen.has(lw)) { seen.add(lw); mergedList.push(lw); }
+        });
+        finalWordInput = mergedList.join("\n");
+        setFileLabel("✅ " + file.name + "（合并后 " + mergedList.length + " 词，新增 " + (mergedList.length - existingCount) + " 词）");
+      } else {
+        setFileLabel("✅ " + file.name + "（" + words.length + " 个词）");
+      }
+      setWordInput(finalWordInput); setError(""); setSetupTab("words");
       // 立即保存词库到本地和云端
       var d = await loadSave() || {};
-      d.wordInput = newWordInput;
+      d.wordInput = finalWordInput;
       await doSave(d);
       if (userRef.current) syncToCloud();
     } catch (err) { setError("文件解析失败: " + err.message); setFileLabel(file.name); }
@@ -3385,9 +3411,23 @@ export default function App() {
               </div>
               <div style={S.presetRow}>{Object.keys(goalPresets).map(function(n) {
                 return <button key={n} style={S.presetBtn} onClick={function(){
-                  setWordInput(goalPresets[n]);
-                  // 立即保存预设词库
-                  loadSave().then(function(d) { d = d || {}; d.wordInput = goalPresets[n]; doSave(d); if (userRef.current) syncToCloud(); });
+                  var existingCount = (wordInput || '').split('\n').filter(Boolean).length;
+                  var presetWords = goalPresets[n];
+                  var finalInput = presetWords;
+                  if (existingCount > 50) {
+                    // 已有大词表，合并而非替换
+                    if (!confirm("检测到你已有 " + existingCount + " 个词的词表。\n\n点「确定」：合并预设词到现有词表（不丢旧词）\n点「取消」：放弃")) return;
+                    var existingWords = wordInput.split('\n').map(w => w.trim().toLowerCase()).filter(Boolean);
+                    var seen = new Set(existingWords);
+                    var merged = [...existingWords];
+                    presetWords.split('\n').forEach(w => {
+                      var lw = w.trim().toLowerCase();
+                      if (lw && !seen.has(lw)) { seen.add(lw); merged.push(lw); }
+                    });
+                    finalInput = merged.join('\n');
+                  }
+                  setWordInput(finalInput);
+                  loadSave().then(function(d) { d = d || {}; d.wordInput = finalInput; doSave(d); if (userRef.current) syncToCloud(); });
                 }}>{n}</button>;
               })}</div>
             </div>;
