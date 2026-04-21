@@ -398,7 +398,8 @@ var loadSave = async () => {
     var r = localStorage.getItem(SKEY);
     var d = r ? JSON.parse(r) : null;
     // 迁移独立 key 到 SKEY（只做一次）
-    if (d && d.schemaVersion < 2) {
+    // 注意：undefined < 2 是 false（NaN 比较），要显式判断 !== 2
+    if (d && d.schemaVersion !== 2) {
       try { var ws = localStorage.getItem(WORD_STATUS_KEY); if (ws) { d.wordStatusMap = JSON.parse(ws); localStorage.removeItem(WORD_STATUS_KEY); } } catch(e) {}
       try { var rd = localStorage.getItem(REVIEW_WORD_DATA_KEY); if (rd) { d.reviewWordData = JSON.parse(rd); localStorage.removeItem(REVIEW_WORD_DATA_KEY); } } catch(e) {}
       d.schemaVersion = 2;
@@ -925,6 +926,15 @@ export default function App() {
     try {
       var fullData = await loadSave();
       if (!fullData) { _syncInFlight = false; setSyncStatus("idle"); return; }
+      // 反数据丢失保护：如果本地 reviewWordData 比 wordStatusMap 少太多，拒绝同步
+      // 这种情况通常是迁移 bug 或数据损坏导致，同步会把云端历史覆盖掉
+      var wsmCount = Object.keys(fullData.wordStatusMap || {}).length;
+      var rwdCount = Object.keys(fullData.reviewWordData || {}).length;
+      if (wsmCount > 20 && rwdCount < wsmCount * 0.3) {
+        console.warn('[sync] blocked: reviewWordData (' + rwdCount + ') much smaller than wordStatusMap (' + wsmCount + '). Possible data loss. Skip sync to protect cloud data.');
+        _syncInFlight = false; setSyncStatus("error");
+        return;
+      }
       fullData.updatedAt = new Date().toISOString();
       var r = await fetch('/api/sync', {
         method: 'POST',
