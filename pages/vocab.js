@@ -2039,7 +2039,8 @@ export default function App() {
     // 已登录用户如果 tier 还没加载完，也按 Infinity 处理（宁可多给不限制）
     var tierLoading = userRef.current && userTier === "free" && !localStorage.getItem("vocabspark_tier");
     var limit = (isPaid || tierLoading) ? Infinity : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
-    if (ds.count >= limit) { setShowLimitModal(true); return; }
+    // 双重保护：付费用户永远不应该被限制（即使 userTier 状态竞态也安全）
+    if (!isPaid && !tierLoading && ds.count >= limit) { setShowLimitModal(true); return; }
     incrementDailyCount();
     if (wordStart) {
       setWordTimings(function(prev) { return { ...prev, [currentWord]: { start: wordStart, end: Date.now(), duration: Date.now() - wordStart } }; });
@@ -2068,11 +2069,15 @@ export default function App() {
       if (isFirstLearnToday) {
         consumeNewWordQuota(1);
       }
-      if (guessCorrect === true && !wordStatusMap[currentWord]) {
-        updateManualWordStatus(currentWord, "mastered");
-      }
-      if (guessCorrect === false && !wordStatusMap[currentWord]) {
-        updateManualWordStatus(currentWord, "error");
+      // 关键修复：无论猜词结果如何，只要用户完成了这个词的学习流程，
+      // 都要更新 wordStatusMap，否则这个词明天还会被当"未学"重新安排
+      // 同时，如果词原本是 unlearned 或 skipped（快筛跳过），现在完成了深度学习，也要升级
+      var currentStatus = wordStatusMap[currentWord];
+      var shouldUpdateStatus = !currentStatus || currentStatus === "unlearned" || currentStatus === "skipped";
+      if (shouldUpdateStatus) {
+        if (guessCorrect === true) updateManualWordStatus(currentWord, "mastered");
+        else if (guessCorrect === false) updateManualWordStatus(currentWord, "error");
+        else updateManualWordStatus(currentWord, "learning"); // 跳过猜词 → learning（学习中）
       }
     } catch(e) {}
     // Persist completed word permanently (survives session resets)
@@ -4350,7 +4355,7 @@ export default function App() {
           <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:360,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
             <div style={{fontSize:48,marginBottom:8}}>🎓</div>
             <h3 style={{fontSize:19,fontWeight:700,margin:"0 0 8px"}}>{user ? "今日学习完成！" : "今天的体验课结束了"}</h3>
-            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 16px"}}>{user ? "今日 "+DAILY_LIMIT_REGISTERED+" 词已学完，明天继续加油！" : "你刚才体验了 AI 1 对 1 的私教效果："}</p>
+            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 16px"}}>{user ? "免费用户每天可学 "+DAILY_LIMIT_REGISTERED+" 词，想学更多可以升级 Pro" : "你刚才体验了 AI 1 对 1 的私教效果："}</p>
             {!user && <div style={{background:C.bg,borderRadius:10,padding:"12px 14px",marginBottom:12,fontSize:13,lineHeight:1.7,textAlign:"left"}}>
               {"🎯 AI 根据你的兴趣和生活定制了讲解"}<br/>
               {"🧠 这种个性化教学，传统私教每小时 $100+"}<br/>
