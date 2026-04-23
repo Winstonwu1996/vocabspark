@@ -2612,7 +2612,8 @@ export default function App() {
 
     var ready = function() {
       var d = dataCache.current[nextWord];
-      return !!(d && d.guess && d.teach);
+      // Phase 1.5: JSON 路径 teachJSON 有值而 teach 为 null，必须同时检查两者
+      return !!(d && d.guess && (d.teach || d.teachJSON));
     };
 
     if (ready()) {
@@ -4809,7 +4810,7 @@ export default function App() {
           )}
           <div style={{display:"flex",flexWrap:"wrap",gap:6,justifyContent:"center",margin:"8px 0 16px"}}>
             {wordList.slice(idx, Math.min(idx+5, wordList.length)).map(function(w, i) {
-              var loaded = dataCache.current[w] && (dataCache.current[w].guess || dataCache.current[w].teach);
+              var loaded = dataCache.current[w] && (dataCache.current[w].guess || dataCache.current[w].teach || dataCache.current[w].teachJSON);
               return <span key={w} style={{padding:"4px 12px",borderRadius:20,fontSize:12,fontWeight:600,border:"1px solid "+(loaded?C.green:C.border),background:loaded?C.greenLight:C.bg,color:loaded?C.green:C.textSec,transition:"all 0.3s ease"}}>{loaded?"✓ ":""}{w}</span>;
             })}
           </div>
