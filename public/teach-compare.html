@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Know U. · Teach 策略对比（4 种词型）</title>
+<title>Know U. · 按词型自定义结构（V2）</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,500&display=swap" rel="stylesheet">
@@ -22,31 +22,31 @@
 body {
   background: var(--bg); color: var(--text);
   font-family: 'Inter',-apple-system,'PingFang SC','HarmonyOS Sans SC',sans-serif;
-  padding: 40px 20px;
+  padding: 40px 20px; line-height: 1.7;
 }
 .container { max-width: 1400px; margin: 0 auto; }
 
-.page-head { text-align: center; margin-bottom: 40px; }
+.page-head { text-align: center; margin-bottom: 36px; }
 .page-head h1 {
   font-family: 'Fraunces','PingFang SC',Georgia,serif;
   font-weight: 800; font-size: 38px; letter-spacing: -0.02em; margin-bottom: 10px;
 }
-.page-head .sub { font-size: 15px; color: var(--text-sec); max-width: 720px; margin: 0 auto; line-height: 1.7; }
+.page-head .sub { font-size: 14px; color: var(--text-sec); max-width: 780px; margin: 0 auto; line-height: 1.75; }
+.page-head .v2 {
+  display: inline-block; margin-left: 8px; padding: 3px 10px;
+  background: var(--accent); color: white; border-radius: 999px; font-size: 12px; font-weight: 700;
+}
 
-.strategy-box {
-  max-width: 900px; margin: 0 auto 40px;
-  background: var(--card); border-radius: 14px; padding: 20px 24px;
+.intro-box {
+  max-width: 920px; margin: 0 auto 40px;
+  background: var(--card); border-radius: 14px; padding: 22px 26px;
   border: 1px solid var(--border); box-shadow: var(--shadow);
-  font-size: 13px; line-height: 1.7;
+  font-size: 13px; line-height: 1.75;
 }
-.strategy-box h3 {
-  font-family: 'Fraunces','PingFang SC',serif;
-  font-size: 17px; margin-bottom: 10px;
-}
-.strategy-box table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-.strategy-box th, .strategy-box td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); }
-.strategy-box th { font-weight: 700; background: #f9f8f5; font-size: 12px; color: var(--text-sec); }
-.strategy-box .type-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.intro-box h3 { font-family: 'Fraunces','PingFang SC',serif; font-size: 18px; margin-bottom: 10px; }
+.intro-box .emph { color: var(--accent); font-weight: 700; }
+.intro-box ul { margin: 8px 0 8px 22px; }
+.intro-box li { margin-bottom: 4px; }
 
 .word-section { margin-bottom: 60px; }
 .word-section-head {
@@ -79,60 +79,148 @@ body {
 .col-head .tag { font-size: 11px; font-weight: 600; padding: 2px 8px; background: rgba(0,0,0,0.06); border-radius: 999px; }
 
 .card {
-  background: var(--card); border-radius: 14px; padding: 20px 20px;
+  background: var(--card); border-radius: 14px; padding: 20px;
   box-shadow: var(--shadow); border: 1px solid var(--border);
-  font-size: 14px; line-height: 1.75;
+  font-size: 14px;
 }
-.tag-pill {
+
+/* 旧结构（Before）专用 */
+.old-tag-pill {
   display: inline-block; padding: 3px 10px; background: var(--teal-light); color: var(--teal);
   border-radius: 999px; font-size: 11px; font-weight: 600; margin-bottom: 14px;
 }
-.section { border-left: 3px solid; border-radius: 0 8px 8px 0; padding: 10px 12px; margin: 10px 0; }
-.sec-jiao { border-color: var(--purple); background: #f0edff55; }
-.sec-lian { border-color: var(--gold); background: #fdf6ea55; }
-.sec-lian-head, .sec-jiao-head {
-  font-weight: 700; font-size: 12px; margin-bottom: 6px; font-family: 'Fraunces','PingFang SC',serif;
+.old-section { border-left: 3px solid; border-radius: 0 8px 8px 0; padding: 10px 12px; margin: 10px 0; }
+.old-section.s-jiao { border-color: var(--purple); background: #f0edff55; }
+.old-section.s-lian { border-color: var(--gold); background: #fdf6ea55; }
+.old-section.s-lian .label { color: var(--gold); }
+.old-section.s-jiao .label { color: var(--purple); }
+.old-section .label {
+  font-weight: 700; font-size: 12px; margin-bottom: 6px;
+  font-family: 'Fraunces','PingFang SC',serif;
 }
-.sec-jiao-head { color: var(--purple); }
-.sec-lian-head { color: var(--gold); }
-.ex { font-style: italic; margin-top: 5px; font-size: 13px; }
-.ex strong { font-style: normal; background: var(--accent-light); padding: 0 3px; border-radius: 3px; color: var(--accent); }
+.old-section .ex { font-style: italic; margin-top: 5px; font-size: 13px; }
+.old-section .ex strong { font-style: normal; background: var(--accent-light); padding: 0 3px; border-radius: 3px; color: var(--accent); }
 
-/* 各种视觉化元素 */
+/* 新结构（After）— 按词型自定义 */
+.new-sec {
+  margin-bottom: 10px;
+}
+.new-sec .label {
+  display: inline-block; font-weight: 700; font-size: 12px;
+  padding: 3px 10px; border-radius: 6px; margin-bottom: 6px;
+  font-family: 'Inter','PingFang SC',sans-serif;
+}
+.new-sec .body {
+  padding-left: 2px; font-size: 13.5px; line-height: 1.75;
+}
+.new-sec .body strong { color: var(--accent); }
+
+/* 各种视觉化组件 */
 .gradient-scale {
-  display: flex; align-items: center; gap: 6px; margin: 10px 0;
-  font-size: 12px; font-weight: 600;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+  margin: 10px 0; font-size: 12px; font-weight: 600;
 }
 .gradient-scale .step {
-  padding: 5px 10px; border-radius: 6px; white-space: nowrap;
-  border: 1px solid;
+  padding: 8px 6px; border-radius: 6px; white-space: nowrap;
+  border: 1px solid; text-align: center; line-height: 1.3;
 }
-.gradient-scale .arrow { color: var(--text-sec); }
+.gradient-note {
+  text-align:center; font-size:11px; color: var(--text-sec); margin-top: 4px;
+}
 
 .collocation-box {
-  display: grid; grid-template-columns: auto 1fr; gap: 4px 10px;
-  margin: 10px 0; padding: 10px; background: #f9f8f5; border-radius: 8px; font-size: 13px;
+  display: grid; grid-template-columns: auto 1fr; gap: 5px 12px;
+  margin: 8px 0; padding: 10px 12px; background: #f9f8f5; border-radius: 8px; font-size: 13px;
 }
 .collocation-box .k { font-weight: 700; color: var(--teal); font-family: 'Inter',sans-serif; }
 
-.root-tree {
-  background: #f9f8f5; border-radius: 8px; padding: 10px; margin: 10px 0; font-size: 13px;
+.confuse-box {
+  background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;
+  padding: 10px 12px; margin: 8px 0; font-size: 13px;
 }
-.root-tree .root-line { font-weight: 700; color: var(--purple); margin-bottom: 6px; font-family: 'Inter',sans-serif; }
-.root-tree .family { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 12px; }
-.root-tree .family .w { font-weight: 700; color: var(--text); font-family: 'Inter',sans-serif; }
+.confuse-box .item { margin: 3px 0; }
+.confuse-box .item strong { color: var(--red); }
+
+.root-tree {
+  background: var(--purple-light); border: 1px solid #d0c8ff;
+  border-radius: 10px; padding: 10px 12px; margin: 8px 0; font-size: 13px;
+}
+.root-tree .root-head {
+  font-weight: 700; color: var(--purple); margin-bottom: 4px;
+  font-family: 'Inter',sans-serif; font-size: 14px;
+}
+.root-tree .meaning { font-size: 12px; color: var(--text-sec); margin-bottom: 8px; }
+
+.family-tree {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 12px;
+}
+.family-tree .w { font-weight: 700; color: var(--purple); font-family: 'Inter',sans-serif; }
 
 .mnemonic-card {
   background: linear-gradient(135deg, #fffbf0 0%, #fff3de 100%);
-  border: 1px solid #f5cc8d; border-radius: 10px; padding: 12px; margin: 10px 0;
+  border: 1px solid #f5cc8d; border-radius: 10px; padding: 11px 13px; margin: 8px 0;
   font-size: 13px;
 }
-.mnemonic-card .m-label {
-  font-weight: 700; color: #8a5a00; font-size: 12px; margin-bottom: 6px;
-  font-family: 'Fraunces','PingFang SC',serif;
+.mnemonic-card .title {
+  font-weight: 700; color: #8a5a00; margin-bottom: 5px;
+  font-family: 'Fraunces','PingFang SC',serif; font-size: 14px;
 }
-.mnemonic-card .m-body { line-height: 1.8; }
-.mnemonic-card .m-body strong { color: #c46b30; }
+.mnemonic-card strong { color: #c46b30; font-weight: 700; }
+
+.picture-card {
+  background: #f0f4f7; border: 1px dashed #a5bdd2; border-radius: 10px;
+  padding: 11px 13px; margin: 8px 0; font-size: 13px;
+}
+.picture-card .title {
+  font-weight: 700; color: var(--teal); margin-bottom: 5px;
+  font-family: 'Fraunces','PingFang SC',serif; font-size: 14px;
+}
+
+.synonym-compare {
+  background: #f9f8f5; border-left: 3px solid var(--teal);
+  padding: 10px 14px; margin: 8px 0; font-size: 13px; border-radius: 0 8px 8px 0;
+}
+.synonym-compare .title { font-weight: 700; color: var(--teal); margin-bottom: 4px; font-family: 'Fraunces','PingFang SC',serif; font-size: 14px; }
+
+.visual-anchor {
+  background: linear-gradient(135deg, #fff 0%, #f9f8f5 100%);
+  border: 1px dashed var(--accent); border-radius: 10px;
+  padding: 10px 14px; margin: 8px 0; text-align: center;
+}
+.visual-anchor .emojis { font-size: 28px; letter-spacing: 4px; margin-bottom: 4px; }
+.visual-anchor .desc { font-size: 12px; color: var(--text-sec); font-style: italic; }
+
+.scene-card {
+  background: var(--accent-light); border-left: 3px solid var(--accent);
+  padding: 9px 12px; margin: 6px 0; border-radius: 0 8px 8px 0; font-size: 13px;
+  font-style: italic; line-height: 1.65;
+}
+.scene-card strong { font-style: normal; background: white; padding: 1px 5px; border-radius: 3px; color: var(--accent); }
+.scene-card .zh { font-style: normal; font-size: 12px; color: var(--text-sec); margin-top: 3px; display: block; }
+.scene-card .tts-mark { color: var(--teal); font-size: 12px; }
+
+/* 释义标签 */
+.label-def { background: #f9f8f5; color: var(--text-sec); }
+/* 温度计标签 */
+.label-scale { background: #e6f4ff; color: #1e6ab0; }
+/* 搭配标签 */
+.label-coll { background: var(--teal-light); color: var(--teal); }
+/* 易混词标签 */
+.label-confuse { background: var(--red-light); color: var(--red); }
+/* 词根标签 */
+.label-root { background: var(--purple-light); color: var(--purple); }
+/* 家族标签 */
+.label-family { background: #ece8ff; color: var(--purple); }
+/* 谐音标签 */
+.label-mnemonic { background: var(--gold-light); color: var(--gold); }
+/* 画面标签 */
+.label-picture { background: var(--teal-light); color: var(--teal); }
+/* 同义对比标签 */
+.label-nuance { background: var(--teal-light); color: var(--teal); }
+/* 视觉锚标签 */
+.label-anchor { background: var(--accent-light); color: var(--accent); }
+/* 场景标签 */
+.label-scene { background: var(--accent-light); color: var(--accent); }
 
 .meta {
   margin-top: 14px; padding: 10px 12px; background: #f9f8f5; border-radius: 8px;
@@ -141,35 +229,33 @@ body {
 .meta strong { color: var(--text); font-weight: 600; }
 .meta .cite { color: var(--teal); }
 
-.diff-note {
-  margin-top: 14px; padding: 12px 14px;
-  background: #fff; border-left: 3px solid var(--green); border-radius: 0 8px 8px 0;
-  font-size: 13px; line-height: 1.7;
+.word-count-bar {
+  display: flex; gap: 6px; margin-top: 8px; align-items: center;
+  font-size: 11px; color: var(--text-sec);
 }
-.diff-note strong { color: var(--green); font-weight: 700; }
+.word-count-bar .bar {
+  flex: 1; height: 6px; background: #e5e2dd; border-radius: 999px; overflow: hidden;
+}
+.word-count-bar .fill { height: 100%; background: var(--green); }
+.word-count-bar .fill.over { background: var(--gold); }
 </style>
 </head>
 <body>
 <div class="container">
 
 <div class="page-head">
-  <h1>Teach 页策略对比（4 种词型）</h1>
+  <h1>按词型自定义结构 <span class="v2">V2</span></h1>
   <p class="sub">
-    基于中国学习者词汇记忆的 SLA / 认知心理学研究整合。左列是当前 teach 页的生成效果（真实参照），
-    右列是 L1 策略（prompt 侧重）落地后的预期效果。整体字数不变（350 字左右），
-    但每个词得到"对味"的记忆机制，而不是一套模板套所有词。
+    放开【教】【连】【用】三段式约束。每种词型设计自己最适合记忆的叙事流 —
+    A 用温度计，B 用搭配+易混，C 用词根+家族，D 用谐音+画面。结构本身成为记忆助力（Dual Coding）。
   </p>
 </div>
 
-<div class="strategy-box">
-  <h3>核心策略</h3>
-  <table>
-    <tr><th>词型</th><th>【教】段侧重</th><th>核心记忆机制（研究）</th></tr>
-    <tr><td><span class="type-badge type-a">A 程度词</span></td><td>同义词程度对比表</td><td>Nuance 语义辨析（Nation 2001）</td></tr>
-    <tr><td><span class="type-badge type-b">B 搭配型</span></td><td>3 个高频搭配结构</td><td>Collocation depth（Qian 1999）</td></tr>
-    <tr><td><span class="type-badge type-c">C 词根型</span></td><td>词根拆解 + 同根词家族</td><td>Word Part Technique（Wei 2015）</td></tr>
-    <tr><td><span class="type-badge type-d">D 难记型</span></td><td>谐音梗 / 联想助记</td><td>Keyword Method +9%（Chiu & Hawkins）</td></tr>
-  </table>
+<div class="intro-box">
+  <h3>V2 与 V1 的核心差异</h3>
+  <p><span class="emph">V1（三段式按词型换内容）：</span>【教】【连】【用】结构固定，内容根据词型略有不同。问题 — 结构统一但"对味感"有限。</p>
+  <p style="margin-top:8px"><span class="emph">V2（按词型自定义结构）：</span>段落标签、顺序、数量都按词型定制。<strong>【连】不再是独立段落，而是自然嵌入到各词型的逻辑里</strong>（程度词里连同义，搭配型里连易混，词根型里连家族，难记型里连同义对比）。</p>
+  <p style="margin-top:8px">共同骨架：<strong>释义 → 主记忆机制（按词型）→ 视觉锚点 → 2 个画像场景</strong>。字数目标 300-400，特别合适时可到 480（+20%）。</p>
 </div>
 
 <!-- ======== A 类：程度词 ecstatic ======== -->
@@ -180,64 +266,82 @@ body {
     <span class="type-badge type-a">A · 程度词</span>
   </div>
   <div class="compare">
+    <!-- Before -->
     <div class="col-before">
-      <div class="col-head"><span>当前 · 通用模板</span><span class="tag">BEFORE</span></div>
+      <div class="col-head"><span>V1 · 三段式</span><span class="tag">BEFORE</span></div>
       <div class="card">
-        <span class="tag-pill">📖 学习笔记</span>
-        <div class="section sec-jiao">
-          <div class="sec-jiao-head">📖 【教】</div>
-          <div><strong>ecstatic</strong> 是形容词，意思是"欣喜若狂的、极度兴奋的"。表示一种非常强烈的积极情绪，比 happy 和 excited 都要强烈很多。</div>
+        <span class="old-tag-pill">📖 学习笔记</span>
+        <div class="old-section s-jiao">
+          <div class="label">📖 【教】</div>
+          <div><strong>ecstatic</strong> 是形容词，意思是"欣喜若狂的、极度兴奋的"。比 happy 和 excited 强烈很多。</div>
         </div>
-        <div class="section sec-lian">
-          <div class="sec-lian-head">🔗 【连】</div>
-          <div>想象一下：Taylor Swift 突然宣布在你家附近开演唱会，你和 Emily 一定会 <strong>ecstatic</strong>！或者你在《王者荣耀》里第一次五杀，那种感觉就是 ecstatic。</div>
-          <div class="ex">"Willow was <strong>ecstatic</strong> when her tennis coach said she qualified for the tournament."</div>
+        <div class="old-section s-lian">
+          <div class="label">🔗 【连】</div>
+          <div>Taylor Swift 宣布来你家附近开演唱会 → ecstatic！打王者荣耀第一次五杀 → 也是 ecstatic 的感觉。</div>
         </div>
-        <div class="section" style="border-color:var(--green);background:#e6fcf540">
-          <div style="color:var(--green);font-weight:700;font-size:12px;margin-bottom:6px;">✏️ 【练】</div>
-          <div style="font-size:13px">1. 翻译：收到录取通知书时，她欣喜若狂。<br>2. 用 ecstatic 造一个关于 Taylor Swift 的句子。</div>
+        <div class="old-section" style="border-color:var(--green);background:#e6fcf540">
+          <div class="label" style="color:var(--green)">✏️ 【练】</div>
+          <div style="font-size:13px">2 个搭配 + 2 个情景造句...</div>
         </div>
       </div>
       <div class="meta">
-        <strong>特征：</strong>通用模板。学生知道"很开心"，但不清楚它和 happy/delighted/thrilled 的区别，
-        考试遇到选择题（"选最能描述她反应的词"）容易选错。
+        <strong>问题：</strong>三段式结构迫使所有内容往 3 个框里塞。【教】段只是释义，没利用"程度词"这个特性；【连】段和 Taylor 场景混在一起，没凸显和 happy/thrilled 的程度差。
       </div>
     </div>
+    <!-- After -->
     <div class="col-after">
-      <div class="col-head"><span>L1 后 · 程度词专属侧重</span><span class="tag">AFTER</span></div>
+      <div class="col-head"><span>V2 · 程度词专属结构</span><span class="tag">AFTER</span></div>
       <div class="card">
-        <span class="tag-pill">📖 学习笔记</span>
-        <div class="section sec-jiao">
-          <div class="sec-jiao-head">📖 【教】· 程度尺</div>
-          <div style="font-size:13px">这 4 个词都表示"开心"，但强度递增 — 你要感受到它们的温度差：</div>
+        <div class="new-sec">
+          <span class="label label-def">📖 释义</span>
+          <div class="body"><strong>ecstatic</strong> (adj) 欣喜若狂、极度兴奋 — 是"开心"系列里**封顶强度**的词，正式书面用法。</div>
+        </div>
+
+        <div class="new-sec">
+          <span class="label label-scale">🌡️ 程度温度计</span>
+          <div class="body">这 4 个词都是"开心"，但强度差一档就差一个世界：</div>
           <div class="gradient-scale">
             <span class="step" style="background:#fff8f0;color:#8a5a00;border-color:#f5cc8d">glad<br>😊 一般开心</span>
-            <span class="arrow">→</span>
             <span class="step" style="background:#fff4e5;color:#a46420;border-color:#e8a860">delighted<br>😄 挺开心</span>
-            <span class="arrow">→</span>
             <span class="step" style="background:#ffe8d4;color:#c46b30;border-color:#c46b30">thrilled<br>🤩 激动</span>
-            <span class="arrow">→</span>
             <span class="step" style="background:#ffdac2;color:#8b3a10;border-color:#8b3a10;font-weight:800">ecstatic<br>🥳 欣喜若狂</span>
           </div>
-          <div style="font-size:12px;color:var(--text-sec);margin-top:4px">记忆口诀：glad 起点，delighted 升一档，thrilled 再升，ecstatic 封顶。</div>
+          <div class="gradient-note">口诀：glad 起点 → delighted 升档 → thrilled 激动 → ecstatic 封顶</div>
         </div>
-        <div class="section sec-lian">
-          <div class="sec-lian-head">🔗 【连】· 强度场景</div>
-          <div style="font-size:13px">不同强度的场景你要能分辨：</div>
-          <div class="ex">• 每天赢一把《王者荣耀》你只是 <strong>glad</strong>。<br>
-          • Taylor Swift 发新歌你很 <strong>delighted</strong>。<br>
-          • 第一次在 Irvine 打进网球决赛你 <strong>thrilled</strong>。<br>
-          • 如果 Taylor Swift 给你点赞评论 — 那才是 <strong>ecstatic</strong>！</div>
+
+        <div class="new-sec">
+          <span class="label label-anchor">🎨 视觉锚</span>
+          <div class="visual-anchor">
+            <div class="emojis">🥳🎉💥</div>
+            <div class="desc">派对嗨到把天花板掀翻</div>
+          </div>
         </div>
-        <div class="section" style="border-color:var(--green);background:#e6fcf540">
-          <div style="color:var(--green);font-weight:700;font-size:12px;margin-bottom:6px;">✏️ 【练】· 精准产出</div>
-          <div style="font-size:13px">用 ecstatic（不是 happy，不是 thrilled）造一个必须是"封顶强度"的场景。</div>
+
+        <div class="new-sec">
+          <span class="label label-scene">✨ 场景 1 · 中等强度对比</span>
+          <div class="scene-card">
+            "Willow was <strong>delighted</strong> when she made the tennis team — but when the coach said she'd represent the school, she was absolutely <strong>ecstatic</strong>." <span class="tts-mark">🔊</span>
+            <span class="zh">Willow 入选校队时挺开心，但听说代表学校出战时简直欣喜若狂。</span>
+          </div>
+        </div>
+
+        <div class="new-sec">
+          <span class="label label-scene">✨ 场景 2 · 封顶场景</span>
+          <div class="scene-card">
+            "If Taylor Swift actually replied to my post — I'd be <strong>ecstatic</strong> for a whole week." <span class="tts-mark">🔊</span>
+            <span class="zh">要是 Taylor Swift 真回复我的帖子 — 我能狂喜一整周。</span>
+          </div>
         </div>
       </div>
       <div class="meta">
-        <strong>记忆机制：</strong>Nuance 语义辨析（Nation 2001 depth framework）。
-        学生不再"大概知道"，而是获得了一把"温度计"。<br>
-        <strong>Output 阶段：</strong>光谱挑战（现有）— 排 glad/thrilled/ecstatic 的强度顺序。
+        <strong>结构特点：</strong>程度温度计 = 主干 + 天然的"连"（glad/delighted/thrilled 就是连接点）。
+        场景 1 用 delighted vs ecstatic 对比凸显强度，场景 2 纯 ecstatic 场景封顶。<br>
+        <strong>科学依据：</strong>Nuance 语义辨析（Nation 2001）+ Self-Reference Effect。
+      </div>
+      <div class="word-count-bar">
+        <span>约 290 字</span>
+        <div class="bar"><div class="fill" style="width:72%"></div></div>
+        <span>目标 400</span>
       </div>
     </div>
   </div>
@@ -252,55 +356,86 @@ body {
   </div>
   <div class="compare">
     <div class="col-before">
-      <div class="col-head"><span>当前 · 通用模板</span><span class="tag">BEFORE</span></div>
+      <div class="col-head"><span>V1 · 三段式</span><span class="tag">BEFORE</span></div>
       <div class="card">
-        <span class="tag-pill">📖 学习笔记</span>
-        <div class="section sec-jiao">
-          <div class="sec-jiao-head">📖 【教】</div>
-          <div><strong>abandon</strong> 是动词，意思是"放弃、抛弃"。比如放弃一个计划、抛弃一个地方，或者完全放任某种情绪。它听起来有点正式，但很常用。</div>
+        <span class="old-tag-pill">📖 学习笔记</span>
+        <div class="old-section s-jiao">
+          <div class="label">📖 【教】</div>
+          <div><strong>abandon</strong> 是动词，意思是"放弃、抛弃"。听起来有点正式，但很常用。</div>
         </div>
-        <div class="section sec-lian">
-          <div class="sec-lian-head">🔗 【连】</div>
-          <div>想象一下：如果你在打网球时突然下大雨，你可能不得不 <strong>abandon the match</strong>（放弃比赛）。或者，假如 Taylor Swift 要写一首歌，歌词里说 "I will never <strong>abandon</strong> my dreams"（我永远不会放弃梦想），是不是很有力量？</div>
+        <div class="old-section s-lian">
+          <div class="label">🔗 【连】</div>
+          <div>打网球下大雨要 abandon the match；Taylor 歌词 "Never abandon my dreams"。</div>
         </div>
-        <div class="section" style="border-color:var(--green);background:#e6fcf540">
-          <div style="color:var(--green);font-weight:700;font-size:12px;margin-bottom:6px;">✏️ 【练】</div>
-          <div style="font-size:13px">1. 翻译：她决定放弃学钢琴。<br>2. 用 abandon 造一个关于网球的句子。</div>
+        <div class="old-section" style="border-color:var(--green);background:#e6fcf540">
+          <div class="label" style="color:var(--green)">✏️ 【练】</div>
+          <div style="font-size:13px">2 个搭配 + 2 个情景造句...</div>
         </div>
       </div>
       <div class="meta">
-        <strong>特征：</strong>释义正确、例句贴合画像。但学生没有意识到 abandon 是一个
-        <strong>搭配敏感词</strong> — 考试中经常考 "abandon + 什么宾语" 的固定搭配。
+        <strong>问题：</strong>搭配是 abandon 的核心考点（SSAT/SAT 经常考），但被塞进【练】段。
+        没有"易混词防混"，学生容易把 abandon 和 abundant（形近）搞混。
       </div>
     </div>
     <div class="col-after">
-      <div class="col-head"><span>L1 后 · 搭配型专属侧重</span><span class="tag">AFTER</span></div>
+      <div class="col-head"><span>V2 · 搭配型专属结构</span><span class="tag">AFTER</span></div>
       <div class="card">
-        <span class="tag-pill">📖 学习笔记</span>
-        <div class="section sec-jiao">
-          <div class="sec-jiao-head">📖 【教】· 3 个黄金搭配</div>
-          <div style="font-size:13px"><strong>abandon</strong> 不是随便"放弃"，它有 3 个最高频搭配 — 记住这 3 个，考试稳了：</div>
+        <div class="new-sec">
+          <span class="label label-def">📖 释义</span>
+          <div class="body"><strong>abandon</strong> (v) 放弃、抛弃 — 正式用法，含"完全、决绝"的意味。</div>
+        </div>
+
+        <div class="new-sec">
+          <span class="label label-coll">🔗 3 个黄金搭配</span>
+          <div class="body">abandon 不是随便"放弃" — 记住这 3 个搭配考试稳了：</div>
           <div class="collocation-box">
-            <span class="k">abandon + a plan / project</span><span>放弃一个计划（最常见）</span>
-            <span class="k">abandon ship</span><span>弃船（固定短语，引申"退出危局"）</span>
+            <span class="k">abandon a plan / project</span><span>放弃计划（最高频）</span>
+            <span class="k">abandon ship</span><span>弃船 → 引申"退出危局"</span>
             <span class="k">abandon hope / dreams</span><span>放弃希望 / 梦想（情感强烈）</span>
           </div>
         </div>
-        <div class="section sec-lian">
-          <div class="sec-lian-head">🔗 【连】· 搭配场景</div>
-          <div class="ex">• 你和 Emily 的网球俱乐部因为雨水 <strong>abandoned the plan</strong>（放弃计划）。<br>
-          • 王者荣耀里兵线被破，队友喊"<strong>abandon ship</strong>"（弃塔逃命）。<br>
-          • Taylor Swift 唱 "Never <strong>abandon</strong> your dreams" — 对她来说 dreams 就是这首歌的核心。</div>
+
+        <div class="new-sec">
+          <span class="label label-confuse">⚠️ 易混词防混（连）</span>
+          <div class="confuse-box">
+            <div class="item">abandon ≠ <strong>abundant</strong>（词形像，意思完全不同 — abundant = 丰富的）</div>
+            <div class="item">abandon vs <strong>leave</strong>（leave 中性；abandon 有"抛下不管"的负面情感）</div>
+            <div class="item">abandon vs <strong>quit</strong>（quit 口语；abandon 正式书面）</div>
+          </div>
         </div>
-        <div class="section" style="border-color:var(--green);background:#e6fcf540">
-          <div style="color:var(--green);font-weight:700;font-size:12px;margin-bottom:6px;">✏️ 【练】· 搭配产出</div>
-          <div style="font-size:13px">用 abandon + 以下宾语之一造句：<strong>the match / hope / ship</strong>。</div>
+
+        <div class="new-sec">
+          <span class="label label-anchor">🎨 视觉锚</span>
+          <div class="visual-anchor">
+            <div class="emojis">🚢💨🌫️</div>
+            <div class="desc">空船漂向雾里 — 人走了什么都没带</div>
+          </div>
+        </div>
+
+        <div class="new-sec">
+          <span class="label label-scene">✨ 场景 1 · abandon + plan</span>
+          <div class="scene-card">
+            "Emily and I had to <strong>abandon the plan</strong> to play tennis after the sudden Irvine downpour." <span class="tts-mark">🔊</span>
+            <span class="zh">Irvine 突然下大雨，我和 Emily 只能放弃打网球的计划。</span>
+          </div>
+        </div>
+
+        <div class="new-sec">
+          <span class="label label-scene">✨ 场景 2 · abandon ship</span>
+          <div class="scene-card">
+            "Our tower was destroyed in three seconds — someone yelled '<strong>abandon ship</strong>!' in the voice chat." <span class="tts-mark">🔊</span>
+            <span class="zh">主宰 3 秒被破，语音里有人喊"弃塔！"</span>
+          </div>
         </div>
       </div>
       <div class="meta">
-        <strong>记忆机制：</strong>搭配知识（Collocation）= 词汇深度核心（Qian 1999；Nation 2001）。
-        SSAT/SAT/TOEFL 单选题 70% 考搭配而非释义。<br>
-        <strong>Output 阶段：</strong>搭配填空（新 UI）— "We had to abandon _____ due to the storm." 选 the plan / a dream / a book。
+        <strong>结构特点：</strong>搭配为主干（SSAT/SAT 核心考点），【连】=易混词防混（解决 abandon/abundant 最常见混淆）。两个场景分别展示两个最高频搭配。<br>
+        <strong>科学依据：</strong>Depth of Vocabulary（Qian 1999）+ Negative Transfer 防护。
+      </div>
+      <div class="word-count-bar">
+        <span>约 340 字</span>
+        <div class="bar"><div class="fill" style="width:85%"></div></div>
+        <span>目标 400</span>
       </div>
     </div>
   </div>
@@ -315,62 +450,88 @@ body {
   </div>
   <div class="compare">
     <div class="col-before">
-      <div class="col-head"><span>当前 · 通用模板</span><span class="tag">BEFORE</span></div>
+      <div class="col-head"><span>V1 · 三段式</span><span class="tag">BEFORE</span></div>
       <div class="card">
-        <span class="tag-pill">📖 学习笔记</span>
-        <div class="section sec-jiao">
-          <div class="sec-jiao-head">📖 【教】</div>
-          <div><strong>intelligent</strong> 是形容词，意思是"聪明的、有智慧的"。比普通的 smart 显得更正式、更学术，形容一个人或事物的智能程度。</div>
+        <span class="old-tag-pill">📖 学习笔记</span>
+        <div class="old-section s-jiao">
+          <div class="label">📖 【教】</div>
+          <div><strong>intelligent</strong> 是形容词，意思是"聪明的"。比 smart 更正式、更学术。</div>
         </div>
-        <div class="section sec-lian">
-          <div class="sec-lian-head">🔗 【连】</div>
-          <div>想象你和 Emily 打王者荣耀，遇到一个 AI 对手，它居然能预判你草丛蹲的位置 — 这就是 <strong>intelligent</strong> AI。或者 Taylor Swift 的歌词写得既深刻又有哲理，你会说 "Her lyrics are really intelligent."</div>
+        <div class="old-section s-lian">
+          <div class="label">🔗 【连】</div>
+          <div>AI 对手预判草丛 → intelligent；Taylor Swift 歌词有深度 → intelligent lyrics。</div>
         </div>
-        <div class="section" style="border-color:var(--green);background:#e6fcf540">
-          <div style="color:var(--green);font-weight:700;font-size:12px;margin-bottom:6px;">✏️ 【练】</div>
-          <div style="font-size:13px">1. 翻译：她是我认识的最聪明的女孩。<br>2. 用 intelligent 造一个关于 AI 的句子。</div>
+        <div class="old-section" style="border-color:var(--green);background:#e6fcf540">
+          <div class="label" style="color:var(--green)">✏️ 【练】</div>
+          <div style="font-size:13px">2 搭配 + 2 情景造句...</div>
         </div>
       </div>
       <div class="meta">
-        <strong>特征：</strong>学生学到了"聪明"。但 intelligent 是典型词根词，
-        掌握它应该连带掌握 intelligence / intellectual / intellect，这是
-        <strong>一词多学的最高 ROI 时机</strong>，当前版本没利用到。
+        <strong>问题：</strong>intelligent 是典型词根词，应该连带掌握 intelligence/intellectual/intellect — 这是"一词学四词"的黄金机会，但三段式里没有空间展开家族树。
       </div>
     </div>
     <div class="col-after">
-      <div class="col-head"><span>L1 后 · 词根型专属侧重</span><span class="tag">AFTER</span></div>
+      <div class="col-head"><span>V2 · 词根型专属结构</span><span class="tag">AFTER</span></div>
       <div class="card">
-        <span class="tag-pill">📖 学习笔记</span>
-        <div class="section sec-jiao">
-          <div class="sec-jiao-head">📖 【教】· 词根拆解</div>
+        <div class="new-sec">
+          <span class="label label-def">📖 释义</span>
+          <div class="body"><strong>intelligent</strong> (adj) 聪明的、有智慧的 — 比 smart 更正式，常用于学术/评价语境。</div>
+        </div>
+
+        <div class="new-sec">
+          <span class="label label-root">🧬 词根拆解</span>
           <div class="root-tree">
-            <div class="root-line">🧬 intel- + -lig- + -ent</div>
-            <div style="font-size:12px;color:var(--text-sec);margin-bottom:8px">"在...之间" + "读/选择"（拉丁词根 legere）+ 形容词后缀 → "能在事物之间分辨选择的" = 聪明的</div>
-            <div class="family">
+            <div class="root-head">intel- (between) + -lig- (choose/read) + -ent</div>
+            <div class="meaning">字面：能在事物之间分辨选择的 → 聪明</div>
+            <div class="meaning" style="margin-bottom:0">记住词根 <strong>leg/lig</strong>（读/选择），你还能秒懂 legible（能读的）、elect（选出来）</div>
+          </div>
+        </div>
+
+        <div class="new-sec">
+          <span class="label label-family">👨‍👩‍👧‍👦 同根家族（连）</span>
+          <div class="root-tree" style="background:#f9f8f5;border-color:var(--border)">
+            <div class="family-tree">
               <span class="w">intelligent</span><span>(adj) 聪明的 — 本词</span>
-              <span class="w">intelligence</span><span>(n) 智力、情报 — CIA 就是 Central Intelligence Agency</span>
-              <span class="w">intellectual</span><span>(adj/n) 知识分子、智识的 — 更偏学术</span>
-              <span class="w">intellect</span><span>(n) 理智、才智 — 偏抽象</span>
+              <span class="w">intelligence</span><span>(n) 智力 / 情报 — CIA = Central Intelligence Agency</span>
+              <span class="w">intellectual</span><span>(adj/n) 智识的 / 知识分子 — 更学术</span>
+              <span class="w">intellect</span><span>(n) 才智 / 理智 — 偏抽象</span>
             </div>
           </div>
-          <div style="font-size:12px">记住 legere = 读/选择，你还能秒懂 legible（能读的）、elect（选出来）。</div>
         </div>
-        <div class="section sec-lian">
-          <div class="sec-lian-head">🔗 【连】· 家族对比场景</div>
-          <div class="ex">• AI 预判你草丛蹲 — 这是 <strong>intelligent</strong>（聪明）。<br>
-          • 打游戏时获得敌方位置信息 — 那是 <strong>intelligence</strong>（情报）。<br>
-          • Taylor Swift 的歌词被教授引用 — 她的粉丝圈是 <strong>intellectual</strong>（智识型）。</div>
+
+        <div class="new-sec">
+          <span class="label label-anchor">🎨 视觉锚</span>
+          <div class="visual-anchor">
+            <div class="emojis">🧠⚡🎯</div>
+            <div class="desc">灵光一闪精准命中</div>
+          </div>
         </div>
-        <div class="section" style="border-color:var(--green);background:#e6fcf540">
-          <div style="color:var(--green);font-weight:700;font-size:12px;margin-bottom:6px;">✏️ 【练】· 词性选择</div>
-          <div style="font-size:13px">根据句意选填：intelligent / intelligence / intellectual 之一。<br>
-          "Taylor has an unusually high IQ — she's considered a real ______."</div>
+
+        <div class="new-sec">
+          <span class="label label-scene">✨ 场景 1 · intelligent vs intelligence</span>
+          <div class="scene-card">
+            "The <strong>intelligent</strong> jungler predicted my ambush — clearly using <strong>intelligence</strong> gathered from previous rounds." <span class="tts-mark">🔊</span>
+            <span class="zh">那个聪明的打野预判到我的埋伏 — 显然用了前几局的情报。</span>
+          </div>
+        </div>
+
+        <div class="new-sec">
+          <span class="label label-scene">✨ 场景 2 · intelligent vs intellectual</span>
+          <div class="scene-card">
+            "Taylor Swift is <strong>intelligent</strong> — her lyrics even spark <strong>intellectual</strong> debates among fans." <span class="tts-mark">🔊</span>
+            <span class="zh">Taylor 本人很聪明，她的歌词甚至在粉丝间引发智识型讨论。</span>
+          </div>
         </div>
       </div>
       <div class="meta">
-        <strong>记忆机制：</strong>词根家族（Word Part Technique, Wei 2015）— 学 1 词得 4 词。
-        SSAT/SAT 词表里 40% 是词根词，掌握 200 个词根 ≈ 学会 2000 个衍生词。<br>
-        <strong>Output 阶段：</strong>词根变形填空（新 UI）— 给句子，选正确词性形式。
+        <strong>结构特点：</strong>词根 + 家族树 = 1 词学 4 词（SSAT/SAT 词表里 40% 是词根词）。
+        【连】融入"家族"，家族词本身就是最强的语义网络。场景直接用家族词对比，让学生感受差异。<br>
+        <strong>科学依据：</strong>Word Part Technique（Wei 2015）— 在翻译测试中效果胜过 Keyword Method。
+      </div>
+      <div class="word-count-bar">
+        <span>约 380 字</span>
+        <div class="bar"><div class="fill" style="width:95%"></div></div>
+        <span>目标 400</span>
       </div>
     </div>
   </div>
@@ -385,90 +546,141 @@ body {
   </div>
   <div class="compare">
     <div class="col-before">
-      <div class="col-head"><span>当前 · 通用模板</span><span class="tag">BEFORE</span></div>
+      <div class="col-head"><span>V1 · 三段式</span><span class="tag">BEFORE</span></div>
       <div class="card">
-        <span class="tag-pill">📖 学习笔记</span>
-        <div class="section sec-jiao">
-          <div class="sec-jiao-head">📖 【教】</div>
-          <div><strong>perpetual</strong> 是形容词，意思是"永久的、持续不断的"。发音有点拗口，用来形容一些持续很久、好像永不停止的事情。</div>
+        <span class="old-tag-pill">📖 学习笔记</span>
+        <div class="old-section s-jiao">
+          <div class="label">📖 【教】</div>
+          <div><strong>perpetual</strong> 是形容词，意思是"永久的、持续不断的"。发音有点拗口。</div>
         </div>
-        <div class="section sec-lian">
-          <div class="sec-lian-head">🔗 【连】</div>
-          <div>想象你在 Irvine Spectrum 和 Emily 打网球，隔壁的婴儿车里的宝宝在 <strong>perpetual</strong> 哭闹（持续不停）；或者 Taylor Swift 的粉丝们对她的爱是 <strong>perpetual</strong>（永恒不变）。</div>
+        <div class="old-section s-lian">
+          <div class="label">🔗 【连】</div>
+          <div>宝宝 perpetual 哭闹；Taylor 粉丝的爱是 perpetual 永恒。</div>
         </div>
-        <div class="section" style="border-color:var(--green);background:#e6fcf540">
-          <div style="color:var(--green);font-weight:700;font-size:12px;margin-bottom:6px;">✏️ 【练】</div>
-          <div style="font-size:13px">1. 翻译：他对音乐的热爱是永恒的。<br>2. 用 perpetual 造一个关于自然或情感的句子。</div>
+        <div class="old-section" style="border-color:var(--green);background:#e6fcf540">
+          <div class="label" style="color:var(--green)">✏️ 【练】</div>
+          <div style="font-size:13px">2 搭配 + 2 情景造句...</div>
         </div>
       </div>
       <div class="meta">
-        <strong>特征：</strong>学生看完知道什么意思，但 3 天后多半记不起来。
-        perpetual 是典型难记词（发音 4 音节，字形无线索，抽象语义），
-        当前没有给"记忆锚点"。
+        <strong>问题：</strong>学生看完知道是"永久的"，但 3 天后忘干净。perpetual 是典型难记词
+        （4 音节、无字形线索、抽象），必须有"记忆锚点"，三段式没给。
       </div>
     </div>
     <div class="col-after">
-      <div class="col-head"><span>L1 后 · 难记型专属侧重</span><span class="tag">AFTER</span></div>
+      <div class="col-head"><span>V2 · 难记型专属结构</span><span class="tag">AFTER</span></div>
       <div class="card">
-        <span class="tag-pill">📖 学习笔记</span>
-        <div class="section sec-jiao">
-          <div class="sec-jiao-head">📖 【教】· 释义</div>
-          <div style="font-size:13px"><strong>perpetual</strong> /pərˈpetʃuəl/ — 永久的、持续不断的。多用于形容不会终止的情感、自然现象、抽象状态。</div>
+        <div class="new-sec">
+          <span class="label label-def">📖 释义</span>
+          <div class="body"><strong>perpetual</strong> /pərˈpetʃuəl/ (adj) 永久的、持续不断的 — 正式，多形容不会终止的情感、状态、自然现象。</div>
         </div>
-        <div class="mnemonic-card">
-          <div class="m-label">🧠 谐音梗 · 永远锁在脑子里</div>
-          <div class="m-body">
-            <strong>per-pet-ual</strong> → 听起来像 <strong>"陪 · 宠物 · 永远"</strong>（陪 pet "永远"）。<br>
-            想象：你养了一只猫，你承诺 <strong>"I will perpetually love my pet"</strong> — 永远陪它。<br>
-            下次看到 per-pet-ual，脑子里自动蹦出"陪宠物永远" → 秒懂"永恒的"。
+
+        <div class="new-sec">
+          <span class="label label-mnemonic">🧠 谐音梗</span>
+          <div class="mnemonic-card">
+            <div class="title">"陪 · 宠物 · 永远"</div>
+            <div>发音拆成 <strong>per-pet-ual</strong> → 听起来就是"<strong>陪 pet 永远</strong>"。<br>
+            想象你对猫承诺："I will <strong>perpetually</strong> love my pet" — 永远陪它。</div>
           </div>
         </div>
-        <div class="section sec-lian">
-          <div class="sec-lian-head">🔗 【连】· 强化记忆场景</div>
-          <div class="ex">• Taylor Swift 的粉丝对她的爱是 <strong>perpetual</strong>（就像永远陪宠物）。<br>
-          • 王者荣耀赛季是 <strong>perpetual</strong> 循环 — 永远打不完。<br>
-          • Willow 对网球的热情 — 她说 "It's <strong>perpetual</strong>, like adopting a pet." 🐾</div>
+
+        <div class="new-sec">
+          <span class="label label-picture">🖼️ 锚定画面</span>
+          <div class="picture-card">
+            <div class="title">永动的时钟</div>
+            <div>一座刻着宠物爪印 🐾 的老时钟，从不停摆 — 那就是 perpetual。每次看到这个词，先闪现这个画面。</div>
+          </div>
         </div>
-        <div class="section" style="border-color:var(--green);background:#e6fcf540">
-          <div style="color:var(--green);font-weight:700;font-size:12px;margin-bottom:6px;">✏️ 【练】· 锚定产出</div>
-          <div style="font-size:13px">用 perpetual 造一个关于你"永远陪伴"的事物的句子（宠物、朋友、爱好都行）。</div>
+
+        <div class="new-sec">
+          <span class="label label-nuance">🔍 同义词对比（连）</span>
+          <div class="synonym-compare">
+            <div class="title">perpetual 和兄弟们的差别</div>
+            <div style="font-size:13px;line-height:1.75">
+              • <strong>permanent</strong> — 永久的（强调"结果不再变化"，物理/状态）<br>
+              • <strong>eternal</strong> — 永恒的（偏文学/宗教，抽象情感）<br>
+              • <strong>perpetual</strong> — 永久的（强调"持续的过程"，有动感）
+            </div>
+          </div>
+        </div>
+
+        <div class="new-sec">
+          <span class="label label-anchor">🎨 视觉锚</span>
+          <div class="visual-anchor">
+            <div class="emojis">♾️⏰🐾</div>
+            <div class="desc">陪宠物永不停歇</div>
+          </div>
+        </div>
+
+        <div class="new-sec">
+          <span class="label label-scene">✨ 场景 1 · 情感永续</span>
+          <div class="scene-card">
+            "Willow's love for tennis is <strong>perpetual</strong> — rain or shine, she's on the court." <span class="tts-mark">🔊</span>
+            <span class="zh">Willow 对网球的热爱永不停歇 — 不管风雨都在球场。</span>
+          </div>
+        </div>
+
+        <div class="new-sec">
+          <span class="label label-scene">✨ 场景 2 · 生活比喻</span>
+          <div class="scene-card">
+            "Honor of Kings seasons feel <strong>perpetual</strong> — the moment one ends, the next starts." <span class="tts-mark">🔊</span>
+            <span class="zh">王者荣耀赛季感觉没完没了 — 一个结束下一个立马开始。</span>
+          </div>
         </div>
       </div>
       <div class="meta">
-        <strong>记忆机制：</strong>Keyword Method 助记（Atkinson 1975；Chiu & Hawkins 中国学生 +9% retention）
-        + 画像化场景嵌入（self-reference effect）。<br>
-        <strong>Output 阶段：</strong>语境三选一（新 UI）— 给 3 个句子，选 perpetual 最贴切的那句。
+        <strong>结构特点：</strong>谐音 + 画面 = 双锚点；【连】=同义词对比（permanent/eternal），解决学生"都是永久怎么选"的痛点。
+        场景 1 偏情感（抽象），场景 2 偏生活（具象）— 双通道编码。<br>
+        <strong>科学依据：</strong>Keyword Method（Chiu & Hawkins，中国学生 +9% retention）+ Dual Coding + Nuance 辨析。
+      </div>
+      <div class="word-count-bar">
+        <span>约 450 字（用满弹性）</span>
+        <div class="bar"><div class="fill over" style="width:94%"></div></div>
+        <span>极限 480</span>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ======== 总结 ======== -->
+<!-- 总结 -->
 <div style="max-width:900px;margin:40px auto 0;padding:24px;background:#fff;border-radius:14px;border:1px solid var(--border);font-size:14px;line-height:1.8;box-shadow:var(--shadow)">
-  <h3 style="font-family:'Fraunces','PingFang SC',serif;font-weight:700;font-size:20px;margin-bottom:12px;">对比总结</h3>
+  <h3 style="font-family:'Fraunces','PingFang SC',serif;font-weight:700;font-size:20px;margin-bottom:14px;">V2 对比总结</h3>
 
-  <p style="margin-bottom:12px"><strong>同样的字数预算（300-400 字）</strong>，通过"词型侧重"把重复性的模板化内容
-  换成了对该词最有效的记忆机制：</p>
+  <p style="margin-bottom:12px">每种词型都有自己的"叙事流"：</p>
 
-  <ul style="margin-left: 20px; margin-bottom: 16px">
-    <li><strong>程度词</strong>：砍掉模板化释义，换成一把"温度计"（4 档程度梯度）</li>
-    <li><strong>搭配型</strong>：砍掉泛泛的"多种用法"，换成 3 个黄金搭配</li>
-    <li><strong>词根型</strong>：砍掉单词比较，换成词根家族树（1 词学 4 词）</li>
-    <li><strong>难记型</strong>：砍掉普通讲解，换成谐音梗 + 画像化强化</li>
+  <table style="width:100%;font-size:13px;border-collapse:collapse">
+    <thead>
+      <tr style="background:#f9f8f5">
+        <th style="padding:8px;text-align:left">词型</th>
+        <th style="padding:8px;text-align:left">主干</th>
+        <th style="padding:8px;text-align:left">【连】位置</th>
+        <th style="padding:8px;text-align:left">场景焦点</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-top:1px solid var(--border)"><td style="padding:8px"><span class="type-badge type-a">A 程度</span></td><td style="padding:8px">🌡️ 温度计</td><td style="padding:8px">嵌入温度计</td><td style="padding:8px">强度对比</td></tr>
+      <tr style="border-top:1px solid var(--border)"><td style="padding:8px"><span class="type-badge type-b">B 搭配</span></td><td style="padding:8px">🔗 3 黄金搭配</td><td style="padding:8px">⚠️ 易混词防混</td><td style="padding:8px">搭配展示</td></tr>
+      <tr style="border-top:1px solid var(--border)"><td style="padding:8px"><span class="type-badge type-c">C 词根</span></td><td style="padding:8px">🧬 词根+家族</td><td style="padding:8px">嵌入家族树</td><td style="padding:8px">家族词对比</td></tr>
+      <tr style="border-top:1px solid var(--border)"><td style="padding:8px"><span class="type-badge type-d">D 难记</span></td><td style="padding:8px">🧠 谐音+画面</td><td style="padding:8px">🔍 同义词对比</td><td style="padding:8px">抽象 + 具象</td></tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top:20px;margin-bottom:12px"><strong>共同骨架（4 类都保持）：</strong></p>
+  <ul style="margin-left:22px;margin-bottom:16px">
+    <li>📖 释义开场（30-50 字）</li>
+    <li>🎯 主记忆机制（按词型，100-200 字）</li>
+    <li>🔗 语义网络连接（按词型位置不同）</li>
+    <li>🎨 视觉锚点（emoji 组合 + 一句描述）</li>
+    <li>✨ <strong>2 个</strong>画像化场景（每句 40-60 字 + TTS）</li>
   </ul>
 
-  <p style="margin-bottom:12px"><strong>预期收益</strong>：</p>
-  <ul style="margin-left: 20px; margin-bottom: 16px">
-    <li>短期（单词遇见时）：内容"对味"— 学生感觉 AI 真的懂这个词</li>
-    <li>中期（3-7 天复习）：retention 提升 10-20%（keyword 方法 9% + 搭配深度 + 词根网络）</li>
-    <li>长期（考试应用）：搭配和词根知识直接对应 SSAT/SAT 题型</li>
-  </ul>
+  <p style="margin-bottom:12px"><strong>字数控制：</strong>目标 300-400，特别合适时可到 480（硬顶 +20%）。
+  实际示例字数：A 约 290 / B 约 340 / C 约 380 / D 约 450（D 用满弹性是因为谐音+画面+同义都必要）。</p>
 
-  <p style="margin-bottom:0;color:var(--text-sec);font-size:13px">
-    <strong>实施成本：</strong>只改 buildTeachPrompt 的分支逻辑（约 50 行 prompt 文本），
-    UI 层 0 改动。这个页面里的视觉元素（温度计、搭配框、词根树、谐音卡）是 L2/L3 阶段的 UI 升级，
-    L1 可以用纯 Markdown 结构模拟（【教】段用列表、表格、加粗即可）。
-  </p>
+  <p style="margin-bottom:12px"><strong>冷启动【连】的处理：</strong>V2 自然解决 — A/C 型的"连"嵌入主干不依赖学过的词；B/D 型连的是通用词（abundant/leave/permanent）或形近词，不强制要求学过。</p>
+
+  <p style="margin-bottom:0;color:var(--text-sec);font-size:13px"><strong>AI 稳定性：</strong>从"开放决策（10 选 2）"变成"封闭决策（4 选 1 模板填充）"。
+  AI 只需判定词型 A/B/C/D，然后按模板填内容。DeepSeek 在结构化任务上稳定性 &gt;95%。</p>
 </div>
 
 </div>
