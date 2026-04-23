@@ -170,8 +170,36 @@ var buildGuessPrompt = (word, learned) => {
 };
 
 var buildTeachPrompt = (word, learned) => {
-  var ctx = learned.length > 0 ? "\n学过的词：" + learned.join(", ") + "。\"连\"环节与它们建立联系。" : "";
-  return "单词：" + word + ctx + "\n\n依次执行3环节。[🔊]只放在完整英文句末尾（句号/感叹号后）。\n\n【教】挑最适合的2种，每种2-3句：\n1.词根词缀🧩 2.谐音联想🧠 3.画面记忆🖼️ 4.近义词找茬🔍 5.词义光谱📶 6.词源故事📖\n\n【连】与学过的词建立联系。\n\n【练】2个高频搭配（词组 [🔊]）+ 2个情景造句（英文句。[🔊]（中文））。造句结合画像不同场景。\n\n要求：300-400字，朋友聊天语气，释义中文，例句英文，多换行，用直引号\"\"。";
+  var ctx = learned.length > 0
+    ? "\n学过的词：" + learned.join(", ") + "（【连】环节优先引用其中一个相关词）。"
+    : "";
+  return "单词：" + word + ctx + "\n\n" +
+    "【目标】为学生生成一份深度记忆的学习笔记，中英双语导师风格。\n\n" +
+    "【Step 1】内部判定词型（不输出判定结果）：\n" +
+    "A 程度词（ecstatic, adore, loathe）| B 搭配型（abandon, require, ignorance）| C 词根型（intelligent, biological）\n" +
+    "D 难记型（perpetual, ambulance, hearse）| E 抽象概念（democracy, rhetoric, paradox）| F 多义词（run, break）\n\n" +
+    "【Step 2】从 10 种方法里按词型选最合适的 2-3 种（第 3 种可选，特别合适才加）：\n" +
+    "🧩 词根词缀 | 🧠 谐音联想 | 🖼️ 画面记忆 | 🔍 近义词找茬 | 📶 程度光谱\n" +
+    "📖 词源故事 | 🔗 搭配学习 | ⚖️ 反义对比 | 🧬 词性家族 | 🎬 微故事\n" +
+    "推荐组合（可发挥）：A→📶+🔍 | B→🔗+🔍 | C→🧩+🧬 | D→🧠+🖼️ | E→🎬+⚖️ | F→🖼️+🔍\n\n" +
+    "【Step 3】输出 3 段笔记：\n\n" +
+    "开场（1 句）：画像化定调，把词和学生兴趣/常去地方/日常联系。\n\n" +
+    "📖【教】按选好的 2-3 种方法展开，每种 2-3 句，中英混合。\n" +
+    "末尾追加一行 🎨 视觉锚（按词的抽象度选格式）：\n" +
+    "  具象/动作词 → 3 emoji + 一句动态画面（如 🚢💨🌫️ 空船漂向雾里）\n" +
+    "  中度抽象词 → 2 emoji + 带情境短语（如 🥳💥 派对嗨到把天花板掀翻）\n" +
+    "  高度抽象/概念词 → 1-2 emoji + 典型使用情境短句（如 🎩 米其林餐厅的摆盘、Apple 发布会文案）\n" +
+    "  极抽象/专业词 → 跳过 emoji，用 1 句典型语境句（如 \"Scientists propose a hypothesis before running experiments.\"）\n\n" +
+    "🔗【连】从以下里选 1 个连接点（1-2 句说清关系）：\n" +
+    "  - 有学过的词：优先选 1 个相关的学过词做同义/反义/形近/场景对比\n" +
+    "  - 没有学过的词：选 1 个通用常见词、反义词、形近易混词或同词根词做对比\n\n" +
+    "✨【用】场景应用：\n" +
+    "- 2 个高频搭配（词组 [🔊]（中文））\n" +
+    "- **2 个**情景造句（英文完整句。[🔊]（中文）），画像化不同场景（严格 2 个，不是 3 或 4）\n\n" +
+    "【格式要求】\n" +
+    "- 目标 300-400 字，极端合适时可到 480 字（绝对不超 +20% 弹性）\n" +
+    "- 释义用中文，例句用英文，多换行，用直引号 \"\"\n" +
+    "- [🔊] 只放在完整英文句末尾（句号/感叹号后）";
 };
 
 var buildSpectrumPrompt = (word) => {
@@ -756,6 +784,22 @@ export default function App() {
   var [photoLoading, setPhotoLoading] = useState(false);
 
   useEffect(function() { if (typeof window !== "undefined") window.speechSynthesis?.getVoices(); }, []);
+
+  // 进入 teach phase 时，当 teach 内容就绪，自动朗读一次目标词（L1 改进：词级 auto-play）
+  // 用 ref 记录已朗读的词，避免同一词在 teach ↔ spectrum 切换时重复播放
+  var teachAutoPlayedRef = useRef(null);
+  useEffect(function() {
+    if (phase !== "teach") return;
+    if (!currentWord) return;
+    if (!teachContent || teachContent === "__FAILED__") return;
+    if (teachAutoPlayedRef.current === currentWord) return; // 同词不重复
+    teachAutoPlayedRef.current = currentWord;
+    // 延迟 350ms 让切换动画完成后再播放，体验更顺
+    var timer = setTimeout(function() {
+      if (typeof window !== "undefined") speakWord(currentWord);
+    }, 350);
+    return function() { clearTimeout(timer); };
+  }, [phase, teachContent, currentWord]);
   useEffect(function() {
     if (screen === "deep_review") {
       var w = deepReviewQueue[deepReviewIdx];
