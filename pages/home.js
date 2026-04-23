@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Head from "next/head";
 import Link from "next/link";
-import { C, FONT, globalCSS, S } from '../lib/theme';
+import { C, FONT, FONT_DISPLAY, globalCSS, S } from '../lib/theme';
 import { BrandNavBar, BrandUIcon } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
 import { supabase } from '../lib/supabase';
@@ -70,7 +70,7 @@ var KnowUExampleCard = () => {
       <div style={{ fontSize: 11, color: C.accent, opacity: 0.8, marginBottom: 6, fontWeight:600 }}>{ex.student}</div>
       <div style={{ opacity: fade ? 1 : 0, transition: "opacity 0.25s ease" }}>
         <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom: 8 }}>
-          <span style={{ fontSize: 22, fontWeight: 700, color: C.accent }}>{ex.word}</span>
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, color: C.accent, letterSpacing: "-0.01em" }}>{ex.word}</span>
           <span style={{ fontSize: 12, color: C.textSec, fontStyle: "italic" }}>{ex.phonetic}</span>
         </div>
         <div style={{ fontSize: 14, color: C.text, lineHeight: 1.8, minHeight: 90 }}>
@@ -131,7 +131,7 @@ export default function HomePage() {
           <div style={{ animation: "floatLogo 3s ease-in-out infinite", marginBottom: 16 }}>
             <BrandUIcon size={72} />
           </div>
-          <h1 style={{ fontSize: 36, fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.03em", lineHeight: 1.1 }}>Know U. Learning</h1>
+          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, margin: "0 0 4px", letterSpacing: "-0.035em", lineHeight: 1.1 }}>Know U. Learning</h1>
           <div style={{ display:"inline-block", padding:"4px 12px", background:C.card, border:"1px solid "+C.border, borderRadius:999, fontSize:11, fontWeight:600, color:C.textSec, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:24, boxShadow:C.shadowSoft }}>Personal AI Language Tutor</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: C.text, marginBottom: 12, lineHeight: 1.35, letterSpacing:"-0.02em" }}>读、写、词汇 — 一个懂你的 AI 英语私教</div>
           <p style={{ fontSize: 15, color: C.textSec, lineHeight: 1.8, maxWidth: 520, margin: "0 auto 32px" }}>
@@ -164,7 +164,7 @@ export default function HomePage() {
       {/* ═══ WHY KNOW U. ═══ */}
       <FadeInSection>
         <section id="why" style={{ ...container, padding: "40px 20px" }}>
-          <h2 style={{ fontSize: 22, fontWeight: 800, textAlign: "center", marginBottom: 6 }}>为什么选择 Know U.？</h2>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, textAlign: "center", letterSpacing: "-0.02em", marginBottom: 6 }}>为什么选择 Know U.？</h2>
           <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 28 }}>同一个单词，两种完全不同的学习体验</p>
 
           {/* Before/After cards */}
@@ -172,7 +172,7 @@ export default function HomePage() {
             {/* Traditional */}
             <div style={{ flex: "1 1 280px", background: C.card, border: "1px solid " + C.border, borderRadius: 14, padding: "20px", opacity: 0.7 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: C.textSec, marginBottom: 8 }}>📖 传统教材</div>
-              <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>abandon</div>
+              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, marginBottom: 4, letterSpacing: "-0.01em" }}>abandon</div>
               <div style={{ fontSize: 13, color: C.textSec, fontStyle: "italic", marginBottom: 8 }}>/əˈbændən/</div>
               <div style={{ fontSize: 14, color: C.textSec, lineHeight: 1.6 }}>to leave completely and finally; forsake</div>
               <div style={{ fontSize: 12, color: C.textSec, marginTop: 12, opacity: 0.6 }}>💤 看完就忘，和你没有任何关系</div>
@@ -201,7 +201,7 @@ export default function HomePage() {
       {/* ═══ ECOSYSTEM LOOP ═══ */}
       <FadeInSection>
         <section id="ecosystem" style={{ ...container, padding: "40px 20px" }}>
-          <h2 style={{ fontSize: 22, fontWeight: 800, textAlign: "center", marginBottom: 6 }}>三位一体 · 学习闭环</h2>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, textAlign: "center", letterSpacing: "-0.02em", marginBottom: 6 }}>三位一体 · 学习闭环</h2>
           <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 28 }}>读、写、词汇不再是孤立的练习 — 它们相互赋能</p>
 
           {/* Loop Diagram - 加呼吸动画 + 流动箭头 */}
@@ -294,7 +294,7 @@ export default function HomePage() {
       {/* ═══ DIFFERENTIATION ═══ */}
       <FadeInSection>
         <section style={{ ...container, padding: "40px 20px" }}>
-          <h2 style={{ fontSize: 22, fontWeight: 800, textAlign: "center", marginBottom: 24 }}>与众不同</h2>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, textAlign: "center", letterSpacing: "-0.02em", marginBottom: 24 }}>与众不同</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
             {[
               { vs: "vs 百词斩", bad: "所有人看到相同的例句和图片", good: "每个学生看到的例句都不同 — 因为来自你的生活" },
@@ -314,7 +314,7 @@ export default function HomePage() {
       {/* ═══ PARENT TESTIMONIALS — WeChat Style ═══ */}
       <FadeInSection>
         <section style={{ ...container, padding: "40px 20px" }}>
-          <h2 style={{ fontSize: 22, fontWeight: 800, textAlign: "center", marginBottom: 6 }}>家长们怎么说</h2>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, textAlign: "center", letterSpacing: "-0.02em", marginBottom: 6 }}>家长们怎么说</h2>
           <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 24 }}>来自妈妈群的真实反馈</p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 480, margin: "0 auto" }}>
