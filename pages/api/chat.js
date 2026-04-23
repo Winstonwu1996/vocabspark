@@ -182,8 +182,12 @@ export default async function handler(req, res) {
     orderedProviders = preferred.concat(rest);
   }
 
-  // Time-based: during DeepSeek peak (China daytime UTC 0-14), prefer Gemini
-  if (!Array.isArray(preferredProviders) || preferredProviders.length === 0) {
+  // DeepSeek 全时段优先（2026-04-23 实测：速度持平、中文质量更优、JSON 输出
+  // 稳定性显著好于 Gemini 2.5）。Gemini 保留为 fallback，DeepSeek 429 或
+  // 超时自动切换。如需恢复"白天 Gemini 优先"的旧行为（应对 DeepSeek 高峰
+  // 限流），设 env CHAT_DAYTIME_GEMINI=1。
+  if (process.env.CHAT_DAYTIME_GEMINI === "1" &&
+      (!Array.isArray(preferredProviders) || preferredProviders.length === 0)) {
     const utcHour = new Date().getUTCHours();
     if (utcHour >= 0 && utcHour < 14) {
       const gemini = orderedProviders.filter((p) => p.family === "gemini");
