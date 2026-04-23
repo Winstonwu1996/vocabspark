@@ -121,7 +121,9 @@ export default async function handler(req) {
   }
 
   const errors = [];
-  const perProviderTimeoutMs = 25000;
+  // 50s per provider：覆盖 Gemini 对中文的慢生成（实测完整 teach 需 30-40s）
+  // Edge Runtime 在 Vercel Fluid Compute 下默认支持 5 分钟流式，50s 完全在安全范围
+  const perProviderTimeoutMs = 50000;
 
   for (const provider of orderedProviders) {
     for (let attempt = 0; attempt <= 1; attempt++) {
