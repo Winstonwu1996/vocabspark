@@ -296,8 +296,55 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     "直接输出纯 JSON（5 个顶层字段完整）。";
 };
 
-var buildSpectrumPrompt = (word) => {
+// Phase 2 Round 1：spectrum phase 按词型路由不同玩法
+// A 程度词 → 情境强度选择（gradient_choice）— 替代拖动光谱
+// 其他词型（Round 2-4 逐步实现）：暂时走 legacy gradient 保证不回归
+var buildSpectrumPrompt = (word, classifyResult) => {
+  var wordType = classifyResult?.wordType || null;
+  switch (wordType) {
+    case "A": return buildGradientChoicePrompt(word);
+    // case "B": return buildCollocationFillPrompt(word);  // Round 2
+    // case "C": return buildMorphFillPrompt(word);         // Round 2
+    // case "D": return buildMnemonicFillPrompt(word);      // Round 3
+    // case "E":
+    // case "F":
+    // default:  return buildContextChoicePrompt(word);     // Round 3
+    default: return buildLegacyGradientPrompt(word);
+  }
+};
+
+// Legacy 光谱排序（保留：A 类替换后，其他词型暂时用，Round 2-4 逐步替换）
+var buildLegacyGradientPrompt = (word) => {
   return "单词：" + word + "\n\n设计\"词义光谱排序\"游戏。找2个含义相近但程度/强度不同的常见词，组成从弱到强的3词光谱。写2-3句沉浸式场景描述（用学习画像场景），场景中必须按从弱到强的顺序展示三个词的用法。排序正确后给出解读。\n\n注意：spectrum_words 数组必须严格按照程度从弱到强排列，确保语义强度递增。例如 dislike < hate < loathe，或 smile < grin < beam。\n\nIMPORTANT: 直接输出JSON：\n" + '{"spectrum_words":["最弱","中等","最强"],"scenario":"场景（必须按弱→中→强顺序描述）","decoded":"解读（解释为什么这个顺序正确）"}';
+};
+
+// A 程度词 → 情境强度选择（核心升级：替代拖动光谱）
+// 给一个场景，4 个程度词选一个最贴切的（目标词应是正解）
+// 测的是"情境→词的匹配能力"，和 SSAT/SAT 选择题格式一致
+var buildGradientChoicePrompt = (word) => {
+  return "为 \"" + word + "\" 设计【情境强度选择】题。\n\n" +
+    "【任务】给 1-2 句画像化场景 + 1 个问题，4 个程度词选项（包括目标词）从弱到强排列。学生选最贴切的那个，目标词应该是正确答案。\n\n" +
+    "【场景要求】\n" +
+    "- 1-2 句，深度利用学习画像（兴趣、常去地方、日常）\n" +
+    "- 场景的情感/状态强度必须和目标词 \"" + word + "\" 精确匹配\n" +
+    "- 目的：让目标词是 4 选项中最准的那个，其他 3 个选项强度稍弱/稍强都不够贴切\n\n" +
+    "【4 个选项设计】同义程度词，从弱到强排列：\n" +
+    "- A: 弱程度词（如 glad）\n" +
+    "- B: 中弱（如 delighted）\n" +
+    "- C: 中强（如 thrilled）\n" +
+    "- D: 强程度（如 ecstatic）\n" +
+    "- 目标词 \"" + word + "\" 必须占其中一个位置（根据实际强度决定 A/B/C/D）\n" +
+    "- answer 字段填目标词所在的字母\n\n" +
+    "【输出严格 JSON】\n" +
+    '{\n' +
+    '  "type": "gradient_choice",\n' +
+    '  "scenario": "1-2 句画像化场景",\n' +
+    '  "question": "How does X feel? / What best describes this?",\n' +
+    '  "options": {"A":"弱词","B":"中弱","C":"中强","D":"强词"},\n' +
+    '  "answer": "目标词所在字母（A/B/C/D）",\n' +
+    '  "explanation": "为什么这个场景强度匹配 ' + word + '（≤40 字）"\n' +
+    "}\n\n" +
+    "直接输出 JSON，不要 markdown 代码块标记。";
 };
 
 var buildReviewPrompt = (words) => {
@@ -924,6 +971,127 @@ var TeachJSON = ({ data, streaming }) => {
         <span style={{ display:"inline-block", width:8, height:16, background:C.accent, marginLeft:2, verticalAlign:"-2px", animation:"cursorBlink 0.9s steps(1) infinite" }} aria-hidden="true" />
       )}
     </div>
+  );
+};
+
+/* ═══ Phase 2 Output Games — 按词型路由的独立玩法组件 ═══
+ * Round 1: gradient_choice (A 程度词替代拖动光谱)
+ * Round 2-4: collocation_fill / morph_fill / mnemonic_fill / context_choice
+ */
+
+// A 程度词 → 情境强度选择
+// 场景 + 4 个程度词选项（从弱到强），学生选最贴切的那个
+var GradientChoiceGame = ({ data, onCorrect, onNext, sfx, loading }) => {
+  var [selected, setSelected] = useState(null);
+  var [submitted, setSubmitted] = useState(false);
+  if (!data) return null;
+  var isCorrect = submitted && selected === data.answer;
+  var optKeys = ["A","B","C","D"];
+
+  return (
+    <>
+      <div style={S.specTag}>🌡️ 情境强度</div>
+      <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>选最贴切这个场景的词</div>
+      {/* 场景卡 */}
+      <div style={{
+        padding:"12px 14px", marginBottom:14, background:C.bg,
+        borderLeft:"3px solid "+C.accent, borderRadius:"0 10px 10px 0",
+        fontSize:15, lineHeight:1.7, color:C.text
+      }}>
+        {data.scenario}
+      </div>
+      {/* 问题 */}
+      {data.question && (
+        <div style={{ fontWeight:700, fontSize:15, marginBottom:12, color:C.text }}>
+          {data.question}
+        </div>
+      )}
+      {/* 强度渐变条（视觉提示：从弱到强） */}
+      <div style={{ position:"relative", height:4, background:"linear-gradient(90deg, "+C.teal+"66, "+C.gold+"88, "+C.red+"aa)", borderRadius:2, marginBottom:4 }} />
+      <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:C.textSec, marginBottom:10, padding:"0 4px" }}>
+        <span>较弱</span><span>中等</span><span>最强</span>
+      </div>
+      {/* 4 个选项 */}
+      <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:14 }}>
+        {optKeys.map(function(k){
+          var option = data.options?.[k] || "";
+          var isSel = selected === k;
+          var isAns = k === data.answer;
+          var bg = C.bg, bdr = C.border, clr = C.text, shadow = "none";
+          if (submitted) {
+            if (isAns) { bg = C.greenLight; bdr = C.green; clr = C.green; shadow = "0 0 0 2px "+C.green+"33"; }
+            else if (isSel) { bg = C.redLight; bdr = C.red; clr = C.red; shadow = "0 0 0 2px "+C.red+"33"; }
+            else { bg = C.bg; bdr = C.border; clr = C.textSec; }
+          } else if (isSel) {
+            bg = C.accentLight; bdr = C.accent; clr = C.accent; shadow = "0 0 0 2px "+C.accent+"33";
+          }
+          return (
+            <button
+              key={k}
+              disabled={submitted}
+              onClick={function(){ if (!submitted) setSelected(k); }}
+              style={{
+                display:"flex", alignItems:"center", gap:12,
+                padding:"12px 14px",
+                background: bg, border:"2px solid "+bdr, borderRadius:10,
+                cursor: submitted ? "default" : "pointer",
+                color: clr, fontWeight:600, textAlign:"left",
+                fontSize:15, transition:"all 0.2s", boxShadow: shadow,
+                fontFamily: FONT
+              }}
+            >
+              <span style={{
+                display:"inline-flex", alignItems:"center", justifyContent:"center",
+                width:24, height:24, borderRadius:"50%",
+                background: clr+"22", color: clr, fontSize:13, fontWeight:700,
+                flexShrink:0
+              }}>{k}</span>
+              <span style={{ flex:1 }}>{option}</span>
+              {submitted && isAns && <span style={{ color:C.green, fontWeight:700 }}>✓</span>}
+              {submitted && isSel && !isAns && <span style={{ color:C.red, fontWeight:700 }}>✗</span>}
+            </button>
+          );
+        })}
+      </div>
+      {/* 提交按钮 / 解析 */}
+      {!submitted && (
+        <button
+          onClick={function(){
+            if (!selected) return;
+            setSubmitted(true);
+            if (selected === data.answer) {
+              if (sfx?.spectrumWin) sfx.spectrumWin();
+              if (onCorrect) onCorrect();
+            } else if (sfx?.spectrumFail) sfx.spectrumFail();
+          }}
+          disabled={!selected}
+          style={{
+            ...S.specCheckBtn,
+            opacity: selected ? 1 : 0.5,
+            cursor: selected ? "pointer" : "not-allowed"
+          }}
+        >✓ 提交答案</button>
+      )}
+      {submitted && (
+        <div style={{ ...S.specDecoded, marginTop:4 }}>
+          <div style={{ color: isCorrect ? C.green : C.accent, fontWeight:700, marginBottom:8 }}>
+            {isCorrect ? "✓ 正确！+10 XP" : "💡 正确答案："+data.answer+" · "+(data.options?.[data.answer] || "")}
+          </div>
+          {data.explanation && (
+            <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>
+          )}
+          <button
+            onClick={onNext}
+            disabled={loading}
+            style={{
+              ...S.specCheckBtn, marginTop:16,
+              background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)",
+              boxShadow:"0 4px 12px "+C.green+"55"
+            }}
+          >→ 下一步</button>
+        </div>
+      )}
+    </>
   );
 };
 
@@ -2149,9 +2317,12 @@ export default function App() {
           if (pokeQueue) pokeQueue();
         });
 
-        // Spectrum (fire and forget)
-        callWithClientRetry(function() {
-          return callAPIFast(sysP, buildSpectrumPrompt(word), { preferredProviders: preferred });
+        // Spectrum (fire and forget, waits for classify to route to right game type)
+        // Phase 2 Round 1: spectrum prompt 按 wordType 路由（A → gradient_choice，其他 legacy）
+        classifyByWord[word].then(function(cls) {
+          return callWithClientRetry(function() {
+            return callAPIFast(sysP, buildSpectrumPrompt(word, cls), { preferredProviders: preferred });
+          });
         }).then(function(raw) {
           dataCache.current[word].spectrum = raw ? tryJSON(raw) : null;
         }).catch(function(err) {
@@ -2360,14 +2531,18 @@ export default function App() {
       }, 35000);
     }
     if (spectrumPollRef.current) clearInterval(spectrumPollRef.current);
-    if (d?.spectrum?.spectrum_words) {
+    // Phase 2: 兼容新旧 spectrum 格式
+    // - 旧 gradient: { spectrum_words, scenario, decoded }
+    // - 新 gradient_choice: { type: "gradient_choice", scenario, options, answer, ... }
+    var spectrumReady = function(sp) { return !!(sp && (sp.spectrum_words || sp.type)); };
+    if (spectrumReady(d?.spectrum)) {
       setSpectrumData(d.spectrum);
     } else {
       // spectrum 数据可能还在加载中，轮询等待
       var specWord = word;
       spectrumPollRef.current = setInterval(function() {
         var cached = dataCache.current[specWord];
-        if (cached?.spectrum?.spectrum_words) {
+        if (spectrumReady(cached?.spectrum)) {
           setSpectrumData(cached.spectrum);
           clearInterval(spectrumPollRef.current);
         }
@@ -4927,7 +5102,19 @@ export default function App() {
         </>}
       </div>}
 
-      {phase === "spectrum" && spectrumData && <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+      {phase === "spectrum" && spectrumData && spectrumData.type === "gradient_choice" && (
+        <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+          <GradientChoiceGame
+            data={spectrumData}
+            sfx={sfx}
+            loading={loading}
+            onCorrect={function(){ save({ ...stats, xp: stats.xp+10 }); }}
+            onNext={goNextWord}
+          />
+        </div>
+      )}
+
+      {phase === "spectrum" && spectrumData && !spectrumData.type && <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
         <div style={S.specTag}>🎮 词义光谱挑战</div>
         <div style={S.specHint}>按程度【从弱到强】排列！</div>
         {spectrumData.scenario && <div style={S.specScenario}>{spectrumData.scenario}</div>}
