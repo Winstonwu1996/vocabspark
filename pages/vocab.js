@@ -296,13 +296,13 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     "直接输出纯 JSON（5 个顶层字段完整）。";
 };
 
-// Phase 2 Round 1：spectrum phase 按词型路由不同玩法
-// A 程度词 → 情境强度选择（gradient_choice）— 替代拖动光谱
+// Phase 2 Round 1.5：spectrum phase 按词型路由不同玩法
+// A 程度词 → 行为一致性判断（behavior_match）— 真正测使用感
 // 其他词型（Round 2-4 逐步实现）：暂时走 legacy gradient 保证不回归
 var buildSpectrumPrompt = (word, classifyResult) => {
   var wordType = classifyResult?.wordType || null;
   switch (wordType) {
-    case "A": return buildGradientChoicePrompt(word);
+    case "A": return buildBehaviorMatchPrompt(word);
     // case "B": return buildCollocationFillPrompt(word);  // Round 2
     // case "C": return buildMorphFillPrompt(word);         // Round 2
     // case "D": return buildMnemonicFillPrompt(word);      // Round 3
@@ -321,28 +321,44 @@ var buildLegacyGradientPrompt = (word) => {
 // A 程度词 → 情境强度选择（核心升级：替代拖动光谱）
 // 给一个场景，4 个程度词选一个最贴切的（目标词应是正解）
 // 测的是"情境→词的匹配能力"，和 SSAT/SAT 选择题格式一致
-var buildGradientChoicePrompt = (word) => {
-  return "为 \"" + word + "\" 设计【情境强度选择】题。\n\n" +
-    "【任务】给 1-2 句画像化场景 + 1 个问题，4 个程度词选项（包括目标词）从弱到强排列。学生选最贴切的那个，目标词应该是正确答案。\n\n" +
-    "【场景要求】\n" +
-    "- 1-2 句，深度利用学习画像（兴趣、常去地方、日常）\n" +
-    "- 场景的情感/状态强度必须和目标词 \"" + word + "\" 精确匹配\n" +
-    "- 目的：让目标词是 4 选项中最准的那个，其他 3 个选项强度稍弱/稍强都不够贴切\n\n" +
-    "【4 个选项设计】同义程度词，从弱到强排列：\n" +
-    "- A: 弱程度词（如 glad）\n" +
-    "- B: 中弱（如 delighted）\n" +
-    "- C: 中强（如 thrilled）\n" +
-    "- D: 强程度（如 ecstatic）\n" +
-    "- 目标词 \"" + word + "\" 必须占其中一个位置（根据实际强度决定 A/B/C/D）\n" +
-    "- answer 字段填目标词所在的字母\n\n" +
+// A 程度词 → 行为一致性判断（真正测使用感，不是识别目标词）
+// 之前 gradient_choice 让目标词成为选项之一 → 学生看顶部大字就能选对（无效）
+// 新设计：4 个选项是【行为描述】不是词 → 必须理解目标词的使用强度才能判断
+var buildBehaviorMatchPrompt = (word) => {
+  return "为 \"" + word + "\" 设计【行为一致性判断】题。\n\n" +
+    "【任务】场景 + 问题 + 4 个行为描述，测学生是否真正理解 \"" + word + "\" 的使用强度和语义。\n\n" +
+    "【场景】1-2 句画像化（深度用学生兴趣/常去地方/日常），描述一个让人 " + word + " 的事件。\n" +
+    "可以让 \"" + word + "\" 出现在场景或问题里（便于给上下文），重点是选项必须是行为。\n\n" +
+    "【问题】询问该状态下的典型行为。例：\n" +
+    "- \"How would someone feeling " + word + " likely react?\"\n" +
+    "- \"Which behavior best fits a " + word + " state?\"\n\n" +
+    "【4 个行为描述选项 — 关键】\n" +
+    "🚫 **禁止**是同义词（如 glad/delighted/thrilled/ecstatic）— 那测的是认词不是理解\n" +
+    "✅ 必须是**具体的行为、动作、表情、语言**\n" +
+    "- 1 个正解：精准符合 " + word + " 的强度和语义\n" +
+    "- 3 个干扰：强度不够 / 方向偏离 / 完全无关 — 都是合理但不贴切的行为\n" +
+    "每个选项 ≤ 15 英文词，尽量画像化（王者/Taylor/AI 项目等）\n\n" +
+    "【参考示例】（学风格，不是学 ecstatic 内容）\n" +
+    "{\n" +
+    '  "scenario": "Willow\'s tennis team just pulled off a stunning comeback in the regional final.",\n' +
+    '  "question": "How would a player feeling ecstatic about this likely react?",\n' +
+    '  "options": {\n' +
+    '    "A": "Quietly packing her gear and leaving.",\n' +
+    '    "B": "Screaming and jumping up and down, arms raised.",\n' +
+    '    "C": "Smiling politely to the losing team.",\n' +
+    '    "D": "Texting her mom with a thumbs-up emoji."\n' +
+    '  },\n' +
+    '  "answer": "B",\n' +
+    '  "explanation": "ecstatic 是极度狂喜，尖叫跳跃最贴合；其他太克制或方向偏离"\n' +
+    "}\n\n" +
     "【输出严格 JSON】\n" +
     '{\n' +
-    '  "type": "gradient_choice",\n' +
+    '  "type": "behavior_match",\n' +
     '  "scenario": "1-2 句画像化场景",\n' +
-    '  "question": "How does X feel? / What best describes this?",\n' +
-    '  "options": {"A":"弱词","B":"中弱","C":"中强","D":"强词"},\n' +
-    '  "answer": "目标词所在字母（A/B/C/D）",\n' +
-    '  "explanation": "为什么这个场景强度匹配 ' + word + '（≤40 字）"\n' +
+    '  "question": "询问符合该状态行为的问题（英文）",\n' +
+    '  "options": {"A":"行为描述 1","B":"行为描述 2","C":"行为描述 3","D":"行为描述 4"},\n' +
+    '  "answer": "正确行为的字母",\n' +
+    '  "explanation": "为什么这个行为最符合 ' + word + '（≤40 字，中文）"\n' +
     "}\n\n" +
     "直接输出 JSON，不要 markdown 代码块标记。";
 };
@@ -975,13 +991,13 @@ var TeachJSON = ({ data, streaming }) => {
 };
 
 /* ═══ Phase 2 Output Games — 按词型路由的独立玩法组件 ═══
- * Round 1: gradient_choice (A 程度词替代拖动光谱)
+ * Round 1.5: behavior_match (A 程度词 — 行为一致性判断)
  * Round 2-4: collocation_fill / morph_fill / mnemonic_fill / context_choice
  */
 
-// A 程度词 → 情境强度选择
-// 场景 + 4 个程度词选项（从弱到强），学生选最贴切的那个
-var GradientChoiceGame = ({ data, onCorrect, onNext, sfx, loading }) => {
+// A 程度词 → 行为一致性判断
+// 场景 + 问题 + 4 个行为描述（不是同义词），测使用感
+var BehaviorMatchGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
   var [selected, setSelected] = useState(null);
   var [submitted, setSubmitted] = useState(false);
   if (!data) return null;
@@ -990,11 +1006,11 @@ var GradientChoiceGame = ({ data, onCorrect, onNext, sfx, loading }) => {
 
   return (
     <>
-      <div style={S.specTag}>🌡️ 情境强度</div>
-      <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>选最贴切这个场景的词</div>
+      <div style={S.specTag}>🎭 行为匹配</div>
+      <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>判断哪个行为最符合这个词的使用场景</div>
       {/* 场景卡 */}
       <div style={{
-        padding:"12px 14px", marginBottom:14, background:C.bg,
+        padding:"12px 14px", marginBottom:12, background:C.bg,
         borderLeft:"3px solid "+C.accent, borderRadius:"0 10px 10px 0",
         fontSize:15, lineHeight:1.7, color:C.text
       }}>
@@ -1002,16 +1018,11 @@ var GradientChoiceGame = ({ data, onCorrect, onNext, sfx, loading }) => {
       </div>
       {/* 问题 */}
       {data.question && (
-        <div style={{ fontWeight:700, fontSize:15, marginBottom:12, color:C.text }}>
+        <div style={{ fontWeight:700, fontSize:15, marginBottom:12, color:C.text, padding:"0 2px" }}>
           {data.question}
         </div>
       )}
-      {/* 强度渐变条（视觉提示：从弱到强） */}
-      <div style={{ position:"relative", height:4, background:"linear-gradient(90deg, "+C.teal+"66, "+C.gold+"88, "+C.red+"aa)", borderRadius:2, marginBottom:4 }} />
-      <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:C.textSec, marginBottom:10, padding:"0 4px" }}>
-        <span>较弱</span><span>中等</span><span>最强</span>
-      </div>
-      {/* 4 个选项 */}
+      {/* 4 个选项（行为描述 — 长度较长） */}
       <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:14 }}>
         {optKeys.map(function(k){
           var option = data.options?.[k] || "";
@@ -1031,24 +1042,24 @@ var GradientChoiceGame = ({ data, onCorrect, onNext, sfx, loading }) => {
               disabled={submitted}
               onClick={function(){ if (!submitted) setSelected(k); }}
               style={{
-                display:"flex", alignItems:"center", gap:12,
+                display:"flex", alignItems:"flex-start", gap:10,
                 padding:"12px 14px",
                 background: bg, border:"2px solid "+bdr, borderRadius:10,
                 cursor: submitted ? "default" : "pointer",
-                color: clr, fontWeight:600, textAlign:"left",
-                fontSize:15, transition:"all 0.2s", boxShadow: shadow,
+                color: clr, fontWeight:500, textAlign:"left",
+                fontSize:14, lineHeight:1.5, transition:"all 0.2s", boxShadow: shadow,
                 fontFamily: FONT
               }}
             >
               <span style={{
                 display:"inline-flex", alignItems:"center", justifyContent:"center",
                 width:24, height:24, borderRadius:"50%",
-                background: clr+"22", color: clr, fontSize:13, fontWeight:700,
-                flexShrink:0
+                background: clr+"22", color: clr, fontSize:12, fontWeight:700,
+                flexShrink:0, marginTop:1
               }}>{k}</span>
-              <span style={{ flex:1 }}>{option}</span>
-              {submitted && isAns && <span style={{ color:C.green, fontWeight:700 }}>✓</span>}
-              {submitted && isSel && !isAns && <span style={{ color:C.red, fontWeight:700 }}>✗</span>}
+              <span style={{ flex:1, fontFamily:"'Inter',"+FONT }}>{option}</span>
+              {submitted && isAns && <span style={{ color:C.green, fontWeight:700, marginLeft:4 }}>✓</span>}
+              {submitted && isSel && !isAns && <span style={{ color:C.red, fontWeight:700, marginLeft:4 }}>✗</span>}
             </button>
           );
         })}
@@ -1075,7 +1086,7 @@ var GradientChoiceGame = ({ data, onCorrect, onNext, sfx, loading }) => {
       {submitted && (
         <div style={{ ...S.specDecoded, marginTop:4 }}>
           <div style={{ color: isCorrect ? C.green : C.accent, fontWeight:700, marginBottom:8 }}>
-            {isCorrect ? "✓ 正确！+10 XP" : "💡 正确答案："+data.answer+" · "+(data.options?.[data.answer] || "")}
+            {isCorrect ? "✓ 正确！+10 XP" : "💡 正确答案 "+data.answer}
           </div>
           {data.explanation && (
             <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>
@@ -1088,7 +1099,7 @@ var GradientChoiceGame = ({ data, onCorrect, onNext, sfx, loading }) => {
               background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)",
               boxShadow:"0 4px 12px "+C.green+"55"
             }}
-          >→ 下一步</button>
+          >{nextLabel || "→ 下一个词"}</button>
         </div>
       )}
     </>
@@ -2221,11 +2232,14 @@ export default function App() {
         }, delay);
       }
     };
-    var dynamicCap = 3;
+    // Phase 2 Round 1.5：Cap 3 → 5（上限 6）缓解切词卡顿
+    // 原因：Phase 1.5 多了 classify 步骤，Cap=3 下 5 词流水线 ~15-20s，部分用户学快会追上
+    // Cap=5 让 teach 更多并发跑，切词稳定
+    var dynamicCap = 5;
     try {
       if (typeof window !== "undefined") {
-        var savedCap = Number(localStorage.getItem(CONC_KEY) || "3");
-        dynamicCap = Math.max(2, Math.min(4, savedCap || 3));
+        var savedCap = Number(localStorage.getItem(CONC_KEY) || "5");
+        dynamicCap = Math.max(3, Math.min(6, savedCap || 5));
       }
     } catch (e) {}
 
@@ -2382,8 +2396,8 @@ export default function App() {
           var elapsedMs = Date.now() - batchStartedAtMs;
           var currentCap = dynamicCap;
           var nextCap = currentCap;
-          if (elapsedMs > 45000) nextCap = Math.max(2, currentCap - 1);
-          else if (elapsedMs < 20000) nextCap = Math.min(4, currentCap + 1);
+          if (elapsedMs > 45000) nextCap = Math.max(3, currentCap - 1);
+          else if (elapsedMs < 20000) nextCap = Math.min(6, currentCap + 1);
           localStorage.setItem(CONC_KEY, String(nextCap));
         }
       } catch (e) {}
@@ -3039,6 +3053,37 @@ export default function App() {
     }, 72);
     return function() { clearInterval(id); };
   }, [screen, progress]);
+
+  // Phase 2 Round 1.5：进学习页立即按 tier 预取多组（silent 模式，不影响 UI）
+  // 游客 5 词 / 免费 10 / Basic 20 / Pro 30 — 预取到对应深度
+  // 每组独立 silent loadBatch，cache 命中的词自动跳过
+  useEffect(function() {
+    if (screen !== "learning") return;
+    if (!wordList || wordList.length === 0) return;
+
+    var isPaid = userTier === "basic" || userTier === "pro";
+    var maxPreloadWords;
+    if (userTier === "pro") maxPreloadWords = 30;
+    else if (userTier === "basic") maxPreloadWords = 20;
+    else if (userRef.current) maxPreloadWords = 10; // 免费注册用户
+    else maxPreloadWords = 5; // 游客
+
+    var currentBatchStart = Math.floor(idx / 5) * 5;
+    var nextBatchStart = currentBatchStart + 5;
+    var preloadLimit = Math.min(idx + maxPreloadWords, wordList.length);
+
+    // 从下一组开始，silent 预取直到 preloadLimit
+    for (var start = nextBatchStart; start < preloadLimit; start += 5) {
+      var needsLoad = false;
+      for (var bi = start; bi < Math.min(start + 5, wordList.length); bi++) {
+        if (!dataCache.current[wordList[bi]]) { needsLoad = true; break; }
+      }
+      if (needsLoad) {
+        // Fire-and-forget；cache 已命中的词会在 loadBatch 内 continue，避免重复
+        loadBatch(start, learned, undefined, { silent: true, streaming: false }).catch(function(){});
+      }
+    }
+  }, [screen, userTier, idx]); // userTier/idx 变化时重跑（仍然靠 dataCache check 去重）
 
   var getDailyPlan = function() {
     var words = parseWordsFromInput(wordInput);
@@ -5108,14 +5153,15 @@ export default function App() {
         </>}
       </div>}
 
-      {phase === "spectrum" && spectrumData && spectrumData.type === "gradient_choice" && (
+      {phase === "spectrum" && spectrumData && spectrumData.type === "behavior_match" && (
         <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
-          <GradientChoiceGame
+          <BehaviorMatchGame
             data={spectrumData}
             sfx={sfx}
             loading={loading}
             onCorrect={function(){ save({ ...stats, xp: stats.xp+10 }); }}
             onNext={goNextWord}
+            nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
           />
         </div>
       )}
