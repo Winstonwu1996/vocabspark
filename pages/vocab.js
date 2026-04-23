@@ -2015,22 +2015,25 @@ export default function App() {
         .catch(function() {});
     });
 
-    // ── Phase 1.5 优化：批量预取 classify（每词一个 shared Promise）──
-    // 避免每个 teach task 串联 classify → generator 形成阻塞流水线。
-    // 5 个 classify 并行发出（每个 2-3s），后续 teach task 直接 await 对应 Promise：
-    //   - 如果 classify 已完成 → 立刻拿到 cls，零额外等待
-    //   - 如果 classify 还在跑 → 等最多 2-3s（已在并行）
-    // 实测：原先每词 classify(2s) + generate(6s) = 8s 串联 → 现在 generate 6s 几乎零前置开销
-    var classifyByWord = {}; // word -> shared Promise<cls>
+    // ── Phase 1.5 v2：Scheduled Task Insertion ──
+    // 核心：classify 独立跑（不占 task slot），teach task 在 classify resolve 后动态入队。
+    // 解决 v1 缺陷：v1 的 teach task 在 slot 里 await classify，浪费 ~3s × N slot。
+    //
+    // 流水线：
+    //   t=0: 5 classify 并行发出（非 task，独立 fetch）
+    //   t=0: 5 guess task 立即入队 → Cap 3 slot 跑
+    //   t~3s: classify 陆续完成 → 对应 teach task 动态入队
+    //   t~3+6s: teach 完成 → 全 batch 在 ~12s 完成（对齐 Phase 1）
+    var classifyByWord = {};
     batchWords.forEach(function(w) {
-      if (dataCache.current[w]) return; // 跳过已缓存词
+      if (dataCache.current[w]) return;
       classifyByWord[w] = callClassify(w, profile, lrn).catch(function() { return null; });
     });
 
     var tasks = [];
     var completed = 0;
     var tipWordIdx = 0;
-    var shardProviders = ["deepseek-a", "deepseek-b"]; // A/B split for 5-word pack
+    var shardProviders = ["deepseek-a", "deepseek-b"];
     var batchStartedAtMs = Date.now();
     var readyWordSet = new Set();
     var earlyStartResolved = false;
@@ -2042,10 +2045,6 @@ export default function App() {
         earlyStartResolved = true;
         setBatchTip(readyWordSet.size > 0 ? "✅ 首词已就绪，正在为你打开学习页面..." : "⏳ 加载完成，正在进入学习...");
         setBatchProgress(function() { return batchTotalR.current || 0; });
-        // DeepSeek streaming 首 chunk 常在 500-1000ms 到达，如果立即切换会感觉
-        // "batch_loading 进度条一闪而过 → 猜词骨架屏"很割裂。
-        // 最小 5000ms 展示：让进度条有充分时间，同时让 guess（非流式，3-5s）
-        // 大概率在切换时已到达，进猜词页不再显示骨架屏。
         var elapsed = Date.now() - batchStartedAtMs;
         var minDisplayMs = 5000;
         var delay = Math.max(readyWordSet.size > 0 ? 400 : 200, minDisplayMs - elapsed);
@@ -2061,27 +2060,51 @@ export default function App() {
         dynamicCap = Math.max(2, Math.min(4, savedCap || 3));
       }
     } catch (e) {}
+
+    // pokeQueue: classify 完成后动态 push teach task 时唤醒 runner（下方 runAllPromise 里赋值）
+    var pokeQueue = null;
+    // expectedTaskCount：预期要跑的 task 总数（1 guess + 1 teach 每个新词）
+    var expectedTaskCount = 0;
+
     for (var i = 0; i < batchWords.length; i++) {
       var w = batchWords[i];
       if (dataCache.current[w]) {
         completed += 2;
-        if (dataCache.current[w].teach || dataCache.current[w].guess) readyWordSet.add(w);
+        if (dataCache.current[w].teach || dataCache.current[w].teachJSON || dataCache.current[w].guess) readyWordSet.add(w);
         continue;
       }
-      dataCache.current[w] = { guess: null, guessRaw: null, teach: null, spectrum: null };
+      dataCache.current[w] = { guess: null, guessRaw: null, teach: null, teachJSON: null, spectrum: null };
+      expectedTaskCount += 2; // 1 guess + 1 teach
       var wLrn = [...lrn, ...batchWords.slice(0, i)];
       (function(word, learned, providerHint) {
         var preferred = providerHint ? [providerHint] : undefined;
-        // Block on guess + teach; spectrum runs in background to preserve pack smoothness.
-        // 优化：teach 比 guess 慢（300-400字生成），先 push 让它尽早占用并发 slot
+
+        // === Guess task（立即入队，不依赖 classify）===
         tasks.push(function() {
-          // Phase 1.5：两步式 — 先 classify（选方法），再 generate（按选中方法生成）
-          // 优化：用批量预取的 shared Promise（classifyByWord），避免重复请求
-          var classifyFor = classifyByWord[word] || callClassify(word, profile, learned);
-          return classifyFor.then(function(cls) {
+          return callWithClientRetry(function() {
+            return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred });
+          }).then(function(raw) {
+            dataCache.current[word].guess = raw ? tryJSON(raw) : null;
+            dataCache.current[word].guessRaw = raw;
+            if ((dataCache.current[word].teach || dataCache.current[word].teachJSON) && (dataCache.current[word].guess || dataCache.current[word].guessRaw)) {
+              readyWordSet.add(word);
+              tryResolveEarlyStart();
+            }
+          }).catch(function(err) {
+            console.warn("[loadBatch] guess failed for " + word + ":", err.message);
+            dataCache.current[word].guessFailed = true;
+            if (dataCache.current[word].teach || dataCache.current[word].teachJSON) {
+              readyWordSet.add(word);
+              tryResolveEarlyStart();
+            }
+          });
+        });
+
+        // === Teach task（延迟入队 — classify resolve 后才 push 进 queue）===
+        // 关键：task 函数本身不 await classify，进 slot 后立即 callAPIStream，不浪费 slot 时间
+        classifyByWord[word].then(function(cls) {
+          tasks.push(function() {
             return callWithClientRetry(function() {
-              // generator prompt 只含 classifier 选中的方法 schema + 示例（prompt 减半，AI 更聚焦）
-              // jsonMode: true 让 DeepSeek/Gemini 开启 JSON mode，强制严格 JSON 输出，不提前停
               return callAPIStream(sysP, buildTeachPrompt(word, learned, cls), { preferredProviders: preferred, jsonMode: true }, function(partial) {
                 if (!dataCache.current[word]) return;
                 var parsed = parsePartialJSON(partial);
@@ -2097,57 +2120,36 @@ export default function App() {
                   tryResolveEarlyStart();
                 }
               });
+            }).then(function(raw) {
+              var finalJSON = raw ? (tryJSON(raw) || parsePartialJSON(raw)) : null;
+              if (finalJSON && finalJSON.opening && finalJSON.teach) {
+                dataCache.current[word].teachJSON = finalJSON;
+                dataCache.current[word].teach = null;
+              } else {
+                dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
+                dataCache.current[word].teachJSON = null;
+              }
+              dataCache.current[word].teachStreaming = false;
+              if ((dataCache.current[word].teachJSON || dataCache.current[word].teach) && !dataCache.current[word]._streamReadyTriggered) {
+                dataCache.current[word]._streamReadyTriggered = true;
+                readyWordSet.add(word);
+                tryResolveEarlyStart();
+              }
+            }).catch(function(err) {
+              console.warn("[loadBatch] teach failed for " + word + ":", err.message);
+              dataCache.current[word].teachFailed = true;
+              dataCache.current[word].teachStreaming = false;
+              if (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed) {
+                readyWordSet.add(word);
+                tryResolveEarlyStart();
+              }
             });
-          }).then(function(raw) {
-            // 完成：最终尝试 JSON 解析，成功用 JSON，失败 fallback 到 Markdown
-            var finalJSON = raw ? (tryJSON(raw) || parsePartialJSON(raw)) : null;
-            if (finalJSON && finalJSON.opening && finalJSON.teach) {
-              dataCache.current[word].teachJSON = finalJSON;
-              dataCache.current[word].teach = null; // JSON 优先，清 markdown 避免双渲染
-            } else {
-              // JSON 无效 → 降级 Markdown 渲染
-              dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
-              dataCache.current[word].teachJSON = null;
-            }
-            dataCache.current[word].teachStreaming = false;
-            // 兜底 ready（fallback 路径一次性返回时，首 chunk 未触发）
-            if ((dataCache.current[word].teachJSON || dataCache.current[word].teach) && !dataCache.current[word]._streamReadyTriggered) {
-              dataCache.current[word]._streamReadyTriggered = true;
-              readyWordSet.add(word);
-              tryResolveEarlyStart();
-            }
-          }).catch(function(err) {
-            console.warn("[loadBatch] teach failed for " + word + ":", err.message);
-            dataCache.current[word].teachFailed = true;
-            dataCache.current[word].teachStreaming = false;
-            // teach 失败时：如果 guess 已到，至少让用户能猜词；否则等 guess task 触发 ready
-            if (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed) {
-              readyWordSet.add(word);
-              tryResolveEarlyStart();
-            }
           });
+          // teach task 已入队，唤醒 runner 检查新 task（如果 runner 已 idle）
+          if (pokeQueue) pokeQueue();
         });
-        tasks.push(function() {
-          return callWithClientRetry(function() {
-            return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred });
-          }).then(function(raw) {
-            dataCache.current[word].guess = raw ? tryJSON(raw) : null;
-            dataCache.current[word].guessRaw = raw;
-            // Word is ready if teach is done (guess can be null — UI handles gracefully)
-            if (dataCache.current[word].teach && (dataCache.current[word].guess || dataCache.current[word].guessRaw)) {
-              readyWordSet.add(word);
-              tryResolveEarlyStart();
-            }
-          }).catch(function(err) {
-            console.warn("[loadBatch] guess failed for " + word + ":", err.message);
-            dataCache.current[word].guessFailed = true;
-            // Even if guess failed, if teach is ready, consider the word ready
-            if (dataCache.current[word].teach) {
-              readyWordSet.add(word);
-              tryResolveEarlyStart();
-            }
-          });
-        });
+
+        // Spectrum (fire and forget)
         callWithClientRetry(function() {
           return callAPIFast(sysP, buildSpectrumPrompt(word), { preferredProviders: preferred });
         }).then(function(raw) {
@@ -2160,13 +2162,15 @@ export default function App() {
 
     tryResolveEarlyStart();
 
-    var totalTasks = completed + tasks.length;
+    // totalTasks = 已 cache（completed）+ 预期要跑（expectedTaskCount）
+    // v1 用 tasks.length 计算会错（teach 还未 push），v2 用 expected 准确
+    var totalTasks = completed + expectedTaskCount;
     if (!silent) { setBatchTotal(totalTasks); setBatchProgress(completed); }
 
     var running = 0;
     var taskIdx = 0;
     var runAllPromise = new Promise(function(resolve) {
-      if (tasks.length === 0) { resolve(); return; }
+      if (totalTasks <= completed) { resolve(); return; }
       function next() {
         while (running < dynamicCap && taskIdx < tasks.length) {
           running++;
@@ -2175,7 +2179,6 @@ export default function App() {
             running--;
             completed++;
             if (!silent) {
-              // earlyStartResolved 后进度条已满，不再更新避免回退
               if (!earlyStartResolved) {
                 setBatchProgress(completed);
                 if (completed % 2 === 0) {
@@ -2194,6 +2197,7 @@ export default function App() {
           });
         }
       }
+      pokeQueue = next; // 暴露给 classify.then 回调：新 teach task 入队后唤醒 runner
       next();
     });
 
