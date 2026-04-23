@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Know U. · 字体对比</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f6f3;
+  --card: #ffffff;
+  --accent: #c46b30;
+  --accent-light: #fdf1e8;
+  --teal: #4a6d8c;
+  --teal-light: #f0f4f7;
+  --purple: #6c5ce7;
+  --purple-light: #f0edff;
+  --gold: #c8922e;
+  --gold-light: #fdf6ea;
+  --green: #22a06b;
+  --green-light: #e6fcf5;
+  --text: #2c2e33;
+  --text-sec: #6b7280;
+  --border: #e5e2dd;
+  --shadow: 0 1px 2px rgba(44,36,32,0.04), 0 8px 24px rgba(44,36,32,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  padding: 40px 20px;
+  min-height: 100vh;
+}
+
+.page-title {
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto 30px;
+}
+.page-title h1 {
+  font-family: 'Fraunces', 'PingFang SC', Georgia, serif;
+  font-weight: 800;
+  font-size: 36px;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.page-title p {
+  font-family: -apple-system, 'PingFang SC', sans-serif;
+  color: var(--text-sec);
+  font-size: 14px;
+}
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.col-header {
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  font-family: -apple-system, 'PingFang SC', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.col-before .col-header { background: #fff3e0; color: #8a5a00; border: 1px solid #f5cc8d; }
+.col-after .col-header { background: var(--green-light); color: #0d6b44; border: 1px solid #a7e0c3; }
+.col-header .tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  background: rgba(0,0,0,0.06);
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 28px 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+/* ─── BEFORE（当前） ─── */
+.col-before .word-display {
+  font-family: 'Fraunces', 'Noto Serif SC', 'Noto Sans SC', Georgia, serif;
+  font-weight: 600;
+  font-size: 32px;
+  letter-spacing: -0.01em;
+}
+.col-before .phonetic {
+  font-family: 'DM Sans', 'Noto Sans SC', sans-serif;
+  font-style: italic;
+  color: var(--text-sec);
+  font-size: 14px;
+}
+.col-before .section-heading {
+  font-family: 'Fraunces', 'Noto Serif SC', 'Noto Sans SC', Georgia, serif;
+  font-weight: 700;
+}
+.col-before .body-text,
+.col-before .example,
+.col-before .tag-pill,
+.col-before .btn {
+  font-family: 'DM Sans', 'Noto Sans SC', sans-serif;
+}
+
+/* ─── AFTER（推荐） ─── */
+.col-after .word-display {
+  font-family: 'Fraunces', -apple-system, 'HarmonyOS Sans SC', 'PingFang SC', Georgia, serif;
+  font-weight: 600;
+  font-size: 32px;
+  letter-spacing: -0.01em;
+}
+.col-after .phonetic {
+  font-family: 'Inter', -apple-system, 'PingFang SC', sans-serif;
+  font-style: italic;
+  color: var(--text-sec);
+  font-size: 14px;
+}
+.col-after .section-heading {
+  font-family: 'Fraunces', -apple-system, 'HarmonyOS Sans SC', 'PingFang SC', Georgia, serif;
+  font-weight: 700;
+}
+.col-after .body-text,
+.col-after .example,
+.col-after .tag-pill,
+.col-after .btn {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'HarmonyOS Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+/* ─── 共同样式 ─── */
+.word-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+.word-row .speaker {
+  color: var(--text-sec);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.tag-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--teal-light);
+  color: var(--teal);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+.section {
+  border-left: 3px solid;
+  border-radius: 0 10px 10px 0;
+  padding: 12px 14px;
+  margin: 14px 0;
+}
+.section-jiao { border-color: var(--purple); background: #f0edff88; }
+.section-lian { border-color: var(--gold); background: #fdf6ea88; }
+.section-lian .section-heading { color: var(--gold); }
+.section-jiao .section-heading { color: var(--purple); }
+.section-lian-head, .section-jiao-head {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.section-jiao-head { color: var(--purple); }
+.section-lian-head { color: var(--gold); }
+
+.body-text {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text);
+}
+
+.example {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+  margin-top: 6px;
+  font-style: italic;
+}
+.example strong {
+  font-style: normal;
+  background: var(--accent-light);
+  padding: 0 4px;
+  border-radius: 3px;
+  color: var(--accent);
+}
+
+.btn-row {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+.btn {
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  flex: 1;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-sec);
+}
+
+.meta {
+  margin-top: 24px;
+  padding: 14px;
+  background: #f9f8f5;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-sec);
+}
+.meta strong { color: var(--text); font-weight: 600; }
+.col-before .meta { font-family: 'DM Sans', 'Noto Sans SC', sans-serif; }
+.col-after .meta { font-family: 'Inter', -apple-system, 'PingFang SC', sans-serif; }
+
+@media (max-width: 900px) {
+  .compare { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>字体组合对比 — 标准学习页</h1>
+  <p>模拟 30 分钟长阅读场景，左右并排对比</p>
+</div>
+
+<div class="compare">
+
+  <!-- ─── BEFORE 列 ─── -->
+  <div class="col-before">
+    <div class="col-header">
+      <span>📖 当前 · DM Sans + Noto Sans/Serif SC</span>
+      <span class="tag">BEFORE</span>
+    </div>
+    <div class="card">
+      <div class="word-row">
+        <span class="word-display">ignorance</span>
+        <span class="speaker">🔊</span>
+      </div>
+      <div class="phonetic">/ˈɪɡnərəns/</div>
+
+      <div style="margin:18px 0"><span class="tag-pill">📖 学习笔记</span></div>
+
+      <div class="section section-jiao">
+        <div class="section-jiao-head"><span class="section-heading">📖 【教】</span></div>
+        <div class="body-text">
+          <strong>ignorance</strong> 是名词，意思是"无知、不了解"。词根 <em>ignor-</em> 表示"忽略、不知"，和动词 <strong>ignore</strong>（忽略）同源。听起来有点学术，但用在日常也很自然。
+        </div>
+      </div>
+
+      <div class="section section-lian">
+        <div class="section-lian-head"><span class="section-heading">🔗 【连】</span></div>
+        <div class="body-text">
+          想象你和 Emily 在 Irvine Spectrum 打网球时聊起 <em>Honor of Kings</em>，她完全没听过 — 你会友好地吐槽她的 <strong>ignorance</strong>。或者 Taylor Swift 的粉丝听到 "Swiftie" 却不知道含义，那就是 pop culture ignorance。
+        </div>
+        <div class="example">
+          "Her <strong>ignorance</strong> of the new ranked system got us eliminated in seconds!"
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary">🎮 词义光谱挑战 →</button>
+        <button class="btn btn-ghost">跳过</button>
+      </div>
+
+      <div class="meta">
+        <strong>字体构成：</strong><br>
+        英文正文 <code>DM Sans 400-700</code>（Google Fonts, ~50KB）<br>
+        中文正文 <code>Noto Sans SC 400-700</code>（Google Fonts, ~180KB）<br>
+        装饰标题 <code>Fraunces + Noto Serif SC</code>（~250KB）<br>
+        <strong>总加载：~480KB · 全部跨境 CDN</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── AFTER 列 ─── -->
+  <div class="col-after">
+    <div class="col-header">
+      <span>✨ 推荐 · Inter + 苹方/鸿蒙系统字</span>
+      <span class="tag">AFTER</span>
+    </div>
+    <div class="card">
+      <div class="word-row">
+        <span class="word-display">ignorance</span>
+        <span class="speaker">🔊</span>
+      </div>
+      <div class="phonetic">/ˈɪɡnərəns/</div>
+
+      <div style="margin:18px 0"><span class="tag-pill">📖 学习笔记</span></div>
+
+      <div class="section section-jiao">
+        <div class="section-jiao-head"><span class="section-heading">📖 【教】</span></div>
+        <div class="body-text">
+          <strong>ignorance</strong> 是名词，意思是"无知、不了解"。词根 <em>ignor-</em> 表示"忽略、不知"，和动词 <strong>ignore</strong>（忽略）同源。听起来有点学术，但用在日常也很自然。
+        </div>
+      </div>
+
+      <div class="section section-lian">
+        <div class="section-lian-head"><span class="section-heading">🔗 【连】</span></div>
+        <div class="body-text">
+          想象你和 Emily 在 Irvine Spectrum 打网球时聊起 <em>Honor of Kings</em>，她完全没听过 — 你会友好地吐槽她的 <strong>ignorance</strong>。或者 Taylor Swift 的粉丝听到 "Swiftie" 却不知道含义，那就是 pop culture ignorance。
+        </div>
+        <div class="example">
+          "Her <strong>ignorance</strong> of the new ranked system got us eliminated in seconds!"
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary">🎮 词义光谱挑战 →</button>
+        <button class="btn btn-ghost">跳过</button>
+      </div>
+
+      <div class="meta">
+        <strong>字体构成：</strong><br>
+        英文正文 <code>Inter 400-700</code>（Google Fonts, ~42KB）<br>
+        中文正文 <code>苹方 / 鸿蒙字体</code>（设备原生，0 加载）<br>
+        装饰标题 <code>Fraunces + 系统中文</code>（~200KB）<br>
+        <strong>总加载：~242KB · 减少 50% · 中文零延迟原生渲染</strong>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="max-width:900px;margin:40px auto 0;padding:20px;background:#fff;border-radius:12px;border:1px solid var(--border);font-family:'Inter',-apple-system,'PingFang SC',sans-serif;font-size:14px;line-height:1.75;color:var(--text-sec)">
+  <strong style="color:var(--text)">对比重点：</strong>
+  <ul style="margin:10px 0 0 20px">
+    <li><strong>英文</strong>：Inter（右）x-height 更高，长阅读更耐看；DM Sans（左）几何感更强但偏冷</li>
+    <li><strong>中文</strong>：你的设备是 Apple，右侧展示的就是苹方 Regular/Semibold；左侧是 Google CDN 的 Noto Sans SC（如果 CDN 慢会看到字体回退）</li>
+    <li><strong>中英混排</strong>：Inter 和苹方的 baseline 对齐度比 DM Sans + Noto 更好</li>
+    <li><strong>加载性能</strong>：减少 ~240KB 跨境下载，首屏快 300-800ms</li>
+  </ul>
+</div>
+
+</body>
+</html>
