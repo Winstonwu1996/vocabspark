@@ -81,7 +81,7 @@ export default async function handler(req) {
       headers: { "Content-Type": "application/json" },
     });
   }
-  const { system, message, maxTokens, preferredProviders, userApiKeys } = body || {};
+  const { system, message, maxTokens, preferredProviders, userApiKeys, jsonMode } = body || {};
   if (!system || !message) {
     return new Response(JSON.stringify({ error: "Missing system or message" }), {
       status: 400,
@@ -141,7 +141,7 @@ export default async function handler(req) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${provider.apiKey}`,
           },
-          body: JSON.stringify({
+          body: JSON.stringify(Object.assign({
             model: provider.model,
             max_tokens: tokens,
             stream: true,
@@ -149,7 +149,7 @@ export default async function handler(req) {
               { role: "system", content: system },
               { role: "user", content: message },
             ],
-          }),
+          }, jsonMode ? { response_format: { type: "json_object" } } : {})),
           signal: AbortSignal.timeout(perProviderTimeoutMs),
         });
 

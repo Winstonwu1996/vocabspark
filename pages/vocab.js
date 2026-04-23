@@ -2061,7 +2061,8 @@ export default function App() {
           return callClassify(word, profile, learned).then(function(cls) {
             return callWithClientRetry(function() {
               // generator prompt 只含 classifier 选中的方法 schema + 示例（prompt 减半，AI 更聚焦）
-              return callAPIStream(sysP, buildTeachPrompt(word, learned, cls), { preferredProviders: preferred }, function(partial) {
+              // jsonMode: true 让 DeepSeek/Gemini 开启 JSON mode，强制严格 JSON 输出，不提前停
+              return callAPIStream(sysP, buildTeachPrompt(word, learned, cls), { preferredProviders: preferred, jsonMode: true }, function(partial) {
                 if (!dataCache.current[word]) return;
                 var parsed = parsePartialJSON(partial);
                 if (parsed && parsed.opening) {
