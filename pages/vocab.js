@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { supabase } from '../lib/supabase';
 import { C, FONT, globalCSS, S } from '../lib/theme';
@@ -549,14 +549,57 @@ var RL = ({ text }) => {
   })}</span>;
 };
 
+// P2-9: 识别【教】【连】【练】三段，给每段加色条 + 背景区分
+var SECTION_STYLES = {
+  "教": { color: C.purple, bg: C.purpleLight, icon: "📖" },
+  "连": { color: C.gold,   bg: C.goldLight,   icon: "🔗" },
+  "练": { color: C.green,  bg: C.greenLight,  icon: "✏️" },
+};
 var Md = ({ text }) => {
   if (!text) return null;
-  return text.split("\n").map((line, i) => {
-    if (line.trim() === "---") return <hr key={i} style={{ border:"none", height:1, background:C.border, margin:"14px 0" }} />;
-    if (line.startsWith("### ")) return <div key={i} style={{ fontWeight:700, fontSize:15, margin:"14px 0 6px", color:C.teal, display:"flex", alignItems:"flex-end", gap:4 }}><RL text={line.slice(4)} /></div>;
-    if (line.startsWith("## ")) return <div key={i} style={{ fontWeight:700, fontSize:17, margin:"18px 0 8px", color:C.accent, display:"flex", alignItems:"flex-end", gap:4 }}><RL text={line.slice(3)} /></div>;
-    return line.trim() ? <div key={i} style={{ margin:"5px 0", lineHeight:1.85, fontSize:15, display:"flex", alignItems:"flex-end", gap:4 }}><RL text={line} /></div> : <div key={i} style={{ height:6 }} />;
+  var lines = text.split("\n");
+  var blocks = [];
+  var currentSection = null;
+  var currentContent = [];
+  var flush = function() {
+    if (currentContent.length === 0 && !currentSection) return;
+    var key = "b" + blocks.length;
+    if (currentSection && SECTION_STYLES[currentSection]) {
+      var s = SECTION_STYLES[currentSection];
+      blocks.push(
+        <div key={key} style={{ borderLeft:"3px solid "+s.color, background:s.bg+"55", borderRadius:"0 10px 10px 0", padding:"10px 14px 10px 14px", margin:"14px 0" }}>
+          <div style={{ fontWeight:700, fontSize:13, color:s.color, marginBottom:6 }}>{s.icon} 【{currentSection}】</div>
+          {currentContent}
+        </div>
+      );
+    } else {
+      blocks.push(<div key={key}>{currentContent}</div>);
+    }
+    currentContent = [];
+  };
+  lines.forEach(function(line, i) {
+    // 检测【X】section 标记
+    var m = line.match(/^【([教连练])】\s*$/);
+    if (m) {
+      flush();
+      currentSection = m[1];
+      return;
+    }
+    // 普通行渲染
+    if (line.trim() === "---") {
+      currentContent.push(<hr key={"hr"+i} style={{ border:"none", height:1, background:C.border, margin:"14px 0" }} />);
+    } else if (line.startsWith("### ")) {
+      currentContent.push(<div key={"h3"+i} style={{ fontWeight:700, fontSize:15, margin:"14px 0 6px", color:C.teal, display:"flex", alignItems:"flex-end", gap:4 }}><RL text={line.slice(4)} /></div>);
+    } else if (line.startsWith("## ")) {
+      currentContent.push(<div key={"h2"+i} style={{ fontWeight:700, fontSize:17, margin:"18px 0 8px", color:C.accent, display:"flex", alignItems:"flex-end", gap:4 }}><RL text={line.slice(3)} /></div>);
+    } else if (line.trim()) {
+      currentContent.push(<div key={"p"+i} style={{ margin:"5px 0", lineHeight:1.85, fontSize:15, display:"flex", alignItems:"flex-end", gap:4 }}><RL text={line} /></div>);
+    } else {
+      currentContent.push(<div key={"sp"+i} style={{ height:6 }} />);
+    }
   });
+  flush();
+  return blocks;
 };
 
 /* ═══ MAIN APP ═══ */
@@ -3112,7 +3155,7 @@ export default function App() {
                   var picked = deepQuizSelect === op.key;
                   var ok = deepQuizSubmitted && op.key === deepQuiz.answer;
                   var bad = deepQuizSubmitted && picked && op.key !== deepQuiz.answer;
-                  return <button key={op.key} disabled={deepQuizSubmitted} onClick={function(){setDeepQuizSelect(op.key);}} style={{...S.optionBtn,justifyContent:"flex-start",background:ok?C.greenLight:bad?C.redLight:picked?C.accentLight:C.bg,borderColor:ok?C.green:bad?C.red:picked?C.accent:C.border,color:ok?C.green:bad?C.red:C.text}}><span style={S.optionKey}>{op.key}</span>{op.text}</button>;
+                  return <button key={op.key} data-option-btn="true" data-selected={picked ? "true" : "false"} disabled={deepQuizSubmitted} onClick={function(){setDeepQuizSelect(op.key);}} style={{...S.optionBtn,justifyContent:"flex-start",background:ok?C.greenLight:bad?C.redLight:picked?C.accentLight:"#fff",borderColor:ok?C.green:bad?C.red:picked?C.accent:C.border,color:ok?C.green:bad?C.red:C.text}}><span data-option-key="true" style={S.optionKey}>{op.key}</span>{op.text}</button>;
                 })}
               </div>
               {!deepQuizSubmitted ? (
@@ -3280,6 +3323,26 @@ export default function App() {
                 <button style={{...S.smallBtn,padding:"2px 8px"}} onClick={function(){setShowTaskOrderHint(false);}}>跳过建议</button>
               </div>
             )}
+
+            {/* P1-6: 三步进度轨（Duolingo 风格） — 直观展示今日进度 */}
+            <div style={{display:"flex",alignItems:"center",gap:0,marginBottom:10,padding:"8px 4px"}}>
+              {[
+                { label:"快速复习", done:dailyPlan.quickDone, active:!dailyPlan.quickDone && dailyPlan.toReview.length > 0 },
+                { label:"重点攻克", done:dailyPlan.deepDone, active:dailyPlan.quickDone && !dailyPlan.deepDone && !dailyPlan.deepLocked },
+                { label:"学习新词", done:dailyPlan.newDone, active:dailyPlan.quickDone && dailyPlan.deepDone && !dailyPlan.newDone },
+              ].map(function(step, i, arr) {
+                var nodeBg = step.done ? C.green : step.active ? C.accent : C.border;
+                var nodeColor = step.done || step.active ? "#fff" : C.textSec;
+                var trackBg = i > 0 ? (arr[i-1].done ? C.green : C.border) : null;
+                return <React.Fragment key={i}>
+                  {i > 0 && <div style={{flex:1,height:3,background:trackBg,transition:"background 0.3s",margin:"0 -2px"}} />}
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,position:"relative"}}>
+                    <div style={{width:28,height:28,borderRadius:"50%",background:nodeBg,color:nodeColor,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,boxShadow:step.active ? "0 0 0 4px "+C.accent+"22" : "none",transition:"all 0.3s"}}>{step.done ? "✓" : (i+1)}</div>
+                    <div style={{fontSize:10,color:step.active?C.accent:step.done?C.green:C.textSec,fontWeight:step.active?700:500,whiteSpace:"nowrap"}}>{step.label}</div>
+                  </div>
+                </React.Fragment>;
+              })}
+            </div>
 
             <div className="vs-task-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
               <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
@@ -4165,13 +4228,21 @@ export default function App() {
       )}
 
       {phase !== "review" && phase !== "done" && phase !== "batch_loading" && phase !== "cloze" && phase !== "speed_wait" && (
-        <div style={{...S.wordHeader, boxShadow: stats.streak >= 5 ? "0 0 0 2px "+C.gold+", 0 0 18px "+C.gold+"55" : C.shadow, border: stats.streak >= 5 ? "1px solid "+C.gold : "1px solid "+C.border, animation: stats.streak >= 5 ? "glowPulse 2s ease-in-out infinite" : "fadeUp 0.3s ease-out"}}>
-          <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-            <h2 style={S.wordTitle}>{currentWord}</h2>
-            {phonetic && <span style={S.phoneticText}>{phonetic}</span>}
-            <SpeakWordBtn text={currentWord} size={38} />
+        <div style={{...S.wordHeader, padding:"20px 22px 16px", boxShadow: stats.streak >= 5 ? "0 0 0 2px "+C.gold+", 0 0 18px "+C.gold+"55" : C.shadow, border: stats.streak >= 5 ? "1px solid "+C.gold : "1px solid "+C.border, animation: stats.streak >= 5 ? "glowPulse 2s ease-in-out infinite" : "fadeUp 0.3s ease-out"}}>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+              {/* P2-8: 单词字号调大到 38，让它真正成为页面主角 */}
+              <h2 style={{ ...S.wordTitle, fontSize: 38, margin:0 }}>{currentWord}</h2>
+              <SpeakWordBtn text={currentWord} size={36} />
+            </div>
+            {phonetic && <div style={{ ...S.phoneticText, marginTop:4, fontSize:15 }}>{phonetic}</div>}
           </div>
-          {stats.streak > 0 && <div style={S.streakBadge}>{stats.streak >= 5 ? "🔥×"+stats.streak : "🔥 "+stats.streak}</div>}
+          {stats.streak > 0 && (
+            <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
+              <div style={S.streakBadge}>{stats.streak >= 5 ? "🔥×"+stats.streak : "🔥 "+stats.streak}</div>
+              {stats.streak >= 3 && <div style={{ fontSize:10, color:C.gold, fontWeight:600, opacity:0.8 }}>连对中</div>}
+            </div>
+          )}
         </div>
       )}
 
@@ -4236,7 +4307,7 @@ export default function App() {
                     <span key={"t"+i}>{seg}</span>,
                     guessSubmitted
                       ? <span key={"f"+i} style={{fontWeight:700, color: isCorrect ? C.green : C.red, display:"inline-block", animation:"fillIn 0.4s ease-out", padding:"0 2px", borderRadius:4, background: isCorrect ? C.greenLight : C.redLight}}>{guessData.answer}</span>
-                      : <span key={"b"+i} style={{letterSpacing:3, color:C.textSec, fontWeight:700}}>___</span>
+                      : <span key={"b"+i} style={{display:"inline-block",minWidth:80,padding:"2px 14px",margin:"0 3px",background:C.accentLight,borderBottom:"2px solid "+C.accent,borderRadius:4,color:C.accent+"66",fontWeight:700,textAlign:"center",letterSpacing:2}}>___</span>
                   ];
                 })}
               </span>
@@ -4247,7 +4318,7 @@ export default function App() {
               var bg=C.bg, bdr=C.border, clr=C.text;
               if(ok){bg=C.greenLight;bdr=C.green;clr=C.green;} else if(bad){bg=C.redLight;bdr=C.red;clr=C.red;} else if(sel){bg=C.accentLight;bdr=C.accent;clr=C.accent;}
               var shadow = ok ? "0 0 0 2px "+C.green+"33" : bad ? "0 0 0 2px "+C.red+"33" : sel ? "0 0 0 2px "+C.accent+"33" : "none";
-              return <button key={k} disabled={guessSubmitted} style={{...S.optionBtn,background:bg,borderColor:bdr,color:clr,boxShadow:shadow}} onClick={()=>setSelectedOption(k)}><span style={S.optionKey}>{k}</span>{v}{ok?" ✓":""}{bad?" ✗":""}</button>;
+              return <button key={k} data-option-btn="true" data-selected={sel ? "true" : "false"} disabled={guessSubmitted} style={{...S.optionBtn,background:bg,borderColor:bdr,color:clr,boxShadow:shadow}} onClick={()=>setSelectedOption(k)}><span data-option-key="true" style={S.optionKey}>{k}</span>{v}{ok?" ✓":""}{bad?" ✗":""}</button>;
             })}</div> : guessData._failed ? <div style={{textAlign:"center",padding:"12px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>猜题加载失败</div><button style={S.primaryBtn} onClick={function(){setGuessData(null);callWithClientRetry(function(){return callAPIFast(sysP,buildGuessPrompt(currentWord,learned));}).then(function(raw){var parsed=tryJSON(raw);if(parsed?.context&&parsed?.options){dataCache.current[currentWord].guess=parsed;dataCache.current[currentWord].guessFailed=false;setGuessData(parsed);}else{setGuessData({context:"格式异常",options:null});}}).catch(function(){setGuessData({context:"内容加载失败",options:null,_failed:true});});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={skipGuess}>直接学习 →</button></div> : <div style={{fontSize:14,color:C.textSec,marginBottom:14}}>选项异常，请跳过</div>}
             {!guessSubmitted && guessData.hint && <button style={S.hintBtn} onClick={()=>setShowHint(true)}>{showHint?"💡 "+guessData.hint:"💡 提示"}</button>}
             {guessSubmitted && <div style={{...S.resultBanner, background:selectedOption===guessData.answer?C.greenLight:C.goldLight, borderColor:selectedOption===guessData.answer?C.green:C.gold}}>{selectedOption===guessData.answer?"🎉 猜对了！+15 XP":"😯 正确答案："+guessData.answer+"—"+guessData.options[guessData.answer]}<div style={{fontSize:13,marginTop:4,color:C.textSec}}>✨ 即将进入学习...</div></div>}
@@ -4279,19 +4350,25 @@ export default function App() {
         <div style={S.specTag}>🎮 词义光谱挑战</div>
         <div style={S.specHint}>按程度【从弱到强】排列！</div>
         {spectrumData.scenario && <div style={S.specScenario}>{spectrumData.scenario}</div>}
+        {/* P2-10: 强度渐变条 — 视觉化"弱→强" */}
+        <div style={{ position:"relative", height:6, background:"linear-gradient(90deg, "+C.teal+"66 0%, "+C.gold+"88 50%, "+C.red+"aa 100%)", borderRadius:3, marginBottom:6 }} />
+        <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:C.textSec, marginBottom:10, padding:"0 4px" }}>
+          <span>较弱</span><span>中等</span><span>最强</span>
+        </div>
         <div style={S.specSlotRow}>{specSlots.map((w,i) => {
           var labels=["较弱 →","中等 →","最强 ★"];
-          var bc=specStatus==="success"?C.darkGreen:specStatus==="error"?C.red:C.darkBorder;
-          var bgc=specStatus==="success"?C.darkGreen+"22":specStatus==="error"?C.red+"22":C.dark;
-          return <div key={i} onClick={()=>returnFromSlot(w,i)} style={{...S.specSlot,borderColor:bc,background:bgc,cursor:w&&specStatus!=="success"?"pointer":"default"}}>{w||<span style={{color:C.darkBorder,fontSize:12}}>{labels[i]}</span>}</div>;
+          var colors=[C.teal+"55", C.gold+"55", C.red+"55"];
+          var bc=specStatus==="success"?C.green:specStatus==="error"?C.red:(w?colors[i]:C.border);
+          var bgc=specStatus==="success"?C.greenLight:specStatus==="error"?C.redLight:(w?colors[i].replace("55","22"):"#fff");
+          return <div key={i} onClick={()=>returnFromSlot(w,i)} style={{...S.specSlot,borderColor:bc,background:bgc,cursor:w&&specStatus!=="success"?"pointer":"default",color:w?C.accent:C.textSec}}>{w||<span style={{fontSize:12}}>{labels[i]}</span>}</div>;
         })}</div>
-        {specStatus!=="success" && <div style={S.specPoolRow}>{specPool.map(w => <button key={w} onClick={()=>moveToSlot(w)} style={S.specPoolBtn}>{w}</button>)}</div>}
-        {specSlots.every(s=>s!==null) && specStatus==="idle" && <button onClick={checkSpectrum} style={S.specCheckBtn}>[ 验证排序 ]</button>}
+        {specStatus!=="success" && <div style={S.specPoolRow}>{specPool.map(w => <button key={w} onClick={()=>moveToSlot(w)} style={S.specPoolBtn} onMouseEnter={function(e){ e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 4px 14px rgba(196,107,48,0.25)"; }} onMouseLeave={function(e){ e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 2px 8px rgba(196,107,48,0.12)"; }}>{w}</button>)}</div>}
+        {specSlots.every(s=>s!==null) && specStatus==="idle" && <button onClick={checkSpectrum} style={S.specCheckBtn}>✓ 验证排序</button>}
         {specStatus==="error" && <div style={{color:C.red,textAlign:"center",padding:10,fontWeight:700,animation:"shake 0.4s ease"}}>⚠️ 再试一次！</div>}
         {specStatus==="success" && <div style={S.specDecoded}>
-          <div style={{color:C.darkGreen,fontWeight:700,marginBottom:8}}>✓ 正确！+10 XP</div>
+          <div style={{color:C.green,fontWeight:700,marginBottom:8}}>✓ 正确！+10 XP</div>
           <div style={{lineHeight:1.7,fontSize:14}}>{spectrumData.decoded}</div>
-          <button onClick={goNextWord} disabled={loading} style={{...S.specCheckBtn,marginTop:16,background:C.darkGreen}}>
+          <button onClick={goNextWord} disabled={loading} style={{...S.specCheckBtn,marginTop:16,background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)",boxShadow:"0 4px 12px "+C.green+"55"}}>
             {idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
           </button>
         </div>}
@@ -4561,18 +4638,21 @@ export default function App() {
         </div>
       )}
 
-      <Disclaimer />
-      <div style={{ textAlign:"center", padding:"24px 0 8px", fontSize:13, lineHeight:1.8, color:C.textSec }}>
-        <div>Made with ❤️ by a dad for his daughter, and for you.</div>
-        <div style={{ fontStyle:"italic" }}>为女儿而写，献给每一位认真学习的你</div>
-        <div style={{ marginTop:6, fontSize:12 }}>问题反馈：<a href="mailto:Winstonwu1996@icloud.com" style={{ color:C.accent, textDecoration:"none" }}>Winstonwu1996@icloud.com</a> ✉️</div>
-        <div style={{ marginTop:4, fontSize:12, display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap", alignItems:"center" }}>
-          <a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a>
-          <button onClick={()=>setShowShare(true)} style={{ background:"transparent", border:"none", color:C.accent, fontFamily:FONT, fontSize:12, fontWeight:600, cursor:"pointer", padding:0 }}>🔗 推荐给朋友</button>
+      {/* 学习中不显示 footer，避免干扰；只在 done（学完）才显示完整 footer */}
+      {phase === "done" && <>
+        <Disclaimer />
+        <div style={{ textAlign:"center", padding:"24px 0 8px", fontSize:13, lineHeight:1.8, color:C.textSec }}>
+          <div>Made with ❤️ by a dad for his daughter, and for you.</div>
+          <div style={{ fontStyle:"italic" }}>为女儿而写，献给每一位认真学习的你</div>
+          <div style={{ marginTop:6, fontSize:12 }}>问题反馈：<a href="mailto:Winstonwu1996@icloud.com" style={{ color:C.accent, textDecoration:"none" }}>Winstonwu1996@icloud.com</a> ✉️</div>
+          <div style={{ marginTop:4, fontSize:12, display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap", alignItems:"center" }}>
+            <a href="https://buymeacoffee.com/winstonwu1996" target="_blank" rel="noreferrer" style={{ color:C.gold, textDecoration:"none", fontWeight:600 }}>☕ 请开发者喝杯咖啡</a>
+            <button onClick={()=>setShowShare(true)} style={{ background:"transparent", border:"none", color:C.accent, fontFamily:FONT, fontSize:12, fontWeight:600, cursor:"pointer", padding:0 }}>🔗 推荐给朋友</button>
+          </div>
+          <div style={{ marginTop:4, fontSize:11, color:C.border }}>Vocab by Know U.</div>
         </div>
-        <div style={{ marginTop:4, fontSize:11, color:C.border }}>Vocab by Know U.</div>
-      </div>
-      <PrivacyNotice />
+        <PrivacyNotice />
+      </>}
 
       <div ref={contentEndRef} />
       </div>
