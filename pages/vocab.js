@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { supabase } from '../lib/supabase';
 import { C, FONT, globalCSS, S } from '../lib/theme';
-import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, tryJSON } from '../lib/api';
+import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON } from '../lib/api';
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
@@ -685,6 +685,7 @@ export default function App() {
 
   var [teachContent, setTeachContent] = useState("");
   var [teachWaitSec, setTeachWaitSec] = useState(0); // teach 加载已等待秒数（用于进度反馈）
+  var [teachStreaming, setTeachStreaming] = useState(false); // 是否在流式生成中（用于显示光标+禁用按钮）
   var [spectrumData, setSpectrumData] = useState(null);
   var [specSlots, setSpecSlots] = useState([null,null,null]);
   var [specPool, setSpecPool] = useState([]);
@@ -1709,9 +1710,23 @@ export default function App() {
         // 优化：teach 比 guess 慢（300-400字生成），先 push 让它尽早占用并发 slot
         tasks.push(function() {
           return callWithClientRetry(function() {
-            return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred });
+            // streaming 版本：callAPIStream 内置 fallback 到 callAPI（灰度关闭或失败时）
+            // onChunk 增量更新 cache.teach（纯文本，不加 speak markers，等完成后再加）
+            return callAPIStream(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred }, function(partial) {
+              if (!dataCache.current[word]) return; // 词可能已被移除
+              dataCache.current[word].teach = partial;
+              dataCache.current[word].teachStreaming = true;
+              // 首次 chunk 到达即标记 ready，让用户秒进 teach 页看打字机效果
+              if (!dataCache.current[word]._streamReadyTriggered && (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed)) {
+                dataCache.current[word]._streamReadyTriggered = true;
+                readyWordSet.add(word);
+                tryResolveEarlyStart();
+              }
+            });
           }).then(function(raw) {
+            // streaming 完成 or fallback 返回：替换为带 speak markers 的最终版本
             dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
+            dataCache.current[word].teachStreaming = false;
             // Word is ready if teach loaded (guess can be partial or failed)
             if (dataCache.current[word].teach && (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed)) {
               readyWordSet.add(word);
@@ -1720,6 +1735,7 @@ export default function App() {
           }).catch(function(err) {
             console.warn("[loadBatch] teach failed for " + word + ":", err.message);
             dataCache.current[word].teachFailed = true;
+            dataCache.current[word].teachStreaming = false;
             // If guess is done/attempted, word is as ready as it'll get
             if (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed) {
               readyWordSet.add(word);
@@ -1855,40 +1871,53 @@ export default function App() {
     } else {
       setGuessData({ context: (d?.guessRaw||"").substring(0,300) || "格式异常", options: null });
     }
-    if (d?.teach) {
+    // streaming 中或已完成但未稳定：也要启动轮询持续拉增量内容
+    var teachStreamingActive = !!d?.teachStreaming;
+    setTeachStreaming(teachStreamingActive);
+    if (d?.teach && !teachStreamingActive) {
       setTeachContent(d.teach);
       setTeachWaitSec(0);
     } else if (d?.teachFailed) {
       setTeachContent("__FAILED__");
       setTeachWaitSec(0);
+      setTeachStreaming(false);
     } else {
-      // teach 数据还在加载中，启动轮询等待 + 秒数计时器（让用户看到进度感）
+      // 两种情况：(a) 还没开始生成 (b) 正在 streaming 中 — 都用轮询捡增量
       if (teachTimeoutRef.current) clearTimeout(teachTimeoutRef.current);
       if (teachPollRef.current) clearInterval(teachPollRef.current);
       var pollWord = word;
       var startT = Date.now();
       setTeachWaitSec(0);
+      // streaming 阶段已有部分内容时，先渲染一次，避免 skeleton 抖动
+      if (d?.teach) setTeachContent(d.teach);
+      // 200ms 更细的粒度，打字机感觉更流畅
       teachPollRef.current = setInterval(function() {
         var cached = dataCache.current[pollWord];
         if (cached?.teach) {
           setTeachContent(cached.teach);
           setTeachWaitSec(0);
-          clearInterval(teachPollRef.current);
-          clearTimeout(teachTimeoutRef.current);
+          setTeachStreaming(!!cached.teachStreaming);
+          // streaming 未完成 → 继续轮询捡增量；已完成 → 停止
+          if (!cached.teachStreaming) {
+            clearInterval(teachPollRef.current);
+            clearTimeout(teachTimeoutRef.current);
+          }
         } else if (cached?.teachFailed) {
           setTeachContent("__FAILED__");
           setTeachWaitSec(0);
+          setTeachStreaming(false);
           clearInterval(teachPollRef.current);
           clearTimeout(teachTimeoutRef.current);
         } else {
           setTeachWaitSec(Math.floor((Date.now() - startT) / 1000));
         }
-      }, 500);
-      // 超时从 60s → 35s：大部分正常请求 15s 内完成，35s 后认为失败
+      }, 200);
+      // 超时 35s：大部分正常请求 15s 内完成
       teachTimeoutRef.current = setTimeout(function() {
         if (teachPollRef.current) clearInterval(teachPollRef.current);
         setTeachContent(function(prev) { return prev || "__FAILED__"; });
         setTeachWaitSec(0);
+        setTeachStreaming(false);
       }, 35000);
     }
     if (spectrumPollRef.current) clearInterval(spectrumPollRef.current);
@@ -4440,8 +4469,11 @@ export default function App() {
             )}
           </div>;
         })() : <>
-          <div style={{marginBottom:20}}><Md text={teachContent} /></div>
-          <button style={S.primaryBtn} onClick={teachToSpectrum} disabled={loading}>{spectrumData?"🎮 词义光谱挑战 →":"→ 下一个词"}</button>
+          <div style={{marginBottom:20, position:"relative"}}>
+            <Md text={teachContent} />
+            {teachStreaming && <span style={{display:"inline-block",width:8,height:16,background:C.accent,marginLeft:2,verticalAlign:"-2px",animation:"cursorBlink 0.9s steps(1) infinite"}} aria-hidden="true" />}
+          </div>
+          <button style={{...S.primaryBtn, opacity: teachStreaming ? 0.6 : 1, cursor: teachStreaming ? "progress" : "pointer"}} onClick={teachToSpectrum} disabled={loading || teachStreaming}>{teachStreaming ? "✨ 正在生成...": (spectrumData?"🎮 词义光谱挑战 →":"→ 下一个词")}</button>
         </>}
       </div>}
 
