@@ -684,6 +684,7 @@ export default function App() {
   var [bounceCorrect, setBounceCorrect] = useState(false);
 
   var [teachContent, setTeachContent] = useState("");
+  var [teachWaitSec, setTeachWaitSec] = useState(0); // teach 加载已等待秒数（用于进度反馈）
   var [spectrumData, setSpectrumData] = useState(null);
   var [specSlots, setSpecSlots] = useState([null,null,null]);
   var [specPool, setSpecPool] = useState([]);
@@ -1705,6 +1706,27 @@ export default function App() {
       (function(word, learned, providerHint) {
         var preferred = providerHint ? [providerHint] : undefined;
         // Block on guess + teach; spectrum runs in background to preserve pack smoothness.
+        // 优化：teach 比 guess 慢（300-400字生成），先 push 让它尽早占用并发 slot
+        tasks.push(function() {
+          return callWithClientRetry(function() {
+            return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred });
+          }).then(function(raw) {
+            dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
+            // Word is ready if teach loaded (guess can be partial or failed)
+            if (dataCache.current[word].teach && (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed)) {
+              readyWordSet.add(word);
+              tryResolveEarlyStart();
+            }
+          }).catch(function(err) {
+            console.warn("[loadBatch] teach failed for " + word + ":", err.message);
+            dataCache.current[word].teachFailed = true;
+            // If guess is done/attempted, word is as ready as it'll get
+            if (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed) {
+              readyWordSet.add(word);
+              tryResolveEarlyStart();
+            }
+          });
+        });
         tasks.push(function() {
           return callWithClientRetry(function() {
             return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred });
@@ -1721,26 +1743,6 @@ export default function App() {
             dataCache.current[word].guessFailed = true;
             // Even if guess failed, if teach is ready, consider the word ready
             if (dataCache.current[word].teach) {
-              readyWordSet.add(word);
-              tryResolveEarlyStart();
-            }
-          });
-        });
-        tasks.push(function() {
-          return callWithClientRetry(function() {
-            return callAPI(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred });
-          }).then(function(raw) {
-            dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
-            // Word is ready if teach loaded (guess can be partial or failed)
-            if (dataCache.current[word].teach && (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed)) {
-              readyWordSet.add(word);
-              tryResolveEarlyStart();
-            }
-          }).catch(function(err) {
-            console.warn("[loadBatch] teach failed for " + word + ":", err.message);
-            dataCache.current[word].teachFailed = true;
-            // If guess is done/attempted, word is as ready as it'll get
-            if (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed) {
               readyWordSet.add(word);
               tryResolveEarlyStart();
             }
@@ -1855,29 +1857,39 @@ export default function App() {
     }
     if (d?.teach) {
       setTeachContent(d.teach);
+      setTeachWaitSec(0);
     } else if (d?.teachFailed) {
       setTeachContent("__FAILED__");
+      setTeachWaitSec(0);
     } else {
-      // teach 数据可能还在加载中（streaming 模式），轮询等待到达
+      // teach 数据还在加载中，启动轮询等待 + 秒数计时器（让用户看到进度感）
       if (teachTimeoutRef.current) clearTimeout(teachTimeoutRef.current);
       if (teachPollRef.current) clearInterval(teachPollRef.current);
       var pollWord = word;
+      var startT = Date.now();
+      setTeachWaitSec(0);
       teachPollRef.current = setInterval(function() {
         var cached = dataCache.current[pollWord];
         if (cached?.teach) {
           setTeachContent(cached.teach);
+          setTeachWaitSec(0);
           clearInterval(teachPollRef.current);
           clearTimeout(teachTimeoutRef.current);
         } else if (cached?.teachFailed) {
           setTeachContent("__FAILED__");
+          setTeachWaitSec(0);
           clearInterval(teachPollRef.current);
           clearTimeout(teachTimeoutRef.current);
+        } else {
+          setTeachWaitSec(Math.floor((Date.now() - startT) / 1000));
         }
       }, 500);
+      // 超时从 60s → 35s：大部分正常请求 15s 内完成，35s 后认为失败
       teachTimeoutRef.current = setTimeout(function() {
         if (teachPollRef.current) clearInterval(teachPollRef.current);
         setTeachContent(function(prev) { return prev || "__FAILED__"; });
-      }, 60000);
+        setTeachWaitSec(0);
+      }, 35000);
     }
     if (spectrumPollRef.current) clearInterval(spectrumPollRef.current);
     if (d?.spectrum?.spectrum_words) {
@@ -4402,14 +4414,32 @@ export default function App() {
       {phase === "teach" && <div style={{...S.card, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
         <div style={{...S.tag,background:C.tealLight,color:C.teal}}>📖 学习笔记</div>
         {teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解内容加载失败</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");callWithClientRetry(function(){return callAPI(sysP,buildTeachPrompt(currentWord,learned));}).then(function(raw){var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
-        : !teachContent ? <div style={{padding:"8px 0"}}>
-          <div style={{background:C.border,borderRadius:8,height:20,width:"70%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
-          <div style={{background:C.border,borderRadius:8,height:14,width:"100%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.1s"}}/>
-          <div style={{background:C.border,borderRadius:8,height:14,width:"90%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.2s"}}/>
-          <div style={{background:C.border,borderRadius:8,height:14,width:"95%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.3s"}}/>
-          <div style={{background:C.border,borderRadius:8,height:14,width:"60%",marginBottom:12,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.4s"}}/>
-          <div style={{textAlign:"center",fontSize:13,color:C.textSec,marginTop:8}}>{loadingTip||"📖 正在用你的生活场景编写专属讲解..."}</div>
-        </div> : <>
+        : !teachContent ? (() => {
+          // 根据等待秒数动态展示不同提示，给用户进度感
+          var s = teachWaitSec;
+          var msg, mainColor;
+          if (s < 6) { msg = "📖 AI 正在理解你的学习画像..."; mainColor = C.textSec; }
+          else if (s < 15) { msg = "🤔 正在为 " + currentWord + " 编写专属讲解..."; mainColor = C.teal; }
+          else if (s < 25) { msg = "⚡ AI 思考中... 稍慢一点"; mainColor = C.gold; }
+          else { msg = "⏳ 还需要一点时间，马上好..."; mainColor = C.accent; }
+          return <div style={{padding:"8px 0"}}>
+            <div style={{background:C.border,borderRadius:8,height:20,width:"70%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
+            <div style={{background:C.border,borderRadius:8,height:14,width:"100%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.1s"}}/>
+            <div style={{background:C.border,borderRadius:8,height:14,width:"90%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.2s"}}/>
+            <div style={{background:C.border,borderRadius:8,height:14,width:"95%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.3s"}}/>
+            <div style={{background:C.border,borderRadius:8,height:14,width:"60%",marginBottom:12,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.4s"}}/>
+            <div style={{textAlign:"center",fontSize:13,color:mainColor,marginTop:8,fontWeight:600,transition:"color 0.3s"}}>
+              {msg}
+              {s >= 3 && <span style={{marginLeft:8,fontSize:12,color:C.textSec,fontWeight:400}}>已等待 {s}s</span>}
+            </div>
+            {/* 超过 12 秒给用户"跳过"出口 */}
+            {s >= 12 && (
+              <div style={{textAlign:"center",marginTop:12}}>
+                <button onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}} style={{...S.ghostBtn,fontSize:12,padding:"6px 14px"}}>等不及了，跳过此词 →</button>
+              </div>
+            )}
+          </div>;
+        })() : <>
           <div style={{marginBottom:20}}><Md text={teachContent} /></div>
           <button style={S.primaryBtn} onClick={teachToSpectrum} disabled={loading}>{spectrumData?"🎮 词义光谱挑战 →":"→ 下一个词"}</button>
         </>}
