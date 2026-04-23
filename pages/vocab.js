@@ -166,7 +166,14 @@ var buildSys = (profile, goal, goalCustom) => {
 
 var buildGuessPrompt = (word, learned) => {
   var ctx = learned.length > 0 ? "\n之前学过：" + learned.join(", ") : "";
-  return "单词：" + word + ctx + "\n\n请执行 Step 1（猜）：\n\n1. 给出这个单词的IPA音标\n2. 给出一个生动的英文语境句（1-2句），用 _____ 代替目标单词，深度使用学习画像中的具体场景。\n3. 给出 4 个中文选项（A/B/C/D），其中只有 1 个是正确含义。\n\nIMPORTANT: 直接输出JSON，不要任何前导文字：\n" + '{"phonetic":"/音标/","context":"语境句","options":{"A":"选项A","B":"选项B","C":"选项C","D":"选项D"},"answer":"字母","hint":"提示"}';
+  return "单词：" + word + ctx + "\n\n请执行 Step 1（猜）：\n\n" +
+    "1. 给出这个单词的IPA音标\n" +
+    "2. context 字段：1-2 句**纯英文**语境句（⚠️ 必须全英文，不能含任何中文、拼音、中文标点），用 _____ 代替目标单词，深度利用学习画像的场景（兴趣/常去地方/日常）。\n" +
+    "   ✅ 好范例：\"William just pulled off a clutch Pentakill in Honor of Kings, and immediately rushed to _____ the new season pass before the Jay Chou collab skin expired.\"\n" +
+    "   ❌ 禁止：中英混合（如\"William 在《王者荣耀》里 _____\"）、纯中文、中文标点\n" +
+    "3. 给出 4 个中文选项（A/B/C/D），只有 1 个正确含义\n\n" +
+    "IMPORTANT: 直接输出JSON，不要任何前导文字：\n" +
+    '{"phonetic":"/音标/","context":"English-only sentence with _____","options":{"A":"中文选项A","B":"中文选项B","C":"中文选项C","D":"中文选项D"},"answer":"字母","hint":"中文提示"}';
 };
 
 // Phase 1.5：generator prompt — 接受 classifyResult，动态裁剪 schema 到选中方法
