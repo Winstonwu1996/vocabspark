@@ -1802,11 +1802,14 @@ export default function App() {
             running--;
             completed++;
             if (!silent) {
-              setBatchProgress(completed);
-              if (completed % 2 === 0) {
-                tipWordIdx++;
-                if (tipWordIdx < batchWords.length) {
-                  setBatchTip(makeBatchTip(tipWordIdx, batchWords[tipWordIdx], total));
+              // earlyStartResolved 后进度条已满，不再更新避免回退
+              if (!earlyStartResolved) {
+                setBatchProgress(completed);
+                if (completed % 2 === 0) {
+                  tipWordIdx++;
+                  if (tipWordIdx < batchWords.length) {
+                    setBatchTip(makeBatchTip(tipWordIdx, batchWords[tipWordIdx], total));
+                  }
                 }
               }
             }
