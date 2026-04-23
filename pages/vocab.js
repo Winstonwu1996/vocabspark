@@ -3416,10 +3416,30 @@ export default function App() {
       </div>
       {setupTab === "profile" && (
         <div style={S.setupCard}>
-          <div style={S.setupHint}>{profileLocked ? "✅ 画像已保存" : "🌟 告诉 AI 你的世界——兴趣爱好、日常生活，越真实越有趣，AI 造的句子会让你惊喜！"}</div>
-          {profileLocked ? (
-            <div><div style={S.profilePrev}>{profile.slice(0,250)}{profile.length>250?"...":""}</div><button style={S.smallBtn} onClick={() => setProfileLocked(false)}>✏️ 编辑</button></div>
-          ) : (
+          <div style={S.setupHint}>{profileLocked ? "✅ 画像已保存 — AI 会用它为你定制每一个例句" : "🌟 告诉 AI 你的世界——兴趣爱好、日常生活，越真实越有趣，AI 造的句子会让你惊喜！"}</div>
+          {profileLocked ? (() => {
+            // 画像质量评估
+            var len = profile.length;
+            var quality, qColor, qLabel, qHint;
+            if (len >= 200) { quality = 100; qColor = C.green; qLabel = "画像丰富"; qHint = "AI 能生成高度个性化的例句"; }
+            else if (len >= 100) { quality = 66; qColor = C.gold; qLabel = "画像良好"; qHint = "补充更多细节（爱好/朋友/地点）能让 AI 更懂你"; }
+            else { quality = 33; qColor = C.accent; qLabel = "画像较简单"; qHint = "建议补充到 100 字以上，AI 会用这些素材编织例句"; }
+            return <div>
+              {/* 画像质量评分卡 */}
+              <div style={{background:"linear-gradient(135deg, "+qColor+"11 0%, "+qColor+"22 100%)",border:"1px solid "+qColor+"33",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                  <div style={{fontSize:13,fontWeight:700,color:qColor}}>✨ {qLabel}</div>
+                  <div style={{fontSize:12,color:C.textSec}}>{len} 字</div>
+                </div>
+                <div style={{height:6,background:"#fff",borderRadius:3,overflow:"hidden",marginBottom:6}}>
+                  <div style={{height:"100%",width:quality+"%",background:"linear-gradient(90deg, "+qColor+" 0%, "+qColor+"aa 100%)",borderRadius:3,transition:"width 0.3s"}} />
+                </div>
+                <div style={{fontSize:11,color:C.textSec,lineHeight:1.5}}>{qHint}</div>
+              </div>
+              <div style={S.profilePrev}>{profile.slice(0,250)}{profile.length>250?"...":""}</div>
+              <button style={{...S.smallBtn,marginTop:10}} onClick={() => setProfileLocked(false)}>✏️ 编辑画像</button>
+            </div>;
+          })() : (
             <div>
               {/* 默认示例提示 */}
               {!profile.trim() && (
@@ -3476,17 +3496,23 @@ export default function App() {
                   syncToCloud();
                 });
               }} style={{
-                background: selected ? C.tealLight : C.card,
-                border: "1.5px solid " + (selected ? C.teal : C.border),
-                borderRadius: 12,
-                padding: "14px 12px",
+                background: selected ? C.accentLight : "#fff",
+                border: "2px solid " + (selected ? C.accent : C.border),
+                borderRadius: 14,
+                padding: "14px 14px",
                 textAlign: "left",
                 cursor: "pointer",
                 fontFamily: FONT,
                 transition: "all 0.15s ease",
-              }}>
-                <div style={{fontSize:14,fontWeight:700,color: selected ? C.teal : C.text,marginBottom:2}}>{selected ? "✅ " : ""}{opt.label}</div>
-                <div style={{fontSize:12,color:C.textSec,lineHeight:1.4}}>{opt.desc}</div>
+                boxShadow: selected ? "0 6px 18px "+C.accent+"33" : "0 1px 2px rgba(44,36,32,0.04)",
+                transform: selected ? "translateY(-1px)" : "none",
+                position: "relative",
+              }}
+              onMouseEnter={function(e){ if(!selected){ e.currentTarget.style.borderColor = C.accent+"66"; e.currentTarget.style.background = C.accentLight+"55"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(196,107,48,0.12)"; } }}
+              onMouseLeave={function(e){ if(!selected){ e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 1px 2px rgba(44,36,32,0.04)"; } }}>
+                {selected && <div style={{position:"absolute",top:8,right:10,width:22,height:22,borderRadius:"50%",background:C.accent,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,boxShadow:"0 2px 6px "+C.accent+"66"}}>✓</div>}
+                <div style={{fontSize:14,fontWeight:700,color: selected ? C.accent : C.text,marginBottom:2,paddingRight:selected?28:0}}>{opt.label}</div>
+                <div style={{fontSize:12,color:selected?C.accent:C.textSec,opacity:selected?0.9:1,lineHeight:1.4}}>{opt.desc}</div>
               </button>;
             })}
           </div>
@@ -3526,31 +3552,67 @@ export default function App() {
         return <div style={S.setupCard}>
           <div style={S.setupHint}>控制每天的学习节奏，系统会自动安排任务。</div>
 
-          {/* 词库概览 */}
-          <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:10,padding:"12px 14px",fontSize:13,lineHeight:1.8,marginBottom:14}}>
-            <div>📚 词库：<strong>{planView.totalWords}</strong> 个词</div>
-            {planView.learnedCount > 0 && <div>📖 已通过 AI 学习：<strong>{planView.learnedCount}</strong> 个</div>}
-            {planView.skippedCount > 0 && <div>⏭️ 快筛已跳过：<strong>{planView.skippedCount}</strong> 个（不参与学习和复习）</div>}
-            <div>📝 待学习：<strong>{planView.unlearnedCount}</strong> 个
-              {_hasScreeningData && planView.unlearnedCount > 0 && <span style={{color:C.textSec}}>（预估其中约 <strong style={{color:C.accent}}>{planView.predictedNeedLearn}</strong> 个需要学习，基于 {_unknownPct}% 不认识率）</span>}
+          {/* 词库仪表盘 — 4 格视觉化统计 */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2, 1fr)",gap:10,marginBottom:14}}>
+            <div style={{background:"linear-gradient(135deg, "+C.tealLight+" 0%, #fff 100%)",border:"1px solid "+C.teal+"33",borderRadius:12,padding:"14px"}}>
+              <div style={{fontSize:11,color:C.textSec,fontWeight:600,marginBottom:4,textTransform:"uppercase",letterSpacing:"0.05em"}}>📚 词库总数</div>
+              <div style={{fontSize:26,fontWeight:800,color:C.teal,lineHeight:1}}>{planView.totalWords}</div>
+              <div style={{fontSize:11,color:C.textSec,marginTop:4}}>词</div>
             </div>
-            <div>📅 今日到期复习：<strong>{planView.dueCount}</strong> 个</div>
-            {planView.unlearnedCount > 50 && (
-              <div style={{marginTop:6}}>
-                <button style={{background:C.teal,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:FONT}} onClick={function(){ startScreening(); }}>🃏 用快筛过滤已认识的词 →</button>
-              </div>
-            )}
+            <div style={{background:"linear-gradient(135deg, "+C.accentLight+" 0%, #fff 100%)",border:"1px solid "+C.accent+"33",borderRadius:12,padding:"14px"}}>
+              <div style={{fontSize:11,color:C.textSec,fontWeight:600,marginBottom:4,textTransform:"uppercase",letterSpacing:"0.05em"}}>📝 待学习</div>
+              <div style={{fontSize:26,fontWeight:800,color:C.accent,lineHeight:1}}>{planView.unlearnedCount}</div>
+              <div style={{fontSize:11,color:C.textSec,marginTop:4}}>{_hasScreeningData && planView.unlearnedCount > 0 ? "预估 "+planView.predictedNeedLearn+" 个真正需学" : "词"}</div>
+            </div>
+            {planView.learnedCount > 0 && <div style={{background:"linear-gradient(135deg, "+C.greenLight+" 0%, #fff 100%)",border:"1px solid "+C.green+"33",borderRadius:12,padding:"14px"}}>
+              <div style={{fontSize:11,color:C.textSec,fontWeight:600,marginBottom:4,textTransform:"uppercase",letterSpacing:"0.05em"}}>📖 已学过</div>
+              <div style={{fontSize:26,fontWeight:800,color:C.green,lineHeight:1}}>{planView.learnedCount}</div>
+              <div style={{fontSize:11,color:C.textSec,marginTop:4}}>词 · AI 精读</div>
+            </div>}
+            {(planView.dueCount > 0 || planView.learnedCount === 0) && <div style={{background:"linear-gradient(135deg, "+C.goldLight+" 0%, #fff 100%)",border:"1px solid "+C.gold+"33",borderRadius:12,padding:"14px"}}>
+              <div style={{fontSize:11,color:C.textSec,fontWeight:600,marginBottom:4,textTransform:"uppercase",letterSpacing:"0.05em"}}>📅 今日到期</div>
+              <div style={{fontSize:26,fontWeight:800,color:C.gold,lineHeight:1}}>{planView.dueCount}</div>
+              <div style={{fontSize:11,color:C.textSec,marginTop:4}}>词待复习</div>
+            </div>}
           </div>
 
-          {/* 每日精读数 — 主控 */}
-          <div style={{marginBottom:16}}>
-            <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:6}}>每天 AI 精读几个新词？</div>
-            <div style={{fontSize:11,color:C.textSec,marginBottom:6}}>快筛时，筛出这么多不认识的词就会提醒你开始精读</div>
-            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              {[5,10,15,20,25,30,50].map(function(n) { return <button key={n} onClick={function(){updateDailyNewWords(n);}} style={dailyNewWords===n ? {...S.ghostBtn, background:C.accent, color:"#fff", borderColor:C.accent, padding:"8px 14px"} : {...S.ghostBtn, padding:"8px 14px"}}>{n}</button>; })}
+          {planView.unlearnedCount > 50 && (
+            <div style={{background:C.tealLight,border:"1px dashed "+C.teal+"66",borderRadius:10,padding:"10px 14px",marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
+              <div style={{fontSize:12,color:C.teal,lineHeight:1.5}}>💡 词库较大，建议先快筛过滤已认识的词</div>
+              <button style={{background:C.teal,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:FONT,whiteSpace:"nowrap"}} onClick={function(){ startScreening(); }}>🃏 开始快筛 →</button>
             </div>
+          )}
+
+          {/* 每日精读目标 — 预设 + 自定义 */}
+          <div style={{marginBottom:16}}>
+            <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:8}}>
+              <div style={{fontSize:14,fontWeight:700,color:C.text}}>每日新词目标</div>
+              <div style={{fontSize:12,color:C.textSec}}>当前 <strong style={{color:C.accent}}>{dailyNewWords || 20}</strong> 词/天</div>
+            </div>
+            {/* 三个推荐档位（轻/中/重） */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}>
+              {[
+                { n:10, label:"轻松", desc:"10 词/天", icon:"🌱" },
+                { n:20, label:"标准", desc:"20 词/天", icon:"🎯" },
+                { n:30, label:"冲刺", desc:"30 词/天", icon:"🚀" },
+              ].map(function(opt) {
+                var selected = dailyNewWords === opt.n;
+                return <button key={opt.n} onClick={function(){updateDailyNewWords(opt.n);}} style={{background:selected?C.accentLight:"#fff",border:"2px solid "+(selected?C.accent:C.border),borderRadius:12,padding:"10px 6px",cursor:"pointer",fontFamily:FONT,textAlign:"center",transition:"all 0.15s ease",boxShadow:selected?"0 4px 12px "+C.accent+"33":"0 1px 2px rgba(44,36,32,0.04)"}}>
+                  <div style={{fontSize:20,marginBottom:2}}>{opt.icon}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:selected?C.accent:C.text}}>{opt.label}</div>
+                  <div style={{fontSize:10,color:C.textSec,marginTop:2}}>{opt.desc}</div>
+                </button>;
+              })}
+            </div>
+            {/* 其他档位（折叠） */}
+            <details style={{fontSize:12,color:C.textSec}}>
+              <summary style={{cursor:"pointer",padding:"4px 0",userSelect:"none"}}>其他档位（5 / 15 / 25 / 50）</summary>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:6}}>
+                {[5,15,25,50].map(function(n) { return <button key={n} onClick={function(){updateDailyNewWords(n);}} style={dailyNewWords===n ? {...S.ghostBtn, background:C.accent, color:"#fff", borderColor:C.accent, padding:"6px 14px"} : {...S.ghostBtn, padding:"6px 14px"}}>{n}</button>; })}
+              </div>
+            </details>
             {planView.predictedNeedLearn > 0 && _estDateStr && (
-              <div style={{fontSize:12,color:C.teal,marginTop:8,lineHeight:1.6}}>
+              <div style={{background:C.tealLight,border:"1px solid "+C.teal+"33",borderRadius:10,padding:"10px 12px",fontSize:12,color:C.teal,marginTop:10,lineHeight:1.6}}>
                 📈 按每天 {dailyNewWords || 20} 个新词，<strong>预计 {_estDays} 天后（{_estDateStr}）</strong>可完成
                 {_hasScreeningData && <span style={{color:C.textSec}}>（基于快筛 {_unknownPct}% 不认识率推算）</span>}
               </div>
@@ -3586,17 +3648,21 @@ export default function App() {
             if (_allWords.length === 0) return <div style={S.setupHint}>👇 先导入词表或选择预设词库，开始你的学习之旅！</div>;
             return <div style={{marginBottom:14}}>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-                <button style={{background:C.tealLight,border:"1.5px solid "+C.teal+"66",borderRadius:12,padding:"14px 10px",textAlign:"center",cursor:"pointer",fontFamily:FONT}} onClick={function(){ startScreening(); }}>
-                  <div style={{fontSize:22,marginBottom:4}}>🃏</div>
+                <button style={{background:"#fff",border:"1.5px solid "+C.border,borderRadius:14,padding:"16px 12px",textAlign:"center",cursor:"pointer",fontFamily:FONT,boxShadow:C.shadowSoft,transition:"all 0.2s ease",borderTop:"3px solid "+C.teal}} onClick={function(){ startScreening(); }}
+                  onMouseEnter={function(e){ e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 8px 20px rgba(74,109,140,0.15)"; e.currentTarget.style.borderColor=C.teal+"66"; }}
+                  onMouseLeave={function(e){ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow=C.shadowSoft; e.currentTarget.style.borderColor=C.border; e.currentTarget.style.borderTopColor=C.teal; }}>
+                  <div style={{fontSize:26,marginBottom:6}}>🃏</div>
                   <div style={{fontSize:14,fontWeight:700,color:C.teal,marginBottom:2}}>快筛模式</div>
-                  <div style={{fontSize:11,color:C.textSec,lineHeight:1.4,marginBottom:8}}>认识的跳过，不认识的留给 AI</div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.teal}}>{_unlearnedCount} 词待筛</div>
+                  <div style={{fontSize:11,color:C.textSec,lineHeight:1.4,marginBottom:10}}>认识就跳过，过滤词表</div>
+                  <div style={{display:"inline-block",padding:"4px 12px",background:C.tealLight,borderRadius:20,fontSize:12,fontWeight:700,color:C.teal}}>{_unlearnedCount} 词待筛</div>
                 </button>
-                <button style={{background:C.accentLight,border:"1.5px solid "+C.accent+"66",borderRadius:12,padding:"14px 10px",textAlign:"center",cursor:"pointer",fontFamily:FONT}} onClick={function(){ startLearning(0); }}>
-                  <div style={{fontSize:22,marginBottom:4}}>✨</div>
+                <button style={{background:"#fff",border:"1.5px solid "+C.border,borderRadius:14,padding:"16px 12px",textAlign:"center",cursor:"pointer",fontFamily:FONT,boxShadow:C.shadowSoft,transition:"all 0.2s ease",borderTop:"3px solid "+C.accent}} onClick={function(){ startLearning(0); }}
+                  onMouseEnter={function(e){ e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 8px 20px rgba(196,107,48,0.18)"; e.currentTarget.style.borderColor=C.accent+"66"; }}
+                  onMouseLeave={function(e){ e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow=C.shadowSoft; e.currentTarget.style.borderColor=C.border; e.currentTarget.style.borderTopColor=C.accent; }}>
+                  <div style={{fontSize:26,marginBottom:6}}>✨</div>
                   <div style={{fontSize:14,fontWeight:700,color:C.accent,marginBottom:2}}>精读模式</div>
-                  <div style={{fontSize:11,color:C.textSec,lineHeight:1.4,marginBottom:8}}>AI 定制：猜→讲→练→复习</div>
-                  <div style={{fontSize:13,fontWeight:700,color:C.accent}}>{Math.min(_unlearnedCount, dailyNewWords||10)} 词精读</div>
+                  <div style={{fontSize:11,color:C.textSec,lineHeight:1.4,marginBottom:10}}>AI 定制 · 深度学习</div>
+                  <div style={{display:"inline-block",padding:"4px 12px",background:C.accentLight,borderRadius:20,fontSize:12,fontWeight:700,color:C.accent}}>{Math.min(_unlearnedCount, dailyNewWords||10)} 词精读</div>
                 </button>
               </div>
               {_unlearnedCount > 50 && (
@@ -3612,15 +3678,18 @@ export default function App() {
               <span style={{fontSize:13,color:C.textSec}}>{fileLabel||".xlsx .csv .txt 均支持"}</span>
               <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" style={{display:"none"}} onChange={handleFile} />
             </div>
-            <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:4}}>
-              <button onClick={resetLearningProgress} style={{padding:"5px 10px",background:C.red+"18",color:C.red,border:"1px solid "+C.red+"33",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>🔄 重置进度</button>
-              <span onClick={function(){setHelpTip(helpTip==="reset"?null:"reset");}} style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:18,height:18,borderRadius:999,background:C.border,color:C.textSec,fontSize:11,fontWeight:700,cursor:"pointer",userSelect:"none",flexShrink:0}}>?</span>
+            <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:6}}>
+              {/* 重置进度改为低调文字链接，避免误点；点击后才展开说明 */}
+              <button onClick={function(){setHelpTip(helpTip==="reset"?null:"reset");}} style={{padding:"4px 10px",background:"transparent",color:C.textSec,border:"none",fontFamily:FONT,fontSize:12,cursor:"pointer",textDecoration:"underline dashed",textUnderlineOffset:3,whiteSpace:"nowrap"}}>重置进度</button>
             </div>
           </div>
-          {helpTip === "reset" && <div style={{background:C.accentLight,border:"1px solid "+C.accent+"33",borderRadius:10,padding:"10px 14px",fontSize:12,color:C.text,lineHeight:1.7,marginBottom:10}}>
-            <strong>重置进度</strong>：换词表后建议重置，清除旧词的学习状态和统计数据，从零开始。<br/>
-            <span style={{color:C.textSec}}>会清除：单词状态、复习记录、XP 和正确率、今日配额<br/>不会清除：词表内容、学习画像、每日目标、连续学习天数</span>
-            <div style={{textAlign:"right",marginTop:4}}><span onClick={function(){setHelpTip(null);}} style={{color:C.accent,cursor:"pointer",fontWeight:600}}>收起</span></div>
+          {helpTip === "reset" && <div style={{background:C.redLight,border:"1px solid "+C.red+"33",borderRadius:10,padding:"12px 14px",fontSize:12,color:C.text,lineHeight:1.7,marginBottom:10}}>
+            <div style={{fontWeight:700,color:C.red,marginBottom:4}}>⚠️ 重置进度（谨慎操作）</div>
+            <span style={{color:C.textSec}}>换词表后建议重置。<br/>会清除：单词状态、复习记录、XP 和正确率、今日配额<br/>不会清除：词表内容、学习画像、每日目标、连续学习天数</span>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
+              <button onClick={function(){setHelpTip(null);}} style={{background:"transparent",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",padding:0,fontFamily:FONT}}>取消</button>
+              <button onClick={function(){ resetLearningProgress(); setHelpTip(null); }} style={{padding:"6px 14px",background:C.red,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:700,cursor:"pointer"}}>确认重置</button>
+            </div>
           </div>}
           {(() => {
             var hasUserWords = wordInput.trim().length > 0;
