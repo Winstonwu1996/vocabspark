@@ -238,8 +238,47 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     '  }\n' +
     "}\n\n" +
 
-    "# 重要约束\n" +
-    "- **必须完整输出 5 个顶层字段**（opening / wordType / teach / connect / use），不要中途停止\n" +
+    "# 微型完整示例（让你看到完整 5 字段输出的样子 — 学此整体结构，不是学此词内容）\n" +
+    "{\n" +
+    '  "opening": "William，这词就像你排位连败的熟悉感。",\n' +
+    '  "wordType": "D",\n' +
+    '  "teach": {\n' +
+    '    "methods": [\n' +
+    '      {"type":"mnemonic","soundAlike":"陪 pet 永远","interpretation":"陪宠物永不停歇 = 永久的"},\n' +
+    '      {"type":"image","scene":"刻着爪印的老时钟永不停摆","mapping":"时钟永动 = perpetual"}\n' +
+    '    ],\n' +
+    '    "visualAnchor": {"emojis":"♾️⏰🐾","text":"陪宠物永不停歇"}\n' +
+    '  },\n' +
+    '  "connect": {\n' +
+    '    "comparedWith": "eternal",\n' +
+    '    "points": [\n' +
+    '      {"word":"eternal","meaning":"永恒（抽象情感）"},\n' +
+    '      {"word":"perpetual","meaning":"永久（持续动感）"}\n' +
+    '    ]\n' +
+    '  },\n' +
+    '  "use": {\n' +
+    '    "collocations": [\n' +
+    '      {"phrase":"perpetual motion","zh":"永动机"},\n' +
+    '      {"phrase":"perpetual student","zh":"万年学生"}\n' +
+    '    ],\n' +
+    '    "scenarios": [\n' +
+    '      {"sceneZh":"王者赛季体验：","en":"Honor of Kings seasons feel perpetual.","zh":"王者赛季没完没了。"},\n' +
+    '      {"sceneZh":"Taylor 粉丝：","en":"Her fans\' love is perpetual.","zh":"她粉丝的爱永续。"}\n' +
+    '    ]\n' +
+    '  }\n' +
+    "}\n\n" +
+
+    "# ❗❗ 关键完整性约束 ❗❗\n" +
+    "你的输出必须包含以下 5 个顶层字段（一个都不能少）：\n" +
+    "1. opening (必有)\n" +
+    "2. wordType (必有，= \"" + cls.wordType + "\")\n" +
+    "3. teach { methods, visualAnchor } (必有)\n" +
+    "4. connect { comparedWith, points } (必有)\n" +
+    "5. use { collocations, scenarios } (必有)\n" +
+    "生成完 teach.methods 不能停！必须继续生成 visualAnchor → connect → use 三个剩余部分。\n" +
+    "只有所有 5 个字段都输出后才能结束 JSON。\n\n" +
+
+    "# 其他约束\n" +
     "- 整个输出是单个合法的、可 JSON.parse 解析的对象\n" +
     "- 不要 markdown 代码块标记（```json 或 ```）\n" +
     "- 不要叙述性修饰：\"想象你...\"、\"让你变...\"、\"这就是...的核心\"\n" +
@@ -247,7 +286,7 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     "- use.scenarios 严格 2 个，use.collocations 严格 2 个\n" +
     "- 画像化：例句深度利用学生画像（兴趣、常去地方、日常）\n\n" +
 
-    "直接输出纯 JSON。";
+    "直接输出纯 JSON（5 个顶层字段完整）。";
 };
 
 var buildSpectrumPrompt = (word) => {
