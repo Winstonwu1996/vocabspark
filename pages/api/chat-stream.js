@@ -113,8 +113,12 @@ export default async function handler(req) {
     orderedProviders = preferred.concat(rest);
   }
 
-  // 时段切换：UTC 0-14（国内白天）DeepSeek 高峰，优先 Gemini
-  if (!Array.isArray(preferredProviders) || preferredProviders.length === 0) {
+  // DeepSeek 全时段优先（2026-04-23 实测：TTFT 1.1s、总时长 27s、中文质量
+  // 明显优于 Gemini）。Gemini 保留为兜底，DeepSeek 失败/限流时自动切换。
+  // 如需恢复"白天 Gemini 优先"的旧行为（应对 DeepSeek 高峰期），
+  // 设 env CHAT_STREAM_DAYTIME_GEMINI=1。
+  if (process.env.CHAT_STREAM_DAYTIME_GEMINI === "1" &&
+      (!Array.isArray(preferredProviders) || preferredProviders.length === 0)) {
     const utcHour = new Date().getUTCHours();
     if (utcHour >= 0 && utcHour < 14) {
       const gemini = orderedProviders.filter((p) => p.family === "gemini");
