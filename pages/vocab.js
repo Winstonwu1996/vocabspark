@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { supabase } from '../lib/supabase';
 import { C, FONT, globalCSS, S } from '../lib/theme';
-import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON, parsePartialJSON } from '../lib/api';
+import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON, parsePartialJSON, callClassify, METHOD_SCHEMAS, METHOD_EXAMPLES, VISUAL_ANCHOR_FORMATS } from '../lib/api';
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
@@ -169,163 +169,85 @@ var buildGuessPrompt = (word, learned) => {
   return "单词：" + word + ctx + "\n\n请执行 Step 1（猜）：\n\n1. 给出这个单词的IPA音标\n2. 给出一个生动的英文语境句（1-2句），用 _____ 代替目标单词，深度使用学习画像中的具体场景。\n3. 给出 4 个中文选项（A/B/C/D），其中只有 1 个是正确含义。\n\nIMPORTANT: 直接输出JSON，不要任何前导文字：\n" + '{"phonetic":"/音标/","context":"语境句","options":{"A":"选项A","B":"选项B","C":"选项C","D":"选项D"},"answer":"字母","hint":"提示"}';
 };
 
-var buildTeachPrompt = (word, learned) => {
-  var ctx = learned.length > 0
-    ? '\n"learnedWords": ' + JSON.stringify(learned) + ' (【连】优先引用其中 1 个相关词)'
-    : '';
+// Phase 1.5：generator prompt — 接受 classifyResult，动态裁剪 schema 到选中方法
+var buildTeachPrompt = (word, learned, classifyResult) => {
+  var cls = classifyResult || {
+    wordType: "F",
+    methods: [{type:"image"},{type:"nuance"}],
+    comparedWith: null,
+    abstractLevel: "L2"
+  };
+  var methodTypes = (cls.methods || [])
+    .map(function(m){ return m && m.type; })
+    .filter(function(t){ return t && METHOD_SCHEMAS[t]; });
+  if (methodTypes.length === 0) methodTypes = ["image","nuance"]; // 最终兜底
+
+  var methodSchemasBlock = methodTypes.map(function(t){ return METHOD_SCHEMAS[t]; }).join("\n\n");
+  var methodExamplesBlock = methodTypes.map(function(t){ return METHOD_EXAMPLES[t]; }).join("\n\n");
+  var visualAnchorHint = VISUAL_ANCHOR_FORMATS[cls.abstractLevel] || VISUAL_ANCHOR_FORMATS.L2;
+
+  var learnedLine = (learned && learned.length > 0)
+    ? "学过的词：" + learned.slice(-15).join(", ") + "（【连】优先引用其中相关词）\n"
+    : "";
+  var comparedHint = cls.comparedWith
+    ? "【分类器推荐对比词】：" + cls.comparedWith + "（可直接采用）\n"
+    : "";
+
   return "# 任务\n" +
-    "为单词 \"" + word + "\" 生成学习笔记。严格按 JSON schema 返回，不要输出任何 JSON 之外的文字、注释、markdown 代码块标记。\n" +
-    ctx + "\n\n" +
-    "# 内部判定（不要输出）\n" +
-    "词型：A 程度词 | B 搭配型 | C 词根型 | D 难记型 | E 抽象概念 | F 多义词\n" +
-    "推荐方法组合：A→scale+nuance | B→collocation+nuance | C→root+family | D→mnemonic+image | E→microstory+antonym | F→image+nuance\n" +
-    "方法数量：主推 2 种，合适时可加第 3 种（不强求）\n\n" +
-    "# 10 种方法的 schema（method.type 取值 + 字段）\n" +
-    '- root: { type:"root", parts:[{part, meaning}], synthesis, anchor? }\n' +
-    '- mnemonic: { type:"mnemonic", soundAlike, interpretation, anchor? }\n' +
-    '- image: { type:"image", scene, mapping, anchor? }\n' +
-    '- nuance: { type:"nuance", compareWith, target:{word,nuance}, other:{word,nuance} }\n' +
-    '- scale: { type:"scale", words:[...], description }\n' +
-    '- etymology: { type:"etymology", origin, story }\n' +
-    '- collocation: { type:"collocation", items:[{phrase, zh}] }\n' +
-    '- antonym: { type:"antonym", opposite, contrast }\n' +
-    '- family: { type:"family", members:[{word, pos, meaning}] }\n' +
-    '- microstory: { type:"microstory", scene, interpretation }\n\n' +
-    "# 顶层 schema\n" +
+    "为单词 \"" + word + "\" 生成学习笔记 JSON。不要输出任何 JSON 之外的文字。\n" +
+    learnedLine + comparedHint + "\n" +
+
+    "# 分类器决策（必须遵守）\n" +
+    "- 词型：" + cls.wordType + "\n" +
+    "- 使用的方法（严格 " + methodTypes.length + " 种）：" + methodTypes.join(" + ") + "\n" +
+    "- 视觉锚级别：" + cls.abstractLevel + "\n\n" +
+
+    "# 你要用的方法 schema（仅此 " + methodTypes.length + " 种）\n" +
+    methodSchemasBlock + "\n\n" +
+
+    "# 方法示例（按此质感输出）\n" +
+    methodExamplesBlock + "\n\n" +
+
+    "# 视觉锚格式\n" +
+    visualAnchorHint + "\n\n" +
+
+    "# 顶层 schema（必须完整输出 5 个字段）\n" +
     "{\n" +
-    '  "opening": string,          // 画像化开场白 ≤40 字，口语化\n' +
-    '  "wordType": "A"|"B"|"C"|"D"|"E"|"F",\n' +
+    '  "opening": "画像化开场 ≤40 字，口语化",\n' +
+    '  "wordType": "' + cls.wordType + '",\n' +
     '  "teach": {\n' +
-    '    "methods": Method[],      // 2-3 种方法\n' +
-    '    "visualAnchor": {\n' +
-    '      "emojis": string,       // 1-3 个 emoji，极抽象词可为空\n' +
-    '      "text": string          // 画面/情境短语 ≤15 字\n' +
-    '    }\n' +
+    '    "methods": [ ... ],  // 严格 ' + methodTypes.length + ' 个，按上面 schema\n' +
+    '    "visualAnchor": {"emojis":"...","text":"..."}\n' +
     '  },\n' +
     '  "connect": {\n' +
-    '    "comparedWith": string,   // 对比的词（学过词/通用词/反义/形近/同根）\n' +
+    '    "comparedWith": "' + (cls.comparedWith || '对比词') + '",\n' +
     '    "points": [\n' +
-    '      { "word": string, "meaning": string },  // 2 条，短语式（场景）\n' +
-    '      { "word": string, "meaning": string }\n' +
+    '      {"word":"...","meaning":"含义（场景）≤15 字"},\n' +
+    '      {"word":"...","meaning":"含义（场景）≤15 字"}\n' +
     '    ]\n' +
     '  },\n' +
     '  "use": {\n' +
-    '    "collocations": [         // 严格 2 个\n' +
-    '      { "phrase": string, "zh": string },\n' +
-    '      { "phrase": string, "zh": string }\n' +
+    '    "collocations": [\n' +
+    '      {"phrase":"...","zh":"..."},\n' +
+    '      {"phrase":"...","zh":"..."}\n' +
     '    ],\n' +
-    '    "scenarios": [            // 严格 2 个\n' +
-    '      { "sceneZh": string, "en": string, "zh": string },\n' +
-    '      { "sceneZh": string, "en": string, "zh": string }\n' +
+    '    "scenarios": [\n' +
+    '      {"sceneZh":"中文场景 5-10 字：","en":"完整英文句。","zh":"中文翻译"},\n' +
+    '      {"sceneZh":"...","en":"...","zh":"..."}\n' +
     '    ]\n' +
     '  }\n' +
     "}\n\n" +
-    "# 完整示例（学习这些的质感和密度）\n\n" +
-    "## 示例 1：intelligent（C 词根型）\n" +
-    "```json\n" +
-    "{\n" +
-    '  "opening": "William，这词就是那些带脑子玩游戏的神队友的底色。",\n' +
-    '  "wordType": "C",\n' +
-    '  "teach": {\n' +
-    '    "methods": [\n' +
-    '      {\n' +
-    '        "type": "root",\n' +
-    '        "parts": [\n' +
-    '          {"part": "inter-", "meaning": "之间"},\n' +
-    '          {"part": "legere", "meaning": "选择"},\n' +
-    '          {"part": "-ent", "meaning": "形容词后缀"}\n' +
-    '        ],\n' +
-    '        "synthesis": "在信息间做选择 = 聪明",\n' +
-    '        "anchor": "王者五分路秒选最优 = intelligent"\n' +
-    '      },\n' +
-    '      {\n' +
-    '        "type": "family",\n' +
-    '        "members": [\n' +
-    '          {"word": "intelligent", "pos": "adj", "meaning": "聪明的"},\n' +
-    '          {"word": "intelligence", "pos": "n", "meaning": "智力 / 情报"},\n' +
-    '          {"word": "intelligently", "pos": "adv", "meaning": "聪明地"}\n' +
-    '        ]\n' +
-    '      }\n' +
-    '    ],\n' +
-    '    "visualAnchor": {"emojis": "🧠⚡🎯", "text": "灵光一闪精准命中"}\n' +
-    '  },\n' +
-    '  "connect": {\n' +
-    '    "comparedWith": "smart",\n' +
-    '    "points": [\n' +
-    '      {"word": "smart", "meaning": "灵光机灵（套路打野）"},\n' +
-    '      {"word": "intelligent", "meaning": "深度思考（研究 AI 论文）"}\n' +
-    '    ]\n' +
-    '  },\n' +
-    '  "use": {\n' +
-    '    "collocations": [\n' +
-    '      {"phrase": "artificially intelligent", "zh": "人工智能的"},\n' +
-    '      {"phrase": "highly intelligent", "zh": "高度聪明的"}\n' +
-    '    ],\n' +
-    '    "scenarios": [\n' +
-    '      {"sceneZh": "研究 AI 论文时：", "en": "The model in this paper is so intelligent it drafts code like a senior engineer.", "zh": "这篇论文的模型太聪明了，写代码像资深工程师。"},\n' +
-    '      {"sceneZh": "叮嘱队友时：", "en": "Don\'t just chase kills—be intelligent and focus on towers.", "zh": "别只追人头——聪明点，先推塔。"}\n' +
-    '    ]\n' +
-    '  }\n' +
-    "}\n" +
-    "```\n\n" +
-    "## 示例 2：perpetual（D 难记型）\n" +
-    "```json\n" +
-    "{\n" +
-    '  "opening": "William，这词就像你排位连败——永远没完没了的。",\n' +
-    '  "wordType": "D",\n' +
-    '  "teach": {\n' +
-    '    "methods": [\n' +
-    '      {\n' +
-    '        "type": "mnemonic",\n' +
-    '        "soundAlike": "陪 pet 永远",\n' +
-    '        "interpretation": "陪宠物永不停歇 = 永久的",\n' +
-    '        "anchor": "王者赛季循环 = perpetually recurring"\n' +
-    '      },\n' +
-    '      {\n' +
-    '        "type": "image",\n' +
-    '        "scene": "刻着爪印的老时钟，永不停摆",\n' +
-    '        "mapping": "时钟永动 = perpetual"\n' +
-    '      }\n' +
-    '    ],\n' +
-    '    "visualAnchor": {"emojis": "♾️⏰🐾", "text": "陪宠物永不停歇"}\n' +
-    '  },\n' +
-    '  "connect": {\n' +
-    '    "comparedWith": "permanent",\n' +
-    '    "points": [\n' +
-    '      {"word": "permanent", "meaning": "永久的（强调结果不变）"},\n' +
-    '      {"word": "perpetual", "meaning": "永久的（强调持续的过程，有动感）"}\n' +
-    '    ]\n' +
-    '  },\n' +
-    '  "use": {\n' +
-    '    "collocations": [\n' +
-    '      {"phrase": "perpetual motion", "zh": "永动机"},\n' +
-    '      {"phrase": "perpetual student", "zh": "万年学生"}\n' +
-    '    ],\n' +
-    '    "scenarios": [\n' +
-    '      {"sceneZh": "王者赛季体验：", "en": "Honor of Kings seasons feel perpetual—one ends, next starts.", "zh": "王者赛季没完没了——一个结束下一个立马开始。"},\n' +
-    '      {"sceneZh": "Taylor 粉丝：", "en": "Her fans\' love is perpetual, outlasting every trend.", "zh": "她粉丝的爱永续，超越任何潮流。"}\n' +
-    '    ]\n' +
-    '  }\n' +
-    "}\n" +
-    "```\n\n" +
-    "# 重要：JSON 完整性\n" +
-    "**必须输出完整的所有 5 个顶层字段**：opening / wordType / teach / connect / use\n" +
-    "不要在中途停止。每个 JSON 对象和数组都要有闭合括号。\n" +
-    "整个输出必须是单个合法的、可被 JSON.parse 解析的对象。\n\n" +
-    "# 禁止事项\n" +
-    "- ❌ 任何 JSON 之外的文字、markdown 代码块标记（不要输出 ```json 或 ```）\n" +
-    "- ❌ 叙述性修饰：\"想象你...\"、\"让你变...\"、\"这就是...的核心\"\n" +
-    "- ❌ 情景造句超过 2 个\n" +
-    "- ❌ 搭配超过 2 个（teach.methods 里 collocation 类型可以 3 个，但 use.collocations 严格 2 个）\n\n" +
-    "# 约束\n" +
-    "- 每个字段内容精炼，拒绝啰嗦\n" +
+
+    "# 重要约束\n" +
+    "- **必须完整输出 5 个顶层字段**（opening / wordType / teach / connect / use），不要中途停止\n" +
+    "- 整个输出是单个合法的、可 JSON.parse 解析的对象\n" +
+    "- 不要 markdown 代码块标记（```json 或 ```）\n" +
+    "- 不要叙述性修饰：\"想象你...\"、\"让你变...\"、\"这就是...的核心\"\n" +
     "- 释义中文，例句英文，直引号 \"\"\n" +
-    "- opening ≤ 40 字\n" +
-    "- method.anchor ≤ 20 字\n" +
-    "- visualAnchor.text ≤ 15 字\n" +
-    "- connect.points[i].meaning 每条 ≤ 15 字（短语式）\n" +
-    "- scenarios[i].sceneZh 中文场景铺垫 5-10 字\n\n" +
-    "直接输出纯 JSON，无前导、无后缀、无 markdown 标记。";
+    "- use.scenarios 严格 2 个，use.collocations 严格 2 个\n" +
+    "- 画像化：例句深度利用学生画像（兴趣、常去地方、日常）\n\n" +
+
+    "直接输出纯 JSON。";
 };
 
 var buildSpectrumPrompt = (word) => {
@@ -2095,25 +2017,26 @@ export default function App() {
         // Block on guess + teach; spectrum runs in background to preserve pack smoothness.
         // 优化：teach 比 guess 慢（300-400字生成），先 push 让它尽早占用并发 slot
         tasks.push(function() {
-          return callWithClientRetry(function() {
-            // streaming 版本：callAPIStream 内置 fallback 到 callAPI（灰度关闭或失败时）
-            // onChunk 增量更新 cache.teach（纯文本，不加 speak markers，等完成后再加）
-            return callAPIStream(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred }, function(partial) {
-              if (!dataCache.current[word]) return; // 词可能已被移除
-              // Phase 1：尝试流式 JSON 解析，成功则存 teachJSON；失败先留 raw（fallback 用）
-              var parsed = parsePartialJSON(partial);
-              if (parsed && parsed.opening) {
-                dataCache.current[word].teachJSON = parsed;
-              } else {
-                dataCache.current[word].teach = partial;
-              }
-              dataCache.current[word].teachStreaming = true;
-              // 首次 chunk 到达即标记 ready（无论 JSON 还是 raw）
-              if (!dataCache.current[word]._streamReadyTriggered) {
-                dataCache.current[word]._streamReadyTriggered = true;
-                readyWordSet.add(word);
-                tryResolveEarlyStart();
-              }
+          // Phase 1.5：两步式 — 先 classify（选方法），再 generate（按选中方法生成）
+          // classify 有 localStorage 缓存，同词直接复用（除首次 1-2s）
+          return callClassify(word, profile, learned).then(function(cls) {
+            return callWithClientRetry(function() {
+              // generator prompt 只含 classifier 选中的方法 schema + 示例（prompt 减半，AI 更聚焦）
+              return callAPIStream(sysP, buildTeachPrompt(word, learned, cls), { preferredProviders: preferred }, function(partial) {
+                if (!dataCache.current[word]) return;
+                var parsed = parsePartialJSON(partial);
+                if (parsed && parsed.opening) {
+                  dataCache.current[word].teachJSON = parsed;
+                } else {
+                  dataCache.current[word].teach = partial;
+                }
+                dataCache.current[word].teachStreaming = true;
+                if (!dataCache.current[word]._streamReadyTriggered) {
+                  dataCache.current[word]._streamReadyTriggered = true;
+                  readyWordSet.add(word);
+                  tryResolveEarlyStart();
+                }
+              });
             });
           }).then(function(raw) {
             // 完成：最终尝试 JSON 解析，成功用 JSON，失败 fallback 到 Markdown
