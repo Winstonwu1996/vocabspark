@@ -194,15 +194,37 @@ var buildReviewTeachPrompt = (word, learned, reviewCount) => {
     "\n1) 2-3句生动场景（结合学习画像）" +
     "\n2) 一个易混词对比" +
     "\n3) 一个简短记忆口诀" +
-    "\n4) 一道SSAT风格单选题，格式必须如下：" +
-    "\n   ✏️ SSAT 仿真题" +
-    "\n   题干句子" +
-    "\n   A) 选项" +
-    "\n   B) 选项" +
-    "\n   C) 选项" +
-    "\n   D) 选项" +
-    "\n   答案：X" +
-    "\n\n输出格式：Markdown，200-250字，朋友聊天语气。";
+    "\n4) 一道**有效的** SSAT 风格选择题（关键：必须真正考察记忆，不能送分）" +
+    "\n\n【题目设计铁律 - 必须严格遵守】" +
+    "\n❌ 绝对禁止：题干中以任何形式出现目标词 \"" + word + "\"（包括加粗、引号、大小写变体、词根、词形变化）" +
+    "\n❌ 绝对禁止：把 \"" + word + "\" 的中文翻译直接放在题干或问题里" +
+    "\n✅ 正确做法：出一道【英文语境填空题】或【英文定义选词题】" +
+    "\n   - 题干用英文描述一个情景 / 给一个定义 / 空一个关键词" +
+    "\n   - 4 个选项都是英文单词（目标词 " + word + " 是正确答案）" +
+    "\n   - 3 个干扰项应该是同难度的【易混词】或【形似词】或【同主题近义但不贴切的词】" +
+    "\n   - 用户要通过理解情景，从 4 个词里识别出 " + word + " 才是答案" +
+    "\n" +
+    "\n✅ 好的例子（假设目标词 amorphous）：" +
+    "\n   题干: The artist's sculpture was deliberately _____, lacking any recognizable form or symmetry." +
+    "\n   A) geometric  B) amorphous  C) symmetrical  D) uniform" +
+    "\n   答案: B" +
+    "\n   （题干测试\"没有固定形状\"的语义，干扰项都是和形状相关的形容词）" +
+    "\n" +
+    "\n❌ 坏的例子（绝对不要这样出）：" +
+    "\n   题干: The cloud was **amorphous**, spreading everywhere.  ← 题干已经给出了答案词！" +
+    "\n   A) Defined  B) Shapeless  C) Solid  D) Bright" +
+    "\n   （这题等于送分，用户已经知道在复习 amorphous，直接选它的同义词即可）" +
+    "\n" +
+    "\n【输出格式 - 严格遵守】" +
+    "\n✏️ SSAT 仿真题" +
+    "\n[英文题干，不含目标词]" +
+    "\nA) 选项词1" +
+    "\nB) 选项词2" +
+    "\nC) 选项词3" +
+    "\nD) 选项词4" +
+    "\n答案：X" +
+    "\n" +
+    "\n输出格式：Markdown，200-250字，朋友聊天语气（但 SSAT 题用标准英文）。";
 };
 
 /* ─── TTS: server proxy (Google Neural) → speechSynthesis fallback ─── */
@@ -2661,12 +2683,33 @@ export default function App() {
     return { question: stem, options: mapped, answer: answer };
   };
 
-  var splitDeepReviewParts = function(text) {
+  var splitDeepReviewParts = function(text, targetWord) {
     var lines = String(text || "").split(/\n+/).map(function(s){ return s.trim(); }).filter(Boolean);
-    var qIdx = lines.findIndex(function(l){ return /ssat|选择题|single choice|question/i.test(l); });
+    var qIdx = lines.findIndex(function(l){ return /ssat|选择题|single choice|question|仿真题/i.test(l); });
     var quiz = parseDeepQuiz(lines, qIdx);
     var teachLines = qIdx >= 0 ? lines.slice(0, qIdx) : lines;
     teachLines = teachLines.filter(function(l){ return !/^[A-D][\).、:：\s]/i.test(l) && !/答案|answer/i.test(l); });
+
+    // 校验：题干不能出现目标词（送分题检测）
+    // 目标词 + 简单词形变化（去 e, 加 s/ed/ing/ly）都要检查
+    if (quiz && targetWord) {
+      var w = String(targetWord).toLowerCase().trim();
+      var stem = w.replace(/e$/, ""); // 去掉结尾 e 得词根
+      var variants = [w, w + "s", w + "es", w + "ed", w + "ing", w + "ly", w + "ion", stem + "ed", stem + "ing", stem + "ion"];
+      var questionText = (quiz.question || "").toLowerCase();
+      // 去掉 markdown 加粗/斜体标记后检测
+      var cleanQ = questionText.replace(/[\*_`]/g, "");
+      var leaked = variants.some(function(v) {
+        // 用单词边界确保不是子串误匹配（例如 "ate" 不应匹配 "hesitate"）
+        var re = new RegExp("\\b" + v.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&") + "\\b", "i");
+        return re.test(cleanQ);
+      });
+      if (leaked) {
+        console.warn('[review quiz] blocked: question contains target word "' + w + '". Q: ' + quiz.question);
+        quiz = null; // 抛弃这道送分题
+      }
+    }
+
     return { teach: teachLines.join("\n\n"), quiz: quiz };
   };
 
@@ -2681,7 +2724,7 @@ export default function App() {
         var reviewCount = (d.reviewHistory || []).length + 1;
         var raw = await callAPIFast(sysP, buildReviewTeachPrompt(word, learned, reviewCount));
         var text = raw || "生成失败，请重试";
-        var parts = splitDeepReviewParts(text);
+        var parts = splitDeepReviewParts(text, word);
         var payload = { teach: parts.teach || text, quiz: parts.quiz || null };
         deepReviewCacheRef.current[word] = payload;
         return payload;
