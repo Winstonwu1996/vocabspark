@@ -27,6 +27,61 @@ var FadeInSection = ({ children, style }) => {
   return <div ref={ref} style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(28px)", transition: "opacity 0.6s ease, transform 0.6s ease", ...style }}>{children}</div>;
 };
 
+// 多学生个性化例句轮播（展示 AI 的"生成力"）
+var KnowUExampleCard = () => {
+  var EXAMPLES = [
+    {
+      student: "Willow · 6年级 · Irvine",
+      word: "abandon",
+      phonetic: "/əˈbændən/",
+      sentence: <>Willow 和 Emily 在 Irvine Spectrum 的网球场打到正嗨，突然暴雨 — they had to <strong style={{ color: C.accent }}>abandon</strong> the match and run for matcha ice cream! 🍵</>,
+    },
+    {
+      student: "Jason · 8年级 · 纽约",
+      word: "resilient",
+      phonetic: "/rɪˈzɪljənt/",
+      sentence: <>Jason 的篮球教练常说："A <strong style={{ color: C.accent }}>resilient</strong> player doesn't quit after losing one game." 上周输了之后，Jason 第二天照样准时训练 🏀</>,
+    },
+    {
+      student: "Mia · 7年级 · 波士顿",
+      word: "euphoria",
+      phonetic: "/juːˈfɔːriə/",
+      sentence: <>Mia 第一次看 Taylor Swift 的 Eras Tour 时，全场 5 万人一起唱 "Shake It Off"，那种 <strong style={{ color: C.accent }}>euphoria</strong> 让她激动到快哭 🎤</>,
+    },
+  ];
+  var [idx, setIdx] = useState(0);
+  var [fade, setFade] = useState(true);
+  useEffect(() => {
+    var t = setInterval(() => {
+      setFade(false);
+      setTimeout(() => { setIdx(i => (i + 1) % EXAMPLES.length); setFade(true); }, 250);
+    }, 5000);
+    return () => clearInterval(t);
+  }, []);
+  var ex = EXAMPLES[idx];
+  return (
+    <div style={{ flex: "1 1 280px", background: C.accentLight, border: "2px solid " + C.accent + "44", borderRadius: 14, padding: "20px", position: "relative", overflow:"hidden" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 10 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.accent }}>✨ Know U. 为你定制</div>
+        <div style={{ display:"flex", gap:4 }}>
+          {EXAMPLES.map((_, i) => <div key={i} style={{ width:6, height:6, borderRadius:"50%", background: i === idx ? C.accent : C.accent+"33", transition:"background 0.3s" }} />)}
+        </div>
+      </div>
+      <div style={{ fontSize: 11, color: C.accent, opacity: 0.8, marginBottom: 6, fontWeight:600 }}>{ex.student}</div>
+      <div style={{ opacity: fade ? 1 : 0, transition: "opacity 0.25s ease" }}>
+        <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom: 8 }}>
+          <span style={{ fontSize: 22, fontWeight: 700, color: C.accent }}>{ex.word}</span>
+          <span style={{ fontSize: 12, color: C.textSec, fontStyle: "italic" }}>{ex.phonetic}</span>
+        </div>
+        <div style={{ fontSize: 14, color: C.text, lineHeight: 1.8, minHeight: 90 }}>
+          {ex.sentence}
+        </div>
+      </div>
+      <div style={{ fontSize: 12, color: C.accent, marginTop: 12, fontWeight: 600, borderTop:"1px dashed "+C.accent+"44", paddingTop:10 }}>📍 你的朋友 · 你的地方 · 你的记忆</div>
+    </div>
+  );
+};
+
 export default function HomePage() {
   var [user, setUser] = useState(null);
   var [showUserCenter, setShowUserCenter] = useState(false);
@@ -53,6 +108,11 @@ export default function HomePage() {
       </Head>
       <style dangerouslySetInnerHTML={{ __html: globalCSS + `
         @keyframes floatLogo { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        @keyframes bounceDown { 0%,20%,50%,80%,100%{transform:translateY(0)} 40%{transform:translateY(6px)} 60%{transform:translateY(3px)} }
+        @keyframes fadeInText { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulseDot { 0%,100%{transform:scale(0.9);opacity:0.5} 50%{transform:scale(1.1);opacity:1} }
+        @keyframes flowDot { 0%{transform:translateX(-20px);opacity:0} 20%{opacity:1} 80%{opacity:1} 100%{transform:translateX(20px);opacity:0} }
+        @keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
         @keyframes slideInFromRight { from{transform:translateX(100%)} to{transform:translateX(0)} }
       `}} />
 
@@ -60,26 +120,44 @@ export default function HomePage() {
       <BrandNavBar activeTab="home" user={user} onUserCenterClick={() => setShowUserCenter(true)} />
 
       {/* ═══ HERO ═══ */}
-      <section style={{ ...container, textAlign: "center", padding: "60px 20px 40px" }}>
-        <div style={{ animation: "floatLogo 3s ease-in-out infinite", marginBottom: 16 }}>
-          <BrandUIcon size={72} />
+      <section style={{ position:"relative", textAlign: "center", padding: "60px 20px 48px", overflow:"hidden" }}>
+        {/* 背景装饰：3 个柔和光斑 */}
+        <div aria-hidden="true" style={{ position:"absolute", inset:0, zIndex:0, pointerEvents:"none" }}>
+          <div style={{ position:"absolute", top:"-120px", left:"10%", width:360, height:360, borderRadius:"50%", background:"radial-gradient(circle, " + C.accent + "1f 0%, transparent 70%)", filter:"blur(40px)" }} />
+          <div style={{ position:"absolute", top:"40px", right:"5%", width:300, height:300, borderRadius:"50%", background:"radial-gradient(circle, " + C.teal + "1a 0%, transparent 70%)", filter:"blur(40px)" }} />
+          <div style={{ position:"absolute", bottom:"-80px", left:"30%", width:280, height:280, borderRadius:"50%", background:"radial-gradient(circle, " + C.gold + "1f 0%, transparent 70%)", filter:"blur(36px)" }} />
         </div>
-        <h1 style={{ fontSize: 36, fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.03em", lineHeight: 1.1 }}>Know U. Learning</h1>
-        <p style={{ fontSize: 14, color: C.textSec, fontStyle: "italic", margin: "0 0 24px" }}>Personal AI Language Tutor</p>
-        <div style={{ fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 10, lineHeight: 1.4 }}>读、写、词汇 — 一个懂你的 AI 英语私教</div>
-        <p style={{ fontSize: 15, color: C.textSec, lineHeight: 1.8, maxWidth: 520, margin: "0 auto 28px" }}>
-          AI 了解你的生活、朋友、爱好，用你最熟悉的场景教英语。<br/>
-          词汇理解、阅读输入、写作表达 — 三位一体，形成闭环。
-        </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 24 }}>
-          <Link href="/vocab?from=home" style={{ ...S.bigBtn, display: "inline-block", width: "auto", padding: "14px 32px", fontSize: 16, textDecoration: "none" }}>免费体验词汇课 →</Link>
-          <Link href="/writing" style={{ ...S.primaryBtn, display: "inline-block", padding: "14px 24px", fontSize: 14, textDecoration: "none", background: C.purple }}>体验写作课 →</Link>
-        </div>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 24 }}>
-          <a href="#ecosystem" style={{ fontSize: 13, color: C.textSec, textDecoration: "none" }}>了解三位一体学习法 ↓</a>
-        </div>
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-          {EXAMS.map(function(e) { return <span key={e} style={{ padding: "4px 12px", background: C.goldLight, borderRadius: 20, fontSize: 12, fontWeight: 700, color: C.gold, border: "1px solid " + C.gold + "33" }}>{e}</span>; })}
+        <div style={{ position:"relative", zIndex:1, ...container }}>
+          <div style={{ animation: "floatLogo 3s ease-in-out infinite", marginBottom: 16 }}>
+            <BrandUIcon size={72} />
+          </div>
+          <h1 style={{ fontSize: 36, fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.03em", lineHeight: 1.1 }}>Know U. Learning</h1>
+          <div style={{ display:"inline-block", padding:"4px 12px", background:C.card, border:"1px solid "+C.border, borderRadius:999, fontSize:11, fontWeight:600, color:C.textSec, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:24, boxShadow:C.shadowSoft }}>Personal AI Language Tutor</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: C.text, marginBottom: 12, lineHeight: 1.35, letterSpacing:"-0.02em" }}>读、写、词汇 — 一个懂你的 AI 英语私教</div>
+          <p style={{ fontSize: 15, color: C.textSec, lineHeight: 1.8, maxWidth: 520, margin: "0 auto 32px" }}>
+            AI 了解你的生活、朋友、爱好，用你最熟悉的场景教英语。<br/>
+            词汇理解、阅读输入、写作表达 — 三位一体，形成闭环。
+          </p>
+          {/* 主 CTA：单一大按钮 + 辅助链接 */}
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:14, marginBottom:28 }}>
+            <Link href="/vocab?from=home" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", padding:"16px 40px", background:"linear-gradient(135deg, "+C.accent+" 0%, #d4823d 100%)", color:"#fff", borderRadius:14, fontSize:17, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 24px "+C.accent+"55, inset 0 1px 0 rgba(255,255,255,0.2)", transition:"transform 0.2s ease, box-shadow 0.2s ease" }} onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 12px 32px "+C.accent+"66, inset 0 1px 0 rgba(255,255,255,0.25)"; }} onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 8px 24px "+C.accent+"55, inset 0 1px 0 rgba(255,255,255,0.2)"; }}>
+              免费开始学习 →
+            </Link>
+            <div style={{ fontSize:13, color:C.textSec, display:"flex", alignItems:"center", gap:14 }}>
+              <span>起点：</span>
+              <Link href="/vocab?from=home" style={{ color:C.accent, fontWeight:600, textDecoration:"none", borderBottom:"1px dashed "+C.accent+"66" }}>词汇课</Link>
+              <span style={{ color:C.border }}>|</span>
+              <Link href="/writing" style={{ color:C.purple, fontWeight:600, textDecoration:"none", borderBottom:"1px dashed "+C.purple+"66" }}>写作课</Link>
+            </div>
+          </div>
+          {/* 下滚引导：弹跳箭头 */}
+          <a href="#ecosystem" style={{ display:"inline-flex", flexDirection:"column", alignItems:"center", gap:4, marginBottom:20, textDecoration:"none", color:C.textSec, fontSize:13, cursor:"pointer" }}>
+            <span>了解三位一体学习法</span>
+            <span style={{ animation:"bounceDown 1.8s ease-in-out infinite", display:"inline-block" }}>↓</span>
+          </a>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+            {EXAMS.map(function(e) { return <span key={e} style={{ padding: "4px 12px", background: C.goldLight, borderRadius: 20, fontSize: 12, fontWeight: 700, color: C.gold, border: "1px solid " + C.gold + "33" }}>{e}</span>; })}
+          </div>
         </div>
       </section>
 
@@ -99,15 +177,8 @@ export default function HomePage() {
               <div style={{ fontSize: 14, color: C.textSec, lineHeight: 1.6 }}>to leave completely and finally; forsake</div>
               <div style={{ fontSize: 12, color: C.textSec, marginTop: 12, opacity: 0.6 }}>💤 看完就忘，和你没有任何关系</div>
             </div>
-            {/* Know U. */}
-            <div style={{ flex: "1 1 280px", background: C.accentLight, border: "2px solid " + C.accent + "44", borderRadius: 14, padding: "20px" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.accent, marginBottom: 8 }}>✨ Know U. 为你定制</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: C.accent, marginBottom: 8 }}>abandon</div>
-              <div style={{ fontSize: 14, color: C.text, lineHeight: 1.8 }}>
-                Willow 和 Emily 在 Irvine Spectrum 的网球场打到正嗨，突然暴雨 — they had to <strong style={{ color: C.accent }}>abandon</strong> the match and run for matcha ice cream! 🍵
-              </div>
-              <div style={{ fontSize: 12, color: C.accent, marginTop: 12, fontWeight: 600 }}>📍 你的朋友 · 你的地方 · 你的记忆</div>
-            </div>
+            {/* Know U. 个性化例句轮播 */}
+            <KnowUExampleCard />
           </div>
 
           {/* 3 Pillars */}
@@ -133,22 +204,30 @@ export default function HomePage() {
           <h2 style={{ fontSize: 22, fontWeight: 800, textAlign: "center", marginBottom: 6 }}>三位一体 · 学习闭环</h2>
           <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 28 }}>读、写、词汇不再是孤立的练习 — 它们相互赋能</p>
 
-          {/* Loop Diagram */}
+          {/* Loop Diagram - 加呼吸动画 + 流动箭头 */}
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 0, marginBottom: 24, flexWrap: "wrap" }}>
             <div style={{ textAlign: "center", flex: "0 0 auto" }}>
-              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, " + C.accent + ", " + C.gold + ")", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 6px", boxShadow: "0 4px 12px " + C.accent + "44" }}>📖</div>
+              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, " + C.accent + ", " + C.gold + ")", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 6px", boxShadow: "0 4px 12px " + C.accent + "44", animation:"breathe 3.2s ease-in-out infinite" }}>📖</div>
               <div style={{ fontSize: 13, fontWeight: 700 }}>Vocab</div>
               <div style={{ fontSize: 11, color: C.textSec }}>词汇理解与记忆</div>
             </div>
-            <div style={{ fontSize: 20, color: C.accent, padding: "0 8px", fontWeight: 700 }}>⇄</div>
+            {/* 流动箭头 - Vocab ⇄ Reading */}
+            <div style={{ position:"relative", padding: "0 8px", fontSize: 20, color: C.accent, fontWeight: 700, width:48, height:24, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span>⇄</span>
+              <span style={{ position:"absolute", top:"50%", left:0, width:6, height:6, borderRadius:"50%", background:C.accent, transform:"translateY(-50%)", animation:"flowDot 2.4s linear infinite" }} />
+            </div>
             <div style={{ textAlign: "center", flex: "0 0 auto" }}>
-              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, " + C.teal + ", #5a9abf)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 6px", boxShadow: "0 4px 12px " + C.teal + "44" }}>📚</div>
+              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, " + C.teal + ", #5a9abf)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 6px", boxShadow: "0 4px 12px " + C.teal + "44", animation:"breathe 3.2s ease-in-out infinite", animationDelay:"1s" }}>📚</div>
               <div style={{ fontSize: 13, fontWeight: 700 }}>Reading</div>
               <div style={{ fontSize: 11, color: C.textSec }}>语感输入与积累</div>
             </div>
-            <div style={{ fontSize: 20, color: C.purple, padding: "0 8px", fontWeight: 700 }}>⇄</div>
+            {/* 流动箭头 - Reading ⇄ Writing */}
+            <div style={{ position:"relative", padding: "0 8px", fontSize: 20, color: C.purple, fontWeight: 700, width:48, height:24, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span>⇄</span>
+              <span style={{ position:"absolute", top:"50%", left:0, width:6, height:6, borderRadius:"50%", background:C.purple, transform:"translateY(-50%)", animation:"flowDot 2.4s linear infinite", animationDelay:"1.2s" }} />
+            </div>
             <div style={{ textAlign: "center", flex: "0 0 auto" }}>
-              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, " + C.purple + ", #8b7cf7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 6px", boxShadow: "0 4px 12px " + C.purple + "44" }}>✍️</div>
+              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, " + C.purple + ", #8b7cf7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 6px", boxShadow: "0 4px 12px " + C.purple + "44", animation:"breathe 3.2s ease-in-out infinite", animationDelay:"2s" }}>✍️</div>
               <div style={{ fontSize: 13, fontWeight: 700 }}>Writing</div>
               <div style={{ fontSize: 11, color: C.textSec }}>思维表达与输出</div>
             </div>
@@ -242,17 +321,41 @@ export default function HomePage() {
 
             {/* Conversation 1: Vocab feedback */}
             {(() => {
-              var WxBubble = ({ name, avatar, text, time, isRight }) => (
+              var WxBubble = ({ name, avatar, text, time, isRight, voice, image }) => (
                 <div style={{ display: "flex", flexDirection: isRight ? "row-reverse" : "row", gap: 8, alignItems: "flex-start", marginBottom: 4 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 6, background: isRight ? "linear-gradient(135deg, #f093fb, #f5576c)" : "linear-gradient(135deg, #4facfe, #00f2fe)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#fff", fontWeight: 700, flexShrink: 0 }}>{avatar}</div>
                   <div style={{ maxWidth: "75%" }}>
                     <div style={{ fontSize: 11, color: C.textSec, marginBottom: 3, textAlign: isRight ? "right" : "left" }}>{name}</div>
-                    <div style={{ background: isRight ? "#95EC69" : "#fff", color: C.text, padding: "9px 12px", borderRadius: isRight ? "12px 4px 12px 12px" : "4px 12px 12px 12px", fontSize: 14, lineHeight: 1.7, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>{text}</div>
+                    {voice ? (
+                      <div style={{ background: isRight ? "#95EC69" : "#fff", color: C.text, padding: "10px 14px", borderRadius: isRight ? "12px 4px 12px 12px" : "4px 12px 12px 12px", fontSize: 13, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", display:"flex", alignItems:"center", gap:8, minWidth:100 }}>
+                        <span style={{ fontSize:14 }}>🎙</span>
+                        <span style={{ flex:1, height:3, background: isRight ? "rgba(0,0,0,0.15)" : C.border, borderRadius:2, position:"relative" }}>
+                          <span style={{ position:"absolute", left:0, top:0, height:"100%", width:"40%", background: isRight ? "rgba(0,0,0,0.3)" : C.textSec, borderRadius:2 }} />
+                        </span>
+                        <span style={{ fontSize:11, color:C.textSec }}>{voice}</span>
+                      </div>
+                    ) : image ? (
+                      <div style={{ background: isRight ? "#95EC69" : "#fff", padding: 4, borderRadius: isRight ? "10px 4px 10px 10px" : "4px 10px 10px 10px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                        <div style={{ width: 140, height:90, background:"linear-gradient(135deg, "+C.accentLight+", "+C.goldLight+")", borderRadius:6, display:"flex", alignItems:"center", justifyContent:"center", fontSize:28 }}>{image}</div>
+                      </div>
+                    ) : (
+                      <div style={{ background: isRight ? "#95EC69" : "#fff", color: C.text, padding: "9px 12px", borderRadius: isRight ? "12px 4px 12px 12px" : "4px 12px 12px 12px", fontSize: 14, lineHeight: 1.7, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>{text}</div>
+                    )}
                   </div>
                 </div>
               );
               var WxTime = ({ text }) => (
                 <div style={{ textAlign: "center", fontSize: 11, color: C.textSec, opacity: 0.6, margin: "8px 0" }}>{text}</div>
+              );
+              var WxTyping = () => (
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4, marginLeft:44, fontSize:11, color:C.textSec, fontStyle:"italic" }}>
+                  <span style={{ display:"inline-flex", gap:3 }}>
+                    <span style={{ width:5, height:5, borderRadius:"50%", background:C.textSec, animation:"pulseDot 1.2s ease-in-out infinite" }} />
+                    <span style={{ width:5, height:5, borderRadius:"50%", background:C.textSec, animation:"pulseDot 1.2s ease-in-out infinite 0.2s" }} />
+                    <span style={{ width:5, height:5, borderRadius:"50%", background:C.textSec, animation:"pulseDot 1.2s ease-in-out infinite 0.4s" }} />
+                  </span>
+                  <span>对方正在输入…</span>
+                </div>
               );
 
               return (
@@ -264,6 +367,7 @@ export default function HomePage() {
                     <WxBubble name="Emily妈" avatar="E" text="有人试过那个 Know U 吗 我家娃昨天背 abandon 居然在笑 说这不就是上周网球场那事吗😂" />
                     <WxBubble name="Sophia妈" avatar="S" text="哈哈哈 我女儿也是 以前背单词跟要命似的 现在自己打开的" isRight />
                     <WxBubble name="Emily妈" avatar="E" text="就是有些词的例句有点长 不过孩子倒不介意 说比干巴巴的释义有意思多了" />
+                    <WxBubble name="Sophia妈" avatar="S" voice="12&quot;" isRight />
                     <WxBubble name="Sophia妈" avatar="S" text="主要是它会自动安排复习 我不用盯了 省心" isRight />
                   </div>
 
@@ -272,8 +376,10 @@ export default function HomePage() {
                     <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>✍️ 英语写作群</div>
                     <WxTime text="今天 09:15" />
                     <WxBubble name="Jason妈" avatar="J" text="那个写作课挺有意思 AI 不给答案 就一直问问题 Jason 说有点烦但是确实得自己想" />
-                    <WxBubble name="Mia妈" avatar="M" text="对 Mia 喜欢看那个雷达图 每次写完看哪个涨了 跟健身似的哈哈" isRight />
+                    <WxBubble name="Mia妈" avatar="M" image="📊" isRight />
+                    <WxBubble name="Mia妈" avatar="M" text="看 这是 Mia 的六维雷达图 每次写完看哪个涨了 跟健身似的哈哈" isRight />
                     <WxBubble name="Jason妈" avatar="J" text="嗯 而且难度会慢慢加上去 一开始挺简单的 现在他偶尔会说有点难 但没放弃 这对我儿子来说已经很不容易了" />
+                    <WxTyping />
                     <WxBubble name="Mia妈" avatar="M" text="是的 能坚持用下去就行 慢慢来呗" isRight />
                   </div>
 
