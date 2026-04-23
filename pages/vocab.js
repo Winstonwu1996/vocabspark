@@ -2008,6 +2008,18 @@ export default function App() {
         .catch(function() {});
     });
 
+    // ── Phase 1.5 优化：批量预取 classify（每词一个 shared Promise）──
+    // 避免每个 teach task 串联 classify → generator 形成阻塞流水线。
+    // 5 个 classify 并行发出（每个 2-3s），后续 teach task 直接 await 对应 Promise：
+    //   - 如果 classify 已完成 → 立刻拿到 cls，零额外等待
+    //   - 如果 classify 还在跑 → 等最多 2-3s（已在并行）
+    // 实测：原先每词 classify(2s) + generate(6s) = 8s 串联 → 现在 generate 6s 几乎零前置开销
+    var classifyByWord = {}; // word -> shared Promise<cls>
+    batchWords.forEach(function(w) {
+      if (dataCache.current[w]) return; // 跳过已缓存词
+      classifyByWord[w] = callClassify(w, profile, lrn).catch(function() { return null; });
+    });
+
     var tasks = [];
     var completed = 0;
     var tipWordIdx = 0;
@@ -2057,8 +2069,9 @@ export default function App() {
         // 优化：teach 比 guess 慢（300-400字生成），先 push 让它尽早占用并发 slot
         tasks.push(function() {
           // Phase 1.5：两步式 — 先 classify（选方法），再 generate（按选中方法生成）
-          // classify 有 localStorage 缓存，同词直接复用（除首次 1-2s）
-          return callClassify(word, profile, learned).then(function(cls) {
+          // 优化：用批量预取的 shared Promise（classifyByWord），避免重复请求
+          var classifyFor = classifyByWord[word] || callClassify(word, profile, learned);
+          return classifyFor.then(function(cls) {
             return callWithClientRetry(function() {
               // generator prompt 只含 classifier 选中的方法 schema + 示例（prompt 减半，AI 更聚焦）
               // jsonMode: true 让 DeepSeek/Gemini 开启 JSON mode，强制严格 JSON 输出，不提前停
