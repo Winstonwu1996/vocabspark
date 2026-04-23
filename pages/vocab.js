@@ -1685,9 +1685,15 @@ export default function App() {
         earlyStartResolved = true;
         setBatchTip(readyWordSet.size > 0 ? "✅ 首词已就绪，正在为你打开学习页面..." : "⏳ 加载完成，正在进入学习...");
         setBatchProgress(function() { return batchTotalR.current || 0; });
+        // DeepSeek streaming 首 chunk 常在 500-1000ms 到达，如果立即切换会感觉
+        // "batch_loading 进度条一闪而过 → 猜词骨架屏"很割裂。
+        // 强制最小 1500ms 展示，让用户看清"正在准备"的过渡。
+        var elapsed = Date.now() - batchStartedAtMs;
+        var minDisplayMs = 1500;
+        var delay = Math.max(readyWordSet.size > 0 ? 400 : 200, minDisplayMs - elapsed);
         setTimeout(function() {
           if (resolveEarlyStart) resolveEarlyStart();
-        }, readyWordSet.size > 0 ? 400 : 200);
+        }, delay);
       }
     };
     var dynamicCap = 3;
