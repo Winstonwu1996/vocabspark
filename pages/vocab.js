@@ -669,6 +669,8 @@ export default function App() {
     }
     return "free";
   });
+  // tier 是否已从网络确认过（用于限制检查：未确认前放行，避免误伤付费用户）
+  var [tierLoaded, setTierLoaded] = useState(false);
   var [showLogin, setShowLogin] = useState(false);
   var [loginEmail, setLoginEmail] = useState('');
   var [loginSent, setLoginSent] = useState(false);
@@ -1311,10 +1313,18 @@ export default function App() {
     try {
       var r = await fetch('/api/stripe/check-subscription?userId=' + userId);
       var j = await r.json();
-      var t = j.isActive ? j.tier : "free";
-      setUserTier(t);
-      try { localStorage.setItem("vocabspark_tier", t); } catch(e) {}
-    } catch(e) {}
+      if (j && typeof j.tier === "string") {
+        var t = j.isActive ? j.tier : "free";
+        setUserTier(t);
+        // 写入缓存：确认是 free 时也写入 "free"（覆盖之前错误的 "pro" 缓存）
+        // 但只在 API 明确返回时才写（isActive 是个明确信号）
+        try { localStorage.setItem("vocabspark_tier", t); } catch(e) {}
+      }
+      setTierLoaded(true);
+    } catch(e) {
+      // 网络失败：不改状态，但也不标记 loaded（让保护层继续放行）
+      console.warn('[tier] load failed, keeping cached value:', e.message);
+    }
   };
 
   // ─── 学习计时器（用户活跃时才计时：click/keydown/scroll/touch） ───
@@ -2112,11 +2122,11 @@ export default function App() {
     // Check daily limit (guests: 5, free registered: 10, basic/pro: unlimited)
     var ds = getDailyState();
     var isPaid = userTier === "basic" || userTier === "pro";
-    // 已登录用户如果 tier 还没加载完，也按 Infinity 处理（宁可多给不限制）
-    var tierLoading = userRef.current && userTier === "free" && !localStorage.getItem("vocabspark_tier");
-    var limit = (isPaid || tierLoading) ? Infinity : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
-    // 双重保护：付费用户永远不应该被限制（即使 userTier 状态竞态也安全）
-    if (!isPaid && !tierLoading && ds.count >= limit) { setShowLimitModal(true); return; }
+    // 关键保护：已登录用户如果 tier 还没从网络确认过，永远不触发限制
+    // 这防止了 localStorage 缓存了 "free" 但用户实际是 Pro 的竞态场景
+    var tierNotConfirmed = userRef.current && !tierLoaded;
+    var limit = (isPaid || tierNotConfirmed) ? Infinity : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
+    if (!isPaid && !tierNotConfirmed && ds.count >= limit) { setShowLimitModal(true); return; }
     incrementDailyCount();
     if (wordStart) {
       setWordTimings(function(prev) { return { ...prev, [currentWord]: { start: wordStart, end: Date.now(), duration: Date.now() - wordStart } }; });

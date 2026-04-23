@@ -3,6 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { C, FONT, globalCSS, S } from '../lib/theme';
 import { BrandNavBar, BrandSparkIcon } from '../components/BrandNavBar';
+import UserCenter from '../components/UserCenter';
 import { supabase } from '../lib/supabase';
 
 /* Plan & Pricing */
@@ -74,6 +75,7 @@ export default function PlanPage() {
   var [showCalc, setShowCalc] = useState(false);
   var [user, setUser] = useState(null);
   var [currentSub, setCurrentSub] = useState(null);
+  var [showUserCenter, setShowUserCenter] = useState(false);
   var [checkoutLoading, setCheckoutLoading] = useState(null);
   var [successMsg, setSuccessMsg] = useState(false);
   var [showLogin, setShowLogin] = useState(false);
@@ -208,7 +210,8 @@ export default function PlanPage() {
       </Head>
       <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
 
-      <BrandNavBar activeTab="plan" />
+      <BrandNavBar activeTab="plan" user={user} onUserCenterClick={function(){ setShowUserCenter(true); }} />
+      <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} userTier={currentSub?.tier || "free"} onLogin={function(){ setShowUserCenter(false); window.location.href = "/vocab"; }} onLogout={async function(){ await supabase.auth.signOut(); setUser(null); setShowUserCenter(false); }} />
 
       <div style={S.container}>
         {/* 早鸟优惠横幅 */}
