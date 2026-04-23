@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { supabase } from '../lib/supabase';
 import { C, FONT, globalCSS, S } from '../lib/theme';
-import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON } from '../lib/api';
+import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON, parsePartialJSON } from '../lib/api';
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
@@ -171,63 +171,240 @@ var buildGuessPrompt = (word, learned) => {
 
 var buildTeachPrompt = (word, learned) => {
   var ctx = learned.length > 0
-    ? "\n学过的词：" + learned.join(", ") + "（【连】优先用其中一个相关词）。"
-    : "";
-  return "单词：" + word + ctx + "\n\n" +
-    "【目标】紧凑高密度学习笔记。信息型内容用结构/列表/符号；叙事型（开场白、情景造句）保留人性化。\n\n" +
-    "【词型 → 推荐方法】（选 2-3 种，合适即用）\n" +
-    "A 程度词（ecstatic）→ 📶 程度光谱 + 🔍 近义辨析\n" +
-    "B 搭配型（abandon）→ 🔗 搭配 + 🔍 近义辨析\n" +
-    "C 词根型（intelligent）→ 🧩 词根 + 🧬 词性家族\n" +
-    "D 难记型（perpetual）→ 🧠 谐音 + 🖼️ 画面\n" +
-    "E 抽象概念（democracy）→ 🎬 微故事 + ⚖️ 反义对比\n" +
-    "F 多义词（run）→ 🖼️ 画面 + 🔍 近义辨析\n\n" +
-    "10 种方法池：🧩 词根 | 🧠 谐音 | 🖼️ 画面 | 🔍 近义辨析 | 📶 程度光谱 | 📖 词源 | 🔗 搭配 | ⚖️ 反义 | 🧬 词性家族 | 🎬 微故事\n\n" +
-    "【输出结构】\n\n" +
-    "━━ 开场 ≤ 40 字（人性化）\n" +
-    "1 句画像化定调，口语化，联系学生兴趣/场景。\n\n" +
-    "━━ 📖【教】每方法 ≤ 70 字\n" +
-    "结构：先知识骨架（列表/符号/对比），可选加 1 句画像锚 ≤ 20 字。\n" +
-    "❌ 禁用：\"想象你...\"、\"让你变...\"、\"这就是...的核心\"等修饰性长句。\n" +
-    "✅ 范例：\n\n" +
-    "🧩 词根：\n" +
-    "inter- = 之间\n" +
-    "legere = 选择\n" +
-    "-ent   = 形容词后缀\n" +
-    "  ↓\n" +
-    "\"在信息间做选择\" = 聪明\n" +
-    "💡 王者五分路秒选最优 = intelligent\n\n" +
-    "🧬 词性家族：\n" +
-    "• intelligent (adj) 聪明的\n" +
-    "• intelligence (n) 智力 / 情报\n" +
-    "• intelligently (adv) 聪明地\n\n" +
-    "🔗 搭配：\n" +
-    "• abandon + a plan（放弃计划）\n" +
-    "• abandon ship（弃船）\n" +
-    "• abandon hope（放弃希望）\n\n" +
-    "其他方法（🔍 / 📶 / 🧠 / 🖼️ / ⚖️ / 🎬 / 📖）同样紧凑骨架 + 可选画像锚。\n\n" +
-    "📖【教】末尾加一行 🎨 视觉锚 ≤ 15 字（短语断句）：\n" +
-    "  具象词 → 3 emoji + 短语（🚢💨🌫️ 空船漂雾里）\n" +
-    "  中度抽象 → 2 emoji + 短语（🥳💥 派对嗨翻天）\n" +
-    "  高度抽象 → 1-2 emoji + 情境短语（🎩 米其林摆盘感）\n" +
-    "  极抽象 → 跳 emoji，1 句典型语境句\n\n" +
-    "━━ 🔗【连】≤ 50 字\n" +
-    "格式：\n" +
-    "对比 [学过词 / 通用词 / 反义 / 形近 / 同根]：\n" +
-    "• 词 A = 一句含义（场景）\n" +
-    "• 词 B = 一句含义（场景）\n\n" +
-    "━━ ✨【用】≤ 120 字（保留人性化）\n" +
-    "1. 高频搭配：\n" +
-    "   • collocation 1 [🔊]（中文）\n" +
-    "   • collocation 2 [🔊]（中文）\n" +
-    "2. 情景造句（**严格 2 个**）：\n" +
-    "   - 中文场景铺垫 5-10 字：\"完整英文句。\" [🔊]（中文翻译）\n" +
-    "   - 中文场景铺垫 5-10 字：\"完整英文句。\" [🔊]（中文翻译）\n\n" +
-    "━━ 【格式】\n" +
-    "- 总字数 320-380（严格）\n" +
+    ? '\n"learnedWords": ' + JSON.stringify(learned) + ' (【连】优先引用其中 1 个相关词)'
+    : '';
+  return "# 任务\n" +
+    "为单词 \"" + word + "\" 生成学习笔记。严格按 JSON schema 返回，不要输出任何 JSON 之外的文字、注释、markdown 代码块标记。\n" +
+    ctx + "\n\n" +
+    "# 内部判定（不要输出）\n" +
+    "词型：A 程度词 | B 搭配型 | C 词根型 | D 难记型 | E 抽象概念 | F 多义词\n" +
+    "推荐方法组合：A→scale+nuance | B→collocation+nuance | C→root+family | D→mnemonic+image | E→microstory+antonym | F→image+nuance\n" +
+    "方法数量：主推 2 种，合适时可加第 3 种（不强求）\n\n" +
+    "# 10 种方法的 schema（method.type 取值 + 字段）\n" +
+    '- root: { type:"root", parts:[{part, meaning}], synthesis, anchor? }\n' +
+    '- mnemonic: { type:"mnemonic", soundAlike, interpretation, anchor? }\n' +
+    '- image: { type:"image", scene, mapping, anchor? }\n' +
+    '- nuance: { type:"nuance", compareWith, target:{word,nuance}, other:{word,nuance} }\n' +
+    '- scale: { type:"scale", words:[...], description }\n' +
+    '- etymology: { type:"etymology", origin, story }\n' +
+    '- collocation: { type:"collocation", items:[{phrase, zh}] }\n' +
+    '- antonym: { type:"antonym", opposite, contrast }\n' +
+    '- family: { type:"family", members:[{word, pos, meaning}] }\n' +
+    '- microstory: { type:"microstory", scene, interpretation }\n\n' +
+    "# 顶层 schema\n" +
+    "{\n" +
+    '  "opening": string,          // 画像化开场白 ≤40 字，口语化\n' +
+    '  "wordType": "A"|"B"|"C"|"D"|"E"|"F",\n' +
+    '  "teach": {\n' +
+    '    "methods": Method[],      // 2-3 种方法\n' +
+    '    "visualAnchor": {\n' +
+    '      "emojis": string,       // 1-3 个 emoji，极抽象词可为空\n' +
+    '      "text": string          // 画面/情境短语 ≤15 字\n' +
+    '    }\n' +
+    '  },\n' +
+    '  "connect": {\n' +
+    '    "comparedWith": string,   // 对比的词（学过词/通用词/反义/形近/同根）\n' +
+    '    "points": [\n' +
+    '      { "word": string, "meaning": string },  // 2 条，短语式（场景）\n' +
+    '      { "word": string, "meaning": string }\n' +
+    '    ]\n' +
+    '  },\n' +
+    '  "use": {\n' +
+    '    "collocations": [         // 严格 2 个\n' +
+    '      { "phrase": string, "zh": string },\n' +
+    '      { "phrase": string, "zh": string }\n' +
+    '    ],\n' +
+    '    "scenarios": [            // 严格 2 个\n' +
+    '      { "sceneZh": string, "en": string, "zh": string },\n' +
+    '      { "sceneZh": string, "en": string, "zh": string }\n' +
+    '    ]\n' +
+    '  }\n' +
+    "}\n\n" +
+    "# 完整示例（学习这些的质感和密度）\n\n" +
+    "## 示例 1：intelligent（C 词根型）\n" +
+    "```json\n" +
+    "{\n" +
+    '  "opening": "William，这词就是那些带脑子玩游戏的神队友的底色。",\n' +
+    '  "wordType": "C",\n' +
+    '  "teach": {\n' +
+    '    "methods": [\n' +
+    '      {\n' +
+    '        "type": "root",\n' +
+    '        "parts": [\n' +
+    '          {"part": "inter-", "meaning": "之间"},\n' +
+    '          {"part": "legere", "meaning": "选择"},\n' +
+    '          {"part": "-ent", "meaning": "形容词后缀"}\n' +
+    '        ],\n' +
+    '        "synthesis": "在信息间做选择 = 聪明",\n' +
+    '        "anchor": "王者五分路秒选最优 = intelligent"\n' +
+    '      },\n' +
+    '      {\n' +
+    '        "type": "family",\n' +
+    '        "members": [\n' +
+    '          {"word": "intelligent", "pos": "adj", "meaning": "聪明的"},\n' +
+    '          {"word": "intelligence", "pos": "n", "meaning": "智力 / 情报"},\n' +
+    '          {"word": "intelligently", "pos": "adv", "meaning": "聪明地"}\n' +
+    '        ]\n' +
+    '      }\n' +
+    '    ],\n' +
+    '    "visualAnchor": {"emojis": "🧠⚡🎯", "text": "灵光一闪精准命中"}\n' +
+    '  },\n' +
+    '  "connect": {\n' +
+    '    "comparedWith": "smart",\n' +
+    '    "points": [\n' +
+    '      {"word": "smart", "meaning": "灵光机灵（套路打野）"},\n' +
+    '      {"word": "intelligent", "meaning": "深度思考（研究 AI 论文）"}\n' +
+    '    ]\n' +
+    '  },\n' +
+    '  "use": {\n' +
+    '    "collocations": [\n' +
+    '      {"phrase": "artificially intelligent", "zh": "人工智能的"},\n' +
+    '      {"phrase": "highly intelligent", "zh": "高度聪明的"}\n' +
+    '    ],\n' +
+    '    "scenarios": [\n' +
+    '      {"sceneZh": "研究 AI 论文时：", "en": "The model in this paper is so intelligent it drafts code like a senior engineer.", "zh": "这篇论文的模型太聪明了，写代码像资深工程师。"},\n' +
+    '      {"sceneZh": "叮嘱队友时：", "en": "Don\'t just chase kills—be intelligent and focus on towers.", "zh": "别只追人头——聪明点，先推塔。"}\n' +
+    '    ]\n' +
+    '  }\n' +
+    "}\n" +
+    "```\n\n" +
+    "## 示例 2：abandon（B 搭配型）\n" +
+    "```json\n" +
+    "{\n" +
+    '  "opening": "William，这词就像王者高地被破时那个弃塔的瞬间。",\n' +
+    '  "wordType": "B",\n' +
+    '  "teach": {\n' +
+    '    "methods": [\n' +
+    '      {\n' +
+    '        "type": "collocation",\n' +
+    '        "items": [\n' +
+    '          {"phrase": "abandon a plan", "zh": "放弃计划"},\n' +
+    '          {"phrase": "abandon ship", "zh": "弃船 → 退出危局"},\n' +
+    '          {"phrase": "abandon hope", "zh": "放弃希望"}\n' +
+    '        ]\n' +
+    '      },\n' +
+    '      {\n' +
+    '        "type": "nuance",\n' +
+    '        "compareWith": "leave",\n' +
+    '        "target": {"word": "abandon", "nuance": "决绝、有负面感"},\n' +
+    '        "other": {"word": "leave", "nuance": "中性离开，可以回来"}\n' +
+    '      }\n' +
+    '    ],\n' +
+    '    "visualAnchor": {"emojis": "🚢💨🌫️", "text": "空船漂向雾里"}\n' +
+    '  },\n' +
+    '  "connect": {\n' +
+    '    "comparedWith": "abundant",\n' +
+    '    "points": [\n' +
+    '      {"word": "abandon", "meaning": "抛弃（动词）"},\n' +
+    '      {"word": "abundant", "meaning": "丰富的（形容词，形近易混）"}\n' +
+    '    ]\n' +
+    '  },\n' +
+    '  "use": {\n' +
+    '    "collocations": [\n' +
+    '      {"phrase": "abandon the match", "zh": "放弃比赛"},\n' +
+    '      {"phrase": "abandon your dreams", "zh": "放弃梦想"}\n' +
+    '    ],\n' +
+    '    "scenarios": [\n' +
+    '      {"sceneZh": "Irvine 下暴雨时：", "en": "Emily and I had to abandon the plan to play tennis.", "zh": "我和 Emily 只能放弃打网球的计划。"},\n' +
+    '      {"sceneZh": "主宰 3 秒被破：", "en": "Someone yelled \'abandon ship!\' in the voice chat.", "zh": "语音里有人喊弃塔！"}\n' +
+    '    ]\n' +
+    '  }\n' +
+    "}\n" +
+    "```\n\n" +
+    "## 示例 3：perpetual（D 难记型）\n" +
+    "```json\n" +
+    "{\n" +
+    '  "opening": "William，这词就像你排位连败——永远没完没了的。",\n' +
+    '  "wordType": "D",\n' +
+    '  "teach": {\n' +
+    '    "methods": [\n' +
+    '      {\n' +
+    '        "type": "mnemonic",\n' +
+    '        "soundAlike": "陪 pet 永远",\n' +
+    '        "interpretation": "陪宠物永不停歇 = 永久的",\n' +
+    '        "anchor": "王者赛季循环 = perpetually recurring"\n' +
+    '      },\n' +
+    '      {\n' +
+    '        "type": "image",\n' +
+    '        "scene": "刻着爪印的老时钟，永不停摆",\n' +
+    '        "mapping": "时钟永动 = perpetual"\n' +
+    '      }\n' +
+    '    ],\n' +
+    '    "visualAnchor": {"emojis": "♾️⏰🐾", "text": "陪宠物永不停歇"}\n' +
+    '  },\n' +
+    '  "connect": {\n' +
+    '    "comparedWith": "permanent",\n' +
+    '    "points": [\n' +
+    '      {"word": "permanent", "meaning": "永久的（强调结果不变）"},\n' +
+    '      {"word": "perpetual", "meaning": "永久的（强调持续的过程，有动感）"}\n' +
+    '    ]\n' +
+    '  },\n' +
+    '  "use": {\n' +
+    '    "collocations": [\n' +
+    '      {"phrase": "perpetual motion", "zh": "永动机"},\n' +
+    '      {"phrase": "perpetual student", "zh": "万年学生"}\n' +
+    '    ],\n' +
+    '    "scenarios": [\n' +
+    '      {"sceneZh": "王者赛季体验：", "en": "Honor of Kings seasons feel perpetual—one ends, next starts.", "zh": "王者赛季没完没了——一个结束下一个立马开始。"},\n' +
+    '      {"sceneZh": "Taylor 粉丝：", "en": "Her fans\' love is perpetual, outlasting every trend.", "zh": "她粉丝的爱永续，超越任何潮流。"}\n' +
+    '    ]\n' +
+    '  }\n' +
+    "}\n" +
+    "```\n\n" +
+    "## 示例 4：ecstatic（A 程度词）\n" +
+    "```json\n" +
+    "{\n" +
+    '  "opening": "William，这词不是一般的高兴——是嗨到天花板。",\n' +
+    '  "wordType": "A",\n' +
+    '  "teach": {\n' +
+    '    "methods": [\n' +
+    '      {\n' +
+    '        "type": "scale",\n' +
+    '        "words": ["glad", "delighted", "thrilled", "ecstatic"],\n' +
+    '        "description": "开心强度从一般到封顶"\n' +
+    '      },\n' +
+    '      {\n' +
+    '        "type": "nuance",\n' +
+    '        "compareWith": "happy",\n' +
+    '        "target": {"word": "ecstatic", "nuance": "极度狂喜，封顶强度"},\n' +
+    '        "other": {"word": "happy", "nuance": "普通开心，日常用"}\n' +
+    '      }\n' +
+    '    ],\n' +
+    '    "visualAnchor": {"emojis": "🥳💥", "text": "派对嗨到把天花板掀翻"}\n' +
+    '  },\n' +
+    '  "connect": {\n' +
+    '    "comparedWith": "thrilled",\n' +
+    '    "points": [\n' +
+    '      {"word": "thrilled", "meaning": "激动（赛场胜利的兴奋）"},\n' +
+    '      {"word": "ecstatic", "meaning": "欣喜若狂（封顶，难以自持）"}\n' +
+    '    ]\n' +
+    '  },\n' +
+    '  "use": {\n' +
+    '    "collocations": [\n' +
+    '      {"phrase": "ecstatic fans", "zh": "狂喜的粉丝"},\n' +
+    '      {"phrase": "absolutely ecstatic", "zh": "绝对欣喜若狂"}\n' +
+    '    ],\n' +
+    '    "scenarios": [\n' +
+    '      {"sceneZh": "入选校队时：", "en": "Willow was ecstatic when the coach said she\'d represent the school.", "zh": "听说代表学校出战时 Willow 欣喜若狂。"},\n' +
+    '      {"sceneZh": "脑补 Taylor 回复：", "en": "If Taylor Swift actually replied to my post, I\'d be ecstatic for a week.", "zh": "要是 Taylor 真回复我的帖子，我能狂喜一整周。"}\n' +
+    '    ]\n' +
+    '  }\n' +
+    "}\n" +
+    "```\n\n" +
+    "# 禁止事项\n" +
+    "- ❌ 任何 JSON 之外的文字、markdown 代码块标记（不要输出 ```json 或 ```）\n" +
+    "- ❌ 叙述性修饰：\"想象你...\"、\"让你变...\"、\"这就是...的核心\"\n" +
+    "- ❌ 情景造句超过 2 个\n" +
+    "- ❌ 搭配超过 2 个（teach.methods 里 collocation 类型可以 3 个，但 use.collocations 严格 2 个）\n\n" +
+    "# 约束\n" +
+    "- 每个字段内容精炼，拒绝啰嗦\n" +
     "- 释义中文，例句英文，直引号 \"\"\n" +
-    "- [🔊] 只在完整英文句末尾\n" +
-    "- 多用列表/符号（→ = vs ↔）代替长段叙述";
+    "- opening ≤ 40 字\n" +
+    "- method.anchor ≤ 20 字\n" +
+    "- visualAnchor.text ≤ 15 字\n" +
+    "- connect.points[i].meaning 每条 ≤ 15 字（短语式）\n" +
+    "- scenarios[i].sceneZh 中文场景铺垫 5-10 字\n\n" +
+    "直接输出纯 JSON，无前导、无后缀、无 markdown 标记。";
 };
 
 var buildSpectrumPrompt = (word) => {
@@ -660,6 +837,207 @@ var Md = ({ text }) => {
   return blocks;
 };
 
+/* ═══ TeachJSON 渲染（Phase 1：统一简洁样式）═══
+ * Phase 2 将为每种 method type 做专属视觉组件
+ * 当前：所有 method 共用 MethodCard 壳，内部按字段展示列表
+ */
+var METHOD_META = {
+  root:       { icon: "🧩", name: "词根" },
+  mnemonic:   { icon: "🧠", name: "谐音" },
+  image:      { icon: "🖼️", name: "画面" },
+  nuance:     { icon: "🔍", name: "近义辨析" },
+  scale:      { icon: "📶", name: "程度光谱" },
+  etymology:  { icon: "📖", name: "词源" },
+  collocation:{ icon: "🔗", name: "搭配" },
+  antonym:    { icon: "⚖️", name: "反义" },
+  family:     { icon: "🧬", name: "词性家族" },
+  microstory: { icon: "🎬", name: "微故事" },
+};
+
+var MethodBody = ({ m }) => {
+  switch (m.type) {
+    case "root":
+      return <>
+        {(m.parts || []).map((p, i) => (
+          <div key={i} style={{ display:"flex", gap:10, fontSize:14, margin:"2px 0" }}>
+            <code style={{ fontWeight:700, color:C.accent, minWidth:70 }}>{p.part}</code>
+            <span>= {p.meaning}</span>
+          </div>
+        ))}
+        {m.synthesis && (
+          <div style={{ marginTop:8, padding:"6px 10px", background:C.accentLight, borderRadius:6, fontSize:14 }}>
+            ↓ {m.synthesis}
+          </div>
+        )}
+        {m.anchor && <div style={{ marginTop:6, fontSize:13, color:C.textSec, fontStyle:"italic" }}>💡 {m.anchor}</div>}
+      </>;
+    case "mnemonic":
+      return <>
+        <div style={{ fontSize:14, margin:"3px 0" }}>"<strong style={{ color:C.accent }}>{m.soundAlike}</strong>"</div>
+        <div style={{ fontSize:14, margin:"3px 0" }}>→ {m.interpretation}</div>
+        {m.anchor && <div style={{ marginTop:6, fontSize:13, color:C.textSec, fontStyle:"italic" }}>💡 {m.anchor}</div>}
+      </>;
+    case "image":
+      return <>
+        <div style={{ fontSize:14, margin:"3px 0", fontStyle:"italic" }}>{m.scene}</div>
+        <div style={{ fontSize:14, margin:"3px 0" }}>→ {m.mapping}</div>
+        {m.anchor && <div style={{ marginTop:6, fontSize:13, color:C.textSec, fontStyle:"italic" }}>💡 {m.anchor}</div>}
+      </>;
+    case "nuance":
+      return <>
+        <div style={{ fontSize:14, margin:"3px 0" }}><strong style={{ color:C.accent }}>{m.target?.word}</strong>：{m.target?.nuance}</div>
+        <div style={{ fontSize:14, margin:"3px 0" }}><strong style={{ color:C.textSec }}>{m.other?.word}</strong>：{m.other?.nuance}</div>
+      </>;
+    case "scale":
+      return <>
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center", margin:"4px 0" }}>
+          {(m.words || []).map((w, i) => (
+            <React.Fragment key={i}>
+              <span style={{ padding:"4px 10px", background:C.accentLight, borderRadius:6, fontSize:13, fontWeight:600, color:C.accent }}>{w}</span>
+              {i < (m.words || []).length - 1 && <span style={{ color:C.textSec }}>→</span>}
+            </React.Fragment>
+          ))}
+        </div>
+        {m.description && <div style={{ fontSize:13, color:C.textSec, marginTop:4 }}>{m.description}</div>}
+      </>;
+    case "etymology":
+      return <>
+        <div style={{ fontSize:14, margin:"3px 0" }}><strong>源自</strong>：{m.origin}</div>
+        <div style={{ fontSize:14, margin:"3px 0" }}>{m.story}</div>
+      </>;
+    case "collocation":
+      return <>
+        {(m.items || []).map((it, i) => (
+          <div key={i} style={{ fontSize:14, margin:"3px 0" }}>
+            • <strong style={{ color:C.accent }}>{it.phrase}</strong>（{it.zh}）
+          </div>
+        ))}
+      </>;
+    case "antonym":
+      return <div style={{ fontSize:14, margin:"3px 0" }}>
+        ↔ <strong style={{ color:C.accent }}>{m.opposite}</strong>：{m.contrast}
+      </div>;
+    case "family":
+      return <>
+        {(m.members || []).map((member, i) => (
+          <div key={i} style={{ fontSize:14, margin:"3px 0" }}>
+            • <strong style={{ color:C.accent }}>{member.word}</strong>{" "}
+            <span style={{ color:C.textSec, fontSize:12 }}>({member.pos})</span>{" "}
+            {member.meaning}
+          </div>
+        ))}
+      </>;
+    case "microstory":
+      return <>
+        <div style={{ fontSize:14, margin:"3px 0", fontStyle:"italic" }}>"{m.scene}"</div>
+        <div style={{ fontSize:14, margin:"3px 0" }}>→ {m.interpretation}</div>
+      </>;
+    default:
+      return <div style={{ fontSize:13, color:C.textSec }}>[未知方法类型: {m.type}]</div>;
+  }
+};
+
+var MethodCard = ({ method }) => {
+  var meta = METHOD_META[method.type] || { icon:"📝", name:method.type || "方法" };
+  return (
+    <div style={{ marginBottom:12, padding:"10px 12px", background:"#f9f8f5", borderRadius:10, borderLeft:"3px solid "+C.purple }}>
+      <div style={{ fontSize:13, fontWeight:700, color:C.purple, marginBottom:6 }}>
+        {meta.icon} {meta.name}
+      </div>
+      <MethodBody m={method} />
+    </div>
+  );
+};
+
+var VisualAnchorBlock = ({ anchor }) => {
+  if (!anchor) return null;
+  return (
+    <div style={{ marginBottom:12, padding:"8px 12px", background:"linear-gradient(135deg, #fff 0%, #fdf1e8 100%)", border:"1px dashed "+C.accent, borderRadius:10, textAlign:"center" }}>
+      {anchor.emojis && <span style={{ fontSize:22, marginRight:8, letterSpacing:2 }}>{anchor.emojis}</span>}
+      <span style={{ fontSize:13, color:C.text, fontStyle:"italic" }}>🎨 {anchor.text}</span>
+    </div>
+  );
+};
+
+var ConnectBlock = ({ connect }) => {
+  if (!connect || !Array.isArray(connect.points) || connect.points.length === 0) return null;
+  return (
+    <div style={{ marginBottom:12, padding:"10px 12px", background:C.goldLight+"55", borderRadius:10, borderLeft:"3px solid "+C.gold }}>
+      <div style={{ fontSize:13, fontWeight:700, color:C.gold, marginBottom:6 }}>
+        🔗 对比 {connect.comparedWith}
+      </div>
+      {connect.points.map((p, i) => (
+        <div key={i} style={{ fontSize:14, margin:"3px 0" }}>
+          • <strong style={{ color:C.accent }}>{p.word}</strong> = {p.meaning}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+var UseBlock = ({ use }) => {
+  if (!use) return null;
+  var collocations = Array.isArray(use.collocations) ? use.collocations : [];
+  var scenarios = Array.isArray(use.scenarios) ? use.scenarios : [];
+  if (collocations.length === 0 && scenarios.length === 0) return null;
+  return (
+    <div style={{ marginBottom:12, padding:"12px 14px", background:C.greenLight+"55", borderRadius:10, borderLeft:"3px solid "+C.green }}>
+      <div style={{ fontSize:13, fontWeight:700, color:C.green, marginBottom:8 }}>
+        ✨ 场景应用
+      </div>
+      {collocations.length > 0 && (
+        <div style={{ marginBottom:10 }}>
+          <div style={{ fontSize:12, color:C.textSec, marginBottom:4 }}>搭配：</div>
+          {collocations.map((c, i) => (
+            <div key={i} style={{ fontSize:14, margin:"3px 0", display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
+              <span>• <strong style={{ color:C.accent }}>{c.phrase}</strong></span>
+              <SpeakBtn text={c.phrase} size={20} />
+              <span style={{ color:C.textSec, fontSize:13 }}>（{c.zh}）</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {scenarios.length > 0 && (
+        <div>
+          <div style={{ fontSize:12, color:C.textSec, marginBottom:4 }}>造句：</div>
+          {scenarios.map((s, i) => (
+            <div key={i} style={{ fontSize:14, margin:"8px 0" }}>
+              {s.sceneZh && <div style={{ color:C.textSec, fontSize:12, marginBottom:3 }}>{s.sceneZh}</div>}
+              <div style={{ display:"flex", alignItems:"flex-start", gap:6, flexWrap:"wrap" }}>
+                <span style={{ fontStyle:"italic" }}>"{s.en}"</span>
+                <SpeakBtn text={s.en} size={20} />
+              </div>
+              {s.zh && <div style={{ color:C.textSec, fontSize:13, marginTop:3 }}>（{s.zh}）</div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+var TeachJSON = ({ data, streaming }) => {
+  if (!data) return null;
+  return (
+    <div>
+      {data.opening && (
+        <div style={{ fontSize:15, lineHeight:1.7, margin:"0 0 14px", color:C.text, padding:"10px 12px", background:C.bg, borderRadius:8 }}>
+          {data.opening}
+        </div>
+      )}
+      {Array.isArray(data.teach?.methods) && data.teach.methods.map((m, i) => (
+        <MethodCard key={i} method={m} />
+      ))}
+      {data.teach?.visualAnchor && <VisualAnchorBlock anchor={data.teach.visualAnchor} />}
+      {data.connect && <ConnectBlock connect={data.connect} />}
+      {data.use && <UseBlock use={data.use} />}
+      {streaming && (
+        <span style={{ display:"inline-block", width:8, height:16, background:C.accent, marginLeft:2, verticalAlign:"-2px", animation:"cursorBlink 0.9s steps(1) infinite" }} aria-hidden="true" />
+      )}
+    </div>
+  );
+};
+
 /* ═══ MAIN APP ═══ */
 export default function App() {
   var [screen, setScreen] = useState("setup");
@@ -741,7 +1119,8 @@ export default function App() {
   var [shakeWrong, setShakeWrong] = useState(false);
   var [bounceCorrect, setBounceCorrect] = useState(false);
 
-  var [teachContent, setTeachContent] = useState("");
+  var [teachContent, setTeachContent] = useState("");        // Markdown 降级（旧路径 / JSON fallback）
+  var [teachData, setTeachData] = useState(null);            // JSON 结构（Phase 1 新路径，优先使用）
   var [teachWaitSec, setTeachWaitSec] = useState(0); // teach 加载已等待秒数（用于进度反馈）
   var [teachStreaming, setTeachStreaming] = useState(false); // 是否在流式生成中（用于显示光标+禁用按钮）
   var [spectrumData, setSpectrumData] = useState(null);
@@ -821,7 +1200,10 @@ export default function App() {
   useEffect(function() {
     if (phase !== "teach") return;
     if (!currentWord) return;
-    if (!teachContent || teachContent === "__FAILED__") return;
+    // 兼容 JSON + Markdown 两种路径：任一有内容且非失败态即可
+    var hasJSON = !!teachData;
+    var hasMd = teachContent && teachContent !== "__FAILED__";
+    if (!hasJSON && !hasMd) return;
     if (teachAutoPlayedRef.current === currentWord) return; // 同词不重复
     teachAutoPlayedRef.current = currentWord;
     // 延迟 350ms 让切换动画完成后再播放，体验更顺
@@ -829,7 +1211,7 @@ export default function App() {
       if (typeof window !== "undefined") speakWord(currentWord);
     }, 350);
     return function() { clearTimeout(timer); };
-  }, [phase, teachContent, currentWord]);
+  }, [phase, teachContent, teachData, currentWord]);
   useEffect(function() {
     if (screen === "deep_review") {
       var w = deepReviewQueue[deepReviewIdx];
@@ -1797,10 +2179,15 @@ export default function App() {
             // onChunk 增量更新 cache.teach（纯文本，不加 speak markers，等完成后再加）
             return callAPIStream(sysP, buildTeachPrompt(word, learned), { preferredProviders: preferred }, function(partial) {
               if (!dataCache.current[word]) return; // 词可能已被移除
-              dataCache.current[word].teach = partial;
+              // Phase 1：尝试流式 JSON 解析，成功则存 teachJSON；失败先留 raw（fallback 用）
+              var parsed = parsePartialJSON(partial);
+              if (parsed && parsed.opening) {
+                dataCache.current[word].teachJSON = parsed;
+              } else {
+                dataCache.current[word].teach = partial;
+              }
               dataCache.current[word].teachStreaming = true;
-              // 首次 chunk 到达即标记 ready — 不再等 guess（guess 由 applyWordData 轮询后台补上）
-              // 这让用户从点"开始学习"到进入学习页的总等待从 8-10s 压到 1-3s
+              // 首次 chunk 到达即标记 ready（无论 JSON 还是 raw）
               if (!dataCache.current[word]._streamReadyTriggered) {
                 dataCache.current[word]._streamReadyTriggered = true;
                 readyWordSet.add(word);
@@ -1808,11 +2195,19 @@ export default function App() {
               }
             });
           }).then(function(raw) {
-            // streaming 完成 or fallback 返回：替换为带 speak markers 的最终版本
-            dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
+            // 完成：最终尝试 JSON 解析，成功用 JSON，失败 fallback 到 Markdown
+            var finalJSON = raw ? (tryJSON(raw) || parsePartialJSON(raw)) : null;
+            if (finalJSON && finalJSON.opening && finalJSON.teach) {
+              dataCache.current[word].teachJSON = finalJSON;
+              dataCache.current[word].teach = null; // JSON 优先，清 markdown 避免双渲染
+            } else {
+              // JSON 无效 → 降级 Markdown 渲染
+              dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
+              dataCache.current[word].teachJSON = null;
+            }
             dataCache.current[word].teachStreaming = false;
-            // 兜底：首 chunk 未触发时（fallback 路径一次性返回），此处补触发
-            if (dataCache.current[word].teach && !dataCache.current[word]._streamReadyTriggered) {
+            // 兜底 ready（fallback 路径一次性返回时，首 chunk 未触发）
+            if ((dataCache.current[word].teachJSON || dataCache.current[word].teach) && !dataCache.current[word]._streamReadyTriggered) {
               dataCache.current[word]._streamReadyTriggered = true;
               readyWordSet.add(word);
               tryResolveEarlyStart();
@@ -1946,7 +2341,7 @@ export default function App() {
     if (guessPollRef.current) clearInterval(guessPollRef.current);
     if (guessTimeoutRef.current) clearTimeout(guessTimeoutRef.current);
     setGuessData(null); setSelectedOption(""); setGuessSubmitted(false);
-    setShowHint(false); setTeachContent(""); setSpectrumData(null);
+    setShowHint(false); setTeachContent(""); setTeachData(null); setSpectrumData(null);
     setSpecSlots([null,null,null]); setSpecPool([]); setSpecStatus("idle");
     setReviewData(null); setReviewAnswers({}); setReviewSubmitted(false); setPhonetic("");
     setClozeData(null); setClozeAnswers({}); setClozeSubmitted(false);
@@ -1987,9 +2382,13 @@ export default function App() {
         setGuessData(function(prev) { return prev || { context: "内容加载失败", options: null, _failed: true }; });
       }, 25000);
     }
-    // streaming 中或已完成但未稳定：也要启动轮询持续拉增量内容
+    // Phase 1：优先 JSON（teachJSON），降级 Markdown（teach）
     var teachStreamingActive = !!d?.teachStreaming;
     setTeachStreaming(teachStreamingActive);
+    if (d?.teachJSON && d.teachJSON.opening) {
+      setTeachData(d.teachJSON);
+      setTeachWaitSec(0);
+    }
     if (d?.teach && !teachStreamingActive) {
       setTeachContent(d.teach);
       setTeachWaitSec(0);
@@ -1997,7 +2396,7 @@ export default function App() {
       setTeachContent("__FAILED__");
       setTeachWaitSec(0);
       setTeachStreaming(false);
-    } else {
+    } else if (!d?.teachJSON) {
       // 两种情况：(a) 还没开始生成 (b) 正在 streaming 中 — 都用轮询捡增量
       if (teachTimeoutRef.current) clearTimeout(teachTimeoutRef.current);
       if (teachPollRef.current) clearInterval(teachPollRef.current);
@@ -2006,14 +2405,24 @@ export default function App() {
       setTeachWaitSec(0);
       // streaming 阶段已有部分内容时，先渲染一次，避免 skeleton 抖动
       if (d?.teach) setTeachContent(d.teach);
-      // 200ms 更细的粒度，打字机感觉更流畅
       teachPollRef.current = setInterval(function() {
         var cached = dataCache.current[pollWord];
+        // JSON 优先
+        if (cached?.teachJSON && cached.teachJSON.opening) {
+          setTeachData(cached.teachJSON);
+          setTeachWaitSec(0);
+          setTeachStreaming(!!cached.teachStreaming);
+          if (!cached.teachStreaming) {
+            clearInterval(teachPollRef.current);
+            clearTimeout(teachTimeoutRef.current);
+          }
+          return;
+        }
+        // Markdown 降级
         if (cached?.teach) {
           setTeachContent(cached.teach);
           setTeachWaitSec(0);
           setTeachStreaming(!!cached.teachStreaming);
-          // streaming 未完成 → 继续轮询捡增量；已完成 → 停止
           if (!cached.teachStreaming) {
             clearInterval(teachPollRef.current);
             clearTimeout(teachTimeoutRef.current);
@@ -2031,7 +2440,11 @@ export default function App() {
       // 超时 35s：大部分正常请求 15s 内完成
       teachTimeoutRef.current = setTimeout(function() {
         if (teachPollRef.current) clearInterval(teachPollRef.current);
-        setTeachContent(function(prev) { return prev || "__FAILED__"; });
+        // 如果 JSON 还没到，降级显示失败
+        var cached = dataCache.current[pollWord];
+        if (!cached?.teachJSON) {
+          setTeachContent(function(prev) { return prev || "__FAILED__"; });
+        }
         setTeachWaitSec(0);
         setTeachStreaming(false);
       }, 35000);
@@ -4558,7 +4971,14 @@ export default function App() {
 
       {phase === "teach" && <div style={{...S.card, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
         <div style={{...S.tag,background:C.tealLight,color:C.teal}}>📖 学习笔记</div>
-        {teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解内容加载失败</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");callWithClientRetry(function(){return callAPI(sysP,buildTeachPrompt(currentWord,learned));}).then(function(raw){var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
+        {/* Phase 1：优先 JSON 渲染路径 */}
+        {teachData ? <>
+          <div style={{marginBottom:20}}>
+            <TeachJSON data={teachData} streaming={teachStreaming} />
+          </div>
+          <button style={{...S.primaryBtn, opacity: teachStreaming ? 0.6 : 1, cursor: teachStreaming ? "progress" : "pointer"}} onClick={teachToSpectrum} disabled={loading || teachStreaming}>{teachStreaming ? "✨ 正在生成...": (spectrumData?"🎮 词义光谱挑战 →":"→ 下一个词")}</button>
+        </>
+        : teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解内容加载失败</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");setTeachData(null);callWithClientRetry(function(){return callAPI(sysP,buildTeachPrompt(currentWord,learned));}).then(function(raw){var finalJSON=raw?(tryJSON(raw)||parsePartialJSON(raw)):null;if(finalJSON&&finalJSON.opening&&finalJSON.teach){dataCache.current[currentWord].teachJSON=finalJSON;dataCache.current[currentWord].teach=null;dataCache.current[currentWord].teachFailed=false;setTeachData(finalJSON);}else{var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
         : !teachContent ? (() => {
           // 根据等待秒数动态展示不同提示，给用户进度感
           var s = teachWaitSec;
