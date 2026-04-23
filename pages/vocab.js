@@ -2612,8 +2612,10 @@ export default function App() {
 
     var ready = function() {
       var d = dataCache.current[nextWord];
-      // Phase 1.5: JSON 路径 teachJSON 有值而 teach 为 null，必须同时检查两者
-      return !!(d && d.guess && (d.teach || d.teachJSON));
+      // 真正的切词 gate：只要 guess 到达就能进猜词页（第一阶段）
+      // Teach 是后续阶段，即使未 ready，applyWordData 的轮询会在用户进 teach 页时接住
+      // 之前要求 teach 同时 ready 是过度保守 — 让用户等不必要的时间
+      return !!(d && d.guess);
     };
 
     if (ready()) {
