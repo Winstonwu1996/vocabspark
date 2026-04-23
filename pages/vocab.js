@@ -2273,14 +2273,16 @@ export default function App() {
       setTeachData(d.teachJSON);
       setTeachWaitSec(0);
     }
-    if (d?.teach && !teachStreamingActive) {
+    if (d?.teach && !teachStreamingActive && !d?.teachJSON) {
       setTeachContent(d.teach);
       setTeachWaitSec(0);
     } else if (d?.teachFailed) {
       setTeachContent("__FAILED__");
       setTeachWaitSec(0);
       setTeachStreaming(false);
-    } else if (!d?.teachJSON) {
+    } else if (teachStreamingActive || (!d?.teachJSON && !d?.teach)) {
+      // 关键修复：teachStreaming=true 时必须启动轮询（即使 teachJSON 已有中间态）
+      // 否则 streaming 完成后 teachStreaming=false 无人监听，UI 卡在"正在生成..."
       // 两种情况：(a) 还没开始生成 (b) 正在 streaming 中 — 都用轮询捡增量
       if (teachTimeoutRef.current) clearTimeout(teachTimeoutRef.current);
       if (teachPollRef.current) clearInterval(teachPollRef.current);
