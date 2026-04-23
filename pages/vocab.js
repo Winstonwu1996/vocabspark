@@ -182,8 +182,62 @@ var buildReviewPrompt = (words) => {
   return "刚学完5个词：" + words.join(", ") + "\n\n设计互动复习关卡。直接输出JSON：\n" + '{"type":"fill_blank","title":"标题","intro":"场景描述","questions":[{"id":1,"sentence":"含_____的句","options":["词1","词2","词3"],"answer":"答案","explanation":"解释"},{"id":2,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":3,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":4,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":5,"sentence":"...","options":["..."],"answer":"...","explanation":"..."}]}' + "\n\n每题对应一个词，options含正确答案和2个干扰词，场景结合学习画像。";
 };
 
+// 校验 cloze 题目：passage 里不能出现任何答案词（送分题检测）
+// 返回 null 如果有效；返回错误原因字符串如果无效
+var validateCloze = function(parsed) {
+  if (!parsed || !parsed.passage || !Array.isArray(parsed.questions)) return "缺少必要字段";
+  if (parsed.questions.length === 0) return "题目为空";
+  var passage = String(parsed.passage || "");
+  // 去除占位符本身，只检查"非占位符"的部分
+  var cleaned = passage.replace(/_{2,}\s*\(\d+\)/g, ""); // 去除 _____(N) 形式
+  cleaned = cleaned.replace(/[\*_`]/g, "").toLowerCase(); // 去 markdown + 小写
+  // 对每个答案词，生成词形变体，检查是否出现在 passage 非占位符部分
+  for (var i = 0; i < parsed.questions.length; i++) {
+    var ans = String(parsed.questions[i].answer || "").toLowerCase().trim();
+    if (!ans) continue;
+    var stem = ans.replace(/e$/, "");
+    var variants = [ans, ans + "s", ans + "es", ans + "ed", ans + "ing", ans + "ly", ans + "ion", stem + "ed", stem + "ing"];
+    for (var j = 0; j < variants.length; j++) {
+      var v = variants[j];
+      var re = new RegExp("\\b" + v.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&") + "\\b", "i");
+      if (re.test(cleaned)) {
+        return "答案词 \"" + ans + "\" 明文出现在 passage 中（变体: " + v + "）";
+      }
+    }
+  }
+  // 校验占位符数量是否匹配
+  var placeholders = (passage.match(/_{2,}\s*\(\d+\)/g) || []).length;
+  if (placeholders !== parsed.questions.length) {
+    return "占位符数量(" + placeholders + ")与题目数量(" + parsed.questions.length + ")不匹配";
+  }
+  return null;
+};
+
 var buildClozePrompt = (words) => {
-  return "刚学完的词：" + words.join(", ") + "\n\n请写一篇120-150词的英文小短文，深度结合学习画像。短文中必须恰好包含5个编号空格 _____(1) 到 _____(5)，每个空格对应一个词。\n\n严格要求：\n1. 短文中必须恰好有5个空格，编号从(1)到(5)\n2. questions 数组必须恰好有5个元素\n3. 每个 question 的 answer 必须在对应的 options 中\n4. 短文中的空格数量 = questions 数量 = 5\n\nIMPORTANT: 直接输出JSON：\n" + '{"title":"短文标题","passage":"短文正文，必须含_____(1)到_____(5)共5个空格","questions":[{"id":1,"blank":"_____(1)","options":["词1","词2","词3"],"answer":"正确词","explanation":"为什么选这个词"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
+  return "刚学完的词：" + words.join(", ") +
+    "\n\n请写一篇120-150词的英文小短文，深度结合学习画像。" +
+    "\n\n【铁律 - 必须严格遵守，否则题目无效】" +
+    "\n1. 短文中必须恰好有 5 个空格，格式是 _____(1) 到 _____(5)（5 个下划线 + 括号编号）" +
+    "\n2. 🚫 绝对禁止：这 5 个答案词（" + words.join(", ") + "）以任何形式在 passage 里明文出现（包括它们的原形、复数、过去式、ing形、加粗、引号等任何变体）" +
+    "\n3. 只能在 _____(N) 占位符位置代表这些答案词，passage 其他地方不能提到" +
+    "\n4. questions 数组必须恰好 5 个元素，对应 5 个空格" +
+    "\n5. 每个 question 的 answer 必须在对应的 options 数组中" +
+    "\n6. 每个 options 数组有 3 个选项（1 个答案 + 2 个易混干扰词）" +
+    "\n" +
+    "\n✅ 正确例子（答案词是 exhausted）：" +
+    "\n   passage: \"After the marathon, Willow was _____(1). She drank water and rested.\"" +
+    "\n   （passage 里没有任何地方出现 \"exhausted\" 这个词）" +
+    "\n" +
+    "\n❌ 错误例子 1（AI 没用占位符）：" +
+    "\n   passage: \"After the marathon, Willow was exhausted. She drank water.\"" +
+    "\n   （直接写了 exhausted，用户一看就知道答案）" +
+    "\n" +
+    "\n❌ 错误例子 2（答案词在其他句子出现）：" +
+    "\n   passage: \"After the marathon, Willow was _____(1). Her mother said she looked exhausted.\"" +
+    "\n   （虽然有占位符，但下一句明写了 exhausted，还是送分题）" +
+    "\n" +
+    "\nIMPORTANT: 直接输出JSON：\n" +
+    '{"title":"短文标题","passage":"短文正文，必须含_____(1)到_____(5)共5个空格，且答案词不能明文出现在 passage 任何地方","questions":[{"id":1,"blank":"_____(1)","options":["词1","词2","词3"],"answer":"正确词","explanation":"为什么选这个词"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
 };
 
 var buildReviewTeachPrompt = (word, learned, reviewCount) => {
@@ -2116,16 +2170,41 @@ export default function App() {
       // Phase B: instant if pre-fetched during batch loading
       var cachedCloze = dataCache.current["_cloze_" + newLearned.length];
       if (cachedCloze?.questions) {
-        setClozeData(cachedCloze); setClozeAnswers({}); setClozeSubmitted(false); setPhase("cloze"); return;
+        // 即使是缓存也要校验（预取时可能没校验）
+        var cacheErr = validateCloze(cachedCloze);
+        if (!cacheErr) {
+          setClozeData(cachedCloze); setClozeAnswers({}); setClozeSubmitted(false); setPhase("cloze"); return;
+        } else {
+          console.warn('[cloze] cached invalid:', cacheErr);
+          dataCache.current["_cloze_" + newLearned.length] = null; // 清缓存
+        }
       }
       // Phase A: switch phase immediately so spinner shows, then fetch
       setPhase("cloze"); setLoadingTip("📝 正在生成阅读理解短文...");
       try {
-        var raw = await callAPIFast(sysP, buildClozePrompt(newLearned.slice(-10)));
-        var parsed = tryJSON(raw);
-        if (parsed?.questions && Array.isArray(parsed.questions) && parsed.questions.length > 0 && parsed.questions.every(function(q) { return q.answer && q.options; })) {
+        // 最多重试 2 次，如果生成的题目"送分"（答案词明文出现）
+        var parsed = null;
+        var validationErr = null;
+        for (var attempt = 0; attempt < 2; attempt++) {
+          var raw = await callAPIFast(sysP, buildClozePrompt(newLearned.slice(-10)));
+          parsed = tryJSON(raw);
+          if (!parsed?.questions || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
+            validationErr = "解析失败";
+            continue;
+          }
+          if (!parsed.questions.every(function(q) { return q.answer && q.options; })) {
+            validationErr = "题目字段缺失";
+            continue;
+          }
+          validationErr = validateCloze(parsed);
+          if (!validationErr) break; // 通过校验
+          console.warn('[cloze] attempt ' + (attempt+1) + ' rejected:', validationErr);
+        }
+        if (!validationErr) {
           setClozeData(parsed); setClozeAnswers({}); setClozeSubmitted(false);
         } else {
+          // 校验始终失败 → 跳过阅读挑战，继续学下个词（用户友好）
+          console.warn('[cloze] skipped after retries:', validationErr);
           if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
           else { sfx.complete(); setPhase("done"); }
         }
