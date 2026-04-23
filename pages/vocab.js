@@ -750,6 +750,8 @@ export default function App() {
   var teachTimeoutRef = useRef(null);
   var teachPollRef = useRef(null);
   var spectrumPollRef = useRef(null);
+  var guessPollRef = useRef(null);
+  var guessTimeoutRef = useRef(null);
   var speedWaitAbortRef = useRef(false);
   var [photoLoading, setPhotoLoading] = useState(false);
 
@@ -1716,8 +1718,9 @@ export default function App() {
               if (!dataCache.current[word]) return; // 词可能已被移除
               dataCache.current[word].teach = partial;
               dataCache.current[word].teachStreaming = true;
-              // 首次 chunk 到达即标记 ready，让用户秒进 teach 页看打字机效果
-              if (!dataCache.current[word]._streamReadyTriggered && (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed)) {
+              // 首次 chunk 到达即标记 ready — 不再等 guess（guess 由 applyWordData 轮询后台补上）
+              // 这让用户从点"开始学习"到进入学习页的总等待从 8-10s 压到 1-3s
+              if (!dataCache.current[word]._streamReadyTriggered) {
                 dataCache.current[word]._streamReadyTriggered = true;
                 readyWordSet.add(word);
                 tryResolveEarlyStart();
@@ -1727,8 +1730,9 @@ export default function App() {
             // streaming 完成 or fallback 返回：替换为带 speak markers 的最终版本
             dataCache.current[word].teach = raw ? addSpeakMarkers(raw) : null;
             dataCache.current[word].teachStreaming = false;
-            // Word is ready if teach loaded (guess can be partial or failed)
-            if (dataCache.current[word].teach && (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed)) {
+            // 兜底：首 chunk 未触发时（fallback 路径一次性返回），此处补触发
+            if (dataCache.current[word].teach && !dataCache.current[word]._streamReadyTriggered) {
+              dataCache.current[word]._streamReadyTriggered = true;
               readyWordSet.add(word);
               tryResolveEarlyStart();
             }
@@ -1736,7 +1740,7 @@ export default function App() {
             console.warn("[loadBatch] teach failed for " + word + ":", err.message);
             dataCache.current[word].teachFailed = true;
             dataCache.current[word].teachStreaming = false;
-            // If guess is done/attempted, word is as ready as it'll get
+            // teach 失败时：如果 guess 已到，至少让用户能猜词；否则等 guess task 触发 ready
             if (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed) {
               readyWordSet.add(word);
               tryResolveEarlyStart();
@@ -1855,6 +1859,8 @@ export default function App() {
     if (teachPollRef.current) clearInterval(teachPollRef.current);
     if (teachTimeoutRef.current) clearTimeout(teachTimeoutRef.current);
     if (spectrumPollRef.current) clearInterval(spectrumPollRef.current);
+    if (guessPollRef.current) clearInterval(guessPollRef.current);
+    if (guessTimeoutRef.current) clearTimeout(guessTimeoutRef.current);
     setGuessData(null); setSelectedOption(""); setGuessSubmitted(false);
     setShowHint(false); setTeachContent(""); setSpectrumData(null);
     setSpecSlots([null,null,null]); setSpecPool([]); setSpecStatus("idle");
@@ -1868,8 +1874,34 @@ export default function App() {
       if (d.guess.phonetic) setPhonetic(d.guess.phonetic);
     } else if (d?.guessFailed && !d?.guess) {
       setGuessData({ context: "内容加载失败", options: null, _failed: true });
+    } else if (d?.guessRaw) {
+      // 响应到达但 JSON parse 失败 — 显示原始文本
+      setGuessData({ context: d.guessRaw.substring(0,300) || "格式异常", options: null });
     } else {
-      setGuessData({ context: (d?.guessRaw||"").substring(0,300) || "格式异常", options: null });
+      // guess 还在加载中 — 保持 guessData=null（UI 自动显示骨架屏），启动轮询
+      var guessPollWord = word;
+      guessPollRef.current = setInterval(function() {
+        var cached = dataCache.current[guessPollWord];
+        if (cached?.guess?.context && cached?.guess?.options) {
+          setGuessData(cached.guess);
+          if (cached.guess.phonetic) setPhonetic(cached.guess.phonetic);
+          clearInterval(guessPollRef.current);
+          clearTimeout(guessTimeoutRef.current);
+        } else if (cached?.guessFailed) {
+          setGuessData({ context: "内容加载失败", options: null, _failed: true });
+          clearInterval(guessPollRef.current);
+          clearTimeout(guessTimeoutRef.current);
+        } else if (cached?.guessRaw) {
+          setGuessData({ context: cached.guessRaw.substring(0,300) || "格式异常", options: null });
+          clearInterval(guessPollRef.current);
+          clearTimeout(guessTimeoutRef.current);
+        }
+      }, 200);
+      // 25s 超时兜底（实际 guess 通常 5-10s 到达）
+      guessTimeoutRef.current = setTimeout(function() {
+        if (guessPollRef.current) clearInterval(guessPollRef.current);
+        setGuessData(function(prev) { return prev || { context: "内容加载失败", options: null, _failed: true }; });
+      }, 25000);
     }
     // streaming 中或已完成但未稳定：也要启动轮询持续拉增量内容
     var teachStreamingActive = !!d?.teachStreaming;
