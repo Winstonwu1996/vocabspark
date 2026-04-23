@@ -3,6 +3,9 @@
 // 客户端任何失败都会 fallback 到 /api/chat，不会影响生产稳定性。
 export const config = {
   runtime: "edge",
+  // Vercel Edge Runtime 默认初始响应 25s 上限会切断长流式。Pro 计划允许最多 300s。
+  // 设 60s 覆盖 Gemini 生成完整 teach 所需 30-40s，留 20s buffer。
+  maxDuration: 60,
 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
