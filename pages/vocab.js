@@ -1687,9 +1687,10 @@ export default function App() {
         setBatchProgress(function() { return batchTotalR.current || 0; });
         // DeepSeek streaming 首 chunk 常在 500-1000ms 到达，如果立即切换会感觉
         // "batch_loading 进度条一闪而过 → 猜词骨架屏"很割裂。
-        // 强制最小 1500ms 展示，让用户看清"正在准备"的过渡。
+        // 最小 5000ms 展示：让进度条有充分时间，同时让 guess（非流式，3-5s）
+        // 大概率在切换时已到达，进猜词页不再显示骨架屏。
         var elapsed = Date.now() - batchStartedAtMs;
-        var minDisplayMs = 1500;
+        var minDisplayMs = 5000;
         var delay = Math.max(readyWordSet.size > 0 ? 400 : 200, minDisplayMs - elapsed);
         setTimeout(function() {
           if (resolveEarlyStart) resolveEarlyStart();
