@@ -2774,10 +2774,11 @@ export default function App() {
 
     if (userRef.current && newLearned.length === 10 && !tipDismissed) { setShowTipJar(true); }
 
-    // Pre-generate next batch: when at word 3 of current batch (0-indexed within batch),
-    // start loading the next 5 words in background so they're ready when needed
+    // Phase 1.5 优化：预取下一组更早触发（posInBatch === 1 即学完第 1 词就启动）
+    // 给 silent 预取充足时间（用户学 3-4 词 = 60-200s），Phase 1.5 的 classify+generate
+    // 总流水线 ~15-20s 足够在用户学完本组前填好下一组 cache
     var posInBatch = nextIdx % 5;
-    if (posInBatch === 3) {
+    if (posInBatch === 1 || posInBatch === 3) {
       var nextBatchStart = Math.floor(nextIdx / 5) * 5 + 5;
       if (nextBatchStart < wordList.length) {
         var nbEnd = Math.min(nextBatchStart + 5, wordList.length);
