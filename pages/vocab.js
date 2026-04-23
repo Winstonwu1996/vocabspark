@@ -2748,11 +2748,17 @@ export default function App() {
   };
 
   var teachToSpectrum = () => {
+    // Phase 2 兼容两种 spectrum 数据格式
     if (spectrumData?.spectrum_words) {
+      // Legacy 拖动排序
       setSpecPool(shuffle(spectrumData.spectrum_words));
       setSpecSlots([null,null,null]); setSpecStatus("idle");
       setPhaseDir(1); setPhase("spectrum");
+    } else if (spectrumData?.type) {
+      // 新 Phase 2 玩法（gradient_choice 等）— 不需要 pool 初始化，组件自己管理 state
+      setPhaseDir(1); setPhase("spectrum");
     } else {
+      // 无 spectrum 数据（生成失败或超时）— 直接进下一词
       goNextWord();
     }
   };
