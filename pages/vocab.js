@@ -268,50 +268,7 @@ var buildTeachPrompt = (word, learned) => {
     '  }\n' +
     "}\n" +
     "```\n\n" +
-    "## 示例 2：abandon（B 搭配型）\n" +
-    "```json\n" +
-    "{\n" +
-    '  "opening": "William，这词就像王者高地被破时那个弃塔的瞬间。",\n' +
-    '  "wordType": "B",\n' +
-    '  "teach": {\n' +
-    '    "methods": [\n' +
-    '      {\n' +
-    '        "type": "collocation",\n' +
-    '        "items": [\n' +
-    '          {"phrase": "abandon a plan", "zh": "放弃计划"},\n' +
-    '          {"phrase": "abandon ship", "zh": "弃船 → 退出危局"},\n' +
-    '          {"phrase": "abandon hope", "zh": "放弃希望"}\n' +
-    '        ]\n' +
-    '      },\n' +
-    '      {\n' +
-    '        "type": "nuance",\n' +
-    '        "compareWith": "leave",\n' +
-    '        "target": {"word": "abandon", "nuance": "决绝、有负面感"},\n' +
-    '        "other": {"word": "leave", "nuance": "中性离开，可以回来"}\n' +
-    '      }\n' +
-    '    ],\n' +
-    '    "visualAnchor": {"emojis": "🚢💨🌫️", "text": "空船漂向雾里"}\n' +
-    '  },\n' +
-    '  "connect": {\n' +
-    '    "comparedWith": "abundant",\n' +
-    '    "points": [\n' +
-    '      {"word": "abandon", "meaning": "抛弃（动词）"},\n' +
-    '      {"word": "abundant", "meaning": "丰富的（形容词，形近易混）"}\n' +
-    '    ]\n' +
-    '  },\n' +
-    '  "use": {\n' +
-    '    "collocations": [\n' +
-    '      {"phrase": "abandon the match", "zh": "放弃比赛"},\n' +
-    '      {"phrase": "abandon your dreams", "zh": "放弃梦想"}\n' +
-    '    ],\n' +
-    '    "scenarios": [\n' +
-    '      {"sceneZh": "Irvine 下暴雨时：", "en": "Emily and I had to abandon the plan to play tennis.", "zh": "我和 Emily 只能放弃打网球的计划。"},\n' +
-    '      {"sceneZh": "主宰 3 秒被破：", "en": "Someone yelled \'abandon ship!\' in the voice chat.", "zh": "语音里有人喊弃塔！"}\n' +
-    '    ]\n' +
-    '  }\n' +
-    "}\n" +
-    "```\n\n" +
-    "## 示例 3：perpetual（D 难记型）\n" +
+    "## 示例 2：perpetual（D 难记型）\n" +
     "```json\n" +
     "{\n" +
     '  "opening": "William，这词就像你排位连败——永远没完没了的。",\n' +
@@ -351,46 +308,10 @@ var buildTeachPrompt = (word, learned) => {
     '  }\n' +
     "}\n" +
     "```\n\n" +
-    "## 示例 4：ecstatic（A 程度词）\n" +
-    "```json\n" +
-    "{\n" +
-    '  "opening": "William，这词不是一般的高兴——是嗨到天花板。",\n' +
-    '  "wordType": "A",\n' +
-    '  "teach": {\n' +
-    '    "methods": [\n' +
-    '      {\n' +
-    '        "type": "scale",\n' +
-    '        "words": ["glad", "delighted", "thrilled", "ecstatic"],\n' +
-    '        "description": "开心强度从一般到封顶"\n' +
-    '      },\n' +
-    '      {\n' +
-    '        "type": "nuance",\n' +
-    '        "compareWith": "happy",\n' +
-    '        "target": {"word": "ecstatic", "nuance": "极度狂喜，封顶强度"},\n' +
-    '        "other": {"word": "happy", "nuance": "普通开心，日常用"}\n' +
-    '      }\n' +
-    '    ],\n' +
-    '    "visualAnchor": {"emojis": "🥳💥", "text": "派对嗨到把天花板掀翻"}\n' +
-    '  },\n' +
-    '  "connect": {\n' +
-    '    "comparedWith": "thrilled",\n' +
-    '    "points": [\n' +
-    '      {"word": "thrilled", "meaning": "激动（赛场胜利的兴奋）"},\n' +
-    '      {"word": "ecstatic", "meaning": "欣喜若狂（封顶，难以自持）"}\n' +
-    '    ]\n' +
-    '  },\n' +
-    '  "use": {\n' +
-    '    "collocations": [\n' +
-    '      {"phrase": "ecstatic fans", "zh": "狂喜的粉丝"},\n' +
-    '      {"phrase": "absolutely ecstatic", "zh": "绝对欣喜若狂"}\n' +
-    '    ],\n' +
-    '    "scenarios": [\n' +
-    '      {"sceneZh": "入选校队时：", "en": "Willow was ecstatic when the coach said she\'d represent the school.", "zh": "听说代表学校出战时 Willow 欣喜若狂。"},\n' +
-    '      {"sceneZh": "脑补 Taylor 回复：", "en": "If Taylor Swift actually replied to my post, I\'d be ecstatic for a week.", "zh": "要是 Taylor 真回复我的帖子，我能狂喜一整周。"}\n' +
-    '    ]\n' +
-    '  }\n' +
-    "}\n" +
-    "```\n\n" +
+    "# 重要：JSON 完整性\n" +
+    "**必须输出完整的所有 5 个顶层字段**：opening / wordType / teach / connect / use\n" +
+    "不要在中途停止。每个 JSON 对象和数组都要有闭合括号。\n" +
+    "整个输出必须是单个合法的、可被 JSON.parse 解析的对象。\n\n" +
     "# 禁止事项\n" +
     "- ❌ 任何 JSON 之外的文字、markdown 代码块标记（不要输出 ```json 或 ```）\n" +
     "- ❌ 叙述性修饰：\"想象你...\"、\"让你变...\"、\"这就是...的核心\"\n" +

@@ -3,9 +3,9 @@
 // 客户端任何失败都会 fallback 到 /api/chat，不会影响生产稳定性。
 export const config = {
   runtime: "edge",
-  // Vercel Edge Runtime 默认初始响应 25s 上限会切断长流式。Pro 计划允许最多 300s。
-  // 设 60s 覆盖 Gemini 生成完整 teach 所需 30-40s，留 20s buffer。
-  maxDuration: 60,
+  // JSON teach 需要 2500 tokens，实测生成 60-80s 不罕见。Pro 计划允许最多 300s。
+  // 设 180s 覆盖完整生成，留 buffer 给边缘情况。
+  maxDuration: 180,
 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -128,9 +128,9 @@ export default async function handler(req) {
   }
 
   const errors = [];
-  // 50s per provider：覆盖 Gemini 对中文的慢生成（实测完整 teach 需 30-40s）
-  // Edge Runtime 在 Vercel Fluid Compute 下默认支持 5 分钟流式，50s 完全在安全范围
-  const perProviderTimeoutMs = 50000;
+  // 120s per provider：JSON teach 需要 2500 tokens，实测生成 60-80s 不罕见。
+  // 配合 maxDuration: 180 整体预算，留 60s buffer 给 fallback。
+  const perProviderTimeoutMs = 120000;
 
   for (const provider of orderedProviders) {
     for (let attempt = 0; attempt <= 1; attempt++) {
