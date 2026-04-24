@@ -288,7 +288,14 @@ var buildGuessPrompt = (word, learned) => {
     "2. context 字段：1-2 句**纯英文**语境句（⚠️ 必须全英文，不能含任何中文、拼音、中文标点），用 _____ 代替目标单词，深度利用学习画像的场景（兴趣/常去地方/日常）。\n" +
     "   ✅ 好范例：\"William just pulled off a clutch Pentakill in Honor of Kings, and immediately rushed to _____ the new season pass before the Jay Chou collab skin expired.\"\n" +
     "   ❌ 禁止：中英混合（如\"William 在《王者荣耀》里 _____\"）、纯中文、中文标点\n" +
-    "3. 给出 4 个中文选项（A/B/C/D），只有 1 个正确含义\n\n" +
+    "3. 给出 4 个中文选项（A/B/C/D），只有 1 个正确含义\n" +
+    "   ⚠️ **正确答案必须是这个单词的最高频、最常见义项**（用户更可能首次遇到的意思）：\n" +
+    "   ✅ account → 账户（不是\"注册\"或\"账目\"）\n" +
+    "   ✅ issue → 问题（不是\"期号\"或\"发行\"）\n" +
+    "   ✅ subject → 主题/科目（不是\"使臣服于\"）\n" +
+    "   ✅ address → 地址（不是\"演讲\"或\"处理\"）\n" +
+    "   3 个干扰项可以是：相关词义、近义混淆、词性陷阱、形近词，但**不能让\"主义项\"出现在干扰项里**。\n" +
+    "   context 句子也必须**贴合主义项**使用，让上下文支持主义项答案。\n\n" +
     "IMPORTANT: 直接输出JSON，不要任何前导文字：\n" +
     '{"phonetic":"/音标/","context":"English-only sentence with _____","options":{"A":"中文选项A","B":"中文选项B","C":"中文选项C","D":"中文选项D"},"answer":"字母","hint":"中文提示"}';
 };
@@ -316,6 +323,16 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
   var comparedHint = cls.comparedWith
     ? "【分类器推荐对比词】：" + cls.comparedWith + "（可直接采用）\n"
     : "";
+
+  // closing 5 种风格随机轮换 — 解决"看多了审美疲劳"的问题，让每次悄悄话调性不同
+  var CLOSING_STYLES = [
+    { name:"金句对比", spec:"以「以前你可能会说 X，其实 W 更准 — 因为...」格式开头，X 是用户熟悉的简单词，W 是本词。重点突出本词独有的细微差别。" },
+    { name:"场景应用", spec:"用「下次在 [画像里的具体场景] 时，用 W 比 [常见替代词] 更有画面」开头。具体到画像里的兴趣/地点/朋友。" },
+    { name:"联想触发", spec:"用「看到 [一个具体物/场景] 就想到 W」开头，给一个画面感强的钩子。结尾留白让人回味，不必带建议字眼。" },
+    { name:"直呼姓名", spec:"开头直接喊用户名字（从画像里取），像朋友说话。例如「Willow，你昨天提到 X 时其实就在描述 W 的状态」。要懂她的口吻。" },
+    { name:"反向提问", spec:"用一个具体可视化的问题结尾，让她想象。例如「想象你跟 [画像里的朋友] 说 [场景]，会用 W 吗？」不要给答案，留思考空间。" },
+  ];
+  var closingStyle = CLOSING_STYLES[Math.floor(Math.random() * CLOSING_STYLES.length)];
 
   return "# 任务\n" +
     "为单词 \"" + word + "\" 生成学习笔记 JSON。不要输出任何 JSON 之外的文字。\n" +
@@ -361,7 +378,7 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     '      {"sceneZh":"...","en":"...","zh":"..."}\n' +
     '    ]\n' +
     '  },\n' +
-    '  "closing": "结束鼓励 50-80 字，2-3 句。要把本词的【应用场景/精神】跟【用户的具体世界】结合 — 一句肯定她已经会的、一句指出这词能让她在自己的世界里更准确地表达什么。要像懂她的朋友说话，不是老师下结论"\n' +
+    '  "closing": "悄悄话 50-80 字。【本次必须使用 ' + closingStyle.name + ' 风格】：' + closingStyle.spec + ' 像懂她的朋友说话，不是老师下结论"\n' +
     "}\n\n" +
 
     "# 微型完整示例（让你看到完整 7 字段输出的样子 — 学此整体结构与 opening/closing 的口吻，不是学此词内容）\n" +
@@ -404,7 +421,7 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     "4. teach { methods, visualAnchor } (必有)\n" +
     "5. connect { comparedWith, points } (必有)\n" +
     "6. use { collocations, scenarios } (必有)\n" +
-    "7. closing (必有，50-80 字鼓励+应用建议)\n" +
+    "7. closing (必有，50-80 字。本次必须用【" + closingStyle.name + "】风格，开头方式参考上方 schema 注释)\n" +
     "生成完 teach.methods 不能停！必须继续生成 visualAnchor → connect → use → closing 剩余部分。\n" +
     "只有所有 7 个字段都输出后才能结束 JSON。\n\n" +
 
@@ -7308,10 +7325,11 @@ export default function App() {
         // Round 4 修复：mnemonic_fill 是"4 选 1 拼写辨识"，顶部显示 currentWord 等于直接送答案
         // 改成显示问号 + "????" 占位（音标也藏起来），等用户提交后再揭晓
         var hideTargetWord = phase === "spectrum" && spectrumData?.type === "mnemonic_fill";
+        // 猜一猜阶段也必须隐藏释义 — 否则即使没 teachData，reviewWordData[w].meaning 会剧透答案
+        var hideMeaning = hideTargetWord || phase === "guess";
         // 词性 + 中文释义 — 优先 teach JSON 的 definition；fallback 到 reviewWordData 里学过的 meaning
-        // 在 mnemonic_fill phase 隐藏（等于送答案）
-        var defPos = !hideTargetWord && (teachData?.definition?.pos || "");
-        var defZh = !hideTargetWord && (teachData?.definition?.zh || reviewWordData?.[currentWord]?.meaning || "");
+        var defPos = !hideMeaning && (teachData?.definition?.pos || "");
+        var defZh = !hideMeaning && (teachData?.definition?.zh || reviewWordData?.[currentWord]?.meaning || "");
         return (
         <div style={{...S.wordHeader, padding:"20px 22px 16px", boxShadow: stats.streak >= 5 ? "0 0 0 2px "+C.gold+", 0 0 18px "+C.gold+"55" : C.shadow, border: stats.streak >= 5 ? "1px solid "+C.gold : "1px solid "+C.border, animation: stats.streak >= 5 ? "glowPulse 2s ease-in-out infinite" : "fadeUp 0.3s ease-out"}}>
           <div style={{ flex:1, minWidth:0 }}>
