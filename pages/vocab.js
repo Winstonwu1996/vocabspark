@@ -5335,14 +5335,18 @@ export default function App() {
         var _sk = getStudyStreak();
         var _rwdCount = Object.keys(reviewWordData || {}).length;
         var _stage = pet ? getPetStage(pet.totalFed || 0) : null;
+        var _nextStage = pet ? getNextPetStage(pet.totalFed || 0) : null;
+        var _mood = pet ? getPetMood(pet) : null;
         var _hasAny = pet || _sk.streak > 0 || _rwdCount > 0 || (stats?.xp || 0) > 0;
         if (!_hasAny) return null;
         var todayDone = _sk.todayDone;
-        // 第二行精简数据：词数 · XP · streak（用 mono 数字 + 短词），去掉"学了/累计/连续"啰嗦词
+        // 数据 mono — 永远至少显示一项让卡有"信息感"，不再 fallback 到空鼓励
         var stats2 = [];
         if (_rwdCount > 0) stats2.push({n: _rwdCount, label: "词"});
         if ((stats?.xp || 0) > 0) stats2.push({n: stats.xp, label: "XP"});
         if (_sk.streak > 0) stats2.push({n: _sk.streak, label: "天 🔥"});
+        // 进化倒计时（每张卡都加 — 给用户具体的"我能让宠物升级"目标感）
+        var feedToNext = _nextStage ? Math.max(0, _nextStage.minFed - (pet?.totalFed || 0)) : 0;
         return (
           <button
             onClick={function(){ if (pet) setShowPet(true); }}
@@ -5372,14 +5376,15 @@ export default function App() {
               {_stage ? _stage.emoji : "🌱"}
             </div>
             <div style={{flex:1, minWidth:0}}>
-              {/* 第一行：宠物名 · Lv N — 大字 Fraunces */}
-              <div style={{fontSize:16, color:C.text, fontWeight:800, fontFamily:FONT_DISPLAY, letterSpacing:"-0.01em", marginBottom:4, display:"flex", alignItems:"baseline", gap:6}}>
+              {/* 第一行：宠物名 · Lv N · mood emoji */}
+              <div style={{fontSize:16, color:C.text, fontWeight:800, fontFamily:FONT_DISPLAY, letterSpacing:"-0.01em", marginBottom:4, display:"flex", alignItems:"baseline", gap:6, flexWrap:"wrap"}}>
                 <span style={{color:C.accent}}>{pet ? pet.name : "🌱"}</span>
-                {_stage && <span style={{...NUM, fontSize:12, color:C.textSec, fontWeight:700}}>· Lv {_stage.level}</span>}
+                {_stage && <span style={{...NUM, fontSize:12, color:C.textSec, fontWeight:700}}>Lv {_stage.level}</span>}
+                {_mood && <span style={{fontSize:14, lineHeight:1}} title={_mood.label}>{_mood.emoji}</span>}
               </div>
-              {/* 第二行：数字 mono · 简短 label */}
+              {/* 第二行：核心数据 — mono 数字 */}
               {stats2.length > 0 && (
-                <div style={{fontSize:12, color:C.textSec, display:"flex", gap:10, alignItems:"center", flexWrap:"wrap"}}>
+                <div style={{fontSize:12, color:C.textSec, display:"flex", gap:10, alignItems:"center", flexWrap:"wrap", marginBottom:_nextStage?3:0}}>
                   {stats2.map(function(s, i){
                     return <span key={i} style={{display:"inline-flex", alignItems:"baseline", gap:3}}>
                       <strong style={{...NUM, fontSize:13, color:C.text, fontWeight:800}}>{s.n}</strong>
@@ -5388,7 +5393,16 @@ export default function App() {
                   })}
                 </div>
               )}
-              {stats2.length === 0 && (
+              {/* 第三行：进化倒计时（永远显示，让用户有"养成"目标） */}
+              {_nextStage && (
+                <div style={{fontSize:11, color:C.textSec, fontWeight:600}}>
+                  距 <strong style={{color:C.accent}}>{_nextStage.title}</strong> {_nextStage.emoji} 还差 <strong style={{...NUM, color:C.accent, fontSize:12}}>{feedToNext}</strong> 顿饭
+                </div>
+              )}
+              {!_nextStage && stats2.length > 0 && (
+                <div style={{fontSize:11, color:C.gold, fontWeight:700}}>👑 已达最高级 — 传奇宠物</div>
+              )}
+              {!_nextStage && stats2.length === 0 && (
                 <div style={{fontSize:11, color:C.textSec}}>{todayDone ? "✅ 今天完成" : "📖 一起加油"}</div>
               )}
             </div>
@@ -5641,14 +5655,31 @@ export default function App() {
             </div>;
           })() : (
             <div>
-              {/* 引导卡（精简）—— 一句话 + 两个并列动作（填示例 / 用 chip 拼） */}
+              {/* 引导卡（精简） — 强调"年龄/年级是关键字段" */}
               {!profile.trim() && (
                 <div style={{background:C.goldLight,border:"1px solid "+C.gold+"55",borderRadius:10,padding:"12px 14px",marginBottom:12,fontSize:13,lineHeight:1.7}}>
-                  <div style={{fontWeight:700,marginBottom:6,color:C.text}}>👇 不知道写啥？两条路：</div>
-                  <div style={{color:C.textSec,fontSize:12,marginBottom:8}}>① 直接填个示例改一改 ② 点下方的小标签往里加内容</div>
+                  <div style={{fontWeight:700,marginBottom:4,color:C.text}}>👇 不知道写啥？两条路：</div>
+                  <div style={{color:C.textSec,fontSize:12,marginBottom:6}}>① 直接填个示例改一改 ② 点下方小标签往里加</div>
+                  <div style={{color:C.accent,fontSize:11.5,fontWeight:700,marginBottom:8}}>⚠️ <strong>必填年龄/年级</strong> — 决定 AI 的难度和语气</div>
                   <button style={{background:C.gold,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT}} onClick={function(){ setProfile(PROFILE_DEFAULT_EXAMPLE); }}>📝 填入示例</button>
                 </div>
               )}
+              {/* 年龄/年级 快选 chip — 点击插入到 profile 顶部 */}
+              <div style={{marginBottom:10}}>
+                <div style={{fontSize:11,color:C.textSec,fontWeight:700,marginBottom:6,letterSpacing:"0.05em"}}>🎂 先选年龄 / 年级（影响 AI 用词）</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                  {[
+                    "🧒 小学 1-3 年级",
+                    "🧑 小学 4-6 年级",
+                    "👦 初中（7-9 年级）",
+                    "🧑‍🎓 高中（10-12 年级）",
+                    "🎓 大学/成人",
+                  ].map(function(p) {
+                    return <button key={p} onClick={function() { setProfile(function(prev){ var line = "🎂 我是" + p.replace(/^[^ ]+ /,'') + "\n"; if (prev.indexOf("🎂") >= 0) return prev; return line + (prev || ""); }); }} style={{background:C.tealLight,border:"1px solid "+C.teal+"44",borderRadius:20,padding:"4px 12px",fontSize:12,color:C.teal,cursor:"pointer",fontFamily:FONT,fontWeight:600}}>{p}</button>;
+                  })}
+                </div>
+              </div>
+              <div style={{fontSize:11,color:C.textSec,fontWeight:700,marginBottom:6,letterSpacing:"0.05em"}}>✨ 兴趣 / 生活 chip（继续往里加）</div>
               <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
                 {["💬 今天最开心的事","🎬 最近在追的剧/动画","🌟 最近认识的新朋友","📍 上周末去了哪里","😋 最近特别想吃什么","🎵 最近单曲循环的歌","😤 最近让你烦心的事","🐾 有没有喜欢的宠物"].map(function(p) {
                   return <button key={p} onClick={function() { setProfile(function(prev) { return prev + (prev && !prev.endsWith('\n') ? '\n' : '') + p + '：'; }); }} style={{background:C.accentLight,border:"1px solid "+C.accent+"44",borderRadius:20,padding:"4px 12px",fontSize:12,color:C.accent,cursor:"pointer",fontFamily:FONT,fontWeight:500}}>{p}</button>;
@@ -6404,26 +6435,32 @@ export default function App() {
             <div onClick={function(e){e.stopPropagation();}} style={{background:C.card,borderRadius:18,maxWidth:380,width:"100%",padding:"24px 22px 20px",boxShadow:"0 20px 60px rgba(0,0,0,0.35)",border:"1px solid "+C.border,position:"relative"}}>
               <button onClick={function(){ setShowPet(false); }} aria-label="关闭" style={{position:"absolute",top:8,right:8,width:36,height:36,background:"rgba(0,0,0,0.04)",border:"none",borderRadius:"50%",fontSize:20,cursor:"pointer",color:C.textSec,padding:0,lineHeight:1,display:"flex",alignItems:"center",justifyContent:"center",zIndex:10,fontFamily:"system-ui,sans-serif",fontWeight:600,transition:"all 0.15s"}} onMouseEnter={function(e){e.currentTarget.style.background="rgba(0,0,0,0.1)";e.currentTarget.style.color=C.text;}} onMouseLeave={function(e){e.currentTarget.style.background="rgba(0,0,0,0.04)";e.currentTarget.style.color=C.textSec;}}>×</button>
 
-              {/* 大字符宠物 + 名字 */}
+              {/* 大字符宠物 + 名字（input 加 ✏️ 提示更可见） */}
               <div style={{textAlign:"center", marginBottom: 12}}>
                 <div style={{fontSize: 80, lineHeight: 1, marginBottom: 8, animation: hunger < 20 ? "petShake 1.2s ease-in-out infinite" : (mood.emoji === "😊" ? "petBounce 2s ease-in-out infinite" : "none")}}>
                   {stage.emoji}
                 </div>
-                <div style={{display:"inline-flex",alignItems:"center",gap:8}}>
+                <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"6px 12px",background:C.bg,borderRadius:10,border:"1px solid "+C.border}} title="点击改名">
+                  <span style={{fontSize:14,opacity:0.6}}>✏️</span>
                   <input
                     value={pet.name || ""}
                     onChange={function(e){ renamePet(e.target.value); }}
                     maxLength={12}
+                    placeholder="给宠物起名"
+                    onFocus={function(e){ e.currentTarget.select(); }}
                     style={{
                       fontSize: 18, fontWeight: 800, color: C.text,
                       fontFamily: FONT_DISPLAY, textAlign: "center",
-                      border: "none", borderBottom: "1px dashed " + C.border,
-                      background: "transparent", padding: "2px 6px",
+                      border: "none",
+                      background: "transparent", padding: 0,
                       width: 130, outline: "none",
                     }}
                   />
                 </div>
-                <div style={{fontSize: 12, color: C.textSec, marginTop: 4}}>
+                <div style={{fontSize: 11, color: C.textSec, marginTop: 4, fontStyle:"italic"}}>
+                  ↑ 点击改名 · 你的专属伙伴
+                </div>
+                <div style={{fontSize: 12, color: C.textSec, marginTop: 6}}>
                   Lv {stage.level} · {stage.title} · {mood.emoji} {mood.label}
                 </div>
               </div>
