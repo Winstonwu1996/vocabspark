@@ -5372,22 +5372,53 @@ export default function App() {
         else if (dailyPlan.deepLocked && stepDef.id !== "deep" && !dailyPlan.deepDone) doneItems.push("攻克未解锁");
         if (dailyPlan.newDone && stepDef.id !== "new") doneItems.push("新学 " + (dailyPlan.newLearnedToday || 0) + " 词");
 
-        // 三步整体进度（用于顶部进度条）
+        // 三步整体进度（用于全局 stepper）
         var totalSteps = 3;
         var doneSteps = (dailyPlan.quickDone ? 1 : 0) + (dailyPlan.deepDone || dailyPlan.deepLocked ? 1 : 0) + (dailyPlan.newDone ? 1 : 0);
-        var progressPct = Math.round((doneSteps / totalSteps) * 100);
+        // 三步定义（含状态判断），用于 stepper 渲染
+        var stepDefs = [
+          { id:"review", icon:"🔄", label:"复习", done:dailyPlan.quickDone, current:stepDef.id === "review", locked:false },
+          { id:"deep",   icon:"🎯", label:"攻克", done:dailyPlan.deepDone || dailyPlan.deepLocked, current:stepDef.id === "deep", locked:dailyPlan.deepLocked && !dailyPlan.deepDone },
+          { id:"new",    icon:"📖", label:"新词", done:dailyPlan.newDone, current:stepDef.id === "new", locked:false },
+        ];
 
         return (
           <div style={{...S.card, marginBottom:14, padding:"16px 18px"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
               <div style={{fontSize:13,fontWeight:700,color:C.textSec,letterSpacing:"0.02em"}}>📚 今日任务</div>
               <div style={{fontSize:12,fontWeight:600,color:C.textSec,fontFamily:FONT_DISPLAY}}>
                 <strong style={{color:C.text,fontSize:15}}>{doneSteps}</strong>/{totalSteps} 步 · 约 {dailyPlan.totalMin} 分钟
               </div>
             </div>
-            {/* 进度条 */}
-            <div style={{height:6, background:"rgba(0,0,0,0.06)", borderRadius:3, overflow:"hidden", marginBottom:14}}>
-              <div style={{height:"100%", width:progressPct+"%", background:"linear-gradient(90deg, "+C.accent+", "+C.gold+")", borderRadius:3, transition:"width 0.4s"}} />
+            {/* 三段 stepper：恢复"今天 3 件事"的全局感，每段标注状态 */}
+            <div style={{display:"flex", gap:6, marginBottom:14}}>
+              {stepDefs.map(function(s, i){
+                // 颜色逻辑：done 绿 / current accent / locked 灰边 / 待办浅灰
+                var bg, border, labelColor;
+                if (s.done) { bg = C.green; border = C.green; labelColor = C.green; }
+                else if (s.current) { bg = stepDef.color || C.accent; border = stepDef.color || C.accent; labelColor = stepDef.color || C.accent; }
+                else if (s.locked) { bg = "rgba(0,0,0,0.05)"; border = C.border; labelColor = C.textSec; }
+                else { bg = "rgba(0,0,0,0.05)"; border = C.border; labelColor = C.textSec; }
+                return (
+                  <div key={s.id} style={{flex:1, textAlign:"center"}}>
+                    <div style={{
+                      height: 6, background: bg, border:"1px solid "+border,
+                      borderRadius: 3, marginBottom: 4,
+                      transition: "all 0.3s",
+                      boxShadow: s.current ? "0 0 0 3px " + (stepDef.color || C.accent) + "22" : "none",
+                    }} />
+                    <div style={{
+                      fontSize: 10.5,
+                      fontWeight: s.current ? 800 : s.done ? 700 : 600,
+                      color: labelColor,
+                      letterSpacing: "0.02em",
+                      transition: "color 0.3s",
+                    }}>
+                      {s.done ? "✓ " : s.current ? "▶ " : s.locked ? "🔒 " : ""}{s.label}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             {/* 当前步骤行 */}
             <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
