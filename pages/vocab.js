@@ -1247,41 +1247,228 @@ var ConnectBlock = ({ connect }) => {
   );
 };
 
+// Use 区：搭配 + 场景。Phase B 升级：scenarios 改 iMessage 风格对话泡泡
 var UseBlock = ({ use }) => {
   if (!use) return null;
   var collocations = Array.isArray(use.collocations) ? use.collocations : [];
   var scenarios = Array.isArray(use.scenarios) ? use.scenarios : [];
   if (collocations.length === 0 && scenarios.length === 0) return null;
   return (
-    <div style={{ marginBottom:12, padding:"12px 14px", background:C.greenLight+"55", borderRadius:10, borderLeft:"3px solid "+C.green }}>
-      <div style={{ fontSize:13, fontWeight:700, color:C.green, marginBottom:8 }}>
+    <div style={{ marginBottom: 14, padding: "14px 14px", background: C.greenLight + "55", borderRadius: 12, border: "1px solid " + C.green + "33" }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: C.green, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
         ✨ 场景应用
       </div>
       {collocations.length > 0 && (
-        <div style={{ marginBottom:10 }}>
-          <div style={{ fontSize:12, color:C.textSec, marginBottom:4 }}>搭配：</div>
-          {collocations.map((c, i) => (
-            <div key={i} style={{ fontSize:14, margin:"3px 0", display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
-              <span>• <strong style={{ color:C.accent }}>{c.phrase}</strong></span>
-              <SpeakBtn text={c.phrase} size={20} />
-              <span style={{ color:C.textSec, fontSize:13 }}>（{c.zh}）</span>
-            </div>
-          ))}
+        <div style={{ marginBottom: scenarios.length > 0 ? 14 : 0 }}>
+          <div style={{ fontSize: 11, color: C.textSec, marginBottom: 6, fontWeight: 700, letterSpacing: "0.05em" }}>常见搭配</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {collocations.map((c, i) => (
+              <div key={i} style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "4px 10px",
+                background: "#fff",
+                border: "1px solid " + C.green + "55",
+                borderRadius: 999,
+                fontSize: 13,
+              }}>
+                <strong style={{ color: C.green, fontFamily: "'Inter'," + FONT }}>{c.phrase}</strong>
+                <SpeakBtn text={c.phrase} size={16} />
+                <span style={{ color: C.textSec, fontSize: 12 }}>{c.zh}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
       {scenarios.length > 0 && (
         <div>
-          <div style={{ fontSize:12, color:C.textSec, marginBottom:4 }}>造句：</div>
-          {scenarios.map((s, i) => (
-            <div key={i} style={{ fontSize:14, margin:"8px 0" }}>
-              {s.sceneZh && <div style={{ color:C.textSec, fontSize:12, marginBottom:3 }}>{s.sceneZh}</div>}
-              <div style={{ display:"flex", alignItems:"flex-start", gap:6, flexWrap:"wrap" }}>
-                <span style={{ fontStyle:"italic" }}>"{s.en}"</span>
-                <SpeakBtn text={s.en} size={20} />
+          <div style={{ fontSize: 11, color: C.textSec, marginBottom: 8, fontWeight: 700, letterSpacing: "0.05em" }}>真实场景</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {scenarios.map((s, i) => (
+              <div key={i}>
+                {s.sceneZh && (
+                  <div style={{ fontSize: 11, color: C.textSec, marginBottom: 4, paddingLeft: 6, fontWeight: 600 }}>
+                    📍 {s.sceneZh}
+                  </div>
+                )}
+                {/* iMessage 风格对话泡泡 */}
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 4 }}>
+                  <div style={{
+                    flexShrink: 0,
+                    width: 24, height: 24,
+                    borderRadius: "50%",
+                    background: C.green + "33",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 12,
+                  }}>
+                    💬
+                  </div>
+                  <div style={{
+                    background: "#fff",
+                    padding: "8px 12px",
+                    borderRadius: "16px 16px 16px 4px",
+                    border: "1px solid " + C.green + "44",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                    maxWidth: "85%",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}>
+                    <span style={{ fontSize: 14, fontStyle: "italic", color: C.text, fontFamily: "'Inter'," + FONT, lineHeight: 1.5 }}>
+                      {s.en}
+                    </span>
+                    <SpeakBtn text={s.en} size={18} />
+                  </div>
+                </div>
+                {s.zh && (
+                  <div style={{ paddingLeft: 36, fontSize: 12, color: C.textSec, fontStyle: "italic" }}>
+                    {s.zh}
+                  </div>
+                )}
               </div>
-              {s.zh && <div style={{ color:C.textSec, fontSize:13, marginTop:3 }}>（{s.zh}）</div>}
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// 连续学习日历：最近 30 天点亮已学日。强化"不断签"动机（损失厌恶 > 追求收获 2-3×）
+// 7 列网格（周日→周六），按真实日历对齐
+var StreakCalendar = ({ history, streak, todayDone }) => {
+  var doneSet = new Set(history || []);
+  var today = new Date();
+  // 取最近 35 天（5 周），保证视觉填满
+  var days = [];
+  for (var i = 34; i >= 0; i--) {
+    var d = new Date(today);
+    d.setDate(today.getDate() - i);
+    var iso = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+    days.push({ iso: iso, day: d.getDate(), dow: d.getDay(), isToday: i === 0, done: doneSet.has(iso) });
+  }
+  // 找出第一天是周几，前面补空格
+  var firstDow = days[0].dow;
+  var paddedDays = [];
+  for (var p = 0; p < firstDow; p++) paddedDays.push(null);
+  paddedDays = paddedDays.concat(days);
+  // 计算这 30 天里实际学习天数
+  var activeCount = days.filter(function(d){ return d.done; }).length;
+  // milestone 文案
+  var milestoneEmoji = streak >= 30 ? "💎" : streak >= 14 ? "⭐" : streak >= 7 ? "🔥" : streak >= 3 ? "🌳" : "🌱";
+  var milestoneText = streak >= 30 ? "传奇坚持" : streak >= 14 ? "学霸气质" : streak >= 7 ? "整整一周" : streak >= 3 ? "习惯萌芽" : streak >= 1 ? "起步中" : "今天开始";
+  return (
+    <div style={{ marginBottom: 14, padding: "14px 16px", background: "linear-gradient(135deg, #fff 0%, "+C.accentLight+"55 100%)", border: "1px solid "+C.border, borderRadius: 12 }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom: 12 }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+            🗓️ 学习日历 <span style={{ color: C.textSec, fontWeight: 400, fontSize: 12 }}>· 最近 30 天</span>
+          </div>
+          <div style={{ fontSize: 11, color: C.textSec }}>
+            {activeCount} 天 / 30 天 学习
+          </div>
+        </div>
+        <div style={{ textAlign:"right" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:4, justifyContent:"flex-end" }}>
+            <span style={{ fontSize: 18 }}>{milestoneEmoji}</span>
+            <span style={{ fontSize: 22, fontWeight: 900, color: C.accent, fontFamily: FONT_DISPLAY, lineHeight: 1 }}>{streak || 0}</span>
+            <span style={{ fontSize: 11, color: C.textSec, fontWeight: 600 }}>天</span>
+          </div>
+          <div style={{ fontSize: 10, color: C.textSec, marginTop: 2 }}>{milestoneText}</div>
+        </div>
+      </div>
+      {/* 周标签 */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3, marginBottom: 4 }}>
+        {["日","一","二","三","四","五","六"].map(function(w, i){
+          return <div key={i} style={{ fontSize: 9, color: C.textSec, textAlign: "center", fontWeight: 600 }}>{w}</div>;
+        })}
+      </div>
+      {/* 日历网格 */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3 }}>
+        {paddedDays.map(function(d, i){
+          if (!d) return <div key={i} style={{ aspectRatio: "1", borderRadius: 4 }} />;
+          var bg = "#f3f0eb";
+          var color = C.textSec;
+          var border = "1px solid transparent";
+          if (d.done) { bg = "linear-gradient(135deg, "+C.accent+" 0%, "+C.gold+" 100%)"; color = "#fff"; }
+          if (d.isToday) {
+            border = "2px solid " + (d.done ? C.accent : C.gold);
+            if (!d.done) bg = "#fff";
+          }
+          return (
+            <div key={i} title={d.iso + (d.done ? " ✓" : "")} style={{
+              aspectRatio: "1",
+              background: bg,
+              borderRadius: 4,
+              border: border,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 10, fontWeight: 700,
+              color: color,
+              fontFamily: "'Inter',"+FONT,
+            }}>
+              {d.day}
             </div>
-          ))}
+          );
+        })}
+      </div>
+      {!todayDone && streak > 0 && (
+        <div style={{ marginTop: 10, padding: "8px 12px", background: C.goldLight, border: "1px dashed " + C.gold + "88", borderRadius: 8, fontSize: 12, color: C.gold, fontWeight: 700, textAlign:"center" }}>
+          ⚠️ 今天还没学，别让 {streak} 天的 streak 断了！
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Closing：老师悄悄话折叠卡，默认收起，tap 揭晓 — 增加期待感和"私房话"的亲密感
+var ClosingNote = ({ text }) => {
+  var [open, setOpen] = useState(false);
+  if (!text) return null;
+  return (
+    <div style={{ margin: "18px 0 4px" }}>
+      {!open ? (
+        <button onClick={function(){ setOpen(true); }} style={{
+          width: "100%",
+          padding: "12px 14px",
+          background: "linear-gradient(135deg, " + C.tealLight + " 0%, #fff 100%)",
+          border: "1.5px dashed " + C.teal + "88",
+          borderRadius: 12,
+          cursor: "pointer",
+          fontFamily: FONT,
+          textAlign: "left",
+          color: C.teal,
+          fontWeight: 700,
+          fontSize: 14,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          transition: "all 0.2s",
+        }}>
+          <span style={{ fontSize: 18 }}>💌</span>
+          <span style={{ flex: 1 }}>给你的悄悄话（点击展开）</span>
+          <span style={{ fontSize: 16, opacity: 0.6 }}>▾</span>
+        </button>
+      ) : (
+        <div style={{
+          padding: "14px 16px",
+          background: "linear-gradient(135deg, " + C.tealLight + " 0%, #fff 70%, " + C.tealLight + "55 100%)",
+          border: "1.5px solid " + C.teal + "55",
+          borderRadius: 12,
+          boxShadow: "0 2px 8px " + C.teal + "1a",
+          animation: "fadeUp 0.3s ease-out",
+        }}>
+          <div style={{ fontSize: 11, color: C.teal, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 6, opacity: 0.85 }}>
+            💌 给你的悄悄话
+          </div>
+          <div style={{
+            fontSize: 14.5,
+            lineHeight: 1.8,
+            color: C.text,
+            fontFamily: FONT_DISPLAY,
+            fontStyle: "italic",
+            fontWeight: 500,
+          }}>
+            {text}
+          </div>
         </div>
       )}
     </div>
@@ -1294,9 +1481,42 @@ var TeachJSON = ({ data, streaming }) => {
   var theme = getWordTheme(data.wordType);
   return (
     <div>
+      {/* Opening 日记式开场：左侧角色头像 + 右侧 Fraunces 衬线文字，像翻开一本日记 */}
       {data.opening && (
-        <div style={{ fontSize:15, lineHeight:1.7, margin:"0 0 14px", color:C.text, padding:"10px 12px", background:C.bg, borderRadius:8 }}>
-          {data.opening}
+        <div style={{
+          display: "flex",
+          gap: 12,
+          margin: "0 0 18px",
+          padding: "14px 14px 14px 12px",
+          background: "linear-gradient(135deg, #fef9f3 0%, #fff 60%, #fef9f3 100%)",
+          border: "1px solid " + theme.border + "55",
+          borderLeft: "4px solid " + theme.accent,
+          borderRadius: "4px 14px 14px 4px",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.04)",
+        }}>
+          <div style={{
+            flexShrink: 0,
+            width: 36, height: 36,
+            background: theme.light,
+            borderRadius: "50%",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 20,
+            border: "1.5px solid " + theme.border,
+          }}>
+            {theme.icon}
+          </div>
+          <div style={{
+            flex: 1,
+            fontSize: 14.5,
+            lineHeight: 1.75,
+            color: C.text,
+            fontFamily: FONT_DISPLAY,
+            fontWeight: 500,
+            letterSpacing: "-0.005em",
+            paddingTop: 4,
+          }}>
+            {data.opening}
+          </div>
         </div>
       )}
       {Array.isArray(data.teach?.methods) && data.teach.methods.map((m, i) => (
@@ -1305,11 +1525,7 @@ var TeachJSON = ({ data, streaming }) => {
       {data.teach?.visualAnchor && <VisualAnchorBlock anchor={data.teach.visualAnchor} theme={theme} />}
       {data.connect && <ConnectBlock connect={data.connect} />}
       {data.use && <UseBlock use={data.use} />}
-      {data.closing && (
-        <div style={{ fontSize:14.5, lineHeight:1.75, margin:"16px 0 4px", color:C.text, padding:"12px 14px", background:C.tealLight, border:"1px solid "+C.teal+"33", borderRadius:10, fontStyle:"italic" }}>
-          {data.closing}
-        </div>
-      )}
+      {data.closing && <ClosingNote text={data.closing} />}
       {streaming && (
         <span style={{ display:"inline-block", width:8, height:16, background:C.accent, marginLeft:2, verticalAlign:"-2px", animation:"cursorBlink 0.9s steps(1) infinite" }} aria-hidden="true" />
       )}
@@ -1412,8 +1628,8 @@ var BehaviorMatchGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) =
       )}
       {submitted && (
         <div style={{ ...S.specDecoded, marginTop:4 }}>
-          <div style={{ color: isCorrect ? C.green : C.accent, fontWeight:700, marginBottom:8 }}>
-            {isCorrect ? "✓ 正确！+10 XP" : "💡 正确答案 "+data.answer}
+          <div style={{ color: isCorrect ? C.green : C.gold, fontWeight:700, marginBottom:8 }}>
+            {isCorrect ? "✓ 正确！+10 XP" : "💛 差一点！答案是 "+data.answer+" — 这个词会在复习里再见你"}
           </div>
           {data.explanation && (
             <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>
@@ -1491,7 +1707,7 @@ var CollocationFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel })
       )}
       {submitted && (
         <div style={{ ...S.specDecoded, marginTop:4 }}>
-          <div style={{ color:isCorrect?C.green:C.accent, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💡 正确答案 "+data.answer}</div>
+          <div style={{ color:isCorrect?C.green:C.gold, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💛 差一点！答案是 "+data.answer+" — 这个词会在复习里再见你"}</div>
           {data.explanation && <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>}
           <button onClick={onNext} disabled={loading} style={{ ...S.specCheckBtn, marginTop:16, background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)", boxShadow:"0 4px 12px "+C.green+"55" }}>{nextLabel || "→ 下一个词"}</button>
         </div>
@@ -1562,7 +1778,7 @@ var MorphFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
       )}
       {submitted && (
         <div style={{ ...S.specDecoded, marginTop:4 }}>
-          <div style={{ color:isCorrect?C.green:C.accent, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💡 正确答案 "+data.answer}</div>
+          <div style={{ color:isCorrect?C.green:C.gold, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💛 差一点！答案是 "+data.answer+" — 这个词会在复习里再见你"}</div>
           {data.explanation && <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>}
           <button onClick={onNext} disabled={loading} style={{ ...S.specCheckBtn, marginTop:16, background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)", boxShadow:"0 4px 12px "+C.green+"55" }}>{nextLabel || "→ 下一个词"}</button>
         </div>
@@ -1632,7 +1848,7 @@ var MnemonicFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) =>
       )}
       {submitted && (
         <div style={{ ...S.specDecoded, marginTop:4 }}>
-          <div style={{ color:isCorrect?C.green:C.accent, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💡 正确答案 "+data.answer}</div>
+          <div style={{ color:isCorrect?C.green:C.gold, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💛 差一点！答案是 "+data.answer+" — 这个词会在复习里再见你"}</div>
           {data.explanation && <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>}
           <button onClick={onNext} disabled={loading} style={{ ...S.specCheckBtn, marginTop:16, background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)", boxShadow:"0 4px 12px "+C.green+"55" }}>{nextLabel || "→ 下一个词"}</button>
         </div>
@@ -1690,7 +1906,7 @@ var ContextChoiceGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) =
       )}
       {submitted && (
         <div style={{ ...S.specDecoded, marginTop:4 }}>
-          <div style={{ color:isCorrect?C.green:C.accent, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💡 正确答案 "+data.answer}</div>
+          <div style={{ color:isCorrect?C.green:C.gold, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💛 差一点！答案是 "+data.answer+" — 这个词会在复习里再见你"}</div>
           {data.explanation && <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>}
           <button onClick={onNext} disabled={loading} style={{ ...S.specCheckBtn, marginTop:16, background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)", boxShadow:"0 4px 12px "+C.green+"55" }}>{nextLabel || "→ 下一个词"}</button>
         </div>
@@ -1971,6 +2187,7 @@ export default function App() {
   var [teachWaitSec, setTeachWaitSec] = useState(0); // teach 加载已等待秒数（用于进度反馈）
   var [teachStreaming, setTeachStreaming] = useState(false); // 是否在流式生成中（用于显示光标+禁用按钮）
   var [recallChoice, setRecallChoice] = useState(null); // active recall 自测：null / "easy" / "fuzzy" / "hard"
+  var [showMyDict, setShowMyDict] = useState(false); // "我的词典"模态
   var [reward, setReward] = useState(null); // 答对视觉爆发 { amount, kind: 'normal'|'double'|'combo', id }
   var rewardTimerRef = useRef(null);
 
@@ -2299,20 +2516,22 @@ export default function App() {
   };
 
   // ── Study Streak (consecutive days) helpers ──
+  // 数据结构：{ lastDate, streak, todayDone, history: ["YYYY-MM-DD", ...] }
+  // history 用于日历视图渲染，最多保留 90 天
   var getStudyStreak = function() {
     try {
       var stored = JSON.parse(localStorage.getItem(STUDY_STREAK_KEY) || '{}');
-      // { lastDate: "2026-03-27", streak: 5, todayDone: true }
       var today = getLocalDateKey();
-      if (!stored.lastDate) return { streak: 0, todayDone: false };
-      if (stored.lastDate === today) return { streak: stored.streak || 0, todayDone: !!stored.todayDone };
+      var history = Array.isArray(stored.history) ? stored.history : (stored.lastDate ? [stored.lastDate] : []);
+      if (!stored.lastDate) return { streak: 0, todayDone: false, history: history };
+      if (stored.lastDate === today) return { streak: stored.streak || 0, todayDone: !!stored.todayDone, history: history };
       // Check if yesterday
       var last = new Date(stored.lastDate + "T12:00:00");
       var now = new Date(today + "T12:00:00");
       var diffDays = Math.round((now - last) / 86400000);
-      if (diffDays === 1) return { streak: stored.streak || 0, todayDone: false }; // streak continues, today not yet done
-      return { streak: 0, todayDone: false }; // streak broken
-    } catch (e) { return { streak: 0, todayDone: false }; }
+      if (diffDays === 1) return { streak: stored.streak || 0, todayDone: false, history: history };
+      return { streak: 0, todayDone: false, history: history };
+    } catch (e) { return { streak: 0, todayDone: false, history: [] }; }
   };
 
   var markStudyStreakToday = function() {
@@ -2321,10 +2540,14 @@ export default function App() {
       var current = getStudyStreak();
       if (current.todayDone) return current; // already marked today
       var newStreak = current.streak + 1;
-      var next = { lastDate: today, streak: newStreak, todayDone: true };
+      // 加入今天到 history（去重 + 截断到最近 90 天）
+      var history = (current.history || []).filter(function(d){ return d !== today; });
+      history.push(today);
+      if (history.length > 90) history = history.slice(-90);
+      var next = { lastDate: today, streak: newStreak, todayDone: true, history: history };
       localStorage.setItem(STUDY_STREAK_KEY, JSON.stringify(next));
-      return { streak: newStreak, todayDone: true };
-    } catch (e) { return { streak: 0, todayDone: false }; }
+      return { streak: newStreak, todayDone: true, history: history };
+    } catch (e) { return { streak: 0, todayDone: false, history: [] }; }
   };
 
   var STREAK_MILESTONES = {
@@ -5496,8 +5719,42 @@ export default function App() {
         var statsView = getStatsSnapshot();
         var planView = getStudyPlanPrediction();
         var phaseView = getPhaseExecutionSnapshot();
+        var streakInfo = getStudyStreak();
         return <div style={S.setupCard}>
           <div style={S.setupHint}>学习统计中心：查看学习成效、复习量和当前词库健康度。</div>
+
+          {/* 连续学习日历：最近 30 天点亮已学日，强化"不断签"动机（损失厌恶 > 追求收获 2-3×） */}
+          <StreakCalendar history={streakInfo.history} streak={streakInfo.streak} todayDone={streakInfo.todayDone} />
+
+          {/* 我的词典入口 — 把"学过的词"变成"我珍藏的词" */}
+          {(() => {
+            var rwdCount = Object.keys(reviewWordData || {}).length;
+            if (rwdCount === 0) return null;
+            return (
+              <button onClick={function(){ setShowMyDict(true); }} style={{
+                width: "100%",
+                padding: "14px 16px",
+                marginBottom: 12,
+                background: "linear-gradient(135deg, " + C.purpleLight + " 0%, #fff 100%)",
+                border: "1.5px solid " + C.purple + "55",
+                borderRadius: 12,
+                cursor: "pointer",
+                fontFamily: FONT,
+                textAlign: "left",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}>
+                <div style={{ fontSize: 28 }}>📖</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.purple, marginBottom: 2 }}>我的词典</div>
+                  <div style={{ fontSize: 12, color: C.textSec }}>翻看你学过的 {rwdCount} 个词，按日期回顾</div>
+                </div>
+                <div style={{ fontSize: 18, color: C.purple }}>›</div>
+              </button>
+            );
+          })()}
+
           {statsView.totalWords > 0 && (() => {
             // 学习进度 = 已接触的词 / 已接触的词总数（不是全词库！这样才公平）
             var _touched = (statsView.statuses.mastered||0) + (statsView.statuses.uncertain||0) + (statsView.statuses.error||0) + (statsView.statuses.learning||0);
@@ -5717,6 +5974,78 @@ export default function App() {
           {loginToast}
         </div>
       )}
+
+      {/* 我的词典模态：按学习日期分组，让"学过的词"变成"我珍藏的词" */}
+      {showMyDict && (() => {
+        var entries = Object.values(reviewWordData || {}).filter(function(w){ return w && w.word; });
+        // 按 firstLearnedAt 降序（最近学的在最前）
+        entries.sort(function(a,b){ var ta = new Date(a.firstLearnedAt || 0).getTime(); var tb = new Date(b.firstLearnedAt || 0).getTime(); return tb - ta; });
+        // 按日期分组
+        var groups = {};
+        entries.forEach(function(w){
+          var d = w.firstLearnedAt ? new Date(w.firstLearnedAt) : null;
+          var key = d ? (d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0')) : "未知日期";
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(w);
+        });
+        var sortedKeys = Object.keys(groups).sort(function(a,b){ return b.localeCompare(a); });
+        var todayKey = getLocalDateKey();
+        var formatDateLabel = function(k){
+          if (k === "未知日期") return k;
+          if (k === todayKey) return "今天";
+          var d = new Date(k + "T12:00:00");
+          var diffDays = Math.round((new Date(todayKey + "T12:00:00") - d) / 86400000);
+          if (diffDays === 1) return "昨天";
+          if (diffDays < 7) return diffDays + " 天前";
+          return d.getMonth()+1 + " 月 " + d.getDate() + " 日";
+        };
+        return (
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",zIndex:1500,display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"40px 16px 16px",fontFamily:FONT,overflowY:"auto"}} onClick={function(){ setShowMyDict(false); }}>
+            <div onClick={function(e){e.stopPropagation();}} style={{background:C.card,borderRadius:16,maxWidth:560,width:"100%",padding:"22px 22px 16px",boxShadow:"0 20px 60px rgba(0,0,0,0.35)",border:"1px solid "+C.border,maxHeight:"calc(100vh - 80px)",display:"flex",flexDirection:"column"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexShrink:0}}>
+                <div>
+                  <div style={{fontSize:20,fontWeight:800,color:C.purple,fontFamily:FONT_DISPLAY,letterSpacing:"-0.02em"}}>📖 我的词典</div>
+                  <div style={{fontSize:12,color:C.textSec,marginTop:2}}>{entries.length} 个学过的词</div>
+                </div>
+                <button onClick={function(){ setShowMyDict(false); }} style={{background:"transparent",border:"none",fontSize:24,cursor:"pointer",color:C.textSec,padding:"0 4px"}}>×</button>
+              </div>
+              <div style={{flex:1,overflowY:"auto",paddingRight:4}}>
+                {entries.length === 0 ? (
+                  <div style={{textAlign:"center",padding:"40px 0",color:C.textSec,fontSize:14}}>还没有学过的词。开始学习后这里会陆续装满 ✨</div>
+                ) : sortedKeys.map(function(dateKey){
+                  return (
+                    <div key={dateKey} style={{marginBottom:18}}>
+                      <div style={{fontSize:11,color:C.textSec,fontWeight:700,letterSpacing:"0.05em",marginBottom:8,paddingLeft:4,position:"sticky",top:0,background:C.card,padding:"4px 4px"}}>
+                        📅 {formatDateLabel(dateKey)} <span style={{color:C.textSec,opacity:0.6,fontWeight:400,marginLeft:6}}>· {groups[dateKey].length} 词</span>
+                      </div>
+                      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                        {groups[dateKey].map(function(w){
+                          var status = wordStatusMap[w.word] || "learning";
+                          var statusInfo = WORD_STATUS_META[status] || {};
+                          return (
+                            <div key={w.word} style={{padding:"10px 12px",background:C.bg,borderRadius:10,border:"1px solid "+C.border,display:"flex",alignItems:"flex-start",gap:10}}>
+                              <div style={{flex:1,minWidth:0}}>
+                                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                                  <strong style={{fontSize:15,color:C.text,fontFamily:"'Inter',"+FONT}}>{w.word}</strong>
+                                  {w.phonetic && <span style={{fontSize:11,color:C.textSec,fontStyle:"italic"}}>{w.phonetic}</span>}
+                                </div>
+                                {w.meaning && <div style={{fontSize:13,color:C.text,lineHeight:1.5}}>{w.meaning}</div>}
+                              </div>
+                              <span style={{flexShrink:0,padding:"3px 8px",fontSize:11,fontWeight:700,borderRadius:999,background:(statusInfo.color||C.textSec)+"22",color:statusInfo.color||C.textSec}}>
+                                {statusInfo.icon} {statusInfo.text}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 重置进度二次确认模态（替代 native confirm，不会被浏览器屏蔽） */}
       {showResetConfirm && (
