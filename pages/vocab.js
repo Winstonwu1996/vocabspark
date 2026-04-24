@@ -55,6 +55,67 @@ var WORD_STATUS_META = {
   skipped: { icon: "⏭️", text: "已跳过", color: "#94a3b8" },
 };
 
+/* ─── 学习宠物系统 ─── */
+// 进化阶梯：累计喂养次数 → 物种 / 形象。emoji 取代图片资源，零依赖 + 跨平台一致
+var PET_STAGES = [
+  { minFed: 0,   level: 1,  species: "kitten",   emoji: "🐱", title: "小奶猫" },
+  { minFed: 10,  level: 5,  species: "cat",      emoji: "😼", title: "中猫" },
+  { minFed: 30,  level: 15, species: "tiger",    emoji: "🐯", title: "小老虎" },
+  { minFed: 100, level: 30, species: "lion",     emoji: "🦁", title: "雄狮" },
+];
+
+// 根据累计喂养次数推算当前阶段
+var getPetStage = function(totalFed) {
+  var n = Number(totalFed) || 0;
+  var current = PET_STAGES[0];
+  for (var i = 0; i < PET_STAGES.length; i++) {
+    if (n >= PET_STAGES[i].minFed) current = PET_STAGES[i];
+  }
+  return current;
+};
+
+// 下一个进化阶段（用于"还差 N 顿到下一级"的预告）
+var getNextPetStage = function(totalFed) {
+  var n = Number(totalFed) || 0;
+  for (var i = 0; i < PET_STAGES.length; i++) {
+    if (PET_STAGES[i].minFed > n) return PET_STAGES[i];
+  }
+  return null; // 已最高级
+};
+
+// 计算从 lastFeedAt 到现在的"自然饥饿衰减"（每天 -30）
+// 用户离线期间饱食度也会下降，这是"宠物需要照顾"的核心机制
+var calcDecayedHunger = function(pet) {
+  if (!pet) return 100;
+  var hunger = Number(pet.hunger);
+  if (!Number.isFinite(hunger)) hunger = 100;
+  if (!pet.lastFeedAt) return hunger;
+  try {
+    var elapsed = (Date.now() - new Date(pet.lastFeedAt).getTime()) / 86400000; // 天
+    if (elapsed <= 0) return hunger;
+    var decayed = hunger - elapsed * 30;
+    return Math.max(0, Math.min(100, decayed));
+  } catch (e) { return hunger; }
+};
+
+// 判断宠物情绪（影响 UI 表情/状态文案）
+var getPetMood = function(pet) {
+  if (!pet) return { emoji: "😴", label: "还没醒来", color: "#98a2b3" };
+  var hunger = calcDecayedHunger(pet);
+  var happiness = Number(pet.happiness) || 50;
+  if (hunger < 10 || happiness < 20) return { emoji: "😢", label: "难过", color: "#e53e3e" };
+  if (hunger < 30) return { emoji: "😟", label: "饿了", color: "#e6a817" };
+  if (hunger > 60 && happiness > 60) return { emoji: "😊", label: "开心", color: "#22a06b" };
+  return { emoji: "😐", label: "一般", color: "#94a3b8" };
+};
+
+// 喂食成本：每顿 10 XP
+var PET_FEED_COST_XP = 10;
+// 喂食增益：饱食度 +25，开心度 +5（饿狠了 +15）
+var PET_FEED_HUNGER_DELTA = 25;
+var PET_FEED_HAPPINESS_DELTA_NORMAL = 5;
+var PET_FEED_HAPPINESS_DELTA_RESCUE = 15; // 饥饿 < 20 时喂养"救命粮"额外加分
+
 /** 缩小边长并转 JPEG base64，避免请求体过大（Next 默认 1MB）及加速上传 */
 var compressImageToJpegBase64 = function(file, maxEdge) {
   maxEdge = maxEdge || 1280;
@@ -2191,6 +2252,10 @@ export default function App() {
   var [teachStreaming, setTeachStreaming] = useState(false); // 是否在流式生成中（用于显示光标+禁用按钮）
   var [recallChoice, setRecallChoice] = useState(null); // active recall 自测：null / "easy" / "fuzzy" / "hard"
   var [showMyDict, setShowMyDict] = useState(false); // "我的词典"模态
+  // 学习宠物：默认初始化（首次进入自动创建）
+  var [pet, setPet] = useState(null); // null = 还没加载；object = 已就绪
+  var [showPet, setShowPet] = useState(false); // 宠物详情模态
+  var [petToast, setPetToast] = useState(null); // 喂食/进化时的小气泡提示
   var [reward, setReward] = useState(null); // 答对视觉爆发 { amount, kind: 'normal'|'double'|'combo', id }
   var rewardTimerRef = useRef(null);
 
@@ -2376,6 +2441,9 @@ export default function App() {
           setIdx(d.session.idx);
           setLearned(d.session.learned || []);
         }
+        // 学习宠物：首次访问自动初始化（用 setPet，不调 savePet 避免初始化触发 sync）
+        if (d?.pet) setPet(d.pet);
+        else { var initial = defaultPet(); setPet(initial); doSave({ pet: initial }); }
       } catch(e) {}
     }).catch(function() {});
 
@@ -2553,6 +2621,78 @@ export default function App() {
     } catch (e) { return { streak: 0, todayDone: false, history: [] }; }
   };
 
+  /* ─── 学习宠物：加载 / 持久化 / 喂食 ─── */
+  // 默认初始化的宠物
+  var defaultPet = function() {
+    return {
+      name: "小毛球",
+      species: "kitten",
+      hunger: 80,
+      happiness: 70,
+      totalFed: 0,
+      lastFeedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    };
+  };
+
+  // 写宠物到 SKEY + 同步云端
+  var savePet = function(p) {
+    setPet(p);
+    loadSave().then(function(d) {
+      doSave(Object.assign({}, d || {}, { pet: p }));
+      if (userRef.current) syncToCloud();
+    });
+  };
+
+  // 喂食：消耗 XP，提升饱食度和开心度
+  // 返回 { ok, msg }
+  var feedPet = function() {
+    if (!pet) return { ok: false, msg: "宠物还没醒来" };
+    if (!stats || (stats.xp || 0) < PET_FEED_COST_XP) {
+      return { ok: false, msg: "XP 不够 — 再答对几题攒攒" };
+    }
+    var currentHunger = calcDecayedHunger(pet);
+    if (currentHunger >= 100) {
+      return { ok: false, msg: pet.name + " 已经吃饱了，过会儿再来" };
+    }
+    var isRescue = currentHunger < 20;
+    var newHunger = Math.min(100, currentHunger + PET_FEED_HUNGER_DELTA);
+    var happinessDelta = isRescue ? PET_FEED_HAPPINESS_DELTA_RESCUE : PET_FEED_HAPPINESS_DELTA_NORMAL;
+    var newHappiness = Math.min(100, (pet.happiness || 50) + happinessDelta);
+    var newTotalFed = (pet.totalFed || 0) + 1;
+    // 进化检测
+    var oldStage = getPetStage(pet.totalFed || 0);
+    var newStage = getPetStage(newTotalFed);
+    var evolved = newStage.species !== oldStage.species;
+    var nextPet = Object.assign({}, pet, {
+      hunger: newHunger,
+      happiness: newHappiness,
+      totalFed: newTotalFed,
+      lastFeedAt: new Date().toISOString(),
+      species: newStage.species,
+    });
+    if (evolved) nextPet.evolvedAt = new Date().toISOString();
+    savePet(nextPet);
+    // 扣 XP
+    save(Object.assign({}, stats, { xp: (stats.xp || 0) - PET_FEED_COST_XP }));
+    // 提示
+    var msg;
+    if (evolved) msg = "🎉 " + pet.name + " 进化成了 " + newStage.title + "！";
+    else if (isRescue) msg = "🍖 " + pet.name + " 救命粮！开心 +" + happinessDelta;
+    else msg = "🍖 " + pet.name + " 吃饱了 (饱 +" + PET_FEED_HUNGER_DELTA + ")";
+    setPetToast(msg);
+    if (sfx?.correct) try { sfx.correct(); } catch(e) {}
+    setTimeout(function(){ setPetToast(null); }, 2400);
+    return { ok: true, msg: msg };
+  };
+
+  // 改名
+  var renamePet = function(newName) {
+    if (!pet || !newName || !newName.trim()) return;
+    var clean = newName.trim().slice(0, 12);
+    savePet(Object.assign({}, pet, { name: clean }));
+  };
+
   var STREAK_MILESTONES = {
     1: { emoji: "🌱", msg: "第一天，好的开始！" },
     3: { emoji: "🌿", msg: "连续 3 天！习惯正在养成" },
@@ -2700,6 +2840,7 @@ export default function App() {
     if (d.settings?.studyGoal) setStudyGoal(d.settings.studyGoal);
     if (d.settings?.dailyNewWords) setDailyNewWords(d.settings.dailyNewWords);
     if (d.settings?.deepReviewDailyCap) setDeepReviewDailyCap(d.settings.deepReviewDailyCap);
+    if (d.pet) setPet(d.pet);
   };
 
   // ── Auth actions ──
@@ -5971,6 +6112,171 @@ export default function App() {
           {loginToast}
         </div>
       )}
+
+      {/* 学习宠物：右下角浮动按钮 — 跟用户共生存在感，配合 streak/XP 形成长期驱动 */}
+      {pet && (() => {
+        var stage = getPetStage(pet.totalFed || 0);
+        var mood = getPetMood(pet);
+        var hunger = calcDecayedHunger(pet);
+        return (
+          <button onClick={function(){ setShowPet(true); }} style={{
+            position: "fixed",
+            bottom: 18,
+            right: 18,
+            width: 60,
+            height: 60,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #fff 0%, " + C.accentLight + " 100%)",
+            border: "2px solid " + (hunger < 20 ? C.red : hunger < 40 ? C.gold : C.accent + "66"),
+            boxShadow: "0 4px 16px rgba(196,107,48,0.25), 0 1px 3px rgba(0,0,0,0.1)",
+            cursor: "pointer",
+            zIndex: 1000,
+            fontSize: 28,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: FONT,
+            transition: "transform 0.15s",
+            animation: hunger < 20 ? "petShake 1.2s ease-in-out infinite" : "none",
+          }} title={pet.name + " · " + mood.label} aria-label="打开宠物">
+            <span>{stage.emoji}</span>
+            {/* 状态徽章右下角小点 */}
+            <span style={{
+              position: "absolute",
+              bottom: -2, right: -2,
+              fontSize: 14,
+              background: "#fff",
+              borderRadius: "50%",
+              padding: 2,
+              lineHeight: 1,
+              border: "1px solid " + C.border,
+            }}>{mood.emoji}</span>
+          </button>
+        );
+      })()}
+
+      {/* 宠物喂食小气泡（喂食成功 / 进化时展示） */}
+      {petToast && (
+        <div style={{
+          position: "fixed",
+          bottom: 90,
+          right: 18,
+          maxWidth: 240,
+          padding: "10px 14px",
+          background: C.accent,
+          color: "#fff",
+          borderRadius: 12,
+          fontSize: 13,
+          fontWeight: 700,
+          boxShadow: "0 6px 24px rgba(196,107,48,0.35)",
+          animation: "fadeUp 0.3s ease-out",
+          zIndex: 1100,
+          fontFamily: FONT,
+        }}>
+          {petToast}
+        </div>
+      )}
+
+      {/* 宠物详情模态：饱食度 + 开心度 + 喂食 + 改名 + 进化预告 */}
+      {showPet && pet && (() => {
+        var stage = getPetStage(pet.totalFed || 0);
+        var nextStage = getNextPetStage(pet.totalFed || 0);
+        var mood = getPetMood(pet);
+        var hunger = Math.round(calcDecayedHunger(pet));
+        var happiness = Math.round(pet.happiness || 0);
+        var canFeed = (stats?.xp || 0) >= PET_FEED_COST_XP && hunger < 100;
+        var feedHint;
+        if ((stats?.xp || 0) < PET_FEED_COST_XP) feedHint = "XP 不够 — 再答对几题攒攒";
+        else if (hunger >= 100) feedHint = pet.name + " 已经吃饱了";
+        else feedHint = "消耗 " + PET_FEED_COST_XP + " XP 给 " + pet.name + " 喂一顿";
+        return (
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",zIndex:1500,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:FONT}} onClick={function(){ setShowPet(false); }}>
+            <div onClick={function(e){e.stopPropagation();}} style={{background:C.card,borderRadius:18,maxWidth:380,width:"100%",padding:"24px 22px 20px",boxShadow:"0 20px 60px rgba(0,0,0,0.35)",border:"1px solid "+C.border,position:"relative"}}>
+              <button onClick={function(){ setShowPet(false); }} style={{position:"absolute",top:10,right:14,background:"transparent",border:"none",fontSize:22,cursor:"pointer",color:C.textSec,padding:"0 4px",lineHeight:1}}>×</button>
+
+              {/* 大字符宠物 + 名字 */}
+              <div style={{textAlign:"center", marginBottom: 12}}>
+                <div style={{fontSize: 80, lineHeight: 1, marginBottom: 8, animation: hunger < 20 ? "petShake 1.2s ease-in-out infinite" : (mood.emoji === "😊" ? "petBounce 2s ease-in-out infinite" : "none")}}>
+                  {stage.emoji}
+                </div>
+                <div style={{display:"inline-flex",alignItems:"center",gap:8}}>
+                  <input
+                    value={pet.name || ""}
+                    onChange={function(e){ renamePet(e.target.value); }}
+                    maxLength={12}
+                    style={{
+                      fontSize: 18, fontWeight: 800, color: C.text,
+                      fontFamily: FONT_DISPLAY, textAlign: "center",
+                      border: "none", borderBottom: "1px dashed " + C.border,
+                      background: "transparent", padding: "2px 6px",
+                      width: 130, outline: "none",
+                    }}
+                  />
+                </div>
+                <div style={{fontSize: 12, color: C.textSec, marginTop: 4}}>
+                  Lv {stage.level} · {stage.title} · {mood.emoji} {mood.label}
+                </div>
+              </div>
+
+              {/* 饱食度 / 开心度 进度条 */}
+              <div style={{marginBottom:14}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.textSec,marginBottom:3,fontWeight:600}}>
+                  <span>🍖 饱食度</span><span>{hunger}/100</span>
+                </div>
+                <div style={{height:8, background:C.border, borderRadius:4, overflow:"hidden", marginBottom:10}}>
+                  <div style={{height:"100%", width:hunger+"%", background: hunger > 60 ? C.green : hunger > 30 ? C.gold : C.red, transition: "width 0.4s"}} />
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.textSec,marginBottom:3,fontWeight:600}}>
+                  <span>💖 开心度</span><span>{happiness}/100</span>
+                </div>
+                <div style={{height:8, background:C.border, borderRadius:4, overflow:"hidden"}}>
+                  <div style={{height:"100%", width:happiness+"%", background: "linear-gradient(90deg, "+C.purple+", "+C.accent+")", transition: "width 0.4s"}} />
+                </div>
+              </div>
+
+              {/* 进化预告 */}
+              {nextStage && (
+                <div style={{padding:"8px 12px", background:C.tealLight+"99", border:"1px solid "+C.teal+"33", borderRadius:8, fontSize:12, color:C.teal, marginBottom:14, textAlign:"center"}}>
+                  距离 <strong>{nextStage.title}</strong> {nextStage.emoji} 还差 <strong>{nextStage.minFed - (pet.totalFed||0)}</strong> 顿饭
+                </div>
+              )}
+              {!nextStage && (
+                <div style={{padding:"8px 12px", background:C.goldLight, border:"1px solid "+C.gold+"55", borderRadius:8, fontSize:12, color:C.gold, marginBottom:14, textAlign:"center", fontWeight:700}}>
+                  👑 已达最高等级 — 传奇宠物
+                </div>
+              )}
+
+              {/* 喂食按钮 */}
+              <button onClick={function(){ var r = feedPet(); if (!r.ok) setPetToast(r.msg) || setTimeout(function(){ setPetToast(null); }, 2400); }} disabled={!canFeed} style={{
+                width: "100%",
+                padding: "14px 0",
+                background: canFeed ? "linear-gradient(135deg, "+C.accent+" 0%, "+C.gold+" 100%)" : C.border,
+                color: canFeed ? "#fff" : C.textSec,
+                border: "none",
+                borderRadius: 12,
+                fontFamily: FONT,
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: canFeed ? "pointer" : "not-allowed",
+                boxShadow: canFeed ? "0 4px 12px "+C.accent+"55" : "none",
+                marginBottom: 8,
+              }}>
+                🍖 喂一顿（-{PET_FEED_COST_XP} XP）
+              </button>
+              <div style={{fontSize:11,color:C.textSec,textAlign:"center",lineHeight:1.5}}>
+                {feedHint}<br/>
+                当前 XP：<strong style={{color:C.accent}}>{stats?.xp || 0}</strong>
+              </div>
+
+              {/* 累计统计 */}
+              <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid "+C.border,display:"flex",justifyContent:"space-around",fontSize:11,color:C.textSec,textAlign:"center"}}>
+                <div><strong style={{color:C.text,fontSize:14,display:"block"}}>{pet.totalFed || 0}</strong>累计喂养</div>
+                <div><strong style={{color:C.text,fontSize:14,display:"block"}}>Lv {stage.level}</strong>当前等级</div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 我的词典模态：按学习日期分组，让"学过的词"变成"我珍藏的词" */}
       {showMyDict && (() => {
