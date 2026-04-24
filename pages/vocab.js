@@ -370,28 +370,43 @@ var buildBehaviorMatchPrompt = (word) => {
 // 4 个选项是【搭配候选词】（动词或介词），目标词在句子里给出，让学生选搭配
 var buildCollocationFillPrompt = (word) => {
   return "为 \"" + word + "\" 设计【固定搭配填空】题。\n\n" +
-    "【任务】场景 + 一句带空格的英文 + 4 个搭配候选，测学生是否掌握 \"" + word + "\" 的典型搭配（动词搭配/介词搭配/形容词搭配等）。\n\n" +
+    "❗❗【绝对铁律 — 违反则题目无效】❗❗\n" +
+    "1. options 4 个候选词 **绝对不能包含 \"" + word + "\" 本身**（包括原形/复数/过去式/ing/任何变体）\n" +
+    "2. sentence 必须**明确包含 \"" + word + "\" 原形**，且 ___ 空格在另一个位置\n" +
+    "3. 用户要选的是【与 " + word + " 搭配的另一半词】，不是 " + word + " 本身\n" +
+    "🚫 错误示范：'Willow had to ___ the project' + options[abandon, pursue, embrace, review] —— 这就是把目标词放选项里，闭眼可选\n" +
+    "✅ 正确做法：'Willow had to abandon ___ the project' + options[in, on, of, at] 或类似搭配介词/补语\n" +
+    "或：'Willow refused to ___ abandon her plan' + options[completely, suddenly, totally, instantly] 选副词搭配\n\n" +
+    "【任务】场景 + 一句带空格的英文 + 4 个搭配候选，测学生是否掌握 \"" + word + "\" 的典型搭配（动词搭配/介词搭配/副词搭配/常见宾语等）。\n\n" +
     "【场景】1 句画像化（用学生兴趣/朋友/日常），引出需要用 \"" + word + "\" 表达的情境。\n\n" +
-    "【句子】1 句完整英文，必须包含 \"" + word + "\"（标记位置即可，不要遮盖目标词），但要有 1 个空格 ___ 给搭配候选\n" +
-    "重点：空格处填的是【搭配的另一半】（如 pay tribute 的 pay；in addition 的 in；keep promise 的 keep）\n\n" +
+    "【句子】1 句完整英文，**必须明示出现 \"" + word + "\" 原形** + 1 个空格 ___ 给搭配候选\n" +
+    "空格处填的是【与 " + word + " 搭配的另一半】（动词/介词/副词/宾语名词），不是 " + word + " 本身\n\n" +
     "【4 个搭配选项 — 关键】\n" +
-    "✅ 1 个正解：" + word + " 真正的固定/常用搭配\n" +
-    "✅ 3 个干扰：是常见词、单独看也合理，但跟 \"" + word + "\" 搭起来不地道\n" +
-    "干扰应来自学生熟悉的词（make/take/do/give/pay/keep/break 等高频动词；in/on/at/with 等介词）\n\n" +
-    "【参考示例】（学风格，不是学 tribute 内容）\n" +
+    "✅ 1 个正解：" + word + " 真正的固定/常用搭配的【另一半】\n" +
+    "✅ 3 个干扰：合理但跟 \"" + word + "\" 搭起来不地道的【其他词】\n" +
+    "🚫 严禁选项里出现 \"" + word + "\" 或它的任何词形变化\n\n" +
+    "【参考示例 1】（动词搭配 — 学风格）\n" +
     "{\n" +
-    '  "scenario": "Willow\'s tennis coach is retiring after 20 years; the team plans a small ceremony.",\n' +
+    '  "scenario": "Willow\'s tennis coach is retiring after 20 years; the team plans a ceremony.",\n' +
     '  "sentence": "The team decided to ___ tribute to Coach Lee at the farewell party.",\n' +
     '  "options": {"A":"pay","B":"make","C":"do","D":"give"},\n' +
     '  "answer": "A",\n' +
     '  "explanation": "pay tribute to 是固定搭配（致敬/缅怀），其他动词都不与 tribute 搭配"\n' +
     "}\n\n" +
+    "【参考示例 2】（宾语搭配 — 适合 abandon/acquire 这类动词）\n" +
+    "{\n" +
+    '  "scenario": "Willow finally finished a long React project after weeks of debugging.",\n' +
+    '  "sentence": "She refused to abandon her ___ even when the bugs seemed endless.",\n' +
+    '  "options": {"A":"happiness","B":"hope","C":"breakfast","D":"hairstyle"},\n' +
+    '  "answer": "B",\n' +
+    '  "explanation": "abandon hope/dream/plan 是常见高频搭配（放弃希望/梦想/计划）；其他词与 abandon 搭起来不自然"\n' +
+    "}\n\n" +
     "【输出严格 JSON】\n" +
     '{\n' +
     '  "type": "collocation_fill",\n' +
     '  "scenario": "1 句画像化场景",\n' +
-    '  "sentence": "1 句含 ' + word + ' 和 ___ 的英文",\n' +
-    '  "options": {"A":"...","B":"...","C":"...","D":"..."},\n' +
+    '  "sentence": "1 句明示含 ' + word + ' 原形 + ___ 的英文",\n' +
+    '  "options": {"A":"非 ' + word + ' 的搭配词","B":"...","C":"...","D":"..."},\n' +
     '  "answer": "正确搭配的字母",\n' +
     '  "explanation": "为什么这个搭配最地道（≤40 字，中文，可附其他选项不搭的简短说明）"\n' +
     "}\n\n" +
@@ -440,14 +455,29 @@ var buildMorphFillPrompt = (word) => {
 // 4 个选项是发音相近的难记英文词（不告诉是哪个），只给中文/谐音/画面线索
 var buildMnemonicFillPrompt = (word) => {
   return "为 \"" + word + "\" 设计【谐音 + 画面 → 拼写辨识】题。\n\n" +
-    "【任务】给中文意思 + 谐音线索 + 画面线索，4 个发音相近的英文词，让学生从拼写中辨认 \"" + word + "\"。\n\n" +
+    "❗❗【谐音 hint 质量铁律】❗❗\n" +
+    "1. 必须真的【发音相近】 — 把谐音读出来，听感要和英文实际发音类似（不是字面拼字母）\n" +
+    "2. 必须【自然好记】 — 像顺口溜或日常短语，不是拗口生造\n" +
+    "3. 必须【关联含义】 — 谐音的中文场景应该能联想到词的含义\n" +
+    "4. 🚫 严禁不雅、低俗、令人困惑的谐音（如 \"屁头没\"、\"大爷的\" 之类）\n" +
+    "5. 🚫 严禁谐音和含义完全脱节（如 epitome 含义 \"典型/缩影\"，谐音 \"爱屁头没\" 既不雅也无关）\n" +
+    "6. 如果实在编不出好谐音，宁可改用【画面联想】或【词根拆解】当主线索\n\n" +
+    "好谐音示例：\n" +
+    "- perpetual: \"陪 pet 永远\" — 发音 pər-PET-chu-əl 接近，宠物陪伴 → 永远\n" +
+    "- ambulance: \"俺不能死\" — 发音 AM-byə-ləns 接近，救护车送医 → 不能死\n" +
+    "- ephemeral: \"易腐没了\" — ee-FEM-er-əl 接近，易腐 → 短暂的\n\n" +
+    "差谐音反例（绝不模仿）：\n" +
+    "- epitome: \"爱屁头没\" — 又脏又拗口，和\"典型/缩影\"无任何关联\n" +
+    "- 这种情况应该改用画面联想：\"金字塔尖 = 完美典型的 epitome\"\n\n" +
+    "【任务】给中文意思 + 谐音/画面线索 + 画面线索，4 个发音相近的英文词，让学生从拼写中辨认 \"" + word + "\"。\n\n" +
     "【中文 hint】1 行核心中文意思（≤10 字）\n" +
-    "【谐音 hint】1 行有趣中文谐音（如 \"陪 pet 永远\" 对 perpetual）\n" +
+    "【谐音 hint】1 行【自然好记 + 关联含义】的中文谐音（如 \"陪 pet 永远\" 对 perpetual）\n" +
+    "  如果该词谐音难做或会变成强行/不雅，**就把这一行写成画面联想**（如 \"金字塔尖=典型缩影\" 对 epitome），并保留 imageHint\n" +
     "【画面 hint】1 行场景化画面（≤20 字，结合学生世界）\n\n" +
     "【4 个选项 — 关键】\n" +
     "✅ 1 个正解：" + word + " 本身\n" +
     "✅ 3 个干扰：必须是【与 " + word + " 拼写相近 / 发音相近 / 容易混淆】的真实英文词\n" +
-    "  - 同前缀（per- / pre- / pro-）但不同含义的词\n" +
+    "  - 同前缀（per- / pre- / pro- / epi- / ambi-）但不同含义的词\n" +
     "  - 同后缀但不同词根的词\n" +
     "  - 拼写差 1-2 字母容易看混的词\n" +
     "🚫 不要选完全不相关、明显不可能的词作干扰\n\n" +
@@ -571,11 +601,11 @@ var validateCloze = function(parsed) {
   return null;
 };
 
-// Round 4：升级到 SSAT 真题质感 —— 200-280 词叙事性短文 + 每空 4 选项
-// 让学生体验真实考试，培养上下文推理而非孤立词汇识别
+// Round 4：SSAT 风格短文 + 每空 4 选项（6-8 年级 SSAT Middle Level 阅读长度）
+// 150-180 词比 220-280 更符合 6-8 年级注意力跨度，5 题节奏紧凑
 var buildClozePrompt = (words) => {
   return "刚学完的词：" + words.join(", ") +
-    "\n\n请写一篇【SSAT 风格】英文短文：220-280 词，叙事性（带场景、人物、冲突或转折），深度结合学习画像，让学生像在做真题一样。" +
+    "\n\n请写一篇【SSAT 风格】英文短文：150-180 词，叙事性（带场景、人物、转折），深度结合学习画像，让学生像在做真题一样。" +
     "\n\n【铁律 - 必须严格遵守】" +
     "\n1. 短文恰好 5 个空格：_____(1) 到 _____(5)" +
     "\n2. 🚫 5 个答案词（" + words.join(", ") + "）禁止以任何形式明文出现在 passage（含原形/复数/过去式/ing/词根变形/加粗引号等）" +
@@ -597,7 +627,7 @@ var buildClozePrompt = (words) => {
     "\n（_____(1) 暗示某种性格/打法，前文 'predictable' 给线索）" +
     "\n" +
     "\nIMPORTANT: 直接输出 JSON：\n" +
-    '{"title":"短文标题（≤20 字英文，吸引人）","passage":"220-280 词叙事性英文短文，含 _____(1) 到 _____(5)","questions":[{"id":1,"blank":"_____(1)","options":["选项1","选项2","选项3","选项4"],"answer":"正确词","explanation":"为什么选这个词 + 干扰项各自偏在哪"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
+    '{"title":"短文标题（≤20 字英文，吸引人）","passage":"150-180 词叙事性英文短文，含 _____(1) 到 _____(5)","questions":[{"id":1,"blank":"_____(1)","options":["选项1","选项2","选项3","选项4"],"answer":"正确词","explanation":"为什么选这个词 + 干扰项各自偏在哪"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
 };
 
 var buildReviewTeachPrompt = (word, learned, reviewCount) => {
@@ -2830,25 +2860,24 @@ export default function App() {
       setBatchTip(makeBatchTip(0, batchWords[0], total));
     }
 
-    // ── Phase B: review/cloze pre-fetch（仅前台 batch！）──
-    // silent 预取 batch 5/10/15 时 lrn 还是空（用户还没学），endMilestone=5/10/15 但
-    // batchWords 是预取批次的词（不是用户即将学完的词），结果 _review_5 缓存被
-    // 预取批次的词占了 → 用户学完 batch 1 触发 review 命中 cache 看到的是别的词。
-    // 修复：silent 模式不预生成 review/cloze，只在前台真正学的时候生成。
-    if (!silent) {
-      var endMilestone = lrn.length + batchWords.length;
-      var willCloze  = endMilestone % 10 === 0;
-      var willReview = endMilestone % 5 === 0 && !willCloze;
-      if (willReview && !dataCache.current["_review_" + endMilestone]) {
-        callAPIFast(sysP, buildReviewPrompt(batchWords))
-          .then(function(raw) { dataCache.current["_review_" + endMilestone] = tryJSON(raw) || null; })
-          .catch(function(err) { console.warn("[loadBatch] review pre-fetch failed:", err.message); });
-      }
-      if (willCloze && !dataCache.current["_cloze_" + endMilestone]) {
-        callAPIFast(sysP, buildClozePrompt([...lrn.slice(-5), ...batchWords]))
-          .then(function(raw) { dataCache.current["_cloze_" + endMilestone] = tryJSON(raw) || null; })
-          .catch(function(err) { console.warn("[loadBatch] cloze pre-fetch failed:", err.message); });
-      }
+    // ── Phase B: review/cloze pre-fetch ──
+    // milestone 必须用 startIdx + batchWords.length（"学完此批后的总进度"），
+    // 不能用 lrn.length + batchWords.length（lrn 在 silent preload 时是 stale 的，会算错 key）
+    // silent 也允许预生成（这才能让 cloze 在用户进入 batch 2 之前就准备好）
+    var endMilestone = startIdx + batchWords.length;
+    var willCloze  = endMilestone % 10 === 0;
+    var willReview = endMilestone % 5 === 0 && !willCloze;
+    if (willReview && !dataCache.current["_review_" + endMilestone]) {
+      callAPIFast(sysP, buildReviewPrompt(batchWords))
+        .then(function(raw) { dataCache.current["_review_" + endMilestone] = tryJSON(raw) || null; })
+        .catch(function(err) { console.warn("[loadBatch] review pre-fetch failed:", err.message); });
+    }
+    if (willCloze && !dataCache.current["_cloze_" + endMilestone]) {
+      // cloze 需要前 5 词作上下文 — 用 wl.slice(startIdx-5, startIdx) 取前一组的词
+      var prevBatchWords = startIdx >= 5 ? wl.slice(startIdx - 5, startIdx) : [];
+      callAPIFast(sysP, buildClozePrompt([...prevBatchWords, ...batchWords]))
+        .then(function(raw) { dataCache.current["_cloze_" + endMilestone] = tryJSON(raw) || null; })
+        .catch(function(err) { console.warn("[loadBatch] cloze pre-fetch failed:", err.message); });
     }
 
     // ── Word audio pre-fetch: Free Dictionary API (fire and forget) ──
@@ -3621,9 +3650,18 @@ export default function App() {
     }
 
     if (newLearned.length > 0 && newLearned.length % 5 === 0) {
+      // Round 4：复习数据有两种合法格式
+      // - speed_match: { type:"speed_match", pairs:[{word,meaning}] }
+      // - fill_blank（旧）: { questions:[{...}] }
+      var isValidReview = function(d) {
+        if (!d) return false;
+        if (d.type === "speed_match" && Array.isArray(d.pairs) && d.pairs.length > 0) return true;
+        if (Array.isArray(d.questions) && d.questions.length > 0 && d.questions.every(function(q){ return q.answer && q.options; })) return true;
+        return false;
+      };
       // Phase B: instant if pre-fetched during batch loading
       var cachedReview = dataCache.current["_review_" + newLearned.length];
-      if (cachedReview?.questions && Array.isArray(cachedReview.questions) && cachedReview.questions.length > 0) {
+      if (isValidReview(cachedReview)) {
         setReviewData(cachedReview); setReviewAnswers({}); setReviewSubmitted(false); setPhase("review"); return;
       }
       // Phase A: switch phase immediately so spinner shows, then fetch
@@ -3631,7 +3669,7 @@ export default function App() {
       try {
         var raw = await callAPIFast(sysP, buildReviewPrompt(newLearned.slice(-5)));
         var parsed = tryJSON(raw);
-        if (parsed?.questions && Array.isArray(parsed.questions) && parsed.questions.length > 0 && parsed.questions.every(function(q) { return q.answer && q.options; })) {
+        if (isValidReview(parsed)) {
           setReviewData(parsed); setReviewAnswers({}); setReviewSubmitted(false);
         } else {
           if (nextIdx < wordList.length) { setIdx(nextIdx); applyWordData(wordList[nextIdx]); }
@@ -5722,15 +5760,25 @@ export default function App() {
         </div>
       )}
 
-      {phase !== "review" && phase !== "done" && phase !== "batch_loading" && phase !== "cloze" && phase !== "speed_wait" && (
+      {phase !== "review" && phase !== "done" && phase !== "batch_loading" && phase !== "cloze" && phase !== "speed_wait" && (() => {
+        // Round 4 修复：mnemonic_fill 是"4 选 1 拼写辨识"，顶部显示 currentWord 等于直接送答案
+        // 改成显示问号 + "????" 占位（音标也藏起来），等用户提交后再揭晓
+        var hideTargetWord = phase === "spectrum" && spectrumData?.type === "mnemonic_fill";
+        return (
         <div style={{...S.wordHeader, padding:"20px 22px 16px", boxShadow: stats.streak >= 5 ? "0 0 0 2px "+C.gold+", 0 0 18px "+C.gold+"55" : C.shadow, border: stats.streak >= 5 ? "1px solid "+C.gold : "1px solid "+C.border, animation: stats.streak >= 5 ? "glowPulse 2s ease-in-out infinite" : "fadeUp 0.3s ease-out"}}>
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ display:"flex", alignItems:"center", gap:12 }}>
               {/* P2-8: 单词字号调大到 38，让它真正成为页面主角 */}
-              <h2 style={{ ...S.wordTitle, fontSize: 38, margin:0 }}>{currentWord}</h2>
-              <SpeakWordBtn text={currentWord} size={36} />
+              {hideTargetWord
+                ? <h2 style={{ ...S.wordTitle, fontSize: 38, margin:0, color: C.textSec, letterSpacing: "0.15em" }}>?????</h2>
+                : <>
+                    <h2 style={{ ...S.wordTitle, fontSize: 38, margin:0 }}>{currentWord}</h2>
+                    <SpeakWordBtn text={currentWord} size={36} />
+                  </>
+              }
             </div>
-            {phonetic && <div style={{ ...S.phoneticText, marginTop:4, fontSize:15 }}>{phonetic}</div>}
+            {!hideTargetWord && phonetic && <div style={{ ...S.phoneticText, marginTop:4, fontSize:15 }}>{phonetic}</div>}
+            {hideTargetWord && <div style={{ ...S.phoneticText, marginTop:4, fontSize:13, color:C.textSec, fontStyle:"italic" }}>选对答案后揭晓</div>}
           </div>
           {stats.streak > 0 && (
             <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
@@ -5739,7 +5787,8 @@ export default function App() {
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
 
       {error && <div style={S.error}>{error}<button onClick={() => {setError("");loadBatch(idx, learned, undefined, { streaming: true }).then(function() { applyWordData(currentWord); });}} style={S.retryBtn}>🔄 重试</button></div>}
 
