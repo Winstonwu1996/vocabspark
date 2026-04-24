@@ -1237,6 +1237,8 @@ export default function App() {
   var [wordStart, setWordStart] = useState(null);
 
   var dataCache = useRef({});
+  // Round 1.5+：预取串行化 —— inflight 记录已入队的 batchStart，promise 是当前 chain 尾巴
+  var preloadChainRef = useRef({ inflight: new Set(), promise: Promise.resolve() });
   var [batchProgress, setBatchProgress] = useState(0);
   var [batchTotal, setBatchTotal] = useState(0);
   var [batchTip, setBatchTip] = useState("");
@@ -3089,14 +3091,13 @@ export default function App() {
     return function() { clearInterval(id); };
   }, [screen, progress]);
 
-  // Phase 2 Round 1.5：进学习页立即按 tier 预取多组（silent 模式，不影响 UI）
+  // Phase 2 Round 1.5+：进学习页按 tier 串行预取多组（silent 模式，不影响 UI）
   // 游客 5 词 / 免费 10 / Basic 20 / Pro 30 — 预取到对应深度
-  // 每组独立 silent loadBatch，cache 命中的词自动跳过
+  // 关键：串行执行（chain），避免多个 silent loadBatch 同时打爆 DeepSeek API 拖慢前台
   useEffect(function() {
     if (screen !== "learning") return;
     if (!wordList || wordList.length === 0) return;
 
-    var isPaid = userTier === "basic" || userTier === "pro";
     var maxPreloadWords;
     if (userTier === "pro") maxPreloadWords = 30;
     else if (userTier === "basic") maxPreloadWords = 20;
@@ -3107,18 +3108,39 @@ export default function App() {
     var nextBatchStart = currentBatchStart + 5;
     var preloadLimit = Math.min(idx + maxPreloadWords, wordList.length);
 
-    // 从下一组开始，silent 预取直到 preloadLimit
+    // 收集需要预取且未在 chain 中的 batchStart
+    var toQueue = [];
     for (var start = nextBatchStart; start < preloadLimit; start += 5) {
+      if (preloadChainRef.current.inflight.has(start)) continue;
       var needsLoad = false;
       for (var bi = start; bi < Math.min(start + 5, wordList.length); bi++) {
         if (!dataCache.current[wordList[bi]]) { needsLoad = true; break; }
       }
-      if (needsLoad) {
-        // Fire-and-forget；cache 已命中的词会在 loadBatch 内 continue，避免重复
-        loadBatch(start, learned, undefined, { silent: true, streaming: false }).catch(function(){});
-      }
+      if (needsLoad) toQueue.push(start);
     }
-  }, [screen, userTier, idx]); // userTier/idx 变化时重跑（仍然靠 dataCache check 去重）
+
+    // 串行追加到 chain：上一个 silent loadBatch 完成后才启动下一个
+    // 这样前台 batch + 单个 silent batch 同时跑（API 压力 ~2 倍，可控）
+    // 而不是前台 + N 个 silent 同时跑（API 压力 ~4-7 倍，会被限流）
+    toQueue.forEach(function(start) {
+      preloadChainRef.current.inflight.add(start);
+      var lrnSnap = learned;
+      preloadChainRef.current.promise = preloadChainRef.current.promise.then(function() {
+        // 双重检查：链中前一组完成期间，本组可能已被 cache 命中（极少见，但保险）
+        var stillNeeds = false;
+        for (var bi = start; bi < Math.min(start + 5, wordList.length); bi++) {
+          if (!dataCache.current[wordList[bi]]) { stillNeeds = true; break; }
+        }
+        if (!stillNeeds) {
+          preloadChainRef.current.inflight.delete(start);
+          return;
+        }
+        return loadBatch(start, lrnSnap, undefined, { silent: true, streaming: false })
+          .catch(function(){})
+          .finally(function(){ preloadChainRef.current.inflight.delete(start); });
+      });
+    });
+  }, [screen, userTier, idx]);
 
   var getDailyPlan = function() {
     var words = parseWordsFromInput(wordInput);
