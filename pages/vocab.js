@@ -524,8 +524,20 @@ var buildContextChoicePrompt = (word, wordType) => {
     "直接输出 JSON，不要 markdown 代码块标记。";
 };
 
+// Round 4：5 词关卡改为 Speed Match —— 限时词↔含义快速配对
+// 比传统填空更快、更紧张，是经典间隔强化技巧（active recall + retrieval pressure）
 var buildReviewPrompt = (words) => {
-  return "刚学完5个词：" + words.join(", ") + "\n\n设计互动复习关卡。直接输出JSON：\n" + '{"type":"fill_blank","title":"标题","intro":"场景描述","questions":[{"id":1,"sentence":"含_____的句","options":["词1","词2","词3"],"answer":"答案","explanation":"解释"},{"id":2,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":3,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":4,"sentence":"...","options":["..."],"answer":"...","explanation":"..."},{"id":5,"sentence":"...","options":["..."],"answer":"...","explanation":"..."}]}' + "\n\n每题对应一个词，options含正确答案和2个干扰词，场景结合学习画像。";
+  return "刚学完 5 个词：" + words.join(", ") +
+    "\n\n设计【Speed Match 速配】复习关卡。给每个词配一个【极简精准的中文含义】（≤8 字，画像化更佳）。" +
+    "\n\n【铁律】" +
+    "\n- meaning 必须 ≤8 字，能让学生 1 秒识别匹配" +
+    "\n- 5 个 meaning 之间不能有歧义重叠（每个 meaning 只能对应唯一的 word）" +
+    "\n- 含义要抓【核心义】，不要泛泛用'重要的/特别的'之类模糊形容" +
+    "\n- 画像融入：能用学生熟悉的场景就用（例：'网球训练' 比 '体育锻炼' 好）" +
+    "\n\n【参考示例】" +
+    "\n{\"type\":\"speed_match\",\"title\":\"⚡ 速配挑战\",\"intro\":\"30 秒内把英文词和中文含义配对！\",\"pairs\":[{\"word\":\"ecstatic\",\"meaning\":\"狂喜的\"},{\"word\":\"nimble\",\"meaning\":\"敏捷的\"},{\"word\":\"oblique\",\"meaning\":\"斜的/拐弯的\"},{\"word\":\"perpetual\",\"meaning\":\"永久不停\"},{\"word\":\"subtle\",\"meaning\":\"微妙细致\"}]}" +
+    "\n\n直接输出 JSON：" +
+    '{"type":"speed_match","title":"⚡ 速配挑战","intro":"30 秒内把英文词和中文含义配对！","pairs":[{"word":"...","meaning":"≤8 字精准含义"},{"word":"...","meaning":"..."},{"word":"...","meaning":"..."},{"word":"...","meaning":"..."},{"word":"...","meaning":"..."}]}';
 };
 
 // 校验 cloze 题目：passage 里不能出现任何答案词（送分题检测）
@@ -559,31 +571,33 @@ var validateCloze = function(parsed) {
   return null;
 };
 
+// Round 4：升级到 SSAT 真题质感 —— 200-280 词叙事性短文 + 每空 4 选项
+// 让学生体验真实考试，培养上下文推理而非孤立词汇识别
 var buildClozePrompt = (words) => {
   return "刚学完的词：" + words.join(", ") +
-    "\n\n请写一篇120-150词的英文小短文，深度结合学习画像。" +
-    "\n\n【铁律 - 必须严格遵守，否则题目无效】" +
-    "\n1. 短文中必须恰好有 5 个空格，格式是 _____(1) 到 _____(5)（5 个下划线 + 括号编号）" +
-    "\n2. 🚫 绝对禁止：这 5 个答案词（" + words.join(", ") + "）以任何形式在 passage 里明文出现（包括它们的原形、复数、过去式、ing形、加粗、引号等任何变体）" +
-    "\n3. 只能在 _____(N) 占位符位置代表这些答案词，passage 其他地方不能提到" +
-    "\n4. questions 数组必须恰好 5 个元素，对应 5 个空格" +
-    "\n5. 每个 question 的 answer 必须在对应的 options 数组中" +
-    "\n6. 每个 options 数组有 3 个选项（1 个答案 + 2 个易混干扰词）" +
+    "\n\n请写一篇【SSAT 风格】英文短文：220-280 词，叙事性（带场景、人物、冲突或转折），深度结合学习画像，让学生像在做真题一样。" +
+    "\n\n【铁律 - 必须严格遵守】" +
+    "\n1. 短文恰好 5 个空格：_____(1) 到 _____(5)" +
+    "\n2. 🚫 5 个答案词（" + words.join(", ") + "）禁止以任何形式明文出现在 passage（含原形/复数/过去式/ing/词根变形/加粗引号等）" +
+    "\n3. 只能在占位符位置代表，passage 其他地方提到目标词概念时用同义改述" +
+    "\n4. questions 恰好 5 个，每空对应一题" +
+    "\n5. 🎯【SSAT 真题标准】每空 **4 个选项**（不是 3 个）：1 答案 + 3 干扰" +
+    "\n6. 干扰项设计原则（重要）：" +
+    "\n   - 1 个【词性正确但语义偏】（学生能排除部分错误后还要思考）" +
+    "\n   - 1 个【近义但语境不贴】（测精准理解）" +
+    "\n   - 1 个【完全无关的高频词】（送分项，给基础分）" +
+    "\n7. passage 必须有上下文线索（前后句暗示空格的语义），不是纯孤立填空" +
     "\n" +
-    "\n✅ 正确例子（答案词是 exhausted）：" +
-    "\n   passage: \"After the marathon, Willow was _____(1). She drank water and rested.\"" +
-    "\n   （passage 里没有任何地方出现 \"exhausted\" 这个词）" +
+    "\n【叙事质感】不要写'Willow learned X today'流水账。要写：" +
+    "\n- 一个完整的小故事（去打球/参加活动/朋友冲突/项目挑战等）" +
+    "\n- 有起承转合（背景 → 事件 → 转折/感受 → 结果）" +
+    "\n- 自然嵌入空格（让学生从上下文推理，不是猜词）" +
     "\n" +
-    "\n❌ 错误例子 1（AI 没用占位符）：" +
-    "\n   passage: \"After the marathon, Willow was exhausted. She drank water.\"" +
-    "\n   （直接写了 exhausted，用户一看就知道答案）" +
+    "\n✅ 好例子节选：'Yesterday Willow's tennis match took an unexpected turn. Her opponent, usually _____(1) and predictable, suddenly switched to a sharp slice that...'" +
+    "\n（_____(1) 暗示某种性格/打法，前文 'predictable' 给线索）" +
     "\n" +
-    "\n❌ 错误例子 2（答案词在其他句子出现）：" +
-    "\n   passage: \"After the marathon, Willow was _____(1). Her mother said she looked exhausted.\"" +
-    "\n   （虽然有占位符，但下一句明写了 exhausted，还是送分题）" +
-    "\n" +
-    "\nIMPORTANT: 直接输出JSON：\n" +
-    '{"title":"短文标题","passage":"短文正文，必须含_____(1)到_____(5)共5个空格，且答案词不能明文出现在 passage 任何地方","questions":[{"id":1,"blank":"_____(1)","options":["词1","词2","词3"],"answer":"正确词","explanation":"为什么选这个词"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
+    "\nIMPORTANT: 直接输出 JSON：\n" +
+    '{"title":"短文标题（≤20 字英文，吸引人）","passage":"220-280 词叙事性英文短文，含 _____(1) 到 _____(5)","questions":[{"id":1,"blank":"_____(1)","options":["选项1","选项2","选项3","选项4"],"answer":"正确词","explanation":"为什么选这个词 + 干扰项各自偏在哪"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
 };
 
 var buildReviewTeachPrompt = (word, learned, reviewCount) => {
@@ -1532,6 +1546,190 @@ var ContextChoiceGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) =
           <div style={{ color:isCorrect?C.green:C.accent, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💡 正确答案 "+data.answer}</div>
           {data.explanation && <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>}
           <button onClick={onNext} disabled={loading} style={{ ...S.specCheckBtn, marginTop:16, background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)", boxShadow:"0 4px 12px "+C.green+"55" }}>{nextLabel || "→ 下一个词"}</button>
+        </div>
+      )}
+    </>
+  );
+};
+
+// Round 4：Speed Match 速配 —— 5 词关卡升级
+// 限时 30s 把 5 个英文词配对到对应中文含义，错配 -2s 惩罚
+// 设计参考 Quizlet Match Mode：retrieval pressure + 即时反馈 = 强化短期记忆
+var SpeedMatchGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
+  var [matched, setMatched] = useState({}); // { word: meaning }
+  var [selectedWord, setSelectedWord] = useState(null);
+  var [selectedMeaning, setSelectedMeaning] = useState(null);
+  var [wrongFlash, setWrongFlash] = useState(null); // {word,meaning} for red flash
+  var [secondsLeft, setSecondsLeft] = useState(30);
+  var [done, setDone] = useState(false);
+  var [score, setScore] = useState(0);
+  var startedRef = useRef(false);
+  var pairs = data?.pairs || [];
+  var total = pairs.length;
+  // 打乱 meaning 顺序（不打乱 word 顺序，让用户专注配对而非搜索）
+  var meaningOrderRef = useRef(null);
+  if (meaningOrderRef.current === null && pairs.length) {
+    var shuffled = pairs.map(function(p){ return p.meaning; });
+    for (var i = shuffled.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = t;
+    }
+    meaningOrderRef.current = shuffled;
+  }
+  var meaningOrder = meaningOrderRef.current || [];
+
+  // 倒计时
+  useEffect(function(){
+    if (done || !data) return;
+    if (!startedRef.current) startedRef.current = true;
+    if (secondsLeft <= 0) { setDone(true); return; }
+    var t = setTimeout(function(){ setSecondsLeft(function(s){ return s - 1; }); }, 1000);
+    return function(){ clearTimeout(t); };
+  }, [secondsLeft, done, data]);
+
+  // 全部配完 → 完成
+  useEffect(function(){
+    if (Object.keys(matched).length === total && total > 0 && !done) {
+      setDone(true);
+      var finalScore = total * 10 + Math.max(0, secondsLeft) * 2;
+      setScore(finalScore);
+      if (sfx?.correct) sfx.correct();
+      if (onCorrect) onCorrect(finalScore);
+    }
+  }, [matched, total, done]);
+
+  // 用户选 word + meaning 后判断
+  useEffect(function(){
+    if (!selectedWord || !selectedMeaning) return;
+    var correctMeaning = pairs.find(function(p){ return p.word === selectedWord; })?.meaning;
+    if (correctMeaning === selectedMeaning) {
+      // 配对成功
+      setMatched(function(prev){ var next = { ...prev }; next[selectedWord] = selectedMeaning; return next; });
+      if (sfx?.click) sfx.click();
+      setSelectedWord(null);
+      setSelectedMeaning(null);
+    } else {
+      // 错配：闪红 + 倒计时 -2s
+      setWrongFlash({ word: selectedWord, meaning: selectedMeaning });
+      if (sfx?.wrong) sfx.wrong();
+      setSecondsLeft(function(s){ return Math.max(0, s - 2); });
+      setTimeout(function(){
+        setWrongFlash(null);
+        setSelectedWord(null);
+        setSelectedMeaning(null);
+      }, 400);
+    }
+  }, [selectedWord, selectedMeaning]);
+
+  if (!data) return null;
+  var matchedCount = Object.keys(matched).length;
+  var pct = total ? Math.round(matchedCount / total * 100) : 0;
+  var timerColor = secondsLeft > 15 ? C.green : secondsLeft > 5 ? C.gold : C.red;
+
+  return (
+    <>
+      <div style={{...S.tag, background:C.purpleLight, color:C.purple, marginBottom:8}}>{data.title || "⚡ 速配挑战"}</div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, fontSize:13, color:C.textSec }}>
+        <div>{data.intro || "把英文词和中文含义配对"}</div>
+        <div style={{ display:"flex", gap:14, alignItems:"center" }}>
+          <span>已配 <strong style={{color:C.green}}>{matchedCount}</strong>/{total}</span>
+          <span style={{ padding:"4px 10px", background:timerColor+"22", color:timerColor, borderRadius:8, fontWeight:700, fontFamily:"'Inter',"+FONT, minWidth:40, textAlign:"center" }}>⏱ {secondsLeft}s</span>
+        </div>
+      </div>
+      {/* 进度条 */}
+      <div style={{ height:6, background:C.border, borderRadius:3, overflow:"hidden", marginBottom:14 }}>
+        <div style={{ height:"100%", width:pct+"%", background:"linear-gradient(90deg,"+C.teal+","+C.green+")", transition:"width 0.3s" }} />
+      </div>
+
+      {/* 配对区 */}
+      {!done && (
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:14 }}>
+          {/* 左列：英文词 */}
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+            {pairs.map(function(p){
+              var isMatched = !!matched[p.word];
+              var isSel = selectedWord === p.word;
+              var isWrong = wrongFlash?.word === p.word;
+              var bg = C.bg, bdr = C.border, clr = C.text;
+              if (isMatched) { bg = C.greenLight; bdr = C.green; clr = C.green; }
+              else if (isWrong) { bg = C.redLight; bdr = C.red; clr = C.red; }
+              else if (isSel) { bg = C.accentLight; bdr = C.accent; clr = C.accent; }
+              return (
+                <button key={p.word} disabled={isMatched} onClick={function(){
+                  if (isMatched) return;
+                  setSelectedWord(isSel ? null : p.word);
+                }} style={{
+                  padding:"12px 14px", background:bg, border:"2px solid "+bdr, borderRadius:10,
+                  cursor: isMatched?"default":"pointer", color:clr, fontWeight:700, fontSize:15,
+                  fontFamily:"'Inter',"+FONT, textAlign:"center", transition:"all 0.15s",
+                  boxShadow: isSel?"0 0 0 2px "+C.accent+"33":"none",
+                  opacity: isMatched?0.6:1
+                }}>
+                  {p.word} {isMatched && "✓"}
+                </button>
+              );
+            })}
+          </div>
+          {/* 右列：中文含义（打乱） */}
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+            {meaningOrder.map(function(meaning){
+              var matchedWord = Object.keys(matched).find(function(w){ return matched[w] === meaning; });
+              var isMatched = !!matchedWord;
+              var isSel = selectedMeaning === meaning;
+              var isWrong = wrongFlash?.meaning === meaning;
+              var bg = C.bg, bdr = C.border, clr = C.text;
+              if (isMatched) { bg = C.greenLight; bdr = C.green; clr = C.green; }
+              else if (isWrong) { bg = C.redLight; bdr = C.red; clr = C.red; }
+              else if (isSel) { bg = C.tealLight; bdr = C.teal; clr = C.teal; }
+              return (
+                <button key={meaning} disabled={isMatched} onClick={function(){
+                  if (isMatched) return;
+                  setSelectedMeaning(isSel ? null : meaning);
+                }} style={{
+                  padding:"12px 14px", background:bg, border:"2px solid "+bdr, borderRadius:10,
+                  cursor: isMatched?"default":"pointer", color:clr, fontWeight:600, fontSize:14,
+                  fontFamily:FONT, textAlign:"center", transition:"all 0.15s",
+                  boxShadow: isSel?"0 0 0 2px "+C.teal+"33":"none",
+                  opacity: isMatched?0.6:1
+                }}>
+                  {meaning} {isMatched && "✓"}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 完成态 */}
+      {done && (
+        <div style={{ ...S.reviewScore, animation:"fadeUp 0.3s ease-out", marginTop:8 }}>
+          <div style={{ fontSize:32, marginBottom:6 }}>{matchedCount === total ? "🌟" : matchedCount >= total*0.6 ? "👍" : "💪"}</div>
+          <div style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>
+            {matchedCount === total ? "全部配对成功！" : "时间到 — " + matchedCount + "/" + total + " 配对"}
+          </div>
+          <div style={{ fontSize:14, color:C.textSec }}>
+            +{score || matchedCount * 10} XP
+            {matchedCount === total && secondsLeft > 0 && <span style={{color:C.gold,marginLeft:6}}>（速度奖励 +{secondsLeft*2}）</span>}
+          </div>
+          {/* 完成后展示所有正确配对（让用户确认/复习） */}
+          <div style={{ marginTop:14, display:"flex", flexDirection:"column", gap:6 }}>
+            {pairs.map(function(p){
+              var got = matched[p.word] === p.meaning;
+              return (
+                <div key={p.word} style={{
+                  display:"flex", justifyContent:"space-between", alignItems:"center",
+                  padding:"8px 12px", background:got?C.greenLight:C.redLight,
+                  border:"1px solid "+(got?C.green+"33":C.red+"33"), borderRadius:8, fontSize:14
+                }}>
+                  <span style={{ fontWeight:700, color:got?C.green:C.red, fontFamily:"'Inter',"+FONT }}>{p.word}</span>
+                  <span style={{ color:got?C.green:C.text }}>{got?"✓":"→"} {p.meaning}</span>
+                </div>
+              );
+            })}
+          </div>
+          <button style={{...S.primaryBtn, marginTop:16}} onClick={onNext} disabled={loading}>
+            {nextLabel || "→ 下一个词"}
+          </button>
         </div>
       )}
     </>
@@ -5764,7 +5962,21 @@ export default function App() {
         </div>}
       </div>}
 
-      {phase === "review" && <div style={{...S.card, animation:"slideInRight 0.28s ease-out"}}>
+      {/* Round 4: speed_match 类型走新组件，旧 fill_blank 类型继续走下方传统填空 UI（兼容旧 cache） */}
+      {phase === "review" && reviewData?.type === "speed_match" && (
+        <div style={{...S.card, animation:"slideInRight 0.28s ease-out"}}>
+          <SpeedMatchGame
+            data={reviewData}
+            sfx={sfx}
+            loading={loading}
+            onCorrect={function(score){ save({ ...stats, xp: stats.xp + (score || 50) }); }}
+            onNext={afterReview}
+            nextLabel={idx+1>=wordList.length?"🎉 完成！":"→ "+wordList[idx+1]}
+          />
+        </div>
+      )}
+
+      {phase === "review" && reviewData?.type !== "speed_match" && <div style={{...S.card, animation:"slideInRight 0.28s ease-out"}}>
         <div style={{...S.tag,background:C.purpleLight,color:C.purple}}>🏆 复习关卡</div>
         {!reviewData?.questions ? <div style={{padding:"8px 0"}}>
           <div style={{background:C.border,borderRadius:8,height:18,width:"55%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
