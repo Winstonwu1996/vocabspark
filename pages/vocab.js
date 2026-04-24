@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { supabase } from '../lib/supabase';
-import { C, FONT, FONT_DISPLAY, globalCSS, S, getWordTheme } from '../lib/theme';
+import { C, FONT, FONT_DISPLAY, NUM, globalCSS, S, getWordTheme } from '../lib/theme';
 import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON, parsePartialJSON, callClassify, METHOD_SCHEMAS, METHOD_EXAMPLES, VISUAL_ANCHOR_FORMATS } from '../lib/api';
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
@@ -5337,14 +5337,12 @@ export default function App() {
         var _stage = pet ? getPetStage(pet.totalFed || 0) : null;
         var _hasAny = pet || _sk.streak > 0 || _rwdCount > 0 || (stats?.xp || 0) > 0;
         if (!_hasAny) return null;
-        // 叙事文案：动态拼接关键事实
-        var lines = [];
-        if (_rwdCount > 0) lines.push("学了 " + _rwdCount + " 个词");
-        if (_sk.streak > 0) lines.push("连续 " + _sk.streak + " 天");
-        if ((stats?.xp || 0) > 0) lines.push("累计 " + stats.xp + " XP");
-        var narrative = lines.length > 0 ? lines.join(" · ") : "今天开始第一天";
-        var petLine = pet ? <><strong style={{color:C.accent,fontFamily:FONT_DISPLAY}}>{pet.name}</strong> 跟你一起 {narrative}</> : narrative;
         var todayDone = _sk.todayDone;
+        // 第二行精简数据：词数 · XP · streak（用 mono 数字 + 短词），去掉"学了/累计/连续"啰嗦词
+        var stats2 = [];
+        if (_rwdCount > 0) stats2.push({n: _rwdCount, label: "词"});
+        if ((stats?.xp || 0) > 0) stats2.push({n: stats.xp, label: "XP"});
+        if (_sk.streak > 0) stats2.push({n: _sk.streak, label: "天 🔥"});
         return (
           <button
             onClick={function(){ if (pet) setShowPet(true); }}
@@ -5362,10 +5360,10 @@ export default function App() {
               boxShadow: "0 1px 2px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.04)",
             }}
           >
-            {/* emoji 头像放大 — 圆形背景增加存在感 */}
+            {/* 圆形头像 */}
             <div style={{
               width: 56, height: 56, flexShrink: 0,
-              background: todayDone ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.7)",
+              background: "rgba(255,255,255,0.7)",
               borderRadius: "50%",
               display:"flex", alignItems:"center", justifyContent:"center",
               fontSize: 36, lineHeight: 1,
@@ -5374,12 +5372,25 @@ export default function App() {
               {_stage ? _stage.emoji : "🌱"}
             </div>
             <div style={{flex:1, minWidth:0}}>
-              <div style={{fontSize:14.5, color:C.text, lineHeight:1.5, fontWeight:500, marginBottom:3}}>
-                {petLine}
+              {/* 第一行：宠物名 · Lv N — 大字 Fraunces */}
+              <div style={{fontSize:16, color:C.text, fontWeight:800, fontFamily:FONT_DISPLAY, letterSpacing:"-0.01em", marginBottom:4, display:"flex", alignItems:"baseline", gap:6}}>
+                <span style={{color:C.accent}}>{pet ? pet.name : "🌱"}</span>
+                {_stage && <span style={{...NUM, fontSize:12, color:C.textSec, fontWeight:700}}>· Lv {_stage.level}</span>}
               </div>
-              <div style={{fontSize:11, color:C.textSec, fontWeight:600}}>
-                {todayDone ? "✅ 今天已完成 — 太棒了" : (_sk.streak > 0 ? "🔥 今天还没学，别让 " + _sk.streak + " 天断了" : "📖 一起加油")}
-              </div>
+              {/* 第二行：数字 mono · 简短 label */}
+              {stats2.length > 0 && (
+                <div style={{fontSize:12, color:C.textSec, display:"flex", gap:10, alignItems:"center", flexWrap:"wrap"}}>
+                  {stats2.map(function(s, i){
+                    return <span key={i} style={{display:"inline-flex", alignItems:"baseline", gap:3}}>
+                      <strong style={{...NUM, fontSize:13, color:C.text, fontWeight:800}}>{s.n}</strong>
+                      <span>{s.label}</span>
+                    </span>;
+                  })}
+                </div>
+              )}
+              {stats2.length === 0 && (
+                <div style={{fontSize:11, color:C.textSec}}>{todayDone ? "✅ 今天完成" : "📖 一起加油"}</div>
+              )}
             </div>
             {pet && <div style={{fontSize:18, color:C.textSec, flexShrink:0, opacity:0.6}}>›</div>}
           </button>
@@ -6704,12 +6715,27 @@ export default function App() {
                         {groups[dateKey].map(function(w){
                           var status = wordStatusMap[w.word] || "learning";
                           var statusInfo = WORD_STATUS_META[status] || {};
+                          // 复习倒计时：基于 nextReviewDate 计算还有几天
+                          var dueLabel = null;
+                          var dueColor = C.textSec;
+                          if (w.nextReviewDate) {
+                            try {
+                              var dueMs = new Date(w.nextReviewDate).getTime();
+                              var nowMs = new Date().setHours(0,0,0,0);
+                              var dueDays = Math.ceil((dueMs - nowMs) / 86400000);
+                              if (dueDays <= 0) { dueLabel = "⏰ 今天"; dueColor = C.red; }
+                              else if (dueDays === 1) { dueLabel = "🔄 明天"; dueColor = C.gold; }
+                              else if (dueDays <= 7) { dueLabel = "🔄 " + dueDays + " 天"; dueColor = C.teal; }
+                              else { dueLabel = "🔄 " + dueDays + " 天"; dueColor = C.textSec; }
+                            } catch(e) {}
+                          }
                           return (
                             <div key={w.word} style={{padding:"10px 12px",background:C.bg,borderRadius:10,border:"1px solid "+C.border,display:"flex",alignItems:"flex-start",gap:10}}>
                               <div style={{flex:1,minWidth:0}}>
-                                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3,flexWrap:"wrap"}}>
                                   <strong style={{fontSize:15,color:C.text,fontFamily:"'Inter',"+FONT}}>{w.word}</strong>
                                   {w.phonetic && <span style={{fontSize:11,color:C.textSec,fontStyle:"italic"}}>{w.phonetic}</span>}
+                                  {dueLabel && <span style={{...NUM, fontSize:10.5, fontWeight:700, color:dueColor, padding:"1px 6px", background:dueColor+"15", borderRadius:4}}>{dueLabel}</span>}
                                 </div>
                                 {w.meaning && <div style={{fontSize:13,color:C.text,lineHeight:1.5}}>{w.meaning}</div>}
                               </div>
@@ -7218,9 +7244,9 @@ export default function App() {
                 </div>
               ) : (
                 <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.textSec, padding: "4px 0" }}>
-                  {recallChoice === "easy" && <><span style={{color:C.green, fontWeight:700}}>✅ 已掌握</span>—— 太棒了，继续保持！</>}
-                  {recallChoice === "fuzzy" && <><span style={{color:C.gold, fontWeight:700}}>🤔 标记为"不确定"</span>—— 后续复习会再出现</>}
-                  {recallChoice === "hard" && <><span style={{color:C.red, fontWeight:700}}>❌ 标记为"易错"</span>—— 加入重点巩固池</>}
+                  {recallChoice === "easy" && <><span style={{color:C.green, fontWeight:700}}>✅ 已掌握</span> · 📅 <strong style={{...NUM, color:C.teal}}>3 天</strong>后再考</>}
+                  {recallChoice === "fuzzy" && <><span style={{color:C.gold, fontWeight:700}}>🤔 不确定</span> · 📅 <strong style={{...NUM, color:C.teal}}>1 天</strong>后再考</>}
+                  {recallChoice === "hard" && <><span style={{color:C.red, fontWeight:700}}>❌ 想不起</span> · 📅 <strong style={{...NUM, color:C.teal}}>明天</strong>重点巩固</>}
                 </div>
               )}
             </div>
@@ -7492,6 +7518,34 @@ export default function App() {
           </div>
 
           <div style={S.doneWords}>{wordList.map(w => <span key={w} style={S.doneTag} onClick={()=>speak(w)}>{w+" 🔊"}</span>)}</div>
+
+          {/* 📅 记忆地图 — 让用户感知 SRS 系统在持续追踪这些词 */}
+          <div style={{marginTop:18, padding:"14px 16px", background:C.tealLight+"99", border:"1px solid "+C.teal+"44", borderRadius:12, textAlign:"left"}}>
+            <div style={{fontSize:13, fontWeight:800, color:C.teal, marginBottom:10, display:"flex", alignItems:"center", gap:6}}>
+              📅 你的记忆地图
+            </div>
+            <div style={{fontSize:12, color:C.text, lineHeight:1.6, marginBottom:10}}>
+              这 <strong style={{...NUM, color:C.teal}}>{wordList.length}</strong> 个词将分别在以下时间回来找你：
+            </div>
+            {/* 5 个时间点 mini 时间轴 */}
+            <div style={{display:"grid", gridTemplateColumns:"repeat(5, 1fr)", gap:6, marginBottom:8}}>
+              {[
+                { label:"1 天", color:C.accent },
+                { label:"3 天", color:C.gold },
+                { label:"7 天", color:C.teal },
+                { label:"14 天", color:C.purple },
+                { label:"30 天", color:C.green },
+              ].map(function(p, i){
+                return <div key={i} style={{textAlign:"center"}}>
+                  <div style={{height:6, background:p.color, borderRadius:3, marginBottom:4, opacity:0.7}} />
+                  <div style={{...NUM, fontSize:11, fontWeight:800, color:p.color}}>{p.label}</div>
+                </div>;
+              })}
+            </div>
+            <div style={{fontSize:11, color:C.textSec, lineHeight:1.5}}>
+              答对 → 间隔变长；答错 → 重置 1 天。<strong style={{color:C.teal}}>科学间隔重复</strong> 让你真正记住，而不是临时背完就忘。
+            </div>
+          </div>
 
           {!tipDismissed && <div style={{marginTop:20,padding:"16px 20px",background:C.goldLight,borderRadius:12,fontSize:14,lineHeight:1.7,textAlign:"center"}}>
             <div style={{marginBottom:8}}>☕ 如果 Vocab by Know U. 帮到了你，考虑请开发者喝杯咖啡？</div>
