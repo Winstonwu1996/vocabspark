@@ -184,6 +184,118 @@ var VsArt = () => (
   </div>
 );
 
+/* ─── 家长微信对话轮播（取代之前 3 个并排展开） ─── */
+var WxBubble = ({ name, avatar, text, isRight, voice, image }) => (
+  <div style={{ display: "flex", flexDirection: isRight ? "row-reverse" : "row", gap: 8, alignItems: "flex-start", marginBottom: 4 }}>
+    <div style={{ width: 36, height: 36, borderRadius: 6, background: isRight ? "linear-gradient(135deg, #f093fb, #f5576c)" : "linear-gradient(135deg, #4facfe, #00f2fe)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#fff", fontWeight: 700, flexShrink: 0 }}>{avatar}</div>
+    <div style={{ maxWidth: "75%" }}>
+      <div style={{ fontSize: 11, color: C.textSec, marginBottom: 3, textAlign: isRight ? "right" : "left" }}>{name}</div>
+      {voice ? (
+        <div style={{ background: isRight ? "#95EC69" : "#fff", color: C.text, padding: "10px 14px", borderRadius: isRight ? "12px 4px 12px 12px" : "4px 12px 12px 12px", fontSize: 13, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", display:"flex", alignItems:"center", gap:8, minWidth:100 }}>
+          <span style={{ fontSize:14 }}>🎙</span>
+          <span style={{ flex:1, height:3, background: isRight ? "rgba(0,0,0,0.15)" : C.border, borderRadius:2, position:"relative" }}>
+            <span style={{ position:"absolute", left:0, top:0, height:"100%", width:"40%", background: isRight ? "rgba(0,0,0,0.3)" : C.textSec, borderRadius:2 }} />
+          </span>
+          <span style={{ fontSize:11, color:C.textSec }}>{voice}</span>
+        </div>
+      ) : image ? (
+        <div style={{ background: isRight ? "#95EC69" : "#fff", padding: 4, borderRadius: isRight ? "10px 4px 10px 10px" : "4px 10px 10px 10px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          <div style={{ width: 140, height:90, background:"linear-gradient(135deg, "+C.accentLight+", "+C.goldLight+")", borderRadius:6, display:"flex", alignItems:"center", justifyContent:"center", fontSize:28 }}>{image}</div>
+        </div>
+      ) : (
+        <div style={{ background: isRight ? "#95EC69" : "#fff", color: C.text, padding: "9px 12px", borderRadius: isRight ? "12px 4px 12px 12px" : "4px 12px 12px 12px", fontSize: 14, lineHeight: 1.7, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>{text}</div>
+      )}
+    </div>
+  </div>
+);
+var WxTyping = () => (
+  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4, marginLeft:44, fontSize:11, color:C.textSec, fontStyle:"italic" }}>
+    <span style={{ display:"inline-flex", gap:3 }}>
+      <span style={{ width:5, height:5, borderRadius:"50%", background:C.textSec, animation:"pulseDot 1.2s ease-in-out infinite" }} />
+      <span style={{ width:5, height:5, borderRadius:"50%", background:C.textSec, animation:"pulseDot 1.2s ease-in-out infinite 0.2s" }} />
+      <span style={{ width:5, height:5, borderRadius:"50%", background:C.textSec, animation:"pulseDot 1.2s ease-in-out infinite 0.4s" }} />
+    </span>
+    <span>对方正在输入…</span>
+  </div>
+);
+
+var PARENT_THREADS = [
+  {
+    title: "📖 SSAT 妈妈群",
+    time: "昨天 21:32",
+    msgs: [
+      { name: "Emily妈", avatar: "E", text: "有人试过那个 Know U 吗 我家娃昨天背 abandon 居然在笑 说这不就是上周网球场那事吗😂" },
+      { name: "Sophia妈", avatar: "S", text: "哈哈哈 我女儿也是 以前背单词跟要命似的 现在自己打开的", isRight: true },
+      { name: "Emily妈", avatar: "E", text: "就是有些词的例句有点长 不过孩子倒不介意 说比干巴巴的释义有意思多了" },
+      { name: "Sophia妈", avatar: "S", voice: '12"', isRight: true },
+      { name: "Sophia妈", avatar: "S", text: "主要是它会自动安排复习 我不用盯了 省心", isRight: true },
+    ],
+  },
+  {
+    title: "✍️ 英语写作群",
+    time: "今天 09:15",
+    msgs: [
+      { name: "Jason妈", avatar: "J", text: "那个写作课挺有意思 AI 不给答案 就一直问问题 Jason 说有点烦但是确实得自己想" },
+      { name: "Mia妈", avatar: "M", image: "📊", isRight: true },
+      { name: "Mia妈", avatar: "M", text: "看 这是 Mia 的六维雷达图 每次写完看哪个涨了 跟健身似的哈哈", isRight: true },
+      { name: "Jason妈", avatar: "J", text: "嗯 而且难度会慢慢加上去 一开始挺简单的 现在他偶尔会说有点难 但没放弃 这对我儿子来说已经很不容易了" },
+      { typing: true },
+      { name: "Mia妈", avatar: "M", text: "是的 能坚持用下去就行 慢慢来呗", isRight: true },
+    ],
+  },
+  {
+    title: "💬 家长闲聊",
+    time: "今天 14:08",
+    msgs: [
+      { name: "David妈", avatar: "D", text: "我们是外教每周一次课 平时用这个练 外教管口语 AI 管单词和写作 搭着用还行" },
+      { name: "Olivia妈", avatar: "O", text: "这思路好 外教太贵了一周只能一次 平时总不能空着", isRight: true },
+      { name: "David妈", avatar: "D", text: "对 而且它单词和写作好像是通的 写作里遇到不会的词可以直接去背 这个设计蛮好" },
+      { name: "Olivia妈", avatar: "O", text: "反正免费 让孩子先用着呗 能养成每天学一点的习惯就赚了", isRight: true },
+    ],
+  },
+];
+
+var ParentChatCarousel = () => {
+  var [idx, setIdx] = useState(0);
+  var [fade, setFade] = useState(true);
+  var [paused, setPaused] = useState(false);
+  useEffect(function() {
+    if (paused) return;
+    var t = setInterval(function() {
+      setFade(false);
+      setTimeout(function() { setIdx(function(i) { return (i + 1) % PARENT_THREADS.length; }); setFade(true); }, 280);
+    }, 9000);
+    return function() { clearInterval(t); };
+  }, [paused]);
+  var thread = PARENT_THREADS[idx];
+  return (
+    <div style={{ maxWidth: 480, margin: "0 auto" }} onMouseEnter={function(){ setPaused(true); }} onMouseLeave={function(){ setPaused(false); }}>
+      {/* dot indicator + 标题轮换 */}
+      <div style={{ display:"flex", justifyContent:"center", gap:8, marginBottom:10 }}>
+        {PARENT_THREADS.map(function(t, i) {
+          var active = i === idx;
+          return (
+            <button key={i} onClick={function(){ setFade(false); setTimeout(function(){ setIdx(i); setFade(true); }, 200); }} style={{ background:"transparent", border:"none", padding:"4px 10px", cursor:"pointer", fontSize:11, fontWeight: active ? 800 : 600, color: active ? C.text : C.textSec, opacity: active ? 1 : 0.55, borderBottom: active ? "2px solid "+C.accent : "2px solid transparent", transition:"all 0.2s", fontFamily:FONT }}>{t.title}</button>
+          );
+        })}
+      </div>
+      {/* 微信对话框 */}
+      <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0", minHeight: 360, opacity: fade ? 1 : 0, transition: "opacity 0.28s ease" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 8 }}>{thread.title}</div>
+        <div style={{ textAlign: "center", fontSize: 11, color: C.textSec, opacity: 0.6, margin: "8px 0 12px" }}>{thread.time}</div>
+        {thread.msgs.map(function(m, i) {
+          if (m.typing) return <WxTyping key={i} />;
+          return <WxBubble key={i} {...m} />;
+        })}
+      </div>
+      {/* 进度小圆点 */}
+      <div style={{ display:"flex", justifyContent:"center", gap:6, marginTop:10 }}>
+        {PARENT_THREADS.map(function(_, i) { return <div key={i} style={{ width: i === idx ? 16 : 6, height:6, borderRadius:3, background: i === idx ? C.accent : C.border, transition:"all 0.3s" }} />; })}
+      </div>
+    </div>
+  );
+};
+
 /* ─── 多学生个性化例句轮播（在 VS 段下面） ─── */
 var KnowUExampleCard = () => {
   var EXAMPLES = [
@@ -504,81 +616,7 @@ export default function HomePage() {
           <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, textAlign: "center", letterSpacing: "-0.02em", marginBottom: 6 }}>家长们怎么说</h2>
           <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 24 }}>来自妈妈群的真实反馈</p>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 480, margin: "0 auto" }}>
-
-            {(() => {
-              var WxBubble = ({ name, avatar, text, isRight, voice, image }) => (
-                <div style={{ display: "flex", flexDirection: isRight ? "row-reverse" : "row", gap: 8, alignItems: "flex-start", marginBottom: 4 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 6, background: isRight ? "linear-gradient(135deg, #f093fb, #f5576c)" : "linear-gradient(135deg, #4facfe, #00f2fe)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#fff", fontWeight: 700, flexShrink: 0 }}>{avatar}</div>
-                  <div style={{ maxWidth: "75%" }}>
-                    <div style={{ fontSize: 11, color: C.textSec, marginBottom: 3, textAlign: isRight ? "right" : "left" }}>{name}</div>
-                    {voice ? (
-                      <div style={{ background: isRight ? "#95EC69" : "#fff", color: C.text, padding: "10px 14px", borderRadius: isRight ? "12px 4px 12px 12px" : "4px 12px 12px 12px", fontSize: 13, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", display:"flex", alignItems:"center", gap:8, minWidth:100 }}>
-                        <span style={{ fontSize:14 }}>🎙</span>
-                        <span style={{ flex:1, height:3, background: isRight ? "rgba(0,0,0,0.15)" : C.border, borderRadius:2, position:"relative" }}>
-                          <span style={{ position:"absolute", left:0, top:0, height:"100%", width:"40%", background: isRight ? "rgba(0,0,0,0.3)" : C.textSec, borderRadius:2 }} />
-                        </span>
-                        <span style={{ fontSize:11, color:C.textSec }}>{voice}</span>
-                      </div>
-                    ) : image ? (
-                      <div style={{ background: isRight ? "#95EC69" : "#fff", padding: 4, borderRadius: isRight ? "10px 4px 10px 10px" : "4px 10px 10px 10px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                        <div style={{ width: 140, height:90, background:"linear-gradient(135deg, "+C.accentLight+", "+C.goldLight+")", borderRadius:6, display:"flex", alignItems:"center", justifyContent:"center", fontSize:28 }}>{image}</div>
-                      </div>
-                    ) : (
-                      <div style={{ background: isRight ? "#95EC69" : "#fff", color: C.text, padding: "9px 12px", borderRadius: isRight ? "12px 4px 12px 12px" : "4px 12px 12px 12px", fontSize: 14, lineHeight: 1.7, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>{text}</div>
-                    )}
-                  </div>
-                </div>
-              );
-              var WxTime = ({ text }) => (
-                <div style={{ textAlign: "center", fontSize: 11, color: C.textSec, opacity: 0.6, margin: "8px 0" }}>{text}</div>
-              );
-              var WxTyping = () => (
-                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4, marginLeft:44, fontSize:11, color:C.textSec, fontStyle:"italic" }}>
-                  <span style={{ display:"inline-flex", gap:3 }}>
-                    <span style={{ width:5, height:5, borderRadius:"50%", background:C.textSec, animation:"pulseDot 1.2s ease-in-out infinite" }} />
-                    <span style={{ width:5, height:5, borderRadius:"50%", background:C.textSec, animation:"pulseDot 1.2s ease-in-out infinite 0.2s" }} />
-                    <span style={{ width:5, height:5, borderRadius:"50%", background:C.textSec, animation:"pulseDot 1.2s ease-in-out infinite 0.4s" }} />
-                  </span>
-                  <span>对方正在输入…</span>
-                </div>
-              );
-
-              return (
-                <>
-                  <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0" }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>📖 SSAT 妈妈群</div>
-                    <WxTime text="昨天 21:32" />
-                    <WxBubble name="Emily妈" avatar="E" text="有人试过那个 Know U 吗 我家娃昨天背 abandon 居然在笑 说这不就是上周网球场那事吗😂" />
-                    <WxBubble name="Sophia妈" avatar="S" text="哈哈哈 我女儿也是 以前背单词跟要命似的 现在自己打开的" isRight />
-                    <WxBubble name="Emily妈" avatar="E" text="就是有些词的例句有点长 不过孩子倒不介意 说比干巴巴的释义有意思多了" />
-                    <WxBubble name="Sophia妈" avatar="S" voice="12&quot;" isRight />
-                    <WxBubble name="Sophia妈" avatar="S" text="主要是它会自动安排复习 我不用盯了 省心" isRight />
-                  </div>
-
-                  <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0" }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>✍️ 英语写作群</div>
-                    <WxTime text="今天 09:15" />
-                    <WxBubble name="Jason妈" avatar="J" text="那个写作课挺有意思 AI 不给答案 就一直问问题 Jason 说有点烦但是确实得自己想" />
-                    <WxBubble name="Mia妈" avatar="M" image="📊" isRight />
-                    <WxBubble name="Mia妈" avatar="M" text="看 这是 Mia 的六维雷达图 每次写完看哪个涨了 跟健身似的哈哈" isRight />
-                    <WxBubble name="Jason妈" avatar="J" text="嗯 而且难度会慢慢加上去 一开始挺简单的 现在他偶尔会说有点难 但没放弃 这对我儿子来说已经很不容易了" />
-                    <WxTyping />
-                    <WxBubble name="Mia妈" avatar="M" text="是的 能坚持用下去就行 慢慢来呗" isRight />
-                  </div>
-
-                  <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0" }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>💬 家长闲聊</div>
-                    <WxTime text="今天 14:08" />
-                    <WxBubble name="David妈" avatar="D" text="我们是外教每周一次课 平时用这个练 外教管口语 AI 管单词和写作 搭着用还行" />
-                    <WxBubble name="Olivia妈" avatar="O" text="这思路好 外教太贵了一周只能一次 平时总不能空着" isRight />
-                    <WxBubble name="David妈" avatar="D" text="对 而且它单词和写作好像是通的 写作里遇到不会的词可以直接去背 这个设计蛮好" />
-                    <WxBubble name="Olivia妈" avatar="O" text="反正免费 让孩子先用着呗 能养成每天学一点的习惯就赚了" isRight />
-                  </div>
-                </>
-              );
-            })()}
-          </div>
+          <ParentChatCarousel />
 
           <p style={{ fontSize: 12, color: C.textSec, textAlign: "center", marginTop: 16, opacity: 0.5 }}>* 为保护隐私，已去除用户名和头像，基于真实对话生成</p>
         </section>
@@ -635,7 +673,7 @@ export default function HomePage() {
       </footer>
 
       {/* User Center Drawer */}
-      <UserCenter open={showUserCenter} onClose={() => setShowUserCenter(false)} user={user} onLogin={() => { setShowUserCenter(false); window.location.href = "/vocab"; }} onLogout={async () => { await supabase.auth.signOut(); setUser(null); setShowUserCenter(false); }} />
+      <UserCenter open={showUserCenter} onClose={() => setShowUserCenter(false)} user={user} onLogin={() => { window.location.href = "/vocab?login=1"; }} onLogout={async () => { await supabase.auth.signOut(); setUser(null); setShowUserCenter(false); }} />
     </div>
   );
 }

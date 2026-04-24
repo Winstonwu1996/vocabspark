@@ -214,7 +214,18 @@ export default function PlanPage() {
       <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} userTier={currentSub?.tier || "free"} onLogin={function(){ setShowUserCenter(false); window.location.href = "/vocab"; }} onLogout={async function(){ await supabase.auth.signOut(); setUser(null); setShowUserCenter(false); }} />
 
       <div style={S.container}>
-        {/* 早鸟优惠横幅 */}
+        {/* 已付费用户：会员致谢横幅（取代 promo） */}
+        {currentSub && (
+          <div style={{ background:"linear-gradient(135deg, "+C.gold+" 0%, "+C.accent+" 100%)", borderRadius:14, padding:"14px 18px", marginBottom:14, color:"#fff", animation:"fadeUp 0.3s ease-out", display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+            <div>
+              <div style={{ fontSize:14, fontWeight:800, marginBottom:2 }}>{"✨ 你已是 " + (currentSub.tier === "pro" ? "Pro" : "Basic") + " 会员 · 谢谢支持 ❤️"}</div>
+              <div style={{ fontSize:12, opacity:0.92 }}>{"到期时间：" + (currentSub.expiresAt ? new Date(currentSub.expiresAt).toLocaleDateString() : "—") + " · 续费可享老用户折扣"}</div>
+            </div>
+            <Link href="/vocab" style={{ background:"rgba(255,255,255,0.22)", border:"1px solid rgba(255,255,255,0.4)", borderRadius:10, padding:"8px 14px", color:"#fff", fontSize:13, fontWeight:700, textDecoration:"none", whiteSpace:"nowrap" }}>{"继续学习 →"}</Link>
+          </div>
+        )}
+
+        {/* 早鸟优惠横幅（仅未订阅用户可见） */}
         {!currentSub && (
           <div style={{ background:"linear-gradient(135deg, #e53e3e 0%, " + C.accent + " 100%)", borderRadius:14, padding:"16px 18px", marginBottom:14, color:"#fff", animation:"fadeUp 0.3s ease-out" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>

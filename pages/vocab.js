@@ -2360,6 +2360,18 @@ export default function App() {
   // tier 是否已从网络确认过（用于限制检查：未确认前放行，避免误伤付费用户）
   var [tierLoaded, setTierLoaded] = useState(false);
   var [showLogin, setShowLogin] = useState(false);
+  // 支持 /vocab?login=1 URL 参数：从首页"登录/注册"跳转过来时自动打开登录弹窗
+  useEffect(function() {
+    if (typeof window === "undefined") return;
+    var sp = new URLSearchParams(window.location.search);
+    if (sp.get("login") === "1") {
+      setShowLogin(true);
+      // 清掉 URL 参数避免刷新再次触发
+      var u = new URL(window.location.href);
+      u.searchParams.delete("login");
+      window.history.replaceState({}, "", u.pathname + u.search + u.hash);
+    }
+  }, []);
   var [loginEmail, setLoginEmail] = useState('');
   var [loginSent, setLoginSent] = useState(false);
   var [loginLoading, setLoginLoading] = useState(false);
