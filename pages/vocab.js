@@ -2018,7 +2018,7 @@ export default function App() {
     });
   };
 
-  var resetLearningProgress = async function() {
+  var resetLearningProgress = function() {
     if (!confirm("⚠️ 确认重置学习进度？\n\n将清除：\n· 所有单词的学习状态\n· 复习记录与复习计划\n· 统计数据（XP、正确率等）\n· 今日学习配额\n· AI 缓存（强制重新生成）\n\n不会清除：\n· 词表内容\n· 学习画像\n· 每日目标设置\n· 连续学习天数\n\n此操作不可撤销。")) return;
     // 读取要保留的字段（在擦除前）
     var preserved = {};
@@ -2032,7 +2032,6 @@ export default function App() {
         tipDismissed: existing.tipDismissed,
       };
     } catch(e) {}
-    // 如果登录了，先同步清零数据到云端 —— 防 reload 后 loadFromCloud 把旧数据拉回
     var cleared = Object.assign({}, preserved, {
       schemaVersion: 2,
       stats: { correct:0, total:0, streak:0, bestStreak:0, xp:0 },
@@ -2043,15 +2042,6 @@ export default function App() {
       dailyNewQuotaState: null,
       updatedAt: new Date().toISOString(),
     });
-    if (userRef.current) {
-      try {
-        await fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: userRef.current.id, data: cleared }),
-        });
-      } catch(e) {}
-    }
     // 清除独立 localStorage 键
     try { localStorage.removeItem(WORD_STATUS_KEY); } catch(e) {}
     try { localStorage.removeItem(REVIEW_WORD_DATA_KEY); } catch(e) {}
@@ -2067,9 +2057,21 @@ export default function App() {
       }
       toDelete.forEach(function(k) { try { localStorage.removeItem(k); } catch(e) {} });
     } catch(e) {}
-    // 写 SKEY + 立刻 reload —— 不触发 React 再渲染，避免 useEffect 回写
+    // 写 SKEY —— 同步、不触发 React 再渲染
     try { localStorage.setItem(SKEY, JSON.stringify(cleared)); } catch(e) {}
-    // 用 location.replace 替代 reload：跳过 history，避免 bfcache 恢复 in-memory state
+    // 登录用户：用 keepalive 把清零数据推到云端，不 await，不阻塞导航
+    // keepalive 保证 reload 时 fetch 依然发出
+    if (userRef.current) {
+      try {
+        fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: userRef.current.id, data: cleared }),
+          keepalive: true,
+        }).catch(function(){});
+      } catch(e) {}
+    }
+    // 立即硬刷 —— 跳过 history，避开 bfcache 恢复内存态
     try { window.location.replace(window.location.pathname + '?reset=' + Date.now()); } catch(e) {
       try { window.location.reload(); } catch(e2) {}
     }
