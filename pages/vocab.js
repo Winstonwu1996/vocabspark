@@ -218,9 +218,9 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     "# 视觉锚格式\n" +
     visualAnchorHint + "\n\n" +
 
-    "# 顶层 schema（必须完整输出 5 个字段）\n" +
+    "# 顶层 schema（必须完整输出 6 个字段）\n" +
     "{\n" +
-    '  "opening": "画像化开场 ≤40 字，口语化",\n' +
+    '  "opening": "画像化开场 50-80 字，2-3 句口语化。要把【用户画像里的具体场景】和【本词的含义/感觉】真正联系起来，不是空喊名字。让用户读完第一句就觉得\'这词跟我的世界有关\'",\n' +
     '  "wordType": "' + cls.wordType + '",\n' +
     '  "teach": {\n' +
     '    "methods": [ ... ],  // 严格 ' + methodTypes.length + ' 个，按上面 schema\n' +
@@ -242,12 +242,13 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     '      {"sceneZh":"中文场景 5-10 字：","en":"完整英文句。","zh":"中文翻译"},\n' +
     '      {"sceneZh":"...","en":"...","zh":"..."}\n' +
     '    ]\n' +
-    '  }\n' +
+    '  },\n' +
+    '  "closing": "结束鼓励 50-80 字，2-3 句。要把本词的【应用场景/精神】跟【用户的具体世界】结合 — 一句肯定她已经会的、一句指出这词能让她在自己的世界里更准确地表达什么。要像懂她的朋友说话，不是老师下结论"\n' +
     "}\n\n" +
 
-    "# 微型完整示例（让你看到完整 5 字段输出的样子 — 学此整体结构，不是学此词内容）\n" +
+    "# 微型完整示例（让你看到完整 6 字段输出的样子 — 学此整体结构与 opening/closing 的口吻，不是学此词内容）\n" +
     "{\n" +
-    '  "opening": "William，这词就像你排位连败的熟悉感。",\n' +
+    '  "opening": "William，你打排位连败时那种\'怎么这局还没完\'的熟悉感，就是 perpetual。不是真的永远，但感觉上就是停不下来的那种持续。",\n' +
     '  "wordType": "D",\n' +
     '  "teach": {\n' +
     '    "methods": [\n' +
@@ -272,18 +273,20 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     '      {"sceneZh":"王者赛季体验：","en":"Honor of Kings seasons feel perpetual.","zh":"王者赛季没完没了。"},\n' +
     '      {"sceneZh":"Taylor 粉丝：","en":"Her fans\' love is perpetual.","zh":"她粉丝的爱永续。"}\n' +
     '    ]\n' +
-    '  }\n' +
+    '  },\n' +
+    '  "closing": "你以前可能会说 \'always\' 或 \'forever\'，其实那种带点疲惫感的\'没完没了\'就是 perpetual 的精髓。下次写排位日记或吐槽训练强度，这词比 always 更有画面。"\n' +
     "}\n\n" +
 
     "# ❗❗ 关键完整性约束 ❗❗\n" +
-    "你的输出必须包含以下 5 个顶层字段（一个都不能少）：\n" +
-    "1. opening (必有)\n" +
+    "你的输出必须包含以下 6 个顶层字段（一个都不能少）：\n" +
+    "1. opening (必有，50-80 字共情画像)\n" +
     "2. wordType (必有，= \"" + cls.wordType + "\")\n" +
     "3. teach { methods, visualAnchor } (必有)\n" +
     "4. connect { comparedWith, points } (必有)\n" +
     "5. use { collocations, scenarios } (必有)\n" +
-    "生成完 teach.methods 不能停！必须继续生成 visualAnchor → connect → use 三个剩余部分。\n" +
-    "只有所有 5 个字段都输出后才能结束 JSON。\n\n" +
+    "6. closing (必有，50-80 字鼓励+应用建议)\n" +
+    "生成完 teach.methods 不能停！必须继续生成 visualAnchor → connect → use → closing 四个剩余部分。\n" +
+    "只有所有 6 个字段都输出后才能结束 JSON。\n\n" +
 
     "# 其他约束\n" +
     "- 整个输出是单个合法的、可 JSON.parse 解析的对象\n" +
@@ -983,6 +986,11 @@ var TeachJSON = ({ data, streaming }) => {
       {data.teach?.visualAnchor && <VisualAnchorBlock anchor={data.teach.visualAnchor} />}
       {data.connect && <ConnectBlock connect={data.connect} />}
       {data.use && <UseBlock use={data.use} />}
+      {data.closing && (
+        <div style={{ fontSize:14.5, lineHeight:1.75, margin:"16px 0 4px", color:C.text, padding:"12px 14px", background:C.tealLight, border:"1px solid "+C.teal+"33", borderRadius:10, fontStyle:"italic" }}>
+          {data.closing}
+        </div>
+      )}
       {streaming && (
         <span style={{ display:"inline-block", width:8, height:16, background:C.accent, marginLeft:2, verticalAlign:"-2px", animation:"cursorBlink 0.9s steps(1) infinite" }} aria-hidden="true" />
       )}
