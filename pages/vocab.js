@@ -44,6 +44,47 @@ var STUDY_GOAL_OPTIONS = [
   { key: "other", label: "其他", desc: "有其他考试或学习目标" },
 ];
 
+// GOAL_DIRECTIVES — 把"我的目标"从一句话装饰升级为真正影响 AI 输出的教学指令
+// 每个目标定义：受众/难度/风格/cloze 风格/例句场景偏好
+// buildSys 会展开成 4-5 行明确指令，guess/teach/cloze 调 AI 时全部带上
+var GOAL_DIRECTIVES = {
+  ssat: {
+    audience: "美国私立中学 6-8 年级，备考 SSAT (Middle/Upper Level)",
+    difficulty: "词汇难度对应 SSAT 高频词（≈ 中学进阶到高一基础），避免 GRE 级生僻词",
+    style: "用中学生熟悉的口语 + 校园场景，例句活泼带流行文化梗，避免学术术语和过长复杂句",
+    clozeStyle: "150-180 词叙事性短文，含校园冲突/友谊/家庭/兴趣，5 题 4 选项",
+    sceneTags: "校园 / 朋友 / 运动 / anime/K-pop/Taylor Swift / 家庭 / 周末 hangout",
+  },
+  isee: {
+    audience: "美国私立中学 5-8 年级，备考 ISEE (Lower/Middle/Upper)",
+    difficulty: "词汇贴 ISEE 同义辨析与句子完型常考词，难度跟 SSAT 接近",
+    style: "中学生友好 + 句子结构稍正式（ISEE 偏书面），例句重在精准表达",
+    clozeStyle: "150-180 词，含一个对比/转折结构，5 题 4 选项",
+    sceneTags: "校园 / 文化活动 / 阅读体验 / 团队合作 / 思考瞬间",
+  },
+  sat: {
+    audience: "美国高中 9-11 年级，备考 SAT (Reading & Writing)",
+    difficulty: "SAT Reading 高频词 + 过渡词 + 学术词汇（如 paradigm, contend, undermine）",
+    style: "略正式但仍鲜活，可融入辩论/社会观察/科学常识，鼓励逻辑性表达",
+    clozeStyle: "200-250 词议论或叙事+议论混合，含 1 个论点或转折，5 题 4 选项",
+    sceneTags: "学术讨论 / 时事观察 / 文化思辨 / 大学申请 / 科技伦理",
+  },
+  toefl: {
+    audience: "中国高中/大学生，备考 TOEFL iBT",
+    difficulty: "TOEFL 5500 词表 + Academic Word List（AWL），偏学术",
+    style: "学术中性，偏说明文/议论文，避免太多本土俚语；多用名词化和被动语态",
+    clozeStyle: "200-280 词学术风格短文（说明文为主），TOEFL Reading 风格，5 题 4 选项",
+    sceneTags: "北美校园生活 / 学术研究 / 科技 / 历史 / 自然现象 / 文化对比",
+  },
+  ielts: {
+    audience: "中国学生（高中/大学/职场），备考 IELTS",
+    difficulty: "IELTS Band 6.5+ 词汇 + 写作高分词（如 substantial, mitigate, prevalent）",
+    style: "BBC 英式风格，议论文偏多，可用更复杂的复合句；避免美式俚语",
+    clozeStyle: "200-260 词 IELTS Reading 风格，常含数据/观点对比，5 题 4 选项",
+    sceneTags: "环境 / 教育政策 / 移民 / 科技伦理 / 健康议题 / 城市化",
+  },
+};
+
 var WORD_STATUS_KEY = "vocabspark_word_status_v1";
 var REVIEW_WORD_DATA_KEY = "vocabspark_review_word_data_v1";
 var WORD_STATUS_META = {
@@ -214,13 +255,23 @@ var sfx = {
 var buildSys = (profile, goal, goalCustom) => {
   var p = (profile || '').slice(0, PROFILE_MAX);
   var goalText = "";
-  if (goal) {
-    if (goal === "other" && goalCustom) {
-      goalText = "\n\n【学习目的】\n" + goalCustom.slice(0, 100) + "\n请在教学中适当贴合该目标，例如选用相关的例句语境。";
-    } else {
-      var found = STUDY_GOAL_OPTIONS.find(function(o) { return o.key === goal; });
-      goalText = found ? "\n\n【学习目的】\n" + found.label + "（" + found.desc + "）\n请在教学中适当贴合该目标，例如选用与考试/阅读/写作相关的例句语境。" : "";
-    }
+  if (goal === "other" && goalCustom) {
+    goalText = "\n\n【学习目标】\n" + goalCustom.slice(0, 100) +
+      "\n请在词汇难度、例句风格、cloze 文体上贴合该目标。";
+  } else if (goal && GOAL_DIRECTIVES[goal]) {
+    var dir = GOAL_DIRECTIVES[goal];
+    var found = STUDY_GOAL_OPTIONS.find(function(o) { return o.key === goal; });
+    var label = found ? found.label : goal;
+    goalText = "\n\n【学习目标】" + label +
+      "\n- 目标受众：" + dir.audience +
+      "\n- 词汇难度：" + dir.difficulty +
+      "\n- 教学风格：" + dir.style +
+      "\n- 例句优先采用：" + dir.sceneTags +
+      "\n- Cloze 文体：" + dir.clozeStyle +
+      "\n以上四条贯穿你所有输出（猜词例句、teach 场景、scenarios、cloze 短文）。";
+  } else if (goal) {
+    var found2 = STUDY_GOAL_OPTIONS.find(function(o) { return o.key === goal; });
+    if (found2) goalText = "\n\n【学习目标】" + found2.label + "（" + found2.desc + "）\n请贴合该目标。";
   }
   return "你是幽默有耐心的中英双语词汇导师，风格轻松活泼——会用梗、偶尔吐槽抖机灵。\n\n【学习画像】\n" + p + goalText + "\n\n深度利用画像：例句、画面、比喻必须紧扣用户的爱好、常去地方、日常生活。让用户觉得\"说的就是我\"。";
 };
@@ -6360,7 +6411,7 @@ export default function App() {
         return (
           <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",zIndex:1500,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:FONT}} onClick={function(){ setShowPet(false); }}>
             <div onClick={function(e){e.stopPropagation();}} style={{background:C.card,borderRadius:18,maxWidth:380,width:"100%",padding:"24px 22px 20px",boxShadow:"0 20px 60px rgba(0,0,0,0.35)",border:"1px solid "+C.border,position:"relative"}}>
-              <button onClick={function(){ setShowPet(false); }} style={{position:"absolute",top:10,right:14,background:"transparent",border:"none",fontSize:22,cursor:"pointer",color:C.textSec,padding:"0 4px",lineHeight:1}}>×</button>
+              <button onClick={function(){ setShowPet(false); }} aria-label="关闭" style={{position:"absolute",top:8,right:8,width:36,height:36,background:"rgba(0,0,0,0.04)",border:"none",borderRadius:"50%",fontSize:20,cursor:"pointer",color:C.textSec,padding:0,lineHeight:1,display:"flex",alignItems:"center",justifyContent:"center",zIndex:10,fontFamily:"system-ui,sans-serif",fontWeight:600,transition:"all 0.15s"}} onMouseEnter={function(e){e.currentTarget.style.background="rgba(0,0,0,0.1)";e.currentTarget.style.color=C.text;}} onMouseLeave={function(e){e.currentTarget.style.background="rgba(0,0,0,0.04)";e.currentTarget.style.color=C.textSec;}}>×</button>
 
               {/* 大字符宠物 + 名字 */}
               <div style={{textAlign:"center", marginBottom: 12}}>
@@ -6658,7 +6709,7 @@ export default function App() {
                   <div style={{fontSize:20,fontWeight:800,color:C.purple,fontFamily:FONT_DISPLAY,letterSpacing:"-0.02em"}}>📖 我的词典</div>
                   <div style={{fontSize:12,color:C.textSec,marginTop:2}}>{entries.length} 个学过的词</div>
                 </div>
-                <button onClick={function(){ setShowMyDict(false); }} style={{background:"transparent",border:"none",fontSize:24,cursor:"pointer",color:C.textSec,padding:"0 4px"}}>×</button>
+                <button onClick={function(){ setShowMyDict(false); }} aria-label="关闭" style={{width:36,height:36,background:"rgba(0,0,0,0.04)",border:"none",borderRadius:"50%",fontSize:20,cursor:"pointer",color:C.textSec,padding:0,lineHeight:1,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif",fontWeight:600,flexShrink:0,transition:"all 0.15s"}} onMouseEnter={function(e){e.currentTarget.style.background="rgba(0,0,0,0.1)";e.currentTarget.style.color=C.text;}} onMouseLeave={function(e){e.currentTarget.style.background="rgba(0,0,0,0.04)";e.currentTarget.style.color=C.textSec;}}>×</button>
               </div>
               <div style={{flex:1,overflowY:"auto",paddingRight:4}}>
                 {entries.length === 0 ? (
@@ -6801,7 +6852,7 @@ export default function App() {
           <div style={{background:C.card,borderRadius:16,width:"100%",maxWidth:600,boxShadow:"0 20px 60px rgba(0,0,0,0.2)",fontFamily:FONT}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"20px 20px 0"}}>
               <h3 style={{fontSize:18,fontWeight:700,margin:0}}>⚙️ 设置</h3>
-              <button onClick={() => { setShowSettings(false); window.scrollTo(0,0); }} style={{background:"transparent",border:"none",fontSize:22,cursor:"pointer",color:C.textSec,padding:"0 4px"}}>×</button>
+              <button onClick={() => { setShowSettings(false); window.scrollTo(0,0); }} aria-label="关闭" style={{width:36,height:36,background:"rgba(0,0,0,0.04)",border:"none",borderRadius:"50%",fontSize:20,cursor:"pointer",color:C.textSec,padding:0,lineHeight:1,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif",fontWeight:600,flexShrink:0,transition:"all 0.15s"}} onMouseEnter={function(e){e.currentTarget.style.background="rgba(0,0,0,0.1)";e.currentTarget.style.color=C.text;}} onMouseLeave={function(e){e.currentTarget.style.background="rgba(0,0,0,0.04)";e.currentTarget.style.color=C.textSec;}}>×</button>
             </div>
             <div style={{display:"flex",borderBottom:"1px solid "+C.border,margin:"16px 20px 0"}}>
               <button style={setupTab==="profile"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("profile")}>👤 我是谁</button>
