@@ -2252,6 +2252,12 @@ export default function App() {
   var [teachStreaming, setTeachStreaming] = useState(false); // 是否在流式生成中（用于显示光标+禁用按钮）
   var [recallChoice, setRecallChoice] = useState(null); // active recall 自测：null / "easy" / "fuzzy" / "hard"
   var [showMyDict, setShowMyDict] = useState(false); // "我的词典"模态
+  var [showShareCard, setShowShareCard] = useState(false); // 战绩分享卡模态
+  // 番茄钟：null = 自由 / { mode, startedAt, durationMs }
+  var [focusSession, setFocusSession] = useState(null);
+  var [focusElapsedSec, setFocusElapsedSec] = useState(0);
+  var [showFocusModal, setShowFocusModal] = useState(false);
+  var [focusEndedSnapshot, setFocusEndedSnapshot] = useState(null); // { wordsLearned, mode, durationSec }
   // 学习宠物：默认初始化（首次进入自动创建）
   var [pet, setPet] = useState(null); // null = 还没加载；object = 已就绪
   var [showPet, setShowPet] = useState(false); // 宠物详情模态
@@ -3090,6 +3096,35 @@ export default function App() {
       // 网络失败：不改状态，但也不标记 loaded（让保护层继续放行）
       console.warn('[tier] load failed, keeping cached value:', e.message);
     }
+  };
+
+  // 番茄钟倒计时 effect — 每秒更新 elapsed，到时间触发结束 snapshot
+  useEffect(function() {
+    if (!focusSession) { setFocusElapsedSec(0); return; }
+    var tick = function() {
+      var elapsed = Math.floor((Date.now() - focusSession.startedAt) / 1000);
+      setFocusElapsedSec(elapsed);
+      if (elapsed * 1000 >= focusSession.durationMs) {
+        // 时间到 — 用 wordsLearnedAtStart 算这场学了几个词
+        var learnedNow = (learned || []).length;
+        var diff = learnedNow - (focusSession.wordsLearnedAtStart || 0);
+        setFocusEndedSnapshot({ wordsLearned: diff, mode: focusSession.mode, durationSec: Math.floor(focusSession.durationMs / 1000) });
+        setFocusSession(null);
+      }
+    };
+    tick();
+    var id = setInterval(tick, 1000);
+    return function() { clearInterval(id); };
+  }, [focusSession]);
+
+  // 启动番茄钟
+  var startFocusSession = function(mode) {
+    var durationMs;
+    if (mode === "sprint") durationMs = 5 * 60 * 1000;       // 5 分钟冲刺
+    else if (mode === "focus") durationMs = 15 * 60 * 1000;  // 15 分钟专注
+    else { setFocusSession(null); setShowFocusModal(false); return; } // free
+    setFocusSession({ mode: mode, startedAt: Date.now(), durationMs: durationMs, wordsLearnedAtStart: (learned || []).length });
+    setShowFocusModal(false);
   };
 
   // ─── 学习计时器（用户活跃时才计时：click/keydown/scroll/touch） ───
@@ -5864,32 +5899,49 @@ export default function App() {
           {/* 连续学习日历：最近 30 天点亮已学日，强化"不断签"动机（损失厌恶 > 追求收获 2-3×） */}
           <StreakCalendar history={streakInfo.history} streak={streakInfo.streak} todayDone={streakInfo.todayDone} />
 
-          {/* 我的词典入口 — 把"学过的词"变成"我珍藏的词" */}
+          {/* 我的词典入口 + 战绩分享卡 — 双按钮并排 */}
           {(() => {
             var rwdCount = Object.keys(reviewWordData || {}).length;
             if (rwdCount === 0) return null;
             return (
-              <button onClick={function(){ setShowMyDict(true); }} style={{
-                width: "100%",
-                padding: "14px 16px",
-                marginBottom: 12,
-                background: "linear-gradient(135deg, " + C.purpleLight + " 0%, #fff 100%)",
-                border: "1.5px solid " + C.purple + "55",
-                borderRadius: 12,
-                cursor: "pointer",
-                fontFamily: FONT,
-                textAlign: "left",
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-              }}>
-                <div style={{ fontSize: 28 }}>📖</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: C.purple, marginBottom: 2 }}>我的词典</div>
-                  <div style={{ fontSize: 12, color: C.textSec }}>翻看你学过的 {rwdCount} 个词，按日期回顾</div>
-                </div>
-                <div style={{ fontSize: 18, color: C.purple }}>›</div>
-              </button>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
+                <button onClick={function(){ setShowMyDict(true); }} style={{
+                  padding: "12px 12px",
+                  background: "linear-gradient(135deg, " + C.purpleLight + " 0%, #fff 100%)",
+                  border: "1.5px solid " + C.purple + "55",
+                  borderRadius: 12,
+                  cursor: "pointer",
+                  fontFamily: FONT,
+                  textAlign: "left",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}>
+                  <div style={{ fontSize: 22 }}>📖</div>
+                  <div style={{ flex: 1, minWidth:0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.purple, marginBottom: 1 }}>我的词典</div>
+                    <div style={{ fontSize: 11, color: C.textSec, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{rwdCount} 个词</div>
+                  </div>
+                </button>
+                <button onClick={function(){ setShowShareCard(true); }} style={{
+                  padding: "12px 12px",
+                  background: "linear-gradient(135deg, " + C.goldLight + " 0%, #fff 100%)",
+                  border: "1.5px solid " + C.gold + "55",
+                  borderRadius: 12,
+                  cursor: "pointer",
+                  fontFamily: FONT,
+                  textAlign: "left",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}>
+                  <div style={{ fontSize: 22 }}>🏆</div>
+                  <div style={{ flex: 1, minWidth:0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.gold, marginBottom: 1 }}>战绩卡片</div>
+                    <div style={{ fontSize: 11, color: C.textSec, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>分享给爸妈</div>
+                  </div>
+                </button>
+              </div>
             );
           })()}
 
@@ -6278,6 +6330,186 @@ export default function App() {
         );
       })()}
 
+      {/* 番茄钟模式选择 */}
+      {showFocusModal && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:1500,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:FONT}} onClick={function(){ setShowFocusModal(false); }}>
+          <div onClick={function(e){e.stopPropagation();}} style={{background:C.card,borderRadius:16,maxWidth:380,width:"100%",padding:"22px 22px 18px",boxShadow:"0 20px 60px rgba(0,0,0,0.35)",border:"1px solid "+C.border}}>
+            <div style={{fontSize:18,fontWeight:800,color:C.text,fontFamily:FONT_DISPLAY,marginBottom:6,textAlign:"center"}}>⏱ 选个学习节奏</div>
+            <div style={{fontSize:12,color:C.textSec,marginBottom:16,textAlign:"center",lineHeight:1.6}}>
+              选定后顶部会显示倒计时。<br/>不会强制中断 — 时间到只是提醒一下你的努力。
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {[
+                { mode:"sprint", emoji:"⚡", title:"5 分钟冲刺", desc:"看你能学多少词", color:C.accent },
+                { mode:"focus",  emoji:"🌳", title:"15 分钟专注", desc:"安静学一组",     color:C.teal },
+                { mode:"free",   emoji:"🌊", title:"自由模式",   desc:"随心学，不计时", color:C.textSec },
+              ].map(function(m){
+                return (
+                  <button key={m.mode} onClick={function(){ startFocusSession(m.mode); }} style={{
+                    display:"flex",alignItems:"center",gap:12,padding:"12px 14px",
+                    background:"#fff", border:"1.5px solid "+m.color+"55",
+                    borderRadius:12, cursor:"pointer", fontFamily:FONT, textAlign:"left",
+                  }}>
+                    <span style={{fontSize:24, lineHeight:1}}>{m.emoji}</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:14,fontWeight:700,color:m.color,marginBottom:2}}>{m.title}</div>
+                      <div style={{fontSize:11,color:C.textSec}}>{m.desc}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 番茄钟时间到弹窗 */}
+      {focusEndedSnapshot && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:1500,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:FONT}}>
+          <div style={{background:C.card,borderRadius:16,maxWidth:340,width:"100%",padding:"24px 22px",boxShadow:"0 20px 60px rgba(0,0,0,0.35)",border:"2px solid "+C.gold,textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:8}}>{focusEndedSnapshot.wordsLearned >= 5 ? "🏆" : focusEndedSnapshot.wordsLearned >= 2 ? "🎯" : "💪"}</div>
+            <div style={{fontSize:20,fontWeight:800,color:C.text,fontFamily:FONT_DISPLAY,marginBottom:6}}>时间到！</div>
+            <div style={{fontSize:14,color:C.text,marginBottom:14,lineHeight:1.7}}>
+              这次{focusEndedSnapshot.mode === "sprint" ? "冲刺" : "专注"} {Math.floor(focusEndedSnapshot.durationSec/60)} 分钟，<br/>你学了 <strong style={{color:C.accent,fontSize:18,fontFamily:FONT_DISPLAY}}>{focusEndedSnapshot.wordsLearned}</strong> 个词。
+            </div>
+            {focusEndedSnapshot.wordsLearned >= 5 && (
+              <div style={{padding:"6px 12px",background:C.goldLight,borderRadius:8,fontSize:11,color:C.gold,fontWeight:700,marginBottom:12,display:"inline-block"}}>
+                超过平均水平，太棒了！
+              </div>
+            )}
+            <button onClick={function(){ setFocusEndedSnapshot(null); }} style={{
+              width:"100%", padding:"12px 0",
+              background: "linear-gradient(135deg, "+C.accent+" 0%, "+C.gold+" 100%)",
+              color:"#fff", border:"none", borderRadius:10,
+              fontFamily:FONT, fontSize:14, fontWeight:700, cursor:"pointer",
+            }}>继续学习</button>
+          </div>
+        </div>
+      )}
+
+      {/* 战绩分享卡模态：精美卡片让用户截屏发给家长 — 社交认可强化下次学习动机 */}
+      {showShareCard && pet && (() => {
+        var streakInfo = getStudyStreak();
+        var rwdEntries = Object.values(reviewWordData || {});
+        var totalLearned = rwdEntries.length;
+        var masteredCount = rwdEntries.filter(function(w){ return wordStatusMap[w.word] === "mastered"; }).length;
+        var accuracy = stats?.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+        var stage = getPetStage(pet.totalFed || 0);
+        // 取最近 5 个学的词作"代表词"
+        var recentWords = rwdEntries
+          .sort(function(a,b){ return new Date(b.firstLearnedAt||0) - new Date(a.firstLearnedAt||0); })
+          .slice(0, 5)
+          .map(function(w){ return w.word; });
+        var displayName = (profile || "我").split(/[，。\n,.]/)[0].trim().slice(0, 8) || "学习者";
+        var dateStr = new Date().toLocaleDateString("zh-CN", { month:"long", day:"numeric" });
+        return (
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:1500,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:FONT,overflowY:"auto"}} onClick={function(){ setShowShareCard(false); }}>
+            <div onClick={function(e){e.stopPropagation();}} style={{maxWidth:380,width:"100%"}}>
+              {/* 截图引导（在卡片上方） */}
+              <div style={{textAlign:"center", color:"#fff", fontSize:13, marginBottom:12, opacity:0.85}}>
+                📸 长按或截屏保存图片 → 发给爸妈或朋友
+              </div>
+              {/* 卡片本体 */}
+              <div style={{
+                background: "linear-gradient(160deg, " + C.goldLight + " 0%, #fff 35%, " + C.accentLight + " 100%)",
+                borderRadius: 20,
+                padding: "26px 22px 22px",
+                border: "2px solid " + C.gold + "55",
+                boxShadow: "0 24px 60px rgba(0,0,0,0.4)",
+                position: "relative",
+                overflow: "hidden",
+              }}>
+                {/* 装饰圆点 */}
+                <div style={{position:"absolute",top:-30,right:-30,width:120,height:120,borderRadius:"50%",background:C.accent+"22"}} />
+                <div style={{position:"absolute",bottom:-40,left:-40,width:140,height:140,borderRadius:"50%",background:C.gold+"22"}} />
+                {/* 内容 */}
+                <div style={{position:"relative", zIndex:1}}>
+                  {/* 顶部：品牌 + 日期 */}
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,fontSize:11,color:C.textSec,fontWeight:600}}>
+                    <span>🧠 Know U. Vocab</span>
+                    <span>{dateStr}</span>
+                  </div>
+                  {/* 标题 + 用户 */}
+                  <div style={{textAlign:"center",marginBottom:20}}>
+                    <div style={{fontSize:13,color:C.textSec,marginBottom:4,fontWeight:600,letterSpacing:"0.05em"}}>📊 我的学习战绩</div>
+                    <div style={{fontSize:24,fontWeight:900,color:C.text,fontFamily:FONT_DISPLAY,letterSpacing:"-0.02em"}}>{displayName} 的进度</div>
+                  </div>
+                  {/* 大数字 三栏 */}
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:18}}>
+                    <div style={{textAlign:"center",padding:"12px 4px",background:"#fff",borderRadius:12,border:"1px solid "+C.border}}>
+                      <div style={{fontSize:24,fontWeight:900,color:C.accent,fontFamily:FONT_DISPLAY,lineHeight:1}}>{totalLearned}</div>
+                      <div style={{fontSize:10,color:C.textSec,marginTop:4,fontWeight:600}}>已学词数</div>
+                    </div>
+                    <div style={{textAlign:"center",padding:"12px 4px",background:"#fff",borderRadius:12,border:"1px solid "+C.border}}>
+                      <div style={{fontSize:24,fontWeight:900,color:C.green,fontFamily:FONT_DISPLAY,lineHeight:1}}>{accuracy}%</div>
+                      <div style={{fontSize:10,color:C.textSec,marginTop:4,fontWeight:600}}>正确率</div>
+                    </div>
+                    <div style={{textAlign:"center",padding:"12px 4px",background:"#fff",borderRadius:12,border:"1px solid "+C.border}}>
+                      <div style={{fontSize:24,fontWeight:900,color:C.gold,fontFamily:FONT_DISPLAY,lineHeight:1}}>🔥{streakInfo.streak||0}</div>
+                      <div style={{fontSize:10,color:C.textSec,marginTop:4,fontWeight:600}}>连续天数</div>
+                    </div>
+                  </div>
+                  {/* 代表词 */}
+                  {recentWords.length > 0 && (
+                    <div style={{marginBottom:16}}>
+                      <div style={{fontSize:11,color:C.textSec,fontWeight:700,letterSpacing:"0.05em",marginBottom:8,textAlign:"center"}}>📚 最近学的词</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:6,justifyContent:"center"}}>
+                        {recentWords.map(function(w){
+                          return <span key={w} style={{
+                            padding:"4px 10px",
+                            background:"#fff",
+                            border:"1px solid "+C.accent+"55",
+                            borderRadius:999,
+                            fontSize:12, fontWeight:700,
+                            color:C.accent,
+                            fontFamily:"'Inter',"+FONT,
+                          }}>{w}</span>;
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {/* 宠物 + XP */}
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",background:"linear-gradient(135deg, "+C.purpleLight+" 0%, #fff 100%)",borderRadius:12,border:"1px solid "+C.purple+"33",marginBottom:14}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <span style={{fontSize:32, lineHeight:1}}>{stage.emoji}</span>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:700,color:C.purple}}>{pet.name}</div>
+                        <div style={{fontSize:10,color:C.textSec}}>Lv {stage.level} · {stage.title}</div>
+                      </div>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontSize:18,fontWeight:900,color:C.accent,fontFamily:FONT_DISPLAY,lineHeight:1}}>⚡{stats?.xp||0}</div>
+                      <div style={{fontSize:10,color:C.textSec,marginTop:2}}>累计 XP</div>
+                    </div>
+                  </div>
+                  {/* 底部：掌握徽章 + slogan */}
+                  <div style={{textAlign:"center",fontSize:11,color:C.textSec,lineHeight:1.6,paddingTop:6,borderTop:"1px dashed "+C.border}}>
+                    {masteredCount > 0
+                      ? <>已掌握 <strong style={{color:C.green}}>{masteredCount}</strong> 个词 · 距离梦想又近一步 ✨</>
+                      : <>每一天的坚持都在累积 ✨</>
+                    }
+                  </div>
+                </div>
+              </div>
+              {/* 关闭按钮 */}
+              <div style={{textAlign:"center",marginTop:14}}>
+                <button onClick={function(){ setShowShareCard(false); }} style={{
+                  padding: "10px 24px",
+                  background: "transparent",
+                  border: "1px solid #fff",
+                  borderRadius: 999,
+                  color: "#fff",
+                  fontFamily: FONT,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}>关闭</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* 我的词典模态：按学习日期分组，让"学过的词"变成"我珍藏的词" */}
       {showMyDict && (() => {
         var entries = Object.values(reviewWordData || {}).filter(function(w){ return w && w.word; });
@@ -6410,6 +6642,39 @@ export default function App() {
           </div>
           <span style={S.progressText}><strong>{Math.min(idx+1,wordList.length)}</strong>/{wordList.length}</span>
         </div>
+        {/* 番茄钟倒计时显示（活跃时）/ 启动按钮（空闲时） */}
+        {focusSession ? (() => {
+          var totalSec = Math.floor(focusSession.durationMs / 1000);
+          var remainSec = Math.max(0, totalSec - focusElapsedSec);
+          var pct = Math.min(100, (focusElapsedSec / totalSec) * 100);
+          var mm = Math.floor(remainSec / 60);
+          var ss = remainSec % 60;
+          var color = remainSec < 30 ? C.red : remainSec < 60 ? C.gold : C.teal;
+          return (
+            <button onClick={function(){ if (confirm("结束本次专注？")) { setFocusSession(null); } }} style={{
+              display:"flex", alignItems:"center", gap:6,
+              padding:"4px 10px",
+              background: color + "22",
+              border:"1px solid "+color+"66",
+              borderRadius: 999,
+              cursor:"pointer",
+              fontFamily: FONT, fontSize: 12, fontWeight: 700, color: color,
+            }} title="点击结束番茄钟">
+              <span style={{ fontFamily:"'Inter',"+FONT, fontVariantNumeric:"tabular-nums" }}>
+                ⏱ {mm}:{String(ss).padStart(2,'0')}
+              </span>
+            </button>
+          );
+        })() : (
+          <button onClick={function(){ setShowFocusModal(true); }} style={{
+            padding:"4px 10px",
+            background: "transparent",
+            border:"1px solid "+C.border,
+            borderRadius: 999,
+            cursor:"pointer",
+            fontFamily: FONT, fontSize: 12, fontWeight: 600, color: C.textSec,
+          }} title="开启番茄钟">⏱ 专注</button>
+        )}
         <div style={S.xpBadge}>{"⚡"+stats.xp}</div>
         <button style={S.settingsBtn} onClick={() => setShowSettings(true)} title="设置" aria-label="打开设置">⚙️</button>
       </div>
