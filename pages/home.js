@@ -30,20 +30,27 @@ var FadeInSection = ({ children, style }) => {
   return <div ref={ref} style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(28px)", transition: "opacity 0.6s ease, transform 0.6s ease", ...style }}>{children}</div>;
 };
 
-/* ─── SVG-A：Hero 浮动学习元素（logo 居中 + 4 个角落浮动符号，不重叠） ─── */
-var HeroFloatingArt = () => (
-  <div aria-hidden="true" style={{ position:"relative", width:280, height:160, margin:"0 auto 12px" }}>
-    {/* 中心 logo（居中，安全区 ≥ 80px 直径） */}
-    <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)", animation:"floatLogo 3s ease-in-out infinite", zIndex:2 }}>
-      <BrandUIcon size={72} />
+/* ─── Hero Logo + 柔和光晕（极简方案 — 替代之前的浮动 emoji） ─── */
+var HeroLogoHalo = ({ size }) => {
+  var s = size || 84;
+  return (
+    <div style={{ position:"relative", display:"inline-block", marginBottom:18, padding:30 }}>
+      {/* 光晕 halo — 橙金渐变呼吸 */}
+      <div aria-hidden="true" style={{
+        position:"absolute", top:0, left:0, right:0, bottom:0,
+        borderRadius:"50%",
+        background:"radial-gradient(circle, "+C.accent+"55 0%, "+C.gold+"22 35%, transparent 70%)",
+        animation:"haloBreath 4s ease-in-out infinite",
+        pointerEvents:"none",
+        zIndex:0,
+      }} />
+      {/* Logo 本体 — 浮动 */}
+      <div style={{ position:"relative", animation:"floatLogo 3s ease-in-out infinite", zIndex:1 }}>
+        <BrandUIcon size={s} />
+      </div>
     </div>
-    {/* 四角浮动符号 — 距 logo 中心 ≥ 90px，确保不重叠 */}
-    <div style={{ position:"absolute", top:8, left:18, fontSize:22, animation:"orbitA 6s ease-in-out infinite", filter:"drop-shadow(0 2px 6px rgba(204,107,40,0.35))" }}>📖</div>
-    <div style={{ position:"absolute", top:8, right:18, fontSize:22, animation:"orbitB 6s ease-in-out infinite 1.5s", filter:"drop-shadow(0 2px 6px rgba(58,138,133,0.35))" }}>📚</div>
-    <div style={{ position:"absolute", bottom:8, left:18, fontSize:22, animation:"orbitC 6s ease-in-out infinite 3s", filter:"drop-shadow(0 2px 6px rgba(118,89,194,0.35))" }}>✍️</div>
-    <div style={{ position:"absolute", bottom:8, right:18, fontSize:20, animation:"orbitA 6s ease-in-out infinite 4.5s", filter:"drop-shadow(0 2px 6px rgba(204,164,40,0.35))" }}>✨</div>
-  </div>
-);
+  );
+};
 
 /* ─── SVG-B：Ecosystem 闭环大插画 ─── */
 var EcosystemArt = () => (
@@ -304,20 +311,16 @@ var GuestHero = () => (
       <div style={{ position:"absolute", bottom:"-80px", left:"30%", width:280, height:280, borderRadius:"50%", background:"radial-gradient(circle, " + C.gold + "1f 0%, transparent 70%)", filter:"blur(36px)" }} />
     </div>
     <div style={{ position:"relative", zIndex:1, maxWidth:680, margin:"0 auto" }}>
-      <HeroFloatingArt />
-      <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.035em", lineHeight: 1.1 }}>Know U. Learning</h1>
-      <div style={{ display:"inline-block", padding:"4px 12px", background:C.card, border:"1px solid "+C.border, borderRadius:999, fontSize:11, fontWeight:600, color:C.textSec, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:22, boxShadow:C.shadowSoft }}>Personal AI Language Tutor</div>
-      {/* 一句话主张 */}
-      <h2 style={{ fontSize: 26, fontWeight: 800, color: C.text, margin:"0 0 12px", lineHeight: 1.35, letterSpacing:"-0.02em" }}>
+      {/* Logo + 光晕 — 视觉焦点 */}
+      <HeroLogoHalo size={88} />
+      {/* 品牌 wordmark + tagline pill */}
+      <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, margin: "0 0 8px", letterSpacing: "-0.035em", lineHeight: 1.1 }}>Know U. Learning</h1>
+      <div style={{ display:"inline-block", padding:"4px 12px", background:C.card, border:"1px solid "+C.border, borderRadius:999, fontSize:11, fontWeight:600, color:C.textSec, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:28, boxShadow:C.shadowSoft }}>Personal AI Language Tutor</div>
+      {/* 主张 — 一句话，去掉所有副文案让金句独立 */}
+      <h2 style={{ fontSize: 28, fontWeight: 800, color: C.text, margin:"0 0 32px", lineHeight: 1.3, letterSpacing:"-0.02em" }}>
         AI 用<span style={{ color:C.accent }}>你的故事</span>教英语
       </h2>
-      <p style={{ fontSize: 16, color: C.text, lineHeight: 1.7, maxWidth: 480, margin: "0 auto 8px", fontWeight:600 }}>
-        不背单词 — <span style={{ color:C.accent }}>读自己的故事</span>。
-      </p>
-      <p style={{ fontSize: 13.5, color: C.textSec, lineHeight: 1.7, maxWidth: 460, margin: "0 auto 28px" }}>
-        看一遍就记住 · 备考 SSAT / SAT / TOEFL 都更省心
-      </p>
-      {/* 单一 CTA — 删掉了 hero 内部的"起点"双链接和"了解三位一体 ↓"引导 */}
+      {/* CTA */}
       <Link href="/vocab?from=home" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", padding:"15px 36px", background:"linear-gradient(135deg, "+C.accent+" 0%, #d4823d 100%)", color:"#fff", borderRadius:14, fontSize:16, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 24px "+C.accent+"55, inset 0 1px 0 rgba(255,255,255,0.2)", transition:"transform 0.2s ease, box-shadow 0.2s ease" }} onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 12px 32px "+C.accent+"66, inset 0 1px 0 rgba(255,255,255,0.25)"; }} onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 8px 24px "+C.accent+"55, inset 0 1px 0 rgba(255,255,255,0.2)"; }}>
         免费试 1 个单词 →
       </Link>
@@ -354,9 +357,7 @@ export default function HomePage() {
       </Head>
       <style dangerouslySetInnerHTML={{ __html: globalCSS + `
         @keyframes floatLogo { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-        @keyframes orbitA { 0%,100%{transform:translate(0,0) rotate(0deg)} 50%{transform:translate(-4px,-6px) rotate(-6deg)} }
-        @keyframes orbitB { 0%,100%{transform:translate(0,0) rotate(0deg)} 50%{transform:translate(5px,-4px) rotate(5deg)} }
-        @keyframes orbitC { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-6px)} }
+        @keyframes haloBreath { 0%,100%{opacity:0.45;transform:scale(1)} 50%{opacity:0.85;transform:scale(1.12)} }
         @keyframes pulseDot { 0%,100%{transform:scale(0.9);opacity:0.5} 50%{transform:scale(1.1);opacity:1} }
         /* VS 对比插画 — 手机上垂直排列 + 箭头变 ↓ */
         @media (max-width: 600px) {
