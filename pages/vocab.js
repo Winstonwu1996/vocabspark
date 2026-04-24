@@ -218,8 +218,9 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     "# 视觉锚格式\n" +
     visualAnchorHint + "\n\n" +
 
-    "# 顶层 schema（必须完整输出 6 个字段）\n" +
+    "# 顶层 schema（必须完整输出 7 个字段）\n" +
     "{\n" +
+    '  "definition": {"pos":"vt./adj./n. 等英文缩写","zh":"核心中文释义 ≤15 字，多义用斜杠分隔"},\n' +
     '  "opening": "画像化开场 50-80 字，2-3 句口语化。要把【用户画像里的具体场景】和【本词的含义/感觉】真正联系起来，不是空喊名字。让用户读完第一句就觉得\'这词跟我的世界有关\'",\n' +
     '  "wordType": "' + cls.wordType + '",\n' +
     '  "teach": {\n' +
@@ -246,8 +247,9 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     '  "closing": "结束鼓励 50-80 字，2-3 句。要把本词的【应用场景/精神】跟【用户的具体世界】结合 — 一句肯定她已经会的、一句指出这词能让她在自己的世界里更准确地表达什么。要像懂她的朋友说话，不是老师下结论"\n' +
     "}\n\n" +
 
-    "# 微型完整示例（让你看到完整 6 字段输出的样子 — 学此整体结构与 opening/closing 的口吻，不是学此词内容）\n" +
+    "# 微型完整示例（让你看到完整 7 字段输出的样子 — 学此整体结构与 opening/closing 的口吻，不是学此词内容）\n" +
     "{\n" +
+    '  "definition": {"pos":"adj.","zh":"永久的 / 持续不停的"},\n' +
     '  "opening": "William，你打排位连败时那种\'怎么这局还没完\'的熟悉感，就是 perpetual。不是真的永远，但感觉上就是停不下来的那种持续。",\n' +
     '  "wordType": "D",\n' +
     '  "teach": {\n' +
@@ -278,15 +280,16 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     "}\n\n" +
 
     "# ❗❗ 关键完整性约束 ❗❗\n" +
-    "你的输出必须包含以下 6 个顶层字段（一个都不能少）：\n" +
-    "1. opening (必有，50-80 字共情画像)\n" +
-    "2. wordType (必有，= \"" + cls.wordType + "\")\n" +
-    "3. teach { methods, visualAnchor } (必有)\n" +
-    "4. connect { comparedWith, points } (必有)\n" +
-    "5. use { collocations, scenarios } (必有)\n" +
-    "6. closing (必有，50-80 字鼓励+应用建议)\n" +
-    "生成完 teach.methods 不能停！必须继续生成 visualAnchor → connect → use → closing 四个剩余部分。\n" +
-    "只有所有 6 个字段都输出后才能结束 JSON。\n\n" +
+    "你的输出必须包含以下 7 个顶层字段（一个都不能少）：\n" +
+    "1. definition (必有，{pos:'词性英文缩写', zh:'≤15 字核心释义'})\n" +
+    "2. opening (必有，50-80 字共情画像)\n" +
+    "3. wordType (必有，= \"" + cls.wordType + "\")\n" +
+    "4. teach { methods, visualAnchor } (必有)\n" +
+    "5. connect { comparedWith, points } (必有)\n" +
+    "6. use { collocations, scenarios } (必有)\n" +
+    "7. closing (必有，50-80 字鼓励+应用建议)\n" +
+    "生成完 teach.methods 不能停！必须继续生成 visualAnchor → connect → use → closing 剩余部分。\n" +
+    "只有所有 7 个字段都输出后才能结束 JSON。\n\n" +
 
     "# 其他约束\n" +
     "- 整个输出是单个合法的、可 JSON.parse 解析的对象\n" +
@@ -6316,6 +6319,10 @@ export default function App() {
         // Round 4 修复：mnemonic_fill 是"4 选 1 拼写辨识"，顶部显示 currentWord 等于直接送答案
         // 改成显示问号 + "????" 占位（音标也藏起来），等用户提交后再揭晓
         var hideTargetWord = phase === "spectrum" && spectrumData?.type === "mnemonic_fill";
+        // 词性 + 中文释义 — 优先 teach JSON 的 definition；fallback 到 reviewWordData 里学过的 meaning
+        // 在 mnemonic_fill phase 隐藏（等于送答案）
+        var defPos = !hideTargetWord && (teachData?.definition?.pos || "");
+        var defZh = !hideTargetWord && (teachData?.definition?.zh || reviewWordData?.[currentWord]?.meaning || "");
         return (
         <div style={{...S.wordHeader, padding:"20px 22px 16px", boxShadow: stats.streak >= 5 ? "0 0 0 2px "+C.gold+", 0 0 18px "+C.gold+"55" : C.shadow, border: stats.streak >= 5 ? "1px solid "+C.gold : "1px solid "+C.border, animation: stats.streak >= 5 ? "glowPulse 2s ease-in-out infinite" : "fadeUp 0.3s ease-out"}}>
           <div style={{ flex:1, minWidth:0 }}>
@@ -6331,6 +6338,28 @@ export default function App() {
             </div>
             {!hideTargetWord && phonetic && <div style={{ ...S.phoneticText, marginTop:4, fontSize:15 }}>{phonetic}</div>}
             {hideTargetWord && <div style={{ ...S.phoneticText, marginTop:4, fontSize:13, color:C.textSec, fontStyle:"italic" }}>选对答案后揭晓</div>}
+            {/* 词性 + 中文释义 — 用户女儿反馈：teach 页应该一目了然先看到"是什么意思" */}
+            {(defPos || defZh) && (
+              <div style={{ marginTop: 8, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                {defPos && (
+                  <span style={{
+                    padding: "2px 8px",
+                    background: C.tealLight,
+                    color: C.teal,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    borderRadius: 4,
+                    letterSpacing: "0.03em",
+                    fontFamily: "'Inter'," + FONT,
+                  }}>{defPos}</span>
+                )}
+                {defZh && (
+                  <span style={{ fontSize: 15, color: C.text, fontWeight: 500, lineHeight: 1.4 }}>
+                    {defZh}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           {stats.streak > 0 && (
             <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
