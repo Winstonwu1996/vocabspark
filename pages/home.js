@@ -30,17 +30,18 @@ var FadeInSection = ({ children, style }) => {
   return <div ref={ref} style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(28px)", transition: "opacity 0.6s ease, transform 0.6s ease", ...style }}>{children}</div>;
 };
 
-/* ─── SVG-A：Hero 浮动学习元素（环绕 logo 的 3 个小图标） ─── */
+/* ─── SVG-A：Hero 浮动学习元素（logo 居中 + 4 个角落浮动符号，不重叠） ─── */
 var HeroFloatingArt = () => (
-  <div aria-hidden="true" style={{ position:"relative", width:160, height:160, margin:"0 auto 12px" }}>
-    {/* 中心 logo */}
+  <div aria-hidden="true" style={{ position:"relative", width:280, height:160, margin:"0 auto 12px" }}>
+    {/* 中心 logo（居中，安全区 ≥ 80px 直径） */}
     <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)", animation:"floatLogo 3s ease-in-out infinite", zIndex:2 }}>
       <BrandUIcon size={72} />
     </div>
-    {/* 三个学习符号绕轨 */}
-    <div style={{ position:"absolute", top:6, left:6, fontSize:24, animation:"orbitA 6s ease-in-out infinite", filter:"drop-shadow(0 2px 6px rgba(204,107,40,0.35))" }}>📖</div>
-    <div style={{ position:"absolute", top:14, right:8, fontSize:22, animation:"orbitB 6s ease-in-out infinite 1.5s", filter:"drop-shadow(0 2px 6px rgba(58,138,133,0.35))" }}>📚</div>
-    <div style={{ position:"absolute", bottom:8, left:"50%", transform:"translateX(-50%)", fontSize:24, animation:"orbitC 6s ease-in-out infinite 3s", filter:"drop-shadow(0 2px 6px rgba(118,89,194,0.35))" }}>✍️</div>
+    {/* 四角浮动符号 — 距 logo 中心 ≥ 90px，确保不重叠 */}
+    <div style={{ position:"absolute", top:8, left:18, fontSize:22, animation:"orbitA 6s ease-in-out infinite", filter:"drop-shadow(0 2px 6px rgba(204,107,40,0.35))" }}>📖</div>
+    <div style={{ position:"absolute", top:8, right:18, fontSize:22, animation:"orbitB 6s ease-in-out infinite 1.5s", filter:"drop-shadow(0 2px 6px rgba(58,138,133,0.35))" }}>📚</div>
+    <div style={{ position:"absolute", bottom:8, left:18, fontSize:22, animation:"orbitC 6s ease-in-out infinite 3s", filter:"drop-shadow(0 2px 6px rgba(118,89,194,0.35))" }}>✍️</div>
+    <div style={{ position:"absolute", bottom:8, right:18, fontSize:20, animation:"orbitA 6s ease-in-out infinite 4.5s", filter:"drop-shadow(0 2px 6px rgba(204,164,40,0.35))" }}>✨</div>
   </div>
 );
 
@@ -310,8 +311,11 @@ var GuestHero = () => (
       <h2 style={{ fontSize: 26, fontWeight: 800, color: C.text, margin:"0 0 12px", lineHeight: 1.35, letterSpacing:"-0.02em" }}>
         AI 用<span style={{ color:C.accent }}>你的故事</span>教英语
       </h2>
-      <p style={{ fontSize: 15, color: C.textSec, lineHeight: 1.75, maxWidth: 460, margin: "0 auto 28px" }}>
-        每个例句都来自你认识的人和地方 — 备考 SSAT/SAT/TOEFL，记得住才有用。
+      <p style={{ fontSize: 16, color: C.text, lineHeight: 1.7, maxWidth: 480, margin: "0 auto 8px", fontWeight:600 }}>
+        不背单词 — <span style={{ color:C.accent }}>读自己的故事</span>。
+      </p>
+      <p style={{ fontSize: 13.5, color: C.textSec, lineHeight: 1.7, maxWidth: 460, margin: "0 auto 28px" }}>
+        看一遍就记住 · 备考 SSAT / SAT / TOEFL 都更省心
       </p>
       {/* 单一 CTA — 删掉了 hero 内部的"起点"双链接和"了解三位一体 ↓"引导 */}
       <Link href="/vocab?from=home" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", padding:"15px 36px", background:"linear-gradient(135deg, "+C.accent+" 0%, #d4823d 100%)", color:"#fff", borderRadius:14, fontSize:16, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 24px "+C.accent+"55, inset 0 1px 0 rgba(255,255,255,0.2)", transition:"transform 0.2s ease, box-shadow 0.2s ease" }} onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 12px 32px "+C.accent+"66, inset 0 1px 0 rgba(255,255,255,0.25)"; }} onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 8px 24px "+C.accent+"55, inset 0 1px 0 rgba(255,255,255,0.2)"; }}>
@@ -442,8 +446,8 @@ export default function HomePage() {
             <KnowUExampleCard />
           </div>
 
-          {/* 4 张差异化卡（合并原 3 pillars + 3 vs cards） */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
+          {/* 4 张差异化卡 — 2x2 四宫格（桌面），手机自适应单列 */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 14 }}>
             {[
               {
                 vs: "vs 题海软件",
