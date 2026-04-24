@@ -1864,16 +1864,31 @@ export default function App() {
       }
       setShowLogin(false); setLoginSent(false); setLoginEmail(''); setOtpCode('');
 
-      // 服务端权威：拉取云端数据
-      var cloudData = await loadFromCloud(u.id);
-      if (cloudData) {
-        // 云端有数据 → 直接应用（服务端赢）
-        await doSave(cloudData);
-        _applyCloudData(cloudData);
-        setShowWelcome(false);
-      } else {
-        // 云端无数据（新用户）→ 把本地数据推到云端
+      // 检测"刚刚重置进度" —— URL 带 ?reset=<timestamp> 且 <10s 前
+      // 此时跳过 loadFromCloud（避免被云端旧数据覆盖本地清零）
+      // 改为把本地清零数据推到云端，服务端反向更新
+      var justReset = false;
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var resetTs = Number(params.get('reset'));
+        if (Number.isFinite(resetTs) && Date.now() - resetTs < 10000) justReset = true;
+      } catch(e) {}
+
+      if (justReset) {
+        // 本地已被 resetLearningProgress 清零 → 直接推送，覆盖云端旧数据
         syncToCloud();
+      } else {
+        // 服务端权威：拉取云端数据
+        var cloudData = await loadFromCloud(u.id);
+        if (cloudData) {
+          // 云端有数据 → 直接应用（服务端赢）
+          await doSave(cloudData);
+          _applyCloudData(cloudData);
+          setShowWelcome(false);
+        } else {
+          // 云端无数据（新用户）→ 把本地数据推到云端
+          syncToCloud();
+        }
       }
       // 加载订阅状态
       _loadTier(u.id);
