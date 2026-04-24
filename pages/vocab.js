@@ -5264,144 +5264,196 @@ export default function App() {
 
       <AppHeroHeader stats={stats} studyStreak={getStudyStreak()} user={user} onUserCenterClick={function(){ setShowUserCenter(true); }} syncStatus={syncStatus} />
 
-      {/* 连续学习激励条 */}
+      {/* 我的小本本卡：整合 宠物 + streak + XP + 词数，用叙事化文案替代散落的数据条
+          替代旧的"连续学习激励条"，把分散的成长信号收成一个"温暖的我的世界" */}
       {(() => {
         var _sk = getStudyStreak();
-        var _disp = getStreakDisplay(_sk.streak);
-        if (!_disp) return null;
-        if (_sk.todayDone) {
-          // 今天已完成，显示鼓励
-          return <div style={{background:"linear-gradient(135deg, "+C.goldLight+" 0%, "+C.greenLight+" 100%)",border:"1px solid "+C.green+"44",borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:24}}>{_disp.emoji}</span>
-            <div>
-              <div style={{fontSize:13,fontWeight:700,color:C.green}}>✅ 今日目标已完成！连续 {_disp.days} 天</div>
-              <div style={{fontSize:11,color:C.textSec}}>{_disp.msg}  还想学可以继续~</div>
+        var _rwdCount = Object.keys(reviewWordData || {}).length;
+        var _stage = pet ? getPetStage(pet.totalFed || 0) : null;
+        var _hasAny = pet || _sk.streak > 0 || _rwdCount > 0 || (stats?.xp || 0) > 0;
+        if (!_hasAny) return null;
+        // 叙事文案：动态拼接关键事实
+        var lines = [];
+        if (_rwdCount > 0) lines.push("学了 " + _rwdCount + " 个词");
+        if (_sk.streak > 0) lines.push("连续 " + _sk.streak + " 天");
+        if ((stats?.xp || 0) > 0) lines.push("累计 " + stats.xp + " XP");
+        var narrative = lines.length > 0 ? lines.join(" · ") : "今天开始第一天";
+        var petLine = pet ? <><strong style={{color:C.accent,fontFamily:FONT_DISPLAY}}>{pet.name}</strong> 跟你一起 {narrative}</> : narrative;
+        var todayDone = _sk.todayDone;
+        return (
+          <button
+            onClick={function(){ if (pet) setShowPet(true); }}
+            style={{
+              width:"100%", textAlign:"left", marginBottom:14,
+              padding:"12px 14px",
+              background: todayDone
+                ? "linear-gradient(135deg, "+C.greenLight+" 0%, #fff 60%, "+C.tealLight+" 100%)"
+                : "linear-gradient(135deg, "+C.accentLight+" 0%, #fff 60%, "+C.goldLight+" 100%)",
+              border: "1px solid " + (todayDone ? C.green+"33" : C.accent+"33"),
+              borderRadius: 14,
+              fontFamily: FONT,
+              cursor: pet ? "pointer" : "default",
+              display:"flex", alignItems:"center", gap:12,
+              boxShadow: "0 1px 2px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div style={{fontSize: 36, lineHeight:1, flexShrink:0}}>
+              {_stage ? _stage.emoji : "🌱"}
             </div>
-          </div>;
-        } else {
-          // 今天还没完成，提醒保持连续
-          return <div style={{background:"linear-gradient(135deg, "+C.goldLight+" 0%, "+C.accentLight+" 100%)",border:"1px solid "+C.gold+"44",borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:24}}>🔥</span>
-            <div>
-              <div style={{fontSize:13,fontWeight:700,color:C.accent}}>已连续 {_disp.days} 天！再来一把？</div>
-              <div style={{fontSize:11,color:C.textSec}}>今天还没完成学习，完成后连续天数 +1</div>
+            <div style={{flex:1, minWidth:0}}>
+              <div style={{fontSize:13.5, color:C.text, lineHeight:1.5, fontWeight:500}}>
+                {petLine}
+              </div>
+              <div style={{fontSize:11, color:C.textSec, marginTop:2}}>
+                {todayDone ? "✅ 今天已完成 — 太棒了" : (_sk.streak > 0 ? "🔥 今天还没学，别让 " + _sk.streak + " 天断了" : "📖 一起加油")}
+              </div>
             </div>
-          </div>;
-        }
+            {pet && <div style={{fontSize:14, color:C.textSec, flexShrink:0}}>›</div>}
+          </button>
+        );
       })()}
 
-      {(() => { var _hasWords = parseWordsFromInput(wordInput).length > 0; return <div style={{...S.card, marginBottom:14, borderColor:C.border, background:C.bg, borderLeft:"3px solid "+C.accent}}>
-        <div style={{fontWeight:800,fontSize:15,marginBottom:8,color:C.accent,display:"flex",justifyContent:"space-between"}}>
-          <span>⚡ 今日任务</span>
-          {_hasWords && <span style={{fontSize:12,fontWeight:600}}>总计：约 {dailyPlan.totalMin} 分钟</span>}
-        </div>
+      {(() => {
+        var _hasWords = parseWordsFromInput(wordInput).length > 0;
+        if (!_hasWords) {
+          // 无词表时保留引导卡（不展开示例了，让首屏更精简）
+          return (
+            <div style={{...S.card, marginBottom:14, borderColor:C.border, background:C.bg, borderLeft:"3px solid "+C.accent}}>
+              <div style={{fontWeight:800,fontSize:15,marginBottom:10,color:C.accent}}>⚡ 今日任务</div>
+              <div style={{background:C.card,border:"1px dashed "+C.teal,borderRadius:10,padding:"20px 16px",textAlign:"center"}}>
+                <img src="/ai-illustration.png" alt="" style={{width:"50%",maxWidth:140,margin:"4px auto 14px",display:"block",opacity:0.9}} />
+                <div style={{fontWeight:700,fontSize:15,color:C.text,marginBottom:10}}>导入你的第一个词表，开始学习吧！</div>
+                <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none",padding:"10px 26px",fontSize:14,fontWeight:700}} onClick={function(){ setSetupTab("words"); setTimeout(function(){ var el = document.getElementById("vocabspark-profile-section"); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }, 120); }}>前往词库 →</button>
+              </div>
+            </div>
+          );
+        }
 
-        {!_hasWords ? (
-          <>
-            <div style={{background:C.card,border:"1px dashed "+C.teal,borderRadius:10,padding:"20px 16px",textAlign:"center"}}>
-              <img src="/ai-illustration.png" alt="" style={{width:"60%",maxWidth:168,margin:"12px auto 16px",display:"block",opacity:0.9}} />
-              <div style={{fontWeight:700,fontSize:15,color:C.text,marginBottom:10}}>导入你的第一个词表，开始学习吧！</div>
-              <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none",padding:"8px 20px",fontSize:14,fontWeight:600}} onClick={function(){ setSetupTab("words"); setTimeout(function(){ var el = document.getElementById("vocabspark-profile-section"); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }, 120); }}>前往词汇表 →</button>
-            </div>
-            <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:10,padding:"16px",marginTop:10}}>
-              <div style={{fontSize:13,color:C.teal,fontWeight:800,marginBottom:10,textAlign:"center"}}>✨ AI 如何为你定制学习？</div>
-              <div style={{background:"linear-gradient(135deg,"+C.tealLight+" 0%,"+C.accentLight+" 100%)",borderRadius:10,padding:"12px 14px",marginBottom:10,border:"1px solid "+C.teal+"22"}}>
-                <div style={{fontSize:11,color:C.teal,fontWeight:700,marginBottom:6,display:"flex",alignItems:"center",gap:4}}>📝 画像示例</div>
-                <div style={{fontSize:12,color:C.text,lineHeight:1.7,fontStyle:"italic"}}>Willow，6年级，住在 Irvine<br/>好朋友 Emily · 网球教练 Ms. Lee<br/>最爱逛 Irvine Spectrum · 抹茶冰淇淋控<br/>追《鬼灭之刃》· 偶像 Taylor Swift</div>
+        // 计算"当前应该做哪一步"
+        var stepDef;
+        if (!dailyPlan.quickDone && dailyPlan.toReview.length > 0) {
+          stepDef = {
+            id:"review", icon:"🔄", title:"快速复习", color:C.teal,
+            sub: dailyPlan.toReview.length + " 个词到期 · 约 " + dailyPlan.quickMin + " 分钟",
+            cta: "▶ 开始复习 · " + dailyPlan.toReview.length + " 词",
+            onClick: function(){ startQuickReview("due"); },
+          };
+        } else if (dailyPlan.quickDone && !dailyPlan.deepDone && !dailyPlan.deepLocked) {
+          stepDef = {
+            id:"deep", icon:"🎯", title:"重点攻克", color:C.red,
+            sub: "易错词强化 · 约 " + dailyPlan.deepMin + " 分钟",
+            cta: "▶ 开始攻克",
+            onClick: startDeepReview,
+          };
+        } else if ((dailyPlan.quickDone || dailyPlan.toReview.length === 0) && (dailyPlan.deepDone || dailyPlan.deepLocked) && !dailyPlan.newDone) {
+          var remain = Math.max(0, dailyPlan.newQuota - (dailyPlan.newLearnedToday || 0));
+          stepDef = {
+            id:"new", icon:"📖", title:"学习新词", color:C.accent,
+            sub: remain + " 个词待学 · 约 " + dailyPlan.newMin + " 分钟",
+            cta: "▶ 开始学习 · 剩 " + remain + " 词",
+            onClick: function(){ startLearning(0); },
+          };
+        } else {
+          // 全部完成
+          stepDef = {
+            id:"done", icon:"🎉", title:"今日任务完成！", color:C.green,
+            sub: "保持节奏，明天见～ 还想学的话可以再复习一遍",
+            cta: "🔄 再复习一遍",
+            onClick: function(){ startQuickReview("all"); },
+            allDone: true,
+          };
+        }
+
+        // 已完成步骤的小战绩
+        var doneItems = [];
+        if (dailyPlan.quickDone && stepDef.id !== "review") doneItems.push("复习 " + (dailyPlan.toReview.length + (dailyPlan.quickReviewedToday || 0)) + " 词");
+        else if (!dailyPlan.quickDone && dailyPlan.toReview.length === 0 && stepDef.id !== "review") doneItems.push("无到期复习");
+        if (dailyPlan.deepDone && stepDef.id !== "deep") doneItems.push("攻克 " + (dailyPlan.deepUsedToday || 0) + " 词");
+        else if (dailyPlan.deepLocked && stepDef.id !== "deep" && !dailyPlan.deepDone) doneItems.push("攻克未解锁");
+        if (dailyPlan.newDone && stepDef.id !== "new") doneItems.push("新学 " + (dailyPlan.newLearnedToday || 0) + " 词");
+
+        // 三步整体进度（用于顶部进度条）
+        var totalSteps = 3;
+        var doneSteps = (dailyPlan.quickDone ? 1 : 0) + (dailyPlan.deepDone || dailyPlan.deepLocked ? 1 : 0) + (dailyPlan.newDone ? 1 : 0);
+        var progressPct = Math.round((doneSteps / totalSteps) * 100);
+
+        return (
+          <div style={{...S.card, marginBottom:14, padding:"16px 18px"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+              <div style={{fontSize:13,fontWeight:700,color:C.textSec,letterSpacing:"0.02em"}}>📚 今日任务</div>
+              <div style={{fontSize:12,fontWeight:600,color:C.textSec,fontFamily:FONT_DISPLAY}}>
+                <strong style={{color:C.text,fontSize:15}}>{doneSteps}</strong>/{totalSteps} 步 · 约 {dailyPlan.totalMin} 分钟
               </div>
-              <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                <div style={{background:C.bg,borderRadius:8,padding:"10px 12px",border:"1px solid "+C.border}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                    <span style={{fontWeight:700,fontSize:13}}>abandon</span>
-                    <span style={{fontSize:10,color:C.textSec,background:C.border+"88",borderRadius:4,padding:"1px 6px"}}>普通教材</span>
-                  </div>
-                  <div style={{fontSize:13,color:C.textSec,lineHeight:1.6}}>to leave completely and finally; forsake</div>
-                </div>
-                <div style={{fontSize:11,color:C.teal,fontWeight:700,textAlign:"center",margin:"-2px 0"}}>⬇️ Know U. 加持后</div>
-                <div style={{background:C.accentLight,borderRadius:8,padding:"10px 12px",border:"1px solid "+C.accent+"33"}}>
-                  <div style={{fontWeight:700,fontSize:13,color:C.accent,marginBottom:4}}>abandon</div>
-                  <div style={{fontSize:13,color:C.text,lineHeight:1.7}}>Willow 和 Emily 在 Irvine Spectrum 的网球场打到正嗨，突然暴雨 — they had to <strong style={{color:C.accent}}>abandon</strong> the match and run for matcha ice cream! 🍵</div>
-                </div>
-                <div style={{background:C.purpleLight,borderRadius:8,padding:"10px 12px",border:"1px solid "+C.purple+"33"}}>
-                  <div style={{fontWeight:700,fontSize:13,color:C.purple,marginBottom:4}}>resilient</div>
-                  <div style={{fontSize:13,color:C.text,lineHeight:1.7}}>Ms. Lee 说过："A <strong style={{color:C.purple}}>resilient</strong> player doesn't quit after losing the first set." — Willow 记住了，下一场她翻盘了 🎾</div>
-                </div>
-                <div style={{background:C.goldLight,borderRadius:8,padding:"10px 12px",border:"1px solid "+C.gold+"33"}}>
-                  <div style={{fontWeight:700,fontSize:13,color:"#b8860b",marginBottom:4}}>euphoria</div>
-                  <div style={{fontSize:13,color:C.text,lineHeight:1.7}}>The <strong style={{color:"#b8860b"}}>euphoria</strong> Willow felt when Taylor Swift played "Shake It Off" live — 全场尖叫，她激动到快哭 🎤</div>
-                </div>
-              </div>
-              <div style={{fontSize:12,color:C.teal,marginTop:10,textAlign:"center",fontWeight:600,lineHeight:1.6}}>每个单词都是你的故事<br/><span style={{fontWeight:400,color:C.textSec,fontSize:11}}>填写「画像」后，AI 会用你的真实生活编织例句</span></div>
             </div>
-          </>
-        ) : (
-          <>
-            {showTaskOrderHint && (
-              <div style={{fontSize:12,color:C.textSec,marginBottom:8,display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"6px 8px"}}>
-                <span>建议顺序：先复习，再攻克，最后学新词</span>
-                <button style={{...S.smallBtn,padding:"2px 8px"}} onClick={function(){setShowTaskOrderHint(false);}}>跳过建议</button>
+            {/* 进度条 */}
+            <div style={{height:6, background:"rgba(0,0,0,0.06)", borderRadius:3, overflow:"hidden", marginBottom:14}}>
+              <div style={{height:"100%", width:progressPct+"%", background:"linear-gradient(90deg, "+C.accent+", "+C.gold+")", borderRadius:3, transition:"width 0.4s"}} />
+            </div>
+            {/* 当前步骤行 */}
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+              <div style={{
+                width:46, height:46, borderRadius:12,
+                background:stepDef.color+"22",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontSize:24, flexShrink:0,
+              }}>{stepDef.icon}</div>
+              <div style={{flex:1, minWidth:0}}>
+                <div style={{fontSize:16, fontWeight:800, color:C.text, marginBottom:2, fontFamily:FONT_DISPLAY}}>
+                  {stepDef.title}
+                </div>
+                <div style={{fontSize:12, color:C.textSec, lineHeight:1.5}}>{stepDef.sub}</div>
+              </div>
+            </div>
+            {/* CTA 按钮 */}
+            <button onClick={stepDef.onClick} style={{
+              display:"block", width:"100%",
+              padding:"14px 0",
+              background: stepDef.allDone
+                ? "linear-gradient(135deg, "+C.green+" 0%, "+C.teal+" 100%)"
+                : "linear-gradient(135deg, "+C.accent+" 0%, "+C.gold+" 100%)",
+              color:"#fff",
+              border:"none",
+              borderRadius:12,
+              fontFamily:FONT,
+              fontSize:15, fontWeight:800,
+              cursor:"pointer",
+              boxShadow:"0 4px 12px " + (stepDef.allDone ? C.green : C.accent) + "55",
+              letterSpacing:"0.02em",
+            }}>{stepDef.cta}</button>
+            {/* 已完成步骤折成小字（战绩） */}
+            {doneItems.length > 0 && (
+              <div style={{
+                marginTop:14, paddingTop:12,
+                borderTop:"1px dashed "+C.border,
+                fontSize:12, color:C.textSec,
+                display:"flex", alignItems:"center", gap:14, flexWrap:"wrap",
+              }}>
+                <span style={{fontWeight:700, color:C.text}}>已完成</span>
+                {doneItems.map(function(t, i){
+                  return <span key={i} style={{display:"inline-flex", alignItems:"center", gap:4}}>
+                    <span style={{color:C.green, fontWeight:800}}>✓</span>
+                    {t}
+                  </span>;
+                })}
               </div>
             )}
-
-            {/* P1-6: 三步进度轨（Duolingo 风格） — 直观展示今日进度 */}
-            <div style={{display:"flex",alignItems:"center",gap:0,marginBottom:10,padding:"8px 4px"}}>
-              {[
-                { label:"快速复习", done:dailyPlan.quickDone, active:!dailyPlan.quickDone && dailyPlan.toReview.length > 0 },
-                { label:"重点攻克", done:dailyPlan.deepDone, active:dailyPlan.quickDone && !dailyPlan.deepDone && !dailyPlan.deepLocked },
-                { label:"学习新词", done:dailyPlan.newDone, active:dailyPlan.quickDone && dailyPlan.deepDone && !dailyPlan.newDone },
-              ].map(function(step, i, arr) {
-                var nodeBg = step.done ? C.green : step.active ? C.accent : C.border;
-                var nodeColor = step.done || step.active ? "#fff" : C.textSec;
-                var trackBg = i > 0 ? (arr[i-1].done ? C.green : C.border) : null;
-                return <React.Fragment key={i}>
-                  {i > 0 && <div style={{flex:1,height:3,background:trackBg,transition:"background 0.3s",margin:"0 -2px"}} />}
-                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,position:"relative"}}>
-                    <div style={{width:28,height:28,borderRadius:"50%",background:nodeBg,color:nodeColor,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,boxShadow:step.active ? "0 0 0 4px "+C.accent+"22" : "none",transition:"all 0.3s"}}>{step.done ? "✓" : (i+1)}</div>
-                    <div style={{fontSize:10,color:step.active?C.accent:step.done?C.green:C.textSec,fontWeight:step.active?700:500,whiteSpace:"nowrap"}}>{step.label}</div>
-                  </div>
-                </React.Fragment>;
-              })}
-            </div>
-
-            <div className="vs-task-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-              <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
-                <div>
-                  <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>① 快速复习</div>
-                  <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.quickMin} 分钟</div>
-                  <div style={{fontSize:dailyPlan.toReview.length > 0 && !dailyPlan.quickDone ? 13 : 11,color:dailyPlan.quickDone?C.green:dailyPlan.toReview.length > 0 ? C.accent : C.textSec,fontWeight:dailyPlan.quickDone||dailyPlan.toReview.length > 0?700:500,minHeight:16}}>{dailyPlan.quickDone ? "✅ 已完成" : (dailyPlan.toReview.length === 0 ? "🎉 无到期" : "⏰ " + dailyPlan.toReview.length + " 词待复习")}</div>
-                </div>
-                <button style={{...S.smallBtn,background:dailyPlan.quickDone?C.card:C.teal,color:dailyPlan.quickDone?C.teal:"#fff",border:dailyPlan.quickDone?"1px solid "+C.teal:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} onClick={function(){startQuickReview("due");}}>{dailyPlan.quickDone?"再复习":"开始"}</button>
+            {/* 二级操作（替补按钮 — 切换到不是当前步骤的） */}
+            {!stepDef.allDone && doneItems.length > 0 && (
+              <div style={{display:"flex",gap:8,marginTop:10}}>
+                {stepDef.id !== "review" && dailyPlan.toReview.length > 0 && (
+                  <button style={{...S.smallBtn, flex:1, padding:"7px 0", fontSize:12, background:"transparent", border:"1px solid "+C.border, color:C.teal}} onClick={function(){startQuickReview("due");}}>🔄 复习</button>
+                )}
+                {stepDef.id !== "deep" && !dailyPlan.deepLocked && (
+                  <button style={{...S.smallBtn, flex:1, padding:"7px 0", fontSize:12, background:"transparent", border:"1px solid "+C.border, color:C.red}} onClick={startDeepReview}>🎯 攻克</button>
+                )}
+                {stepDef.id !== "new" && (
+                  <button style={{...S.smallBtn, flex:1, padding:"7px 0", fontSize:12, background:"transparent", border:"1px solid "+C.border, color:C.accent}} onClick={function(){startLearning(0);}}>📖 新词</button>
+                )}
               </div>
-
-              <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between",opacity:dailyPlan.deepLocked?0.7:1}}>
-                <div>
-                  <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>② 重点攻克</div>
-                  <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.deepMin} 分钟</div>
-                  <div style={{fontSize:11,color:dailyPlan.deepLocked?C.textSec:dailyPlan.deepDone?C.green:C.textSec,fontWeight:dailyPlan.deepDone?600:500,minHeight:16}}>
-                    {dailyPlan.deepLocked ? "🔒 待解锁" : (dailyPlan.deepDone ? "✅ 已完成" : dailyPlan.deepUsedToday + "/" + dailyPlan.deepCap + " 词")}
-                  </div>
-                </div>
-                <button style={{...S.smallBtn,background:dailyPlan.deepLocked?C.textSec:dailyPlan.deepDone?C.card:C.red,color:dailyPlan.deepDone?C.red:"#fff",border:dailyPlan.deepDone?"1px solid "+C.red:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} disabled={dailyPlan.deepLocked} onClick={startDeepReview}>
-                  {dailyPlan.deepLocked?"锁定":(dailyPlan.deepDone?"继续":"开始")}
-                </button>
-              </div>
-
-              <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
-                <div>
-                  <div style={{fontWeight:800,fontSize:14,marginBottom:2,whiteSpace:"nowrap",letterSpacing:"-0.02em"}}>③ 学习新词</div>
-                  <div style={{fontSize:11,color:C.textSec,marginBottom:4}}>约 {dailyPlan.newMin} 分钟</div>
-                  <div style={{fontSize:11,color:dailyPlan.newDone?C.green:C.textSec,fontWeight:dailyPlan.newDone?600:500,minHeight:16}}>
-                    {dailyPlan.newDone ? "✅ " + dailyPlan.newLearnedToday + "/" + dailyPlan.newQuota + " 已达标" : (dailyPlan.newLearnedToday || 0) + "/" + dailyPlan.newQuota + " 词"}
-                  </div>
-                </div>
-                <button style={{...S.smallBtn,background:dailyPlan.newDone?C.card:C.accent,color:dailyPlan.newDone?C.accent:"#fff",border:dailyPlan.newDone?"1px solid "+C.accent:"none",width:"100%",marginTop:10,padding:"6px 0",fontSize:13,fontWeight:600}} onClick={function(){startLearning(0);}}>
-                  {dailyPlan.newDone?"继续":"开始"}
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-      </div>; })()}
+            )}
+          </div>
+        );
+      })()}
 
       {hasSession && (
         <div style={{ ...S.card, background: C.tealLight, borderColor: C.teal, marginBottom: 14 }}>
@@ -5410,28 +5462,33 @@ export default function App() {
         </div>
       )}
 
-      {/* Account status banner */}
-      {user ? (
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:C.tealLight,border:"1px solid "+C.teal,borderRadius:10,padding:"10px 16px",marginBottom:12,fontSize:13}}>
-          <div><span style={{color:C.teal,fontWeight:700}}>✅ 已登录</span><span style={{color:C.textSec,marginLeft:8}}>{user.email}</span><span style={{color:userTier==="pro"||userTier==="basic"?C.gold:C.teal,marginLeft:8,fontSize:12,fontWeight:600}}>{userTier==="pro" ? "· ✨ Pro 无限" : userTier==="basic" ? "· 🎯 Basic 无限" : "· 每日 "+DAILY_LIMIT_REGISTERED+" 词"}</span></div>
-          <button onClick={handleLogout} style={{background:"transparent",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",fontFamily:FONT}}>退出</button>
-        </div>
-      ) : (
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:todayCount>0?C.goldLight:C.tealLight,border:"1px solid "+(todayCount>0?C.gold:C.teal),borderRadius:10,padding:"10px 16px",marginBottom:12,fontSize:13,flexWrap:"wrap",gap:8}}>
-          <div style={{lineHeight:1.6}}>{todayCount > 0
-            ? <><strong>🎓 AI 私教体验</strong>：注册后每天学 {DAILY_LIMIT_REGISTERED} 词 + 云同步<br/><span style={{fontSize:12,color:C.textSec}}>游客每日 {DAILY_LIMIT_GUEST} 词，今日已学 {todayCount} 词</span></>
-            : <><span style={{color:C.teal}}>🎓</span> 注册后享受 <strong>AI 私教</strong>完整体验 + <strong>云同步</strong><span style={{fontSize:12,color:C.textSec,marginLeft:4}}>（免费）</span></>
-          }</div>
-          <button onClick={() => setShowLogin(true)} style={{background:C.accent,color:"#fff",border:"none",borderRadius:8,padding:"7px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT,whiteSpace:"nowrap"}}>登录 / 注册</button>
+      {/* 未登录用户：精简提示条（仅在快接近上限时显示，不再用大蓝色 banner 抢主流程位置） */}
+      {!user && todayCount >= DAILY_LIMIT_GUEST - 2 && (
+        <div onClick={() => setShowLogin(true)} style={{
+          marginBottom: 12,
+          padding: "8px 14px",
+          background: todayCount >= DAILY_LIMIT_GUEST ? C.redLight : C.goldLight,
+          border: "1px solid " + (todayCount >= DAILY_LIMIT_GUEST ? C.red+"55" : C.gold+"55"),
+          borderRadius: 10,
+          fontSize: 12,
+          color: todayCount >= DAILY_LIMIT_GUEST ? C.red : C.gold,
+          fontWeight: 600,
+          cursor: "pointer",
+          textAlign: "center",
+        }}>
+          {todayCount >= DAILY_LIMIT_GUEST
+            ? "⚠️ 游客今日 " + DAILY_LIMIT_GUEST + " 词上限已到 · 注册后每日 " + DAILY_LIMIT_REGISTERED + " 词 →"
+            : "🎓 还能学 " + (DAILY_LIMIT_GUEST - todayCount) + " 词 · 注册后每日 " + DAILY_LIMIT_REGISTERED + " 词无限听 →"
+          }
         </div>
       )}
 
       <div id="vocabspark-profile-section" style={{...S.tabBar}}>
-        <button style={{...(setupTab==="profile"?S.tabActive:S.tab)}} onClick={() => setSetupTab("profile")}>👤 画像</button>
-        <button style={{...(setupTab==="goal"?S.tabActive:S.tab)}} onClick={() => setSetupTab("goal")}>🎯 目的</button>
-        <button style={{...(setupTab==="words"?S.tabActive:S.tab)}} onClick={() => setSetupTab("words")}>📝 词汇表</button>
-        <button style={{...(setupTab==="plan"?S.tabActive:S.tab)}} onClick={() => setSetupTab("plan")}>📅 计划</button>
-        <button style={{...(setupTab==="stats"?S.tabActive:S.tab)}} onClick={() => setSetupTab("stats")}>📊 统计</button>
+        <button style={{...(setupTab==="profile"?S.tabActive:S.tab)}} onClick={() => setSetupTab("profile")}>👤 我是谁</button>
+        <button style={{...(setupTab==="goal"?S.tabActive:S.tab)}} onClick={() => setSetupTab("goal")}>🎯 我的目标</button>
+        <button style={{...(setupTab==="words"?S.tabActive:S.tab)}} onClick={() => setSetupTab("words")}>📝 词库</button>
+        <button style={{...(setupTab==="plan"?S.tabActive:S.tab)}} onClick={() => setSetupTab("plan")}>📅 学习节奏</button>
+        <button style={{...(setupTab==="stats"?S.tabActive:S.tab)}} onClick={() => setSetupTab("stats")}>📊 我的成绩</button>
       </div>
       {setupTab === "profile" && (
         <div style={S.setupCard}>
@@ -6165,8 +6222,8 @@ export default function App() {
         </div>
       )}
 
-      {/* 学习宠物：右下角浮动按钮 — 跟用户共生存在感，配合 streak/XP 形成长期驱动 */}
-      {pet && (() => {
+      {/* 学习宠物：右下角浮动按钮 — 仅学习屏显示（setup 屏的"我的小本本"卡已整合入口，不再重复浮窗） */}
+      {pet && screen !== "setup" && (() => {
         var stage = getPetStage(pet.totalFed || 0);
         var mood = getPetMood(pet);
         var hunger = calcDecayedHunger(pet);
@@ -6688,10 +6745,10 @@ export default function App() {
               <button onClick={() => { setShowSettings(false); window.scrollTo(0,0); }} style={{background:"transparent",border:"none",fontSize:22,cursor:"pointer",color:C.textSec,padding:"0 4px"}}>×</button>
             </div>
             <div style={{display:"flex",borderBottom:"1px solid "+C.border,margin:"16px 20px 0"}}>
-              <button style={setupTab==="profile"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("profile")}>👤 画像</button>
-              <button style={setupTab==="plan"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("plan")}>🎯 计划</button>
-              <button style={setupTab==="words"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("words")}>📝 词汇</button>
-              <button style={setupTab==="stats"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("stats")}>📊 统计</button>
+              <button style={setupTab==="profile"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("profile")}>👤 我是谁</button>
+              <button style={setupTab==="plan"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("plan")}>🎯 学习节奏</button>
+              <button style={setupTab==="words"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("words")}>📝 词库</button>
+              <button style={setupTab==="stats"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("stats")}>📊 我的成绩</button>
               <button style={setupTab==="account"?{...S.tab,...S.tabActive}:S.tab} onClick={() => setSetupTab("account")}>🔑 账号</button>
             </div>
             <div style={{padding:"16px 20px 20px"}}>
