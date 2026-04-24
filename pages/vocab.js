@@ -1875,8 +1875,23 @@ export default function App() {
       } catch(e) {}
 
       if (justReset) {
-        // 本地已被 resetLearningProgress 清零 → 直接推送，覆盖云端旧数据
-        syncToCloud();
+        // 本地已被 resetLearningProgress 清零 → 强制覆盖云端（不带 clientVersion → API 走 LWW 模式）
+        // 直接 inline fetch，await 等待完成再继续，避免 syncToCloud 被 409 打回拿旧数据
+        try {
+          var clearedLocal = await loadSave();
+          if (clearedLocal) {
+            var resp = await fetch('/api/sync', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: u.id, data: clearedLocal }), // 关键：不传 clientVersion → LWW 直接接受
+            });
+            if (resp.ok) {
+              var okJson = await resp.json();
+              syncVersionRef.current = okJson.version || 0;
+              setSyncStatus("synced");
+            }
+          }
+        } catch(e) { console.warn('[reset-sync] error:', e.message); }
       } else {
         // 服务端权威：拉取云端数据
         var cloudData = await loadFromCloud(u.id);
