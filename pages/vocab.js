@@ -1145,6 +1145,8 @@ export default function App() {
   var [showTaskOrderHint, setShowTaskOrderHint] = useState(true);
   var [showProfileGuide, setShowProfileGuide] = useState(false);
   var [helpTip, setHelpTip] = useState(null);
+  var [showResetConfirm, setShowResetConfirm] = useState(false);
+  var [resetInProgress, setResetInProgress] = useState(false);
   var [reviewFeedback, setReviewFeedback] = useState(null);
   var [streakToast, setStreakToast] = useState(null);
   var [loginToast, setLoginToast] = useState(null);
@@ -4431,7 +4433,7 @@ export default function App() {
             <span style={{color:C.textSec}}>换词表后建议重置。<br/>会清除：单词状态、复习记录、XP 和正确率、今日配额<br/>不会清除：词表内容、学习画像、每日目标、连续学习天数</span>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
               <button onClick={function(){setHelpTip(null);}} style={{background:"transparent",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",padding:0,fontFamily:FONT}}>取消</button>
-              <button onClick={function(){ resetLearningProgress(); setHelpTip(null); }} style={{padding:"6px 14px",background:C.red,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:700,cursor:"pointer"}}>确认重置</button>
+              <button onClick={function(){ setHelpTip(null); setShowResetConfirm(true); }} style={{padding:"6px 14px",background:C.red,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:700,cursor:"pointer"}}>确认重置</button>
             </div>
           </div>}
           {(() => {
@@ -4835,6 +4837,29 @@ export default function App() {
       {loginToast && (
         <div style={{position:"fixed",top:80,left:"50%",transform:"translateX(-50%)",zIndex:1200,background:C.green,color:"#fff",padding:"12px 28px",borderRadius:20,fontSize:15,fontWeight:700,boxShadow:"0 6px 24px rgba(0,0,0,0.2)",animation:"fadeUp 0.3s ease-out",whiteSpace:"nowrap"}}>
           {loginToast}
+        </div>
+      )}
+
+      {/* 重置进度二次确认模态（替代 native confirm，不会被浏览器屏蔽） */}
+      {showResetConfirm && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",zIndex:1500,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:FONT}} onClick={function(){ if (!resetInProgress) setShowResetConfirm(false); }}>
+          <div onClick={function(e){e.stopPropagation();}} style={{background:C.card,borderRadius:16,maxWidth:440,width:"100%",padding:"24px 22px",boxShadow:"0 20px 60px rgba(0,0,0,0.35)",border:"2px solid "+C.red}}>
+            <div style={{fontSize:36,textAlign:"center",marginBottom:8}}>⚠️</div>
+            <div style={{fontSize:18,fontWeight:700,color:C.red,textAlign:"center",marginBottom:12}}>最后一次确认：重置学习进度</div>
+            <div style={{fontSize:13,color:C.text,lineHeight:1.8,background:C.redLight,border:"1px solid "+C.red+"33",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
+              <div style={{fontWeight:700,color:C.red,marginBottom:6}}>将清除（不可撤销）：</div>
+              <div style={{color:C.textSec}}>· 所有单词的学习状态<br/>· 复习记录与复习计划<br/>· 统计数据（XP、正确率等）<br/>· 今日学习配额<br/>· AI 缓存（强制重新生成）</div>
+              <div style={{fontWeight:700,color:C.green,marginTop:10,marginBottom:4}}>会保留：</div>
+              <div style={{color:C.textSec}}>· 词表内容<br/>· 学习画像<br/>· 每日目标设置<br/>· 连续学习天数</div>
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button disabled={resetInProgress} onClick={function(){ setShowResetConfirm(false); }} style={{flex:1,padding:"12px 0",background:"transparent",color:C.text,border:"1px solid "+C.border,borderRadius:10,fontFamily:FONT,fontSize:14,fontWeight:600,cursor:resetInProgress?"not-allowed":"pointer",opacity:resetInProgress?0.5:1}}>取消</button>
+              <button disabled={resetInProgress} onClick={async function(){
+                setResetInProgress(true);
+                try { await resetLearningProgress(); } finally { setResetInProgress(false); setShowResetConfirm(false); }
+              }} style={{flex:1,padding:"12px 0",background:C.red,color:"#fff",border:"none",borderRadius:10,fontFamily:FONT,fontSize:14,fontWeight:700,cursor:resetInProgress?"wait":"pointer",opacity:resetInProgress?0.7:1}}>{resetInProgress?"重置中…":"确认重置"}</button>
+            </div>
+          </div>
         </div>
       )}
 
