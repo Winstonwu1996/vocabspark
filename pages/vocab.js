@@ -2416,19 +2416,25 @@ export default function App() {
       setBatchTip(makeBatchTip(0, batchWords[0], total));
     }
 
-    // ── Phase B: fire review/cloze pre-fetch independently (doesn't affect progress bar) ──
-    var endMilestone = lrn.length + batchWords.length;
-    var willCloze  = endMilestone % 10 === 0;
-    var willReview = endMilestone % 5 === 0 && !willCloze;
-    if (willReview && !dataCache.current["_review_" + endMilestone]) {
-      callAPIFast(sysP, buildReviewPrompt(batchWords))
-        .then(function(raw) { dataCache.current["_review_" + endMilestone] = tryJSON(raw) || null; })
-        .catch(function(err) { console.warn("[loadBatch] review pre-fetch failed:", err.message); });
-    }
-    if (willCloze && !dataCache.current["_cloze_" + endMilestone]) {
-      callAPIFast(sysP, buildClozePrompt([...lrn.slice(-5), ...batchWords]))
-        .then(function(raw) { dataCache.current["_cloze_" + endMilestone] = tryJSON(raw) || null; })
-        .catch(function(err) { console.warn("[loadBatch] cloze pre-fetch failed:", err.message); });
+    // ── Phase B: review/cloze pre-fetch（仅前台 batch！）──
+    // silent 预取 batch 5/10/15 时 lrn 还是空（用户还没学），endMilestone=5/10/15 但
+    // batchWords 是预取批次的词（不是用户即将学完的词），结果 _review_5 缓存被
+    // 预取批次的词占了 → 用户学完 batch 1 触发 review 命中 cache 看到的是别的词。
+    // 修复：silent 模式不预生成 review/cloze，只在前台真正学的时候生成。
+    if (!silent) {
+      var endMilestone = lrn.length + batchWords.length;
+      var willCloze  = endMilestone % 10 === 0;
+      var willReview = endMilestone % 5 === 0 && !willCloze;
+      if (willReview && !dataCache.current["_review_" + endMilestone]) {
+        callAPIFast(sysP, buildReviewPrompt(batchWords))
+          .then(function(raw) { dataCache.current["_review_" + endMilestone] = tryJSON(raw) || null; })
+          .catch(function(err) { console.warn("[loadBatch] review pre-fetch failed:", err.message); });
+      }
+      if (willCloze && !dataCache.current["_cloze_" + endMilestone]) {
+        callAPIFast(sysP, buildClozePrompt([...lrn.slice(-5), ...batchWords]))
+          .then(function(raw) { dataCache.current["_cloze_" + endMilestone] = tryJSON(raw) || null; })
+          .catch(function(err) { console.warn("[loadBatch] cloze pre-fetch failed:", err.message); });
+      }
     }
 
     // ── Word audio pre-fetch: Free Dictionary API (fire and forget) ──
