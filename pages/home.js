@@ -5,12 +5,15 @@ import { C, FONT, FONT_DISPLAY, globalCSS, S } from '../lib/theme';
 import { BrandNavBar, BrandUIcon } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
 import { supabase } from '../lib/supabase';
+import { loadLearningTime, formatTime } from '../lib/learningTimer';
 
 /* ═══════════════════════════════════════════════════════
-   Know U. Learning — 营销首页
+   Know U. Learning — 营销首页（已登录用户看 dashboard）
    ═══════════════════════════════════════════════════════ */
 
 var EXAMS = ["SSAT", "ISEE", "SAT", "TOEFL", "IELTS"];
+var VOCAB_SKEY = "vocabspark_v1";
+var WRITING_SKEY = "vocabspark_writing_v1";
 
 var FadeInSection = ({ children, style }) => {
   var ref = useRef(null);
@@ -27,7 +30,153 @@ var FadeInSection = ({ children, style }) => {
   return <div ref={ref} style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(28px)", transition: "opacity 0.6s ease, transform 0.6s ease", ...style }}>{children}</div>;
 };
 
-// 多学生个性化例句轮播（展示 AI 的"生成力"）
+/* ─── SVG-A：Hero 浮动学习元素（环绕 logo 的 3 个小图标） ─── */
+var HeroFloatingArt = () => (
+  <div aria-hidden="true" style={{ position:"relative", width:160, height:160, margin:"0 auto 12px" }}>
+    {/* 中心 logo */}
+    <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)", animation:"floatLogo 3s ease-in-out infinite", zIndex:2 }}>
+      <BrandUIcon size={72} />
+    </div>
+    {/* 三个学习符号绕轨 */}
+    <div style={{ position:"absolute", top:6, left:6, fontSize:24, animation:"orbitA 6s ease-in-out infinite", filter:"drop-shadow(0 2px 6px rgba(204,107,40,0.35))" }}>📖</div>
+    <div style={{ position:"absolute", top:14, right:8, fontSize:22, animation:"orbitB 6s ease-in-out infinite 1.5s", filter:"drop-shadow(0 2px 6px rgba(58,138,133,0.35))" }}>📚</div>
+    <div style={{ position:"absolute", bottom:8, left:"50%", transform:"translateX(-50%)", fontSize:24, animation:"orbitC 6s ease-in-out infinite 3s", filter:"drop-shadow(0 2px 6px rgba(118,89,194,0.35))" }}>✍️</div>
+  </div>
+);
+
+/* ─── SVG-B：Ecosystem 闭环大插画 ─── */
+var EcosystemArt = () => (
+  <div style={{ width:"100%", maxWidth:560, margin:"0 auto 20px", position:"relative" }}>
+    <svg viewBox="0 0 600 360" width="100%" style={{ display:"block", overflow:"visible" }}>
+      <defs>
+        <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={C.accent} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={C.accent} stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="vocabGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={C.accent} />
+          <stop offset="100%" stopColor={C.gold} />
+        </linearGradient>
+        <linearGradient id="readingGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={C.teal} />
+          <stop offset="100%" stopColor="#5a9abf" />
+        </linearGradient>
+        <linearGradient id="writingGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={C.purple} />
+          <stop offset="100%" stopColor="#8b7cf7" />
+        </linearGradient>
+      </defs>
+
+      {/* 中心暖光 */}
+      <ellipse cx="300" cy="180" rx="200" ry="130" fill="url(#centerGlow)" />
+
+      {/* 三角连线（虚线） */}
+      <path d="M 150 130 Q 300 80 450 130" fill="none" stroke={C.accent} strokeWidth="1.5" strokeDasharray="4 4" opacity="0.45" />
+      <path d="M 450 130 Q 480 230 300 280" fill="none" stroke={C.purple} strokeWidth="1.5" strokeDasharray="4 4" opacity="0.45" />
+      <path d="M 300 280 Q 120 230 150 130" fill="none" stroke={C.teal} strokeWidth="1.5" strokeDasharray="4 4" opacity="0.45" />
+
+      {/* 流动小圆点（沿三条边循环） */}
+      <circle r="4" fill={C.accent}>
+        <animateMotion dur="4s" repeatCount="indefinite" path="M 150 130 Q 300 80 450 130" />
+      </circle>
+      <circle r="4" fill={C.purple}>
+        <animateMotion dur="4s" repeatCount="indefinite" begin="1.3s" path="M 450 130 Q 480 230 300 280" />
+      </circle>
+      <circle r="4" fill={C.teal}>
+        <animateMotion dur="4s" repeatCount="indefinite" begin="2.6s" path="M 300 280 Q 120 230 150 130" />
+      </circle>
+
+      {/* 中心学生（YOU） */}
+      <circle cx="300" cy="180" r="48" fill={C.card} stroke={C.accent} strokeWidth="2.5" />
+      <text x="300" y="194" textAnchor="middle" fontSize="38" style={{ fontFamily:"system-ui,sans-serif" }}>🧑‍🎓</text>
+      <rect x="265" y="232" width="70" height="22" rx="11" fill={C.accent} />
+      <text x="300" y="247" textAnchor="middle" fontSize="11" fontWeight="800" fill="#fff" style={{ letterSpacing:"0.1em" }}>YOU</text>
+
+      {/* Vocab（左上） */}
+      <circle cx="120" cy="130" r="46" fill="url(#vocabGrad)" />
+      <text x="120" y="145" textAnchor="middle" fontSize="34" style={{ fontFamily:"system-ui,sans-serif" }}>📖</text>
+      <text x="120" y="200" textAnchor="middle" fontSize="14" fontWeight="800" fill={C.accent} style={{ fontFamily:FONT_DISPLAY }}>Vocab</text>
+      <text x="120" y="216" textAnchor="middle" fontSize="11" fill={C.textSec}>词汇 · 千人千面例句</text>
+
+      {/* Reading（右上） */}
+      <circle cx="480" cy="130" r="46" fill="url(#readingGrad)" />
+      <text x="480" y="145" textAnchor="middle" fontSize="34" style={{ fontFamily:"system-ui,sans-serif" }}>📚</text>
+      <text x="480" y="200" textAnchor="middle" fontSize="14" fontWeight="800" fill={C.teal} style={{ fontFamily:FONT_DISPLAY }}>Reading</text>
+      <text x="480" y="216" textAnchor="middle" fontSize="11" fill={C.textSec}>阅读 · 个性化材料</text>
+
+      {/* Writing（下） */}
+      <circle cx="300" cy="310" r="46" fill="url(#writingGrad)" />
+      <text x="300" y="325" textAnchor="middle" fontSize="34" style={{ fontFamily:"system-ui,sans-serif" }}>✍️</text>
+      <text x="300" y="368" textAnchor="middle" fontSize="14" fontWeight="800" fill={C.purple} style={{ fontFamily:FONT_DISPLAY }}>Writing</text>
+    </svg>
+  </div>
+);
+
+/* ─── SVG-C：传统 vs Know U. 对比插画 ─── */
+var VsArt = () => (
+  <div className="vs-row" style={{ display:"flex", gap:14, alignItems:"center", justifyContent:"center", flexWrap:"wrap", marginBottom:20 }}>
+    {/* 左：灰色教材 */}
+    <div style={{ flex:"1 1 200px", maxWidth:240, textAlign:"center" }}>
+      <svg viewBox="0 0 220 140" width="100%" style={{ filter:"grayscale(60%)", opacity:0.7 }}>
+        <rect x="40" y="20" width="140" height="100" rx="6" fill="#cdcdcd" stroke="#999" strokeWidth="1.5" />
+        <line x1="60" y1="50" x2="160" y2="50" stroke="#888" strokeWidth="2" />
+        <line x1="60" y1="65" x2="160" y2="65" stroke="#aaa" strokeWidth="1.2" />
+        <line x1="60" y1="78" x2="140" y2="78" stroke="#aaa" strokeWidth="1.2" />
+        <line x1="60" y1="91" x2="150" y2="91" stroke="#aaa" strokeWidth="1.2" />
+        <text x="110" y="42" textAnchor="middle" fontSize="11" fontWeight="700" fill="#666" fontFamily="serif">DICTIONARY</text>
+        <text x="186" y="22" fontSize="14" fill="#888">💤</text>
+      </svg>
+      <div style={{ fontSize:11, color:C.textSec, marginTop:4, fontWeight:700 }}>📖 传统教材</div>
+      <div style={{ fontSize:11, color:C.textSec, opacity:0.7, marginTop:2 }}>所有人看相同例句 · 看完就忘</div>
+    </div>
+
+    {/* 中间箭头 — 桌面横排时显示 →，手机包裹后改成 ↓ 竖向位置 */}
+    <div className="vs-arrow" style={{ fontSize:24, color:C.accent, fontWeight:800, padding:"0 4px" }}>→</div>
+
+    {/* 右：彩色 Know U. */}
+    <div style={{ flex:"1 1 200px", maxWidth:240, textAlign:"center" }}>
+      <svg viewBox="0 0 220 140" width="100%">
+        <defs>
+          <radialGradient id="phoneGlow">
+            <stop offset="0%" stopColor={C.gold} stopOpacity="0.4" />
+            <stop offset="100%" stopColor={C.gold} stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        {/* 背景柔光 */}
+        <ellipse cx="110" cy="70" rx="100" ry="60" fill="url(#phoneGlow)" />
+        {/* 手机 */}
+        <rect x="70" y="15" width="80" height="115" rx="10" fill={C.card} stroke={C.accent} strokeWidth="2" />
+        {/* 屏幕内容 */}
+        <rect x="78" y="24" width="64" height="10" rx="3" fill={C.accentLight} />
+        <text x="110" y="32" textAnchor="middle" fontSize="6" fill={C.accent} fontWeight="700">abandon</text>
+        {/* 个性化例句卡 */}
+        <rect x="78" y="40" width="64" height="56" rx="4" fill={C.goldLight} />
+        <text x="110" y="50" textAnchor="middle" fontSize="5.5" fill={C.text}>Willow @ Irvine</text>
+        <text x="110" y="60" textAnchor="middle" fontSize="5" fill={C.textSec}>tennis match</text>
+        <text x="110" y="70" textAnchor="middle" fontSize="5" fill={C.textSec}>暴雨 → 放弃</text>
+        <text x="110" y="84" textAnchor="middle" fontSize="14" fill={C.accent}>🎾</text>
+        {/* 底部 */}
+        <circle cx="110" cy="115" r="4" fill={C.accent} />
+        {/* 周围彩色气泡 */}
+        <circle cx="40" cy="40" r="8" fill={C.purple} opacity="0.6">
+          <animate attributeName="cy" values="40;36;40" dur="3s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="180" cy="50" r="6" fill={C.teal} opacity="0.65">
+          <animate attributeName="cy" values="50;46;50" dur="3.5s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="35" cy="100" r="7" fill={C.accent} opacity="0.55">
+          <animate attributeName="cy" values="100;96;100" dur="3.2s" repeatCount="indefinite" />
+        </circle>
+        <text x="180" y="108" fontSize="14">✨</text>
+        <text x="20" y="75" fontSize="12">💡</text>
+      </svg>
+      <div style={{ fontSize:11, color:C.accent, marginTop:4, fontWeight:700 }}>✨ Know U. 千人千面</div>
+      <div style={{ fontSize:11, color:C.textSec, marginTop:2 }}>用你的朋友 · 你的地方 · 你的记忆</div>
+    </div>
+  </div>
+);
+
+/* ─── 多学生个性化例句轮播（在 VS 段下面） ─── */
 var KnowUExampleCard = () => {
   var EXAMPLES = [
     {
@@ -60,9 +209,9 @@ var KnowUExampleCard = () => {
   }, []);
   var ex = EXAMPLES[idx];
   return (
-    <div style={{ flex: "1 1 280px", background: C.accentLight, border: "2px solid " + C.accent + "44", borderRadius: 14, padding: "20px", position: "relative", overflow:"hidden" }}>
+    <div style={{ background: C.accentLight, border: "2px solid " + C.accent + "44", borderRadius: 14, padding: "20px", position: "relative", overflow:"hidden", maxWidth:520, margin:"0 auto" }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 10 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: C.accent }}>✨ Know U. 为你定制</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.accent }}>✨ 真实例句样本（每 5 秒切换）</div>
         <div style={{ display:"flex", gap:4 }}>
           {EXAMPLES.map((_, i) => <div key={i} style={{ width:6, height:6, borderRadius:"50%", background: i === idx ? C.accent : C.accent+"33", transition:"background 0.3s" }} />)}
         </div>
@@ -77,19 +226,112 @@ var KnowUExampleCard = () => {
           {ex.sentence}
         </div>
       </div>
-      <div style={{ fontSize: 12, color: C.accent, marginTop: 12, fontWeight: 600, borderTop:"1px dashed "+C.accent+"44", paddingTop:10 }}>📍 你的朋友 · 你的地方 · 你的记忆</div>
     </div>
   );
 };
 
+/* ─── 已登录用户的 Hero（dashboard 摘要 + 继续学习） ─── */
+var ReturningUserHero = ({ user, onUserCenterClick }) => {
+  var [progress, setProgress] = useState({ vocab: null, writing: null, time: { totalMinutes: 0, todayMinutes: 0 } });
+  useEffect(() => {
+    try {
+      var v = JSON.parse(localStorage.getItem(VOCAB_SKEY) || "{}");
+      var w = JSON.parse(localStorage.getItem(WRITING_SKEY) || "{}");
+      var t = loadLearningTime();
+      setProgress({
+        vocab: v?.stats || null,
+        writing: w?.essays?.length || 0,
+        time: t,
+      });
+    } catch(e) {}
+  }, []);
+  var name = user.user_metadata?.name || user.email?.split("@")[0] || "学习者";
+  var hour = new Date().getHours();
+  var greet = hour < 6 ? "夜深了" : hour < 11 ? "早上好" : hour < 14 ? "中午好" : hour < 18 ? "下午好" : "晚上好";
+  var xp = progress.vocab?.xp || 0;
+  var rwd = progress.vocab?.total || 0;
+  var wCount = progress.writing || 0;
+  var todayMin = progress.time?.todayMinutes || 0;
+  var hasStudied = xp > 0 || wCount > 0;
+  return (
+    <section style={{ position:"relative", textAlign:"center", padding:"48px 20px 36px", overflow:"hidden" }}>
+      <div aria-hidden="true" style={{ position:"absolute", inset:0, zIndex:0, pointerEvents:"none" }}>
+        <div style={{ position:"absolute", top:"-100px", left:"15%", width:300, height:300, borderRadius:"50%", background:"radial-gradient(circle, " + C.accent + "22 0%, transparent 70%)", filter:"blur(40px)" }} />
+        <div style={{ position:"absolute", top:"40px", right:"10%", width:240, height:240, borderRadius:"50%", background:"radial-gradient(circle, " + C.gold + "1f 0%, transparent 70%)", filter:"blur(36px)" }} />
+      </div>
+      <div style={{ position:"relative", zIndex:1, maxWidth:560, margin:"0 auto" }}>
+        <div style={{ animation:"floatLogo 3s ease-in-out infinite", marginBottom:14 }}>
+          <BrandUIcon size={56} />
+        </div>
+        <div style={{ fontSize:14, color:C.textSec, marginBottom:4, fontWeight:600 }}>{greet} 👋</div>
+        <h1 style={{ fontFamily:FONT_DISPLAY, fontSize:30, fontWeight:700, margin:"0 0 14px", letterSpacing:"-0.025em", lineHeight:1.15 }}>
+          欢迎回来，<span style={{ color:C.accent }}>{name}</span>
+        </h1>
+        {/* 进度摘要 */}
+        {hasStudied ? (
+          <div style={{ display:"inline-flex", flexWrap:"wrap", gap:8, justifyContent:"center", marginBottom:24 }}>
+            {rwd > 0 && <span style={{...S.heroStatPillGold, padding:"6px 14px", fontSize:13}}>📖 {rwd} 词</span>}
+            {xp > 0 && <span style={{...S.heroStatPillAccent, padding:"6px 14px", fontSize:13}}>⚡ {xp} XP</span>}
+            {wCount > 0 && <span style={{...S.heroStatPillGreen, padding:"6px 14px", fontSize:13}}>✍️ {wCount} 篇写作</span>}
+            {todayMin > 0 && <span style={{ padding:"6px 14px", fontSize:13, background:C.tealLight, color:C.teal, fontWeight:700, borderRadius:20, border:"1px solid "+C.teal+"33" }}>⏱ 今天 {formatTime(todayMin)}</span>}
+          </div>
+        ) : (
+          <p style={{ fontSize:14, color:C.textSec, marginBottom:24, lineHeight:1.7 }}>准备好让 AI 真正了解你了吗？从一个单词开始 →</p>
+        )}
+        {/* 主 CTA */}
+        <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap", marginBottom:20 }}>
+          <Link href="/vocab" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", padding:"14px 32px", background:"linear-gradient(135deg, "+C.accent+" 0%, #d4823d 100%)", color:"#fff", borderRadius:12, fontSize:15, fontWeight:700, textDecoration:"none", boxShadow:"0 6px 18px "+C.accent+"55, inset 0 1px 0 rgba(255,255,255,0.2)" }}>
+            {hasStudied ? "继续学习 →" : "开始第一个单词 →"}
+          </Link>
+          <Link href="/writing" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", padding:"14px 24px", background:C.card, color:C.purple, borderRadius:12, fontSize:14, fontWeight:700, textDecoration:"none", border:"1.5px solid "+C.purple+"55" }}>
+            ✍️ 写作课
+          </Link>
+        </div>
+        <button onClick={onUserCenterClick} style={{ background:"transparent", border:"none", color:C.textSec, fontSize:12, cursor:"pointer", textDecoration:"underline", textUnderlineOffset:3 }}>账户与设置</button>
+      </div>
+    </section>
+  );
+};
+
+/* ─── 未登录新访客 Hero（精简版） ─── */
+var GuestHero = () => (
+  <section style={{ position:"relative", textAlign: "center", padding: "56px 20px 40px", overflow:"hidden" }}>
+    {/* 背景柔光 */}
+    <div aria-hidden="true" style={{ position:"absolute", inset:0, zIndex:0, pointerEvents:"none" }}>
+      <div style={{ position:"absolute", top:"-120px", left:"10%", width:360, height:360, borderRadius:"50%", background:"radial-gradient(circle, " + C.accent + "1f 0%, transparent 70%)", filter:"blur(40px)" }} />
+      <div style={{ position:"absolute", top:"40px", right:"5%", width:300, height:300, borderRadius:"50%", background:"radial-gradient(circle, " + C.teal + "1a 0%, transparent 70%)", filter:"blur(40px)" }} />
+      <div style={{ position:"absolute", bottom:"-80px", left:"30%", width:280, height:280, borderRadius:"50%", background:"radial-gradient(circle, " + C.gold + "1f 0%, transparent 70%)", filter:"blur(36px)" }} />
+    </div>
+    <div style={{ position:"relative", zIndex:1, maxWidth:680, margin:"0 auto" }}>
+      <HeroFloatingArt />
+      <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.035em", lineHeight: 1.1 }}>Know U. Learning</h1>
+      <div style={{ display:"inline-block", padding:"4px 12px", background:C.card, border:"1px solid "+C.border, borderRadius:999, fontSize:11, fontWeight:600, color:C.textSec, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:22, boxShadow:C.shadowSoft }}>Personal AI Language Tutor</div>
+      {/* 一句话主张 */}
+      <h2 style={{ fontSize: 26, fontWeight: 800, color: C.text, margin:"0 0 12px", lineHeight: 1.35, letterSpacing:"-0.02em" }}>
+        AI 用<span style={{ color:C.accent }}>你的故事</span>教英语
+      </h2>
+      <p style={{ fontSize: 15, color: C.textSec, lineHeight: 1.75, maxWidth: 460, margin: "0 auto 28px" }}>
+        每个例句都来自你认识的人和地方 — 备考 SSAT/SAT/TOEFL，记得住才有用。
+      </p>
+      {/* 单一 CTA — 删掉了 hero 内部的"起点"双链接和"了解三位一体 ↓"引导 */}
+      <Link href="/vocab?from=home" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", padding:"15px 36px", background:"linear-gradient(135deg, "+C.accent+" 0%, #d4823d 100%)", color:"#fff", borderRadius:14, fontSize:16, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 24px "+C.accent+"55, inset 0 1px 0 rgba(255,255,255,0.2)", transition:"transform 0.2s ease, box-shadow 0.2s ease" }} onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 12px 32px "+C.accent+"66, inset 0 1px 0 rgba(255,255,255,0.25)"; }} onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 8px 24px "+C.accent+"55, inset 0 1px 0 rgba(255,255,255,0.2)"; }}>
+        免费试 1 个单词 →
+      </Link>
+      <div style={{ fontSize:12, color:C.textSec, marginTop:10, opacity:0.75 }}>无需注册 · 30 秒看到效果</div>
+    </div>
+  </section>
+);
+
 export default function HomePage() {
   var [user, setUser] = useState(null);
+  var [authChecked, setAuthChecked] = useState(false);
   var [showUserCenter, setShowUserCenter] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(function(result) {
       var s = result?.data?.session;
       if (s?.user) setUser(s.user);
+      setAuthChecked(true);
     });
     var { data: { subscription } } = supabase.auth.onAuthStateChange(function(event, session) {
       setUser(session?.user || null);
@@ -108,140 +350,35 @@ export default function HomePage() {
       </Head>
       <style dangerouslySetInnerHTML={{ __html: globalCSS + `
         @keyframes floatLogo { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-        @keyframes bounceDown { 0%,20%,50%,80%,100%{transform:translateY(0)} 40%{transform:translateY(6px)} 60%{transform:translateY(3px)} }
-        @keyframes fadeInText { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes orbitA { 0%,100%{transform:translate(0,0) rotate(0deg)} 50%{transform:translate(-4px,-6px) rotate(-6deg)} }
+        @keyframes orbitB { 0%,100%{transform:translate(0,0) rotate(0deg)} 50%{transform:translate(5px,-4px) rotate(5deg)} }
+        @keyframes orbitC { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-6px)} }
         @keyframes pulseDot { 0%,100%{transform:scale(0.9);opacity:0.5} 50%{transform:scale(1.1);opacity:1} }
-        @keyframes flowDot { 0%{transform:translateX(-20px);opacity:0} 20%{opacity:1} 80%{opacity:1} 100%{transform:translateX(20px);opacity:0} }
-        @keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
-        @keyframes slideInFromRight { from{transform:translateX(100%)} to{transform:translateX(0)} }
+        /* VS 对比插画 — 手机上垂直排列 + 箭头变 ↓ */
+        @media (max-width: 600px) {
+          .vs-row { flex-direction: column !important; }
+          .vs-arrow { transform: rotate(90deg); padding: 8px 0 !important; }
+        }
       `}} />
 
-      {/* Nav */}
+      {/* Nav — 已登录显示用户头像，未登录提示注册 */}
       <BrandNavBar activeTab="home" user={user} onUserCenterClick={() => setShowUserCenter(true)} />
 
-      {/* ═══ HERO ═══ */}
-      <section style={{ position:"relative", textAlign: "center", padding: "60px 20px 48px", overflow:"hidden" }}>
-        {/* 背景装饰：3 个柔和光斑 */}
-        <div aria-hidden="true" style={{ position:"absolute", inset:0, zIndex:0, pointerEvents:"none" }}>
-          <div style={{ position:"absolute", top:"-120px", left:"10%", width:360, height:360, borderRadius:"50%", background:"radial-gradient(circle, " + C.accent + "1f 0%, transparent 70%)", filter:"blur(40px)" }} />
-          <div style={{ position:"absolute", top:"40px", right:"5%", width:300, height:300, borderRadius:"50%", background:"radial-gradient(circle, " + C.teal + "1a 0%, transparent 70%)", filter:"blur(40px)" }} />
-          <div style={{ position:"absolute", bottom:"-80px", left:"30%", width:280, height:280, borderRadius:"50%", background:"radial-gradient(circle, " + C.gold + "1f 0%, transparent 70%)", filter:"blur(36px)" }} />
-        </div>
-        <div style={{ position:"relative", zIndex:1, ...container }}>
-          <div style={{ animation: "floatLogo 3s ease-in-out infinite", marginBottom: 16 }}>
-            <BrandUIcon size={72} />
-          </div>
-          <h1 style={{ fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, margin: "0 0 4px", letterSpacing: "-0.035em", lineHeight: 1.1 }}>Know U. Learning</h1>
-          <div style={{ display:"inline-block", padding:"4px 12px", background:C.card, border:"1px solid "+C.border, borderRadius:999, fontSize:11, fontWeight:600, color:C.textSec, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:24, boxShadow:C.shadowSoft }}>Personal AI Language Tutor</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: C.text, marginBottom: 12, lineHeight: 1.35, letterSpacing:"-0.02em" }}>读、写、词汇 — 一个懂你的 AI 英语私教</div>
-          <p style={{ fontSize: 15, color: C.textSec, lineHeight: 1.8, maxWidth: 520, margin: "0 auto 32px" }}>
-            AI 了解你的生活、朋友、爱好，用你最熟悉的场景教英语。<br/>
-            词汇理解、阅读输入、写作表达 — 三位一体，形成闭环。
-          </p>
-          {/* 主 CTA：单一大按钮 + 辅助链接 */}
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:14, marginBottom:28 }}>
-            <Link href="/vocab?from=home" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", padding:"16px 40px", background:"linear-gradient(135deg, "+C.accent+" 0%, #d4823d 100%)", color:"#fff", borderRadius:14, fontSize:17, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 24px "+C.accent+"55, inset 0 1px 0 rgba(255,255,255,0.2)", transition:"transform 0.2s ease, box-shadow 0.2s ease" }} onMouseEnter={e => { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 12px 32px "+C.accent+"66, inset 0 1px 0 rgba(255,255,255,0.25)"; }} onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 8px 24px "+C.accent+"55, inset 0 1px 0 rgba(255,255,255,0.2)"; }}>
-              免费开始学习 →
-            </Link>
-            <div style={{ fontSize:13, color:C.textSec, display:"flex", alignItems:"center", gap:14 }}>
-              <span>起点：</span>
-              <Link href="/vocab?from=home" style={{ color:C.accent, fontWeight:600, textDecoration:"none", borderBottom:"1px dashed "+C.accent+"66" }}>词汇课</Link>
-              <span style={{ color:C.border }}>|</span>
-              <Link href="/writing" style={{ color:C.purple, fontWeight:600, textDecoration:"none", borderBottom:"1px dashed "+C.purple+"66" }}>写作课</Link>
-            </div>
-          </div>
-          {/* 下滚引导：弹跳箭头 */}
-          <a href="#ecosystem" style={{ display:"inline-flex", flexDirection:"column", alignItems:"center", gap:4, marginBottom:20, textDecoration:"none", color:C.textSec, fontSize:13, cursor:"pointer" }}>
-            <span>了解三位一体学习法</span>
-            <span style={{ animation:"bounceDown 1.8s ease-in-out infinite", display:"inline-block" }}>↓</span>
-          </a>
-          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-            {EXAMS.map(function(e) { return <span key={e} style={{ padding: "4px 12px", background: C.goldLight, borderRadius: 20, fontSize: 12, fontWeight: 700, color: C.gold, border: "1px solid " + C.gold + "33" }}>{e}</span>; })}
-          </div>
-        </div>
-      </section>
+      {/* ═══ HERO — 用户视角差异化 ═══ */}
+      {authChecked && user ? (
+        <ReturningUserHero user={user} onUserCenterClick={() => setShowUserCenter(true)} />
+      ) : (
+        <GuestHero />
+      )}
 
-      {/* ═══ WHY KNOW U. ═══ */}
+      {/* ═══ ECOSYSTEM — SVG 大插画 + 3 产品卡（删掉中间文字卡） ═══ */}
       <FadeInSection>
-        <section id="why" style={{ ...container, padding: "40px 20px" }}>
-          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, textAlign: "center", letterSpacing: "-0.02em", marginBottom: 6 }}>为什么选择 Know U.？</h2>
-          <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 28 }}>同一个单词，两种完全不同的学习体验</p>
-
-          {/* Before/After cards */}
-          <div style={{ display: "flex", gap: 16, marginBottom: 32, flexWrap: "wrap" }}>
-            {/* Traditional */}
-            <div style={{ flex: "1 1 280px", background: C.card, border: "1px solid " + C.border, borderRadius: 14, padding: "20px", opacity: 0.7 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.textSec, marginBottom: 8 }}>📖 传统教材</div>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 600, marginBottom: 4, letterSpacing: "-0.01em" }}>abandon</div>
-              <div style={{ fontSize: 13, color: C.textSec, fontStyle: "italic", marginBottom: 8 }}>/əˈbændən/</div>
-              <div style={{ fontSize: 14, color: C.textSec, lineHeight: 1.6 }}>to leave completely and finally; forsake</div>
-              <div style={{ fontSize: 12, color: C.textSec, marginTop: 12, opacity: 0.6 }}>💤 看完就忘，和你没有任何关系</div>
-            </div>
-            {/* Know U. 个性化例句轮播 */}
-            <KnowUExampleCard />
-          </div>
-
-          {/* 3 Pillars */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
-            {[
-              { icon: "🎯", title: "千人千面", desc: "填写「学习画像」后，AI 用你的朋友、爱好、日常编织每一个例句" },
-              { icon: "📚", title: "直击考试", desc: "专为 SSAT/ISEE/SAT/TOEFL/IELTS 设计的词表和教学策略" },
-              { icon: "🧠", title: "科学记忆", desc: "间隔重复算法（1→3→7→14→30 天）+ 多模态语境学习" },
-            ].map(function(p) {
-              return <div key={p.title} style={{ background: C.card, borderRadius: 12, padding: "18px", border: "1px solid " + C.border, boxShadow: C.shadow }}>
-                <div style={{ fontSize: 28, marginBottom: 8 }}>{p.icon}</div>
-                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>{p.title}</div>
-                <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.6 }}>{p.desc}</div>
-              </div>;
-            })}
-          </div>
-        </section>
-      </FadeInSection>
-
-      {/* ═══ ECOSYSTEM LOOP ═══ */}
-      <FadeInSection>
-        <section id="ecosystem" style={{ ...container, padding: "40px 20px" }}>
+        <section id="ecosystem" style={{ ...container, padding: "32px 20px" }}>
           <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, textAlign: "center", letterSpacing: "-0.02em", marginBottom: 6 }}>三位一体 · 学习闭环</h2>
-          <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 28 }}>读、写、词汇不再是孤立的练习 — 它们相互赋能</p>
+          <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 20 }}>读、写、词汇相互赋能 — 学过的词在写作中自然出现</p>
 
-          {/* Loop Diagram - 加呼吸动画 + 流动箭头 */}
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 0, marginBottom: 24, flexWrap: "wrap" }}>
-            <div style={{ textAlign: "center", flex: "0 0 auto" }}>
-              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, " + C.accent + ", " + C.gold + ")", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 6px", boxShadow: "0 4px 12px " + C.accent + "44", animation:"breathe 3.2s ease-in-out infinite" }}>📖</div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>Vocab</div>
-              <div style={{ fontSize: 11, color: C.textSec }}>词汇理解与记忆</div>
-            </div>
-            {/* 流动箭头 - Vocab ⇄ Reading */}
-            <div style={{ position:"relative", padding: "0 8px", fontSize: 20, color: C.accent, fontWeight: 700, width:48, height:24, display:"flex", alignItems:"center", justifyContent:"center" }}>
-              <span>⇄</span>
-              <span style={{ position:"absolute", top:"50%", left:0, width:6, height:6, borderRadius:"50%", background:C.accent, transform:"translateY(-50%)", animation:"flowDot 2.4s linear infinite" }} />
-            </div>
-            <div style={{ textAlign: "center", flex: "0 0 auto" }}>
-              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, " + C.teal + ", #5a9abf)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 6px", boxShadow: "0 4px 12px " + C.teal + "44", animation:"breathe 3.2s ease-in-out infinite", animationDelay:"1s" }}>📚</div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>Reading</div>
-              <div style={{ fontSize: 11, color: C.textSec }}>语感输入与积累</div>
-            </div>
-            {/* 流动箭头 - Reading ⇄ Writing */}
-            <div style={{ position:"relative", padding: "0 8px", fontSize: 20, color: C.purple, fontWeight: 700, width:48, height:24, display:"flex", alignItems:"center", justifyContent:"center" }}>
-              <span>⇄</span>
-              <span style={{ position:"absolute", top:"50%", left:0, width:6, height:6, borderRadius:"50%", background:C.purple, transform:"translateY(-50%)", animation:"flowDot 2.4s linear infinite", animationDelay:"1.2s" }} />
-            </div>
-            <div style={{ textAlign: "center", flex: "0 0 auto" }}>
-              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "linear-gradient(135deg, " + C.purple + ", #8b7cf7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 6px", boxShadow: "0 4px 12px " + C.purple + "44", animation:"breathe 3.2s ease-in-out infinite", animationDelay:"2s" }}>✍️</div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>Writing</div>
-              <div style={{ fontSize: 11, color: C.textSec }}>思维表达与输出</div>
-            </div>
-          </div>
-
-          {/* Loop description */}
-          <div style={{ background: C.card, borderRadius: 14, border: "1px solid " + C.border, padding: "18px 20px", boxShadow: C.shadow, maxWidth: 520, margin: "0 auto 32px" }}>
-            <div style={{ fontSize: 14, lineHeight: 1.9, color: C.text }}>
-              <strong style={{ color: C.teal }}>📚 Reading</strong> 中收藏好句子和观点<br/>
-              <strong style={{ color: C.purple }}>✍️ Writing</strong> 时一键引用你喜欢的表达<br/>
-              遇到生词 → 加入 <strong style={{ color: C.accent }}>📖 Vocab</strong> 深度学习<br/>
-              <span style={{ fontSize: 13, color: C.textSec }}>三个模块，一个成长闭环 🔄</span>
-            </div>
-          </div>
+          {/* 大幅 SVG 闭环插画 */}
+          <EcosystemArt />
 
           {/* 3 Product Cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
@@ -291,37 +428,81 @@ export default function HomePage() {
         </section>
       </FadeInSection>
 
-      {/* ═══ DIFFERENTIATION ═══ */}
+      {/* ═══ WHY — VS 对比插画 + 4 张差异化卡（合并原 WHY+与众不同） ═══ */}
       <FadeInSection>
-        <section style={{ ...container, padding: "40px 20px" }}>
-          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, textAlign: "center", letterSpacing: "-0.02em", marginBottom: 24 }}>与众不同</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
+        <section id="why" style={{ ...container, padding: "32px 20px" }}>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, textAlign: "center", letterSpacing: "-0.02em", marginBottom: 6 }}>为什么 Know U. 不一样</h2>
+          <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 22 }}>同一个单词，两种完全不同的学习体验</p>
+
+          {/* SVG 对比插画 */}
+          <VsArt />
+
+          {/* 个性化例句样本卡 */}
+          <div style={{ marginBottom: 28 }}>
+            <KnowUExampleCard />
+          </div>
+
+          {/* 4 张差异化卡（合并原 3 pillars + 3 vs cards） */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
             {[
-              { vs: "vs 百词斩", bad: "所有人看到相同的例句和图片", good: "每个学生看到的例句都不同 — 因为来自你的生活" },
-              { vs: "vs ChatGPT", bad: "通用 AI，需要自己设计 prompt", good: "专为英语学习定制完整流程：画像→学习→复习→统计" },
-              { vs: "vs Duolingo", bad: "游戏化但内容通用，不针对考试", good: "直接对接 SSAT/SAT/TOEFL 考试词表，效果堪比真人私教" },
+              {
+                vs: "vs 题海软件",
+                example: "百词斩 · 多邻国",
+                bad: "所有人看相同例句和图片",
+                good: "用你认识的人和地方编例句，过目难忘",
+                color: C.accent,
+              },
+              {
+                vs: "vs 通用 AI",
+                example: "ChatGPT · Claude",
+                bad: "需自己设计 prompt，单次对话即忘",
+                good: "完整学习闭环：画像→学习→复习→统计",
+                color: C.purple,
+              },
+              {
+                vs: "vs 真人私教",
+                example: "外教 · 1v1 课程",
+                bad: "$100+/小时 · 每周一次 · 无法 24/7 跟踪",
+                good: "AI 私教越学越懂你，学费 1/10",
+                color: C.teal,
+              },
+              {
+                vs: "我们的科学",
+                example: "1→3→7→14→30 天",
+                bad: "靠重复刷题，记忆很快衰减",
+                good: "间隔重复算法 + 多模态语境，记得长久",
+                color: C.gold,
+              },
             ].map(function(d) {
-              return <div key={d.vs} style={{ background: C.card, borderRadius: 12, padding: "18px", border: "1px solid " + C.border, boxShadow: C.shadow }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.textSec, marginBottom: 10 }}>{d.vs}</div>
-                <div style={{ fontSize: 13, color: C.textSec, marginBottom: 8, lineHeight: 1.5 }}>❌ {d.bad}</div>
-                <div style={{ fontSize: 13, color: C.accent, fontWeight: 600, lineHeight: 1.5 }}>✅ {d.good}</div>
+              return <div key={d.vs} style={{ background: C.card, borderRadius: 12, padding: "18px", border: "1px solid " + C.border, boxShadow: C.shadow, borderTop:"3px solid "+d.color }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom: 10 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: d.color }}>{d.vs}</div>
+                  <div style={{ fontSize: 10, color: C.textSec, opacity:0.7 }}>{d.example}</div>
+                </div>
+                <div style={{ fontSize: 12.5, color: C.textSec, marginBottom: 8, lineHeight: 1.55 }}>❌ {d.bad}</div>
+                <div style={{ fontSize: 12.5, color: C.text, fontWeight: 600, lineHeight: 1.55 }}>✅ {d.good}</div>
               </div>;
             })}
+          </div>
+
+          {/* EXAMS pill 移到这里 — 作为"覆盖考试"的支撑 */}
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginTop: 24 }}>
+            <span style={{ fontSize:11, color:C.textSec, marginRight:4, alignSelf:"center", fontWeight:700 }}>覆盖主流标化考试 →</span>
+            {EXAMS.map(function(e) { return <span key={e} style={{ padding: "4px 12px", background: C.goldLight, borderRadius: 20, fontSize: 12, fontWeight: 700, color: C.gold, border: "1px solid " + C.gold + "33" }}>{e}</span>; })}
           </div>
         </section>
       </FadeInSection>
 
       {/* ═══ PARENT TESTIMONIALS — WeChat Style ═══ */}
       <FadeInSection>
-        <section style={{ ...container, padding: "40px 20px" }}>
+        <section style={{ ...container, padding: "32px 20px" }}>
           <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, textAlign: "center", letterSpacing: "-0.02em", marginBottom: 6 }}>家长们怎么说</h2>
           <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 24 }}>来自妈妈群的真实反馈</p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 480, margin: "0 auto" }}>
 
-            {/* Conversation 1: Vocab feedback */}
             {(() => {
-              var WxBubble = ({ name, avatar, text, time, isRight, voice, image }) => (
+              var WxBubble = ({ name, avatar, text, isRight, voice, image }) => (
                 <div style={{ display: "flex", flexDirection: isRight ? "row-reverse" : "row", gap: 8, alignItems: "flex-start", marginBottom: 4 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 6, background: isRight ? "linear-gradient(135deg, #f093fb, #f5576c)" : "linear-gradient(135deg, #4facfe, #00f2fe)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#fff", fontWeight: 700, flexShrink: 0 }}>{avatar}</div>
                   <div style={{ maxWidth: "75%" }}>
@@ -360,7 +541,6 @@ export default function HomePage() {
 
               return (
                 <>
-                  {/* Thread 1: 单词 */}
                   <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0" }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>📖 SSAT 妈妈群</div>
                     <WxTime text="昨天 21:32" />
@@ -371,7 +551,6 @@ export default function HomePage() {
                     <WxBubble name="Sophia妈" avatar="S" text="主要是它会自动安排复习 我不用盯了 省心" isRight />
                   </div>
 
-                  {/* Thread 2: 写作 */}
                   <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0" }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>✍️ 英语写作群</div>
                     <WxTime text="今天 09:15" />
@@ -383,7 +562,6 @@ export default function HomePage() {
                     <WxBubble name="Mia妈" avatar="M" text="是的 能坚持用下去就行 慢慢来呗" isRight />
                   </div>
 
-                  {/* Thread 3: 组合使用 */}
                   <div style={{ background: "#EDEDED", borderRadius: 16, padding: "16px 14px 12px", border: "1px solid #e0e0e0" }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: C.textSec, textAlign: "center", marginBottom: 12 }}>💬 家长闲聊</div>
                     <WxTime text="今天 14:08" />
@@ -418,23 +596,27 @@ export default function HomePage() {
         </section>
       </FadeInSection>
 
-      {/* ═══ CTA ═══ */}
+      {/* ═══ CTA — 不再重复 hero，换"临门一脚"角度 ═══ */}
       <FadeInSection>
-        <section style={{ ...container, padding: "40px 20px", textAlign: "center" }}>
-          <div style={{ background: C.card, borderRadius: 20, border: "1px solid " + C.border, padding: "36px 24px", boxShadow: "0 8px 30px rgba(44,36,32,0.08)" }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>🎁</div>
-            <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 6 }}>推广期 · 全部免费</div>
-            <p style={{ fontSize: 14, color: C.textSec, marginBottom: 24 }}>目前所有功能免费开放，注册即用</p>
+        <section style={{ ...container, padding: "32px 20px 8px", textAlign: "center" }}>
+          <div style={{ background: C.card, borderRadius: 20, border: "1px solid " + C.border, padding: "32px 24px", boxShadow: "0 8px 30px rgba(44,36,32,0.08)" }}>
+            <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, lineHeight:1.35 }}>看完了？让 AI 真正认识你 →</div>
+            <p style={{ fontSize: 13, color: C.textSec, marginBottom: 22, lineHeight:1.7 }}>
+              填一份「学习画像」（5 分钟）— 之后每个例句都是你的故事。<br/>
+              <span style={{ color:C.gold, fontWeight:700 }}>🎁 推广期全部免费</span> · 无需信用卡 · 随时退出
+            </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              <Link href="/vocab?from=home" style={{ ...S.bigBtn, display: "inline-block", width: "auto", padding: "14px 28px", fontSize: 15, textDecoration: "none" }}>免费注册，开始学习 →</Link>
-              <Link href="/plan" style={{ ...S.ghostBtn, display: "inline-block", padding: "14px 20px", textDecoration: "none", color: C.textSec }}>查看完整方案</Link>
+              <Link href="/vocab?from=home" style={{ ...S.bigBtn, display: "inline-block", width: "auto", padding: "14px 28px", fontSize: 15, textDecoration: "none" }}>
+                {user ? "继续学习 →" : "免费开始 →"}
+              </Link>
+              <Link href="/plan" style={{ ...S.ghostBtn, display: "inline-block", padding: "14px 20px", textDecoration: "none", color: C.textSec }}>查看付费方案</Link>
             </div>
           </div>
         </section>
       </FadeInSection>
 
       {/* ═══ FOOTER ═══ */}
-      <footer style={{ borderTop: "1px solid " + C.border, padding: "24px 20px 16px", textAlign: "center" }}>
+      <footer style={{ borderTop: "1px solid " + C.border, padding: "24px 20px 16px", textAlign: "center", marginTop:24 }}>
         <div style={{ ...container }}>
           <div style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 12, fontSize: 13, flexWrap: "wrap" }}>
             <Link href="/vocab" style={{ color: C.textSec, textDecoration: "none" }}>Vocab 词汇课</Link>

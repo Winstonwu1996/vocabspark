@@ -124,7 +124,15 @@ export default function UserCenter({ open, onClose, user, stats, studyStreak, st
 
               {/* Account */}
               <Section title="账户管理">
-                <Row icon="🌟" label="升级方案" href="/plan" value="查看" />
+                {!isPaid && (
+                  <Link href="/plan" style={{ textDecoration:"none", display:"block" }}>
+                    <div style={{ background:"linear-gradient(135deg, "+C.gold+" 0%, "+C.accent+" 100%)", borderRadius:10, padding:"12px 14px", marginBottom:8, color:"#fff", boxShadow:"0 4px 12px "+C.gold+"55", cursor:"pointer", transition:"transform 0.15s" }} onMouseEnter={function(e){e.currentTarget.style.transform="translateY(-1px)";}} onMouseLeave={function(e){e.currentTarget.style.transform="translateY(0)";}}>
+                      <div style={{ fontSize:13, fontWeight:800, marginBottom:2 }}>✨ 升级 Pro · 解锁无限</div>
+                      <div style={{ fontSize:11, opacity:0.9 }}>每天 1 小时不够？$20/月解锁全部 →</div>
+                    </div>
+                  </Link>
+                )}
+                {isPaid && <Row icon="🌟" label="订阅方案" href="/plan" value="管理" />}
                 <Row icon="🔒" label="隐私声明" href="/vocab" />
               </Section>
 

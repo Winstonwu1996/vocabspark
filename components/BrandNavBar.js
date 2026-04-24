@@ -81,7 +81,7 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
       }
     `}</style>
     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px" }}>
-      <Link href="/" style={{ display:"flex", alignItems:"center", gap:8, textDecoration:"none", minWidth:0, flex:"0 1 auto" }}>
+      <Link href="/" title="返回首页" style={{ display:"flex", alignItems:"center", gap:8, textDecoration:"none", minWidth:0, flex:"0 1 auto" }}>
         <BrandUIcon size={36} />
         <div style={{ minWidth:0 }}>
           <div className="brand-wordmark" style={{ fontSize:15, letterSpacing:"-0.02em", lineHeight:1.1 }}>
@@ -95,7 +95,7 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
         {/* 桌面端：pill 段控件容器 */}
         <div className="desktop-tab" style={{ ...tabsContainer, display:"none" }}>
           <Link href="/vocab" style={tabStyle("vocab")}>Vocab</Link>
-          <Link href="/writing" style={tabStyle("writing")}>Writing</Link>
+          <Link href="/writing" style={tabStyle("writing")}>Writing<sup style={{fontSize:8,color:C.purple,fontWeight:700,marginLeft:1}}>Beta</sup></Link>
           <span style={{ ...tabStyle("reading"), opacity:0.5, cursor:"default" }}>Reading<sup style={{fontSize:8,color:C.teal,fontWeight:700,marginLeft:1}}>Soon</sup></span>
         </div>
         {syncStatus && syncStatus !== "idle" && user && (
@@ -112,7 +112,7 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
     <div className="mobile-tabs-row" style={{ padding:"4px 16px 10px" }}>
       <div style={tabsContainer}>
         <Link href="/vocab" style={tabStyle("vocab")}>Vocab</Link>
-        <Link href="/writing" style={tabStyle("writing")}>Writing</Link>
+        <Link href="/writing" style={tabStyle("writing")}>Writing<sup style={{fontSize:8,color:C.purple,fontWeight:700,marginLeft:1}}>Beta</sup></Link>
         <span style={{ ...tabStyle("reading"), opacity:0.5, cursor:"default" }}>Reading<sup style={{fontSize:8,color:C.teal,fontWeight:700,marginLeft:1}}>Soon</sup></span>
       </div>
     </div>
