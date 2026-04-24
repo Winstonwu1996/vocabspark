@@ -5285,7 +5285,7 @@ export default function App() {
             onClick={function(){ if (pet) setShowPet(true); }}
             style={{
               width:"100%", textAlign:"left", marginBottom:14,
-              padding:"12px 14px",
+              padding:"14px 16px",
               background: todayDone
                 ? "linear-gradient(135deg, "+C.greenLight+" 0%, #fff 60%, "+C.tealLight+" 100%)"
                 : "linear-gradient(135deg, "+C.accentLight+" 0%, #fff 60%, "+C.goldLight+" 100%)",
@@ -5293,22 +5293,30 @@ export default function App() {
               borderRadius: 14,
               fontFamily: FONT,
               cursor: pet ? "pointer" : "default",
-              display:"flex", alignItems:"center", gap:12,
+              display:"flex", alignItems:"center", gap:14,
               boxShadow: "0 1px 2px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.04)",
             }}
           >
-            <div style={{fontSize: 36, lineHeight:1, flexShrink:0}}>
+            {/* emoji 头像放大 — 圆形背景增加存在感 */}
+            <div style={{
+              width: 56, height: 56, flexShrink: 0,
+              background: todayDone ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.7)",
+              borderRadius: "50%",
+              display:"flex", alignItems:"center", justifyContent:"center",
+              fontSize: 36, lineHeight: 1,
+              boxShadow: "inset 0 0 0 1px " + (todayDone ? C.green+"33" : C.accent+"22") + ", 0 1px 3px rgba(0,0,0,0.05)",
+            }}>
               {_stage ? _stage.emoji : "🌱"}
             </div>
             <div style={{flex:1, minWidth:0}}>
-              <div style={{fontSize:13.5, color:C.text, lineHeight:1.5, fontWeight:500}}>
+              <div style={{fontSize:14.5, color:C.text, lineHeight:1.5, fontWeight:500, marginBottom:3}}>
                 {petLine}
               </div>
-              <div style={{fontSize:11, color:C.textSec, marginTop:2}}>
+              <div style={{fontSize:11, color:C.textSec, fontWeight:600}}>
                 {todayDone ? "✅ 今天已完成 — 太棒了" : (_sk.streak > 0 ? "🔥 今天还没学，别让 " + _sk.streak + " 天断了" : "📖 一起加油")}
               </div>
             </div>
-            {pet && <div style={{fontSize:14, color:C.textSec, flexShrink:0}}>›</div>}
+            {pet && <div style={{fontSize:18, color:C.textSec, flexShrink:0, opacity:0.6}}>›</div>}
           </button>
         );
       })()}
@@ -5384,10 +5392,25 @@ export default function App() {
 
         return (
           <div style={{...S.card, marginBottom:14, padding:"16px 18px"}}>
+            {/* "上次学到第 N 词"小条 — 整合自原 teal banner，避免色彩跳脱 */}
+            {hasSession && (
+              <button onClick={async function(){ setScreen("learning"); await loadBatch(idx, learned, undefined, { streaming: true }); applyWordData(wordList[idx]); }} style={{
+                display:"flex", alignItems:"center", justifyContent:"space-between",
+                width:"100%", marginBottom:12, padding:"8px 12px",
+                background:C.accentLight,
+                border:"1px solid "+C.accent+"33",
+                borderRadius:8, cursor:"pointer", fontFamily:FONT, textAlign:"left",
+              }}>
+                <span style={{fontSize:12, color:C.accent, fontWeight:600}}>
+                  📌 上次学到 <strong style={{fontFamily:FONT_DISPLAY,fontSize:13}}>{idx+1}</strong>/{wordList.length} 词
+                </span>
+                <span style={{fontSize:12, color:C.accent, fontWeight:700}}>继续 →</span>
+              </button>
+            )}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-              <div style={{fontSize:13,fontWeight:700,color:C.textSec,letterSpacing:"0.02em"}}>📚 今日任务</div>
-              <div style={{fontSize:12,fontWeight:600,color:C.textSec,fontFamily:FONT_DISPLAY}}>
-                <strong style={{color:C.text,fontSize:15}}>{doneSteps}</strong>/{totalSteps} 步 · 约 {dailyPlan.totalMin} 分钟
+              <div style={{fontSize:14,fontWeight:800,color:C.text,letterSpacing:"-0.01em",fontFamily:FONT_DISPLAY}}>📚 今日任务</div>
+              <div style={{fontSize:11,fontWeight:600,color:C.textSec}}>
+                <span style={{color:C.text,fontWeight:800,fontFamily:FONT_DISPLAY,fontSize:13}}>{doneSteps}</span>/{totalSteps} 步 · 约 {dailyPlan.totalMin} 分钟
               </div>
             </div>
             {/* 三段 stepper：恢复"今天 3 件事"的全局感，每段标注状态 */}
@@ -5486,12 +5509,7 @@ export default function App() {
         );
       })()}
 
-      {hasSession && (
-        <div style={{ ...S.card, background: C.tealLight, borderColor: C.teal, marginBottom: 14 }}>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8, color: C.teal }}>📌 上次学到第 {idx+1} 个词（共 {wordList.length} 个）</div>
-          <button style={{ ...S.primaryBtn, background: C.teal }} onClick={async function() { setScreen("learning"); await loadBatch(idx, learned, undefined, { streaming: true }); applyWordData(wordList[idx]); }}>继续学习 →</button>
-        </div>
-      )}
+      {/* "上次学到第 N 词"入口已整合到今日任务卡顶部小条 — 不再单独色卡突兀 */}
 
       {/* 未登录用户：精简提示条（仅在快接近上限时显示，不再用大蓝色 banner 抢主流程位置） */}
       {!user && todayCount >= DAILY_LIMIT_GUEST - 2 && (

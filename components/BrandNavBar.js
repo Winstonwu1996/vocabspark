@@ -27,17 +27,29 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
   var hasStats = !compact && stats && stats.xp > 0;
   var hasStreak = !compact && studyStreak && studyStreak.streak > 0;
 
+  // pill 段控件样式 — 跟下方 5 tab 视觉统一
   var tabStyle = function(tab) {
     var isActive = tab === activeTab;
     return {
       textDecoration: "none",
-      fontWeight: 700,
-      fontSize: 13,
+      fontWeight: isActive ? 700 : 600,
+      fontSize: 12.5,
       color: isActive ? C.accent : C.textSec,
-      borderBottom: isActive ? "2px solid " + C.accent : "2px solid transparent",
-      paddingBottom: 2,
+      padding: "6px 12px",
+      borderRadius: 8,
+      background: isActive ? C.card : "transparent",
+      boxShadow: isActive ? "0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px " + C.border : "none",
       whiteSpace: "nowrap",
+      transition: "all 0.18s",
     };
+  };
+  // 容器样式：浅灰胶囊容器
+  var tabsContainer = {
+    display: "inline-flex",
+    background: "rgba(0,0,0,0.04)",
+    borderRadius: 10,
+    padding: 3,
+    gap: 2,
   };
 
   return (
@@ -80,10 +92,12 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
         </div>
       </Link>
       <div className="nav-tabs-wrap" style={{ display:"flex", alignItems:"center", gap:10, flex:"0 0 auto" }}>
-        {/* 桌面端直接显示 tabs */}
-        <Link href="/vocab" style={{ ...tabStyle("vocab"), display:"none" }} className="desktop-tab">Vocab</Link>
-        <Link href="/writing" style={{ ...tabStyle("writing"), display:"none" }} className="desktop-tab">Writing</Link>
-        <span style={{ fontSize:12, color:C.textSec, opacity:0.5, display:"none", whiteSpace:"nowrap" }} className="desktop-tab">Reading<sup style={{fontSize:8,color:C.teal,fontWeight:700}}>Soon</sup></span>
+        {/* 桌面端：pill 段控件容器 */}
+        <div className="desktop-tab" style={{ ...tabsContainer, display:"none" }}>
+          <Link href="/vocab" style={tabStyle("vocab")}>Vocab</Link>
+          <Link href="/writing" style={tabStyle("writing")}>Writing</Link>
+          <span style={{ ...tabStyle("reading"), opacity:0.5, cursor:"default" }}>Reading<sup style={{fontSize:8,color:C.teal,fontWeight:700,marginLeft:1}}>Soon</sup></span>
+        </div>
         {syncStatus && syncStatus !== "idle" && user && (
           <span style={{ fontSize:10, color: syncStatus === "error" ? "#e53e3e" : syncStatus === "synced" ? "#22a06b" : C.textSec, fontWeight:600, opacity: syncStatus === "synced" ? 0.6 : 1 }}>
             {syncStatus === "syncing" ? "⟳" : syncStatus === "synced" ? "✓" : syncStatus === "error" ? "⚠" : ""}
@@ -94,16 +108,18 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
         </button>
       </div>
     </div>
-    {/* 移动端 tabs 单独一行，桌面隐藏 */}
-    <div className="mobile-tabs-row" style={{ display:"flex", alignItems:"center", gap:16, padding:"6px 16px 10px", fontSize:13 }}>
-      <Link href="/vocab" style={tabStyle("vocab")}>Vocab</Link>
-      <Link href="/writing" style={tabStyle("writing")}>Writing</Link>
-      <span style={{ fontSize:12, color:C.textSec, opacity:0.5, whiteSpace:"nowrap" }}>Reading<sup style={{fontSize:8,color:C.teal,fontWeight:700,marginLeft:1}}>Soon</sup></span>
+    {/* 移动端 tabs 单独一行，桌面隐藏 — pill 段控件 */}
+    <div className="mobile-tabs-row" style={{ padding:"4px 16px 10px" }}>
+      <div style={tabsContainer}>
+        <Link href="/vocab" style={tabStyle("vocab")}>Vocab</Link>
+        <Link href="/writing" style={tabStyle("writing")}>Writing</Link>
+        <span style={{ ...tabStyle("reading"), opacity:0.5, cursor:"default" }}>Reading<sup style={{fontSize:8,color:C.teal,fontWeight:700,marginLeft:1}}>Soon</sup></span>
+      </div>
     </div>
     <style>{`
       @media (min-width: 640px) {
         .brand-navbar .mobile-tabs-row { display: none !important; }
-        .brand-navbar .desktop-tab { display: inline-block !important; }
+        .brand-navbar .desktop-tab { display: inline-flex !important; }
       }
     `}</style>
     {(hasStats || hasStreak) && (
