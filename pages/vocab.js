@@ -5,7 +5,7 @@ import { C, FONT, FONT_DISPLAY, NUM, globalCSS, S, getWordTheme } from '../lib/t
 import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON, parsePartialJSON, callClassify, METHOD_SCHEMAS, METHOD_EXAMPLES, VISUAL_ANCHOR_FORMATS } from '../lib/api';
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
-import { PetAvatar, moodFromLabel } from '../components/PetAvatar';
+import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../components/PetAvatar';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 import * as XLSX from 'xlsx';
 
@@ -151,12 +151,16 @@ var getPetMood = function(pet) {
   return { emoji: "😐", label: "一般", color: "#94a3b8" };
 };
 
-// 喂食成本：每顿 10 XP
-var PET_FEED_COST_XP = 10;
-// 喂食增益：饱食度 +25，开心度 +5（饿狠了 +15）
-var PET_FEED_HUNGER_DELTA = 25;
+// 喂食成本：每顿 5 XP（之前 10），让 XP 不再过剩
+var PET_FEED_COST_XP = 5;
+// 喂食增益：饱食度 +15（之前 25，需要更多次才饱），开心度 +5
+var PET_FEED_HUNGER_DELTA = 15;
 var PET_FEED_HAPPINESS_DELTA_NORMAL = 5;
 var PET_FEED_HAPPINESS_DELTA_RESCUE = 15; // 饥饿 < 20 时喂养"救命粮"额外加分
+
+// 零食：饱食度满（>=80）时可买，专给 happiness 加分（无饱食度限制）
+var PET_SNACK_COST_XP = 5;
+var PET_SNACK_HAPPINESS_DELTA = 4; // 比正餐 +5 略低，鼓励正餐优先
 
 /** 缩小边长并转 JPEG base64，避免请求体过大（Next 默认 1MB）及加速上传 */
 var compressImageToJpegBase64 = function(file, maxEdge) {
@@ -2269,6 +2273,20 @@ export default function App() {
   var [quickReviewIdx, setQuickReviewIdx] = useState(0);
   var [quickReviewFlipped, setQuickReviewFlipped] = useState(false);
   var [quickReviewStats, setQuickReviewStats] = useState({ remembered:0, fuzzy:0, forgot:0 });
+  // 快速复习释义懒加载缓存：只为缺 meaning 的词异步拉一次
+  var [quickReviewMeaningLoading, setQuickReviewMeaningLoading] = useState(false);
+  // 宠物 celebrate 临时态：覆盖 mood 让头像显示星星眼大笑（答对/升级/喂养时短暂触发）
+  var [petCelebrating, setPetCelebrating] = useState(false);
+  var petCelebrateTimerRef = useRef(null);
+  var triggerPetCelebrate = function(ms) {
+    ms = ms || 1500;
+    setPetCelebrating(true);
+    if (petCelebrateTimerRef.current) clearTimeout(petCelebrateTimerRef.current);
+    petCelebrateTimerRef.current = setTimeout(function() {
+      setPetCelebrating(false);
+      petCelebrateTimerRef.current = null;
+    }, ms);
+  };
   var [deepReviewQueue, setDeepReviewQueue] = useState([]);
   var [deepReviewIdx, setDeepReviewIdx] = useState(0);
   var [deepReviewContent, setDeepReviewContent] = useState("");
@@ -2755,9 +2773,63 @@ export default function App() {
     else if (isRescue) msg = "🍖 " + pet.name + " 救命粮！开心 +" + happinessDelta;
     else msg = "🍖 " + pet.name + " 吃饱了 (饱 +" + PET_FEED_HUNGER_DELTA + ")";
     setPetToast(msg);
+    // 喂养反馈：进化 → 5 秒大庆祝；普通 → 1.5 秒小庆祝
+    triggerPetCelebrate(evolved ? 5000 : 1500);
     if (sfx?.correct) try { sfx.correct(); } catch(e) {}
     setTimeout(function(){ setPetToast(null); }, 2400);
     return { ok: true, msg: msg };
+  };
+
+  // 配饰商店：购买 + 装备/卸下
+  var [showShop, setShowShop] = useState(false);
+  var buyAccessory = function(id) {
+    if (!pet) return;
+    var acc = getAccessory(id);
+    if (!acc) return;
+    var unlocked = pet.unlocked || [];
+    if (unlocked.indexOf(id) >= 0) return; // 已购
+    if ((stats?.xp || 0) < acc.price) {
+      setPetToast("XP 不够 — 还差 " + (acc.price - (stats?.xp || 0)) + " XP");
+      setTimeout(function(){ setPetToast(null); }, 2000);
+      return;
+    }
+    var nextUnlocked = unlocked.concat([id]);
+    var nextEquipped = Object.assign({}, pet.equipped || {});
+    nextEquipped[acc.slot] = id; // 自动装备
+    savePet(Object.assign({}, pet, { unlocked: nextUnlocked, equipped: nextEquipped }));
+    save(Object.assign({}, stats, { xp: (stats.xp || 0) - acc.price }));
+    setPetToast("✨ 解锁 " + acc.name + " 并已装备！");
+    triggerPetCelebrate(2000);
+    if (sfx?.correct) try { sfx.correct(); } catch(e) {}
+    setTimeout(function(){ setPetToast(null); }, 2400);
+  };
+  var toggleEquip = function(id) {
+    if (!pet) return;
+    var acc = getAccessory(id);
+    if (!acc) return;
+    var unlocked = pet.unlocked || [];
+    if (unlocked.indexOf(id) < 0) return; // 未购
+    var equipped = Object.assign({}, pet.equipped || {});
+    if (equipped[acc.slot] === id) delete equipped[acc.slot]; // 已装备 → 卸下
+    else equipped[acc.slot] = id; // 未装备 → 装上
+    savePet(Object.assign({}, pet, { equipped: equipped }));
+  };
+
+  // 零食喂养：饱了之后还能花 XP 买零食加 happiness（无饱食度限制）
+  var feedSnack = function() {
+    if (!pet) return { ok: false, msg: "宠物还没醒来" };
+    if (!stats || (stats.xp || 0) < PET_SNACK_COST_XP) return { ok: false, msg: "XP 不够 — 再答对几题攒攒" };
+    var currentHappiness = Number(pet.happiness) || 50;
+    if (currentHappiness >= 100) return { ok: false, msg: pet.name + " 已经超开心啦，不需要零食" };
+    var newHappiness = Math.min(100, currentHappiness + PET_SNACK_HAPPINESS_DELTA);
+    var nextPet = Object.assign({}, pet, { happiness: newHappiness });
+    savePet(nextPet);
+    save(Object.assign({}, stats, { xp: (stats.xp || 0) - PET_SNACK_COST_XP }));
+    setPetToast("🍪 " + pet.name + " 吃到零食了 (开心 +" + PET_SNACK_HAPPINESS_DELTA + ")");
+    triggerPetCelebrate(1500);
+    if (sfx?.correct) try { sfx.correct(); } catch(e) {}
+    setTimeout(function(){ setPetToast(null); }, 2000);
+    return { ok: true };
   };
 
   // 改名
@@ -4802,6 +4874,32 @@ export default function App() {
     setScreen("quick_review");
   };
 
+  // 翻转时若 meaning 缺失，懒加载一次中文释义并持久化
+  var ensureQuickReviewMeaning = async function(idx) {
+    var item = quickReviewQueue[idx];
+    if (!item) return;
+    var has = item.meaning && item.meaning !== "（释义将随学习自动补全）" && item.meaning.trim();
+    if (has) return;
+    setQuickReviewMeaningLoading(true);
+    try {
+      var prompt = "给出英文单词 \"" + item.word + "\" 的中文释义。要求：用一句话，不超过 20 字，包含主要词性（如：名/动/形）。直接输出释义，不要其他文字。";
+      var raw = await callAPIFast("你是简洁的英汉词典助手", prompt);
+      var meaning = (raw || "").trim().replace(/^["「『\s]+|["」』\s]+$/g, "").slice(0, 60);
+      if (meaning) {
+        setQuickReviewQueue(function(q) {
+          var nq = q.slice();
+          if (nq[idx]) nq[idx] = Object.assign({}, nq[idx], { meaning: meaning });
+          return nq;
+        });
+        upsertReviewWordData(item.word, { meaning: meaning });
+      }
+    } catch(e) {
+      // 失败保持原状，UI 显示提示
+    } finally {
+      setQuickReviewMeaningLoading(false);
+    }
+  };
+
   var markQuickReview = function(result) {
     var item = quickReviewQueue[quickReviewIdx];
     if (!item) return;
@@ -5165,11 +5263,16 @@ export default function App() {
           <h2 style={{fontSize:34,margin:"8px 0 4px"}}>{qr?.word}</h2>
           {!!qr?.phonetic && <div style={{fontSize:14,color:C.textSec,marginBottom:16}}>{qr.phonetic}</div>}
           {!quickReviewFlipped ? (
-            <button style={S.primaryBtn} onClick={() => setQuickReviewFlipped(true)}>翻转查看 👆</button>
+            <button style={S.primaryBtn} onClick={() => { setQuickReviewFlipped(true); ensureQuickReviewMeaning(quickReviewIdx); }}>翻转查看 👆</button>
           ) : (
             <>
               <div style={{margin:"8px 0 16px",padding:"12px 14px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,textAlign:"left",lineHeight:1.7}}>
-                释义：{qr?.meaning || "（暂无）"}
+                {(() => {
+                  var hasMeaning = qr?.meaning && qr.meaning !== "（释义将随学习自动补全）" && qr.meaning.trim();
+                  if (hasMeaning) return <span>释义：{qr.meaning}</span>;
+                  if (quickReviewMeaningLoading) return <span style={{ color:C.textSec, fontStyle:"italic" }}>释义加载中…</span>;
+                  return <span style={{ color:C.textSec, fontStyle:"italic" }}>暂无释义 · <button onClick={() => ensureQuickReviewMeaning(quickReviewIdx)} style={{ background:"transparent", border:"none", color:C.accent, cursor:"pointer", fontSize:13, fontWeight:600, padding:0, textDecoration:"underline" }}>点这里加载 →</button></span>;
+                })()}
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
                 <button style={{...S.primaryBtn,background:C.green,borderColor:C.green,justifyContent:"center",padding:"10px 8px"}} onClick={() => markQuickReview("remembered")}>🟢 彻底掌握</button>
@@ -5385,7 +5488,7 @@ export default function App() {
               display:"flex", alignItems:"center", justifyContent:"center",
               boxShadow: "inset 0 0 0 1px " + (todayDone ? C.green+"33" : C.accent+"22") + ", 0 1px 3px rgba(0,0,0,0.05)",
             }}>
-              {_stage ? <PetAvatar species={_stage.species} mood={moodFromLabel(_mood?.label)} size={48} /> : <span style={{fontSize:36, lineHeight:1}}>🌱</span>}
+              {_stage ? <PetAvatar species={_stage.species} mood={petCelebrating ? "celebrate" : moodFromLabel(_mood?.label)} size={48} accessories={pet?.equipped} /> : <span style={{fontSize:36, lineHeight:1}}>🌱</span>}
             </div>
             <div style={{flex:1, minWidth:0}}>
               {/* 第一行：宠物名 · Lv N · mood emoji */}
@@ -6392,7 +6495,7 @@ export default function App() {
             transition: "transform 0.15s",
             animation: hunger < 20 ? "petShake 1.2s ease-in-out infinite" : "none",
           }} title={pet.name + " · " + mood.label} aria-label="打开宠物">
-            <PetAvatar species={stage.species} mood={moodFromLabel(mood.label)} size={44} animate={false} />
+            <PetAvatar species={stage.species} mood={petCelebrating ? "celebrate" : moodFromLabel(mood.label)} size={44} animate={petCelebrating} accessories={pet.equipped} />
             {/* 状态徽章右下角小点 */}
             <span style={{
               position: "absolute",
@@ -6405,6 +6508,78 @@ export default function App() {
               border: "1px solid " + C.border,
             }}>{mood.emoji}</span>
           </button>
+        );
+      })()}
+
+      {/* 宠物装扮商店 */}
+      {showShop && pet && (() => {
+        var unlocked = pet.unlocked || [];
+        var equipped = pet.equipped || {};
+        var stage = getPetStage(pet.totalFed || 0);
+        var mood = getPetMood(pet);
+        var GENDER_LABEL = { f: "女向", m: "男向", n: "中性" };
+        var GENDER_COLOR = { f: "#ff6b9d", m: "#3066be", n: "#7c3aed" };
+        return (
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",zIndex:1600,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:FONT}} onClick={function(){ setShowShop(false); }}>
+            <div onClick={function(e){e.stopPropagation();}} style={{background:C.card,borderRadius:18,maxWidth:440,width:"100%",maxHeight:"88vh",overflowY:"auto",padding:"22px 20px 18px",boxShadow:"0 20px 60px rgba(0,0,0,0.35)",border:"1px solid "+C.border,position:"relative"}}>
+              <button onClick={function(){ setShowShop(false); }} aria-label="关闭" style={{position:"absolute",top:8,right:8,width:36,height:36,background:"rgba(0,0,0,0.04)",border:"none",borderRadius:"50%",fontSize:20,cursor:"pointer",color:C.textSec,padding:0,lineHeight:1,display:"flex",alignItems:"center",justifyContent:"center",zIndex:10,fontFamily:"system-ui,sans-serif",fontWeight:600}}>×</button>
+
+              {/* 顶部预览 */}
+              <div style={{textAlign:"center",marginBottom:16}}>
+                <div style={{display:"flex",justifyContent:"center",marginBottom:8}}>
+                  <PetAvatar species={stage.species} mood={moodFromLabel(mood.label)} size={100} accessories={equipped} animate={false} />
+                </div>
+                <div style={{fontSize:18,fontWeight:800,color:C.text,fontFamily:FONT_DISPLAY}}>{pet.name} 的装扮</div>
+                <div style={{fontSize:12,color:C.textSec,marginTop:2}}>当前 XP <strong style={{color:C.accent}}>{stats?.xp || 0}</strong> · 已解锁 {unlocked.length}/{ACCESSORY_CATALOG.length}</div>
+              </div>
+
+              {/* 8 个配饰卡片 — 2 列网格 */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                {ACCESSORY_CATALOG.map(function(acc) {
+                  var owned = unlocked.indexOf(acc.id) >= 0;
+                  var isEquipped = owned && equipped[acc.slot] === acc.id;
+                  var canBuy = !owned && (stats?.xp || 0) >= acc.price;
+                  return (
+                    <div key={acc.id} style={{
+                      background: isEquipped ? C.accentLight : C.bg,
+                      border: "1.5px solid " + (isEquipped ? C.accent : owned ? C.green+"66" : C.border),
+                      borderRadius: 12, padding: "10px 8px",
+                      position:"relative", textAlign:"center",
+                    }}>
+                      {/* gender 标 */}
+                      <span style={{position:"absolute",top:6,right:6,fontSize:9,fontWeight:700,color:GENDER_COLOR[acc.gender],background:"#fff",padding:"1px 6px",borderRadius:4,border:"1px solid "+GENDER_COLOR[acc.gender]+"44"}}>{GENDER_LABEL[acc.gender]}</span>
+                      {/* 配饰预览 — 用一只小奶猫 demo */}
+                      <div style={{display:"flex",justifyContent:"center",marginBottom:4}}>
+                        <PetAvatar species="kitten" mood="happy" size={70} accessories={(function(){ var a={}; a[acc.slot]=acc.id; return a; })()} animate={false} />
+                      </div>
+                      <div style={{fontSize:13,fontWeight:800,color:C.text,marginBottom:2}}>{acc.name}</div>
+                      <div style={{fontSize:10,color:C.textSec,marginBottom:6,minHeight:14}}>{acc.desc}</div>
+                      {owned ? (
+                        <button onClick={function(){ toggleEquip(acc.id); }} style={{
+                          width:"100%",padding:"6px 0",
+                          background: isEquipped ? C.accent : "#fff",
+                          color: isEquipped ? "#fff" : C.text,
+                          border: "1px solid " + (isEquipped ? C.accent : C.border),
+                          borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:700,cursor:"pointer",
+                        }}>{isEquipped ? "✓ 已装备 (点击卸下)" : "装备"}</button>
+                      ) : (
+                        <button onClick={function(){ buyAccessory(acc.id); }} disabled={!canBuy} style={{
+                          width:"100%",padding:"6px 0",
+                          background: canBuy ? "linear-gradient(135deg, "+C.gold+", "+C.accent+")" : C.border,
+                          color: canBuy ? "#fff" : C.textSec,
+                          border:"none",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:800,
+                          cursor: canBuy ? "pointer" : "not-allowed",
+                        }}>{acc.price} XP {canBuy ? "购买" : "不够"}</button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{fontSize:10,color:C.textSec,textAlign:"center",marginTop:14,opacity:0.7,lineHeight:1.5}}>
+                ✨ 解锁后永久拥有 · 每个槽位（头/脸/翅膀）只能装备一件
+              </div>
+            </div>
+          </div>
         );
       })()}
 
@@ -6438,9 +6613,12 @@ export default function App() {
         var hunger = Math.round(calcDecayedHunger(pet));
         var happiness = Math.round(pet.happiness || 0);
         var canFeed = (stats?.xp || 0) >= PET_FEED_COST_XP && hunger < 100;
+        // 零食：饱食度 ≥ 80 时显眼提示，但任何时候开心 < 100 都可买
+        var canSnack = (stats?.xp || 0) >= PET_SNACK_COST_XP && happiness < 100;
+        var snackHighlight = hunger >= 80; // 饱了之后零食成为主推
         var feedHint;
         if ((stats?.xp || 0) < PET_FEED_COST_XP) feedHint = "XP 不够 — 再答对几题攒攒";
-        else if (hunger >= 100) feedHint = pet.name + " 已经吃饱了";
+        else if (hunger >= 100) feedHint = pet.name + " 吃饱了 → 试试零食加开心";
         else feedHint = "消耗 " + PET_FEED_COST_XP + " XP 给 " + pet.name + " 喂一顿";
         return (
           <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",zIndex:1500,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:FONT}} onClick={function(){ setShowPet(false); }}>
@@ -6450,7 +6628,7 @@ export default function App() {
               {/* 大字符宠物 + 名字（input 加 ✏️ 提示更可见） */}
               <div style={{textAlign:"center", marginBottom: 12}}>
                 <div style={{ marginBottom: 8, display:"flex", justifyContent:"center" }}>
-                  <PetAvatar species={stage.species} mood={moodFromLabel(mood.label)} size={120} />
+                  <PetAvatar species={stage.species} mood={petCelebrating ? "celebrate" : moodFromLabel(mood.label)} size={120} accessories={pet.equipped} />
                 </div>
                 <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"6px 12px",background:C.bg,borderRadius:10,border:"1px solid "+C.border}} title="点击改名">
                   <span style={{fontSize:14,opacity:0.6}}>✏️</span>
@@ -6505,27 +6683,51 @@ export default function App() {
                 </div>
               )}
 
-              {/* 喂食按钮 */}
-              <button onClick={function(){ var r = feedPet(); if (!r.ok) setPetToast(r.msg) || setTimeout(function(){ setPetToast(null); }, 2400); }} disabled={!canFeed} style={{
-                width: "100%",
-                padding: "14px 0",
-                background: canFeed ? "linear-gradient(135deg, "+C.accent+" 0%, "+C.gold+" 100%)" : C.border,
-                color: canFeed ? "#fff" : C.textSec,
-                border: "none",
-                borderRadius: 12,
-                fontFamily: FONT,
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: canFeed ? "pointer" : "not-allowed",
-                boxShadow: canFeed ? "0 4px 12px "+C.accent+"55" : "none",
-                marginBottom: 8,
-              }}>
-                🍖 喂一顿（-{PET_FEED_COST_XP} XP）
-              </button>
-              <div style={{fontSize:11,color:C.textSec,textAlign:"center",lineHeight:1.5}}>
+              {/* 喂食 + 零食 双按钮（饱了之后零食成为主推） */}
+              <div style={{ display:"flex", gap:8, marginBottom:8 }}>
+                <button onClick={function(){ var r = feedPet(); if (!r.ok) setPetToast(r.msg) || setTimeout(function(){ setPetToast(null); }, 2400); }} disabled={!canFeed} style={{
+                  flex: snackHighlight ? "0 0 45%" : "1",
+                  padding: "14px 0",
+                  background: canFeed ? (snackHighlight ? C.card : "linear-gradient(135deg, "+C.accent+" 0%, "+C.gold+" 100%)") : C.border,
+                  color: canFeed ? (snackHighlight ? C.text : "#fff") : C.textSec,
+                  border: snackHighlight && canFeed ? "1.5px solid "+C.border : "none",
+                  borderRadius: 12,
+                  fontFamily: FONT,
+                  fontSize: snackHighlight ? 13 : 15,
+                  fontWeight: 700,
+                  cursor: canFeed ? "pointer" : "not-allowed",
+                  boxShadow: canFeed && !snackHighlight ? "0 4px 12px "+C.accent+"55" : "none",
+                }}>
+                  🍖 正餐（-{PET_FEED_COST_XP} XP）
+                </button>
+                <button onClick={function(){ var r = feedSnack(); if (!r.ok) setPetToast(r.msg) || setTimeout(function(){ setPetToast(null); }, 2400); }} disabled={!canSnack} style={{
+                  flex: snackHighlight ? "1" : "0 0 45%",
+                  padding: "14px 0",
+                  background: canSnack ? (snackHighlight ? "linear-gradient(135deg, "+C.purple+" 0%, "+C.accent+" 100%)" : C.card) : C.border,
+                  color: canSnack ? (snackHighlight ? "#fff" : C.text) : C.textSec,
+                  border: !snackHighlight && canSnack ? "1.5px solid "+C.border : "none",
+                  borderRadius: 12,
+                  fontFamily: FONT,
+                  fontSize: snackHighlight ? 15 : 13,
+                  fontWeight: 700,
+                  cursor: canSnack ? "pointer" : "not-allowed",
+                  boxShadow: canSnack && snackHighlight ? "0 4px 12px "+C.purple+"55" : "none",
+                }}>
+                  🍪 零食（-{PET_SNACK_COST_XP} XP）
+                </button>
+              </div>
+              <div style={{fontSize:11,color:C.textSec,textAlign:"center",lineHeight:1.5,marginBottom:10}}>
                 {feedHint}<br/>
                 当前 XP：<strong style={{color:C.accent}}>{stats?.xp || 0}</strong>
               </div>
+              {/* 装扮商店入口 */}
+              <button onClick={function(){ setShowShop(true); }} style={{
+                width:"100%",padding:"10px 0",background:C.purpleLight,color:C.purple,
+                border:"1.5px solid "+C.purple+"55",borderRadius:10,fontFamily:FONT,
+                fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:4,
+              }}>
+                ✨ 装扮商店 — 给 {pet.name} 买配饰
+              </button>
 
               {/* 累计统计 */}
               <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid "+C.border,display:"flex",justifyContent:"space-around",fontSize:11,color:C.textSec,textAlign:"center"}}>
@@ -6678,7 +6880,7 @@ export default function App() {
                   {/* 宠物 + XP */}
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",background:"linear-gradient(135deg, "+C.purpleLight+" 0%, #fff 100%)",borderRadius:12,border:"1px solid "+C.purple+"33",marginBottom:14}}>
                     <div style={{display:"flex",alignItems:"center",gap:10}}>
-                      <PetAvatar species={stage.species} mood={moodFromLabel(mood.label)} size={36} animate={false} />
+                      <PetAvatar species={stage.species} mood={petCelebrating ? "celebrate" : moodFromLabel(mood.label)} size={36} animate={petCelebrating} accessories={pet.equipped} />
                       <div>
                         <div style={{fontSize:13,fontWeight:700,color:C.purple}}>{pet.name}</div>
                         <div style={{fontSize:10,color:C.textSec}}>Lv {stage.level} · {stage.title}</div>
@@ -7343,7 +7545,7 @@ export default function App() {
             data={spectrumData}
             sfx={sfx}
             loading={loading}
-            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); }}
+            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); triggerPetCelebrate(1500); }}
             onNext={goNextWord}
             nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
           />
@@ -7356,7 +7558,7 @@ export default function App() {
             data={spectrumData}
             sfx={sfx}
             loading={loading}
-            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); }}
+            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); triggerPetCelebrate(1500); }}
             onNext={goNextWord}
             nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
           />
@@ -7369,7 +7571,7 @@ export default function App() {
             data={spectrumData}
             sfx={sfx}
             loading={loading}
-            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); }}
+            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); triggerPetCelebrate(1500); }}
             onNext={goNextWord}
             nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
           />
@@ -7382,7 +7584,7 @@ export default function App() {
             data={spectrumData}
             sfx={sfx}
             loading={loading}
-            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); }}
+            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); triggerPetCelebrate(1500); }}
             onNext={goNextWord}
             nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
           />
@@ -7395,7 +7597,7 @@ export default function App() {
             data={spectrumData}
             sfx={sfx}
             loading={loading}
-            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); }}
+            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); triggerPetCelebrate(1500); }}
             onNext={goNextWord}
             nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
           />
@@ -7437,7 +7639,7 @@ export default function App() {
             data={reviewData}
             sfx={sfx}
             loading={loading}
-            onCorrect={function(score){ save({ ...stats, xp: stats.xp + (score || 50) }); }}
+            onCorrect={function(score){ save({ ...stats, xp: stats.xp + (score || 50) }); triggerPetCelebrate(2500); }}
             onNext={afterReview}
             nextLabel={idx+1>=wordList.length?"🎉 完成！":"→ "+wordList[idx+1]}
           />
