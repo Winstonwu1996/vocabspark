@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vocab 设置页重设计对比 — Know U.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --card: #ffffff;
+    --accent: #c46b30;
+    --accent-light: #fdf1e8;
+    --teal: #4a6d8c;
+    --teal-light: #f0f4f7;
+    --gold: #c8922e;
+    --gold-light: #fdf6ea;
+    --green: #22a06b;
+    --green-light: #e6fcf5;
+    --red: #e53e3e;
+    --red-light: #fef2f2;
+    --text: #2c2e33;
+    --text-sec: #6b7280;
+    --border: #e5e2dd;
+    --font: 'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-display: 'Fraunces', Georgia, 'PingFang SC', serif;
+    --shadow: 0 1px 2px rgba(44,36,32,0.04), 0 8px 24px rgba(44,36,32,0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: #1a1d23;
+    color: #fff;
+    font-family: var(--font);
+    margin: 0;
+    padding: 24px 16px 60px;
+    min-height: 100vh;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .header h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    margin: 0 0 6px;
+    font-weight: 800;
+  }
+  .header .sub {
+    color: #94a3b8;
+    font-size: 13px;
+    margin: 0;
+  }
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 920px;
+    margin: 0 auto;
+  }
+  @media (max-width: 768px) {
+    .compare { grid-template-columns: 1fr; }
+  }
+  .col {
+    background: var(--bg);
+    border-radius: 20px;
+    padding: 14px 14px 24px;
+    color: var(--text);
+    position: relative;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  }
+  .col-label {
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: #1a1d23;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .col-label.new { background: var(--accent); }
+
+  /* ─── 当前样式（左） ─── */
+  .current .topcard {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .current .topcard .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .current .topcard .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 17px;
+  }
+  .current .topcard .logo .mark {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 16px;
+  }
+  .current .topcard .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #e5e7eb;
+    display: flex; align-items: center; justify-content: center;
+    color: #94a3b8;
+  }
+  .current .tabs {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+  .current .tabs .tab {
+    padding: 8px 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-sec);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .current .tabs .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .current .pills {
+    display: flex; gap: 6px; margin-top: 12px;
+  }
+  .current .pill {
+    padding: 5px 11px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .current .pill.green { background: var(--green-light); color: var(--green); }
+
+  /* 今日任务卡 */
+  .current .task-card {
+    background: #fff;
+    border-radius: 14px;
+    border-left: 6px solid var(--accent);
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .current .task-card .head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .current .task-card h2 {
+    font-family: var(--font-display);
+    font-size: 17px; font-weight: 800; margin: 0;
+  }
+  .current .task-card .total {
+    font-size: 13px; font-weight: 700;
+  }
+  .current .task-card .hint-row {
+    display: flex; gap: 8px;
+    background: #f3f0eb;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  .current .task-card .hint-row .skip {
+    background: #fff; padding: 6px 10px; border-radius: 6px;
+    font-weight: 700;
+    color: var(--text-sec);
+    border: 1px solid var(--border);
+    font-size: 11px;
+  }
+  .current .stepper {
+    display: flex; align-items: center; gap: 4px;
+    margin: 12px 0 14px;
+  }
+  .current .step {
+    flex: 0 0 auto;
+    text-align: center;
+  }
+  .current .step .circle {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 800;
+  }
+  .current .step.todo .circle {
+    background: var(--accent);
+  }
+  .current .step .label {
+    font-size: 11px; margin-top: 4px; color: var(--text-sec);
+  }
+  .current .step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--green);
+  }
+  .current .substep {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .current .substep .title {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  .current .substep .meta {
+    font-size: 11px;
+    color: var(--text-sec);
+    margin-bottom: 8px;
+  }
+  .current .substep .btn {
+    display: block;
+    width: 100%;
+    padding: 8px 0;
+    background: #fff;
+    border: 1px solid var(--teal);
+    color: var(--teal);
+    border-radius: 8px;
+    font-weight: 700;
+    text-align: center;
+    font-size: 12px;
+  }
+  .current .substep.attack .btn {
+    border-color: var(--red); color: var(--red);
+  }
+  .current .substep.new .btn {
+    background: var(--accent); color: #fff; border-color: transparent;
+  }
+  .current .login-banner {
+    background: #f0f4f7;
+    border: 1px solid #c5d3df;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .current .login-banner .login-btn {
+    display: inline-block;
+    padding: 6px 14px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 6px;
+    font-weight: 700;
+    margin-top: 6px;
+    font-size: 11px;
+  }
+  .current .bottom-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 10px;
+    overflow-x: auto;
+  }
+  .current .bottom-tabs .btab {
+    flex: 1;
+    padding: 9px 4px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-sec);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .current .bottom-tabs .btab.active {
+    color: var(--accent);
+    background: var(--accent-light);
+    border-bottom-color: var(--accent);
+  }
+  .current .stats-cards .stats-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+  }
+  .current .stats-cards .stats-card.purple {
+    border-color: #c4b5fd;
+    background: linear-gradient(135deg, #f0edff 0%, #fff 100%);
+  }
+  .current .stats-cards .stats-card.gold {
+    border-color: #fde047;
+    background: linear-gradient(135deg, var(--gold-light) 0%, #fff 100%);
+  }
+
+  /* ─── 新设计（右） ─── */
+  .new-design .hero {
+    background: linear-gradient(135deg, #fff 0%, var(--accent-light) 100%);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+  }
+  .new-design .hero-row {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px;
+  }
+  .new-design .hero .greeting {
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+  .new-design .hero .greeting .name {
+    font-size: 22px;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .new-design .hero .greeting .sub {
+    font-size: 12px;
+    color: var(--text-sec);
+    font-family: var(--font);
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .new-design .hero .meta {
+    text-align: right;
+  }
+  .new-design .hero .meta .row1 {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+    font-size: 12px;
+    color: var(--text-sec);
+    margin-bottom: 2px;
+  }
+  .new-design .hero .meta strong {
+    color: var(--accent);
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .new-design .hero .meta .streak {
+    color: var(--gold);
+  }
+  .new-design .seg {
+    display: inline-flex;
+    background: rgba(0,0,0,0.04);
+    border-radius: 999px;
+    padding: 3px;
+    margin-top: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .new-design .seg .opt {
+    padding: 4px 12px;
+    border-radius: 999px;
+    color: var(--text-sec);
+  }
+  .new-design .seg .opt.active {
+    background: #fff;
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .new-design .seg .opt.disabled {
+    opacity: 0.45;
+  }
+  .new-design .seg .opt.disabled small {
+    background: var(--gold);
+    color: #fff;
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-left: 3px;
+    vertical-align: top;
+  }
+
+  /* 今日任务（new）—— 极简 */
+  .new-design .today-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .new-design .today-card .head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .new-design .today-card .head .title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-sec);
+    letter-spacing: 0.02em;
+  }
+  .new-design .today-card .head .progress {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--text);
+  }
+  .new-design .today-card .head .progress small {
+    color: var(--text-sec);
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .new-design .today-card .progress-bar {
+    height: 6px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .new-design .today-card .progress-bar .fill {
+    height: 100%;
+    width: 30%;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    border-radius: 3px;
+  }
+  .new-design .today-card .current-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .new-design .today-card .current-step .icon {
+    width: 44px; height: 44px;
+    background: var(--accent-light);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .new-design .today-card .current-step .text {
+    flex: 1;
+  }
+  .new-design .today-card .current-step .text .step-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .new-design .today-card .current-step .text .step-sub {
+    font-size: 12px;
+    color: var(--text-sec);
+  }
+  .new-design .today-card .cta {
+    display: block;
+    width: 100%;
+    padding: 14px 0;
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 15px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(196,107,48,0.35);
+    cursor: pointer;
+  }
+  .new-design .today-card .done-list {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    font-size: 12px;
+    color: var(--text-sec);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .new-design .today-card .done-list .item {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .new-design .today-card .done-list .check {
+    color: var(--green);
+    font-weight: 700;
+  }
+
+  /* 设置 tab（new）—— pill 选择器 */
+  .new-design .setting-tabs {
+    display: flex;
+    background: rgba(0,0,0,0.04);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 14px;
+    gap: 2px;
+  }
+  .new-design .setting-tabs .stab {
+    flex: 1;
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-sec);
+    border-radius: 9px;
+    cursor: pointer;
+  }
+  .new-design .setting-tabs .stab.active {
+    background: #fff;
+    color: var(--accent);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px var(--border);
+  }
+
+  /* 统计 tab（new）—— 信息流 */
+  .new-design .info-row {
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .new-design .info-row .icon {
+    width: 38px; height: 38px;
+    background: var(--accent-light);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .new-design .info-row.teal .icon { background: var(--teal-light); color: var(--teal); }
+  .new-design .info-row.gold .icon { background: var(--gold-light); color: var(--gold); }
+  .new-design .info-row .text { flex: 1; min-width: 0; }
+  .new-design .info-row .label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1px;
+  }
+  .new-design .info-row .meta {
+    font-size: 11px;
+    color: var(--text-sec);
+  }
+  .new-design .info-row .value {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .new-design .info-row .arrow {
+    color: var(--text-sec);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .change-note {
+    background: #fff;
+    color: var(--text);
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.7;
+    border-left: 3px solid var(--accent);
+  }
+  .change-note strong { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📐 Vocab 设置页 · 重设计对比</h1>
+  <p class="sub">左：当前线上 · 右：Phase 1 优化方案（Hero 压缩 + 任务卡瘦身 + 信息流）</p>
+</div>
+
+<div class="compare">
+
+  <!-- ─── 当前设计 ─── -->
+  <div class="col current">
+    <div class="col-label">现在</div>
+
+    <div class="topcard">
+      <div class="row">
+        <div class="logo">
+          <div class="mark">⚡</div>
+          <span>Know U. <span style="opacity:0.7">Learning</span></span>
+        </div>
+        <div class="avatar">👤</div>
+      </div>
+      <div class="tabs">
+        <span class="tab active">Vocab</span>
+        <span class="tab">Writing</span>
+        <span class="tab" style="opacity:0.5">Reading <small style="font-size:9px;background:#f0f4f7;padding:1px 4px;border-radius:3px;">Soon</small></span>
+      </div>
+      <div class="pills">
+        <span class="pill">⚡ 350 XP</span>
+        <span class="pill green">✅ 正确率 85%</span>
+      </div>
+    </div>
+
+    <div class="task-card">
+      <div class="head">
+        <h2>⚡ 今日任务</h2>
+        <div class="total">总计：约 2 分钟</div>
+      </div>
+      <div class="hint-row">
+        <div style="flex:1">建议顺序：先复习，再攻克，最后学新词</div>
+        <div class="skip">跳过建议</div>
+      </div>
+      <div class="stepper">
+        <div class="step"><div class="circle">✓</div><div class="label">快速复习</div></div>
+        <div class="step-line"></div>
+        <div class="step"><div class="circle">✓</div><div class="label">重点攻克</div></div>
+        <div class="step-line"></div>
+        <div class="step todo"><div class="circle">3</div><div class="label">学习新词</div></div>
+      </div>
+      <div class="substep">
+        <div class="title">① 快速复习</div>
+        <div class="meta">约 0 分钟 · ✅ 已完成</div>
+        <button class="btn">再复习</button>
+      </div>
+      <div class="substep attack">
+        <div class="title">② 重点攻克</div>
+        <div class="meta">约 0 分钟 · ✅ 已完成</div>
+        <button class="btn">继续</button>
+      </div>
+      <div class="substep new">
+        <div class="title">③ 学习新词</div>
+        <div class="meta">约 2 分钟 · 0/10 词</div>
+        <button class="btn">开始</button>
+      </div>
+    </div>
+
+    <div class="login-banner">
+      🎓 注册后享受 AI 私教完整体验 + 云同步（免费）
+      <div><a href="#" class="login-btn">登录 / 注册</a></div>
+    </div>
+
+    <div class="bottom-tabs">
+      <div class="btab">👤 画像</div>
+      <div class="btab">🎯 目的</div>
+      <div class="btab">📝 词汇表</div>
+      <div class="btab">📅 计划</div>
+      <div class="btab active">📊 统计</div>
+    </div>
+
+    <div class="stats-cards">
+      <div class="stats-card" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff,var(--accent-light));">
+        <div style="font-size:22px">🗓️</div>
+        <div style="flex:1;font-size:13px;font-weight:700">学习日历 · 30 天</div>
+        <div style="color:var(--accent);font-weight:800">🌱 0 天</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="stats-card purple" style="display:flex;gap:8px;align-items:center">
+          <div style="font-size:22px">📖</div>
+          <div><div style="font-size:13px;font-weight:700;color:#7c3aed">我的词典</div><div style="font-size:11px;color:var(--text-sec)">12 个词</div></div>
+        </div>
+        <div class="stats-card gold" style="display:flex;gap:8px;align-items:center">
+          <div style="font-size:22px">🏆</div>
+          <div><div style="font-size:13px;font-weight:700;color:var(--gold)">战绩卡片</div><div style="font-size:11px;color:var(--text-sec)">分享给爸妈</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="change-note">
+      ❌ <strong>问题</strong>：同屏 7 种主题色（橙/绿/蓝/紫/金/红/teal），今日任务卡塞了 10+ 元素，三个 CTA 三种风格，注册 banner 跳脱，5 个 tab 挤压
+    </div>
+  </div>
+
+  <!-- ─── 新设计 ─── -->
+  <div class="col new-design">
+    <div class="col-label new">改造后</div>
+
+    <!-- Hero：合并头部+用户名+核心数据+模块切换 -->
+    <div class="hero">
+      <div class="hero-row">
+        <div class="greeting">
+          <div class="name">Willow，下午好</div>
+          <div class="sub">已学 12 个词 · 累计 350 XP</div>
+        </div>
+        <div class="meta">
+          <div class="row1">
+            <span class="streak">🔥 <strong style="color:var(--gold)">3</strong></span>
+            <span>·</span>
+            <span style="color:var(--green)">✓ <strong style="color:var(--green)">85%</strong></span>
+          </div>
+          <div style="font-size:10px;color:var(--text-sec)">连续 / 正确</div>
+        </div>
+      </div>
+      <div class="seg">
+        <span class="opt active">Vocab</span>
+        <span class="opt">Writing</span>
+        <span class="opt disabled">Reading <small>Soon</small></span>
+      </div>
+    </div>
+
+    <!-- 今日任务：极简，只显示当前要做的事 -->
+    <div class="today-card">
+      <div class="head">
+        <div class="title">📚 今日学习</div>
+        <div class="progress">3<small>/10 词</small></div>
+      </div>
+      <div class="progress-bar"><div class="fill"></div></div>
+      <div class="current-step">
+        <div class="icon">📖</div>
+        <div class="text">
+          <div class="step-title">学习新词</div>
+          <div class="step-sub">约 2 分钟 · 还有 7 个词</div>
+        </div>
+      </div>
+      <button class="cta">▶ 继续学习</button>
+      <div class="done-list">
+        <span style="font-weight:700">已完成</span>
+        <span class="item"><span class="check">✓</span> 快速复习</span>
+        <span class="item"><span class="check">✓</span> 重点攻克</span>
+      </div>
+    </div>
+
+    <!-- 设置 tab：分段控件 -->
+    <div class="setting-tabs">
+      <div class="stab">画像</div>
+      <div class="stab">目的</div>
+      <div class="stab">词汇表</div>
+      <div class="stab">计划</div>
+      <div class="stab active">统计</div>
+    </div>
+
+    <!-- 统计 tab：信息流列表 -->
+    <div class="info-flow">
+      <div class="info-row gold">
+        <div class="icon">🗓️</div>
+        <div class="text">
+          <div class="label">连续学习</div>
+          <div class="meta">最近 30 天 · 0 / 30 学习</div>
+        </div>
+        <div class="value">3</div>
+        <div class="arrow">›</div>
+      </div>
+      <div class="info-row teal">
+        <div class="icon">📖</div>
+        <div class="text">
+          <div class="label">我的词典</div>
+          <div class="meta">按学习日期回顾</div>
+        </div>
+        <div class="value">12</div>
+        <div class="arrow">›</div>
+      </div>
+      <div class="info-row gold">
+        <div class="icon">🏆</div>
+        <div class="text">
+          <div class="label">战绩卡片</div>
+          <div class="meta">生成图片分享给家长</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+      <div class="info-row teal">
+        <div class="icon">📊</div>
+        <div class="text">
+          <div class="label">词库健康度</div>
+          <div class="meta">85% 已掌握 · 3 个易错</div>
+        </div>
+        <div class="value" style="color:var(--green)">85%</div>
+        <div class="arrow">›</div>
+      </div>
+      <div class="info-row">
+        <div class="icon" style="background:#fce7f3;color:#db2777">📈</div>
+        <div class="text">
+          <div class="label">本周学习计划</div>
+          <div class="meta">每日 10 词 · 完成度 60%</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+    </div>
+
+    <div class="change-note">
+      ✅ <strong>改进</strong>：1) Hero 合并头/用户/核心数据/tab，省 2 屏；2) 任务卡只显当前步骤+主 CTA，已完成折叠成小字；3) 注册 banner 删除（移到右上角头像处）；4) tab 改 pill 控件；5) 统计 tab 改信息流，统一卡片风格不再花
+    </div>
+  </div>
+
+</div>
+
+<div style="max-width:920px;margin:32px auto 0;padding:18px 22px;background:#fff;color:var(--text);border-radius:14px;font-size:13px;line-height:1.8">
+  <h3 style="margin:0 0 8px;color:var(--accent);font-family:var(--font-display)">📐 改造要点</h3>
+  <ul style="margin:0;padding-left:20px;color:var(--text)">
+    <li><strong>Hero 区</strong>：从 4 行（logo / tabs / pills / 头像）合并成 2 行 — 节省 ~40% 垂直空间</li>
+    <li><strong>今日任务卡</strong>：从"目录式"改"行动式" — 只显示当前 1 个 CTA，已完成的折叠成小字</li>
+    <li><strong>注册 banner</strong>：移到顶部头像位置（小按钮替代横幅）— 不再抢主流程位置</li>
+    <li><strong>Tab 系统</strong>：5 个 tab 改 pill 分段控件，更现代不挤压</li>
+    <li><strong>统计 tab</strong>：5 张不同色的卡片 → 5 行统一卡片（信息流）— 视觉一致 + 移动端更友好</li>
+    <li><strong>色彩纪律</strong>：主色 accent 橙 + 辅色 teal/gold + 中性灰 — 同屏从 7 色减到 3 色</li>
+  </ul>
+</div>
+
+</body>
+</html>
