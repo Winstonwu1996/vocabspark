@@ -308,10 +308,9 @@ var buildSpectrumPrompt = (word, classifyResult) => {
     case "A": return buildBehaviorMatchPrompt(word);
     case "B": return buildCollocationFillPrompt(word);
     case "C": return buildMorphFillPrompt(word);
-    // case "D": return buildMnemonicFillPrompt(word);      // Round 3
-    // case "E":
-    // case "F":
-    // default:  return buildContextChoicePrompt(word);     // Round 3
+    case "D": return buildMnemonicFillPrompt(word);
+    case "E":
+    case "F": return buildContextChoicePrompt(word, wordType);
     default: return buildLegacyGradientPrompt(word);
   }
 };
@@ -432,6 +431,95 @@ var buildMorphFillPrompt = (word) => {
     '  "options": {"A":"同根词形 1","B":"同根词形 2","C":"同根词形 3","D":"同根词形 4"},\n' +
     '  "answer": "正确词形的字母",\n' +
     '  "explanation": "为什么这个词形对（含语法位置 + 干扰为何不对，≤50 字，中文）"\n' +
+    "}\n\n" +
+    "直接输出 JSON，不要 markdown 代码块标记。";
+};
+
+// D 难记型 → 谐音/画面 → 拼写辨识
+// 测的是：谐音和画面记忆是否真正建立 → 能否从相似拼写的"难记词"里锁定目标词
+// 4 个选项是发音相近的难记英文词（不告诉是哪个），只给中文/谐音/画面线索
+var buildMnemonicFillPrompt = (word) => {
+  return "为 \"" + word + "\" 设计【谐音 + 画面 → 拼写辨识】题。\n\n" +
+    "【任务】给中文意思 + 谐音线索 + 画面线索，4 个发音相近的英文词，让学生从拼写中辨认 \"" + word + "\"。\n\n" +
+    "【中文 hint】1 行核心中文意思（≤10 字）\n" +
+    "【谐音 hint】1 行有趣中文谐音（如 \"陪 pet 永远\" 对 perpetual）\n" +
+    "【画面 hint】1 行场景化画面（≤20 字，结合学生世界）\n\n" +
+    "【4 个选项 — 关键】\n" +
+    "✅ 1 个正解：" + word + " 本身\n" +
+    "✅ 3 个干扰：必须是【与 " + word + " 拼写相近 / 发音相近 / 容易混淆】的真实英文词\n" +
+    "  - 同前缀（per- / pre- / pro-）但不同含义的词\n" +
+    "  - 同后缀但不同词根的词\n" +
+    "  - 拼写差 1-2 字母容易看混的词\n" +
+    "🚫 不要选完全不相关、明显不可能的词作干扰\n\n" +
+    "【参考示例】（学风格，不是学 perpetual 内容）\n" +
+    "{\n" +
+    '  "meaningZh": "永久的 / 持续不断的",\n' +
+    '  "soundHint": "陪 pet 永远（pər-PET-chu-əl）",\n' +
+    '  "imageHint": "刻着爪印的老时钟，永不停摆",\n' +
+    '  "options": {"A":"perpetual","B":"perplexed","C":"preposterous","D":"perceptive"},\n' +
+    '  "answer": "A",\n' +
+    '  "explanation": "perpetual = 永久；perplexed 困惑；preposterous 荒谬；perceptive 敏锐 — 都以 per- 开头但完全不同"\n' +
+    "}\n\n" +
+    "【输出严格 JSON】\n" +
+    '{\n' +
+    '  "type": "mnemonic_fill",\n' +
+    '  "meaningZh": "中文核心含义 ≤10 字",\n' +
+    '  "soundHint": "谐音线索（含发音）",\n' +
+    '  "imageHint": "画面线索 ≤20 字",\n' +
+    '  "options": {"A":"...","B":"...","C":"...","D":"..."},\n' +
+    '  "answer": "正解字母",\n' +
+    '  "explanation": "正解+3 个干扰各自含义对比（≤60 字，中文）"\n' +
+    "}\n\n" +
+    "直接输出 JSON，不要 markdown 代码块标记。";
+};
+
+// E 抽象 / F 多义 → 语境契合度选择
+// E 类（democracy/paradox/rhetoric）：测理解词的核心概念是否到位
+// F 类（run/break）：测能否识别多义中目标义项
+// 4 个英文场景句，选最契合 word 核心义/目标义的那个
+var buildContextChoicePrompt = (word, wordType) => {
+  var isF = wordType === "F";
+  var typeNote = isF
+    ? "F 类多义词 — 4 个场景里 word 都是真实的英文用法，但只有 1 个用的是【目标义项】（最常用的核心义），另 3 个是其他义项（不算错但不是这次学的核心）。"
+    : "E 类抽象词 — 4 个场景都涉及 word 的语义场，但只有 1 个真正契合 word 的【核心定义】，另 3 个偏离或近义而不准。";
+  return "为 \"" + word + "\" 设计【语境契合度选择】题。\n\n" +
+    "【任务】" + typeNote + "\n\n" +
+    "【场景设计】4 个英文场景句（每句 1-2 句，画像化，可融入学生兴趣）\n" +
+    "✅ 1 个正解：完美契合 " + word + " 的核心义\n" +
+    "✅ 3 个干扰：合理但不贴 — 偏义、近义而非精准、或他义混淆\n" +
+    "🚫 不要给明显不相关的句子（那是送分题，无价值）\n\n" +
+    "【参考示例 — E 类抽象 democracy】（学风格）\n" +
+    "{\n" +
+    '  "question": "下面哪个场景最契合 democracy 的核心含义？",\n' +
+    '  "options": {\n' +
+    '    "A":"The teacher decided who would lead the project without asking the class.",\n' +
+    '    "B":"Willow\'s tennis team voted on which tournament to enter; majority chose nationals.",\n' +
+    '    "C":"The coach gave strict orders that everyone followed without question.",\n' +
+    '    "D":"Two friends quietly agreed on a movie without telling others."\n' +
+    '  },\n' +
+    '  "answer": "B",\n' +
+    '  "explanation": "democracy = 多数人集体决策。B 全员投票按多数 = 民主；A 是独裁，C 是命令，D 是私下协商"\n' +
+    "}\n\n" +
+    "【参考示例 — F 类多义 run（核心义=经营/运营）】\n" +
+    "{\n" +
+    '  "question": "下面哪个 run 是【经营/运营】的意思？",\n' +
+    '  "options": {\n' +
+    '    "A":"She runs three miles every morning before school.",\n' +
+    '    "B":"The river runs through the valley toward the ocean.",\n' +
+    '    "C":"Willow\'s mom runs a small bakery near Irvine Spectrum.",\n' +
+    '    "D":"The new engine runs smoothly even at high speed."\n' +
+    '  },\n' +
+    '  "answer": "C",\n' +
+    '  "explanation": "C = 经营/运营（管理一家面包店）；A 跑步；B 流过；D 运转 — 都是 run 的合法义但不是这次学的"\n' +
+    "}\n\n" +
+    "【输出严格 JSON】\n" +
+    '{\n' +
+    '  "type": "context_choice",\n' +
+    '  "wordType": "' + wordType + '",\n' +
+    '  "question": "下面哪个场景最契合 ' + word + ' 的' + (isF ? '【核心义项】？' : '核心含义？') + '",\n' +
+    '  "options": {"A":"完整英文场景","B":"...","C":"...","D":"..."},\n' +
+    '  "answer": "正解字母",\n' +
+    '  "explanation": "正解为何契合 + 3 个干扰各自偏在哪（≤80 字，中文）"\n' +
     "}\n\n" +
     "直接输出 JSON，不要 markdown 代码块标记。";
 };
@@ -1299,6 +1387,134 @@ var MorphFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
               <span style={{ flex:1, wordBreak:"break-word" }}>{option}</span>
               {submitted && isAns && <span style={{ color:C.green, fontWeight:700 }}>✓</span>}
               {submitted && isSel && !isAns && <span style={{ color:C.red, fontWeight:700 }}>✗</span>}
+            </button>
+          );
+        })}
+      </div>
+      {!submitted && (
+        <button onClick={function(){
+          if (!selected) return;
+          setSubmitted(true);
+          if (selected === data.answer) { if (sfx?.spectrumWin) sfx.spectrumWin(); if (onCorrect) onCorrect(); }
+          else if (sfx?.spectrumFail) sfx.spectrumFail();
+        }} disabled={!selected} style={{ ...S.specCheckBtn, opacity:selected?1:0.5, cursor:selected?"pointer":"not-allowed" }}>✓ 提交答案</button>
+      )}
+      {submitted && (
+        <div style={{ ...S.specDecoded, marginTop:4 }}>
+          <div style={{ color:isCorrect?C.green:C.accent, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💡 正确答案 "+data.answer}</div>
+          {data.explanation && <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>}
+          <button onClick={onNext} disabled={loading} style={{ ...S.specCheckBtn, marginTop:16, background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)", boxShadow:"0 4px 12px "+C.green+"55" }}>{nextLabel || "→ 下一个词"}</button>
+        </div>
+      )}
+    </>
+  );
+};
+
+// D 难记型 → 谐音 + 画面 → 拼写辨识
+// meaningZh + soundHint + imageHint + 4 个相似拼写候选
+var MnemonicFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
+  var [selected, setSelected] = useState(null);
+  var [submitted, setSubmitted] = useState(false);
+  if (!data) return null;
+  var isCorrect = submitted && selected === data.answer;
+  var optKeys = ["A","B","C","D"];
+  return (
+    <>
+      <div style={S.specTag}>🧠 谐音辨认</div>
+      <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>看线索，从 4 个相似拼写中找到目标词</div>
+      {/* 三条线索卡 */}
+      <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:14 }}>
+        {data.meaningZh && (
+          <div style={{ padding:"10px 12px", background:C.accentLight, border:"1px solid "+C.accent+"33", borderRadius:10, fontSize:14, color:C.text }}>
+            <span style={{ fontWeight:700, color:C.accent, marginRight:6 }}>含义</span>{data.meaningZh}
+          </div>
+        )}
+        {data.soundHint && (
+          <div style={{ padding:"10px 12px", background:C.purpleLight, border:"1px solid "+C.purple+"44", borderRadius:10, fontSize:14, color:C.text, fontFamily:"'Inter',"+FONT }}>
+            <span style={{ fontWeight:700, color:C.purple, marginRight:6 }}>谐音</span>{data.soundHint}
+          </div>
+        )}
+        {data.imageHint && (
+          <div style={{ padding:"10px 12px", background:C.tealLight, border:"1px solid "+C.teal+"33", borderRadius:10, fontSize:14, color:C.text }}>
+            <span style={{ fontWeight:700, color:C.teal, marginRight:6 }}>画面</span>{data.imageHint}
+          </div>
+        )}
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:14 }}>
+        {optKeys.map(function(k){
+          var option = data.options?.[k] || "";
+          var isSel = selected === k;
+          var isAns = k === data.answer;
+          var bg = C.bg, bdr = C.border, clr = C.text, shadow = "none";
+          if (submitted) {
+            if (isAns) { bg = C.greenLight; bdr = C.green; clr = C.green; shadow = "0 0 0 2px "+C.green+"33"; }
+            else if (isSel) { bg = C.redLight; bdr = C.red; clr = C.red; shadow = "0 0 0 2px "+C.red+"33"; }
+            else { bg = C.bg; bdr = C.border; clr = C.textSec; }
+          } else if (isSel) { bg = C.accentLight; bdr = C.accent; clr = C.accent; shadow = "0 0 0 2px "+C.accent+"33"; }
+          return (
+            <button key={k} disabled={submitted} onClick={function(){ if (!submitted) setSelected(k); }} style={{ display:"flex", alignItems:"center", gap:8, padding:"14px 14px", background:bg, border:"2px solid "+bdr, borderRadius:10, cursor:submitted?"default":"pointer", color:clr, fontWeight:700, textAlign:"left", fontSize:15, transition:"all 0.2s", boxShadow:shadow, fontFamily:"'Inter',"+FONT }}>
+              <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:24, height:24, borderRadius:"50%", background:clr+"22", color:clr, fontSize:12, fontWeight:700, flexShrink:0 }}>{k}</span>
+              <span style={{ flex:1, wordBreak:"break-word" }}>{option}</span>
+              {submitted && isAns && <span style={{ color:C.green, fontWeight:700 }}>✓</span>}
+              {submitted && isSel && !isAns && <span style={{ color:C.red, fontWeight:700 }}>✗</span>}
+            </button>
+          );
+        })}
+      </div>
+      {!submitted && (
+        <button onClick={function(){
+          if (!selected) return;
+          setSubmitted(true);
+          if (selected === data.answer) { if (sfx?.spectrumWin) sfx.spectrumWin(); if (onCorrect) onCorrect(); }
+          else if (sfx?.spectrumFail) sfx.spectrumFail();
+        }} disabled={!selected} style={{ ...S.specCheckBtn, opacity:selected?1:0.5, cursor:selected?"pointer":"not-allowed" }}>✓ 提交答案</button>
+      )}
+      {submitted && (
+        <div style={{ ...S.specDecoded, marginTop:4 }}>
+          <div style={{ color:isCorrect?C.green:C.accent, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💡 正确答案 "+data.answer}</div>
+          {data.explanation && <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>}
+          <button onClick={onNext} disabled={loading} style={{ ...S.specCheckBtn, marginTop:16, background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)", boxShadow:"0 4px 12px "+C.green+"55" }}>{nextLabel || "→ 下一个词"}</button>
+        </div>
+      )}
+    </>
+  );
+};
+
+// E 抽象 / F 多义 → 语境契合度选择
+// question + 4 个完整英文场景，选最契合目标词核心义/目标义的那个
+var ContextChoiceGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
+  var [selected, setSelected] = useState(null);
+  var [submitted, setSubmitted] = useState(false);
+  if (!data) return null;
+  var isCorrect = submitted && selected === data.answer;
+  var optKeys = ["A","B","C","D"];
+  var isF = data.wordType === "F";
+  return (
+    <>
+      <div style={S.specTag}>{isF ? "🎯 义项辨别" : "🌐 语境契合"}</div>
+      <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>{isF ? "从 4 个不同义项里找出目标义" : "判断哪个语境最契合这个词"}</div>
+      {data.question && (
+        <div style={{ fontWeight:700, fontSize:15, marginBottom:12, color:C.text, padding:"10px 12px", background:C.bg, borderLeft:"3px solid "+C.accent, borderRadius:"0 10px 10px 0" }}>
+          {data.question}
+        </div>
+      )}
+      <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:14 }}>
+        {optKeys.map(function(k){
+          var option = data.options?.[k] || "";
+          var isSel = selected === k;
+          var isAns = k === data.answer;
+          var bg = C.bg, bdr = C.border, clr = C.text, shadow = "none";
+          if (submitted) {
+            if (isAns) { bg = C.greenLight; bdr = C.green; clr = C.green; shadow = "0 0 0 2px "+C.green+"33"; }
+            else if (isSel) { bg = C.redLight; bdr = C.red; clr = C.red; shadow = "0 0 0 2px "+C.red+"33"; }
+            else { bg = C.bg; bdr = C.border; clr = C.textSec; }
+          } else if (isSel) { bg = C.accentLight; bdr = C.accent; clr = C.accent; shadow = "0 0 0 2px "+C.accent+"33"; }
+          return (
+            <button key={k} disabled={submitted} onClick={function(){ if (!submitted) setSelected(k); }} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"12px 14px", background:bg, border:"2px solid "+bdr, borderRadius:10, cursor:submitted?"default":"pointer", color:clr, fontWeight:500, textAlign:"left", fontSize:14, lineHeight:1.5, transition:"all 0.2s", boxShadow:shadow, fontFamily:FONT }}>
+              <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:24, height:24, borderRadius:"50%", background:clr+"22", color:clr, fontSize:12, fontWeight:700, flexShrink:0, marginTop:1 }}>{k}</span>
+              <span style={{ flex:1, fontFamily:"'Inter',"+FONT }}>{option}</span>
+              {submitted && isAns && <span style={{ color:C.green, fontWeight:700, marginLeft:4 }}>✓</span>}
+              {submitted && isSel && !isAns && <span style={{ color:C.red, fontWeight:700, marginLeft:4 }}>✗</span>}
             </button>
           );
         })}
@@ -5484,6 +5700,32 @@ export default function App() {
       {phase === "spectrum" && spectrumData && spectrumData.type === "morph_fill" && (
         <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
           <MorphFillGame
+            data={spectrumData}
+            sfx={sfx}
+            loading={loading}
+            onCorrect={function(){ save({ ...stats, xp: stats.xp+10 }); }}
+            onNext={goNextWord}
+            nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
+          />
+        </div>
+      )}
+
+      {phase === "spectrum" && spectrumData && spectrumData.type === "mnemonic_fill" && (
+        <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+          <MnemonicFillGame
+            data={spectrumData}
+            sfx={sfx}
+            loading={loading}
+            onCorrect={function(){ save({ ...stats, xp: stats.xp+10 }); }}
+            onNext={goNextWord}
+            nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
+          />
+        </div>
+      )}
+
+      {phase === "spectrum" && spectrumData && spectrumData.type === "context_choice" && (
+        <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+          <ContextChoiceGame
             data={spectrumData}
             sfx={sfx}
             loading={loading}
