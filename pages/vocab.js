@@ -2018,33 +2018,61 @@ export default function App() {
     });
   };
 
-  var resetLearningProgress = function() {
-    if (!confirm("⚠️ 确认重置学习进度？\n\n将清除：\n· 所有单词的学习状态\n· 复习记录与复习计划\n· 统计数据（XP、正确率等）\n· 今日学习配额\n\n不会清除：\n· 词表内容\n· 学习画像\n· 每日目标设置\n· 连续学习天数\n\n此操作不可撤销。")) return;
-    // 清除学习状态
-    setWordStatusMap({});
-    setReviewWordData({});
-    var newStats = { correct:0, total:0, streak:0, bestStreak:0, xp:0 };
-    setStats(newStats);
-    setTodayCount(0);
-    // 清除学习会话
-    setWordList([]);
-    setIdx(0);
-    setLearned([]);
-    // 清除 localStorage
-    localStorage.removeItem(WORD_STATUS_KEY);
-    localStorage.removeItem(REVIEW_WORD_DATA_KEY);
-    localStorage.removeItem(DAILY_KEY);
-    localStorage.removeItem(DAILY_NEW_QUOTA_KEY);
-    localStorage.removeItem(DEEP_REVIEW_DAILY_KEY);
-    // 同步到本地和云端
-    loadSave().then(function(d) {
-      var nextData = {...(d||{}), stats: newStats, completedWords: [], session: null, wordStatusMap: {}, reviewWordData: {}};
-      doSave(nextData);
-      syncToCloud();
+  var resetLearningProgress = async function() {
+    if (!confirm("⚠️ 确认重置学习进度？\n\n将清除：\n· 所有单词的学习状态\n· 复习记录与复习计划\n· 统计数据（XP、正确率等）\n· 今日学习配额\n· AI 缓存（强制重新生成）\n\n不会清除：\n· 词表内容\n· 学习画像\n· 每日目标设置\n· 连续学习天数\n\n此操作不可撤销。")) return;
+    // 读取要保留的字段（在擦除前）
+    var preserved = {};
+    try {
+      var raw = localStorage.getItem(SKEY);
+      var existing = raw ? JSON.parse(raw) : {};
+      preserved = {
+        profile: existing.profile,
+        wordInput: existing.wordInput,
+        settings: existing.settings,
+        tipDismissed: existing.tipDismissed,
+      };
+    } catch(e) {}
+    // 如果登录了，先同步清零数据到云端 —— 防 reload 后 loadFromCloud 把旧数据拉回
+    var cleared = Object.assign({}, preserved, {
+      schemaVersion: 2,
+      stats: { correct:0, total:0, streak:0, bestStreak:0, xp:0 },
+      completedWords: [],
+      session: null,
+      wordStatusMap: {},
+      reviewWordData: {},
+      dailyNewQuotaState: null,
+      updatedAt: new Date().toISOString(),
     });
-    // 成功提示
-    setLoginToast("✅ 学习进度已重置");
-    setTimeout(function() { setLoginToast(null); }, 3000);
+    if (userRef.current) {
+      try {
+        await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: userRef.current.id, data: cleared }),
+        });
+      } catch(e) {}
+    }
+    // 清除独立 localStorage 键
+    try { localStorage.removeItem(WORD_STATUS_KEY); } catch(e) {}
+    try { localStorage.removeItem(REVIEW_WORD_DATA_KEY); } catch(e) {}
+    try { localStorage.removeItem(DAILY_KEY); } catch(e) {}
+    try { localStorage.removeItem(DAILY_NEW_QUOTA_KEY); } catch(e) {}
+    try { localStorage.removeItem(DEEP_REVIEW_DAILY_KEY); } catch(e) {}
+    // 清除 Phase 1.5 classify/teach 缓存（让重置后的单词走全新生成路径）
+    try {
+      var toDelete = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && (k.indexOf('knowu_classify_v1_') === 0 || k.indexOf('vocabspark_teach_') === 0)) toDelete.push(k);
+      }
+      toDelete.forEach(function(k) { try { localStorage.removeItem(k); } catch(e) {} });
+    } catch(e) {}
+    // 写 SKEY + 立刻 reload —— 不触发 React 再渲染，避免 useEffect 回写
+    try { localStorage.setItem(SKEY, JSON.stringify(cleared)); } catch(e) {}
+    // 用 location.replace 替代 reload：跳过 history，避免 bfcache 恢复 in-memory state
+    try { window.location.replace(window.location.pathname + '?reset=' + Date.now()); } catch(e) {
+      try { window.location.reload(); } catch(e2) {}
+    }
   };
 
   var currentWord = wordList[idx] || "";
