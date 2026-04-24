@@ -1,6 +1,6 @@
 /* ─── Know U. Learning — 共享导航栏组件 ─── */
 import Link from 'next/link';
-import { C, S, FONT } from '../lib/theme';
+import { C, S, FONT, FONT_DISPLAY } from '../lib/theme';
 import { UserAvatar } from './UserCenter';
 
 export var BrandUIcon = ({ size }) => {
@@ -84,9 +84,9 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
       <Link href="/" title="返回首页" style={{ display:"flex", alignItems:"center", gap:8, textDecoration:"none", minWidth:0, flex:"0 1 auto" }}>
         <BrandUIcon size={36} />
         <div style={{ minWidth:0 }}>
-          <div className="brand-wordmark" style={{ fontSize:15, letterSpacing:"-0.02em", lineHeight:1.1 }}>
-            <span style={{ fontWeight:800, color:C.text, textShadow:"0 1px 2px rgba(44,36,32,0.15)" }}>Know U.</span>
-            <span style={{ fontWeight:500, color:C.textSec, marginLeft:4, textShadow:"0 1px 1px rgba(44,36,32,0.08)" }}>Learning</span>
+          <div className="brand-wordmark" style={{ fontSize:16, letterSpacing:"-0.02em", lineHeight:1.1, fontFamily:FONT_DISPLAY }}>
+            <span style={{ fontWeight:700, color:C.text, textShadow:"0 1px 2px rgba(44,36,32,0.15)" }}>Know U.</span>
+            <span style={{ fontWeight:400, color:C.textSec, marginLeft:4, textShadow:"0 1px 1px rgba(44,36,32,0.08)" }}>Learning</span>
           </div>
           <div className="brand-tagline" style={{ fontSize:10, color:C.textSec, opacity:0.7, letterSpacing:"0.02em", marginTop:1, whiteSpace:"nowrap" }}>Personal AI Language Tutor</div>
         </div>
