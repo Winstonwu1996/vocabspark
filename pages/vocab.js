@@ -4092,24 +4092,9 @@ export default function App() {
 
     if (userRef.current && newLearned.length === 10 && !tipDismissed) { setShowTipJar(true); }
 
-    // Phase 1.5 优化：预取下一组更早触发（posInBatch === 1 即学完第 1 词就启动）
-    // 给 silent 预取充足时间（用户学 3-4 词 = 60-200s），Phase 1.5 的 classify+generate
-    // 总流水线 ~15-20s 足够在用户学完本组前填好下一组 cache
-    var posInBatch = nextIdx % 5;
-    if (posInBatch === 1 || posInBatch === 3) {
-      var nextBatchStart = Math.floor(nextIdx / 5) * 5 + 5;
-      if (nextBatchStart < wordList.length) {
-        var nbEnd = Math.min(nextBatchStart + 5, wordList.length);
-        var needsLoad = false;
-        for (var nbi = nextBatchStart; nbi < nbEnd; nbi++) {
-          if (!dataCache.current[wordList[nbi]]) { needsLoad = true; break; }
-        }
-        if (needsLoad) {
-          // Fire and forget — silent background pre-load, no UI change
-          loadBatch(nextBatchStart, newLearned, undefined, { streaming: false, silent: true }).catch(function() {});
-        }
-      }
-    }
+    // 注：之前这里有 posInBatch === 1/3 的额外 silent loadBatch 触发，
+    // 现已移除 —— useEffect 的 preloadChainRef 已统一管理所有预取（按 tier 串行），
+    // 重复触发反而会绕过 chain 跟前台 batch 抢资源，拖慢首组加载。
 
     await waitAndEnterNextWord(nextIdx, newLearned);
   };
@@ -4172,10 +4157,13 @@ export default function App() {
 
   // Phase 2 Round 1.5+：进学习页按 tier 串行预取多组（silent 模式，不影响 UI）
   // 游客 5 词 / 免费 10 / Basic 20 / Pro 30 — 预取到对应深度
-  // 关键：串行执行（chain），避免多个 silent loadBatch 同时打爆 DeepSeek API 拖慢前台
+  // 关键 1：串行执行（chain），避免多个 silent loadBatch 同时打爆 DeepSeek API
+  // 关键 2：前台 batch 加载中（phase === "batch_loading"）时不启动 silent，
+  //   否则 silent batch 5 跟 batch 1 同时跑 = 20 路并发 → 限流拖慢前台
   useEffect(function() {
     if (screen !== "learning") return;
     if (!wordList || wordList.length === 0) return;
+    if (phase === "batch_loading") return; // 让前台 batch 优先抢 DeepSeek 资源
 
     var maxPreloadWords;
     if (userTier === "pro") maxPreloadWords = 30;
@@ -4228,7 +4216,7 @@ export default function App() {
           preloadChainRef.current.inflight.delete(start);
         });
     });
-  }, [screen, userTier, idx]);
+  }, [screen, userTier, idx, phase]); // 加 phase：从 batch_loading 切到 guess 时重跑，启动 silent chain
 
   var getDailyPlan = function() {
     var words = parseWordsFromInput(wordInput);
