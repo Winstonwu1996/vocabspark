@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { requireUser } from '../../lib/auth-server';
 
 var supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -9,8 +10,12 @@ export const config = { api: { bodyParser: { sizeLimit: '4mb' } } };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
-  var { userId, data, clientVersion } = req.body || {};
-  if (!userId || !data) return res.status(400).json({ error: 'missing userId or data' });
+  var { userId: claimedUserId, data, clientVersion } = req.body || {};
+  if (!claimedUserId || !data) return res.status(400).json({ error: 'missing userId or data' });
+
+  // 验证：token 必须有效，且 token 用户 = body 里的 userId（防越权改他人数据）
+  var { userId, errorResponse } = await requireUser(req, res, claimedUserId);
+  if (errorResponse) return errorResponse;
 
   // clientVersion: 客户端上次拉取时的 version
   // 如果 clientVersion 为 null/undefined（旧客户端），按 LWW 直接写入

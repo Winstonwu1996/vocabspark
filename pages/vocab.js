@@ -859,29 +859,29 @@ var loadSave = async () => {
     // 一次性迁移：从旧 key 和独立 key 合并到 SKEY
     var oldRaw = localStorage.getItem(SKEY_OLD);
     if (oldRaw) {
-      try { var od = JSON.parse(oldRaw); localStorage.setItem(SKEY, JSON.stringify({ schemaVersion: 2, completedWords: [], ...od })); localStorage.removeItem(SKEY_OLD); } catch(e) {}
+      try { var od = JSON.parse(oldRaw); localStorage.setItem(SKEY, JSON.stringify({ schemaVersion: 2, completedWords: [], ...od })); localStorage.removeItem(SKEY_OLD); } catch(e) { console.warn('[loadSave] SKEY_OLD migration failed:', e.message); }
     }
     var r = localStorage.getItem(SKEY);
     var d = r ? JSON.parse(r) : null;
     // 迁移独立 key 到 SKEY（只做一次）
     // 注意：undefined < 2 是 false（NaN 比较），要显式判断 !== 2
     if (d && d.schemaVersion !== 2) {
-      try { var ws = localStorage.getItem(WORD_STATUS_KEY); if (ws) { d.wordStatusMap = JSON.parse(ws); localStorage.removeItem(WORD_STATUS_KEY); } } catch(e) {}
-      try { var rd = localStorage.getItem(REVIEW_WORD_DATA_KEY); if (rd) { d.reviewWordData = JSON.parse(rd); localStorage.removeItem(REVIEW_WORD_DATA_KEY); } } catch(e) {}
+      try { var ws = localStorage.getItem(WORD_STATUS_KEY); if (ws) { d.wordStatusMap = JSON.parse(ws); localStorage.removeItem(WORD_STATUS_KEY); } } catch(e) { console.warn('[loadSave] wordStatusMap migration failed:', e.message); }
+      try { var rd = localStorage.getItem(REVIEW_WORD_DATA_KEY); if (rd) { d.reviewWordData = JSON.parse(rd); localStorage.removeItem(REVIEW_WORD_DATA_KEY); } } catch(e) { console.warn('[loadSave] reviewWordData migration failed:', e.message); }
       d.schemaVersion = 2;
       localStorage.setItem(SKEY, JSON.stringify(d));
     }
     return d;
-  } catch(e) { return null; }
+  } catch(e) { console.warn('[loadSave] failed (returning null):', e.message); return null; }
 };
 var doSave = async (d) => {
   try {
     if (typeof window === "undefined") return;
     var existing = null;
-    try { var raw = localStorage.getItem(SKEY); if (raw) existing = JSON.parse(raw); } catch(e) {}
+    try { var raw = localStorage.getItem(SKEY); if (raw) existing = JSON.parse(raw); } catch(e) { console.warn('[doSave] read existing failed:', e.message); }
     var merged = { schemaVersion: 2, completedWords: [], ...(existing || {}), ...d, updatedAt: new Date().toISOString() };
     localStorage.setItem(SKEY, JSON.stringify(merged));
-  } catch(e) {}
+  } catch(e) { console.warn('[doSave] write failed (data may be lost):', e.message); }
 };
 
 /* ─── Markdown + Speak ─── */
@@ -2144,7 +2144,7 @@ export default function App() {
       localStorage.setItem(DAILY_NEW_QUOTA_KEY, JSON.stringify(state));
       doSave({ dailyNewQuotaState: state });
       if (userRef.current) syncToCloud();
-    } catch (e) {}
+    } catch (e) { console.warn('[saveNewWordQuotaState] failed:', e.message); }
   };
 
   var getRemainingNewWordQuota = function() {
@@ -2237,6 +2237,23 @@ export default function App() {
   var _syncRetryCount = 0;
   var MAX_SYNC_RETRIES = 3;
 
+  // 获取当前 access token 用于 API 身份验证
+  // 服务端用此 token 验证用户，防止越权改/读他人数据
+  var accessTokenRef = useRef(null); // 缓存供 beforeunload 同步路径用
+  var getAuthHeaders = async function(includeContentType) {
+    var headers = {};
+    if (includeContentType) headers['Content-Type'] = 'application/json';
+    try {
+      var { data } = await supabase.auth.getSession();
+      var token = data?.session?.access_token;
+      if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
+        accessTokenRef.current = token;
+      }
+    } catch(e) { console.warn('[auth] getSession failed:', e.message); }
+    return headers;
+  };
+
   var syncToCloud = function() {
     if (_syncTimer) clearTimeout(_syncTimer);
     _syncTimer = setTimeout(function() { _doSync(); }, 500);
@@ -2263,7 +2280,7 @@ export default function App() {
       fullData.updatedAt = new Date().toISOString();
       var r = await fetch('/api/sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getAuthHeaders(true),
         body: JSON.stringify({ userId: u.id, data: fullData, clientVersion: syncVersionRef.current }),
       });
       if (r.status === 409) {
@@ -2303,11 +2320,13 @@ export default function App() {
 
   var loadFromCloud = async function(userId) {
     try {
-      var r = await fetch('/api/load?userId=' + userId);
+      var r = await fetch('/api/load?userId=' + userId, {
+        headers: await getAuthHeaders(false),
+      });
       var json = await r.json();
       syncVersionRef.current = json.version || 0;
       return json.data || null;
-    } catch(e) { return null; }
+    } catch(e) { console.warn('[loadFromCloud] failed:', e.message); return null; }
   };
 
   // 将云端数据应用到 React state
@@ -2378,11 +2397,16 @@ export default function App() {
         var fullData = await loadSave();
         if (fullData) {
           fullData.updatedAt = new Date().toISOString();
-          await fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: userRef.current.id, data: fullData }) });
+          await fetch('/api/sync', {
+            method: 'POST',
+            headers: await getAuthHeaders(true),
+            body: JSON.stringify({ userId: userRef.current.id, data: fullData }),
+          });
         }
-      } catch(e) {}
+      } catch(e) { console.warn('[logout-sync] failed:', e.message); }
     }
     await supabase.auth.signOut();
+    accessTokenRef.current = null; // 清掉缓存的 token
     // 清理本地数据，防止下一个用户看到
     try {
       localStorage.removeItem(SKEY);
@@ -2522,6 +2546,12 @@ export default function App() {
       _authHandled.current = true;
       setTimeout(function() { _authHandled.current = false; }, 3000);
 
+      // 提前缓存 access token 给 beforeunload 同步路径用
+      try {
+        var { data: sess } = await supabase.auth.getSession();
+        if (sess?.session?.access_token) accessTokenRef.current = sess.session.access_token;
+      } catch(e) { console.warn('[handleAuthUser] cache token failed:', e.message); }
+
       if (event === 'SIGNED_IN') {
         setLoginToast("✅ 登录成功！" + (u.email || ""));
         setTimeout(function() { setLoginToast(null); }, 4000);
@@ -2585,17 +2615,25 @@ export default function App() {
       } catch(e) {}
       if (!fullData) return;
       fullData.updatedAt = new Date().toISOString();
-      // 用 fetch+keepalive 保证页面关闭时也能发出请求
-      var payload = { userId: userRef.current.id, data: fullData, clientVersion: syncVersionRef.current };
+      // beforeunload 是同步路径，无法 await getSession()
+      // 用缓存的 accessTokenRef（最近一次 sync 时更新），并在 body 里也带上 _authToken 兜底（sendBeacon 不能带 header）
+      var token = accessTokenRef.current || '';
+      var payload = { userId: userRef.current.id, data: fullData, clientVersion: syncVersionRef.current, _authToken: token };
       try {
         var body = JSON.stringify(payload);
         // keepalive fetch 有 64KB 限制，大数据时退回 sendBeacon
         if (body.length < 60000) {
-          fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(function(){});
+          fetch('/api/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: body,
+            keepalive: true,
+          }).catch(function(e){ console.warn('[flushSync] keepalive failed:', e?.message); });
         } else {
           navigator.sendBeacon('/api/sync', new Blob([body], { type: 'application/json' }));
         }
       } catch(e) {
+        console.warn('[flushSync] send failed:', e.message);
         try { navigator.sendBeacon('/api/sync', new Blob([JSON.stringify(payload)], { type: 'application/json' })); } catch(e2) {}
       }
     };
@@ -2692,7 +2730,7 @@ export default function App() {
       try {
         var r = await fetch('/api/reset', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAuthHeaders(true),
           body: JSON.stringify({ userId: userRef.current.id }),
         });
         if (!r.ok) throw new Error('reset api ' + r.status);
@@ -3799,20 +3837,29 @@ export default function App() {
     toQueue.forEach(function(start) {
       preloadChainRef.current.inflight.add(start);
       var lrnSnap = learned;
-      preloadChainRef.current.promise = preloadChainRef.current.promise.then(function() {
-        // 双重检查：链中前一组完成期间，本组可能已被 cache 命中（极少见，但保险）
-        var stillNeeds = false;
-        for (var bi = start; bi < Math.min(start + 5, wordList.length); bi++) {
-          if (!dataCache.current[wordList[bi]]) { stillNeeds = true; break; }
-        }
-        if (!stillNeeds) {
+      // 关键：每环都加 .catch 在 chain 层面 —— 防止单个 batch reject 让整条 promise 永远 reject
+      // 否则后续 .then 永不执行，preload chain 死掉，下次 useEffect 重跑也加不进新任务
+      preloadChainRef.current.promise = preloadChainRef.current.promise
+        .then(function() {
+          // 双重检查：链中前一组完成期间，本组可能已被 cache 命中（极少见，但保险）
+          var stillNeeds = false;
+          for (var bi = start; bi < Math.min(start + 5, wordList.length); bi++) {
+            if (!dataCache.current[wordList[bi]]) { stillNeeds = true; break; }
+          }
+          if (!stillNeeds) return;
+          return loadBatch(start, lrnSnap, undefined, { silent: true, streaming: false })
+            .catch(function(err){
+              // 单个 silent batch 失败不应阻塞 chain；log 给诊断，inflight 会在 finally 清掉
+              console.warn('[preload] batch start=' + start + ' failed:', err?.message || err);
+            });
+        })
+        .catch(function(err) {
+          // 兜底：理论上前面 .catch 已吞了所有 error；这层是为了 chain 的 promise 永不 reject
+          console.warn('[preload] chain unexpected reject at start=' + start + ':', err?.message || err);
+        })
+        .finally(function(){
           preloadChainRef.current.inflight.delete(start);
-          return;
-        }
-        return loadBatch(start, lrnSnap, undefined, { silent: true, streaming: false })
-          .catch(function(){})
-          .finally(function(){ preloadChainRef.current.inflight.delete(start); });
-      });
+        });
     });
   }, [screen, userTier, idx]);
 

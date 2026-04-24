@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { requireUser } from '../../lib/auth-server';
 
 var supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -10,8 +11,12 @@ var supabase = createClient(
 // 清零字段：stats / wordStatusMap / reviewWordData / completedWords / session / dailyNewQuotaState
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
-  var { userId } = req.body || {};
-  if (!userId) return res.status(400).json({ error: 'missing userId' });
+  var { userId: claimedUserId } = req.body || {};
+  if (!claimedUserId) return res.status(400).json({ error: 'missing userId' });
+
+  // 验证：token 必须有效，且 token 用户 = body 里的 userId
+  var { userId, errorResponse } = await requireUser(req, res, claimedUserId);
+  if (errorResponse) return errorResponse;
 
   try {
     // 读取当前服务端数据 —— 提取要保留的字段

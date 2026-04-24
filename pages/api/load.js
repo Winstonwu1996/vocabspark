@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { requireUser } from '../../lib/auth-server';
 
 var supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -7,8 +8,12 @@ var supabase = createClient(
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
-  var userId = req.query.userId;
-  if (!userId) return res.status(400).json({ error: 'missing userId' });
+  var claimedUserId = req.query.userId;
+  if (!claimedUserId) return res.status(400).json({ error: 'missing userId' });
+
+  // 验证：token 必须有效，且 token 用户 = query 里的 userId
+  var { userId, errorResponse } = await requireUser(req, res, claimedUserId);
+  if (errorResponse) return errorResponse;
 
   try {
     var { data, error } = await supabase
