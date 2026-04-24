@@ -2018,7 +2018,8 @@ export default function App() {
   };
 
   var resetLearningProgress = async function() {
-    if (!confirm("⚠️ 确认重置学习进度？\n\n将清除：\n· 所有单词的学习状态\n· 复习记录与复习计划\n· 统计数据（XP、正确率等）\n· 今日学习配额\n· AI 缓存（强制重新生成）\n\n不会清除：\n· 词表内容\n· 学习画像\n· 每日目标设置\n· 连续学习天数\n\n此操作不可撤销。")) return;
+    // 二次确认已经在 UI 层完成（点"重置进度"展开红色警告面板，再点"确认重置"）
+    // 不再用 native confirm()：会被浏览器"阻止此网站弹出对话框"拦截，导致 reset 静默失败
     // 登录用户：调用专用 /api/reset —— 服务端权威清零 + bump version，拿到清零 data 作为 SoT
     // 游客：本地直接构造清零 data
     var cleared;
