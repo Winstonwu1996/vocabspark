@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { supabase } from '../lib/supabase';
-import { C, FONT, globalCSS, S } from '../lib/theme';
+import { C, FONT, FONT_DISPLAY, globalCSS, S, getWordTheme } from '../lib/theme';
 import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON, parsePartialJSON, callClassify, METHOD_SCHEMAS, METHOD_EXAMPLES, VISUAL_ANCHOR_FORMATS } from '../lib/api';
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
@@ -998,120 +998,235 @@ var Md = ({ text }) => {
  * Phase 2 将为每种 method type 做专属视觉组件
  * 当前：所有 method 共用 MethodCard 壳，内部按字段展示列表
  */
+// 每种方法的视觉语言：图标 + 名字 + 主题色（避免所有 method 卡看起来一样导致疲劳）
 var METHOD_META = {
-  root:       { icon: "🧩", name: "词根" },
-  mnemonic:   { icon: "🧠", name: "谐音" },
-  image:      { icon: "🖼️", name: "画面" },
-  nuance:     { icon: "🔍", name: "近义辨析" },
-  scale:      { icon: "📶", name: "程度光谱" },
-  etymology:  { icon: "📖", name: "词源" },
-  collocation:{ icon: "🔗", name: "搭配" },
-  antonym:    { icon: "⚖️", name: "反义" },
-  family:     { icon: "🧬", name: "词性家族" },
-  microstory: { icon: "🎬", name: "微故事" },
+  root:       { icon: "🧩", name: "词根",       accent: "#7c3aed", bg: "linear-gradient(135deg, #ede9fe 0%, #f5f3ff 60%, #fff 100%)", border: "#c4b5fd" }, // 紫
+  mnemonic:   { icon: "🧠", name: "谐音",       accent: "#db2777", bg: "linear-gradient(135deg, #fce7f3 0%, #fdf2f8 60%, #fff 100%)", border: "#f9a8d4" }, // 粉紫
+  image:      { icon: "🖼️", name: "画面",       accent: "#0891b2", bg: "linear-gradient(135deg, #cffafe 0%, #ecfeff 60%, #fff 100%)", border: "#67e8f9" }, // 青
+  nuance:     { icon: "🔍", name: "近义辨析",   accent: "#ca8a04", bg: "linear-gradient(135deg, #fef9c3 0%, #fffbeb 60%, #fff 100%)", border: "#fde047" }, // 金
+  scale:      { icon: "📶", name: "程度光谱",   accent: "#d97706", bg: "linear-gradient(135deg, #fed7aa 0%, #fff7ed 60%, #fff 100%)", border: "#fdba74" }, // 暖橙
+  etymology:  { icon: "📖", name: "词源",       accent: "#78716c", bg: "linear-gradient(135deg, #f5f5f4 0%, #fafaf9 60%, #fff 100%)", border: "#d6d3d1" }, // 古风暖灰
+  collocation:{ icon: "🔗", name: "搭配",       accent: "#0284c7", bg: "linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 60%, #fff 100%)", border: "#7dd3fc" }, // 海蓝
+  antonym:    { icon: "⚖️", name: "反义",       accent: "#6366f1", bg: "linear-gradient(90deg, #fee2e2 0%, #fff 50%, #dbeafe 100%)", border: "#a5b4fc" }, // 红→蓝（视觉对立）
+  family:     { icon: "🧬", name: "词性家族",   accent: "#059669", bg: "linear-gradient(135deg, #d1fae5 0%, #ecfdf5 60%, #fff 100%)", border: "#6ee7b7" }, // 翠绿
+  microstory: { icon: "🎬", name: "微故事",     accent: "#e11d48", bg: "linear-gradient(135deg, #ffe4e6 0%, #fff1f2 60%, #fff 100%)", border: "#fda4af" }, // 玫瑰
 };
 
-var MethodBody = ({ m }) => {
+var MethodBody = ({ m, accent }) => {
+  var c = accent || C.accent;
   switch (m.type) {
     case "root":
+      // 词根：积木拼接视觉 — 每个 part 是一块"LEGO"
       return <>
-        {(m.parts || []).map((p, i) => (
-          <div key={i} style={{ display:"flex", gap:10, fontSize:14, margin:"2px 0" }}>
-            <code style={{ fontWeight:700, color:C.accent, minWidth:70 }}>{p.part}</code>
-            <span>= {p.meaning}</span>
-          </div>
-        ))}
+        <div style={{ display:"flex", flexWrap:"wrap", gap:6, alignItems:"center", margin:"4px 0 8px" }}>
+          {(m.parts || []).map((p, i) => (
+            <React.Fragment key={i}>
+              <div style={{
+                display:"inline-flex", flexDirection:"column", alignItems:"center",
+                padding:"6px 12px",
+                background:"#fff", border:"2px solid "+c,
+                borderRadius:8, boxShadow:"0 2px 0 "+c,
+                minWidth:60, textAlign:"center",
+              }}>
+                <code style={{ fontWeight:800, color:c, fontSize:14, fontFamily:"'Inter','Menlo',monospace" }}>{p.part}</code>
+                <span style={{ fontSize:11, color:C.textSec, marginTop:2 }}>{p.meaning}</span>
+              </div>
+              {i < (m.parts || []).length - 1 && <span style={{ color:c, fontWeight:700 }}>+</span>}
+            </React.Fragment>
+          ))}
+        </div>
         {m.synthesis && (
-          <div style={{ marginTop:8, padding:"6px 10px", background:C.accentLight, borderRadius:6, fontSize:14 }}>
-            ↓ {m.synthesis}
+          <div style={{ padding:"8px 12px", background:"rgba(255,255,255,0.7)", borderRadius:8, fontSize:14, fontWeight:600, color:C.text }}>
+            <span style={{ color:c, marginRight:6 }}>→</span>{m.synthesis}
           </div>
         )}
         {m.anchor && <div style={{ marginTop:6, fontSize:13, color:C.textSec, fontStyle:"italic" }}>💡 {m.anchor}</div>}
       </>;
     case "mnemonic":
+      // 谐音：大字突出
       return <>
-        <div style={{ fontSize:14, margin:"3px 0" }}>"<strong style={{ color:C.accent }}>{m.soundAlike}</strong>"</div>
-        <div style={{ fontSize:14, margin:"3px 0" }}>→ {m.interpretation}</div>
+        <div style={{ fontSize:20, fontWeight:700, color:c, margin:"4px 0 6px", lineHeight:1.3, fontFamily:FONT_DISPLAY }}>
+          "{m.soundAlike}"
+        </div>
+        <div style={{ fontSize:14, color:C.text, margin:"3px 0" }}>→ {m.interpretation}</div>
         {m.anchor && <div style={{ marginTop:6, fontSize:13, color:C.textSec, fontStyle:"italic" }}>💡 {m.anchor}</div>}
       </>;
     case "image":
+      // 画面：场景描述用"剧本"风格
       return <>
-        <div style={{ fontSize:14, margin:"3px 0", fontStyle:"italic" }}>{m.scene}</div>
-        <div style={{ fontSize:14, margin:"3px 0" }}>→ {m.mapping}</div>
+        <div style={{
+          padding:"8px 12px", background:"rgba(255,255,255,0.7)", borderRadius:8,
+          fontSize:14.5, fontStyle:"italic", lineHeight:1.6, color:C.text,
+          borderLeft:"3px solid "+c,
+        }}>
+          🎬 {m.scene}
+        </div>
+        <div style={{ fontSize:14, margin:"6px 0 0" }}><span style={{color:c, fontWeight:700}}>↳</span> {m.mapping}</div>
         {m.anchor && <div style={{ marginTop:6, fontSize:13, color:C.textSec, fontStyle:"italic" }}>💡 {m.anchor}</div>}
       </>;
     case "nuance":
-      return <>
-        <div style={{ fontSize:14, margin:"3px 0" }}><strong style={{ color:C.accent }}>{m.target?.word}</strong>：{m.target?.nuance}</div>
-        <div style={{ fontSize:14, margin:"3px 0" }}><strong style={{ color:C.textSec }}>{m.other?.word}</strong>：{m.other?.nuance}</div>
-      </>;
-    case "scale":
-      return <>
-        <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center", margin:"4px 0" }}>
-          {(m.words || []).map((w, i) => (
-            <React.Fragment key={i}>
-              <span style={{ padding:"4px 10px", background:C.accentLight, borderRadius:6, fontSize:13, fontWeight:600, color:C.accent }}>{w}</span>
-              {i < (m.words || []).length - 1 && <span style={{ color:C.textSec }}>→</span>}
-            </React.Fragment>
-          ))}
+      // 近义辨析：左右双栏对比
+      return (
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, margin:"4px 0" }}>
+          <div style={{ padding:"10px 12px", background:"rgba(255,255,255,0.85)", borderRadius:8, borderTop:"3px solid "+c }}>
+            <div style={{ fontWeight:800, color:c, fontSize:14, marginBottom:4, fontFamily:"'Inter',"+FONT }}>{m.target?.word}</div>
+            <div style={{ fontSize:13, color:C.text, lineHeight:1.5 }}>{m.target?.nuance}</div>
+          </div>
+          <div style={{ padding:"10px 12px", background:"rgba(255,255,255,0.6)", borderRadius:8, borderTop:"3px solid "+C.textSec+"66" }}>
+            <div style={{ fontWeight:700, color:C.textSec, fontSize:14, marginBottom:4, fontFamily:"'Inter',"+FONT }}>{m.other?.word}</div>
+            <div style={{ fontSize:13, color:C.text, lineHeight:1.5 }}>{m.other?.nuance}</div>
+          </div>
         </div>
-        {m.description && <div style={{ fontSize:13, color:C.textSec, marginTop:4 }}>{m.description}</div>}
+      );
+    case "scale":
+      // 程度光谱：用渐变条 + 词标签
+      var scaleWords = m.words || [];
+      return <>
+        {scaleWords.length > 0 && (
+          <div style={{ position:"relative", margin:"6px 0 8px" }}>
+            <div style={{ height:4, background:"linear-gradient(90deg, "+c+"33 0%, "+c+" 100%)", borderRadius:2, marginBottom:8 }} />
+            <div style={{ display:"flex", justifyContent:"space-between", gap:6, flexWrap:"wrap" }}>
+              {scaleWords.map((w, i) => (
+                <span key={i} style={{
+                  padding:"4px 10px",
+                  background:"#fff",
+                  border:"1.5px solid "+c+"99",
+                  borderRadius:999,
+                  fontSize:13, fontWeight:700, color:c,
+                  fontFamily:"'Inter',"+FONT,
+                  boxShadow:"0 1px 2px "+c+"22",
+                }}>{w}</span>
+              ))}
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:C.textSec, marginTop:4, padding:"0 4px" }}>
+              <span>弱</span><span>强</span>
+            </div>
+          </div>
+        )}
+        {m.description && <div style={{ fontSize:13, color:C.textSec }}>{m.description}</div>}
       </>;
     case "etymology":
       return <>
-        <div style={{ fontSize:14, margin:"3px 0" }}><strong>源自</strong>：{m.origin}</div>
-        <div style={{ fontSize:14, margin:"3px 0" }}>{m.story}</div>
+        <div style={{ fontSize:13.5, color:C.textSec, margin:"3px 0" }}><strong style={{color:c}}>源自</strong> {m.origin}</div>
+        <div style={{ fontSize:14, margin:"6px 0", lineHeight:1.6, fontStyle:"italic" }}>{m.story}</div>
       </>;
     case "collocation":
       return <>
         {(m.items || []).map((it, i) => (
-          <div key={i} style={{ fontSize:14, margin:"3px 0" }}>
-            • <strong style={{ color:C.accent }}>{it.phrase}</strong>（{it.zh}）
+          <div key={i} style={{ fontSize:14, margin:"3px 0", padding:"4px 0" }}>
+            <strong style={{ color:c, fontFamily:"'Inter',"+FONT }}>{it.phrase}</strong>
+            <span style={{ color:C.textSec, marginLeft:6, fontSize:13 }}>{it.zh}</span>
           </div>
         ))}
       </>;
     case "antonym":
-      return <div style={{ fontSize:14, margin:"3px 0" }}>
-        ↔ <strong style={{ color:C.accent }}>{m.opposite}</strong>：{m.contrast}
-      </div>;
+      // 反义：视觉对立
+      return (
+        <div style={{ display:"flex", alignItems:"center", gap:10, margin:"4px 0", padding:"6px 0" }}>
+          <span style={{ fontSize:18, color:c, fontWeight:800 }}>↔</span>
+          <div style={{ flex:1 }}>
+            <div style={{ fontWeight:800, color:c, fontSize:15, fontFamily:"'Inter',"+FONT }}>{m.opposite}</div>
+            <div style={{ fontSize:13, color:C.text, marginTop:2 }}>{m.contrast}</div>
+          </div>
+        </div>
+      );
     case "family":
       return <>
         {(m.members || []).map((member, i) => (
-          <div key={i} style={{ fontSize:14, margin:"3px 0" }}>
-            • <strong style={{ color:C.accent }}>{member.word}</strong>{" "}
-            <span style={{ color:C.textSec, fontSize:12 }}>({member.pos})</span>{" "}
-            {member.meaning}
+          <div key={i} style={{ display:"flex", alignItems:"baseline", gap:8, fontSize:14, margin:"3px 0" }}>
+            <strong style={{ color:c, fontFamily:"'Inter',"+FONT }}>{member.word}</strong>
+            <span style={{
+              padding:"1px 6px", background:c+"22", color:c,
+              borderRadius:4, fontSize:10, fontWeight:700, letterSpacing:"0.05em",
+            }}>{member.pos}</span>
+            <span style={{ color:C.text }}>{member.meaning}</span>
           </div>
         ))}
       </>;
     case "microstory":
       return <>
-        <div style={{ fontSize:14, margin:"3px 0", fontStyle:"italic" }}>"{m.scene}"</div>
-        <div style={{ fontSize:14, margin:"3px 0" }}>→ {m.interpretation}</div>
+        <div style={{ padding:"8px 12px", background:"rgba(255,255,255,0.7)", borderRadius:8, fontSize:14, fontStyle:"italic", lineHeight:1.6, borderLeft:"3px solid "+c }}>
+          "{m.scene}"
+        </div>
+        <div style={{ fontSize:14, margin:"6px 0 0" }}><span style={{color:c, fontWeight:700}}>↳</span> {m.interpretation}</div>
       </>;
     default:
       return <div style={{ fontSize:13, color:C.textSec }}>[未知方法类型: {m.type}]</div>;
   }
 };
 
-var MethodCard = ({ method }) => {
-  var meta = METHOD_META[method.type] || { icon:"📝", name:method.type || "方法" };
+// MethodCard — 按 method.type 套用差异化主题色（避免视觉疲劳）
+// theme prop 是从 wordType 推出的 fallback 主题（暂未深度使用）
+var MethodCard = ({ method, theme }) => {
+  var meta = METHOD_META[method.type] || { icon:"📝", name:method.type || "方法", accent: C.purple, bg: "#f9f8f5", border: C.border };
   return (
-    <div style={{ marginBottom:12, padding:"10px 12px", background:"#f9f8f5", borderRadius:10, borderLeft:"3px solid "+C.purple }}>
-      <div style={{ fontSize:13, fontWeight:700, color:C.purple, marginBottom:6 }}>
-        {meta.icon} {meta.name}
+    <div style={{
+      marginBottom: 14,
+      padding: "12px 14px 14px",
+      background: meta.bg,
+      borderRadius: 12,
+      border: "1px solid " + meta.border,
+      boxShadow: "0 1px 3px " + meta.accent + "10, 0 4px 10px " + meta.accent + "08",
+    }}>
+      <div style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        marginBottom: 8,
+        padding: "3px 9px",
+        background: "rgba(255,255,255,0.7)",
+        border: "1px solid " + meta.accent + "33",
+        borderRadius: 999,
+        fontSize: 11.5,
+        fontWeight: 700,
+        color: meta.accent,
+        letterSpacing: "0.04em",
+      }}>
+        <span style={{ fontSize: 13, lineHeight: 1 }}>{meta.icon}</span>
+        <span>{meta.name}</span>
       </div>
-      <MethodBody m={method} />
+      <MethodBody m={method} accent={meta.accent} />
     </div>
   );
 };
 
-var VisualAnchorBlock = ({ anchor }) => {
+// VisualAnchor — 升级为"记忆锚点卡"
+// emoji 大字符（48px）+ 衬线字体的锚点文字 + 主题色渐变 + sticky 行为
+// 这是 teach 页的视觉记忆核心，应该是页面的"主角"
+var VisualAnchorBlock = ({ anchor, theme }) => {
   if (!anchor) return null;
+  var t = theme || { accent: "#c46b30", light: "#fdf1e8", border: "#e5c7b0" };
   return (
-    <div style={{ marginBottom:12, padding:"8px 12px", background:"linear-gradient(135deg, #fff 0%, #fdf1e8 100%)", border:"1px dashed "+C.accent, borderRadius:10, textAlign:"center" }}>
-      {anchor.emojis && <span style={{ fontSize:22, marginRight:8, letterSpacing:2 }}>{anchor.emojis}</span>}
-      <span style={{ fontSize:13, color:C.text, fontStyle:"italic" }}>🎨 {anchor.text}</span>
+    <div style={{
+      marginBottom: 16,
+      padding: "20px 16px 18px",
+      background: "linear-gradient(135deg, " + t.light + " 0%, #fff 70%, " + t.light + "55 100%)",
+      border: "1.5px solid " + t.border,
+      borderRadius: 16,
+      textAlign: "center",
+      position: "sticky",
+      top: 8,
+      zIndex: 5,
+      boxShadow: "0 4px 16px " + t.accent + "1a, 0 1px 3px " + t.accent + "10",
+    }}>
+      <div style={{ fontSize: 11, color: t.accent, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 8, opacity: 0.75 }}>
+        🎯 记忆锚点
+      </div>
+      {anchor.emojis && (
+        <div style={{ fontSize: 48, lineHeight: 1, letterSpacing: 4, marginBottom: 10, animation: "fadeUp 0.4s ease-out" }}>
+          {anchor.emojis}
+        </div>
+      )}
+      <div style={{
+        fontSize: 17,
+        color: C.text,
+        fontWeight: 600,
+        fontFamily: FONT_DISPLAY,
+        lineHeight: 1.4,
+        letterSpacing: "-0.01em",
+      }}>
+        {anchor.text}
+      </div>
     </div>
   );
 };
@@ -1175,6 +1290,8 @@ var UseBlock = ({ use }) => {
 
 var TeachJSON = ({ data, streaming }) => {
   if (!data) return null;
+  // 按 wordType 取主题（A/B/C/D/E/F），影响 visualAnchor 和 method 卡的色彩
+  var theme = getWordTheme(data.wordType);
   return (
     <div>
       {data.opening && (
@@ -1183,9 +1300,9 @@ var TeachJSON = ({ data, streaming }) => {
         </div>
       )}
       {Array.isArray(data.teach?.methods) && data.teach.methods.map((m, i) => (
-        <MethodCard key={i} method={m} />
+        <MethodCard key={i} method={m} theme={theme} />
       ))}
-      {data.teach?.visualAnchor && <VisualAnchorBlock anchor={data.teach.visualAnchor} />}
+      {data.teach?.visualAnchor && <VisualAnchorBlock anchor={data.teach.visualAnchor} theme={theme} />}
       {data.connect && <ConnectBlock connect={data.connect} />}
       {data.use && <UseBlock use={data.use} />}
       {data.closing && (
@@ -1853,6 +1970,23 @@ export default function App() {
   var [teachData, setTeachData] = useState(null);            // JSON 结构（Phase 1 新路径，优先使用）
   var [teachWaitSec, setTeachWaitSec] = useState(0); // teach 加载已等待秒数（用于进度反馈）
   var [teachStreaming, setTeachStreaming] = useState(false); // 是否在流式生成中（用于显示光标+禁用按钮）
+  var [recallChoice, setRecallChoice] = useState(null); // active recall 自测：null / "easy" / "fuzzy" / "hard"
+  var [reward, setReward] = useState(null); // 答对视觉爆发 { amount, kind: 'normal'|'double'|'combo', id }
+  var rewardTimerRef = useRef(null);
+
+  // 触发答对视觉爆发：xp 飘字 + 屏幕短闪 + 偶尔大奖
+  // 10% 概率触发"双倍 +20"，5% 概率触发"连击 +30"（可变奖励 → 多巴胺 4× 强）
+  var triggerReward = function(baseAmount) {
+    var amount = baseAmount || 10;
+    var kind = "normal";
+    var roll = Math.random();
+    if (roll < 0.05) { amount = amount * 3; kind = "combo"; }
+    else if (roll < 0.15) { amount = amount * 2; kind = "double"; }
+    setReward({ amount: amount, kind: kind, id: Date.now() });
+    if (rewardTimerRef.current) clearTimeout(rewardTimerRef.current);
+    rewardTimerRef.current = setTimeout(function(){ setReward(null); }, 1400);
+    return amount; // 返回真实加分（可能被双倍/三倍）让调用方写 stats
+  };
   var [spectrumData, setSpectrumData] = useState(null);
   var [specSlots, setSpecSlots] = useState([null,null,null]);
   var [specPool, setSpecPool] = useState([]);
@@ -3179,6 +3313,7 @@ export default function App() {
     setReviewData(null); setReviewAnswers({}); setReviewSubmitted(false); setPhonetic("");
     setClozeData(null); setClozeAnswers({}); setClozeSubmitted(false);
     setShakeWrong(false); setBounceCorrect(false);
+    setRecallChoice(null); // 新词进入 teach 时清掉旧的自测结果
     setWordStart(Date.now());
 
     if (d?.guess?.context && d?.guess?.options) {
@@ -5807,6 +5942,47 @@ export default function App() {
         </div>
       )}
 
+      {/* 答对视觉爆发：飘字 + 屏幕短闪。10% 概率双倍 / 5% 概率连击（可变奖励） */}
+      {reward && (
+        <>
+          <div key={"flash-"+reward.id} style={{
+            position:"fixed", inset:0, zIndex:1900, pointerEvents:"none",
+            background: reward.kind === "combo" ? "radial-gradient(circle, "+C.gold+"55 0%, transparent 60%)"
+              : reward.kind === "double" ? "radial-gradient(circle, "+C.accent+"44 0%, transparent 60%)"
+              : "radial-gradient(circle, "+C.green+"33 0%, transparent 60%)",
+            animation: "rewardFlash 0.6s ease-out forwards",
+          }} />
+          <div key={"burst-"+reward.id} style={{
+            position:"fixed", top:"42%", left:"50%", zIndex:2000,
+            transform:"translate(-50%,-50%)", pointerEvents:"none",
+            textAlign:"center",
+            animation: "rewardBurst 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+          }}>
+            {reward.kind === "combo" && (
+              <div style={{ fontSize: 16, fontWeight: 800, color: C.gold, letterSpacing: "0.1em", textShadow: "0 2px 8px "+C.gold+"66", marginBottom: 4 }}>
+                🎯 三倍连击！
+              </div>
+            )}
+            {reward.kind === "double" && (
+              <div style={{ fontSize: 14, fontWeight: 800, color: C.accent, letterSpacing: "0.08em", textShadow: "0 2px 6px "+C.accent+"55", marginBottom: 4 }}>
+                ⚡ 双倍奖励
+              </div>
+            )}
+            <div style={{
+              fontSize: reward.kind === "combo" ? 64 : reward.kind === "double" ? 56 : 48,
+              fontWeight: 900,
+              color: reward.kind === "combo" ? C.gold : reward.kind === "double" ? C.accent : C.green,
+              fontFamily: FONT_DISPLAY,
+              textShadow: "0 4px 16px rgba(0,0,0,0.15)",
+              lineHeight: 1,
+            }}>
+              +{reward.amount}
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.textSec, marginTop: 6, letterSpacing: "0.05em" }}>XP</div>
+          </div>
+        </>
+      )}
+
       {phase !== "review" && phase !== "done" && phase !== "batch_loading" && phase !== "cloze" && phase !== "speed_wait" && (() => {
         // Round 4 修复：mnemonic_fill 是"4 选 1 拼写辨识"，顶部显示 currentWord 等于直接送答案
         // 改成显示问号 + "????" 占位（音标也藏起来），等用户提交后再揭晓
@@ -5928,6 +6104,57 @@ export default function App() {
           <div style={{marginBottom:20}}>
             <TeachJSON data={teachData} streaming={teachStreaming} />
           </div>
+          {/* Active Recall 自测钩子（Phase A 核心）—— 把"被动阅读"变"主动判断"，留存率从 5% → 75% */}
+          {!teachStreaming && (
+            <div style={{
+              marginBottom: 16,
+              padding: "14px 16px",
+              background: "linear-gradient(135deg, " + C.tealLight + " 0%, #fff 100%)",
+              border: "1.5px dashed " + C.teal + "88",
+              borderRadius: 12,
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.teal, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                🤔 1 秒自测
+              </div>
+              <div style={{ fontSize: 13, color: C.text, marginBottom: 10, lineHeight: 1.5 }}>
+                看一眼上方单词，<strong>不假思索</strong>能说出意思吗？
+              </div>
+              {!recallChoice ? (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                  {[
+                    { key: "easy",  label: "✅ 能",       sub: "已记住", clr: C.green,  cb: function(){ if (currentWord && (!wordStatusMap[currentWord] || wordStatusMap[currentWord]==="unlearned" || wordStatusMap[currentWord]==="learning")) updateManualWordStatus(currentWord, "mastered"); } },
+                    { key: "fuzzy", label: "🤔 模糊",     sub: "再复习", clr: C.gold,   cb: function(){ updateManualWordStatus(currentWord, "uncertain"); } },
+                    { key: "hard",  label: "❌ 想不起",   sub: "重点巩固", clr: C.red,    cb: function(){ updateManualWordStatus(currentWord, "error"); } },
+                  ].map(function(b){
+                    return (
+                      <button key={b.key} onClick={function(){ b.cb(); setRecallChoice(b.key); }} style={{
+                        padding: "10px 6px",
+                        background: "#fff",
+                        border: "2px solid " + C.border,
+                        borderRadius: 10,
+                        cursor: "pointer",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: b.clr,
+                        fontFamily: FONT,
+                        transition: "all 0.15s",
+                        textAlign: "center",
+                      }}>
+                        <div style={{ marginBottom: 2 }}>{b.label}</div>
+                        <div style={{ fontSize: 10, fontWeight: 500, color: C.textSec, letterSpacing: "0.03em" }}>{b.sub}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.textSec, padding: "4px 0" }}>
+                  {recallChoice === "easy" && <><span style={{color:C.green, fontWeight:700}}>✅ 已掌握</span>—— 太棒了，继续保持！</>}
+                  {recallChoice === "fuzzy" && <><span style={{color:C.gold, fontWeight:700}}>🤔 标记为"不确定"</span>—— 后续复习会再出现</>}
+                  {recallChoice === "hard" && <><span style={{color:C.red, fontWeight:700}}>❌ 标记为"易错"</span>—— 加入重点巩固池</>}
+                </div>
+              )}
+            </div>
+          )}
           <button style={{...S.primaryBtn, opacity: teachStreaming ? 0.6 : 1, cursor: teachStreaming ? "progress" : "pointer"}} onClick={teachToSpectrum} disabled={loading || teachStreaming}>{teachStreaming ? "✨ 正在生成...": (spectrumData?"🎮 词义光谱挑战 →":"→ 下一个词")}</button>
         </>
         : teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解内容加载失败</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");setTeachData(null);callWithClientRetry(function(){return callAPI(sysP,buildTeachPrompt(currentWord,learned));}).then(function(raw){var finalJSON=raw?(tryJSON(raw)||parsePartialJSON(raw)):null;if(finalJSON&&finalJSON.opening&&finalJSON.teach){dataCache.current[currentWord].teachJSON=finalJSON;dataCache.current[currentWord].teach=null;dataCache.current[currentWord].teachFailed=false;setTeachData(finalJSON);}else{var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
@@ -5971,7 +6198,7 @@ export default function App() {
             data={spectrumData}
             sfx={sfx}
             loading={loading}
-            onCorrect={function(){ save({ ...stats, xp: stats.xp+10 }); }}
+            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); }}
             onNext={goNextWord}
             nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
           />
@@ -5984,7 +6211,7 @@ export default function App() {
             data={spectrumData}
             sfx={sfx}
             loading={loading}
-            onCorrect={function(){ save({ ...stats, xp: stats.xp+10 }); }}
+            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); }}
             onNext={goNextWord}
             nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
           />
@@ -5997,7 +6224,7 @@ export default function App() {
             data={spectrumData}
             sfx={sfx}
             loading={loading}
-            onCorrect={function(){ save({ ...stats, xp: stats.xp+10 }); }}
+            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); }}
             onNext={goNextWord}
             nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
           />
@@ -6010,7 +6237,7 @@ export default function App() {
             data={spectrumData}
             sfx={sfx}
             loading={loading}
-            onCorrect={function(){ save({ ...stats, xp: stats.xp+10 }); }}
+            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); }}
             onNext={goNextWord}
             nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
           />
@@ -6023,7 +6250,7 @@ export default function App() {
             data={spectrumData}
             sfx={sfx}
             loading={loading}
-            onCorrect={function(){ save({ ...stats, xp: stats.xp+10 }); }}
+            onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); }}
             onNext={goNextWord}
             nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
           />
