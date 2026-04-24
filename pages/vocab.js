@@ -1864,14 +1864,14 @@ export default function App() {
       }
       setShowLogin(false); setLoginSent(false); setLoginEmail(''); setOtpCode('');
 
-      // 检测"刚刚重置进度" —— URL 带 ?reset=<timestamp> 且 <10s 前
-      // 此时跳过 loadFromCloud（避免被云端旧数据覆盖本地清零）
-      // 改为把本地清零数据推到云端，服务端反向更新
+      // 检测"刚刚重置进度" —— localStorage flag（比 URL 时间戳更稳，不受时钟/延迟影响）
+      // resetLearningProgress 设置此 flag，我们消费后清除
       var justReset = false;
       try {
-        var params = new URLSearchParams(window.location.search);
-        var resetTs = Number(params.get('reset'));
-        if (Number.isFinite(resetTs) && Date.now() - resetTs < 10000) justReset = true;
+        if (localStorage.getItem('vocabspark_just_reset') === '1') {
+          justReset = true;
+          localStorage.removeItem('vocabspark_just_reset');
+        }
       } catch(e) {}
 
       if (justReset) {
@@ -2089,8 +2089,10 @@ export default function App() {
     } catch(e) {}
     // 写 SKEY —— 同步、不触发 React 再渲染
     try { localStorage.setItem(SKEY, JSON.stringify(cleared)); } catch(e) {}
+    // 设置"刚重置" flag —— reload 后 handleAuthUser 消费此 flag 执行 LWW 云端覆盖
+    try { localStorage.setItem('vocabspark_just_reset', '1'); } catch(e) {}
     // 登录用户：用 keepalive 把清零数据推到云端，不 await，不阻塞导航
-    // keepalive 保证 reload 时 fetch 依然发出
+    // keepalive 保证 reload 时 fetch 依然发出（命中时最好，不命中也有 flag 兜底）
     if (userRef.current) {
       try {
         fetch('/api/sync', {
