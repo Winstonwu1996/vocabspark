@@ -2693,12 +2693,16 @@ export default function App() {
   };
 
   // 写宠物到 SKEY + 同步云端
+  // 关键：同步写 localStorage（不走异步 loadSave().then），避免用户关弹窗后立即刷新导致写丢失
   var savePet = function(p) {
     setPet(p);
-    loadSave().then(function(d) {
-      doSave(Object.assign({}, d || {}, { pet: p }));
-      if (userRef.current) syncToCloud();
-    });
+    try {
+      var raw = localStorage.getItem(SKEY);
+      var existing = raw ? JSON.parse(raw) : {};
+      var merged = Object.assign({}, existing, { pet: p, updatedAt: new Date().toISOString() });
+      localStorage.setItem(SKEY, JSON.stringify(merged));
+    } catch(e) { console.warn('[savePet] write failed:', e.message); }
+    if (userRef.current) syncToCloud();
   };
 
   // 喂食：消耗 XP，提升饱食度和开心度
@@ -2849,6 +2853,7 @@ export default function App() {
           await doSave(conflict.serverData);
           _applyCloudData(conflict.serverData);
           setSyncStatus("synced");
+          setTimeout(function(){ setSyncStatus("idle"); }, 2500); // 2.5s 后复位 ✓ 不再常驻
         }
         _syncRetryCount = 0;
       } else if (r.ok) {
@@ -2856,6 +2861,7 @@ export default function App() {
         syncVersionRef.current = result.version;
         _syncRetryCount = 0;
         setSyncStatus("synced");
+        setTimeout(function(){ setSyncStatus("idle"); }, 2500); // 2.5s 后复位 ✓ 不再常驻
       } else {
         throw new Error('sync failed: ' + r.status);
       }
@@ -3258,11 +3264,19 @@ export default function App() {
 
   var save = function(s, session) {
     setStats(s);
-    loadSave().then(function(d) {
-      var data = {...(d||{}), profile, stats: s, session: session || d?.session};
-      doSave(data);
-      syncToCloud();
-    });
+    // 同步写 SKEY，避免快速刷新（如喂宠物后立即关弹窗刷新）导致 stats 丢失
+    try {
+      var raw = localStorage.getItem(SKEY);
+      var existing = raw ? JSON.parse(raw) : {};
+      var merged = Object.assign({}, existing, {
+        profile: profile,
+        stats: s,
+        session: session || existing.session,
+        updatedAt: new Date().toISOString(),
+      });
+      localStorage.setItem(SKEY, JSON.stringify(merged));
+    } catch(e) { console.warn('[save] write failed:', e.message); }
+    syncToCloud();
   };
 
   var updateDailyNewWords = (n) => {
