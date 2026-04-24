@@ -3925,15 +3925,21 @@ export default function App() {
     speedWaitAbortRef.current = false;
 
     var start = Date.now();
-    while (!ready() && !speedWaitAbortRef.current && Date.now() - start < 18000) {
+    // 缩短到 12s（之前 18s 太久，加重焦虑）
+    while (!ready() && !speedWaitAbortRef.current && Date.now() - start < 12000) {
       setSpeedWaitSec(Math.floor((Date.now() - start) / 1000));
       await new Promise(function(r) { setTimeout(r, 240); });
     }
 
     if (!ready() || speedWaitAbortRef.current) {
-      // 清除可能损坏的缓存并重新加载
+      // Fallback：用 silent 模式补救加载，**不**触发 batch_loading UI
+      // （避免给用户"开始新一组"的错觉 — 之前用 streaming:true 会切到 batch_loading 屏，
+      // 让用户以为"刚学的几个词不算了，要重新一组"）
       dataCache.current[nextWord] = null;
-      await loadBatch(nextIdx, learnedSnapshot, undefined, { streaming: true });
+      console.warn('[waitAndEnterNextWord] timeout, silent fallback for', nextWord);
+      try {
+        await loadBatch(nextIdx, learnedSnapshot, undefined, { silent: true, streaming: false });
+      } catch(e) { console.warn('[fallback loadBatch] failed:', e?.message); }
     }
 
     setIdx(nextIdx);
