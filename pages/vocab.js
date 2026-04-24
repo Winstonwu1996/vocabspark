@@ -5,6 +5,7 @@ import { C, FONT, FONT_DISPLAY, NUM, globalCSS, S, getWordTheme } from '../lib/t
 import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON, parsePartialJSON, callClassify, METHOD_SCHEMAS, METHOD_EXAMPLES, VISUAL_ANCHOR_FORMATS } from '../lib/api';
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
+import { PetAvatar, moodFromLabel } from '../components/PetAvatar';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 import * as XLSX from 'xlsx';
 
@@ -5382,10 +5383,9 @@ export default function App() {
               background: "rgba(255,255,255,0.7)",
               borderRadius: "50%",
               display:"flex", alignItems:"center", justifyContent:"center",
-              fontSize: 36, lineHeight: 1,
               boxShadow: "inset 0 0 0 1px " + (todayDone ? C.green+"33" : C.accent+"22") + ", 0 1px 3px rgba(0,0,0,0.05)",
             }}>
-              {_stage ? _stage.emoji : "🌱"}
+              {_stage ? <PetAvatar species={_stage.species} mood={moodFromLabel(_mood?.label)} size={48} /> : <span style={{fontSize:36, lineHeight:1}}>🌱</span>}
             </div>
             <div style={{flex:1, minWidth:0}}>
               {/* 第一行：宠物名 · Lv N · mood emoji */}
@@ -6392,7 +6392,7 @@ export default function App() {
             transition: "transform 0.15s",
             animation: hunger < 20 ? "petShake 1.2s ease-in-out infinite" : "none",
           }} title={pet.name + " · " + mood.label} aria-label="打开宠物">
-            <span>{stage.emoji}</span>
+            <PetAvatar species={stage.species} mood={moodFromLabel(mood.label)} size={44} animate={false} />
             {/* 状态徽章右下角小点 */}
             <span style={{
               position: "absolute",
@@ -6449,8 +6449,8 @@ export default function App() {
 
               {/* 大字符宠物 + 名字（input 加 ✏️ 提示更可见） */}
               <div style={{textAlign:"center", marginBottom: 12}}>
-                <div style={{fontSize: 80, lineHeight: 1, marginBottom: 8, animation: hunger < 20 ? "petShake 1.2s ease-in-out infinite" : (mood.emoji === "😊" ? "petBounce 2s ease-in-out infinite" : "none")}}>
-                  {stage.emoji}
+                <div style={{ marginBottom: 8, display:"flex", justifyContent:"center" }}>
+                  <PetAvatar species={stage.species} mood={moodFromLabel(mood.label)} size={120} />
                 </div>
                 <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"6px 12px",background:C.bg,borderRadius:10,border:"1px solid "+C.border}} title="点击改名">
                   <span style={{fontSize:14,opacity:0.6}}>✏️</span>
@@ -6678,7 +6678,7 @@ export default function App() {
                   {/* 宠物 + XP */}
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",background:"linear-gradient(135deg, "+C.purpleLight+" 0%, #fff 100%)",borderRadius:12,border:"1px solid "+C.purple+"33",marginBottom:14}}>
                     <div style={{display:"flex",alignItems:"center",gap:10}}>
-                      <span style={{fontSize:32, lineHeight:1}}>{stage.emoji}</span>
+                      <PetAvatar species={stage.species} mood={moodFromLabel(mood.label)} size={36} animate={false} />
                       <div>
                         <div style={{fontSize:13,fontWeight:700,color:C.purple}}>{pet.name}</div>
                         <div style={{fontSize:10,color:C.textSec}}>Lv {stage.level} · {stage.title}</div>
