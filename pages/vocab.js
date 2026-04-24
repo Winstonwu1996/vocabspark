@@ -306,8 +306,8 @@ var buildSpectrumPrompt = (word, classifyResult) => {
   var wordType = classifyResult?.wordType || null;
   switch (wordType) {
     case "A": return buildBehaviorMatchPrompt(word);
-    // case "B": return buildCollocationFillPrompt(word);  // Round 2
-    // case "C": return buildMorphFillPrompt(word);         // Round 2
+    case "B": return buildCollocationFillPrompt(word);
+    case "C": return buildMorphFillPrompt(word);
     // case "D": return buildMnemonicFillPrompt(word);      // Round 3
     // case "E":
     // case "F":
@@ -362,6 +362,76 @@ var buildBehaviorMatchPrompt = (word) => {
     '  "options": {"A":"行为描述 1","B":"行为描述 2","C":"行为描述 3","D":"行为描述 4"},\n' +
     '  "answer": "正确行为的字母",\n' +
     '  "explanation": "为什么这个行为最符合 ' + word + '（≤40 字，中文）"\n' +
+    "}\n\n" +
+    "直接输出 JSON，不要 markdown 代码块标记。";
+};
+
+// B 搭配型 → 固定搭配填空
+// 测的是：是否知道这个词的典型搭配（make/take/pay/do + N，或 + preposition）
+// 4 个选项是【搭配候选词】（动词或介词），目标词在句子里给出，让学生选搭配
+var buildCollocationFillPrompt = (word) => {
+  return "为 \"" + word + "\" 设计【固定搭配填空】题。\n\n" +
+    "【任务】场景 + 一句带空格的英文 + 4 个搭配候选，测学生是否掌握 \"" + word + "\" 的典型搭配（动词搭配/介词搭配/形容词搭配等）。\n\n" +
+    "【场景】1 句画像化（用学生兴趣/朋友/日常），引出需要用 \"" + word + "\" 表达的情境。\n\n" +
+    "【句子】1 句完整英文，必须包含 \"" + word + "\"（标记位置即可，不要遮盖目标词），但要有 1 个空格 ___ 给搭配候选\n" +
+    "重点：空格处填的是【搭配的另一半】（如 pay tribute 的 pay；in addition 的 in；keep promise 的 keep）\n\n" +
+    "【4 个搭配选项 — 关键】\n" +
+    "✅ 1 个正解：" + word + " 真正的固定/常用搭配\n" +
+    "✅ 3 个干扰：是常见词、单独看也合理，但跟 \"" + word + "\" 搭起来不地道\n" +
+    "干扰应来自学生熟悉的词（make/take/do/give/pay/keep/break 等高频动词；in/on/at/with 等介词）\n\n" +
+    "【参考示例】（学风格，不是学 tribute 内容）\n" +
+    "{\n" +
+    '  "scenario": "Willow\'s tennis coach is retiring after 20 years; the team plans a small ceremony.",\n' +
+    '  "sentence": "The team decided to ___ tribute to Coach Lee at the farewell party.",\n' +
+    '  "options": {"A":"pay","B":"make","C":"do","D":"give"},\n' +
+    '  "answer": "A",\n' +
+    '  "explanation": "pay tribute to 是固定搭配（致敬/缅怀），其他动词都不与 tribute 搭配"\n' +
+    "}\n\n" +
+    "【输出严格 JSON】\n" +
+    '{\n' +
+    '  "type": "collocation_fill",\n' +
+    '  "scenario": "1 句画像化场景",\n' +
+    '  "sentence": "1 句含 ' + word + ' 和 ___ 的英文",\n' +
+    '  "options": {"A":"...","B":"...","C":"...","D":"..."},\n' +
+    '  "answer": "正确搭配的字母",\n' +
+    '  "explanation": "为什么这个搭配最地道（≤40 字，中文，可附其他选项不搭的简短说明）"\n' +
+    "}\n\n" +
+    "直接输出 JSON，不要 markdown 代码块标记。";
+};
+
+// C 词根型 → 词根拆解 + 同根词形变填空
+// 测的是：词根理解 + 词性辨析（看场景需要 verb / adj / noun，从 4 个同根词选）
+// 4 个选项都是同根词的不同词形，迫使学生理解词根+词缀含义
+var buildMorphFillPrompt = (word) => {
+  return "为 \"" + word + "\" 设计【词根拆解 + 词形辨析】题。\n\n" +
+    "【任务】先简短拆解词根，再给一个场景 + 一句空格句，4 个选项都是【" + word + " 的同根词不同词形】（动词/形容词/名词/副词）。\n\n" +
+    "【词根拆解】1 行：用「+」连接前缀 + 词根 + 后缀，每段标含义\n" +
+    "例：comprehend → com- (一起) + -prehend (抓住) → 全部抓住 = 理解\n\n" +
+    "【场景】1 句画像化（用学生世界），引出需要某种词形的情境\n\n" +
+    "【句子】1 句完整英文，留 ___ 给目标词形\n" +
+    "句子的【语法位置】决定要哪种词形（need a noun / need a verb / need an adj 等）\n\n" +
+    "【4 个选项 — 关键】\n" +
+    "✅ 都是 \"" + word + "\" 的同根词形（不同词性或不同前缀）\n" +
+    "✅ 1 个正解：词性 + 含义都对\n" +
+    "✅ 3 个干扰：词形对但词性错（语法位置不对），或词形对但语义偏移\n\n" +
+    "【参考示例】（学风格，不是学 comprehend 内容）\n" +
+    "{\n" +
+    '  "morph": "com- (一起) + -prehend (抓住) → 全部抓住 = 理解",\n' +
+    '  "scenario": "Willow stayed up debugging her React project, but the bug kept reappearing.",\n' +
+    '  "sentence": "She just couldn\'t ___ why the same error popped up after every fix.",\n' +
+    '  "options": {"A":"comprehend","B":"comprehensive","C":"comprehension","D":"comprehensible"},\n' +
+    '  "answer": "A",\n' +
+    '  "explanation": "couldn\'t 后接动词原形，A 是 verb；B/D 是 adj，C 是 noun，都不对"\n' +
+    "}\n\n" +
+    "【输出严格 JSON】\n" +
+    '{\n' +
+    '  "type": "morph_fill",\n' +
+    '  "morph": "前缀 + 词根 + 后缀 → 含义推导",\n' +
+    '  "scenario": "1 句画像化场景",\n' +
+    '  "sentence": "1 句含 ___ 的英文",\n' +
+    '  "options": {"A":"同根词形 1","B":"同根词形 2","C":"同根词形 3","D":"同根词形 4"},\n' +
+    '  "answer": "正确词形的字母",\n' +
+    '  "explanation": "为什么这个词形对（含语法位置 + 干扰为何不对，≤50 字，中文）"\n' +
     "}\n\n" +
     "直接输出 JSON，不要 markdown 代码块标记。";
 };
@@ -1108,6 +1178,144 @@ var BehaviorMatchGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) =
               boxShadow:"0 4px 12px "+C.green+"55"
             }}
           >{nextLabel || "→ 下一个词"}</button>
+        </div>
+      )}
+    </>
+  );
+};
+
+// B 搭配型 → 固定搭配填空
+// scenario + sentence (含 ___) + 4 个搭配候选
+var CollocationFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
+  var [selected, setSelected] = useState(null);
+  var [submitted, setSubmitted] = useState(false);
+  if (!data) return null;
+  var isCorrect = submitted && selected === data.answer;
+  var optKeys = ["A","B","C","D"];
+  // 把 ___ 替换为高亮的填空标记，让所选选项动态嵌入
+  var renderSentence = function() {
+    var s = data.sentence || "";
+    var parts = s.split(/_{2,}/);
+    if (parts.length < 2) return <span>{s}</span>;
+    var fill = selected ? data.options?.[selected] : "______";
+    var fillColor = !submitted ? C.accent : (selected === data.answer ? C.green : C.red);
+    return <span>{parts[0]}<span style={{ display:"inline-block", padding:"0 8px", background:fillColor+"22", color:fillColor, borderRadius:6, fontWeight:700, minWidth:60, textAlign:"center" }}>{fill}</span>{parts.slice(1).join("___")}</span>;
+  };
+  return (
+    <>
+      <div style={S.specTag}>🔗 固定搭配</div>
+      <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>选出最地道的搭配填进句子</div>
+      <div style={{ padding:"12px 14px", marginBottom:12, background:C.bg, borderLeft:"3px solid "+C.teal, borderRadius:"0 10px 10px 0", fontSize:14, lineHeight:1.7, color:C.text }}>
+        {data.scenario}
+      </div>
+      <div style={{ padding:"14px 14px", marginBottom:14, background:C.tealLight, border:"1px solid "+C.teal+"33", borderRadius:10, fontSize:16, lineHeight:1.9, color:C.text, fontFamily:"'Inter',"+FONT }}>
+        {renderSentence()}
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:14 }}>
+        {optKeys.map(function(k){
+          var option = data.options?.[k] || "";
+          var isSel = selected === k;
+          var isAns = k === data.answer;
+          var bg = C.bg, bdr = C.border, clr = C.text, shadow = "none";
+          if (submitted) {
+            if (isAns) { bg = C.greenLight; bdr = C.green; clr = C.green; shadow = "0 0 0 2px "+C.green+"33"; }
+            else if (isSel) { bg = C.redLight; bdr = C.red; clr = C.red; shadow = "0 0 0 2px "+C.red+"33"; }
+            else { bg = C.bg; bdr = C.border; clr = C.textSec; }
+          } else if (isSel) { bg = C.accentLight; bdr = C.accent; clr = C.accent; shadow = "0 0 0 2px "+C.accent+"33"; }
+          return (
+            <button key={k} disabled={submitted} onClick={function(){ if (!submitted) setSelected(k); }} style={{ display:"flex", alignItems:"center", gap:8, padding:"12px 14px", background:bg, border:"2px solid "+bdr, borderRadius:10, cursor:submitted?"default":"pointer", color:clr, fontWeight:600, textAlign:"left", fontSize:15, transition:"all 0.2s", boxShadow:shadow, fontFamily:"'Inter',"+FONT }}>
+              <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:24, height:24, borderRadius:"50%", background:clr+"22", color:clr, fontSize:12, fontWeight:700, flexShrink:0 }}>{k}</span>
+              <span style={{ flex:1 }}>{option}</span>
+              {submitted && isAns && <span style={{ color:C.green, fontWeight:700 }}>✓</span>}
+              {submitted && isSel && !isAns && <span style={{ color:C.red, fontWeight:700 }}>✗</span>}
+            </button>
+          );
+        })}
+      </div>
+      {!submitted && (
+        <button onClick={function(){
+          if (!selected) return;
+          setSubmitted(true);
+          if (selected === data.answer) { if (sfx?.spectrumWin) sfx.spectrumWin(); if (onCorrect) onCorrect(); }
+          else if (sfx?.spectrumFail) sfx.spectrumFail();
+        }} disabled={!selected} style={{ ...S.specCheckBtn, opacity:selected?1:0.5, cursor:selected?"pointer":"not-allowed" }}>✓ 提交答案</button>
+      )}
+      {submitted && (
+        <div style={{ ...S.specDecoded, marginTop:4 }}>
+          <div style={{ color:isCorrect?C.green:C.accent, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💡 正确答案 "+data.answer}</div>
+          {data.explanation && <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>}
+          <button onClick={onNext} disabled={loading} style={{ ...S.specCheckBtn, marginTop:16, background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)", boxShadow:"0 4px 12px "+C.green+"55" }}>{nextLabel || "→ 下一个词"}</button>
+        </div>
+      )}
+    </>
+  );
+};
+
+// C 词根型 → 词根拆解 + 词形辨析
+// morph card + scenario + sentence (含 ___) + 4 个同根词形候选
+var MorphFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
+  var [selected, setSelected] = useState(null);
+  var [submitted, setSubmitted] = useState(false);
+  if (!data) return null;
+  var isCorrect = submitted && selected === data.answer;
+  var optKeys = ["A","B","C","D"];
+  var renderSentence = function() {
+    var s = data.sentence || "";
+    var parts = s.split(/_{2,}/);
+    if (parts.length < 2) return <span>{s}</span>;
+    var fill = selected ? data.options?.[selected] : "______";
+    var fillColor = !submitted ? C.accent : (selected === data.answer ? C.green : C.red);
+    return <span>{parts[0]}<span style={{ display:"inline-block", padding:"0 8px", background:fillColor+"22", color:fillColor, borderRadius:6, fontWeight:700, minWidth:80, textAlign:"center" }}>{fill}</span>{parts.slice(1).join("___")}</span>;
+  };
+  return (
+    <>
+      <div style={S.specTag}>🧬 词根拆解</div>
+      <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>看词根理解，选对词形填空</div>
+      {data.morph && (
+        <div style={{ padding:"12px 14px", marginBottom:12, background:C.purpleLight, border:"1px solid "+C.purple+"44", borderRadius:10, fontSize:14.5, lineHeight:1.7, color:C.text, fontFamily:"'Inter',"+FONT, fontWeight:600 }}>
+          🧬 {data.morph}
+        </div>
+      )}
+      <div style={{ padding:"12px 14px", marginBottom:12, background:C.bg, borderLeft:"3px solid "+C.teal, borderRadius:"0 10px 10px 0", fontSize:14, lineHeight:1.7, color:C.text }}>
+        {data.scenario}
+      </div>
+      <div style={{ padding:"14px 14px", marginBottom:14, background:C.tealLight, border:"1px solid "+C.teal+"33", borderRadius:10, fontSize:16, lineHeight:1.9, color:C.text, fontFamily:"'Inter',"+FONT }}>
+        {renderSentence()}
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:14 }}>
+        {optKeys.map(function(k){
+          var option = data.options?.[k] || "";
+          var isSel = selected === k;
+          var isAns = k === data.answer;
+          var bg = C.bg, bdr = C.border, clr = C.text, shadow = "none";
+          if (submitted) {
+            if (isAns) { bg = C.greenLight; bdr = C.green; clr = C.green; shadow = "0 0 0 2px "+C.green+"33"; }
+            else if (isSel) { bg = C.redLight; bdr = C.red; clr = C.red; shadow = "0 0 0 2px "+C.red+"33"; }
+            else { bg = C.bg; bdr = C.border; clr = C.textSec; }
+          } else if (isSel) { bg = C.accentLight; bdr = C.accent; clr = C.accent; shadow = "0 0 0 2px "+C.accent+"33"; }
+          return (
+            <button key={k} disabled={submitted} onClick={function(){ if (!submitted) setSelected(k); }} style={{ display:"flex", alignItems:"center", gap:8, padding:"12px 14px", background:bg, border:"2px solid "+bdr, borderRadius:10, cursor:submitted?"default":"pointer", color:clr, fontWeight:600, textAlign:"left", fontSize:14, transition:"all 0.2s", boxShadow:shadow, fontFamily:"'Inter',"+FONT }}>
+              <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:24, height:24, borderRadius:"50%", background:clr+"22", color:clr, fontSize:12, fontWeight:700, flexShrink:0 }}>{k}</span>
+              <span style={{ flex:1, wordBreak:"break-word" }}>{option}</span>
+              {submitted && isAns && <span style={{ color:C.green, fontWeight:700 }}>✓</span>}
+              {submitted && isSel && !isAns && <span style={{ color:C.red, fontWeight:700 }}>✗</span>}
+            </button>
+          );
+        })}
+      </div>
+      {!submitted && (
+        <button onClick={function(){
+          if (!selected) return;
+          setSubmitted(true);
+          if (selected === data.answer) { if (sfx?.spectrumWin) sfx.spectrumWin(); if (onCorrect) onCorrect(); }
+          else if (sfx?.spectrumFail) sfx.spectrumFail();
+        }} disabled={!selected} style={{ ...S.specCheckBtn, opacity:selected?1:0.5, cursor:selected?"pointer":"not-allowed" }}>✓ 提交答案</button>
+      )}
+      {submitted && (
+        <div style={{ ...S.specDecoded, marginTop:4 }}>
+          <div style={{ color:isCorrect?C.green:C.accent, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💡 正确答案 "+data.answer}</div>
+          {data.explanation && <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>}
+          <button onClick={onNext} disabled={loading} style={{ ...S.specCheckBtn, marginTop:16, background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)", boxShadow:"0 4px 12px "+C.green+"55" }}>{nextLabel || "→ 下一个词"}</button>
         </div>
       )}
     </>
@@ -5244,6 +5452,32 @@ export default function App() {
       {phase === "spectrum" && spectrumData && spectrumData.type === "behavior_match" && (
         <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
           <BehaviorMatchGame
+            data={spectrumData}
+            sfx={sfx}
+            loading={loading}
+            onCorrect={function(){ save({ ...stats, xp: stats.xp+10 }); }}
+            onNext={goNextWord}
+            nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
+          />
+        </div>
+      )}
+
+      {phase === "spectrum" && spectrumData && spectrumData.type === "collocation_fill" && (
+        <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+          <CollocationFillGame
+            data={spectrumData}
+            sfx={sfx}
+            loading={loading}
+            onCorrect={function(){ save({ ...stats, xp: stats.xp+10 }); }}
+            onNext={goNextWord}
+            nextLabel={idx+1>=wordList.length&&(learned.length+1)%5!==0?"🎉 完成！":(learned.length+1)%10===0?"📝 阅读填空挑战":(learned.length+1)%5===0?"🏆 复习关卡":"→ "+wordList[idx+1]}
+          />
+        </div>
+      )}
+
+      {phase === "spectrum" && spectrumData && spectrumData.type === "morph_fill" && (
+        <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+          <MorphFillGame
             data={spectrumData}
             sfx={sfx}
             loading={loading}
