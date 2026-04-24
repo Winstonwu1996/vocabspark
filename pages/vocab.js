@@ -5981,57 +5981,21 @@ export default function App() {
         var planView = getStudyPlanPrediction();
         var phaseView = getPhaseExecutionSnapshot();
         var streakInfo = getStudyStreak();
+        // 统一 section header 样式
+        var sectionHeader = function(text) {
+          return <div style={{
+            fontSize: 11, fontWeight: 800, color: C.textSec,
+            letterSpacing: "0.1em", margin: "18px 4px 8px",
+            textTransform: "uppercase", display:"flex", alignItems:"center", gap:6,
+          }}>{text}</div>;
+        };
         return <div style={S.setupCard}>
-          <div style={S.setupHint}>学习统计中心：查看学习成效、复习量和当前词库健康度。</div>
 
-          {/* 连续学习日历：最近 30 天点亮已学日，强化"不断签"动机（损失厌恶 > 追求收获 2-3×） */}
+          {/* ───── 📊 这周表现（数据展示）───── */}
+          {sectionHeader("📊 这周表现")}
+
+          {/* 连续学习日历：最近 30 天点亮已学日 */}
           <StreakCalendar history={streakInfo.history} streak={streakInfo.streak} todayDone={streakInfo.todayDone} />
-
-          {/* 我的词典入口 + 战绩分享卡 — 双按钮并排 */}
-          {(() => {
-            var rwdCount = Object.keys(reviewWordData || {}).length;
-            if (rwdCount === 0) return null;
-            return (
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
-                <button onClick={function(){ setShowMyDict(true); }} style={{
-                  padding: "12px 12px",
-                  background: "linear-gradient(135deg, " + C.purpleLight + " 0%, #fff 100%)",
-                  border: "1.5px solid " + C.purple + "55",
-                  borderRadius: 12,
-                  cursor: "pointer",
-                  fontFamily: FONT,
-                  textAlign: "left",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}>
-                  <div style={{ fontSize: 22 }}>📖</div>
-                  <div style={{ flex: 1, minWidth:0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.purple, marginBottom: 1 }}>我的词典</div>
-                    <div style={{ fontSize: 11, color: C.textSec, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{rwdCount} 个词</div>
-                  </div>
-                </button>
-                <button onClick={function(){ setShowShareCard(true); }} style={{
-                  padding: "12px 12px",
-                  background: "linear-gradient(135deg, " + C.goldLight + " 0%, #fff 100%)",
-                  border: "1.5px solid " + C.gold + "55",
-                  borderRadius: 12,
-                  cursor: "pointer",
-                  fontFamily: FONT,
-                  textAlign: "left",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}>
-                  <div style={{ fontSize: 22 }}>🏆</div>
-                  <div style={{ flex: 1, minWidth:0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.gold, marginBottom: 1 }}>战绩卡片</div>
-                    <div style={{ fontSize: 11, color: C.textSec, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>分享给爸妈</div>
-                  </div>
-                </button>
-              </div>
-            );
-          })()}
 
           {statsView.totalWords > 0 && (() => {
             // 学习进度 = 已接触的词 / 已接触的词总数（不是全词库！这样才公平）
@@ -6146,15 +6110,6 @@ export default function App() {
               <div style={{fontSize:11,color:C.textSec,marginTop:8,lineHeight:1.5}}>间隔重复规则：答对后按 1→3→7→14→30 天递增复习间隔，答错则重置为 1 天。</div>
             </div>;
           })()}
-          <div style={{background:C.bg,border:"1px dashed "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>📋 学习进度看板</div>
-            <div style={{display:"flex",gap:8,flexWrap:"wrap",fontSize:12,marginBottom:6}}>
-              <span style={{padding:"2px 8px",borderRadius:999,background:phaseView.P0?C.greenLight:C.redLight,color:phaseView.P0?C.green:C.red,fontWeight:700}}>P0 基础学习 {phaseView.P0?"✅":"⏳"}</span>
-              <span style={{padding:"2px 8px",borderRadius:999,background:phaseView.P1?C.greenLight:C.redLight,color:phaseView.P1?C.green:C.red,fontWeight:700}}>P1 复习与计划 {phaseView.P1?"✅":"⏳"}</span>
-              <span style={{padding:"2px 8px",borderRadius:999,background:phaseView.P2?C.greenLight:C.redLight,color:phaseView.P2?C.green:C.red,fontWeight:700}}>P2 管理与统计 {phaseView.P2?"✅":"⏳"}</span>
-            </div>
-            <div style={{fontSize:12,color:C.textSec,lineHeight:1.7}}>当前进度：已学习 {phaseView.learnedCount}/{phaseView.totalWords}，到期 {phaseView.dueCount}，重点词 {phaseView.focusCount}。</div>
-          </div>
           <div style={{background:C.goldLight,border:"1px solid "+C.gold,borderRadius:10,padding:"12px 14px",fontSize:13,lineHeight:1.6,color:C.text}}>
             <div style={{fontWeight:700,marginBottom:4}}>⚡ 学习建议</div>
             <ul style={{margin:0,paddingLeft:20}}>
@@ -6164,10 +6119,65 @@ export default function App() {
               {statsView.dueCount === 0 && ((statsView.statuses.uncertain||0) + (statsView.statuses.error||0)) === 0 && <li><strong>太棒了！</strong>今天的复习压力已清空，尽情探索新单词吧。</li>}
             </ul>
           </div>
-          <div style={{marginTop:16,padding:"16px",background:C.redLight,border:"1px dashed "+C.red,borderRadius:10,textAlign:"center"}}>
-            <div style={{fontWeight:700,fontSize:14,color:C.red,marginBottom:8}}>⚠️ 数据管理</div>
-            <div style={{fontSize:12,color:C.textSec,marginBottom:12,lineHeight:1.6}}>清空当前账号的所有学习进度、单词本、画像与积分，从零开始。<br/><strong>注意：此操作不可逆！</strong></div>
-            <button onClick={handleFactoryReset} style={{...S.smallBtn,background:C.red,color:"#fff",border:"none",padding:"8px 16px",fontWeight:600}}>⚠️ 初始化（清除所有记录）</button>
+
+          {/* ───── 📚 我的内容（可点击查看的成果）───── */}
+          {(() => {
+            var rwdCount = Object.keys(reviewWordData || {}).length;
+            if (rwdCount === 0) return null;
+            return <>
+              {sectionHeader("📚 我的内容")}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
+                <button onClick={function(){ setShowMyDict(true); }} style={{
+                  padding: "12px 12px",
+                  background: "linear-gradient(135deg, " + C.purpleLight + " 0%, #fff 100%)",
+                  border: "1.5px solid " + C.purple + "55",
+                  borderRadius: 12,
+                  cursor: "pointer",
+                  fontFamily: FONT,
+                  textAlign: "left",
+                  display: "flex", alignItems: "center", gap: 8,
+                }}>
+                  <div style={{ fontSize: 22 }}>📖</div>
+                  <div style={{ flex: 1, minWidth:0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.purple, marginBottom: 1 }}>我的词典</div>
+                    <div style={{ fontSize: 11, color: C.textSec, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{rwdCount} 个词</div>
+                  </div>
+                </button>
+                <button onClick={function(){ setShowShareCard(true); }} style={{
+                  padding: "12px 12px",
+                  background: "linear-gradient(135deg, " + C.goldLight + " 0%, #fff 100%)",
+                  border: "1.5px solid " + C.gold + "55",
+                  borderRadius: 12,
+                  cursor: "pointer",
+                  fontFamily: FONT,
+                  textAlign: "left",
+                  display: "flex", alignItems: "center", gap: 8,
+                }}>
+                  <div style={{ fontSize: 22 }}>🏆</div>
+                  <div style={{ flex: 1, minWidth:0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.gold, marginBottom: 1 }}>战绩卡片</div>
+                    <div style={{ fontSize: 11, color: C.textSec, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>分享给爸妈</div>
+                  </div>
+                </button>
+              </div>
+            </>;
+          })()}
+
+          {/* ───── ⚙️ 学习设置（工具/管理）───── */}
+          {sectionHeader("⚙️ 学习设置")}
+          <div style={{background:C.bg,border:"1px dashed "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>📋 学习进度看板</div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap",fontSize:12,marginBottom:6}}>
+              <span style={{padding:"2px 8px",borderRadius:999,background:phaseView.P0?C.greenLight:C.redLight,color:phaseView.P0?C.green:C.red,fontWeight:700}}>P0 基础学习 {phaseView.P0?"✅":"⏳"}</span>
+              <span style={{padding:"2px 8px",borderRadius:999,background:phaseView.P1?C.greenLight:C.redLight,color:phaseView.P1?C.green:C.red,fontWeight:700}}>P1 复习与计划 {phaseView.P1?"✅":"⏳"}</span>
+              <span style={{padding:"2px 8px",borderRadius:999,background:phaseView.P2?C.greenLight:C.redLight,color:phaseView.P2?C.green:C.red,fontWeight:700}}>P2 管理与统计 {phaseView.P2?"✅":"⏳"}</span>
+            </div>
+            <div style={{fontSize:12,color:C.textSec,lineHeight:1.7}}>当前进度：已学习 {phaseView.learnedCount}/{phaseView.totalWords}，到期 {phaseView.dueCount}，重点词 {phaseView.focusCount}。</div>
+          </div>
+          <div style={{padding:"14px 16px",background:C.redLight,border:"1px dashed "+C.red+"66",borderRadius:10}}>
+            <div style={{fontWeight:700,fontSize:13,color:C.red,marginBottom:4}}>⚠️ 初始化数据</div>
+            <div style={{fontSize:11,color:C.textSec,marginBottom:10,lineHeight:1.6}}>清空所有学习进度 / 词库 / 画像 / 积分 — <strong>不可逆</strong></div>
+            <button onClick={handleFactoryReset} style={{...S.smallBtn,background:"transparent",color:C.red,border:"1px solid "+C.red,padding:"7px 16px",fontWeight:700,fontSize:12}}>初始化所有数据</button>
           </div>
         </div>;
       })()}

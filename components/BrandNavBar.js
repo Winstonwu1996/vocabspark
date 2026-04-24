@@ -20,11 +20,12 @@ export var BrandSparkIcon = ({ size, marginBottom }) => {
   );
 };
 
-export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterClick, syncStatus }) => {
+export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterClick, syncStatus, compact }) => {
   activeTab = activeTab || "vocab";
   var pct = stats && stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
-  var hasStats = stats && stats.xp > 0;
-  var hasStreak = studyStreak && studyStreak.streak > 0;
+  // compact 模式下不显示底部 pills（避免跟 vocab 页的"我的小本本"卡信息重复）
+  var hasStats = !compact && stats && stats.xp > 0;
+  var hasStreak = !compact && studyStreak && studyStreak.streak > 0;
 
   var tabStyle = function(tab) {
     var isActive = tab === activeTab;
@@ -117,5 +118,5 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
 };
 
 export var AppHeroHeader = ({ stats, studyStreak, user, onUserCenterClick, syncStatus }) => (
-  <BrandNavBar activeTab="vocab" stats={stats} studyStreak={studyStreak} user={user} onUserCenterClick={onUserCenterClick} syncStatus={syncStatus} />
+  <BrandNavBar activeTab="vocab" stats={stats} studyStreak={studyStreak} user={user} onUserCenterClick={onUserCenterClick} syncStatus={syncStatus} compact />
 );
