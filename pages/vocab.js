@@ -1864,48 +1864,17 @@ export default function App() {
       }
       setShowLogin(false); setLoginSent(false); setLoginEmail(''); setOtpCode('');
 
-      // 检测"刚刚重置进度" —— localStorage flag（比 URL 时间戳更稳，不受时钟/延迟影响）
-      // resetLearningProgress 设置此 flag，我们消费后清除
-      var justReset = false;
-      try {
-        if (localStorage.getItem('vocabspark_just_reset') === '1') {
-          justReset = true;
-          localStorage.removeItem('vocabspark_just_reset');
-        }
-      } catch(e) {}
-
-      if (justReset) {
-        // 本地已被 resetLearningProgress 清零 → 强制覆盖云端（不带 clientVersion → API 走 LWW 模式）
-        // 直接 inline fetch，await 等待完成再继续，避免 syncToCloud 被 409 打回拿旧数据
-        try {
-          var clearedLocal = await loadSave();
-          if (clearedLocal) {
-            var resp = await fetch('/api/sync', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userId: u.id, data: clearedLocal }), // 关键：不传 clientVersion → LWW 直接接受
-            });
-            if (resp.ok) {
-              var okJson = await resp.json();
-              syncVersionRef.current = okJson.version || 0;
-              setSyncStatus("synced");
-            }
-          }
-        } catch(e) { console.warn('[reset-sync] error:', e.message); }
+      // 服务端权威：拉取云端数据
+      // 重置场景无需特殊分支 —— resetLearningProgress 已经 await /api/reset
+      // 完成后云端就是清零数据，这里 loadFromCloud 读到的也是清零，自然正确
+      var cloudData = await loadFromCloud(u.id);
+      if (cloudData) {
+        await doSave(cloudData);
+        _applyCloudData(cloudData);
+        setShowWelcome(false);
       } else {
-        // 服务端权威：拉取云端数据
-        var cloudData = await loadFromCloud(u.id);
-        if (cloudData) {
-          // 云端有数据 → 直接应用（服务端赢）
-          await doSave(cloudData);
-          _applyCloudData(cloudData);
-          setShowWelcome(false);
-        } else {
-          // 云端无数据（新用户）→ 把本地数据推到云端
-          syncToCloud();
-        }
+        syncToCloud();
       }
-      // 加载订阅状态
       _loadTier(u.id);
     }
   };
@@ -2048,37 +2017,56 @@ export default function App() {
     });
   };
 
-  var resetLearningProgress = function() {
+  var resetLearningProgress = async function() {
     if (!confirm("⚠️ 确认重置学习进度？\n\n将清除：\n· 所有单词的学习状态\n· 复习记录与复习计划\n· 统计数据（XP、正确率等）\n· 今日学习配额\n· AI 缓存（强制重新生成）\n\n不会清除：\n· 词表内容\n· 学习画像\n· 每日目标设置\n· 连续学习天数\n\n此操作不可撤销。")) return;
-    // 读取要保留的字段（在擦除前）
-    var preserved = {};
-    try {
-      var raw = localStorage.getItem(SKEY);
-      var existing = raw ? JSON.parse(raw) : {};
-      preserved = {
+    // 登录用户：调用专用 /api/reset —— 服务端权威清零 + bump version，拿到清零 data 作为 SoT
+    // 游客：本地直接构造清零 data
+    var cleared;
+    var newVersion = 0;
+    if (userRef.current) {
+      try {
+        var r = await fetch('/api/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: userRef.current.id }),
+        });
+        if (!r.ok) throw new Error('reset api ' + r.status);
+        var json = await r.json();
+        cleared = json.data;
+        newVersion = json.version || 0;
+      } catch(e) {
+        alert('重置失败：网络异常，请稍后再试。\n' + (e.message || ''));
+        return;
+      }
+    } else {
+      // 游客：读取本地保留字段 + 清零其他字段
+      var existing = {};
+      try { existing = JSON.parse(localStorage.getItem(SKEY) || '{}'); } catch(e) {}
+      cleared = {
+        schemaVersion: 2,
         profile: existing.profile,
         wordInput: existing.wordInput,
         settings: existing.settings,
         tipDismissed: existing.tipDismissed,
+        stats: { correct:0, total:0, streak:0, bestStreak:0, xp:0 },
+        wordStatusMap: {},
+        reviewWordData: {},
+        completedWords: [],
+        session: null,
+        dailyNewQuotaState: null,
+        updatedAt: new Date().toISOString(),
       };
-    } catch(e) {}
-    var cleared = Object.assign({}, preserved, {
-      schemaVersion: 2,
-      stats: { correct:0, total:0, streak:0, bestStreak:0, xp:0 },
-      completedWords: [],
-      session: null,
-      wordStatusMap: {},
-      reviewWordData: {},
-      dailyNewQuotaState: null,
-      updatedAt: new Date().toISOString(),
-    });
-    // 清除独立 localStorage 键
+    }
+    // 本地与云端对齐 —— 服务端已经是权威清零，本地只需镜像
+    try { localStorage.setItem(SKEY, JSON.stringify(cleared)); } catch(e) {}
+    syncVersionRef.current = newVersion;
+    // 清辅助 key
     try { localStorage.removeItem(WORD_STATUS_KEY); } catch(e) {}
     try { localStorage.removeItem(REVIEW_WORD_DATA_KEY); } catch(e) {}
     try { localStorage.removeItem(DAILY_KEY); } catch(e) {}
     try { localStorage.removeItem(DAILY_NEW_QUOTA_KEY); } catch(e) {}
     try { localStorage.removeItem(DEEP_REVIEW_DAILY_KEY); } catch(e) {}
-    // 清除 Phase 1.5 classify/teach 缓存（让重置后的单词走全新生成路径）
+    // 清 Phase 1.5 AI 缓存（让重置后的单词走全新生成路径）
     try {
       var toDelete = [];
       for (var i = 0; i < localStorage.length; i++) {
@@ -2087,26 +2075,8 @@ export default function App() {
       }
       toDelete.forEach(function(k) { try { localStorage.removeItem(k); } catch(e) {} });
     } catch(e) {}
-    // 写 SKEY —— 同步、不触发 React 再渲染
-    try { localStorage.setItem(SKEY, JSON.stringify(cleared)); } catch(e) {}
-    // 设置"刚重置" flag —— reload 后 handleAuthUser 消费此 flag 执行 LWW 云端覆盖
-    try { localStorage.setItem('vocabspark_just_reset', '1'); } catch(e) {}
-    // 登录用户：用 keepalive 把清零数据推到云端，不 await，不阻塞导航
-    // keepalive 保证 reload 时 fetch 依然发出（命中时最好，不命中也有 flag 兜底）
-    if (userRef.current) {
-      try {
-        fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: userRef.current.id, data: cleared }),
-          keepalive: true,
-        }).catch(function(){});
-      } catch(e) {}
-    }
-    // 立即硬刷 —— 跳过 history，避开 bfcache 恢复内存态
-    try { window.location.replace(window.location.pathname + '?reset=' + Date.now()); } catch(e) {
-      try { window.location.reload(); } catch(e2) {}
-    }
+    // 硬刷 —— 干净地从服务端权威数据重建 React state
+    try { window.location.reload(); } catch(e) {}
   };
 
   var currentWord = wordList[idx] || "";
