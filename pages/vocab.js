@@ -291,16 +291,21 @@ var buildGuessPrompt = (word, learned) => {
     "2. context 字段：1-2 句**纯英文**语境句（⚠️ 必须全英文，不能含任何中文、拼音、中文标点），用 _____ 代替目标单词，深度利用学习画像的场景（兴趣/常去地方/日常）。\n" +
     "   ✅ 好范例：\"William just pulled off a clutch Pentakill in Honor of Kings, and immediately rushed to _____ the new season pass before the Jay Chou collab skin expired.\"\n" +
     "   ❌ 禁止：中英混合（如\"William 在《王者荣耀》里 _____\"）、纯中文、中文标点\n" +
-    "3. 给出 4 个中文选项（A/B/C/D），只有 1 个正确含义\n" +
-    "   ⚠️ **正确答案必须是这个单词的最高频、最常见义项**（用户更可能首次遇到的意思）：\n" +
-    "   ✅ account → 账户（不是\"注册\"或\"账目\"）\n" +
-    "   ✅ issue → 问题（不是\"期号\"或\"发行\"）\n" +
-    "   ✅ subject → 主题/科目（不是\"使臣服于\"）\n" +
-    "   ✅ address → 地址（不是\"演讲\"或\"处理\"）\n" +
-    "   3 个干扰项可以是：相关词义、近义混淆、词性陷阱、形近词，但**不能让\"主义项\"出现在干扰项里**。\n" +
-    "   context 句子也必须**贴合主义项**使用，让上下文支持主义项答案。\n\n" +
+    "3. 给出 4 个**英文**选项（A/B/C/D），只有 1 个正确含义。这是同义词识别题，让用户用英文思考英文。\n" +
+    "   ⚠️ **正确答案** 必须用 1-2 个最简单、最常见的英文词替代目标词的主义项（用 NGSL/Oxford 1000 高频词），\n" +
+    "   不能用比目标词还难的同义词。例如：\n" +
+    "   ✅ abandon → \"give up\" (✓ 简单短语) ❌ \"forsake\" (✗ 比目标词还生僻)\n" +
+    "   ✅ resilient → \"strong\" 或 \"tough\" ❌ \"durable\"\n" +
+    "   ✅ euphoria → \"great joy\" ❌ \"elation\"\n" +
+    "   ✅ account → \"bank record\" ❌ \"ledger\"\n" +
+    "   ✅ subject → \"topic\" ❌ \"matter\"\n" +
+    "   3 个干扰项也用同样简单词，类型混合：1 个反义、1 个无关、1 个形近/相关但不对。例如 abandon 的：\n" +
+    "     ✓ give up (正解) | continue (反义) | hug tightly (无关) | look back at (形近混淆)\n" +
+    "   选项长度建议 1-3 个词，整个选项 ≤ 25 字符。\n" +
+    "   **不能出现中文** — 全英文选项。\n" +
+    "   context 句子贴合主义项，让正解在上下文里通顺。\n\n" +
     "IMPORTANT: 直接输出JSON，不要任何前导文字：\n" +
-    '{"phonetic":"/音标/","context":"English-only sentence with _____","options":{"A":"中文选项A","B":"中文选项B","C":"中文选项C","D":"中文选项D"},"answer":"字母","hint":"中文提示"}';
+    '{"phonetic":"/音标/","context":"English-only sentence with _____","options":{"A":"simple English option (1-3 words)","B":"...","C":"...","D":"..."},"answer":"字母","hint":"中文小提示"}';
 };
 
 // Phase 1.5：generator prompt — 接受 classifyResult，动态裁剪 schema 到选中方法
@@ -357,7 +362,7 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
 
     "# 顶层 schema（必须完整输出 7 个字段）\n" +
     "{\n" +
-    '  "definition": {"pos":"vt./adj./n. 等英文缩写","zh":"核心中文释义 ≤15 字，多义用斜杠分隔"},\n' +
+    '  "definition": {"pos":"vt./adj./n. 等英文缩写","en":"用 NGSL/Oxford 1000 高频词写的简短英文释义 ≤18 词（不能比目标词还难）","zh":"核心中文释义 ≤15 字，多义用斜杠分隔"},\n' +
     '  "opening": "画像化开场 50-80 字，2-3 句口语化。要把【用户画像里的具体场景】和【本词的含义/感觉】真正联系起来，不是空喊名字。让用户读完第一句就觉得\'这词跟我的世界有关\'",\n' +
     '  "wordType": "' + cls.wordType + '",\n' +
     '  "teach": {\n' +
@@ -386,7 +391,7 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
 
     "# 微型完整示例（让你看到完整 7 字段输出的样子 — 学此整体结构与 opening/closing 的口吻，不是学此词内容）\n" +
     "{\n" +
-    '  "definition": {"pos":"adj.","zh":"永久的 / 持续不停的"},\n' +
+    '  "definition": {"pos":"adj.","en":"never stopping; lasting forever","zh":"永久的 / 持续不停的"},\n' +
     '  "opening": "William，你打排位连败时那种\'怎么这局还没完\'的熟悉感，就是 perpetual。不是真的永远，但感觉上就是停不下来的那种持续。",\n' +
     '  "wordType": "D",\n' +
     '  "teach": {\n' +
@@ -418,7 +423,7 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
 
     "# ❗❗ 关键完整性约束 ❗❗\n" +
     "你的输出必须包含以下 7 个顶层字段（一个都不能少）：\n" +
-    "1. definition (必有，{pos:'词性英文缩写', zh:'≤15 字核心释义'})\n" +
+    "1. definition (必有，{pos:'词性英文缩写', en:'用 1000 高频词写的简短英文释义 ≤18 词', zh:'≤15 字核心释义'})\n" +
     "2. opening (必有，50-80 字共情画像)\n" +
     "3. wordType (必有，= \"" + cls.wordType + "\")\n" +
     "4. teach { methods, visualAnchor } (必有)\n" +
@@ -2347,6 +2352,10 @@ export default function App() {
   var [guessData, setGuessData] = useState(null);
   var [selectedOption, setSelectedOption] = useState("");
   var [guessSubmitted, setGuessSubmitted] = useState(false);
+  // A: 答题速度软约束 — 记录 guess phase 开始时间，提交时如果 < 15s 弹软提示
+  var guessStartRef = useRef(null);
+  var [speedToast, setSpeedToast] = useState(null); // { msg, kind } | null
+  var SPEED_WARN_THRESHOLD_MS = 15000; // 15 秒
   var [showHint, setShowHint] = useState(false);
   var [phonetic, setPhonetic] = useState("");
   var [shakeWrong, setShakeWrong] = useState(false);
@@ -2357,6 +2366,10 @@ export default function App() {
   var [teachWaitSec, setTeachWaitSec] = useState(0); // teach 加载已等待秒数（用于进度反馈）
   var [teachStreaming, setTeachStreaming] = useState(false); // 是否在流式生成中（用于显示光标+禁用按钮）
   var [recallChoice, setRecallChoice] = useState(null); // active recall 自测：null / "easy" / "fuzzy" / "hard"
+  // B: teach 页面深度奖励 — 「能」按钮 10 秒倒计时禁用（强制读完才有资格说"会"）
+  var [teachReadSec, setTeachReadSec] = useState(10);
+  // D: 中文释义折叠 state（默认收起，让用户先用英文 gloss 思考）
+  var [showDefZh, setShowDefZh] = useState(false);
   var [showMyDict, setShowMyDict] = useState(false); // "我的词典"模态
   var [showShareCard, setShowShareCard] = useState(false); // 战绩分享卡模态
   // 番茄钟：null = 自由 / { mode, startedAt, durationMs }
@@ -2543,6 +2556,27 @@ export default function App() {
     return function() { clearInterval(id); };
   }, [phase]);
   useEffect(function() { if (topRef.current) topRef.current.scrollIntoView({ behavior:"smooth", block:"start" }); }, [phase, idx]);
+
+  // A: 进入 guess phase 且 guessData 已就绪时记录开始时间（不包括加载等待）
+  useEffect(function() {
+    if (phase === "guess" && guessData && !guessSubmitted) {
+      guessStartRef.current = Date.now();
+    }
+  }, [phase, currentWord, guessData?.context, guessSubmitted]);
+
+  // B: 进入 teach phase 且内容就绪时启动 10 秒倒计时（强制阅读时长）
+  useEffect(function() {
+    if (phase !== "teach" || !teachData || teachStreaming) { setTeachReadSec(0); return; }
+    if (recallChoice) { setTeachReadSec(0); return; } // 已自评过不再计时
+    setTeachReadSec(10);
+    var t = setInterval(function() {
+      setTeachReadSec(function(s) {
+        if (s <= 1) { clearInterval(t); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+    return function() { clearInterval(t); };
+  }, [phase, currentWord, teachStreaming, recallChoice, !!teachData]);
   useEffect(function() { if (guessSubmitted || reviewSubmitted || clozeSubmitted) setTimeout(function() { if (contentEndRef.current) contentEndRef.current.scrollIntoView({ behavior:"smooth", block:"end" }); }, 200); }, [guessSubmitted, reviewSubmitted, clozeSubmitted]);
 
   useEffect(function() {
@@ -4103,6 +4137,7 @@ export default function App() {
     setClozeData(null); setClozeAnswers({}); setClozeSubmitted(false);
     setShakeWrong(false); setBounceCorrect(false);
     setRecallChoice(null); // 新词进入 teach 时清掉旧的自测结果
+    setShowDefZh(false); // 新词重置中文折叠（强制先看英文 gloss）
     setWordStart(Date.now());
 
     if (d?.guess?.context && d?.guess?.options) {
@@ -4237,6 +4272,20 @@ export default function App() {
     if (!selectedOption) return;
     setGuessSubmitted(true);
     var correct = guessData?.answer && selectedOption === guessData.answer;
+
+    // A: 答题速度检测 — 用时 < 15s 弹软提示（不影响 XP / 节奏，只是温和提醒）
+    if (guessStartRef.current) {
+      var dur = Date.now() - guessStartRef.current;
+      if (dur < SPEED_WARN_THRESHOLD_MS) {
+        var sec = Math.max(1, Math.round(dur / 1000));
+        setSpeedToast({
+          msg: "这次只用了 " + sec + " 秒哦 — 下次试试慢一点，真正读懂",
+          kind: "soft",
+        });
+        setTimeout(function(){ setSpeedToast(null); }, 4000);
+      }
+      guessStartRef.current = null;
+    }
 
     if (correct) { sfx.correct(); setBounceCorrect(true); setTimeout(function() { setBounceCorrect(false); }, 600); }
     else { sfx.wrong(); setShakeWrong(true); setTimeout(function() { setShakeWrong(false); }, 500); }
@@ -7560,6 +7609,12 @@ export default function App() {
         </div>
       )}
 
+      {speedToast && (
+        <div style={{position:"fixed",top:130,left:"50%",transform:"translateX(-50%)",zIndex:1099,background:"#fff",color:C.text,padding:"10px 18px",borderRadius:14,fontSize:13,fontWeight:600,boxShadow:"0 6px 24px rgba(0,0,0,0.12)",border:"1.5px solid "+C.teal+"55",animation:"fadeUp 0.3s ease-out",maxWidth:"calc(100vw - 32px)",textAlign:"center"}}>
+          🐢 {speedToast.msg}
+        </div>
+      )}
+
       {loginToast && (
         <div style={{position:"fixed",top:80,left:"50%",transform:"translateX(-50%)",zIndex:1200,background:C.green,color:"#fff",padding:"12px 28px",borderRadius:20,fontSize:15,fontWeight:700,boxShadow:"0 6px 24px rgba(0,0,0,0.2)",animation:"fadeUp 0.3s ease-out",whiteSpace:"nowrap"}}>
           {loginToast}
@@ -7613,8 +7668,10 @@ export default function App() {
         var hideTargetWord = phase === "spectrum" && spectrumData?.type === "mnemonic_fill";
         // 猜一猜阶段也必须隐藏释义 — 否则即使没 teachData，reviewWordData[w].meaning 会剧透答案
         var hideMeaning = hideTargetWord || phase === "guess";
-        // 词性 + 中文释义 — 优先 teach JSON 的 definition；fallback 到 reviewWordData 里学过的 meaning
+        // D: 优先英文 gloss（用 1000 高频词写的简短英文释义）— 让用户先用英文思考英文
+        // 中文释义默认折叠，点击「看不懂？」展开（求救按钮路径）
         var defPos = !hideMeaning && (teachData?.definition?.pos || "");
+        var defEn = !hideMeaning && (teachData?.definition?.en || "");
         var defZh = !hideMeaning && (teachData?.definition?.zh || reviewWordData?.[currentWord]?.meaning || "");
         return (
         <div style={{...S.wordHeader, padding:"20px 22px 16px", boxShadow: stats.streak >= 5 ? "0 0 0 2px "+C.gold+", 0 0 18px "+C.gold+"55" : C.shadow, border: stats.streak >= 5 ? "1px solid "+C.gold : "1px solid "+C.border, animation: stats.streak >= 5 ? "glowPulse 2s ease-in-out infinite" : "fadeUp 0.3s ease-out"}}>
@@ -7631,25 +7688,49 @@ export default function App() {
             </div>
             {!hideTargetWord && phonetic && <div style={{ ...S.phoneticText, marginTop:4, fontSize:15 }}>{phonetic}</div>}
             {hideTargetWord && <div style={{ ...S.phoneticText, marginTop:4, fontSize:13, color:C.textSec, fontStyle:"italic" }}>选对答案后揭晓</div>}
-            {/* 词性 + 中文释义 — 用户女儿反馈：teach 页应该一目了然先看到"是什么意思" */}
-            {(defPos || defZh) && (
-              <div style={{ marginTop: 8, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                {defPos && (
-                  <span style={{
-                    padding: "2px 8px",
-                    background: C.tealLight,
-                    color: C.teal,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    borderRadius: 4,
-                    letterSpacing: "0.03em",
-                    fontFamily: "'Inter'," + FONT,
-                  }}>{defPos}</span>
-                )}
-                {defZh && (
-                  <span style={{ fontSize: 15, color: C.text, fontWeight: 500, lineHeight: 1.4 }}>
-                    {defZh}
-                  </span>
+            {/* D: 词性 + 英文 gloss（默认显示）+ 中文（点击展开） */}
+            {(defPos || defEn || defZh) && (
+              <div style={{ marginTop: 8 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                  {defPos && (
+                    <span style={{
+                      padding: "2px 8px",
+                      background: C.tealLight,
+                      color: C.teal,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      borderRadius: 4,
+                      letterSpacing: "0.03em",
+                      fontFamily: "'Inter'," + FONT,
+                    }}>{defPos}</span>
+                  )}
+                  {defEn ? (
+                    <span style={{ fontSize: 14, color: C.text, fontWeight: 500, lineHeight: 1.5, fontFamily: "'Inter', " + FONT, fontStyle: "italic" }}>
+                      {defEn}
+                    </span>
+                  ) : defZh && (
+                    /* fallback：teach JSON 没 en（旧数据）就直接显示中文 */
+                    <span style={{ fontSize: 15, color: C.text, fontWeight: 500, lineHeight: 1.4 }}>
+                      {defZh}
+                    </span>
+                  )}
+                </div>
+                {/* 中文释义可折叠区 — 默认收起，鼓励先用英文思考 */}
+                {defEn && defZh && (
+                  showDefZh ? (
+                    <div style={{ marginTop: 6, fontSize: 13, color: C.textSec, lineHeight: 1.5, display: "flex", alignItems: "baseline", gap: 6 }}>
+                      <span style={{ fontSize: 11, color: C.gold, fontWeight: 700, flexShrink: 0 }}>中文：</span>
+                      <span>{defZh}</span>
+                      <button onClick={function(){ setShowDefZh(false); }} style={{ marginLeft: "auto", background: "transparent", border: "none", color: C.textSec, fontSize: 11, cursor: "pointer", padding: "2px 4px", textDecoration: "underline" }}>收起</button>
+                    </div>
+                  ) : (
+                    <button onClick={function(){ setShowDefZh(true); }} style={{
+                      marginTop: 6, padding: "3px 10px",
+                      background: "transparent", border: "1px dashed " + C.border,
+                      borderRadius: 12, fontSize: 11, color: C.textSec,
+                      cursor: "pointer", fontFamily: FONT,
+                    }}>看不懂英文？点开看中文 ↓</button>
+                  )
                 )}
               </div>
             )}
@@ -7765,7 +7846,7 @@ export default function App() {
               borderRadius: 12,
             }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: C.teal, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                🤔 1 秒自测
+                🤔 1 秒自测 <span style={{ fontSize: 10, color: C.textSec, fontWeight: 500, marginLeft: "auto" }}>诚实自评 +8 XP / 已掌握 +3 XP</span>
               </div>
               <div style={{ fontSize: 13, color: C.text, marginBottom: 10, lineHeight: 1.5 }}>
                 看一眼上方单词，<strong>不假思索</strong>能说出意思吗？
@@ -7773,24 +7854,60 @@ export default function App() {
               {!recallChoice ? (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                   {[
-                    { key: "easy",  label: "✅ 能",       sub: "已记住", clr: C.green,  cb: function(){ if (currentWord && (!wordStatusMap[currentWord] || wordStatusMap[currentWord]==="unlearned" || wordStatusMap[currentWord]==="learning")) updateManualWordStatus(currentWord, "mastered"); } },
-                    { key: "fuzzy", label: "🤔 模糊",     sub: "再复习", clr: C.gold,   cb: function(){ updateManualWordStatus(currentWord, "uncertain"); } },
-                    { key: "hard",  label: "❌ 想不起",   sub: "重点巩固", clr: C.red,    cb: function(){ updateManualWordStatus(currentWord, "error"); } },
+                    {
+                      key: "easy",
+                      label: teachReadSec > 0 ? ("⏳ " + teachReadSec + " s") : "✅ 能",
+                      sub: teachReadSec > 0 ? "再读一会儿" : "+3 XP",
+                      clr: C.green,
+                      lockedByTimer: teachReadSec > 0,
+                      cb: function(){
+                        if (currentWord && (!wordStatusMap[currentWord] || wordStatusMap[currentWord]==="unlearned" || wordStatusMap[currentWord]==="learning")) updateManualWordStatus(currentWord, "mastered");
+                        save({ ...stats, xp: (stats.xp || 0) + 3 });
+                      }
+                    },
+                    {
+                      key: "fuzzy",
+                      label: "🤔 模糊",
+                      sub: "+8 XP · 诚实",
+                      clr: C.gold,
+                      lockedByTimer: false,
+                      cb: function(){
+                        updateManualWordStatus(currentWord, "uncertain");
+                        save({ ...stats, xp: (stats.xp || 0) + 8 });
+                      }
+                    },
+                    {
+                      key: "hard",
+                      label: "❌ 想不起",
+                      sub: "+8 XP · 诚实",
+                      clr: C.red,
+                      lockedByTimer: false,
+                      cb: function(){
+                        updateManualWordStatus(currentWord, "error");
+                        save({ ...stats, xp: (stats.xp || 0) + 8 });
+                      }
+                    },
                   ].map(function(b){
+                    var locked = b.lockedByTimer;
                     return (
-                      <button key={b.key} onClick={function(){ b.cb(); setRecallChoice(b.key); }} style={{
-                        padding: "10px 6px",
-                        background: "#fff",
-                        border: "2px solid " + C.border,
-                        borderRadius: 10,
-                        cursor: "pointer",
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: b.clr,
-                        fontFamily: FONT,
-                        transition: "all 0.15s",
-                        textAlign: "center",
-                      }}>
+                      <button
+                        key={b.key}
+                        onClick={function(){ if (locked) return; b.cb(); setRecallChoice(b.key); }}
+                        disabled={locked}
+                        style={{
+                          padding: "10px 6px",
+                          background: locked ? C.bg : "#fff",
+                          border: "2px solid " + C.border,
+                          borderRadius: 10,
+                          cursor: locked ? "not-allowed" : "pointer",
+                          opacity: locked ? 0.55 : 1,
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: b.clr,
+                          fontFamily: FONT,
+                          transition: "all 0.15s",
+                          textAlign: "center",
+                        }}>
                         <div style={{ marginBottom: 2 }}>{b.label}</div>
                         <div style={{ fontSize: 10, fontWeight: 500, color: C.textSec, letterSpacing: "0.03em" }}>{b.sub}</div>
                       </button>
