@@ -3006,6 +3006,12 @@ export default function App() {
     if (d.settings?.dailyNewWords) setDailyNewWords(d.settings.dailyNewWords);
     if (d.settings?.deepReviewDailyCap) setDeepReviewDailyCap(d.settings.deepReviewDailyCap);
     if (d.pet) setPet(d.pet);
+    // 恢复学习 session（关键：闪退/换设备登录后从 idx 继续，不要从头开始）
+    if (d.session?.wordList?.length > 0 && d.session.idx < d.session.wordList.length) {
+      setWordList(d.session.wordList);
+      setIdx(d.session.idx);
+      setLearned(d.session.learned || []);
+    }
   };
 
   // ── Auth actions ──
@@ -3228,7 +3234,18 @@ export default function App() {
       // 重置场景无需特殊分支 —— resetLearningProgress 已经 await /api/reset
       // 完成后云端就是清零数据，这里 loadFromCloud 读到的也是清零，自然正确
       var cloudData = await loadFromCloud(u.id);
-      if (cloudData) {
+      // newer-wins 保护：如果 local 比 cloud 更新（说明云端是旧的，可能因闪退没同步成功），
+      // 保留 local 并把它推到云端，避免覆盖用户最新进度
+      var localData = await loadSave();
+      var localTime = localData?.updatedAt ? new Date(localData.updatedAt).getTime() : 0;
+      var cloudTime = cloudData?.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
+      if (localData && cloudData && localTime > cloudTime + 30000) {
+        // local 比 cloud 至少新 30 秒 — local 是赢家
+        console.warn('[auth] local newer than cloud, pushing local to cloud');
+        _applyCloudData(localData);
+        setShowWelcome(false);
+        syncToCloud(); // 推送 local 到云端
+      } else if (cloudData) {
         await doSave(cloudData);
         _applyCloudData(cloudData);
         setShowWelcome(false);
@@ -3416,10 +3433,20 @@ export default function App() {
   };
 
   var saveSession = function(wl, i, lrn) {
-    loadSave().then(function(d) {
-      doSave({...(d||{}), profile, stats, session: { wordList: wl, idx: i, learned: lrn }});
-      if (userRef.current) syncToCloud();
-    });
+    // 同步写 localStorage（关键：不依赖 loadSave().then 异步链
+    // — 闪退/快速切 tab 时 promise 不会执行，导致 session 丢失）
+    try {
+      var raw = localStorage.getItem(SKEY);
+      var existing = raw ? JSON.parse(raw) : {};
+      var merged = Object.assign({}, existing, {
+        profile: profile,
+        stats: stats,
+        session: { wordList: wl, idx: i, learned: lrn },
+        updatedAt: new Date().toISOString(),
+      });
+      localStorage.setItem(SKEY, JSON.stringify(merged));
+    } catch(e) { console.warn('[saveSession] write failed:', e.message); }
+    if (userRef.current) syncToCloud();
   };
 
   var resetLearningProgress = async function() {
