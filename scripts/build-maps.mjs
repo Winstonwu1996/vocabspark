@@ -640,6 +640,206 @@ function buildEurope1200() {
   return svg;
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// MAP 3: europe-modern.svg
+//   - 跟 europe-1200.svg 用**完全相同的投影 + viewBox**，保证 flip 时几何对齐
+//   - 现代国家名标 + "↳ was XXX 1200" 历史关联注（产品的核心 aha 触发点）
+//   - 中性现代制图风（去除 1200 那张的政治色块和中世纪装饰）
+// ─────────────────────────────────────────────────────────────────────
+
+function buildEuropeModern() {
+  const W = 900;
+  const H = 700;
+
+  // 跟 1200 版一致的投影 — 重要！flip 时陆地对得上
+  const NON_EUROPE_IDS = new Set([
+    '422','760','788','012','504','434','818','376','275','400','368','364','051','031','268',
+  ]);
+  const europeFeatures = {
+    type: 'FeatureCollection',
+    features: countries.features.filter(f => {
+      if (NON_EUROPE_IDS.has(f.id)) return false;
+      const c = geoCentroid(f);
+      return c[0] >= -25 && c[0] <= 42 && c[1] >= 35 && c[1] <= 72;
+    })
+  };
+
+  const projection = geoMercator()
+    .center([14, 53])
+    .scale(900)
+    .translate([W / 2, H / 2 - 20]);
+
+  const pathGen = geoPath(projection);
+
+  // 现代版：所有国家用统一中性灰褐色，加深边线 — 当代地图风格
+  // 但有"历史回响"列表里的国家轻微着色，呼应 1200 那张的色板
+  const HISTORICAL_ECHO = {
+    '826': { color: '#d4612e', label: 'UNITED KINGDOM',     was: 'Kingdom of England (still!)' },  // GBR
+    '792': { color: '#5fa8a0', label: 'TURKEY',             was: 'Byzantine Empire' },           // TUR
+    '276': { color: '#a07cb8', label: 'GERMANY',            was: 'core of Holy Roman Empire' }, // DEU
+    '040': { color: '#a07cb8', label: 'AUSTRIA',            was: 'Holy Roman Empire' },          // AUT
+    '380': { color: '#79a373', label: 'ITALY',              was: 'Papal States + city-states' }, // ITA
+    '300': { color: '#5fa8a0', label: 'GREECE',             was: 'part of Byzantine Empire' },  // GRC
+    '348': { color: '#c69954', label: 'HUNGARY',            was: 'Hungary (still!)' },           // HUN
+    '724': { color: '#d6b94a', label: 'SPAIN',              was: 'Iberian Christian kingdoms' }, // ESP
+    '250': { color: '#5b8db8', label: 'FRANCE',             was: 'Kingdom of France' },          // FRA
+    '372': { color: '#d4612e', label: 'IRELAND',            was: '' },                            // IRL
+    '620': { color: '#d6b94a', label: 'PORTUGAL',           was: '' },                            // PRT
+    '578': { color: '#c08560', label: 'NORWAY',             was: '' },                            // NOR
+    '752': { color: '#c08560', label: 'SWEDEN',             was: '' },                            // SWE
+    '208': { color: '#c08560', label: 'DENMARK',            was: '' },                            // DNK
+    '616': { color: '#b87a8e', label: 'POLAND',             was: '' },                            // POL
+    '804': { color: '#b87a8e', label: 'UKRAINE',            was: 'Kievan Rus' },                  // UKR
+    '643': { color: '#b87a8e', label: 'RUSSIA',             was: 'Kievan Rus' },                  // RUS
+  };
+
+  const modernPaths = europeFeatures.features.map(f => {
+    const echo = HISTORICAL_ECHO[String(parseInt(f.id))];
+    const fill = echo ? echo.color : C.landShade;
+    const opacity = echo ? 0.42 : 0.32;
+    return `<path d="${pathGen(f)}" fill="${fill}" fill-opacity="${opacity}" stroke="${C.ink}" stroke-width="0.85" stroke-linejoin="round"/>`;
+  }).join('\n    ');
+
+  // 现代国家名标（中文 — 让她用熟悉的认知语言识别今天的世界）
+  const COUNTRY_LABELS_MODERN = [
+    { name: '英国',        lon: -1.5, lat: 53.5, fontSize: 13, focal: true },
+    { name: '法国',        lon: 2.5,  lat: 47,   fontSize: 13 },
+    { name: '德国',        lon: 10,   lat: 51.5, fontSize: 13 },
+    { name: '奥地利',      lon: 14,   lat: 47.5, fontSize: 10 },
+    { name: '西班牙',      lon: -4,   lat: 40,   fontSize: 12 },
+    { name: '葡萄牙',      lon: -8,   lat: 39.5, fontSize: 9 },
+    { name: '意大利',      lon: 13,   lat: 43,   fontSize: 11 },
+    { name: '希腊',        lon: 22,   lat: 39.5, fontSize: 11 },
+    { name: '土耳其',      lon: 31,   lat: 39.5, fontSize: 13, focal: true },
+    { name: '波兰',        lon: 20,   lat: 52,   fontSize: 11 },
+    { name: '乌克兰',      lon: 31,   lat: 49.5, fontSize: 11 },
+    { name: '挪威',        lon: 12,   lat: 64,   fontSize: 11 },
+    { name: '瑞典',        lon: 17,   lat: 60,   fontSize: 11 },
+    { name: '匈牙利',      lon: 19,   lat: 47,   fontSize: 10 },
+    { name: '爱尔兰',      lon: -8,   lat: 53,   fontSize: 10 },
+  ].map(r => {
+    const [x, y] = projection([r.lon, r.lat]);
+    return { ...r, x, y };
+  });
+
+  const countryLabels = COUNTRY_LABELS_MODERN.map(r => {
+    const fillColor = r.focal ? C.pinStroke : C.text;
+    const fontWeight = r.focal ? 800 : 700;
+    return `<text x="${r.x}" y="${r.y}" text-anchor="middle" font-size="${r.fontSize}" font-weight="${fontWeight}" letter-spacing="1.5" fill="${fillColor}" opacity="0.9" pointer-events="none">${r.name}</text>`;
+  }).join('');
+
+  // —— "↳ 以前是 XXX" 历史回响注 — 核心 aha 触发点（中文，让她秒懂） ——
+  const HISTORY_ECHO_NOTES = [
+    { lon: 31,  lat: 38,  text: '↳ 以前是拜占庭帝国',         highlight: true },
+    { lon: 10,  lat: 53,  text: '↳ 以前是神圣罗马帝国核心',   highlight: false },
+    { lon: 13,  lat: 41.3,text: '↳ 以前是教皇国 + 城邦',     highlight: false },
+    { lon: 19,  lat: 45.5,text: '↳ 匈牙利（一直就叫这个）',   highlight: false },
+    { lon: -1,  lat: 51.7,text: '↳ 英格兰王国（一直是这片）', highlight: false },
+  ].map(n => {
+    const [x, y] = projection([n.lon, n.lat]);
+    return { ...n, x, y };
+  });
+
+  const echoNotes = HISTORY_ECHO_NOTES.map(n =>
+    `<text x="${n.x}" y="${n.y}" text-anchor="middle" font-size="10" fill="${n.highlight ? C.pinFill : C.textSec}" font-weight="${n.highlight ? 700 : 500}" opacity="0.95">${n.text}</text>`
+  ).join('');
+
+  // 现代主要城市（关键：Constantinople → Istanbul 的史诗时刻）
+  const cityPositions = {
+    london:    projection([-0.1276, 51.5074]),
+    paris:     projection([2.3522,  48.8566]),
+    rome:      projection([12.4964, 41.9028]),
+    istanbul:  projection([28.9784, 41.0082]),
+    madrid:    projection([-3.7038, 40.4168]),
+    berlin:    projection([13.4050, 52.5200]),
+  };
+
+  const modernCities = `
+    <g class="cities-modern">
+      <!-- 普通城市（中英双语，方便她在课本里再遇到时对得上） -->
+      ${[
+        ['伦敦 London',  cityPositions.london],
+        ['巴黎 Paris',   cityPositions.paris],
+        ['罗马 Rome',    cityPositions.rome],
+        ['马德里',       cityPositions.madrid],
+        ['柏林',         cityPositions.berlin],
+      ].map(([name, [x, y]]) => `
+        <circle cx="${x}" cy="${y}" r="3" fill="${C.parchmentHi}" stroke="${C.ink}" stroke-width="0.8"/>
+        <circle cx="${x}" cy="${y}" r="1.2" fill="${C.ink}"/>
+        <text x="${x + 5}" y="${y - 4}" font-size="10" font-weight="600" fill="${C.text}">${name}</text>`).join('')}
+      <!-- 伊斯坦布尔 — 现代地图的英雄城（呼应 1200 的君士坦丁堡） -->
+      <g transform="translate(${cityPositions.istanbul[0]} ${cityPositions.istanbul[1]})">
+        <circle r="6" fill="${C.pinFill}" stroke="${C.pinStroke}" stroke-width="1" opacity="0.4"/>
+        <circle r="3.5" fill="${C.pinFill}" stroke="${C.pinStroke}" stroke-width="0.9"/>
+        <circle r="1.5" fill="${C.parchmentHi}"/>
+      </g>
+      <text x="${cityPositions.istanbul[0] + 8}" y="${cityPositions.istanbul[1] - 3}" font-size="13" font-weight="700" fill="${C.pinStroke}">伊斯坦布尔</text>
+      <text x="${cityPositions.istanbul[0] + 8}" y="${cityPositions.istanbul[1] + 9}" font-size="10" fill="${C.pinFill}" font-weight="700">↳ 以前叫君士坦丁堡！</text>
+    </g>
+  `;
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" font-family="'Iowan Old Style','Hoefler Text','PingFang SC','Noto Sans SC','Microsoft YaHei',Georgia,serif">
+  <defs>
+    ${HANDDRAWN_FILTER}
+    <radialGradient id="parchment-gradient-modern" cx="50%" cy="45%" r="75%">
+      <stop offset="0%"  stop-color="${C.parchmentHi}"/>
+      <stop offset="65%" stop-color="${C.parchment}"/>
+      <stop offset="100%" stop-color="${C.parchmentLo}"/>
+    </radialGradient>
+    <linearGradient id="ocean-gradient-modern" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${C.ocean}" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="${C.ocean}" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 羊皮纸背景（同 1200，保持 flip 一致） -->
+  <rect width="${W}" height="${H}" fill="url(#parchment-gradient-modern)"/>
+  <rect width="${W}" height="${H}" fill="${C.parchment}" filter="url(#parchment-texture)"/>
+
+  <!-- 内框 -->
+  <rect x="14" y="14" width="${W - 28}" height="${H - 28}" fill="none" stroke="${C.ink}" stroke-width="1.2" opacity="0.85"/>
+  <rect x="20" y="20" width="${W - 40}" height="${H - 40}" fill="none" stroke="${C.ink}" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- 海洋背景 -->
+  <rect x="28" y="28" width="${W - 56}" height="${H - 56}" fill="url(#ocean-gradient-modern)" opacity="0.5"/>
+
+  <!-- 现代国家轮廓 -->
+  <g class="countries-modern" filter="url(#soft-shadow)">
+    ${modernPaths}
+  </g>
+
+  <!-- 国家名标 -->
+  <g class="country-labels">
+    ${countryLabels}
+  </g>
+
+  <!-- 历史回响注 — 核心 aha 触发点 -->
+  <g class="history-echo-notes">
+    ${echoNotes}
+  </g>
+
+  <!-- 现代城市（含 Istanbul 英雄城） -->
+  ${modernCities}
+
+  <!-- 罗经 -->
+  ${compassRose(75, 105, 30, 'N')}
+
+  <!-- 角花 -->
+  ${corner(40, 40, 1, '1 1')}
+  ${corner(W - 40, 40, 1, '-1 1')}
+  ${corner(40, H - 40, 1, '1 -1')}
+  ${corner(W - 40, H - 40, 1, '-1 -1')}
+
+  <!-- 标题 + 副题（呼应 1200，但用中文） -->
+  <text x="${W / 2}" y="44" text-anchor="middle" font-size="22" font-weight="700" letter-spacing="6" fill="${C.text}">今 天 的 欧 洲</text>
+  <text x="${W / 2}" y="62" text-anchor="middle" font-size="11" fill="${C.textSec}" opacity="0.9">同样的海岸线，不一样的国名。当年的王国，都去了哪里？</text>
+
+  <text x="${W / 2}" y="${H - 22}" text-anchor="middle" font-size="9" fill="${C.textSec}" opacity="0.7">Know U. Learning · 现代政治地图 · 跟 1200 年那张对照看</text>
+</svg>`;
+
+  return svg;
+}
+
 // ── 写文件 ────────────────────────────────────────────────────────────────
 const outDir = path.join(ROOT, 'public', 'maps');
 fs.mkdirSync(outDir, { recursive: true });
@@ -651,5 +851,9 @@ console.log(`✓ world-base.svg (${(worldSvg.length / 1024).toFixed(1)} KB)`);
 const europeSvg = buildEurope1200();
 fs.writeFileSync(path.join(outDir, 'europe-1200.svg'), europeSvg);
 console.log(`✓ europe-1200.svg (${(europeSvg.length / 1024).toFixed(1)} KB)`);
+
+const europeModernSvg = buildEuropeModern();
+fs.writeFileSync(path.join(outDir, 'europe-modern.svg'), europeModernSvg);
+console.log(`✓ europe-modern.svg (${(europeModernSvg.length / 1024).toFixed(1)} KB)`);
 
 console.log('\nMaps built.');

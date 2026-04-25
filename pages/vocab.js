@@ -8,6 +8,7 @@ import UserCenter from '../components/UserCenter';
 import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../components/PetAvatar';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
+import { US_LIFE_1000 } from '../lib/preset-us-life-1000';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 import * as XLSX from 'xlsx';
 
@@ -963,6 +964,7 @@ function PrivacyNotice() {
 }
 
 var PRESETS = {
+  "🇺🇸 美国生活常用 1000 词": US_LIFE_1000,
   "SSAT 高频 50 词": "aberration\nabhor\nabstain\nadmonish\narduous\naudacious\nbenevolent\ncandid\ncapricious\ncompel\ncontempt\ncunning\ndaunt\ndiligent\ndiscern\neloquent\nempathy\nenigma\nfervent\nfrugal\ngregarious\nhaughty\nimplore\nincessant\njubilant\nlethargy\nlucid\nmalice\nmollify\nnovice\nobstinate\nopulent\npacify\npragmatic\nprudent\nrebuke\nresilient\nsagacious\nserene\ntaciturn\ntenacious\ntrivial\nunanimous\nvehement\nvenerate\nvolatile\nwary\nzealous\nambiguous\nbenign",
   "SSAT 情感词": "elated\nmelancholy\nindignant\napprehensive\ncontrite\njubilant\ndespondent\nexuberant\nserene\nvexed",
   "SSAT 动作词": "implore\nadmonish\ncompel\nrebuke\nmollify\npacify\nvenerate\nabhor\ndiscern\nrelinquish",
@@ -6295,7 +6297,11 @@ export default function App() {
           {(() => {
             var hasUserWords = wordInput.trim().length > 0;
             if (hasUserWords) return null;
-            var goalPresets = (studyGoal && PRESETS_BY_GOAL[studyGoal]) ? PRESETS_BY_GOAL[studyGoal] : PRESETS;
+            // 所有用户（不论考试目标）都能看到"美国生活常用 1000 词"作为通用预设，再叠加各自考试方向的精选词表
+            var COMMON_PRESET = { "🇺🇸 美国生活常用 1000 词": US_LIFE_1000 };
+            var goalPresets = (studyGoal && PRESETS_BY_GOAL[studyGoal])
+              ? Object.assign({}, COMMON_PRESET, PRESETS_BY_GOAL[studyGoal])
+              : PRESETS;
             var goalLabel = studyGoal && STUDY_GOAL_OPTIONS.find(function(o){return o.key===studyGoal;});
             return <div style={{marginBottom:10}}>
               <div style={{fontSize:12,color:C.textSec,fontWeight:700,marginBottom:6}}>
