@@ -6,6 +6,7 @@ import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClie
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
 import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../components/PetAvatar';
+import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 import * as XLSX from 'xlsx';
@@ -2293,6 +2294,21 @@ export default function App() {
   var [quickReviewStats, setQuickReviewStats] = useState({ remembered:0, fuzzy:0, forgot:0 });
   // 快速复习释义懒加载缓存：只为缺 meaning 的词异步拉一次
   var [quickReviewMeaningLoading, setQuickReviewMeaningLoading] = useState(false);
+  // 自定义 confirm 模态框（替代 native confirm 防止移动浏览器拦截）
+  var [confirmModal, setConfirmModal] = useState(null);
+  var confirmAsync = function(opts) {
+    return new Promise(function(resolve) {
+      setConfirmModal({
+        title: opts.title || "确认",
+        body: opts.body || "",
+        confirmText: opts.confirmText || "确认",
+        cancelText: opts.cancelText || "取消",
+        variant: opts.variant || "default",
+        resolve: resolve,
+      });
+    });
+  };
+
   // 宠物 celebrate 临时态：覆盖 mood 让头像显示星星眼大笑（答对/升级/喂养时短暂触发）
   var [petCelebrating, setPetCelebrating] = useState(false);
   var petCelebrateTimerRef = useRef(null);
@@ -3074,7 +3090,21 @@ export default function App() {
     if (d.profile) { setProfile(d.profile); setProfileLocked(true); }
     if (d.stats) setStats(function(s) { return {...s, ...d.stats}; });
     if (d.wordStatusMap) setWordStatusMap(d.wordStatusMap);
-    if (d.reviewWordData) setReviewWordData(d.reviewWordData);
+    if (d.reviewWordData) {
+      // P1-5: reviewLevel normalization — 防止 migration 数据让 level 永远停在 0
+      // 历史数据可能 reviewLevel=undefined/NaN/负数，统一规整成 0..(MAX-1) 范围内
+      var MAX_LVL = 4; // REVIEW_INTERVAL_DAYS.length - 1
+      var normalized = {};
+      Object.keys(d.reviewWordData).forEach(function(w) {
+        var entry = d.reviewWordData[w];
+        if (!entry) return;
+        var lvl = Number(entry.reviewLevel);
+        if (!Number.isFinite(lvl) || lvl < 0) lvl = 0;
+        if (lvl > MAX_LVL) lvl = MAX_LVL;
+        normalized[w] = Object.assign({}, entry, { reviewLevel: lvl });
+      });
+      setReviewWordData(normalized);
+    }
     if (d.settings?.studyGoal) setStudyGoal(d.settings.studyGoal);
     if (d.settings?.dailyNewWords) setDailyNewWords(d.settings.dailyNewWords);
     if (d.settings?.deepReviewDailyCap) setDeepReviewDailyCap(d.settings.deepReviewDailyCap);
@@ -3175,7 +3205,14 @@ export default function App() {
   };
 
   var handleFactoryReset = async function() {
-    if (!confirm('🚨 危险操作：确认要清除所有学习记录、画像和单词本，从零开始吗？此操作不可逆！')) return;
+    var ok = await confirmAsync({
+      title: "清除所有学习记录",
+      body: "确认要清除所有学习记录、画像和单词本，从零开始吗？\n\n此操作不可逆。",
+      confirmText: "我确认重置",
+      cancelText: "取消",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       if (typeof window !== "undefined") {
         localStorage.removeItem(SKEY);
@@ -3701,11 +3738,34 @@ export default function App() {
     if (userRef.current) syncToCloud();
   };
 
+  // 从 dataCache 提取 meaning fallback：teach 的 definition.zh 优先，其次 guess answer 选项
+  var _extractMeaningFallback = function(word) {
+    try {
+      var cache = dataCache.current && dataCache.current[word];
+      if (!cache) return "";
+      // 1. teach JSON 的 definition.zh（最准）
+      var teachZh = cache.teachJSON?.definition?.zh || cache.teach?.definition?.zh;
+      if (teachZh && typeof teachZh === "string") return teachZh.slice(0, 60);
+      // 2. guess 的正确答案选项（中文释义）
+      var guess = cache.guess;
+      if (guess?.answer && guess?.options?.[guess.answer]) {
+        return String(guess.options[guess.answer]).slice(0, 60);
+      }
+    } catch(e) {}
+    return "";
+  };
+
   var upsertReviewWordData = function(word, patch) {
     if (!word) return;
     setReviewWordData(function(prev) {
       var base = prev[word] || { word: word, reviewHistory: [] };
-      var next = { ...prev, [word]: { ...base, ...patch } };
+      var merged = { ...base, ...patch };
+      // 自动补全 meaning：如果合并后 meaning 仍空，从 dataCache 拉 fallback（teach/guess）
+      if (!merged.meaning || !merged.meaning.trim()) {
+        var fb = _extractMeaningFallback(word);
+        if (fb) merged.meaning = fb;
+      }
+      var next = { ...prev, [word]: merged };
       doSave({ reviewWordData: next });
       if (userRef.current) syncToCloud();
       return next;
@@ -4220,7 +4280,12 @@ export default function App() {
       var existingCount = (wordInput || '').split('\n').filter(Boolean).length;
       var finalWordInput = newWordInput;
       if (existingCount > 50) {
-        var choice = confirm("检测到你已有 " + existingCount + " 个词的词表。\n\n点「确定」：合并新词到现有词表（推荐，不丢旧词）\n点「取消」：放弃上传");
+        var choice = await confirmAsync({
+          title: "已有 " + existingCount + " 个词的词表",
+          body: "选择如何处理新上传的 " + words.length + " 个词：\n\n· 合并：新词加到现有词表（推荐，不丢旧词）\n· 取消：放弃这次上传",
+          confirmText: "合并",
+          cancelText: "取消",
+        });
         if (!choice) { setFileLabel(file.name); return; }
         // 合并去重
         var existingWords = (wordInput || '').split('\n').map(w => w.trim().toLowerCase()).filter(Boolean);
@@ -4249,7 +4314,13 @@ export default function App() {
     var rawWords = wordInput.trim().split(/[\n,，、]+/).map(function(w) { return w.trim().toLowerCase(); }).filter(Boolean);
     if (!rawWords.length) { setError("请输入至少一个单词"); return; }
     if (!profile.trim()) {
-      if (!confirm("还没有填写「学习画像」，AI 例句暂时不会个性化。\n\n建议先填写画像，效果更好！\n\n点「确定」继续学习，「取消」去填画像。")) {
+      var continueAnyway = await confirmAsync({
+        title: "还没填学习画像",
+        body: "AI 例句暂时不会个性化。\n\n建议先去填画像（5 分钟），让每个例句都来自你的生活。",
+        confirmText: "先去填画像",
+        cancelText: "直接学习",
+      });
+      if (continueAnyway) {
         setSetupTab("profile"); setScreen("setup"); return;
       }
     }
@@ -4262,9 +4333,13 @@ export default function App() {
       var remainingQuota = getRemainingNewWordQuota();
       if (remainingQuota <= 0) {
         // 不硬挡，而是弹确认框让用户决定是否超额学习
-        if (!confirm("🎉 今日 " + (dailyNewWords||20) + " 个新词目标已完成！\n\n想继续超额学习吗？点「确定」继续。")) {
-          return;
-        }
+        var goExtra = await confirmAsync({
+          title: "今日目标已完成 🎉",
+          body: "今日 " + (dailyNewWords||20) + " 个新词目标已经达成。\n\n想继续超额学习吗？",
+          confirmText: "继续学习",
+          cancelText: "今天到这",
+        });
+        if (!goExtra) return;
         // 超额模式：再给一批词
         words = unlearned.slice(0, dailyNewWords || 20);
       } else {
@@ -5276,6 +5351,18 @@ export default function App() {
 
   // ── USER CENTER (rendered on ALL screens) ──
   var userCenterEl = <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} stats={stats} studyStreak={getStudyStreak()} studyGoal={studyGoal} dailyNewWords={dailyNewWords} deepReviewDailyCap={deepReviewDailyCap} userTier={userTier} newLearnedToday={getNewWordQuotaState().consumed || 0} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={function(){ handleLogout(); setShowUserCenter(false); }} />;
+  // 自定义 confirm 模态框 — 在每个 screen 的 outer div 末尾注入 {confirmModalEl}
+  var confirmModalEl = confirmModal ? (
+    <ConfirmModal
+      title={confirmModal.title}
+      body={confirmModal.body}
+      confirmText={confirmModal.confirmText}
+      cancelText={confirmModal.cancelText}
+      variant={confirmModal.variant}
+      onConfirm={function(){ confirmModal.resolve(true); setConfirmModal(null); }}
+      onCancel={function(){ confirmModal.resolve(false); setConfirmModal(null); }}
+    />
+  ) : null;
 
   // ── SCREENING MODE ──
   if (screen === "screening") {
@@ -5286,7 +5373,18 @@ export default function App() {
     return (
       <div style={S.root}><div className="vs-desktop-container" style={S.container}>
         <div style={S.topBar}>
-          <button style={S.backBtn} onClick={function(){ if (scDone > 0 && !confirm("已筛选 " + scDone + " 个词，确定退出？进度会保留。")) return; setScreen("screening_done"); }}>←</button>
+          <button style={S.backBtn} onClick={async function(){
+            if (scDone > 0) {
+              var ok = await confirmAsync({
+                title: "确定退出快筛？",
+                body: "已筛选 " + scDone + " 个词，进度会保留下次继续。",
+                confirmText: "退出",
+                cancelText: "继续筛",
+              });
+              if (!ok) return;
+            }
+            setScreen("screening_done");
+          }}>←</button>
           <div style={{fontSize:13,color:C.textSec}}>快筛 {screeningIdx+1}/{scTotal}</div>
           <div style={{fontSize:12,color:C.teal,fontWeight:600}}>⏭️{screeningStats.known} ❌{screeningStats.unknown}</div>
         </div>
@@ -5344,7 +5442,7 @@ export default function App() {
         {screeningStats.unknown > 0 && scDone >= 5 && (
           <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",marginTop:16,background:C.teal}} onClick={function(){ setScreen("screening_done"); }}>⏩ 够了，开始学习不认识的词</button>
         )}
-      </div></div>
+      </div>{confirmModalEl}</div>
     );
   }
 
@@ -5377,7 +5475,7 @@ export default function App() {
             <button style={{...S.ghostBtn,width:"100%",justifyContent:"center"}} onClick={function(){ setScreen("screening_done"); }}>查看筛选结果</button>
           </div>
         </div>
-      </div></div>
+      </div>{confirmModalEl}</div>
     );
   }
 
@@ -5424,7 +5522,7 @@ export default function App() {
             <button style={{...S.ghostBtn,width:"100%",justifyContent:"center"}} onClick={function(){ setScreen("setup"); }}>← 返回首页</button>
           </div>
         </div>
-      </div></div>
+      </div>{confirmModalEl}</div>
     );
   }
 
@@ -5458,7 +5556,7 @@ export default function App() {
             </>
           )}
         </div>
-      </div></div>
+      </div>{confirmModalEl}</div>
     );
   }
 
@@ -5481,7 +5579,7 @@ export default function App() {
             <button style={S.primaryBtn} onClick={() => setScreen("setup")}>← 返回主页</button>
           </div>
         </div>
-      </div></div>
+      </div>{confirmModalEl}</div>
     );
   }
 
@@ -5548,7 +5646,7 @@ export default function App() {
           </div>
           {reviewFeedback && <div style={{textAlign:"center",padding:"8px 0",fontSize:14,fontWeight:700,color:reviewFeedback.color,transition:"opacity 0.3s"}}>{reviewFeedback.text}</div>}
         </div>
-      </div></div>
+      </div>{confirmModalEl}</div>
     );
   }
 
@@ -5571,7 +5669,7 @@ export default function App() {
             <button style={S.primaryBtn} onClick={() => { setSetupTab("words"); setScreen("setup"); }}>返回词汇状态</button>
           </div>
         </div>
-      </div></div>
+      </div>{confirmModalEl}</div>
     );
   }
 
@@ -6204,13 +6302,19 @@ export default function App() {
                 {goalLabel ? "📋 推荐词表（" + goalLabel.label + "）" : "📋 预设词表（设置「学习目的」可获得针对性推荐）"}
               </div>
               <div style={S.presetRow}>{Object.keys(goalPresets).map(function(n) {
-                return <button key={n} style={S.presetBtn} onClick={function(){
+                return <button key={n} style={S.presetBtn} onClick={async function(){
                   var existingCount = (wordInput || '').split('\n').filter(Boolean).length;
                   var presetWords = goalPresets[n];
                   var finalInput = presetWords;
                   if (existingCount > 50) {
                     // 已有大词表，合并而非替换
-                    if (!confirm("检测到你已有 " + existingCount + " 个词的词表。\n\n点「确定」：合并预设词到现有词表（不丢旧词）\n点「取消」：放弃")) return;
+                    var ok = await confirmAsync({
+                      title: "已有 " + existingCount + " 个词的词表",
+                      body: "选择如何处理「" + n + "」预设词：\n\n· 合并：预设词加到现有词表（不丢旧词）\n· 取消：放弃这次添加",
+                      confirmText: "合并",
+                      cancelText: "取消",
+                    });
+                    if (!ok) return;
                     var existingWords = wordInput.split('\n').map(w => w.trim().toLowerCase()).filter(Boolean);
                     var seen = new Set(existingWords);
                     var merged = [...existingWords];
@@ -6308,9 +6412,9 @@ export default function App() {
                 <div>第 {safePage}/{totalPages} 页</div>
                 <div style={{display:"flex",gap:6,alignItems:"center"}}>
                   <select value={wordPageSize} onChange={function(e){setWordPageSize(Number(e.target.value)||120);}} style={{padding:"4px 6px",border:"1px solid "+C.border,borderRadius:6,fontFamily:FONT,fontSize:12}}>
-                    <option value={80}>80/页</option>
-                    <option value={120}>120/页</option>
-                    <option value={200}>200/页</option>
+                    <option value={80}>每页 80 个</option>
+                    <option value={120}>每页 120 个</option>
+                    <option value={200}>每页 200 个</option>
                   </select>
                   <button style={S.smallBtn} disabled={safePage<=1} onClick={function(){setWordPage(function(p){return Math.max(1,p-1);});}}>上一页</button>
                   <button style={S.smallBtn} disabled={safePage>=totalPages} onClick={function(){setWordPage(function(p){return Math.min(totalPages,p+1);});}}>下一页</button>
@@ -7205,6 +7309,7 @@ export default function App() {
       )}
 
       {userCenterEl}
+      {confirmModalEl}
       <style>{globalCSS}</style>
     </div>
   );}
@@ -7228,7 +7333,16 @@ export default function App() {
         </div>
       )}
       <div style={S.topBar}>
-        <button style={S.backBtn} aria-label="返回主页" onClick={function(){ if (phase === "done" || confirm("确定要退出学习吗？进度已自动保存。")) setScreen("setup"); }}>←</button>
+        <button style={S.backBtn} aria-label="返回主页" onClick={async function(){
+          if (phase === "done") { setScreen("setup"); return; }
+          var ok = await confirmAsync({
+            title: "退出学习？",
+            body: "进度已经自动保存，下次回来从这里继续。",
+            confirmText: "退出",
+            cancelText: "继续学",
+          });
+          if (ok) setScreen("setup");
+        }}>←</button>
         <div style={S.progressWrap}>
           <div style={{...S.progressTrack, position:"relative", overflow:"visible"}}>
             <div style={{...S.progressFill, width: smoothLessonPct + "%", transition: "none"}} />
@@ -7250,7 +7364,15 @@ export default function App() {
           var ss = remainSec % 60;
           var color = remainSec < 30 ? C.red : remainSec < 60 ? C.gold : C.teal;
           return (
-            <button onClick={function(){ if (confirm("结束本次专注？")) { setFocusSession(null); } }} style={{
+            <button onClick={async function(){
+              var ok = await confirmAsync({
+                title: "结束本次专注？",
+                body: "提前结束番茄钟会保留已学进度。",
+                confirmText: "结束",
+                cancelText: "继续专注",
+              });
+              if (ok) setFocusSession(null);
+            }} style={{
               display:"flex", alignItems:"center", gap:6,
               padding:"4px 10px",
               background: color + "22",
@@ -8133,6 +8255,7 @@ export default function App() {
       <div ref={contentEndRef} />
       </div>
       <UserCenter open={showUserCenter} onClose={function(){ setShowUserCenter(false); }} user={user} stats={stats} studyStreak={getStudyStreak()} studyGoal={studyGoal} dailyNewWords={dailyNewWords} deepReviewDailyCap={deepReviewDailyCap} userTier={userTier} newLearnedToday={getNewWordQuotaState().consumed || 0} onLogin={function(){ setShowUserCenter(false); setShowLogin(true); }} onLogout={function(){ handleLogout(); setShowUserCenter(false); }} />
+      {confirmModalEl}
       <style>{globalCSS}</style>
     </div>
   );
