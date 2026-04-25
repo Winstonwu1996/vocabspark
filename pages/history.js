@@ -156,10 +156,14 @@ export default function HistoryPage() {
       userPrompt = injectPlaceholders(userPrompt, profileFields);
 
       var fullText = "";
-      await callAPIStream(sys, userPrompt, { jsonMode: false }, function(partial) {
+      var raw = await callAPIStream(sys, userPrompt, { jsonMode: false }, function(partial) {
         fullText = partial;
         setAiStreaming(partial);
       });
+      // 兜底：如果 streaming 关闭（默认），onChunk 不触发，raw 是完整文本
+      if (!fullText && raw) {
+        fullText = typeof raw === "string" ? raw : String(raw);
+      }
       // 完成 — 写入 log
       var entry = {
         role: "ai",
@@ -318,8 +322,8 @@ export default function HistoryPage() {
         <title>历史 · Magna Carta — Know U. Learning</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </Head>
-      <style>{globalCSS}</style>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
+      <style dangerouslySetInnerHTML={{ __html: `
         body { background: ${HC.bg}; }
         .h-page { min-height: 100vh; background: ${HC.bg}; font-family: ${FONT}; }
         .h-container { max-width: 920px; margin: 0 auto; padding: 0 12px 80px; }
@@ -683,7 +687,7 @@ export default function HistoryPage() {
           font-size: 13px;
           margin: 10px 0;
         }
-      `}</style>
+      ` }} />
 
       <div className="h-page">
         <BrandNavBar
