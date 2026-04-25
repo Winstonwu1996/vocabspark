@@ -6,6 +6,7 @@ import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClie
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
 import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../components/PetAvatar';
+import { mergeStates, validateMerged } from '../lib/syncMerge';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 import * as XLSX from 'xlsx';
 
@@ -2894,11 +2895,16 @@ export default function App() {
      5. visibilitychange/beforeunload → 强制刷新
      ═══════════════════════════════════════════════════════ */
 
-  var _syncTimer = null;
-  var _syncInFlight = false;
-  var _syncPending = false;
-  var _syncRetryCount = 0;
+  // sync 内部状态 — 用 useRef 避免 module-level 跨用户/HMR 污染
+  var _syncTimerRef = useRef(null);
+  var _syncInFlightRef = useRef(false);
+  var _syncPendingRef = useRef(false);
+  var _syncRetryCountRef = useRef(0);
+  var _lastSyncAtRef = useRef(0); // 上次成功 sync 的时间戳（leading edge 用）
+  var _bcRef = useRef(null); // BroadcastChannel 多 tab 同步
   var MAX_SYNC_RETRIES = 3;
+  var SYNC_DEBOUNCE_MS = 500;
+  var SYNC_LEADING_GAP_MS = 2000; // 距上次 sync 超 2s 时立即推（首次/久未推）
 
   // 获取当前 access token 用于 API 身份验证
   // 服务端用此 token 验证用户，防止越权改/读他人数据
@@ -2917,27 +2923,40 @@ export default function App() {
     return headers;
   };
 
+  // syncToCloud：leading edge debounce —
+  //   距上次成功 sync ≥ SYNC_LEADING_GAP_MS（2s）时立即推，否则 debounce 500ms
+  //   这样"用户答完一题立刻 sync"，连续操作时不会一直被推迟
   var syncToCloud = function() {
-    if (_syncTimer) clearTimeout(_syncTimer);
-    _syncTimer = setTimeout(function() { _doSync(); }, 500);
+    if (_syncTimerRef.current) clearTimeout(_syncTimerRef.current);
+    var sinceLast = Date.now() - _lastSyncAtRef.current;
+    if (sinceLast >= SYNC_LEADING_GAP_MS) {
+      // 距上次成功 sync 已经 ≥ 2s，立即推（leading edge）
+      _doSync();
+    } else {
+      // 否则 debounce 500ms（trailing edge）
+      _syncTimerRef.current = setTimeout(function() {
+        _syncTimerRef.current = null;
+        _doSync();
+      }, SYNC_DEBOUNCE_MS);
+    }
   };
 
+  // 真正推送的内部函数
   var _doSync = async function() {
-    if (_syncInFlight) { _syncPending = true; return; }
+    if (_syncInFlightRef.current) { _syncPendingRef.current = true; return; }
     var u = userRef.current;
     if (!u) return;
-    _syncInFlight = true;
+    _syncInFlightRef.current = true;
     setSyncStatus("syncing");
     try {
       var fullData = await loadSave();
-      if (!fullData) { _syncInFlight = false; setSyncStatus("idle"); return; }
+      if (!fullData) { _syncInFlightRef.current = false; setSyncStatus("idle"); return; }
       // 反数据丢失保护：如果本地 reviewWordData 比 wordStatusMap 少太多，拒绝同步
-      // 这种情况通常是迁移 bug 或数据损坏导致，同步会把云端历史覆盖掉
       var wsmCount = Object.keys(fullData.wordStatusMap || {}).length;
       var rwdCount = Object.keys(fullData.reviewWordData || {}).length;
       if (wsmCount > 20 && rwdCount < wsmCount * 0.3) {
-        console.warn('[sync] blocked: reviewWordData (' + rwdCount + ') much smaller than wordStatusMap (' + wsmCount + '). Possible data loss. Skip sync to protect cloud data.');
-        _syncInFlight = false; setSyncStatus("error");
+        console.warn('[sync] blocked: reviewWordData (' + rwdCount + ') much smaller than wordStatusMap (' + wsmCount + '). Skip sync to protect cloud data.');
+        _syncInFlightRef.current = false; setSyncStatus("error");
         return;
       }
       fullData.updatedAt = new Date().toISOString();
@@ -2946,41 +2965,95 @@ export default function App() {
         headers: await getAuthHeaders(true),
         body: JSON.stringify({ userId: u.id, data: fullData, clientVersion: syncVersionRef.current }),
       });
+
       if (r.status === 409) {
-        // 版本冲突 — 服务端有更新的数据，拉取并应用
+        // P0-1 修复：版本冲突时智能合并（不是无脑覆盖），保住两边的进度
         var conflict = await r.json();
-        console.warn('[sync] version conflict: client=' + syncVersionRef.current + ' server=' + conflict.serverVersion);
+        console.warn('[sync] version conflict: client=' + syncVersionRef.current + ' server=' + conflict.serverVersion + ' — merging');
         if (conflict.serverData) {
+          // 深度合并 local + server（按字段类型策略：累加取 max / 字典 merge / 数组 union）
+          var merged;
+          try {
+            merged = mergeStates(fullData, conflict.serverData);
+            // 验证 merge 没把字段搞少（防止 merge bug）
+            if (!validateMerged(merged, conflict.serverData)) {
+              console.warn('[sync] merge validation failed, falling back to server data');
+              merged = conflict.serverData;
+            }
+          } catch(mergeErr) {
+            console.warn('[sync] merge threw, falling back to server data:', mergeErr.message);
+            merged = conflict.serverData;
+          }
           syncVersionRef.current = conflict.serverVersion;
-          await doSave(conflict.serverData);
-          _applyCloudData(conflict.serverData);
-          setSyncStatus("synced");
-          setTimeout(function(){ setSyncStatus("idle"); }, 2500); // 2.5s 后复位 ✓ 不再常驻
+          await doSave(merged);
+          _applyCloudData(merged);
+          // 重推合并后的数据（带新 version）
+          try {
+            var r2 = await fetch('/api/sync', {
+              method: 'POST',
+              headers: await getAuthHeaders(true),
+              body: JSON.stringify({ userId: u.id, data: merged, clientVersion: syncVersionRef.current }),
+            });
+            if (r2.ok) {
+              var result2 = await r2.json();
+              syncVersionRef.current = result2.version;
+              _broadcastSync(syncVersionRef.current); // 通知其他 tab
+              _lastSyncAtRef.current = Date.now();
+              setSyncStatus("synced");
+              setTimeout(function(){ setSyncStatus("idle"); }, 2500);
+            } else if (r2.status === 409) {
+              // 第二次冲突 — 第三方 tab 又写了。接受服务端避免无限循环
+              var conflict2 = await r2.json();
+              console.warn('[sync] re-merge still 409, accepting server (max contention reached)');
+              if (conflict2.serverData) {
+                syncVersionRef.current = conflict2.serverVersion;
+                await doSave(conflict2.serverData);
+                _applyCloudData(conflict2.serverData);
+              }
+              setSyncStatus("synced");
+              setTimeout(function(){ setSyncStatus("idle"); }, 2500);
+            } else {
+              throw new Error('re-push failed: ' + r2.status);
+            }
+          } catch(repushErr) {
+            console.warn('[sync] re-push error:', repushErr.message);
+            setSyncStatus("error");
+          }
         }
-        _syncRetryCount = 0;
+        _syncRetryCountRef.current = 0;
       } else if (r.ok) {
         var result = await r.json();
         syncVersionRef.current = result.version;
-        _syncRetryCount = 0;
+        _syncRetryCountRef.current = 0;
+        _broadcastSync(syncVersionRef.current);
+        _lastSyncAtRef.current = Date.now();
         setSyncStatus("synced");
-        setTimeout(function(){ setSyncStatus("idle"); }, 2500); // 2.5s 后复位 ✓ 不再常驻
+        setTimeout(function(){ setSyncStatus("idle"); }, 2500);
       } else {
         throw new Error('sync failed: ' + r.status);
       }
     } catch(e) {
       console.warn('[sync] error:', e.message);
-      _syncRetryCount++;
-      if (_syncRetryCount <= MAX_SYNC_RETRIES) {
-        // 指数退避重试
-        setTimeout(function() { _doSync(); }, 1000 * Math.pow(2, _syncRetryCount));
+      _syncRetryCountRef.current++;
+      if (_syncRetryCountRef.current <= MAX_SYNC_RETRIES) {
+        setTimeout(function() { _doSync(); }, 1000 * Math.pow(2, _syncRetryCountRef.current));
         setSyncStatus("syncing");
       } else {
         setSyncStatus("error");
       }
     } finally {
-      _syncInFlight = false;
-      if (_syncPending) { _syncPending = false; syncToCloud(); }
+      _syncInFlightRef.current = false;
+      if (_syncPendingRef.current) { _syncPendingRef.current = false; syncToCloud(); }
     }
+  };
+
+  // P2-8: BroadcastChannel — sync 成功后通知其他 tab 拉新数据
+  var _broadcastSync = function(version) {
+    try {
+      if (_bcRef.current) {
+        _bcRef.current.postMessage({ type: 'sync', version: version, at: Date.now() });
+      }
+    } catch(e) {}
   };
 
   var loadFromCloud = async function(userId) {
@@ -3139,9 +3212,10 @@ export default function App() {
       updatedAt: new Date().getTime()
     };
     if (userRef.current) {
-      await syncToCloud();
+      // P1-4 修复：直接 await _doSync()（不走 debounce），保证 reset 后立刻推送清零数据
+      try { await _doSync(); } catch(e) { console.warn('[reset] sync failed:', e.message); }
     }
-    
+
     alert('✅ 所有记录已清除，应用已重置为初始状态。');
     setSetupTab("profile");
   };
@@ -3235,16 +3309,23 @@ export default function App() {
       // 完成后云端就是清零数据，这里 loadFromCloud 读到的也是清零，自然正确
       var cloudData = await loadFromCloud(u.id);
       // newer-wins 保护：如果 local 比 cloud 更新（说明云端是旧的，可能因闪退没同步成功），
-      // 保留 local 并把它推到云端，避免覆盖用户最新进度
+      // 智能合并 local + cloud 而非简单覆盖，避免任何一方进度丢失
+      // 阈值 5 分钟：容忍系统时钟漂移（移动设备时区/NTP 可能差几分钟）
       var localData = await loadSave();
       var localTime = localData?.updatedAt ? new Date(localData.updatedAt).getTime() : 0;
       var cloudTime = cloudData?.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
-      if (localData && cloudData && localTime > cloudTime + 30000) {
-        // local 比 cloud 至少新 30 秒 — local 是赢家
-        console.warn('[auth] local newer than cloud, pushing local to cloud');
-        _applyCloudData(localData);
+      if (localData && cloudData && localTime > cloudTime + 300000) {
+        // local 比 cloud 至少新 5 分钟 — 但仍然 merge 而非粗暴覆盖
+        console.warn('[auth] local newer than cloud, merging both');
+        var loginMerged;
+        try {
+          loginMerged = mergeStates(localData, cloudData);
+          if (!validateMerged(loginMerged, cloudData)) loginMerged = cloudData;
+        } catch(e) { loginMerged = cloudData; }
+        await doSave(loginMerged);
+        _applyCloudData(loginMerged);
         setShowWelcome(false);
-        syncToCloud(); // 推送 local 到云端
+        syncToCloud(); // 推送合并后的数据
       } else if (cloudData) {
         await doSave(cloudData);
         _applyCloudData(cloudData);
@@ -3319,7 +3400,7 @@ export default function App() {
     var flushSync = function() {
       if (!userRef.current) return;
       // 清除 debounce 定时器，立即同步
-      if (_syncTimer) { clearTimeout(_syncTimer); _syncTimer = null; }
+      if (_syncTimerRef.current) { clearTimeout(_syncTimerRef.current); _syncTimerRef.current = null; }
       var fullData = null;
       try {
         var raw = localStorage.getItem(SKEY);
@@ -3331,33 +3412,83 @@ export default function App() {
       // 用缓存的 accessTokenRef（最近一次 sync 时更新），并在 body 里也带上 _authToken 兜底（sendBeacon 不能带 header）
       var token = accessTokenRef.current || '';
       var payload = { userId: userRef.current.id, data: fullData, clientVersion: syncVersionRef.current, _authToken: token };
-      try {
-        var body = JSON.stringify(payload);
-        // keepalive fetch 有 64KB 限制，大数据时退回 sendBeacon
-        if (body.length < 60000) {
+      var body;
+      try { body = JSON.stringify(payload); } catch(e) { return; }
+      // P1-3 修复：双发保险 — keepalive fetch + sendBeacon 双投递（收到任一即成功，
+      // 服务端 upsert 是幂等的，重复推同 version 不会写两次）
+      var keepaliveOk = false;
+      if (body.length < 60000) {
+        try {
           fetch('/api/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: body,
             keepalive: true,
           }).catch(function(e){ console.warn('[flushSync] keepalive failed:', e?.message); });
-        } else {
-          navigator.sendBeacon('/api/sync', new Blob([body], { type: 'application/json' }));
-        }
-      } catch(e) {
-        console.warn('[flushSync] send failed:', e.message);
-        try { navigator.sendBeacon('/api/sync', new Blob([JSON.stringify(payload)], { type: 'application/json' })); } catch(e2) {}
+          keepaliveOk = true;
+        } catch(e) { console.warn('[flushSync] keepalive throw:', e.message); }
+      }
+      // sendBeacon 兜底（即使 keepalive 已发也再发一次，幂等服务端处理）
+      try {
+        navigator.sendBeacon('/api/sync', new Blob([body], { type: 'application/json' }));
+      } catch(e2) {
+        if (!keepaliveOk) console.warn('[flushSync] both delivery methods failed:', e2.message);
       }
     };
     var handleBeforeUnload = function() { flushSync(); };
-    var handleVisChange = function() { if (document.visibilityState === 'hidden') flushSync(); };
+    var handleVisChange = function() {
+      if (document.visibilityState === 'hidden') flushSync();
+      else if (document.visibilityState === 'visible' && userRef.current) {
+        // 回到 tab 时主动检查云端是否有更新（其他设备/tab 可能推过新数据）
+        _maybePullCloud();
+      }
+    };
     window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisChange);
+    // P2-8: BroadcastChannel — 监听其他 tab sync 完成事件，自动拉新数据
+    if (typeof BroadcastChannel !== "undefined") {
+      try {
+        _bcRef.current = new BroadcastChannel('knowu_sync');
+        _bcRef.current.onmessage = function(ev) {
+          var msg = ev?.data;
+          if (msg?.type === 'sync' && typeof msg.version === 'number' && msg.version > syncVersionRef.current) {
+            // 其他 tab 推送了更新，本 tab 拉一下
+            console.log('[bc] other tab synced version=' + msg.version + ', pulling');
+            _maybePullCloud();
+          }
+        };
+      } catch(e) { console.warn('[bc] init failed:', e.message); }
+    }
     return function() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisChange);
+      if (_bcRef.current) { try { _bcRef.current.close(); } catch(e) {} _bcRef.current = null; }
     };
   }, []);
+
+  // 拉云端最新数据并合并到本地（用于 tab 切换/BroadcastChannel 通知后）
+  var _maybePullCloud = async function() {
+    if (!userRef.current) return;
+    if (_syncInFlightRef.current) return; // 正在同步则跳过（避免与 push 冲突）
+    try {
+      var cloudData = await loadFromCloud(userRef.current.id);
+      if (!cloudData) return;
+      var localData = await loadSave();
+      if (!localData) {
+        await doSave(cloudData);
+        _applyCloudData(cloudData);
+        return;
+      }
+      // 智能合并 local + cloud
+      try {
+        var merged = mergeStates(localData, cloudData);
+        if (validateMerged(merged, cloudData)) {
+          await doSave(merged);
+          _applyCloudData(merged);
+        }
+      } catch(e) { console.warn('[pullCloud] merge failed:', e.message); }
+    } catch(e) { console.warn('[pullCloud] error:', e.message); }
+  };
 
   useEffect(function() {
     setTodayCount(getDailyState().count);
