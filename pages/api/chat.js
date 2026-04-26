@@ -1,3 +1,5 @@
+import { checkPerIpLimit } from "../../lib/ratelimit";
+
 export const config = {
   maxDuration: 60,
 };
@@ -163,6 +165,20 @@ export default async function handler(req, res) {
 
   if (!system || !message) {
     return res.status(400).json({ error: "Missing system or message" });
+  }
+
+  // ─── Rate Limit (per IP, 50/day) ───
+  // BYO key 用户用自己的 quota，跳过限流
+  const isBYO = userApiKeys && (userApiKeys.deepseek || userApiKeys.gemini);
+  if (!isBYO) {
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      req.headers["x-real-ip"] ||
+      "unknown";
+    const rl = await checkPerIpLimit(ip);
+    if (!rl.allowed) {
+      return res.status(429).json({ error: "请求过于频繁，请稍后再试" });
+    }
   }
 
   const tokens = maxTokens || 2000;

@@ -6,21 +6,24 @@
     "dev": "next dev",
     "dev:fresh": "rm -rf .next && next dev",
     "dev:lan": "rm -rf .next && next dev -H 0.0.0.0",
+    "dev:nuclear": "pkill -9 -f 'next dev' 2>/dev/null; pkill -9 -f 'next-server' 2>/dev/null; sleep 1; rm -rf .next node_modules/.cache; next dev",
+    "preview": "next build && next start",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "validate:atlas": "node scripts/validate-atlas.mjs",
+    "test:atlas": "node scripts/test-atlas-renderer.mjs"
   },
   "dependencies": {
+    "@sentry/nextjs": "^8.55.1",
     "@stripe/stripe-js": "^9.0.0",
     "@supabase/supabase-js": "^2.100.0",
     "@vercel/analytics": "^2.0.1",
+    "d3-geo": "^3.1.1",
     "next": "^14.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "stripe": "^21.0.1",
+    "topojson-client": "^3.1.0",
     "xlsx": "^0.18.5"
-  },
-  "devDependencies": {
-    "d3-geo": "^3.1.1",
-    "topojson-client": "^3.1.0"
   }
 }

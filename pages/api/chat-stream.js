@@ -1,6 +1,8 @@
 // Edge Runtime SSE 流式端点 — 只用于 teach 等纯文本任务
 // 与 /api/chat 并存：/api/chat 走 Node Runtime（非流式），本端点走 Edge Runtime（流式透传）。
 // 客户端任何失败都会 fallback 到 /api/chat，不会影响生产稳定性。
+import { checkPerIpLimit } from "../../lib/ratelimit";
+
 export const config = {
   runtime: "edge",
   // JSON teach 需要 2500 tokens，实测生成 60-80s 不罕见。Pro 计划允许最多 300s。
@@ -118,6 +120,23 @@ export default async function handler(req) {
       status: 400,
       headers: { "Content-Type": "application/json" },
     });
+  }
+
+  // ─── Rate Limit (per IP, 50/day) ───
+  // BYO key 用户跳过限流
+  const isBYO = userApiKeys && (userApiKeys.deepseek || userApiKeys.gemini);
+  if (!isBYO) {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+    const rl = await checkPerIpLimit(ip);
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: "请求过于频繁，请稍后再试" }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
   }
 
   const tokens = maxTokens || 900;
