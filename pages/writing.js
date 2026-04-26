@@ -24,12 +24,12 @@ var AgeStepper = ({ value, onChange, style }) => {
   var btnS = { width:36, height:36, borderRadius:"50%", border:"1.5px solid " + C.border, background:C.card, fontSize:18, fontWeight:700, color:C.accent, cursor:"pointer", display:"inline-flex", alignItems:"center", justifyContent:"center", fontFamily:FONT, flexShrink:0 };
   return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:12, ...(style || {}) }}>
-      <button onClick={function() { setAge(age - 1); }} style={btnS}>−</button>
+      <button onClick={function() { setAge(age - 1); }} aria-label="减小年龄" style={btnS}>−</button>
       <div style={{ textAlign:"center", minWidth:50 }}>
         <div style={{ fontSize:28, fontWeight:800, color:C.text, lineHeight:1 }}>{age}</div>
         <div style={{ fontSize:11, color:C.textSec, marginTop:2 }}>岁</div>
       </div>
-      <button onClick={function() { setAge(age + 1); }} style={btnS}>+</button>
+      <button onClick={function() { setAge(age + 1); }} aria-label="增加年龄" style={btnS}>+</button>
     </div>
   );
 };
@@ -1311,7 +1311,7 @@ export default function WritingApp() {
               {user && (
                 <button onClick={function() { handleLogout(); }} style={{ ...S.ghostBtn, flex:1, textAlign:"center", fontSize:12 }}>{"退出登录 (" + (user.email || "").split("@")[0] + ")"}</button>
               )}
-              <button onClick={function() { setShowSettings(true); }} style={{ ...S.ghostBtn, padding:"10px 14px" }}>{"⚙️"}</button>
+              <button onClick={function() { setShowSettings(true); }} aria-label="打开设置" style={{ ...S.ghostBtn, padding:"10px 14px" }}>{"⚙️"}</button>
             </div>
           </div>
           );
@@ -1321,7 +1321,7 @@ export default function WritingApp() {
         {screen === "prompt-select" && (
           <div style={{ animation:"fadeUp 0.3s ease-out" }}>
             <div style={S.topBar}>
-              <button onClick={function() { setScreen("dashboard"); }} style={S.backBtn}>←</button>
+              <button onClick={function() { setScreen("dashboard"); }} aria-label="返回主页" style={S.backBtn}>←</button>
               <div style={{ fontSize:15, fontWeight:700 }}>选择写作主题</div>
             </div>
 
@@ -1368,7 +1368,7 @@ export default function WritingApp() {
         {screen === "idea-lab" && (
           <div style={{ animation:"fadeUp 0.3s ease-out" }}>
             <div style={S.topBar}>
-              <button onClick={function() { setScreen("prompt-select"); }} style={S.backBtn}>←</button>
+              <button onClick={function() { setScreen("prompt-select"); }} aria-label="返回主题选择" style={S.backBtn}>←</button>
               <div style={{ fontSize:15, fontWeight:700 }}>💡 灵感对话</div>
             </div>
 
@@ -1450,7 +1450,7 @@ export default function WritingApp() {
         {screen === "outline" && (
           <div style={{ animation:"fadeUp 0.3s ease-out" }}>
             <div style={S.topBar}>
-              <button onClick={function() { setScreen("idea-lab"); }} style={S.backBtn}>←</button>
+              <button onClick={function() { setScreen("idea-lab"); }} aria-label="返回灵感对话" style={S.backBtn}>←</button>
               <div style={{ fontSize:15, fontWeight:700 }}>📋 写作大纲</div>
             </div>
 
@@ -1508,7 +1508,7 @@ export default function WritingApp() {
         {screen === "writing-editor" && (
           <div style={{ animation:"fadeUp 0.3s ease-out" }}>
             <div style={S.topBar}>
-              <button onClick={function() { setScreen(outline ? "outline" : "idea-lab"); }} style={S.backBtn}>←</button>
+              <button onClick={function() { setScreen(outline ? "outline" : "idea-lab"); }} aria-label="返回上一步" style={S.backBtn}>←</button>
               <div style={{ fontSize:15, fontWeight:700 }}>✍️ 写作</div>
               <div style={{ fontSize:12, color:C.textSec, marginLeft:"auto" }}>
                 {wordCount} 词
@@ -1683,7 +1683,7 @@ export default function WritingApp() {
         {screen === "history" && (
           <div style={{ animation:"fadeUp 0.3s ease-out" }}>
             <div style={S.topBar}>
-              <button onClick={function() { setScreen("dashboard"); }} style={S.backBtn}>{"←"}</button>
+              <button onClick={function() { setScreen("dashboard"); }} aria-label="返回主页" style={S.backBtn}>{"←"}</button>
               <div style={{ fontSize:15, fontWeight:700 }}>{"📚 学习记录"}</div>
             </div>
 

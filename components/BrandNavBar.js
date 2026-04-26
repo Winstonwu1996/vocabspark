@@ -96,7 +96,7 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
         <div className="desktop-tab" style={{ ...tabsContainer, display:"none" }}>
           <Link href="/vocab" style={tabStyle("vocab")}>Vocab</Link>
           <Link href="/writing" style={tabStyle("writing")}>Writing<sup style={{fontSize:8,color:C.purple,fontWeight:700,marginLeft:1}}>Beta</sup></Link>
-          <Link href="/history" style={tabStyle("history")}>History<sup style={{fontSize:8,color:C.purple,fontWeight:700,marginLeft:1}}>Beta</sup></Link>
+          <Link href="/atlas-lab" style={tabStyle("history")}>History<sup style={{fontSize:8,color:C.purple,fontWeight:700,marginLeft:1}}>Beta</sup></Link>
           <span style={{ ...tabStyle("reading"), opacity:0.5, cursor:"default" }}>Reading<sup style={{fontSize:8,color:C.teal,fontWeight:700,marginLeft:1}}>Soon</sup></span>
         </div>
         {syncStatus && syncStatus !== "idle" && user && (
@@ -114,7 +114,7 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
       <div style={tabsContainer}>
         <Link href="/vocab" style={tabStyle("vocab")}>Vocab</Link>
         <Link href="/writing" style={tabStyle("writing")}>Writing<sup style={{fontSize:8,color:C.purple,fontWeight:700,marginLeft:1}}>Beta</sup></Link>
-        <Link href="/history" style={tabStyle("history")}>History<sup style={{fontSize:8,color:C.purple,fontWeight:700,marginLeft:1}}>Beta</sup></Link>
+        <Link href="/atlas-lab" style={tabStyle("history")}>History<sup style={{fontSize:8,color:C.purple,fontWeight:700,marginLeft:1}}>Beta</sup></Link>
         <span style={{ ...tabStyle("reading"), opacity:0.5, cursor:"default" }}>Reading<sup style={{fontSize:8,color:C.teal,fontWeight:700,marginLeft:1}}>Soon</sup></span>
       </div>
     </div>

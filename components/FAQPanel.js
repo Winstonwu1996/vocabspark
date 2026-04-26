@@ -4,7 +4,7 @@
  * 答案用大白话写，避免法律黑话和技术黑话。
  * ──────────────────────────────────────────────────────────────────────── */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { C, FONT } from '../lib/theme';
 
 var FAQ_ITEMS = [
@@ -52,6 +52,13 @@ var FAQ_ITEMS = [
 
 export default function FAQPanel({ open, onClose }) {
   var [expandedIdx, setExpandedIdx] = useState(-1);
+  // A11y：ESC 关闭抽屉（键盘用户）
+  useEffect(function () {
+    if (!open) return;
+    var onKey = function (e) { if (e.key === 'Escape') onClose && onClose(); };
+    window.addEventListener('keydown', onKey);
+    return function () { window.removeEventListener('keydown', onKey); };
+  }, [open, onClose]);
   if (!open) return null;
 
   var toggle = function(i) {

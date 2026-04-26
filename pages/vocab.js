@@ -1069,12 +1069,12 @@ var speakWord = async (word) => {
 
 var SpeakBtn = ({ text, size }) => {
   var s = size || 28;
-  return <button onClick={() => speak(text)} title={"播放: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
+  return <button onClick={() => speak(text)} title={"播放: " + text} aria-label={"播放: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
 };
 
 var SpeakWordBtn = ({ text, size }) => {
   var s = size || 38;
-  return <button onClick={() => speakWord(text)} title={"朗读单词: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
+  return <button onClick={() => speakWord(text)} title={"朗读单词: " + text} aria-label={"朗读单词: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
 };
 
 /* ─── Brand: imported from components/BrandNavBar.js ─── */
@@ -2648,6 +2648,20 @@ export default function App() {
   var [otpError, setOtpError] = useState('');
   var [todayCount, setTodayCount] = useState(0);
   var [showLimitModal, setShowLimitModal] = useState(false);
+
+  // A11y：ESC 关闭最常用的两个 modal（键盘用户）
+  useEffect(function() {
+    if (!showLimitModal) return;
+    var onKey = function(e) { if (e.key === 'Escape') { setShowLimitModal(false); window.scrollTo(0,0); } };
+    window.addEventListener('keydown', onKey);
+    return function() { window.removeEventListener('keydown', onKey); };
+  }, [showLimitModal]);
+  useEffect(function() {
+    if (!feedbackModal) return;
+    var onKey = function(e) { if (e.key === 'Escape') setFeedbackModal(null); };
+    window.addEventListener('keydown', onKey);
+    return function() { window.removeEventListener('keydown', onKey); };
+  }, [feedbackModal]);
 
   var [stats, setStats] = useState({ correct:0, total:0, streak:0, bestStreak:0, xp:0 });
   var [wordTimings, setWordTimings] = useState({});
@@ -5647,7 +5661,7 @@ export default function App() {
     return (
       <div style={S.root}><div className="vs-desktop-container" style={S.container}>
         <div style={S.topBar}>
-          <button style={S.backBtn} onClick={async function(){
+          <button style={S.backBtn} aria-label="退出快筛" onClick={async function(){
             if (scDone > 0) {
               var ok = await confirmAsync({
                 title: "确定退出快筛？",
@@ -5804,7 +5818,7 @@ export default function App() {
     var qr = quickReviewQueue[quickReviewIdx];
     return (
       <div style={S.root}><div className="vs-desktop-container" style={S.container}>
-        <div style={S.topBar}><button style={S.backBtn} onClick={() => setScreen("setup")}>←</button><div style={{fontSize:13,color:C.textSec}}>快速复习 {quickReviewIdx+1}/{quickReviewQueue.length}</div></div>
+        <div style={S.topBar}><button style={S.backBtn} aria-label="返回主页" onClick={() => setScreen("setup")}>←</button><div style={{fontSize:13,color:C.textSec}}>快速复习 {quickReviewIdx+1}/{quickReviewQueue.length}</div></div>
         <div style={{...S.card, textAlign:"center", padding:"30px 20px"}}>
           <div style={S.tag}>🔄 快速复习</div>
           <h2 style={{fontSize:34,margin:"8px 0 4px"}}>{qr?.word}</h2>
@@ -5880,7 +5894,7 @@ export default function App() {
     };
     return (
       <div style={S.root}><div className="vs-desktop-container" style={S.container}>
-        <div style={S.topBar}><button style={S.backBtn} onClick={() => setScreen("setup")}>←</button><div style={{fontSize:13,color:C.textSec}}>重点攻克 {deepReviewIdx+1}/{deepReviewQueue.length}</div></div>
+        <div style={S.topBar}><button style={S.backBtn} aria-label="返回主页" onClick={() => setScreen("setup")}>←</button><div style={{fontSize:13,color:C.textSec}}>重点攻克 {deepReviewIdx+1}/{deepReviewQueue.length}</div></div>
         <div style={{...S.card, padding:"24px 20px"}}>
           <div style={{...S.tag, background:C.redLight, color:C.red}}>🔴 深度复习</div>
           <h2 style={{fontSize:30,margin:"8px 0 10px"}}>{dw}</h2>
@@ -6081,7 +6095,7 @@ export default function App() {
             <div style={{...S.card, marginBottom:14, borderColor:C.border, background:C.bg, borderLeft:"3px solid "+C.accent}}>
               <div style={{fontWeight:800,fontSize:15,marginBottom:10,color:C.accent}}>⚡ 今日任务</div>
               <div style={{background:C.card,border:"1px dashed "+C.teal,borderRadius:10,padding:"20px 16px",textAlign:"center"}}>
-                <img src="/ai-illustration.png" alt="" style={{width:"50%",maxWidth:140,margin:"4px auto 14px",display:"block",opacity:0.9}} />
+                <img src="/ai-illustration.png" alt="" aria-hidden="true" style={{width:"50%",maxWidth:140,margin:"4px auto 14px",display:"block",opacity:0.9}} />
                 <div style={{fontWeight:700,fontSize:15,color:C.text,marginBottom:10}}>导入你的第一个词表，开始学习吧！</div>
                 <button style={{...S.smallBtn,background:C.teal,color:"#fff",border:"none",padding:"10px 26px",fontSize:14,fontWeight:700}} onClick={function(){ setSetupTab("words"); setTimeout(function(){ var el = document.getElementById("vocabspark-profile-section"); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }, 120); }}>前往词库 →</button>
               </div>
@@ -7098,7 +7112,7 @@ export default function App() {
             <h3 style={{fontSize:18,fontWeight:700,margin:"0 0 4px"}}>推荐给朋友</h3>
             <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,margin:"0 0 18px"}}>觉得好用？让身边的华人朋友也试试~</p>
             <div style={{background:C.bg,borderRadius:12,padding:14,marginBottom:14,display:"inline-block"}}>
-              <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fknowulearning.com&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="QR Code" style={{display:"block",borderRadius:6}} />
+              <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fknowulearning.com&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="访问 knowulearning.com 的二维码" style={{display:"block",borderRadius:6}} />
             </div>
             <div style={{fontSize:12,color:C.textSec,marginBottom:16}}>📱 手机扫码 / 长按保存发朋友圈</div>
             <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>{"AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉\n👉 knowulearning.com"}</div>
@@ -8700,7 +8714,7 @@ export default function App() {
 
             {/* QR Code — desktop 扫码，手机长按保存 */}
             <div style={{background:C.bg,borderRadius:12,padding:14,marginBottom:14,display:"inline-block"}}>
-              <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fknowulearning.com&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="QR Code" style={{display:"block",borderRadius:6}} />
+              <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fknowulearning.com&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="访问 knowulearning.com 的二维码" style={{display:"block",borderRadius:6}} />
             </div>
             <div style={{fontSize:12,color:C.textSec,marginBottom:16}}>📱 手机扫码 / 长按保存发朋友圈</div>
 

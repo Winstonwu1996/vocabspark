@@ -288,7 +288,7 @@ export default function PlanPage() {
             <div style={{ position:"relative" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:3 }}>
                 <span style={{ fontSize:22, fontWeight:800, color:C.accent }}>{"<1%"}</span>
-                <button onClick={function(e) { e.stopPropagation(); setShowCalc(!showCalc); }} style={{ width:16, height:16, borderRadius:"50%", border:"1px solid " + C.gold, background:showCalc ? C.gold : "transparent", color:showCalc ? "#fff" : C.gold, fontSize:10, fontWeight:700, cursor:"pointer", display:"inline-flex", alignItems:"center", justifyContent:"center", padding:0, fontFamily:FONT, lineHeight:1 }}>?</button>
+                <button onClick={function(e) { e.stopPropagation(); setShowCalc(!showCalc); }} aria-label="查看私教费用计算说明" style={{ width:16, height:16, borderRadius:"50%", border:"1px solid " + C.gold, background:showCalc ? C.gold : "transparent", color:showCalc ? "#fff" : C.gold, fontSize:10, fontWeight:700, cursor:"pointer", display:"inline-flex", alignItems:"center", justifyContent:"center", padding:0, fontFamily:FONT, lineHeight:1 }}>?</button>
               </div>
               <div style={{ fontSize:11, color:C.textSec }}>私教费用</div>
               {showCalc && (
@@ -329,7 +329,7 @@ export default function PlanPage() {
         <div style={{ textAlign:"center", marginBottom:16 }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, marginBottom:4 }}>
             <span style={{ fontSize:12, color:C.textSec }}>自带 API Key（半价）</span>
-            <button onClick={function() { setShowBYO(!showBYO); }} style={{ width:40, height:22, borderRadius:11, border:"none", background: showBYO ? C.teal : C.border, cursor:"pointer", position:"relative", transition:"background 0.2s" }}>
+            <button onClick={function() { setShowBYO(!showBYO); }} aria-label="切换自带 API Key 选项" aria-pressed={showBYO} style={{ width:40, height:22, borderRadius:11, border:"none", background: showBYO ? C.teal : C.border, cursor:"pointer", position:"relative", transition:"background 0.2s" }}>
               <div style={{ width:18, height:18, borderRadius:9, background:"#fff", position:"absolute", top:2, left: showBYO ? 20 : 2, transition:"left 0.2s", boxShadow:"0 1px 3px rgba(0,0,0,0.2)" }} />
             </button>
           </div>

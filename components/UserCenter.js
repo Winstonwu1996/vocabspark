@@ -1,5 +1,5 @@
 /* ─── Know U. Learning — 用户中心侧边抽屉 ─── */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { C, FONT, S } from '../lib/theme';
 import { supabase } from '../lib/supabase';
@@ -133,6 +133,13 @@ export { UserAvatar };
 
 export default function UserCenter({ open, onClose, user, stats, studyStreak, studyGoal, dailyNewWords, deepReviewDailyCap, userTier, newLearnedToday, onLogin, onLogout }) {
   var [faqOpen, setFaqOpen] = useState(false);
+  // A11y：ESC 关闭抽屉（键盘用户）
+  useEffect(function () {
+    if (!open) return;
+    var onKey = function (e) { if (e.key === 'Escape') onClose && onClose(); };
+    window.addEventListener('keydown', onKey);
+    return function () { window.removeEventListener('keydown', onKey); };
+  }, [open, onClose]);
   if (!open) return null;
 
   // 漏斗：登录/退出/注册（注册由 onLogin 触发跳转 → 跳转目标页处理）
