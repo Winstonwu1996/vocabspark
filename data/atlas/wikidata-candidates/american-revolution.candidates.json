@@ -1,0 +1,733 @@
+{
+  "topicId": "american-revolution",
+  "query": {
+    "id": "american-revolution",
+    "countryQid": "Q30",
+    "yearFrom": 1773,
+    "yearTo": 1785,
+    "bbox": [
+      -100,
+      20,
+      -55,
+      55
+    ]
+  },
+  "generatedAt": "2026-04-26T04:49:08.483Z",
+  "eventCount": 51,
+  "events": [
+    {
+      "qid": "Q19024",
+      "labelEn": "Boston Tea Party",
+      "labelZh": "波士頓茶葉事件",
+      "descEn": "1773 American protest against British taxation",
+      "typeLabel": "protest",
+      "date": "1773-12-16",
+      "year": 1773,
+      "coords": [
+        -71.0524,
+        42.3536
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Boston_Tea_Party"
+    },
+    {
+      "qid": "Q45067",
+      "labelEn": "Siege of Savage's Old Fields",
+      "labelZh": null,
+      "descEn": "1775 military siege of the American revolutionary war",
+      "typeLabel": "siege",
+      "date": "1775-01-01",
+      "year": 1775,
+      "coords": [
+        -82.0244,
+        34.1469
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Siege_of_Savage%27s_Old_Fields"
+    },
+    {
+      "qid": "Q985470",
+      "labelEn": "Gunpowder Incident",
+      "labelZh": "威廉斯堡火藥事件",
+      "descEn": "conflict of the American Revolutionary War",
+      "typeLabel": "armed conflict",
+      "date": "1775-04-20",
+      "year": 1775,
+      "coords": [
+        -76.699994444,
+        37.270738888
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Gunpowder_Incident"
+    },
+    {
+      "qid": "Q3078508",
+      "labelEn": "Fortification of Dorchester Heights",
+      "labelZh": "多徹斯特高地爭奪戰",
+      "descEn": "military action of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1776-01-01",
+      "year": 1776,
+      "coords": [
+        -71.04638889,
+        42.33277778
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Fortification_of_Dorchester_Heights"
+    },
+    {
+      "qid": "Q127912",
+      "labelEn": "United States Declaration of Independence",
+      "labelZh": "美國獨立宣言",
+      "descEn": "1776 assertion of colonial America's independence from Great Britain",
+      "typeLabel": "declaration of independence",
+      "date": "1776-07-04",
+      "year": 1776,
+      "coords": [
+        -75.15,
+        39.9489
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/United_States_Declaration_of_Independence"
+    },
+    {
+      "qid": "Q85745869",
+      "labelEn": "Battle of Lindley's Fort",
+      "labelZh": null,
+      "descEn": "1776 battle",
+      "typeLabel": "battle",
+      "date": "1776-07-15",
+      "year": 1776,
+      "coords": [
+        -82.118268,
+        34.45965
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Lindley%27s_Fort"
+    },
+    {
+      "qid": "Q4871562",
+      "labelEn": "Battle of Lindley's Fort",
+      "labelZh": null,
+      "descEn": "1776 American Revolutionary war battle between patriots and Loyalists dressed and painted as Indians and Indians.",
+      "typeLabel": "battle",
+      "date": "1776-07-15",
+      "year": 1776,
+      "coords": [
+        -82.118268,
+        34.45965
+      ],
+      "wikipedia": null
+    },
+    {
+      "qid": "Q862751",
+      "labelEn": "Battle of Long Island",
+      "labelZh": "長島會戰",
+      "descEn": "1776 first major battle of the American Revolutionary War to take place after the Declaration of Independence",
+      "typeLabel": "battle",
+      "date": "1776-08-27",
+      "year": 1776,
+      "coords": [
+        -73.981,
+        40.665
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Long_Island"
+    },
+    {
+      "qid": "Q5933851",
+      "labelEn": "Staten Island Peace Conference",
+      "labelZh": "斯塔滕島和議",
+      "descEn": "diplomatic conference",
+      "typeLabel": "peace conference",
+      "date": "1776-09-11",
+      "year": 1776,
+      "coords": [
+        -74.2538,
+        40.5029
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Staten_Island_Peace_Conference"
+    },
+    {
+      "qid": "Q692137",
+      "labelEn": "Landing at Kip's Bay",
+      "labelZh": "基普灣登陸戰",
+      "descEn": "1776 action during American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1776-09-15",
+      "year": 1776,
+      "coords": [
+        -73.974722222,
+        40.736388888
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Landing_at_Kip%27s_Bay"
+    },
+    {
+      "qid": "Q668595",
+      "labelEn": "Battle of Harlem Heights",
+      "labelZh": "哈林高地戰役",
+      "descEn": "1776 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1776-09-16",
+      "year": 1776,
+      "coords": [
+        -73.963611111,
+        40.811944444
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Harlem_Heights"
+    },
+    {
+      "qid": "Q2740393",
+      "labelEn": "Great Fire of New York",
+      "labelZh": "1776年紐約大火",
+      "descEn": "Major fire in New York",
+      "typeLabel": "city fire",
+      "date": "1776-09-21",
+      "year": 1776,
+      "coords": [
+        -74.013055555,
+        40.703055555
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Great_Fire_of_New_York_(1776)"
+    },
+    {
+      "qid": "Q934626",
+      "labelEn": "Battle of Valcour Island",
+      "labelZh": "瓦庫爾島戰役",
+      "descEn": "1776 first naval battles of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1776-10-11",
+      "year": 1776,
+      "coords": [
+        -73.430277777,
+        44.610555555
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Valcour_Island"
+    },
+    {
+      "qid": "Q63313",
+      "labelEn": "Battle of Pell's Point",
+      "labelZh": "沛爾岬之戰",
+      "descEn": "1776 battle",
+      "typeLabel": "battle",
+      "date": "1776-10-18",
+      "year": 1776,
+      "coords": [
+        -73.81048,
+        40.86617
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Pell%27s_Point"
+    },
+    {
+      "qid": "Q21187832",
+      "labelEn": "Battle of Mamaroneck",
+      "labelZh": null,
+      "descEn": "1776 battle",
+      "typeLabel": "battle",
+      "date": "1776-10-22",
+      "year": 1776,
+      "coords": [
+        -73.73545,
+        40.946533333
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Mamaroneck"
+    },
+    {
+      "qid": "Q960723",
+      "labelEn": "Battle of White Plains",
+      "labelZh": "白原戰役",
+      "descEn": "1776 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1776-10-28",
+      "year": 1776,
+      "coords": [
+        -73.78,
+        41.03
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_White_Plains"
+    },
+    {
+      "qid": "Q706755",
+      "labelEn": "Battle of Fort Washington",
+      "labelZh": "華盛頓堡攻城戰",
+      "descEn": "1776 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1776-11-16",
+      "year": 1776,
+      "coords": [
+        -73.938,
+        40.853
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Fort_Washington"
+    },
+    {
+      "qid": "Q75827070",
+      "labelEn": "Battle of Fort Lee",
+      "labelZh": null,
+      "descEn": "1776 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1776-11-20",
+      "year": 1776,
+      "coords": [
+        -73.963055555,
+        40.850277777
+      ],
+      "wikipedia": null
+    },
+    {
+      "qid": "Q4742016",
+      "labelEn": "Ambush of Geary",
+      "labelZh": null,
+      "descEn": "1776 skirmish of the American Revolutionary War in New Jersey",
+      "typeLabel": "skirmish",
+      "date": "1776-12-14",
+      "year": 1776,
+      "coords": [
+        -74.859444444,
+        40.456944444
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Ambush_of_Geary"
+    },
+    {
+      "qid": "Q653664",
+      "labelEn": "Battle of Trenton",
+      "labelZh": "特倫頓戰役",
+      "descEn": "1776 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1776-12-26",
+      "year": 1776,
+      "coords": [
+        -74.764722222,
+        40.225833333
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Trenton"
+    },
+    {
+      "qid": "Q7510027",
+      "labelEn": "Siege of Fort Stanwix",
+      "labelZh": "史坦域斯堡圍城戰",
+      "descEn": "1777 siege of American Revolutionary War",
+      "typeLabel": "siege",
+      "date": "1777-01-01",
+      "year": 1777,
+      "coords": [
+        -75.45525,
+        43.21055556
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Siege_of_Fort_Stanwix"
+    },
+    {
+      "qid": "Q1307876",
+      "labelEn": "Siege of Fort Ticonderoga",
+      "labelZh": "提康德羅加堡圍城戰 (1777年)",
+      "descEn": "1777 siege",
+      "typeLabel": "battle",
+      "date": "1777-01-01",
+      "year": 1777,
+      "coords": [
+        -73.388055555,
+        43.841388888
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Siege_of_Fort_Ticonderoga_(1777)"
+    },
+    {
+      "qid": "Q2890385",
+      "labelEn": "Battle of White Marsh",
+      "labelZh": "怀特马什战役",
+      "descEn": "1777 American Revolutionary War battle",
+      "typeLabel": "battle",
+      "date": "1777-01-01",
+      "year": 1777,
+      "coords": [
+        -75.23,
+        40.12
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_White_Marsh"
+    },
+    {
+      "qid": "Q4871625",
+      "labelEn": "Second Battle of Machias",
+      "labelZh": null,
+      "descEn": "1777 an amphibious assault on the Massachusetts town of Machias (in present-day eastern Maine) by British forces during the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-01-01",
+      "year": 1777,
+      "coords": [
+        -67.46086111,
+        44.71405
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Machias_(1777)"
+    },
+    {
+      "qid": "Q233417",
+      "labelEn": "Battle of the Assunpink Creek",
+      "labelZh": "阿孫平克溪戰役",
+      "descEn": "1777 battle between American and British troops",
+      "typeLabel": "battle",
+      "date": "1777-01-02",
+      "year": 1777,
+      "coords": [
+        -74.764166666,
+        40.218055555
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_the_Assunpink_Creek"
+    },
+    {
+      "qid": "Q1132579",
+      "labelEn": "Battle of Princeton",
+      "labelZh": "普林斯顿战役",
+      "descEn": "battle in the American independence War",
+      "typeLabel": "battle",
+      "date": "1777-01-03",
+      "year": 1777,
+      "coords": [
+        -74.675,
+        40.33
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Princeton"
+    },
+    {
+      "qid": "Q4871737",
+      "labelEn": "Battle of Millstone",
+      "labelZh": null,
+      "descEn": "1777 skirmish in the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-01-20",
+      "year": 1777,
+      "coords": [
+        -74.59333333,
+        40.53888889
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Millstone"
+    },
+    {
+      "qid": "Q4872127",
+      "labelEn": "Battle of Punk Hill",
+      "labelZh": null,
+      "descEn": "1777 Skirmish in the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-03-08",
+      "year": 1777,
+      "coords": [
+        -74.357,
+        40.523
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Punk_Hill"
+    },
+    {
+      "qid": "Q3271228",
+      "labelEn": "Battle of Bound Brook",
+      "labelZh": "邦德溪戰役",
+      "descEn": "1777 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-04-13",
+      "year": 1777,
+      "coords": [
+        -74.527777777,
+        40.558888888
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Bound_Brook"
+    },
+    {
+      "qid": "Q4872181",
+      "labelEn": "Battle of Ridgefield",
+      "labelZh": null,
+      "descEn": "1777 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-04-27",
+      "year": 1777,
+      "coords": [
+        -73.50138889,
+        41.30527778
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Ridgefield"
+    },
+    {
+      "qid": "Q4845442",
+      "labelEn": "Battle of Thomas Creek",
+      "labelZh": null,
+      "descEn": "1777 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-05-17",
+      "year": 1777,
+      "coords": [
+        -81.79164,
+        30.50565
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Thomas_Creek"
+    },
+    {
+      "qid": "Q4140507",
+      "labelEn": "Meigs Raid",
+      "labelZh": null,
+      "descEn": "military raid by American Continental Army forces",
+      "typeLabel": "battle",
+      "date": "1777-05-24",
+      "year": 1777,
+      "coords": [
+        -72.29222222,
+        40.99666667
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Meigs_Raid"
+    },
+    {
+      "qid": "Q2889989",
+      "labelEn": "Battle of Short Hills",
+      "labelZh": "矮山戰役",
+      "descEn": "1777 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-06-26",
+      "year": 1777,
+      "coords": [
+        -74.332,
+        40.75
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Short_Hills"
+    },
+    {
+      "qid": "Q1238033",
+      "labelEn": "Battle of Fort Anne",
+      "labelZh": null,
+      "descEn": "1777 battle",
+      "typeLabel": "battle",
+      "date": "1777-07-08",
+      "year": 1777,
+      "coords": [
+        -73.4805,
+        43.426111
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Fort_Anne"
+    },
+    {
+      "qid": "Q1375813",
+      "labelEn": "Battle of Oriskany",
+      "labelZh": "奧里斯卡尼戰役",
+      "descEn": "1777 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-08-06",
+      "year": 1777,
+      "coords": [
+        -75.369444444,
+        43.177222222
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Oriskany"
+    },
+    {
+      "qid": "Q1754313",
+      "labelEn": "Battle of Bennington",
+      "labelZh": "本寧頓戰爭",
+      "descEn": "1777 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-08-16",
+      "year": 1777,
+      "coords": [
+        -73.304444444,
+        42.938611111
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Bennington"
+    },
+    {
+      "qid": "Q2112104",
+      "labelEn": "Battle of Staten Island",
+      "labelZh": "斯塔滕岛战役",
+      "descEn": "1777 Part of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-08-22",
+      "year": 1777,
+      "coords": [
+        -74.14483889,
+        40.57628056
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Staten_Island"
+    },
+    {
+      "qid": "Q4872357",
+      "labelEn": "Battle of Setauket",
+      "labelZh": null,
+      "descEn": "1777 failed attack during the American Revolutionary War by a force of Continental Army troops",
+      "typeLabel": "battle",
+      "date": "1777-08-22",
+      "year": 1777,
+      "coords": [
+        -73.1114,
+        40.9458
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Setauket"
+    },
+    {
+      "qid": "Q7510009",
+      "labelEn": "Siege of Fort Henry",
+      "labelZh": null,
+      "descEn": "1777 attack on American militiamen during the American Revolutionary War near the Virginia outpost known as Fort Henry by a mixed band of Indians",
+      "typeLabel": "siege",
+      "date": "1777-09-01",
+      "year": 1777,
+      "coords": [
+        -80.725,
+        40.0639
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Siege_of_Fort_Henry_(1777)"
+    },
+    {
+      "qid": "Q4870787",
+      "labelEn": "Battle of Cooch's Bridge",
+      "labelZh": null,
+      "descEn": "1777 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-09-03",
+      "year": 1777,
+      "coords": [
+        -75.726667,
+        39.639722
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Cooch%27s_Bridge"
+    },
+    {
+      "qid": "Q301487",
+      "labelEn": "Battle of Brandywine",
+      "labelZh": "白蘭地酒戰役",
+      "descEn": "1777 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-09-11",
+      "year": 1777,
+      "coords": [
+        -75.59006,
+        39.872
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Brandywine"
+    },
+    {
+      "qid": "Q4872890",
+      "labelEn": "Battle of the Clouds",
+      "labelZh": null,
+      "descEn": "1777 aborted battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-09-16",
+      "year": 1777,
+      "coords": [
+        -75.573084,
+        40.045341
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_the_Clouds"
+    },
+    {
+      "qid": "Q113627344",
+      "labelEn": "Battle of Freeman's Farm",
+      "labelZh": null,
+      "descEn": "battle of the American Revolutionary War, 19 September 1777",
+      "typeLabel": "battle",
+      "date": "1777-09-19",
+      "year": 1777,
+      "coords": [
+        -73.6375,
+        42.998888888
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Freeman%27s_Farm"
+    },
+    {
+      "qid": "Q4871984",
+      "labelEn": "Battle of Paoli",
+      "labelZh": null,
+      "descEn": "1777 battle of the American Revolutionary War in Pennsylvania",
+      "typeLabel": "battle",
+      "date": "1777-09-20",
+      "year": 1777,
+      "coords": [
+        -75.519444,
+        40.028333
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Paoli"
+    },
+    {
+      "qid": "Q523857",
+      "labelEn": "Battle of Germantown",
+      "labelZh": "日耳曼鎮戰役",
+      "descEn": "October 1777 battle during the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-10-04",
+      "year": 1777,
+      "coords": [
+        -75.1597,
+        40.0238
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Germantown"
+    },
+    {
+      "qid": "Q2237194",
+      "labelEn": "Battle of Forts Clinton and Montgomery",
+      "labelZh": null,
+      "descEn": "1777 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-10-06",
+      "year": 1777,
+      "coords": [
+        -73.989722222,
+        41.322777777
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Forts_Clinton_and_Montgomery"
+    },
+    {
+      "qid": "Q846674",
+      "labelEn": "Battles of Saratoga",
+      "labelZh": "薩拉托加戰",
+      "descEn": "1777 major turning point of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-10-07",
+      "year": 1777,
+      "coords": [
+        -73.6375,
+        42.998888888
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battles_of_Saratoga"
+    },
+    {
+      "qid": "Q2889754",
+      "labelEn": "Battle of Red Bank",
+      "labelZh": null,
+      "descEn": "1777 battle of the American Revolutionary War in New Jersey",
+      "typeLabel": "battle",
+      "date": "1777-10-22",
+      "year": 1777,
+      "coords": [
+        -75.18941,
+        39.87137
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Red_Bank"
+    },
+    {
+      "qid": "Q609453",
+      "labelEn": "Battle of Gloucester",
+      "labelZh": "格洛斯特戰役",
+      "descEn": "1777 battle",
+      "typeLabel": "battle",
+      "date": "1777-11-25",
+      "year": 1777,
+      "coords": [
+        -75.18871,
+        39.87206
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Gloucester_(1777)"
+    },
+    {
+      "qid": "Q4871696",
+      "labelEn": "Battle of Matson's Ford",
+      "labelZh": null,
+      "descEn": "1777 battle of the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1777-12-11",
+      "year": 1777,
+      "coords": [
+        -75.309935,
+        40.07128
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Matson%27s_Ford"
+    },
+    {
+      "qid": "Q6921294",
+      "labelEn": "Mount Hope Bay raids",
+      "labelZh": null,
+      "descEn": "1778 series of military raids by British troops during the American Revolutionary War",
+      "typeLabel": "battle",
+      "date": "1778-01-01",
+      "year": 1778,
+      "coords": [
+        -71.216,
+        41.694
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Mount_Hope_Bay_raids"
+    }
+  ]
+}

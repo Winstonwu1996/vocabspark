@@ -90,7 +90,7 @@
 
   <!-- 历史回响注 — 核心 aha 触发点 -->
   <g class="history-echo-notes">
-    <text x="717.0353755551324" y="669.1609331639819" text-anchor="middle" font-size="10" fill="#9b2c2c" font-weight="700" opacity="0.95">↳ 以前是拜占庭帝国</text><text x="387.1681469282041" y="329.9999999999999" text-anchor="middle" font-size="10" fill="#6b4f33" font-weight="500" opacity="0.95">↳ 以前是神圣罗马帝国核心</text><text x="434.29203673205103" y="601.8152025370098" text-anchor="middle" font-size="10" fill="#6b4f33" font-weight="500" opacity="0.95">↳ 以前是教皇国 + 城邦</text><text x="528.5398163397448" y="510.9578046359145" text-anchor="middle" font-size="10" fill="#6b4f33" font-weight="500" opacity="0.95">↳ 匈牙利（一直就叫这个）</text><text x="214.3805509807655" y="363.43328036790797" text-anchor="middle" font-size="10" fill="#6b4f33" font-weight="500" opacity="0.95">↳ 英格兰王国（一直是这片）</text>
+    <text x="748.4513020910304" y="679.0940810117155" text-anchor="middle" font-size="10" fill="#9b2c2c" font-weight="700" opacity="0.95">↳ 1200 年是拜占庭帝国</text><text x="371.46018366025515" y="417.89094080630923" text-anchor="middle" font-size="10" fill="#6b4f33" font-weight="500" opacity="0.95">↳ 1200 年是神圣罗马帝国核心</text><text x="450" y="632.826516048643" text-anchor="middle" font-size="10" fill="#6b4f33" font-weight="500" opacity="0.95">↳ 1200 年是教皇国 + 城邦</text><text x="559.9557428756427" y="522.1139026612235" text-anchor="middle" font-size="10" fill="#6b4f33" font-weight="500" opacity="0.95">↳ 匈牙利（一直没变）</text><text x="175.11064281089307" y="338.87318566350723" text-anchor="middle" font-size="10" fill="#6b4f33" font-weight="500" opacity="0.95">↳ 英格兰（1000 年没变）</text>
   </g>
 
   <!-- 现代城市（含 Istanbul 英雄城） -->

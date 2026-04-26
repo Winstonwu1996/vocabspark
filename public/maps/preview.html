@@ -1,120 +1,24 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <title>地图草稿预览</title>
-  <style>
-    body {
-      margin: 0; padding: 24px;
-      background: #2c1d10;
-      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
-    }
-    h2 { color: #f4ead0; margin: 24px 16px 8px; font-weight: 500; letter-spacing: 1px; font-size: 18px; }
-    p.note { color: #c9b78c; margin: 0 16px 16px; font-size: 13px; opacity: 0.8; line-height: 1.5; }
-
-    .frame {
-      background: #f4ead0; padding: 0;
-      margin: 0 16px 32px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-      max-width: 1100px;
-    }
-    .frame > object { display: block; width: 100%; height: auto; }
-
-    /* —— 翻转地图组件 —— */
-    .flip-container {
-      max-width: 1100px;
-      margin: 0 16px 16px;
-      perspective: 2200px;
-    }
-    .flip-card {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 9 / 7;     /* 跟 europe-*.svg viewBox 900×700 一致 */
-      transform-style: preserve-3d;
-      transition: transform 0.85s cubic-bezier(0.55, 0.05, 0.25, 1.05);
-    }
-    .flip-card.flipped { transform: rotateY(180deg); }
-
-    .flip-side {
-      position: absolute;
-      inset: 0;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-      background: #f4ead0;
-    }
-    .flip-side.back { transform: rotateY(180deg); }
-    .flip-side > object { display: block; width: 100%; height: 100%; }
-
-    .flip-controls {
-      max-width: 1100px;
-      margin: 0 16px 32px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .flip-btn {
-      background: #c46b30;
-      color: #fff8e8;
-      border: none;
-      padding: 12px 22px;
-      border-radius: 999px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.3);
-      transition: transform 0.15s, box-shadow 0.15s;
-      font-family: inherit;
-    }
-    .flip-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(0,0,0,0.35); }
-    .flip-btn:active { transform: translateY(0); }
-    .flip-status {
-      color: #c9b78c;
-      font-size: 13px;
-      font-style: italic;
-    }
-  </style>
+<head><meta charset="utf-8"><title>Maps preview</title>
+<style>
+body{margin:0;padding:24px;background:#2c1d10;font-family:-apple-system,'PingFang SC',system-ui,sans-serif;}
+h2{color:#f4ead0;margin:24px 16px 8px;font-weight:500;letter-spacing:1px;font-size:18px;}
+.frame{background:#f4ead0;margin:0 16px 32px;box-shadow:0 4px 20px rgba(0,0,0,0.4);max-width:1100px;}
+.frame>object{display:block;width:100%;height:auto;}
+</style>
 </head>
 <body>
-  <h2>1 · world-base.svg — 全球底图（含中国 + Irvine 双家 pin）</h2>
-  <p class="note">展示 Willow 出生地（中国）和现居地（Irvine），跨太平洋弧形航线，以及当前章节聚焦区（欧洲）。</p>
-  <div class="frame"><object data="/maps/world-base.svg" type="image/svg+xml"></object></div>
+<h2>1 · world-base.svg</h2>
+<div class="frame"><object data="/maps/world-base.svg" type="image/svg+xml"></object></div>
 
-  <h2>2 · europe-1200.svg ↔ europe-modern.svg — 翻转对照</h2>
-  <p class="note">点击下方按钮翻转 — 同样的海岸线，1200 年的王国 vs 今天的国名。让她秒懂"君士坦丁堡 = 伊斯坦布尔"、"拜占庭 = 土耳其"、"神圣罗马帝国 ≈ 德奥地区"。</p>
+<h2>2 · europe-1200.svg</h2>
+<div class="frame"><object data="/maps/europe-1200.svg" type="image/svg+xml"></object></div>
 
-  <div class="flip-container">
-    <div class="flip-card" id="flipCard">
-      <div class="flip-side front">
-        <object data="/maps/europe-1200.svg" type="image/svg+xml"></object>
-      </div>
-      <div class="flip-side back">
-        <object data="/maps/europe-modern.svg" type="image/svg+xml"></object>
-      </div>
-    </div>
-  </div>
+<h2>3 · europe-modern.svg (U11 — 标签位置优化)</h2>
+<div class="frame"><object data="/maps/europe-modern.svg" type="image/svg+xml"></object></div>
 
-  <div class="flip-controls">
-    <button class="flip-btn" id="flipBtn">↻ 翻到今天看看</button>
-    <span class="flip-status" id="flipStatus">现在是：1200 年的欧洲</span>
-  </div>
-
-  <script>
-    const card = document.getElementById('flipCard');
-    const btn = document.getElementById('flipBtn');
-    const status = document.getElementById('flipStatus');
-    let flipped = false;
-    btn.addEventListener('click', () => {
-      flipped = !flipped;
-      card.classList.toggle('flipped', flipped);
-      if (flipped) {
-        btn.textContent = '↻ 翻回 1200 年';
-        status.textContent = '现在是：今天的欧洲';
-      } else {
-        btn.textContent = '↻ 翻到今天看看';
-        status.textContent = '现在是：1200 年的欧洲';
-      }
-    });
-  </script>
+<h2>4 · tang-china.svg (U10 — 唐宋盛世新图)</h2>
+<div class="frame"><object data="/maps/tang-china.svg" type="image/svg+xml"></object></div>
 </body>
 </html>

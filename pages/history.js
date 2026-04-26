@@ -21,6 +21,7 @@
 import Head from 'next/head';
 import React, { useEffect, useRef, useState } from 'react';
 import { BrandNavBar } from '../components/BrandNavBar';
+import { VoiceInputButton } from '../components/VoiceInputButton';
 import { C, FONT, FONT_DISPLAY, S, NUM, globalCSS } from '../lib/theme';
 import { callAPIStream, callAPIFast, tryJSON } from '../lib/api';
 import { supabase } from '../lib/supabase';
@@ -28,8 +29,8 @@ import { supabase } from '../lib/supabase';
 import {
   HISTORY_TOPICS,
   THROUGH_LINES,
+  TOPIC_REGISTRY,
   getTopic,
-  findMustMemorizeHits,
 } from '../lib/history-topics';
 import {
   buildHistorySystemPrompt,
@@ -54,21 +55,26 @@ import {
   loadCurriculum,
   historyProfileToFields,
   saveReviewPool,
+  saveInProgress,
+  loadInProgress,
+  clearInProgress,
+  loadEnglishLevel,
+  saveEnglishLevel,
+  saveSidekickLog,
+  loadSidekickLog,
+  hasSeenWalkthrough,
+  markWalkthroughSeen,
+  bridgeReviewToVocab,
 } from '../lib/history-storage';
 import { inferCurriculum } from '../lib/curriculum-data';
-import { findGlossaryHits, lookupTerm } from '../lib/history-glossary';
 
-// ─── 历史模块色彩扩展（叠加 C 上） ──────────────────────────────────
-var HC = {
-  ...C,
-  parchment:    "#f4ead0",
-  parchmentHi:  "#fbf5e0",
-  parchmentLo:  "#e8dcb6",
-  ink:          "#3d2c1a",
-  inkLight:     "#6b4f33",
-  pinFill:      "#9b2c2c",
-  pinStroke:    "#5a1a1a",
-};
+// ─── history-engine 抽离组件（pages/history.js 和未来的 AtlasLabPage embed mode 共用）
+import { HC } from '../components/history-engine/theme';
+import { renderBilingualText } from '../components/history-engine/bilingual';
+import { MustMemorizePopup, TermPopup } from '../components/history-engine/popups';
+import { ConversationStream } from '../components/history-engine/ConversationStream';
+import { MasteryGateOverlay } from '../components/history-engine/MasteryGate';
+import { CompletionScreen } from '../components/history-engine/CompletionScreen';
 
 // ─── 主组件 ────────────────────────────────────────────────────────
 export default function HistoryPage() {
@@ -114,11 +120,72 @@ export default function HistoryPage() {
   var [showCompletion, setShowCompletion] = useState(false);
   var [topicXpEarned, setTopicXpEarned] = useState(0);
   var [topicReviewPool, setTopicReviewPool] = useState({ words: [], concepts: [] });
+  var [savedSession, setSavedSession] = useState(null); // O6: 上次未完成的进度
 
   // —— UI / drawer state ——
   var [showUserCenter, setShowUserCenter] = useState(false);
   var [activeTerm, setActiveTerm] = useState(null);     // glossary tap-to-explain
   var [activeMust, setActiveMust] = useState(null);     // must-memorize chip tap (含 IPA + TTS)
+
+  // —— Sidekick assistant（追问浮窗，与主对话隔离） ——
+  var [sidekickOpen, setSidekickOpen] = useState(false);
+  var [sidekickLog, setSidekickLog] = useState([]); // [{role, content}]
+  var [sidekickInput, setSidekickInput] = useState("");
+  var [sidekickStreaming, setSidekickStreaming] = useState("");
+  var [sidekickThinking, setSidekickThinking] = useState(false);
+
+  // Sidekick 发送 — 主对话不受影响，但 AI 知道当前 Topic 上下文 + 离题保护
+  var sendSidekick = async function() {
+    if (!sidekickInput.trim() || sidekickThinking) return;
+    var content = sidekickInput.trim();
+    var newLog = sidekickLog.concat([{ role: "user", content: content, timestamp: new Date().toISOString() }]);
+    setSidekickLog(newLog);
+    setSidekickInput("");
+    setSidekickThinking(true);
+    setSidekickStreaming("");
+
+    try {
+      // sidekick 用独立 prompt — 知道当前学到 Magna Carta 哪一轮但不污染主上下文
+      // 复用 freeChat 的 prompt 构造（已有离题保护）
+      var sys = buildFreeChatSystemPrompt({
+        topic: topic,
+        profile: profileText,
+        userName: profileFields.userName,
+      });
+      // 加上"当前主对话进度"作为参考（让 AI 知道她已经学到哪了）
+      sys += "\n\n【当前主对话进度】她在主对话第 " + (turnIndex + 1) + " / " + topic.conversationTurns.length + " 轮（move = " + (topic.conversationTurns[turnIndex] || {}).move + "）。这是侧边追问，不要打断主对话节奏，只回答她侧边问题。";
+      sys = injectPlaceholders(sys, profileFields);
+
+      var historyContext = newLog.slice(-6).map(function(e) {
+        return (e.role === "user" ? "[她]" : "[你]") + " " + e.content;
+      }).join("\n");
+      var userPrompt = "侧边追问历史:\n" + historyContext + "\n\n回复她最新的追问，简短（50-150 字）。";
+
+      var fullText = "";
+      var raw = await callAPIStream(sys, userPrompt, { jsonMode: false }, function(partial) {
+        fullText = partial;
+        setSidekickStreaming(partial);
+      });
+      if (!fullText && raw) fullText = typeof raw === "string" ? raw : String(raw);
+
+      setSidekickLog(function(prev) {
+        var updated = prev.concat([{ role: "ai", content: fullText, timestamp: new Date().toISOString() }]);
+        // U8: 持久化
+        saveSidekickLog(topicId, updated);
+        return updated;
+      });
+      setSidekickStreaming("");
+      setSidekickThinking(false);
+    } catch (e) {
+      setSidekickThinking(false);
+      setSidekickStreaming("");
+      setSidekickLog(function(prev) {
+        var updated = prev.concat([{ role: "ai", content: "（网络不稳，再试一次？）", timestamp: new Date().toISOString(), isFallback: true }]);
+        saveSidekickLog(topicId, updated);
+        return updated;
+      });
+    }
+  };
 
   // Free chat 发送（Winston review #4）
   var sendFreeChat = async function() {
@@ -183,12 +250,96 @@ export default function HistoryPage() {
   var [historyProfile, setHistoryProfile] = useState(null);
   var [curriculum, setCurriculum] = useState(null);
 
-  // —— Topic 数据 ——
-  var topic = getTopic("magna-carta-1215");
+  // —— N3: 英文比例（low/balanced/high）——
+  var [englishLevel, setEnglishLevelState] = useState("balanced");
+
+  // —— U4: 首次 walkthrough ——
+  var [showWalkthrough, setShowWalkthrough] = useState(false);
+
+  // —— Topic 数据（支持 ?topicId=xxx URL 参数切换）——
+  // S9 难度梯度：默认 Magna Carta（已成熟），但 fresh user 第一次推 Tang/Song（home advantage 难度低）
+  var [topicId, setTopicId] = useState("magna-carta-1215");
+  var topic = getTopic(topicId);
+
+  // 整合 atlas-lab：?from=atlas&atlasId=magna-carta — 来自 atlas-lab 跳转，启用返回按钮 + 完成后回跳
+  var [fromAtlas, setFromAtlas] = useState(null); // null | { atlasId: 'magna-carta' }
+  var [autoBackTimer, setAutoBackTimer] = useState(null); // 完成后自动回跳倒计时（秒）
+
+  // mount 时从 URL 读 topicId；如果是 fresh user（无任何完成进度）+ 没指定 topicId，推 Tang/Song
+  useEffect(function() {
+    if (typeof window === "undefined") return;
+    try {
+      var p = new URLSearchParams(window.location.search);
+      var t = p.get("topicId");
+      // 检测 atlas-lab 跳转
+      if (p.get("from") === "atlas") {
+        setFromAtlas({ atlasId: p.get("atlasId") || null });
+      }
+      if (t && getTopic(t)) {
+        setTopicId(t);
+        return;
+      }
+      // S9: 没有 URL 参数 — 检查是否 fresh user
+      var raw = localStorage.getItem("vocabspark_v1");
+      var d = raw ? JSON.parse(raw) : null;
+      var completed = (d && d.historyData && d.historyData.completedTopics) || {};
+      if (Object.keys(completed).length === 0) {
+        // 全新用户 — 推 home advantage 的唐宋盛世
+        setTopicId("tang-song-china");
+      }
+    } catch (e) {}
+  }, []);
+
+  // U5/S7: Topic 切换时重新加载该 Topic 的 sidekick log 和 in-progress 状态
+  useEffect(function() {
+    if (typeof window === "undefined") return;
+    setSidekickLog(loadSidekickLog(topicId));
+    var inProg = loadInProgress(topicId);
+    if (inProg && inProg.turnIndex > 0 && inProg.turnIndex < (topic ? topic.conversationTurns.length : 13)) {
+      setSavedSession(inProg);
+    } else {
+      setSavedSession(null);
+    }
+  }, [topicId]);
 
   // ─── 初始化 ─────────────────────────────────────────────────────
   useEffect(function() {
     if (typeof window === "undefined") return;
+
+    // O2: history 模块默认开启 streaming 输出（让 AI 文字逐字浮现，不要一次蹦出来）
+    window.__forceStreaming = true;
+
+    // O3：移动端键盘遮挡 — 监听 visualViewport，键盘弹起时让 input bar 跟着上移
+    var vv = window.visualViewport;
+    var lastDelta = 0;
+    var handleVV = function() {
+      if (!vv) return;
+      // 当 visualViewport 高度比 window 内层高度小，说明键盘弹起了
+      var winH = window.innerHeight;
+      var vvH = vv.height;
+      var delta = winH - vvH;
+      if (delta < 50) delta = 0;
+      if (delta === lastDelta) return;
+      lastDelta = delta;
+      // 把整个 .input-bar 上移到键盘上方
+      try {
+        var bars = document.querySelectorAll(".input-bar");
+        bars.forEach(function(bar) {
+          bar.style.bottom = delta + "px";
+          bar.style.transition = "bottom 0.15s ease-out";
+        });
+      } catch (e) {}
+    };
+    if (vv) {
+      vv.addEventListener("resize", handleVV);
+      vv.addEventListener("scroll", handleVV);
+    }
+    var cleanup = function() {
+      if (vv) {
+        vv.removeEventListener("resize", handleVV);
+        vv.removeEventListener("scroll", handleVV);
+      }
+    };
 
     // 加载 supabase user (跟 vocab 一致)
     supabase.auth.getUser().then(function(r) {
@@ -222,10 +373,28 @@ export default function HistoryPage() {
     // 当前 XP
     setXp(getXp());
 
+    // 英文比例偏好
+    setEnglishLevelState(loadEnglishLevel());
+
+    // U8: 加载 sidekick 历史日志
+    setSidekickLog(loadSidekickLog(topicId));
+
+    // U4: 第一次进 history → 显示 walkthrough
+    if (!hasSeenWalkthrough()) {
+      setShowWalkthrough(true);
+    }
+
     // 已完成？显示再做一次的 option
-    var prior = loadTopicProgress("magna-carta-1215");
+    var prior = loadTopicProgress(topicId);
     if (prior && prior.completedAt) {
       // 不自动跳转，让她在 intro 看到 "再来一次"
+    }
+
+    // O6：上次未完成？
+    var inProgress = loadInProgress(topicId);
+    if (inProgress && inProgress.turnIndex > 0 && inProgress.turnIndex < 13) {
+      // 标记给 intro 屏显示"继续上次"按钮
+      setSavedSession(inProgress);
     }
 
     // ── DEV shortcut: ?skipto=mastery 跳到 mastery gate 测试 ──
@@ -240,6 +409,9 @@ export default function HistoryPage() {
         setPhase("complete");
       }
     } catch (e) {}
+
+    // 清理 visualViewport listener
+    return cleanup;
   }, []);
 
   // ─── AI 调用核心 ────────────────────────────────────────────────
@@ -248,6 +420,11 @@ export default function HistoryPage() {
     setAiThinking(true);
     setAiStreaming("");
     setError("");
+
+    // U1: 10 秒还没首字 → 显示"AI 慢了，要不要重试？"
+    var slowWarnTimer = setTimeout(function() {
+      setError("AI 反应慢了 — 网络可能不稳。再等等或刷新页面。");
+    }, 10000);
     try {
       var sys = buildHistorySystemPrompt({
         topic: topic,
@@ -257,6 +434,7 @@ export default function HistoryPage() {
         userSchool: profileFields.userSchool,
         worldview: worldview,
         history: conversationLog,
+        englishLevel: englishLevel,
       });
       var userPrompt = buildTurnPrompt(turn, { lastUserAnswer: lastUserAnswer });
       // 占位符注入
@@ -267,7 +445,10 @@ export default function HistoryPage() {
       var raw = await callAPIStream(sys, userPrompt, { jsonMode: false }, function(partial) {
         fullText = partial;
         setAiStreaming(partial);
+        if (partial) clearTimeout(slowWarnTimer);  // U1: 首字到了清掉 timeout warn
       });
+      clearTimeout(slowWarnTimer);
+      setError("");  // 清掉慢提示
       // 兜底：如果 streaming 关闭（默认），onChunk 不触发，raw 是完整文本
       if (!fullText && raw) {
         fullText = typeof raw === "string" ? raw : String(raw);
@@ -296,6 +477,7 @@ export default function HistoryPage() {
         }, 1500);
       }
     } catch (e) {
+      clearTimeout(slowWarnTimer);
       console.error("[history] AI fetch failed:", e);
       setError("网络不稳，AI 回应没出来 — 用兜底文案给你看一下");
       // Fallback: 用 ai_seed 简单展示（截短到 200 字以内）
@@ -318,12 +500,18 @@ export default function HistoryPage() {
   // ─── 推进到下一轮 ───────────────────────────────────────────────
   var advanceTurn = function() {
     var nextIdx = turnIndex + 1;
-    if (nextIdx >= topic.conversationTurns.length) {
-      // 13 轮全部走完 → 显示"开始记忆考核"按钮
-      setTurnIndex(nextIdx);
-      return;
-    }
     setTurnIndex(nextIdx);
+    // O6：每次推进保存进度（mid-conversation only）
+    if (nextIdx > 0 && nextIdx < topic.conversationTurns.length && phase === "conversation") {
+      saveInProgress(topicId, {
+        turnIndex: nextIdx,
+        conversationLog: conversationLog,
+      });
+    }
+    // 走完最后一轮 → 清掉 in-progress
+    if (nextIdx >= topic.conversationTurns.length) {
+      clearInProgress(topicId);
+    }
   };
 
   // ─── 进入对话阶段时，自动 fetch 第一轮 ─────────────────────────
@@ -400,12 +588,19 @@ export default function HistoryPage() {
       reviewConcepts = masteryResults.definition.results.errorConcepts;
     }
     if (reviewWords.length > 0 || reviewConcepts.length > 0) {
-      saveReviewPool("magna-carta-1215", { words: reviewWords, concepts: reviewConcepts });
+      saveReviewPool(topicId, { words: reviewWords, concepts: reviewConcepts });
+    }
+    // 整合 vocab：把错词推到 history 独立队列（**不直接污染 vocab 主词单**）
+    // 用户在 vocab 模块会看到"📚 来自 history 的词 (N)"卡片，可主动选择 加入 / 跳过
+    if (reviewWords.length > 0) {
+      try {
+        bridgeReviewToVocab(reviewWords, { topicId: topicId, priority: "must-memorize" });
+      } catch (e) { console.warn("bridge to vocab failed:", e); }
     }
     setTopicReviewPool({ words: reviewWords, concepts: reviewConcepts });
 
-    saveTranscript("magna-carta-1215", conversationLog);
-    saveTopicCompletion("magna-carta-1215", {
+    saveTranscript(topicId, conversationLog);
+    saveTopicCompletion(topicId, {
       xpEarned: total,
       masteryResults: masteryResults,
       reviewPool: { words: reviewWords, concepts: reviewConcepts },
@@ -418,7 +613,7 @@ export default function HistoryPage() {
       // 把用户的真实回答加进 selfDisclosure
       conversationLog.filter(function(e) { return e.role === "user" && e.content.length > 10; }).forEach(function(e) {
         newSelfDisclosure.push({
-          topic: "magna-carta-1215",
+          topic: topicId,
           turn: e.turn,
           content: e.content,
           at: e.timestamp,
@@ -427,7 +622,7 @@ export default function HistoryPage() {
       var newWv = Object.assign({}, worldview, {
         initialSeed: false,  // 第一个 Topic 完成后，seed 标记移除
         selfDisclosure: newSelfDisclosure.slice(-30),
-        topicsCompleted: ((worldview.topicsCompleted || []).concat(["magna-carta-1215"])).slice(),
+        topicsCompleted: ((worldview.topicsCompleted || []).concat([topicId])).slice(),
         lastUpdated: new Date().toISOString(),
       });
       saveWorldview(newWv);
@@ -437,6 +632,28 @@ export default function HistoryPage() {
     setPhase("complete");
     setShowCompletion(true);
   };
+
+  // 整合 atlas-lab：从 atlas 来 + 完成 Topic → 8 秒后自动跳回 atlas（带 ?completed=1 触发庆祝 toast）
+  // 用户也可点 "立刻返回" 按钮立即跳，或点 "再挑战" 取消跳转
+  useEffect(function() {
+    if (phase !== "complete" || !fromAtlas) {
+      setAutoBackTimer(null);
+      return;
+    }
+    var seconds = 8;
+    setAutoBackTimer(seconds);
+    var iv = setInterval(function() {
+      seconds--;
+      if (seconds <= 0) {
+        clearInterval(iv);
+        var url = "/atlas-lab/" + (fromAtlas.atlasId || "byzantine-rise") + "?completed=" + topicId;
+        window.location.href = url;
+      } else {
+        setAutoBackTimer(seconds);
+      }
+    }, 1000);
+    return function() { clearInterval(iv); };
+  }, [phase, fromAtlas, topicId]);
 
   // ─── Render ──────────────────────────────────────────────────────
   return (
@@ -821,6 +1038,29 @@ export default function HistoryPage() {
         />
 
         <div className="h-container">
+          {/* 整合 atlas-lab：来自 atlas 时显示返回按钮 */}
+          {fromAtlas && (
+            <a
+              href={fromAtlas.atlasId ? "/atlas-lab/" + fromAtlas.atlasId : "/atlas-lab"}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px',
+                marginBottom: 8,
+                background: 'rgba(196, 107, 48, 0.08)',
+                border: '1px solid rgba(196, 107, 48, 0.3)',
+                borderRadius: 999,
+                fontSize: 12, fontWeight: 600,
+                color: '#c46b30',
+                textDecoration: 'none',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(196, 107, 48, 0.16)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(196, 107, 48, 0.08)'; }}
+            >
+              ← 返回 Atlas 浏览
+            </a>
+          )}
+
           {/* ── Topic Hero ── */}
           <TopicHero topic={topic} phase={phase} />
 
@@ -847,13 +1087,54 @@ export default function HistoryPage() {
                 setProfileFields(historyProfileToFields(profile));
                 setCurriculum(loadCurriculum());
                 setNeedsProfileSetup(false);
+                // S10: onboarding 完成的微庆祝（一次性 toast）
+                try {
+                  if (typeof window !== "undefined") {
+                    var div = document.createElement("div");
+                    div.innerText = "✓ 画像建好了 · " + (profile.name || "你") + "，你好！";
+                    div.style.cssText = "position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#22a06b;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.2);animation:toastIn 0.3s ease-out;";
+                    document.body.appendChild(div);
+                    setTimeout(function() { div.style.opacity = "0"; div.style.transition = "opacity 0.3s"; }, 2200);
+                    setTimeout(function() { div.remove(); }, 2700);
+                  }
+                } catch (e) {}
               }}
             />
           )}
 
           {/* ── Phase: intro ── */}
           {phase === "intro" && !needsProfileSetup && (
-            <IntroScreen topic={topic} onStart={startConversation} curriculum={curriculum} historyProfile={historyProfile} />
+            <IntroScreen
+              topic={topic}
+              onStart={startConversation}
+              curriculum={curriculum}
+              historyProfile={historyProfile}
+              englishLevel={englishLevel}
+              onSetEnglishLevel={function(v) {
+                setEnglishLevelState(v);
+                saveEnglishLevel(v);
+              }}
+              onSwitchTopic={function(newId) {
+                setTopicId(newId);
+                setConversationLog([]);
+                setTurnIndex(0);
+                setSavedSession(null);
+                // 不重置 phase — 让她在 intro 屏看新 Topic
+              }}
+              onShowWalkthrough={function() { setShowWalkthrough(true); }}
+              savedSession={savedSession}
+              onResume={function() {
+                if (!savedSession) return;
+                setConversationLog(savedSession.conversationLog || []);
+                setTurnIndex(savedSession.turnIndex || 0);
+                setPhase("conversation");
+              }}
+              onClearAndStart={function() {
+                clearInProgress(topicId);
+                setSavedSession(null);
+                startConversation();
+              }}
+            />
           )}
 
           {/* ── Phase: conversation ── */}
@@ -886,6 +1167,31 @@ export default function HistoryPage() {
             <MustMemorizePopup data={activeMust} onClose={function() { setActiveMust(null); }} />
           )}
 
+          {/* ── U4: 30s 首次 walkthrough ── */}
+          {showWalkthrough && (
+            <Walkthrough onClose={function() {
+              markWalkthroughSeen();
+              setShowWalkthrough(false);
+            }} />
+          )}
+
+          {/* ── Sidekick 浮动追问按钮 + 抽屉（仅在对话阶段显示） ── */}
+          {phase === "conversation" && (
+            <SidekickFAB
+              isOpen={sidekickOpen}
+              onToggle={function() { setSidekickOpen(!sidekickOpen); }}
+              log={sidekickLog}
+              input={sidekickInput}
+              onInput={setSidekickInput}
+              streaming={sidekickStreaming}
+              thinking={sidekickThinking}
+              onSend={sendSidekick}
+              onTermClick={setActiveTerm}
+              onMustClick={setActiveMust}
+              topic={topic}
+            />
+          )}
+
           {/* ── Phase: mastery ── */}
           {phase === "mastery" && topic && (
             <MasteryGateOverlay
@@ -897,6 +1203,49 @@ export default function HistoryPage() {
               onPass={completeTopic}
               onCancel={function() { setPhase("conversation"); }}
             />
+          )}
+
+          {/* 整合 atlas-lab：完成后自动回跳倒计时条 */}
+          {phase === "complete" && fromAtlas && autoBackTimer !== null && (
+            <div style={{
+              padding: '10px 14px',
+              marginBottom: 10,
+              background: 'linear-gradient(135deg, #c46b30 0%, #b85a25 100%)',
+              color: '#fff8e8',
+              borderRadius: 10,
+              display: 'flex', alignItems: 'center', gap: 10,
+              boxShadow: '0 2px 8px rgba(196, 107, 48, 0.25)',
+            }}>
+              <span style={{ fontSize: 18 }}>🎯</span>
+              <span style={{ flex: 1, fontSize: 13 }}>
+                通关 +175 XP！{autoBackTimer} 秒后自动回 Atlas 看 ★ 点亮…
+              </span>
+              <button
+                onClick={function() {
+                  setAutoBackTimer(null); // 取消倒计时
+                }}
+                style={{
+                  fontSize: 11, fontWeight: 600,
+                  padding: '4px 10px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: '#fff8e8',
+                  border: '1px solid rgba(255,255,255,0.4)',
+                  borderRadius: 999,
+                  cursor: 'pointer',
+                }}
+              >留下再挑战</button>
+              <a
+                href={"/atlas-lab/" + (fromAtlas.atlasId || "byzantine-rise") + "?completed=" + topicId}
+                style={{
+                  fontSize: 11, fontWeight: 700,
+                  padding: '4px 12px',
+                  background: '#fff8e8',
+                  color: '#c46b30',
+                  borderRadius: 999,
+                  textDecoration: 'none',
+                }}
+              >立刻返回 →</a>
+            </div>
           )}
 
           {/* ── Phase: complete ── */}
@@ -942,7 +1291,7 @@ function TopicHero(props) {
   return (
     <div className="topic-hero">
       <div className="meta">
-        Chapter 1 · {topic.curriculumUnit} · {topic.hssStandard} · 难度 {topic.difficulty}/5 · 约 {topic.estimatedMinutes} 分钟
+        {topic.hssStandard} · 难度 {topic.difficulty}/5 · 约 {topic.estimatedMinutes} 分钟 · {topic.curriculumUnit.includes("medieval-china") ? "中世纪中国" : topic.curriculumUnit.includes("medieval-europe") ? "中世纪欧洲" : topic.curriculumUnit}
       </div>
       <h1>{topic.title.cn} <span style={{fontSize: 16, fontWeight: 400, color: HC.inkLight}}>· {topic.title.en} ({topic.year})</span></h1>
       <div className="hook">{topic.oneLineHook.cn}</div>
@@ -958,10 +1307,18 @@ function TopicHero(props) {
   );
 }
 
-// ─── Geography Section ────────────────────────────────────────────
+// ─── Geography Section（A4+A5: 多层 + zoom + 地理要素） ───────────
 function GeographySection(props) {
   var topic = props.topic;
   var geo = topic.geography;
+  var isTangSong = topic.id === "tang-song-china";
+
+  // 多层视图状态 — Topic 切换时重置到 continent (or country for Tang/Song)
+  var [mapView, setMapView] = useState(isTangSong ? "country" : "continent");
+  // Topic 变化时 reset
+  useEffect(function() {
+    setMapView(isTangSong ? "country" : "continent");
+  }, [topic.id]);
 
   return (
     <div className="geo-card" id="geo-anchor">
@@ -972,37 +1329,150 @@ function GeographySection(props) {
       </button>
       {props.isOpen && (
         <div className="geo-body">
-          {/* ① World Orient */}
-          <div className="world-orient">
-            <object data="/maps/world-base.svg" type="image/svg+xml" style={{width: 90, height: 50, border: "1px solid " + HC.parchmentLo, borderRadius: 4}}></object>
-            <div className="text">
-              <div style={{fontWeight: 600}}>📌 {geo.worldOrient.orientNote.cn}</div>
-              <div style={{fontSize: 11, opacity: 0.7, marginTop: 2}}>{geo.worldOrient.orientNote.en}</div>
-            </div>
+          {/* A4：多层导航 tabs（按 Topic 切换标签）*/}
+          <div style={{display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap"}}>
+            {(isTangSong ? [
+              { v: "world",     l: "🌍 世界" },
+              { v: "country",   l: "🇨🇳 中国" },
+              { v: "features",  l: "⛰️ 地理要素" },
+            ] : [
+              { v: "world",     l: "🌍 世界" },
+              { v: "continent", l: "🇪🇺 欧洲" },
+              { v: "country",   l: "🇬🇧 英国" },
+              { v: "features",  l: "⛰️ 地理要素" },
+            ]).map(function(tab) {
+              var active = mapView === tab.v;
+              return (
+                <button key={tab.v} onClick={function(){setMapView(tab.v);}} style={{
+                  padding: "6px 12px",
+                  background: active ? HC.accent : "transparent",
+                  color: active ? "#fff8e8" : HC.text,
+                  border: "1px solid " + (active ? HC.accent : HC.border),
+                  borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit"
+                }}>{tab.l}</button>
+              );
+            })}
           </div>
 
-          {/* ② Topic 主图（含 flip） */}
-          <div className="flip-container">
-            <div className={"flip-card " + (props.flipped ? "flipped" : "")}>
-              <div className="flip-side">
-                <object data={"/maps/" + geo.primaryMap + ".svg"} type="image/svg+xml"></object>
+          {/* World 视图 */}
+          {mapView === "world" && (
+            <div>
+              <div style={{padding: "8px 12px", background: HC.parchmentLo, borderRadius: 8, fontSize: 12.5, marginBottom: 10, lineHeight: 1.5}}>
+                <strong>📌 {geo.worldOrient.orientNote.cn}</strong> — 你出生在中国，现在住在 Irvine，今天我们要去看的是欧洲西北角的英国。
+              </div>
+              <object data="/maps/world-base.svg" type="image/svg+xml" style={{width: "100%", display: "block", borderRadius: 10}}></object>
+            </div>
+          )}
+
+          {/* Continent 视图（默认 = europe-1200 + flip） */}
+          {mapView === "continent" && (
+            <div>
+              <div style={{padding: "8px 12px", background: HC.parchmentLo, borderRadius: 8, fontSize: 12.5, marginBottom: 10, lineHeight: 1.5}}>
+                <strong>🇪🇺 1200 年的欧洲</strong> — 9 个王国/帝国按颜色区分。注意英国（橙红色）— 这是今天的舞台。点翻转看今天。
+              </div>
+              <div className="flip-container">
+                <div className={"flip-card " + (props.flipped ? "flipped" : "")}>
+                  <div className="flip-side">
+                    <object data={"/maps/" + geo.primaryMap + ".svg"} type="image/svg+xml"></object>
+                  </div>
+                  {geo.flipMap && (
+                    <div className="flip-side back">
+                      <object data={"/maps/" + geo.flipMap + ".svg"} type="image/svg+xml"></object>
+                    </div>
+                  )}
+                </div>
               </div>
               {geo.flipMap && (
-                <div className="flip-side back">
-                  <object data={"/maps/" + geo.flipMap + ".svg"} type="image/svg+xml"></object>
+                <div className="flip-controls">
+                  <button className="flip-btn" onClick={props.onFlip}>
+                    {props.flipped ? "↻ 翻回 1200 年" : "↻ 翻到今天看看"}
+                  </button>
+                  <span className="flip-status">
+                    {props.flipped ? "现在是：今天的欧洲" : "现在是：1200 年的欧洲"}
+                  </span>
                 </div>
               )}
             </div>
-          </div>
-          {geo.flipMap && (
-            <div className="flip-controls">
-              <button className="flip-btn" onClick={props.onFlip}>
-                {props.flipped ? "↻ 翻回 1200 年" : "↻ 翻到今天看看"}
-              </button>
-              <span className="flip-status">
-                {props.flipped ? "现在是：今天的欧洲" : "现在是：1200 年的欧洲"}
-              </span>
+          )}
+
+          {/* Country 视图（zoom into England area，仅 Magna Carta） */}
+          {mapView === "country" && !isTangSong && (
+            <div>
+              <div style={{padding: "8px 12px", background: HC.parchmentLo, borderRadius: 8, fontSize: 12.5, marginBottom: 10, lineHeight: 1.5}}>
+                <strong>🇬🇧 英国 — 1215 年</strong>。Runnymede 的红章是签 Magna Carta 的草地。
+                <br/>整个英国比中国湖南省还小，但就在这小地方决定了现代法治的起点。
+              </div>
+              <div style={{
+                width: "100%",
+                aspectRatio: "1 / 1",
+                overflow: "hidden",
+                position: "relative",
+                borderRadius: 10,
+                background: "#f4ead0",
+                border: "1px solid " + HC.parchmentLo,
+              }}>
+                {/* europe-1200.svg viewBox 900×700, London 在 (~228, ~200)
+                    保留 220% zoom + 微调让 London 在中心 */}
+                <object data={"/maps/" + geo.primaryMap + ".svg"} type="image/svg+xml" style={{
+                  position: "absolute",
+                  width: "220%",
+                  height: "auto",
+                  top: "-5%",
+                  left: "-5%",
+                  pointerEvents: "none",
+                }}></object>
+                {/* 红圈标 Runnymede 区域（容器中心） */}
+                <div style={{
+                  position: "absolute",
+                  top: "calc(50% - 35px)",
+                  left: "calc(50% - 35px)",
+                  width: 70, height: 70,
+                  borderRadius: "50%",
+                  border: "3px solid " + HC.pinFill,
+                  boxShadow: "0 0 0 4px rgba(155,44,44,0.18), inset 0 0 0 1px rgba(255,255,255,0.6)",
+                  pointerEvents: "none",
+                }}></div>
+                <div style={{
+                  position: "absolute",
+                  top: "calc(50% + 38px)", left: "50%",
+                  transform: "translateX(-50%)",
+                  fontSize: 11, fontWeight: 700, color: HC.pinStroke,
+                  background: "rgba(244, 234, 208, 0.95)",
+                  padding: "2px 8px", borderRadius: 4,
+                  whiteSpace: "nowrap",
+                  pointerEvents: "none"
+                }}>★ Runnymede 1215</div>
+              </div>
+              <div style={{fontSize: 11, color: HC.textSec, fontStyle: "italic", marginTop: 4, textAlign: "center"}}>
+                Europe 1200 地图聚焦英国 — 红圈标 Runnymede 区域
+              </div>
             </div>
+          )}
+
+          {/* Country 视图 — Tang/Song：使用专属 tang-china.svg (U10) */}
+          {mapView === "country" && isTangSong && (
+            <div>
+              <div style={{padding: "8px 12px", background: HC.parchmentLo, borderRadius: 8, fontSize: 12.5, marginBottom: 10, lineHeight: 1.5}}>
+                <strong>🇨🇳 唐宋中国 — 618-1279 年</strong>。世界文明的中心：长安 100 万人是同时代世界最大城市。
+                <br/>红色印章是 <strong>大唐盛世</strong> — 黄河、长江、长城、大运河、丝绸之路全在这一张图上。
+              </div>
+              <object data="/maps/tang-china.svg" type="image/svg+xml" style={{
+                width: "100%",
+                display: "block",
+                borderRadius: 10,
+                border: "1px solid " + HC.parchmentLo,
+              }}></object>
+              <div style={{fontSize: 11, color: HC.textSec, fontStyle: "italic", marginTop: 4, textAlign: "center"}}>
+                唐宋时期的中国 — 黄河（赭）/ 长江（蓝）/ 长城（虚线）/ 大运河（细蓝点）/ 丝绸之路（紫虚）
+              </div>
+            </div>
+          )}
+
+          {/* Features 视图（按 Topic 切换 feature set） */}
+          {mapView === "features" && (
+            isTangSong
+              ? <ChinaFeaturesView />
+              : <FeaturesView primaryMap={geo.primaryMap} />
           )}
 
           {/* ③ Scale Anchors */}
@@ -1084,11 +1554,17 @@ function ProfileSetup(props) {
   }, [city, schoolType, grade]);
 
   var importFromVocab = function() {
+    // O4：优先用从 profile 解析出的 city；只有完全没解析到才回退到"待用户填"
+    var detectedCity = parsedFields.userCity || "";
+    if (!detectedCity && !window.confirm("从 Vocab 画像没解析到具体城市 — 默认按 Irvine 推断课程。要继续还是手动填？\n\n确定 = 用 Irvine 默认\n取消 = 手动填")) {
+      setStep("fill");
+      return;
+    }
     var profile = {
       name: parsedFields.userName || "",
       age: parsedFields.userAge || 13,
       grade: 7,
-      city: "Irvine",  // 默认猜测，可以改
+      city: detectedCity || "Irvine",
       schoolName: parsedFields.userSchool || "",
       schoolType: "public",
       interest: parsedFields.userInterest || "",
@@ -1220,7 +1696,7 @@ function ProfileSetup(props) {
               </div>
             </Field>
 
-            <Field label="学校名（选填）" hint="如 Sierra Vista Middle School">
+            <Field label="学校名（选填）" hint="如 XX Middle School / 你的初中名字">
               <input value={schoolName} onChange={function(e){setSchoolName(e.target.value);}} placeholder="" style={S.input} />
             </Field>
 
@@ -1263,7 +1739,7 @@ function ProfileSetup(props) {
                     background: previewCurriculum.confidence === "high" ? HC.green :
                                previewCurriculum.confidence === "medium" ? HC.gold : HC.textSec,
                     color: "#fff", borderRadius: 999,
-                  }}>{previewCurriculum.confidence === "high" ? "高置信" : previewCurriculum.confidence === "medium" ? "中等" : "低置信"}</span>
+                  }}>{previewCurriculum.confidence === "high" ? "✓ 已对齐" : previewCurriculum.confidence === "medium" ? "大致符合" : "通用版（具体看学校）"}</span>
                 </div>
                 <div><strong>{previewCurriculum.name}</strong></div>
                 <div style={{fontSize: 11.5, marginTop: 4, opacity: 0.9}}>{previewCurriculum.framework}</div>
@@ -1314,6 +1790,437 @@ function Field(props) {
   );
 }
 
+// ─── FeaturesView：地图 + 地理要素叠加标记 ─────────────────────────
+// europe-1200.svg viewBox 900×700，center [14°E, 53°N] scale 900 translate [450, 330]
+// Mercator: x = 450 + (lon-14) × 15.708；y = 330 - 900 × (yMerc(lat) - yMerc(53))
+// 用真实经纬度算出准确位置（Winston review: 之前用 eyeballed 数字位置全错）
+function mercatorPos(lon, lat) {
+  var x = 450 + (lon - 14) * 15.708;
+  var yMerc = function(l) { return Math.log(Math.tan(Math.PI / 4 + l * Math.PI / 360)); };
+  var y = 330 - 900 * (yMerc(lat) - yMerc(53));
+  return [x, y];
+}
+var FEATURES = [
+  { id: "channel", icon: "🌊", color: "#1565c0",
+    name: "英吉利海峡 (English Channel)",
+    pos: mercatorPos(1, 50.5),  // 多佛海峡中心
+    desc: "把英国跟欧陆隔开 — 教皇影响力到这变弱了，国王没大陆军队靠 → 必须跟贵族合作 → 才有 Magna Carta" },
+  { id: "thames", icon: "💧", color: "#0288d1",
+    name: "泰晤士河 (Thames)",
+    pos: mercatorPos(-0.5, 51.4),  // 伦敦附近
+    desc: "伦敦 + Runnymede 都在河边，水路便利 — 贵族军队从全国来 Runnymede 集结靠它" },
+  { id: "northsea", icon: "⛵", color: "#00695c",
+    name: "北海贸易 (North Sea Trade)",
+    pos: mercatorPos(4, 55.5),  // 英国和荷兰之间
+    desc: "英国羊毛卖给佛兰德斯（今比利时），贵族变富 — 贸易致富的贵族最敢挑战国王" },
+  { id: "alps", icon: "🏔️", color: "#5d4037",
+    name: "阿尔卑斯山 (Alps)",
+    pos: mercatorPos(9, 46.5),  // 瑞士/北意大利
+    desc: "把意大利跟德国分开 — 中世纪两边贸易要翻山，哪个国王控制山口就控制贸易税" },
+  { id: "pyrenees", icon: "🗻", color: "#5d4037",
+    name: "比利牛斯山 (Pyrenees)",
+    pos: mercatorPos(0, 42.7),  // 西班牙-法国边界
+    desc: "把伊比利亚跟法国分开 — 让西班牙独立发展，跟英法节奏不同步" },
+  { id: "roads", icon: "🛤️", color: "#6d4c41",
+    name: "罗马大道 (Roman Roads)",
+    pos: mercatorPos(12.5, 42),  // 罗马附近
+    desc: "罗马帝国留下的石头路网，13 世纪还能用 — 让 King John 的命令能传到全英 → 也让贵族反叛信能传开" },
+];
+
+function FeaturesView(props) {
+  var [active, setActive] = useState(null);
+  // viewBox 900×700, 转 % 用作 left/top
+  var posPct = function(p) { return [p[0] / 900 * 100, p[1] / 700 * 100]; };
+
+  return (
+    <div>
+      <div style={{padding: "8px 12px", background: HC.parchmentLo, borderRadius: 8, fontSize: 12.5, marginBottom: 10, lineHeight: 1.5}}>
+        <strong>⛰️ 决定历史的地理要素</strong> — 历史不是凭空发生的，地形给了它路线。<strong>点地图上的图标</strong>看每个要素如何左右了 1215 这件事。
+      </div>
+      <div style={{position: "relative", width: "100%"}}>
+        <object data={"/maps/" + props.primaryMap + ".svg"} type="image/svg+xml" style={{width: "100%", display: "block"}}></object>
+
+        {/* 叠加 marker pins */}
+        {FEATURES.map(function(f) {
+          var pct = posPct(f.pos);
+          var isActive = active === f.id;
+          return (
+            <div key={f.id} style={{
+              position: "absolute",
+              left: "calc(" + pct[0] + "% - 16px)",
+              top: "calc(" + pct[1] + "% - 16px)",
+              width: 32, height: 32,
+              borderRadius: "50%",
+              background: isActive ? f.color : "rgba(255,255,255,0.92)",
+              border: "2px solid " + f.color,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer",
+              fontSize: 16,
+              boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+              transition: "all 0.18s",
+              transform: isActive ? "scale(1.18)" : "scale(1)",
+              zIndex: 5,
+            }} onClick={function() { setActive(active === f.id ? null : f.id); }} title={f.name}>
+              {f.icon}
+            </div>
+          );
+        })}
+
+        {/* English Channel — 红色高亮带（基于 mercator 真实坐标） */}
+        {(function() {
+          var p = mercatorPos(1, 50.5);
+          return (
+            <div style={{
+              position: "absolute",
+              left: "calc(" + (p[0]/900*100) + "% - 35px)",
+              top: "calc(" + (p[1]/700*100) + "% - 12px)",
+              width: 70, height: 24,
+              background: "rgba(213, 47, 47, 0.16)",
+              border: "1.5px dashed #d52f2f",
+              borderRadius: "50%",
+              transform: "rotate(-15deg)",
+              pointerEvents: "none",
+              zIndex: 3,
+            }} title="English Channel"></div>
+          );
+        })()}
+      </div>
+
+      {/* 当前激活的要素详情 */}
+      {active && (() => {
+        var f = FEATURES.find(function(x) { return x.id === active; });
+        return (
+          <div style={{
+            marginTop: 12,
+            padding: "12px 14px",
+            background: HC.parchmentHi,
+            borderRadius: 10,
+            border: "1.5px solid " + f.color,
+            fontSize: 13.5, lineHeight: 1.6,
+          }}>
+            <div style={{fontWeight: 700, color: f.color, fontSize: 14, marginBottom: 4}}>
+              {f.icon} {f.name}
+            </div>
+            <div>{f.desc}</div>
+            <button onClick={function() { setActive(null); }} style={{
+              marginTop: 8, fontSize: 11, padding: "3px 10px",
+              background: "transparent", color: HC.textSec,
+              border: "1px solid " + HC.border, borderRadius: 999,
+              cursor: "pointer", fontFamily: "inherit"
+            }}>关闭</button>
+          </div>
+        );
+      })()}
+
+      {/* 全部 6 个要素列表（一直显示） */}
+      <div style={{
+        marginTop: 12, display: "flex", flexDirection: "column", gap: 6,
+        fontSize: 12.5, color: HC.text
+      }}>
+        <div style={{fontSize: 11, color: HC.textSec, marginBottom: 2}}>所有要素：</div>
+        {FEATURES.map(function(f) {
+          return (
+            <div key={f.id} onClick={function() { setActive(f.id); }} style={{
+              display: "flex", gap: 8,
+              padding: "8px 10px",
+              background: active === f.id ? "rgba(196,107,48,0.10)" : HC.parchmentHi,
+              borderRadius: 6,
+              border: "1px solid " + (active === f.id ? f.color : HC.parchmentLo),
+              lineHeight: 1.4,
+              cursor: "pointer",
+            }}>
+              <span style={{fontSize: 16}}>{f.icon}</span>
+              <div style={{flex: 1, minWidth: 0}}>
+                <div style={{fontWeight: 600, color: HC.ink, fontSize: 12.5}}>{f.name}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── ChinaFeaturesView: 唐宋中国地理要素 ─────────────────────────
+// tang-china.svg viewBox 900×700, center [108°E, 35°N] scale 900
+// Mercator: x = 450 + (lon-108) × 15.708；y = 330 - 900 × (yMerc(lat) - yMerc(35))
+function tangChinaPos(lon, lat) {
+  var x = 450 + (lon - 108) * 15.708;
+  var yMerc = function(l) { return Math.log(Math.tan(Math.PI / 4 + l * Math.PI / 360)); };
+  var y = 330 - 900 * (yMerc(lat) - yMerc(35));
+  return [x, y];
+}
+
+var CHINA_FEATURES = [
+  { id: "yangtze", icon: "🏞️", color: "#0288d1",
+    name: "长江 (Yangtze River)",
+    pos: tangChinaPos(112, 30.5),  // 长江中游
+    desc: "中国南北分界 — 北方种麦南方种稻；唐宋经济重心从北方黄河转到南方长江，这是中国 1500 年的大转折" },
+  { id: "yellow", icon: "💧", color: "#c08560",
+    name: "黄河 (Yellow River)",
+    pos: tangChinaPos(112, 36),  // 黄河中游
+    desc: "中华文明发源地 — 唐宋初期都城（长安、洛阳、开封）都在黄河流域。但泥沙多决堤多，是治国大题" },
+  { id: "great-wall", icon: "🧱", color: "#5d4037",
+    name: "长城 (Great Wall)",
+    pos: tangChinaPos(115, 40.5),
+    desc: "防游牧入侵的人造屏障 — 决定唐宋什么时候能集中精力发展。宋代失去燕云十六州后长城以南直接暴露给金人" },
+  { id: "silk-road", icon: "🐪", color: "#a07cb8",
+    name: "丝绸之路 (Silk Road)",
+    pos: tangChinaPos(80, 40.5),
+    desc: "从长安到罗马的陆上贸易动脉 — 让唐代长安成了国际都市。阿拉伯、波斯、印度商人从这里来；佛教也是" },
+  { id: "grand-canal", icon: "🚣", color: "#1565c0",
+    name: "京杭大运河 (Grand Canal)",
+    pos: tangChinaPos(118, 33),
+    desc: "隋朝挖、唐宋兴盛 — 连黄河长江，让南方稻米运到北方都城。中国统一的物流命脉，1800 公里全人工" },
+  { id: "mountains-west", icon: "🗻", color: "#5d4037",
+    name: "青藏高原 (Tibetan Plateau)",
+    pos: tangChinaPos(88, 32),
+    desc: "天然屏障，挡住西方陆路重装入侵 — 让中国可以专心向南发展。但也挡住了中国向西扩张的路" },
+];
+
+function ChinaFeaturesView() {
+  var [active, setActive] = useState(null);
+  var posPct = function(p) { return [p[0] / 900 * 100, p[1] / 700 * 100]; };
+
+  return (
+    <div>
+      <div style={{padding: "8px 12px", background: HC.parchmentLo, borderRadius: 8, fontSize: 12.5, marginBottom: 10, lineHeight: 1.5}}>
+        <strong>⛰️ 决定唐宋历史的地理要素</strong> — 山川河流不只是风景，是 1000 年治理的硬约束。<strong>点地图上的图标</strong>看每个要素如何左右了唐宋。
+      </div>
+      <div style={{position: "relative", width: "100%"}}>
+        <object data="/maps/tang-china.svg" type="image/svg+xml" style={{width: "100%", display: "block"}}></object>
+        {CHINA_FEATURES.map(function(f) {
+          var pct = posPct(f.pos);
+          var isActive = active === f.id;
+          return (
+            <div key={f.id} style={{
+              position: "absolute",
+              left: "calc(" + pct[0] + "% - 14px)",
+              top: "calc(" + pct[1] + "% - 14px)",
+              width: 28, height: 28,
+              borderRadius: "50%",
+              background: isActive ? f.color : "rgba(255,255,255,0.92)",
+              border: "2px solid " + f.color,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer",
+              fontSize: 14,
+              boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+              transition: "all 0.18s",
+              transform: isActive ? "scale(1.18)" : "scale(1)",
+              zIndex: 5,
+            }} onClick={function() { setActive(active === f.id ? null : f.id); }} title={f.name}>
+              {f.icon}
+            </div>
+          );
+        })}
+      </div>
+
+      {active && (function() {
+        var f = CHINA_FEATURES.find(function(x) { return x.id === active; });
+        return (
+          <div style={{
+            marginTop: 12, padding: "12px 14px",
+            background: HC.parchmentHi, borderRadius: 10,
+            border: "1.5px solid " + f.color,
+            fontSize: 13.5, lineHeight: 1.6,
+          }}>
+            <div style={{fontWeight: 700, color: f.color, fontSize: 14, marginBottom: 4}}>
+              {f.icon} {f.name}
+            </div>
+            <div>{f.desc}</div>
+            <button onClick={function() { setActive(null); }} style={{
+              marginTop: 8, fontSize: 11, padding: "3px 10px",
+              background: "transparent", color: HC.textSec,
+              border: "1px solid " + HC.border, borderRadius: 999,
+              cursor: "pointer", fontFamily: "inherit"
+            }}>关闭</button>
+          </div>
+        );
+      })()}
+
+      <div style={{marginTop: 12, display: "flex", flexDirection: "column", gap: 6, fontSize: 12.5, color: HC.text}}>
+        <div style={{fontSize: 11, color: HC.textSec, marginBottom: 2}}>所有要素：</div>
+        {CHINA_FEATURES.map(function(f) {
+          return (
+            <div key={f.id} onClick={function() { setActive(f.id); }} style={{
+              display: "flex", gap: 8,
+              padding: "8px 10px",
+              background: active === f.id ? "rgba(196,107,48,0.10)" : HC.parchmentHi,
+              borderRadius: 6,
+              border: "1px solid " + (active === f.id ? f.color : HC.parchmentLo),
+              lineHeight: 1.4,
+              cursor: "pointer",
+            }}>
+              <span style={{fontSize: 16}}>{f.icon}</span>
+              <div style={{flex: 1, minWidth: 0}}>
+                <div style={{fontWeight: 600, color: HC.ink, fontSize: 12.5}}>{f.name}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── N4: 通史脉络图 ─────────────────────────────────────────────
+function ThroughLineMap(props) {
+  var [topicProgress, setTopicProgress] = useState({});
+
+  useEffect(function() {
+    if (typeof window === "undefined") return;
+    try {
+      var raw = localStorage.getItem("vocabspark_v1");
+      var d = raw ? JSON.parse(raw) : null;
+      var prog = (d && d.historyData && d.historyData.completedTopics) || {};
+      setTopicProgress(prog);
+    } catch (e) {}
+  }, []);
+
+  var registry = TOPIC_REGISTRY || [];
+  var completedCount = Object.keys(topicProgress).length;
+  var totalAvailable = registry.filter(function(t) { return t.available; }).length;
+  var totalXp = Object.values(topicProgress).reduce(function(sum, t) { return sum + (t.xpEarned || 0); }, 0);
+
+  var byThroughLine = {};
+  registry.forEach(function(reg) {
+    var t = HISTORY_TOPICS[reg.id];
+    if (!t) {
+      byThroughLine["future"] = byThroughLine["future"] || [];
+      byThroughLine["future"].push(Object.assign({}, reg, { future: true }));
+    } else {
+      var line = t.throughLine || "future";
+      byThroughLine[line] = byThroughLine[line] || [];
+      byThroughLine[line].push({ topic: t, registry: reg });
+    }
+  });
+
+  return (
+    <div style={{
+      marginBottom: 14,
+      padding: "14px 16px",
+      background: HC.card,
+      borderRadius: 14,
+      border: "1px solid " + HC.border,
+    }}>
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        marginBottom: 12, flexWrap: "wrap", gap: 8
+      }}>
+        <h3 style={{margin: 0, fontFamily: FONT_DISPLAY, fontSize: 15, color: HC.ink}}>
+          📜 通史脉络
+        </h3>
+        <div style={{display: "flex", gap: 10, fontSize: 11, color: HC.textSec}}>
+          <span>✅ 已学 {completedCount}/{totalAvailable}</span>
+          {totalXp > 0 && <span style={{color: HC.gold, fontWeight: 600}}>⚡ {totalXp} XP 累计</span>}
+        </div>
+      </div>
+
+      {Object.keys(byThroughLine).filter(function(k) { return k !== "future"; }).map(function(lineId) {
+        var line = THROUGH_LINES[lineId] || { cn: lineId, color: HC.teal };
+        var topicsInLine = byThroughLine[lineId];
+        return (
+          <div key={lineId} style={{marginBottom: 10}}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 6,
+              fontSize: 11, fontWeight: 700,
+              color: line.color, letterSpacing: 1, marginBottom: 6,
+            }}>
+              <span style={{display: "inline-block", width: 14, height: 3, background: line.color, borderRadius: 2}}/>
+              {line.cn} 主线
+            </div>
+            <div style={{display: "flex", gap: 8, flexWrap: "wrap"}}>
+              {topicsInLine.map(function(item) {
+                var t = item.topic;
+                var done = topicProgress[t.id];
+                var isCurrent = props.topic && t.id === props.topic.id;
+                var clickable = !isCurrent && props.onSwitch;
+                return (
+                  <div key={t.id}
+                    onClick={clickable ? function() { props.onSwitch(t.id); } : undefined}
+                    style={{
+                      flex: "1 1 200px",
+                      minWidth: 180,
+                      padding: "10px 12px",
+                      background: done ? "rgba(34,160,107,0.08)" : (isCurrent ? HC.parchmentHi : HC.parchmentLo),
+                      borderTop: "1px solid " + (done ? HC.green : (isCurrent ? line.color : HC.border)),
+                      borderRight: "1px solid " + (done ? HC.green : (isCurrent ? line.color : HC.border)),
+                      borderBottom: "1px solid " + (done ? HC.green : (isCurrent ? line.color : HC.border)),
+                      borderLeft: "3px solid " + line.color,
+                      borderRadius: 8,
+                      fontSize: 12,
+                      color: HC.text,
+                      cursor: clickable ? "pointer" : "default",
+                      transition: "all 0.15s",
+                    }}>
+                    <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3}}>
+                      <strong style={{fontSize: 13, color: HC.ink}}>{t.title.cn}</strong>
+                      {done ? <span style={{color: HC.green, fontSize: 14}}>✓</span> :
+                       isCurrent ? <span style={{
+                         fontSize: 9, padding: "1px 6px", background: line.color, color: "#fff",
+                         borderRadius: 999, fontWeight: 700, letterSpacing: 1
+                       }}>当前</span> : null}
+                    </div>
+                    <div style={{fontSize: 11, opacity: 0.78, lineHeight: 1.4}}>
+                      {t.title.en} · {t.year}
+                    </div>
+                    {done && done.xpEarned ? (
+                      <div style={{fontSize: 10, color: HC.gold, fontWeight: 600, marginTop: 3}}>
+                        ⚡ {done.xpEarned} XP · {new Date(done.completedAt).toLocaleDateString("zh-CN")}
+                      </div>
+                    ) : null}
+                    {clickable && !done ? (
+                      <div style={{fontSize: 10, color: HC.accent, fontWeight: 600, marginTop: 3}}>
+                        → 点击切换到这个 Topic
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+
+      {byThroughLine.future && byThroughLine.future.length > 0 && (
+        <div style={{
+          marginTop: 8, padding: "8px 10px",
+          background: "rgba(0,0,0,0.03)", borderRadius: 6,
+          fontSize: 11, color: HC.textSec,
+        }}>
+          🔒 即将上线：
+          {byThroughLine.future.map(function(f, i) {
+            return <span key={i} style={{
+              display: "inline-block", padding: "2px 8px", margin: "2px 4px",
+              background: HC.parchmentLo, borderRadius: 999, fontSize: 10.5, opacity: 0.75,
+            }}>{f.note || f.id}</span>;
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Feature item（旧的，保留以防引用） ─────────────────────────────
+function FeatureItem(props) {
+  return (
+    <div style={{
+      display: "flex", gap: 10,
+      padding: "10px 12px",
+      background: HC.parchmentHi,
+      borderRadius: 8,
+      border: "1px solid " + HC.parchmentLo,
+      lineHeight: 1.5
+    }}>
+      <span style={{fontSize: 22, lineHeight: 1}}>{props.icon}</span>
+      <div style={{flex: 1, minWidth: 0}}>
+        <div style={{fontWeight: 700, color: HC.ink, marginBottom: 2}}>{props.name}</div>
+        <div style={{fontSize: 11.5, color: HC.text, opacity: 0.88}}>{props.desc}</div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Intro Screen（开始前） ────────────────────────────────────────
 function IntroScreen(props) {
   var topic = props.topic;
@@ -1330,7 +2237,7 @@ function IntroScreen(props) {
           borderRadius: 10,
           fontSize: 12,
           color: HC.text,
-          marginBottom: 12,
+          marginBottom: 8,
           display: "flex",
           alignItems: "center",
           gap: 8,
@@ -1345,219 +2252,149 @@ function IntroScreen(props) {
         </div>
       )}
 
+      {/* ── 英文比例选择（N3） ── */}
+      {props.englishLevel !== undefined && (
+        <div style={{
+          padding: "8px 12px",
+          background: HC.parchmentHi,
+          borderRadius: 10,
+          fontSize: 11.5,
+          color: HC.text,
+          marginBottom: 12,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          flexWrap: "wrap"
+        }}>
+          <span style={{opacity: 0.85, marginRight: 4}}>📊 AI 用多少英文：</span>
+          {[
+            { v: "low",      l: "中文偏多",   d: "75% 中" },
+            { v: "balanced", l: "中英平衡",   d: "50/50" },
+            { v: "high",     l: "英文偏多",   d: "65% 英" },
+          ].map(function(opt) {
+            var active = props.englishLevel === opt.v;
+            return (
+              <button key={opt.v} onClick={function(){ props.onSetEnglishLevel(opt.v); }} style={{
+                padding: "4px 10px",
+                background: active ? HC.accent : "rgba(0,0,0,0.04)",
+                color: active ? "#fff8e8" : HC.text,
+                border: "1px solid " + (active ? HC.accent : "rgba(0,0,0,0.08)"),
+                borderRadius: 999, fontSize: 11.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit"
+              }} title={opt.d}>{opt.l}</button>
+            );
+          })}
+        </div>
+      )}
+
       <div style={{
         background: HC.card, padding: 20, borderRadius: 16, border: "1px solid " + HC.border,
         marginBottom: 14
       }}>
         <h3 style={{margin: "0 0 10px", fontFamily: FONT_DISPLAY, fontSize: 17, color: HC.ink}}>这一章你会经历什么</h3>
+        <div style={{
+          padding: "8px 12px", marginBottom: 12,
+          background: HC.accentLight, borderRadius: 8,
+          fontSize: 12, color: HC.text, lineHeight: 1.55,
+          borderLeft: "3px solid " + HC.accent
+        }}>
+          📍 <strong>页面顶部的「Where this happened」</strong>就是地图区 — 任何时候都可以点开看 1200 年的欧洲，再翻过来看今天。<br/>
+          ⭐ AI 说话里**金色的词**点一下能看 IPA + 听发音；<span style={{color: HC.teal, fontWeight: 600}}>蓝色虚线下划线的人名地名</span>点一下看解释。
+          {/* B3: 重看 walkthrough 入口 */}
+          {props.onShowWalkthrough && (
+            <span style={{
+              marginLeft: 8, fontSize: 11, color: HC.teal,
+              cursor: "pointer", textDecoration: "underline",
+            }} onClick={props.onShowWalkthrough}>↻ 重看引导</span>
+          )}
+        </div>
         <ol style={{margin: 0, paddingLeft: 20, fontSize: 14, color: HC.text, lineHeight: 1.7}}>
-          <li>跟 AI 聊 13 轮 — 从校规类比开始，慢慢引到 Magna Carta</li>
-          <li>看 1200 年的欧洲地图，翻过来看今天的欧洲（君士坦丁堡 = 伊斯坦布尔！）</li>
-          <li>读 800 年前的真东西 — Clause 39 原文 + 中文释义</li>
-          <li>代入一个想象的 13 岁角色，体会那天的难抉择</li>
-          <li>过一关核心词汇 + 概念背诵 — <strong>不背不算完成</strong></li>
+          {topic.id === "tang-song-china" ? (
+            <>
+              <li>跟 AI 聊 11 轮 — 用你已经熟的中国史看世界（home advantage）</li>
+              <li>对照同时代欧洲：科举 vs 出生选拔、四大发明 vs 不识字国王</li>
+              <li>读《唐律疏议》节选 + 李白诗 — 1000 年前的真东西</li>
+              <li>代入虚构的农家女儿 — 用现代藤校决策做类比</li>
+              <li>过一关核心词汇 + 概念背诵 — <strong>不背不算完成</strong></li>
+            </>
+          ) : (
+            <>
+              <li>跟 AI 聊 13 轮 — 从校规类比开始，慢慢引到 Magna Carta</li>
+              <li>看 1200 年的欧洲地图，翻过来看今天的欧洲（君士坦丁堡 = 伊斯坦布尔！）</li>
+              <li>读 800 年前的真东西 — Clause 39 原文 + 中文释义</li>
+              <li>代入一个想象的 13 岁角色，体会那天的难抉择</li>
+              <li>过一关核心词汇 + 概念背诵 — <strong>不背不算完成</strong></li>
+            </>
+          )}
         </ol>
         <div style={{marginTop: 12, padding: 10, background: HC.tealLight, borderRadius: 8, fontSize: 12, color: HC.text}}>
-          <strong style={{color: HC.teal}}>桥接：</strong>这次我们用<strong>唐律疏议 (651 AD)</strong>作中国史锚点 — 比 Magna Carta 早 564 年。
+          <strong style={{color: HC.teal}}>桥接：</strong>
+          {topic.id === "tang-song-china" ? (
+            <>这次"反向桥" — 用你已熟的<strong>唐宋历史</strong>对照同时代欧洲，建立『中国 vs 西方』两套不同治理逻辑的认知。</>
+          ) : (
+            <>这次我们用<strong>唐律疏议 (651 AD)</strong>作中国史锚点 — 比 Magna Carta 早 564 年。</>
+          )}
         </div>
       </div>
-      <div style={{textAlign: "center"}}>
-        <button
-          className="continue-btn"
-          style={{background: HC.accent, fontSize: 15, padding: "14px 36px"}}
-          onClick={props.onStart}
-        >
-          准备好了，开始吧 →
-        </button>
-      </div>
-    </div>
-  );
-}
 
-// ─── Conversation Stream ───────────────────────────────────────────
-function ConversationStream(props) {
-  var topic = props.topic;
-  var turnIndex = props.turnIndex;
-  var log = props.conversationLog;
-  var endRef = useRef(null);
+      {/* N4: 通史脉络图 — 已学 + 待学 Topic 一览（点 Topic 卡可切换）*/}
+      <ThroughLineMap topic={topic} onSwitch={props.onSwitchTopic} />
 
-  // 强制 auto-scroll — 双保险：scrollIntoView + window.scrollTo 兜底
-  useEffect(function() {
-    var doScroll = function() {
-      if (endRef.current) {
-        endRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-      }
-      // 兜底：直接滚到 body 底部（防止 sticky/flex 容器干扰）
-      try {
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          behavior: "smooth"
-        });
-      } catch (e) {}
-    };
-    // 立即滚一次 + 200ms 后再滚一次（等 React render + 字体加载完）
-    doScroll();
-    var t1 = setTimeout(doScroll, 200);
-    var t2 = setTimeout(doScroll, 600);
-    return function() { clearTimeout(t1); clearTimeout(t2); };
-  }, [log.length, props.aiStreaming, props.aiThinking, turnIndex]);
-
-  // 完成所有 13 轮？
-  var allDone = turnIndex >= topic.conversationTurns.length;
-  var currentTurn = !allDone ? topic.conversationTurns[turnIndex] : null;
-
-  // 当前 AI 轮已经流完了？
-  var currentAILogged = currentTurn && log.find(function(e) {
-    return e.turn === currentTurn.n && e.role === "ai";
-  });
-
-  // 是否在等用户输入：(a) 是 user 占位轮 OR (b) 是 AI 轮已说完且 expectsInput
-  var awaitingUserInput = currentTurn && (
-    currentTurn.role === "user" ||
-    (currentTurn.expectsInput && currentAILogged)
-  );
-
-  // 是否当前 AI 轮已完成显示（用于显示"继续"按钮）
-  var currentAIDone = !awaitingUserInput && currentAILogged;
-
-  return (
-    <div>
-      <div className="conv-stream" id="conv-anchor">
-        {log.map(function(entry, i) {
-          // 史料卡（在第 8 轮 AI 文本之后）
-          var sourceCard = entry.role === "ai" && entry.move === "source" ? (
-            <SourceCard key={"src-" + i} source={topic.primarySources[0]} />
-          ) : null;
-
-          if (entry.role === "user") {
-            return (
-              <div key={i} className="bubble-row user">
-                <div className="bubble user">{entry.content}</div>
-                <div className="avatar" style={{background: HC.accentLight}}>🙂</div>
-              </div>
-            );
-          }
-          // AI bubble
-          var isGeoTurn = entry.move === "geo";
-          return (
-            <div key={i}>
-              <div className="bubble-row ai">
-                <div className="avatar">🦉</div>
-                <div className={"bubble ai " + (entry.isFallback ? "fallback" : "")}>
-                  {renderBilingualText(entry.content, { topic: topic, onTermClick: props.onTermClick, onMustClick: props.onMustClick })}
-                </div>
-              </div>
-              {/* 地图轮 — 加快速跳到地图区域的链接（Winston review #2） */}
-              {isGeoTurn && (
-                <div className="bubble-row ai" style={{marginTop: 4, marginLeft: 40}}>
-                  <button
-                    onClick={function() {
-                      if (props.onJumpToMap) props.onJumpToMap();
-                    }}
-                    style={{
-                      background: HC.accent,
-                      color: "#fff8e8",
-                      border: "none",
-                      borderRadius: 999,
-                      padding: "8px 16px",
-                      fontSize: 12.5,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      boxShadow: "0 2px 8px rgba(196,107,48,0.3)",
-                    }}
-                  >
-                    📍 现在去看地图 ↑
-                  </button>
-                </div>
-              )}
-              {sourceCard}
-            </div>
-          );
-        })}
-
-        {/* AI streaming */}
-        {props.aiStreaming && (
-          <div className="bubble-row ai">
-            <div className="avatar">🦉</div>
-            <div className="bubble ai">{renderBilingualText(props.aiStreaming, { topic: topic, onTermClick: props.onTermClick, onMustClick: props.onMustClick })}<span style={{opacity: 0.5}}>▌</span></div>
+      {/* O6: 上次未完成？给"继续上次"和"重新开始"两个按钮 */}
+      {props.savedSession && props.savedSession.turnIndex ? (
+        <div style={{
+          padding: "12px 14px",
+          background: HC.tealLight,
+          borderRadius: 12,
+          border: "1px solid " + HC.teal,
+          marginBottom: 12,
+          fontSize: 13,
+          color: HC.text,
+          lineHeight: 1.55
+        }}>
+          <div style={{fontWeight: 700, color: HC.teal, marginBottom: 4}}>
+            ⏯ 你上次走到了第 {props.savedSession.turnIndex} 轮
           </div>
-        )}
-
-        {/* AI thinking */}
-        {props.aiThinking && !props.aiStreaming && (
-          <div className="bubble-row ai">
-            <div className="avatar">🦉</div>
-            <div className="bubble ai">
-              <span className="thinking-dots"><span></span><span></span><span></span></span>
-            </div>
+          <div style={{fontSize: 11.5, opacity: 0.85, marginBottom: 10}}>
+            上次保存于 {new Date(props.savedSession.savedAt).toLocaleDateString("zh-CN")}。可以继续上次，也可以重新开始。
           </div>
-        )}
-
-        {props.error && <div className="error-banner">{props.error}</div>}
-
-        <div ref={endRef}></div>
-      </div>
-
-      {/* ── 输入栏 / 继续按钮 / mastery gate 入口 ── */}
-      {awaitingUserInput && (
-        <div className="input-bar">
-          <div className="prompt">{currentTurn.inputPrompt || "你的回答"}</div>
-
-          {/* PEEL 引导（Winston review #4：训练 US 学校的回答框架） */}
-          <details className="peel-hint" style={{marginBottom: 6}}>
-            <summary style={{
-              cursor: "pointer", fontSize: 11.5, color: HC.teal, fontWeight: 600, userSelect: "none"
-            }}>💡 想答得像 8 年级 essay？试试 PEEL 框架（点开看）</summary>
-            <div style={{
-              marginTop: 6, padding: "8px 10px",
-              background: HC.tealLight, borderRadius: 8, fontSize: 11.5, lineHeight: 1.6,
-              color: HC.text
-            }}>
-              <strong>P</strong>oint — 你的观点是什么？(I think...)<br/>
-              <strong>E</strong>vidence — 用什么证据？(Because... / For example...)<br/>
-              <strong>E</strong>xplanation — 为什么这能撑住观点？(This shows that...)<br/>
-              <strong>L</strong>ink — 跟今天主题怎么连？(So this matters because...)<br/>
-              <span style={{opacity: 0.75, fontStyle: "italic"}}>多用英文，AI 会给更高的认可。短的纯中文也行 — 但慢慢练 P+E 你下次 seminar 就能挂得住。</span>
-            </div>
-          </details>
-
-          <div className="row">
-            <textarea
-              value={props.userInput}
-              onChange={function(e) { props.onInputChange(e.target.value); }}
-              placeholder="试试 P (观点) + E (因为...): I think... because..."
-              onKeyDown={function(e) {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) props.onSubmit();
-              }}
-            />
+          <div style={{display: "flex", gap: 8, flexWrap: "wrap"}}>
             <button
-              className="submit"
-              disabled={!props.userInput.trim()}
-              onClick={props.onSubmit}
-            >发送</button>
-          </div>
-          <div style={{fontSize: 11, color: HC.textSec, marginTop: 4, textAlign: "right"}}>
-            <kbd style={{padding: "1px 4px", background: HC.tealLight, borderRadius: 3, fontSize: 10}}>Cmd</kbd>+
-            <kbd style={{padding: "1px 4px", background: HC.tealLight, borderRadius: 3, fontSize: 10}}>Enter</kbd> 发送
+              onClick={props.onResume}
+              style={{
+                padding: "10px 18px",
+                background: HC.accent,
+                color: "#fff8e8",
+                border: "none",
+                borderRadius: 999,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "inherit"
+              }}
+            >▶ 继续上次（第 {props.savedSession.turnIndex} 轮）</button>
+            <button
+              onClick={props.onClearAndStart}
+              style={{
+                padding: "10px 18px",
+                background: "transparent",
+                color: HC.textSec,
+                border: "1px solid " + HC.border,
+                borderRadius: 999,
+                fontSize: 13,
+                cursor: "pointer",
+                fontFamily: "inherit"
+              }}
+            >从头开始</button>
           </div>
         </div>
-      )}
-
-      {currentAIDone && currentTurn && !currentTurn.expectsInput && !currentTurn.autoAdvance && (
-        <div className="continue-bar">
-          <button className="continue-btn" onClick={props.onAdvance}>继续 →</button>
-        </div>
-      )}
-
-      {allDone && (
-        <div className="continue-bar" style={{flexDirection: "column", gap: 12, padding: "20px 0"}}>
-          <div style={{fontSize: 13, color: HC.textSec, textAlign: "center"}}>
-            13 轮对话完成 — 现在进入记忆考核。<br/>
-            ✏️ 拼写测试 + 概念定义 + 应用题，必过才算完成。
-          </div>
-          <button className="continue-btn" style={{background: HC.accent, fontSize: 15, padding: "14px 36px"}} onClick={props.onStartMastery}>
-            开始记忆考核 ✏️
+      ) : (
+        <div style={{textAlign: "center"}}>
+          <button
+            className="continue-btn"
+            style={{background: HC.accent, fontSize: 15, padding: "14px 36px"}}
+            onClick={props.onStart}
+          >
+            准备好了，开始吧 →
           </button>
         </div>
       )}
@@ -1565,919 +2402,341 @@ function ConversationStream(props) {
   );
 }
 
-// ─── Source Card（史料卡） ─────────────────────────────────────────
-function SourceCard(props) {
-  var src = props.source;
-  if (!src) return null;
-  return (
-    <div className="source-card">
-      <div className="src-title">📜 {src.title.cn} · {src.title.en}</div>
-      <div className="src-en">{src.enSimplified || src.en}</div>
-      <div className="src-cn">{src.cnGloss}</div>
-      {src.keyTerms && src.keyTerms.length > 0 && (
-        <div className="key-terms">
-          {src.keyTerms.map(function(t, i) {
-            return (
-              <span key={i} className="term" title={t.cn + " · " + t.etym}>
-                {t.word} → {t.cn}
-              </span>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
+// ─── (ConversationStream + SourceCard + MasteryGateOverlay + SpellingTest + DefinitionTest + ApplicationTest + CompletionScreen 已抽到 components/history-engine/{ConversationStream,MasteryGate,CompletionScreen}.js) ───
 
-// ─── Mastery Gate Overlay ──────────────────────────────────────────
-function MasteryGateOverlay(props) {
-  var topic = props.topic;
-  var gateStep = props.gateStep;
-  var setGateStep = props.setGateStep;
-  var gateResults = props.gateResults;
-  var setGateResults = props.setGateResults;
+// ─── (renderBilingualText / MustMemorizeChip / EnglishTapPhrase / findMustMemorizeData 已抽到 components/history-engine/bilingual.js) ───
 
-  if (gateStep >= 3) {
-    // 全部完成
-    return null;
-  }
-
-  var stepNames = ["拼写测试", "概念定义", "应用题"];
-  var checks = topic.masteryChecks.required;
-  var currentCheck = checks[gateStep];
-
-  var handleStepDone = function(score, results) {
-    var newResults = Object.assign({}, gateResults);
-    if (gateStep === 0) newResults.spelling = { score: score, results: results };
-    if (gateStep === 1) newResults.definition = { score: score, results: results };
-    if (gateStep === 2) newResults.application = { score: score, results: results };
-    setGateResults(newResults);
-
-    if (gateStep < 2) {
-      setGateStep(gateStep + 1);
-    } else {
-      // 全部完成，触发 onPass
-      setGateStep(3);
-      props.onPass(newResults);
-    }
-  };
+// ─── U4: 30s 首次 walkthrough（4 步教用户核心交互） ─────────────────
+function Walkthrough(props) {
+  var [step, setStep] = useState(0);
+  var steps = [
+    {
+      icon: "🦉",
+      title: "AI 用你的世界讲历史",
+      body: "13 轮对话从你的校规出发，慢慢引到 Magna Carta。不是讲课 — 是聊天。",
+    },
+    {
+      icon: "⭐",
+      title: "三种颜色提示",
+      body: (
+        <>
+          <div style={{display: "inline-block", margin: "2px 4px 2px 0", padding: "1px 8px 1px 6px",
+            background: "linear-gradient(135deg, #fef3d2, #fbe8a8)", border: "1px solid #d4a050",
+            borderRadius: 6, fontSize: 13, fontWeight: 600, color: "#5a1a1a"
+          }}>⭐<strong style={{margin: "0 3px"}}>charter</strong>
+            <span style={{fontSize: 10, opacity: 0.75, fontWeight: 400}}>特许状</span>
+          </div> 必背词，点开看 IPA + 听发音<br/>
+          <span style={{borderBottom: "1px dashed #4a6d8c", padding: "0 2px", color: "#4a6d8c", fontWeight: 500}}>
+            King John<sup style={{fontSize: 8}}>?</sup>
+          </span> 人名地名，点开看解释<br/>
+          <span style={{borderBottom: "1px dotted rgba(74,109,140,0.35)"}}>any English word</span> 点查中文（Achieve3000 式）
+        </>
+      ),
+    },
+    {
+      icon: "🌍",
+      title: "页面顶部地图 4 层",
+      body: "世界 → 欧洲 → 英国 → 地理要素。任何时候都可以展开看，1200 年地图能翻转看今天。",
+    },
+    {
+      icon: "🤔",
+      title: "右下角追问助手",
+      body: "对话过程中有疑问？右下角浮动按钮点开问 — 跟主对话隔离，不打断主流程。中英都行。",
+    },
+  ];
+  var s = steps[step];
+  var isLast = step === steps.length - 1;
 
   return (
-    <div className="mastery-overlay">
-      <div className="mastery-card">
-        <div className="progress">
-          {[0, 1, 2].map(function(i) {
-            return <div key={i} className={"dot " + (i < gateStep ? "done" : i === gateStep ? "current" : "")}></div>;
-          })}
-        </div>
-        <div className="step-meta">第 {gateStep + 1} 关 / 共 3 关</div>
-        <h2>{stepNames[gateStep]}</h2>
-
-        {gateStep === 0 && <SpellingTest check={currentCheck} onDone={handleStepDone} />}
-        {gateStep === 1 && <DefinitionTest check={currentCheck} concepts={topic.mustMemorize.concepts} onDone={handleStepDone} />}
-        {gateStep === 2 && <ApplicationTest check={currentCheck} onDone={handleStepDone} />}
-
-        <div style={{marginTop: 14, fontSize: 11.5, color: HC.textSec, textAlign: "center", opacity: 0.7}}>
-          按 Winston 设计：必过制 + 即时重试，不允许跳过
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Spelling Test ────────────────────────────────────────────────
-function SpellingTest(props) {
-  var check = props.check;
-  // 随机抽 sampleSize 个题
-  var [items] = useState(function() {
-    var shuffled = [...check.items].sort(function() { return Math.random() - 0.5; });
-    return shuffled.slice(0, check.sampleSize);
-  });
-  var [idx, setIdx] = useState(0);
-  var [input, setInput] = useState("");
-  var [feedback, setFeedback] = useState(null); // null | {pass, msg}
-  var [correctCount, setCorrectCount] = useState(0);
-  var [redoQueue, setRedoQueue] = useState([]); // 错的题暂存重测
-
-  var item = items[idx];
-
-  // Winston review #9/#10：软化 gate — 一次走完不强制重测
-  // 错的词收集起来，传给 onDone，由父组件存进 review pool 供后续复习
-  var [errorWords, setErrorWords] = useState([]);
-
-  var submit = function() {
-    if (!input.trim()) return;
-    var correct = input.trim().toLowerCase() === item.answer.toLowerCase();
-    if (correct) {
-      setFeedback({pass: true, msg: "对！" + item.answer});
-      setCorrectCount(correctCount + 1);
-    } else {
-      setFeedback({pass: false, msg: "不对 — 正确答案是 " + item.answer + "（已加进复习单，下次再考）"});
-      setErrorWords(errorWords.concat([{ word: item.answer, hint: item.hint, attempted: input.trim() }]));
-    }
-    setTimeout(function() {
-      setFeedback(null);
-      setInput("");
-      next();
-    }, 1800);
-  };
-
-  var skip = function() {
-    // 允许跳过（不会，但加入错题单）
-    setErrorWords(errorWords.concat([{ word: item.answer, hint: item.hint, attempted: "(跳过)" }]));
-    setFeedback(null);
-    setInput("");
-    next();
-  };
-
-  var next = function() {
-    var newIdx = idx + 1;
-    if (newIdx >= items.length) {
-      // 一次走完，不强制重测
-      var finalScore = correctCount + (feedback && feedback.pass ? 1 : 0);
-      props.onDone(finalScore, {
-        errorWords: errorWords.concat(feedback && !feedback.pass ? [{ word: item.answer, hint: item.hint, attempted: input.trim() }] : []),
-        totalItems: items.length
-      });
-    } else {
-      setIdx(newIdx);
-    }
-  };
-
-  if (!item) return <div>加载中...</div>;
-
-  return (
-    <div>
-      <div className="step-meta">第 {idx + 1} / {items.length} 题 — 已对 {correctCount}</div>
-      <div className="item-prompt">
-        {item.prompt}
-        <div className="item-hint">提示：{item.hint}</div>
-      </div>
-      <input
-        className="item-input"
-        autoFocus
-        value={input}
-        onChange={function(e) { setInput(e.target.value); }}
-        onKeyDown={function(e) { if (e.key === "Enter" && !feedback) submit(); }}
-        placeholder="输入完整单词"
-        disabled={!!feedback}
-      />
-      {feedback && (
-        <div className={"feedback " + (feedback.pass ? "pass" : "fail")}>{feedback.msg}</div>
-      )}
-      <div className="actions" style={{justifyContent: "space-between"}}>
-        <button className="btn-ghost" onClick={skip} disabled={!!feedback} style={{fontSize: 12}}>不会，跳过 →</button>
-        <button className="btn-primary" disabled={!input.trim() || feedback} onClick={submit}>提交</button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Definition Test ─────────────────────────────────────────────
-function DefinitionTest(props) {
-  var check = props.check;
-  var concepts = props.concepts;
-  // 随机抽 sampleSize 个题
-  var [items] = useState(function() {
-    var shuffled = [...check.items].sort(function() { return Math.random() - 0.5; });
-    return shuffled.slice(0, check.sampleSize);
-  });
-  var [idx, setIdx] = useState(0);
-  var [input, setInput] = useState("");
-  var [feedback, setFeedback] = useState(null);
-  var [pending, setPending] = useState(false);
-  var [score, setScore] = useState(0);
-
-  var item = items[idx];
-  var concept = item ? concepts.find(function(c) { return c.id === item.conceptId; }) : null;
-
-  var submit = async function() {
-    if (!input.trim() || pending) return;
-    setPending(true);
-    try {
-      var sysPrompt = "You are a friendly history tutor evaluating a 13-year-old ESL student's understanding.";
-      var userPrompt = buildDefinitionEvalPrompt(concept, input.trim());
-      var raw = await callAPIFast(sysPrompt, userPrompt);
-      var parsed = tryJSON(raw) || { pass: true, feedback: "答得不错！" }; // 兜底 pass
-      setFeedback(parsed);
-      if (parsed.pass) setScore(score + 1);
-      setTimeout(function() {
-        setFeedback(null);
-        setInput("");
-        setPending(false);
-        next(parsed.pass);
-      }, 2200);
-    } catch (e) {
-      // 网络失败 → lenient pass
-      setFeedback({pass: true, feedback: "（评估失败，先按通过算）"});
-      setScore(score + 1);
-      setTimeout(function() {
-        setFeedback(null);
-        setInput("");
-        setPending(false);
-        next(true);
-      }, 1500);
-    }
-  };
-
-  // Winston review #9：软化 — 允许跳过，错的进 review pool
-  var [errorConcepts, setErrorConcepts] = useState([]);
-
-  var skip = function() {
-    if (concept) setErrorConcepts(errorConcepts.concat([{ conceptId: concept.id, en: concept.en, cn: concept.cn, attempted: "(跳过)" }]));
-    setFeedback(null);
-    setInput("");
-    setPending(false);
-    next(false);
-  };
-
-  var next = function(passed) {
-    if (!passed && concept && input.trim()) {
-      // 答错了 — 收集进 errorConcepts（不重测，过到下一题）
-      setErrorConcepts(function(prev) {
-        return prev.concat([{ conceptId: concept.id, en: concept.en, cn: concept.cn, attempted: input.trim() }]);
-      });
-    }
-    var newIdx = idx + 1;
-    if (newIdx >= items.length) {
-      props.onDone(score + (passed ? 0 : 0), {
-        errorConcepts: errorConcepts.concat(!passed && concept && input.trim() ? [{ conceptId: concept.id, en: concept.en, cn: concept.cn, attempted: input.trim() }] : []),
-        totalItems: items.length
-      });
-    } else {
-      setIdx(newIdx);
-    }
-  };
-
-  if (!item || !concept) return <div>加载中...</div>;
-
-  return (
-    <div>
-      <div className="step-meta">第 {idx + 1} / {items.length} 题 — 已对 {score}</div>
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 3000,
+      background: "rgba(44, 36, 32, 0.78)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: 20,
+    }}>
       <div style={{
-        padding: "10px 14px", background: HC.tealLight, borderRadius: 10,
-        fontSize: 13, color: HC.text, marginBottom: 12, lineHeight: 1.5
+        background: HC.parchment,
+        maxWidth: 420, width: "100%",
+        borderRadius: 18,
+        padding: 24,
+        border: "1.5px solid " + HC.parchmentLo,
+        boxShadow: "0 16px 50px rgba(0,0,0,0.4)",
       }}>
-        概念：<strong>{concept.en}</strong> · {concept.cn}
-      </div>
-      <div className="item-prompt">{item.prompt}</div>
-      <textarea
-        className="item-input"
-        autoFocus
-        rows={3}
-        style={{minHeight: 80, resize: "vertical"}}
-        value={input}
-        onChange={function(e) { setInput(e.target.value); }}
-        placeholder="可以中英混着说..."
-        disabled={!!feedback || pending}
-      />
-      {pending && <div style={{fontSize: 12, color: HC.textSec, marginBottom: 12}}>🦉 评估中...</div>}
-      {feedback && (
-        <div className={"feedback " + (feedback.pass ? "pass" : "fail")}>{feedback.feedback}</div>
-      )}
-      <div className="actions" style={{justifyContent: "space-between"}}>
-        <button className="btn-ghost" onClick={skip} disabled={!!feedback || pending} style={{fontSize: 12}}>说不出来，跳过 →</button>
-        <button className="btn-primary" disabled={!input.trim() || feedback || pending} onClick={submit}>提交</button>
-      </div>
-    </div>
-  );
-}
+        {/* 进度 dot */}
+        <div style={{display: "flex", gap: 6, marginBottom: 16, justifyContent: "center"}}>
+          {steps.map(function(_, i) {
+            return <div key={i} style={{
+              width: i === step ? 24 : 8, height: 8,
+              borderRadius: 4,
+              background: i === step ? HC.accent : (i < step ? HC.green : HC.parchmentLo),
+              transition: "all 0.25s",
+            }}/>;
+          })}
+        </div>
 
-// ─── Application Test ────────────────────────────────────────────
-function ApplicationTest(props) {
-  var check = props.check;
-  var [item] = useState(function() {
-    var idx = Math.floor(Math.random() * check.items.length);
-    return check.items[idx];
-  });
-  var [input, setInput] = useState("");
-  var [feedback, setFeedback] = useState(null);
-  var [pending, setPending] = useState(false);
+        <div style={{textAlign: "center", marginBottom: 14}}>
+          <div style={{fontSize: 56, lineHeight: 1, marginBottom: 6}}>{s.icon}</div>
+          <h3 style={{margin: 0, fontFamily: FONT_DISPLAY, fontSize: 20, color: HC.ink}}>{s.title}</h3>
+        </div>
 
-  var submit = async function() {
-    if (!input.trim() || pending) return;
-    setPending(true);
-    try {
-      var sysPrompt = "You are a friendly history tutor evaluating a 13-year-old ESL student.";
-      var userPrompt = buildApplicationEvalPrompt(item, input.trim());
-      var raw = await callAPIFast(sysPrompt, userPrompt);
-      var parsed = tryJSON(raw) || { pass: true, feedback: "想得很有道理。" };
-      setFeedback(parsed);
-      setTimeout(function() {
-        props.onDone(parsed.pass ? 1 : 0, {
-          passed: parsed.pass,
-          item: item,
-          attempted: input.trim()
-        });
-      }, 2500);
-    } catch (e) {
-      setFeedback({pass: true, feedback: "（评估失败，先按通过算）"});
-      setTimeout(function() {
-        props.onDone(1, { passed: true, item: item, attempted: input.trim() });
-      }, 1500);
-    }
-  };
+        <div style={{
+          padding: "14px 16px",
+          background: "rgba(255,255,255,0.5)",
+          borderRadius: 12,
+          fontSize: 14,
+          lineHeight: 1.65,
+          color: HC.text,
+          marginBottom: 18,
+          minHeight: 90,
+        }}>
+          {s.body}
+        </div>
 
-  var skip = function() {
-    props.onDone(0, { passed: false, item: item, attempted: "(跳过)" });
-  };
-
-  return (
-    <div>
-      <div className="step-meta">应用题（共 1 道）</div>
-      <div className="item-prompt">{item.prompt}</div>
-      <textarea
-        className="item-input"
-        autoFocus
-        rows={4}
-        style={{minHeight: 100, resize: "vertical"}}
-        value={input}
-        onChange={function(e) { setInput(e.target.value); }}
-        placeholder="用今天学的原则分析这个场景..."
-        disabled={!!feedback || pending}
-      />
-      {pending && <div style={{fontSize: 12, color: HC.textSec, marginBottom: 12}}>🦉 评估中...</div>}
-      {feedback && (
-        <div className={"feedback " + (feedback.pass ? "pass" : "fail")}>{feedback.feedback}</div>
-      )}
-      <div className="actions" style={{justifyContent: "space-between"}}>
-        <button className="btn-ghost" onClick={skip} disabled={!!feedback || pending} style={{fontSize: 12}}>这题太难，跳过 →</button>
-        <button className="btn-primary" disabled={!input.trim() || feedback || pending} onClick={submit}>提交</button>
+        <div style={{display: "flex", gap: 8, justifyContent: "space-between"}}>
+          <button onClick={props.onClose} style={{
+            padding: "9px 18px",
+            background: "transparent",
+            color: HC.textSec,
+            border: "1px solid " + HC.border,
+            borderRadius: 999,
+            fontSize: 12.5,
+            cursor: "pointer",
+            fontFamily: "inherit"
+          }}>跳过 (我会用)</button>
+          <button
+            onClick={function() {
+              if (isLast) props.onClose();
+              else setStep(step + 1);
+            }}
+            style={{
+              padding: "10px 24px",
+              background: HC.accent,
+              color: "#fff8e8",
+              border: "none",
+              borderRadius: 999,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit"
+            }}
+          >
+            {isLast ? "开始 →" : "下一步 →"}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-// ─── Completion Screen ───────────────────────────────────────────
-function CompletionScreen(props) {
-  var topic = props.topic;
-  var reviewPool = props.reviewPool || { words: [], concepts: [] };
-  var hasReview = (reviewPool.words && reviewPool.words.length > 0) || (reviewPool.concepts && reviewPool.concepts.length > 0);
-  var [showFreeChat, setShowFreeChat] = useState(false);
-  var freeChatEndRef = useRef(null);
+// ─── Sidekick FAB — 学习时浮动追问助手（与主上下文隔离） ─────────
+function SidekickFAB(props) {
+  var endRef = useRef(null);
+  var isOpen = props.isOpen;
 
   useEffect(function() {
-    if (freeChatEndRef.current) {
-      try { freeChatEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" }); } catch (e) {}
+    if (endRef.current) {
+      try { endRef.current.scrollIntoView({ behavior: "smooth", block: "end" }); } catch (e) {}
     }
-  }, [props.freeChatLog && props.freeChatLog.length, props.freeChatStreaming, props.freeChatThinking]);
+  }, [props.log && props.log.length, props.streaming, props.thinking]);
+
   return (
-    <div style={{padding: "30px 0"}}>
-      <div className="completion-card">
-        <div className="stamp">🏆</div>
-        <h2>{topic.title.cn} 完成</h2>
-        <div style={{color: HC.inkLight, fontSize: 13}}>{topic.title.en} · {topic.year}</div>
-        <div className="xp-pill">+{props.xpEarned} XP</div>
+    <>
+      {/* 浮动按钮（始终在右下） */}
+      <button
+        onClick={props.onToggle}
+        style={{
+          position: "fixed",
+          bottom: "max(110px, calc(env(safe-area-inset-bottom) + 110px))",  // B7: 输入栏上方，避开 iOS 安全区
+          right: 16,
+          width: 54, height: 54,
+          borderRadius: "50%",
+          background: isOpen ? HC.pinFill : HC.accent,
+          color: "#fff8e8",
+          border: "none",
+          fontSize: 22,
+          cursor: "pointer",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
+          zIndex: 100,
+          fontFamily: "inherit",
+          transition: "all 0.2s",
+        }}
+        title={isOpen ? "关闭追问助手" : "有问题？问我"}
+        aria-label="Sidekick"
+      >
+        {isOpen ? "✕" : "🤔"}
+      </button>
 
-        <div style={{marginTop: 18, fontSize: 13, color: HC.text, lineHeight: 1.6}}>
-          这是 1215 年 6 月 15 日的故事。<br/>
-          800 年后，加州 Irvine 的法庭、美国宪法第 5 修正案，都是从那一刻长出来的。
-        </div>
-
-        {/* ── Review Pool 提示（Winston review #9：错的进 vocab 复习池） ── */}
-        {hasReview && (
-          <div style={{
-            marginTop: 18,
-            padding: "12px 14px",
-            background: "rgba(91, 141, 184, 0.10)",
-            borderRadius: 12,
-            textAlign: "left",
-            fontSize: 12.5,
-            lineHeight: 1.55,
-            color: HC.text,
-            borderLeft: "3px solid " + HC.teal,
-          }}>
-            <div style={{fontWeight: 700, color: HC.teal, marginBottom: 6, fontSize: 12}}>
-              📝 这些下次再考一次（已加进复习单）
-            </div>
-            {reviewPool.words.length > 0 && (
-              <div style={{marginBottom: 4}}>
-                <span style={{opacity: 0.8}}>词汇：</span>
-                {reviewPool.words.map(function(w, i) {
-                  return <span key={i} style={{
-                    display: "inline-block", margin: "2px 4px 2px 0",
-                    padding: "2px 8px", background: HC.parchmentHi,
-                    borderRadius: 4, fontSize: 11, fontWeight: 600
-                  }}>{w.word} · {w.hint}</span>;
-                })}
-              </div>
-            )}
-            {reviewPool.concepts.length > 0 && (
-              <div>
-                <span style={{opacity: 0.8}}>概念：</span>
-                {reviewPool.concepts.map(function(c, i) {
-                  return <span key={i} style={{
-                    display: "inline-block", margin: "2px 4px 2px 0",
-                    padding: "2px 8px", background: HC.parchmentHi,
-                    borderRadius: 4, fontSize: 11, fontWeight: 600
-                  }}>{c.en} · {c.cn}</span>;
-                })}
-              </div>
-            )}
-            <div style={{marginTop: 8, fontSize: 11, opacity: 0.75, fontStyle: "italic"}}>
-              下次进 history 的时候，会先考一遍这些。也可以去 vocab 模块的复习单看到。
-            </div>
-          </div>
-        )}
-
-        <div className="family-q">
-          <div className="label">📨 今晚的家庭话题</div>
-          <div>「如果当年中国也有人能逼皇帝签 Magna Carta 这种字，你觉得最适合做这个人的是谁？」</div>
-          <div style={{marginTop: 6, opacity: 0.85}}>明天告诉我你们家的答案 — 我想听听爸妈是怎么想的。</div>
-        </div>
-
-        <div style={{marginTop: 22, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap"}}>
-          {!showFreeChat && (
-            <button
-              className="continue-btn"
-              style={{background: HC.accent}}
-              onClick={function() { setShowFreeChat(true); }}
-            >💬 想继续聊？</button>
-          )}
-          <button className="continue-btn" style={{background: HC.teal}} onClick={props.onAgain}>再做一遍</button>
-        </div>
-      </div>
-
-      {/* —— Free Chat Section（Winston review #4） —— */}
-      {showFreeChat && (
+      {/* 抽屉（打开时显示） */}
+      {isOpen && (
         <div style={{
-          marginTop: 18,
-          padding: 18,
+          position: "fixed",
+          bottom: 16,
+          right: 16,
+          width: "min(420px, calc(100vw - 32px))",
+          maxHeight: "70vh",
           background: HC.card,
           borderRadius: 16,
-          border: "1px solid " + HC.border
+          border: "1px solid " + HC.border,
+          boxShadow: "0 12px 40px rgba(0,0,0,0.25)",
+          zIndex: 99,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          fontFamily: FONT,
         }}>
-          <h3 style={{margin: "0 0 4px", fontFamily: FONT_DISPLAY, fontSize: 17, color: HC.ink}}>
-            💬 继续聊
-          </h3>
-          <p style={{margin: "0 0 12px", fontSize: 12.5, color: HC.textSec, lineHeight: 1.5}}>
-            还想问什么 Magna Carta 相关的？— 教皇、King John、Aristotle、议会、美国独立都行。<br/>
-            <span style={{opacity: 0.85, fontStyle: "italic"}}>偏离主题我会温和拉回 — 中文英文都可以问。</span>
-          </p>
+          {/* 头部 */}
+          <div style={{
+            padding: "12px 14px",
+            borderBottom: "1px solid " + HC.border,
+            background: HC.parchmentHi,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: "50%",
+              background: HC.tealLight,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 18,
+            }}>🦉</div>
+            <div style={{flex: 1}}>
+              <div style={{fontWeight: 700, fontSize: 13, color: HC.ink}}>追问助手</div>
+              <div style={{fontSize: 10.5, color: HC.textSec, opacity: 0.8}}>有不懂的随时问，不打断主对话</div>
+            </div>
+          </div>
 
-          <div style={{display: "flex", flexDirection: "column", gap: 10, marginBottom: 12}}>
-            {(props.freeChatLog || []).map(function(entry, i) {
+          {/* 对话区 */}
+          <div style={{
+            flex: 1, padding: "10px 12px",
+            overflowY: "auto",
+            display: "flex", flexDirection: "column", gap: 8,
+          }}>
+            {props.log.length === 0 && (
+              <div style={{
+                padding: "10px 12px",
+                background: HC.parchmentLo,
+                borderRadius: 10,
+                fontSize: 11.5, color: HC.text, lineHeight: 1.55, fontStyle: "italic",
+              }}>
+                💡 你可以问我：<br/>
+                · 这个词什么意思？<br/>
+                · 那个人为什么这么做？<br/>
+                · 这跟今天有什么关系？<br/>
+                <br/>
+                跟主题相关的我都答。完全离题的（比如晚饭吃什么）我会拉回来。
+              </div>
+            )}
+            {props.log.map(function(entry, i) {
               if (entry.role === "user") {
                 return (
-                  <div key={i} className="bubble-row user">
-                    <div className="bubble user">{entry.content}</div>
-                    <div className="avatar" style={{background: HC.accentLight}}>🙂</div>
-                  </div>
+                  <div key={i} style={{
+                    alignSelf: "flex-end",
+                    maxWidth: "85%",
+                    padding: "8px 11px",
+                    background: HC.accent,
+                    color: "#fff8e8",
+                    borderRadius: 12,
+                    borderTopRightRadius: 4,
+                    fontSize: 13,
+                    lineHeight: 1.5,
+                  }}>{entry.content}</div>
                 );
               }
               return (
-                <div key={i} className="bubble-row ai">
-                  <div className="avatar">🦉</div>
-                  <div className={"bubble ai " + (entry.isFallback ? "fallback" : "")}>
-                    {renderBilingualText(entry.content, { topic: topic, onTermClick: props.onTermClick, onMustClick: props.onMustClick })}
-                  </div>
+                <div key={i} style={{
+                  alignSelf: "flex-start",
+                  maxWidth: "85%",
+                  padding: "8px 11px",
+                  background: HC.parchmentHi,
+                  color: HC.text,
+                  borderRadius: 12,
+                  borderTopLeftRadius: 4,
+                  fontSize: 13,
+                  lineHeight: 1.55,
+                  border: "1px solid " + HC.parchmentLo,
+                }}>
+                  {renderBilingualText(entry.content, { topic: props.topic, onTermClick: props.onTermClick, onMustClick: props.onMustClick, enableTranslate: false })}
                 </div>
               );
             })}
-            {props.freeChatStreaming && (
-              <div className="bubble-row ai">
-                <div className="avatar">🦉</div>
-                <div className="bubble ai">{renderBilingualText(props.freeChatStreaming, { topic: topic, onTermClick: props.onTermClick, onMustClick: props.onMustClick })}<span style={{opacity: 0.5}}>▌</span></div>
+            {props.streaming && (
+              <div style={{
+                alignSelf: "flex-start",
+                maxWidth: "85%",
+                padding: "8px 11px",
+                background: HC.parchmentHi,
+                borderRadius: 12,
+                borderTopLeftRadius: 4,
+                fontSize: 13, lineHeight: 1.55,
+                border: "1px solid " + HC.parchmentLo,
+              }}>
+                {renderBilingualText(props.streaming, { topic: props.topic, onTermClick: props.onTermClick, onMustClick: props.onMustClick, enableTranslate: false })}
+                <span style={{opacity: 0.5}}>▌</span>
               </div>
             )}
-            {props.freeChatThinking && !props.freeChatStreaming && (
-              <div className="bubble-row ai">
-                <div className="avatar">🦉</div>
-                <div className="bubble ai">
-                  <span className="thinking-dots"><span></span><span></span><span></span></span>
-                </div>
+            {props.thinking && !props.streaming && (
+              <div style={{
+                alignSelf: "flex-start",
+                padding: "8px 11px",
+                background: HC.parchmentHi,
+                borderRadius: 12,
+                borderTopLeftRadius: 4,
+                border: "1px solid " + HC.parchmentLo,
+              }}>
+                <span className="thinking-dots"><span></span><span></span><span></span></span>
               </div>
             )}
-            <div ref={freeChatEndRef}></div>
+            <div ref={endRef}></div>
           </div>
 
-          <div style={{display: "flex", gap: 8, alignItems: "stretch"}}>
-            <textarea
-              value={props.freeChatInput || ""}
-              onChange={function(e) { props.onFreeChatInput(e.target.value); }}
-              onKeyDown={function(e) {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) props.onSendFreeChat();
-              }}
-              placeholder="想问什么？英文中文都行..."
+          {/* 输入区 */}
+          <div style={{
+            padding: 10,
+            borderTop: "1px solid " + HC.border,
+            display: "flex",
+            gap: 6,
+            alignItems: "center"
+          }}>
+            <input
+              value={props.input}
+              onChange={function(e) { props.onInput(e.target.value); }}
+              onKeyDown={function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); props.onSend(); } }}
+              placeholder="问我点什么..."
               style={{
                 flex: 1,
-                padding: "10px 12px",
+                padding: "8px 12px",
                 border: "1px solid " + HC.border,
-                borderRadius: 12,
-                background: "#fff",
+                borderRadius: 999,
                 fontFamily: "inherit",
-                fontSize: 14,
-                resize: "none",
-                minHeight: 44,
-                maxHeight: 100,
-                lineHeight: 1.5
+                fontSize: 13,
+                outline: "none",
               }}
             />
+            <VoiceInputButton
+              size={32}
+              onTranscript={function(text) { props.onInput(text); }}
+            />
             <button
-              onClick={props.onSendFreeChat}
-              disabled={!(props.freeChatInput || "").trim() || props.freeChatThinking}
+              onClick={props.onSend}
+              disabled={!props.input.trim() || props.thinking}
               style={{
-                padding: "0 18px",
+                padding: "0 14px",
                 background: HC.accent,
                 color: "#fff8e8",
                 border: "none",
-                borderRadius: 12,
-                fontSize: 14,
+                borderRadius: 999,
+                fontSize: 12.5,
                 fontWeight: 600,
-                cursor: (props.freeChatInput || "").trim() && !props.freeChatThinking ? "pointer" : "not-allowed",
-                opacity: (props.freeChatInput || "").trim() && !props.freeChatThinking ? 1 : 0.5,
+                cursor: props.input.trim() && !props.thinking ? "pointer" : "not-allowed",
+                opacity: props.input.trim() && !props.thinking ? 1 : 0.5,
                 fontFamily: "inherit",
-                minWidth: 60
               }}
             >发送</button>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
-// ─── 双语文本渲染 ────────────────────────────────────────────────────
-// 渲染优先级（防止重叠）：
-//   1. ⭐**word**(中文) — AI 显式标记的必背词 → 金色 chip
-//   2. auto-detected 必背词（vocab/concepts） → 金色 chip（首次出现完整 / 后续淡化）
-//   3. glossary terms (人物/地名/概念) → 蓝色虚线下划线
-//   4. 普通 **word** 加重
-function renderBilingualText(text, opts) {
-  opts = opts || {};
-  var topic = opts.topic;
-  var onTermClick = opts.onTermClick;
-  var onMustClick = opts.onMustClick;
-  if (!text) return null;
-
-  // —— Step 1: 先把 AI 显式 ⭐ 标记的部分切出来，避免被后续 auto-mark 干扰 ——
-  var parts = text.split(/(⭐\*\*[^*]+\*\*\s*[（(][^）)]+[）)]|\*\*[^*]+\*\*)/g);
-
-  return parts.map(function(p, i) {
-    // ⭐ AI 标的必背词
-    if (p.indexOf("⭐") === 0) {
-      var match = p.match(/⭐\*\*([^*]+)\*\*\s*[（(]([^）)]+)[）)]/);
-      if (match) {
-        var w = match[1];
-        // 找 must-memorize 数据，给 popup 用
-        var mmData = topic && findMustMemorizeData(topic, w);
-        return (
-          <MustMemorizeChip
-            key={i}
-            word={w}
-            cn={match[2]}
-            data={mmData}
-            onClick={onMustClick}
-          />
-        );
-      }
-    }
-    // 普通 **word** — 但先 check 是不是 must-memorize（让它升级成 chip）
-    if (p.startsWith("**") && p.endsWith("**")) {
-      var bw = p.slice(2, -2);
-      var mm = topic && findMustMemorizeData(topic, bw);
-      if (mm) {
-        return (
-          <MustMemorizeChip
-            key={i}
-            word={bw}
-            cn={mm.cn || (mm.concept && mm.concept.cn) || ""}
-            data={mm}
-            onClick={onMustClick}
-            compact
-          />
-        );
-      }
-      return <strong key={i} style={{color: HC.pinStroke}}>{bw}</strong>;
-    }
-
-    // —— Step 2: 普通文本里 auto-detect must-memorize 词 + glossary terms ——
-    if (!p) return null;
-
-    // 收集所有 hit（must-memorize 优先，glossary 次之），按位置排序后渲染
-    var allHits = [];
-    if (topic) {
-      var mmHits = findMustMemorizeHits(topic, p);
-      mmHits.forEach(function(h) {
-        allHits.push({ kind: "must", start: h.start, end: h.end, text: h.actualText, data: h.data, type: h.type });
-      });
-    }
-    if (onTermClick) {
-      var glHits = findGlossaryHits(p);
-      glHits.forEach(function(h) {
-        // 跳过跟 must hit 重叠的（must 优先）
-        var overlap = allHits.find(function(a) { return h.start < a.end && h.end > a.start; });
-        if (!overlap) {
-          allHits.push({ kind: "glossary", start: h.start, end: h.end, text: p.slice(h.start, h.end), term: h.term });
-        }
-      });
-    }
-    allHits.sort(function(a, b) { return a.start - b.start; });
-
-    if (allHits.length === 0) return <span key={i}>{p}</span>;
-
-    var pieces = [];
-    var cursor = 0;
-    allHits.forEach(function(hit, hi) {
-      if (hit.start > cursor) {
-        pieces.push(<span key={i + "-x-" + hi}>{p.slice(cursor, hit.start)}</span>);
-      }
-      if (hit.kind === "must") {
-        var data = hit.data;
-        var cnText = data.cn || (data.en === hit.text ? data.cn : "") || "";
-        // 用 compact chip（不带显式 ⭐ + 中文小字 — 节省空间，但仍金色高亮 + 可点）
-        pieces.push(
-          <MustMemorizeChip
-            key={i + "-mm-" + hi}
-            word={hit.text}
-            cn={cnText}
-            data={data}
-            onClick={onMustClick}
-            compact
-            autoDetected
-          />
-        );
-      } else {
-        pieces.push(
-          <span
-            key={i + "-gl-" + hi}
-            onClick={function(e) { e.stopPropagation(); if (onTermClick) onTermClick(hit.term); }}
-            style={{
-              background: "rgba(74, 109, 140, 0.10)",
-              borderBottom: "1px dashed " + HC.teal,
-              padding: "0 2px",
-              borderRadius: 2,
-              cursor: "pointer",
-              color: HC.teal,
-              fontWeight: 500,
-            }}
-            title="点一下看解释"
-          >{hit.text}<sup style={{fontSize: 8, marginLeft: 1}}>?</sup></span>
-        );
-      }
-      cursor = hit.end;
-    });
-    if (cursor < p.length) pieces.push(<span key={i + "-end"}>{p.slice(cursor)}</span>);
-    return <React.Fragment key={i}>{pieces}</React.Fragment>;
-  });
-}
-
-// 帮助：从 topic 中找 must-memorize 数据
-function findMustMemorizeData(topic, word) {
-  if (!topic || !topic.mustMemorize) return null;
-  var lower = word.toLowerCase().replace(/s$/, ""); // 简单去复数
-  var v = (topic.mustMemorize.vocab || []).find(function(x) { return x.word.toLowerCase() === lower || x.word.toLowerCase() === word.toLowerCase(); });
-  if (v) return v;
-  var c = (topic.mustMemorize.concepts || []).find(function(x) { return x.en.toLowerCase() === word.toLowerCase(); });
-  if (c) return Object.assign({}, c, { word: c.en, cn: c.cn });
-  return null;
-}
-
-// ─── Must-Memorize Chip ─────────────────────────────────────────────
-function MustMemorizeChip(props) {
-  var word = props.word;
-  var cn = props.cn;
-  var data = props.data;
-  var compact = props.compact;
-  var autoDetected = props.autoDetected;
-
-  return (
-    <span
-      onClick={function(e) {
-        e.stopPropagation();
-        if (props.onClick) props.onClick({ word: word, cn: cn, data: data });
-      }}
-      style={{
-        display: "inline-block",
-        margin: "1px 2px",
-        padding: compact ? "0 6px" : "1px 8px 1px 6px",
-        background: autoDetected
-          ? "linear-gradient(135deg, #fef8df, #fde9b3)"
-          : "linear-gradient(135deg, #fef3d2, #fbe8a8)",
-        border: "1px solid " + (autoDetected ? "#e0b85a" : "#d4a050"),
-        borderRadius: 6,
-        fontSize: compact ? "0.96em" : "0.95em",
-        fontWeight: 600,
-        color: HC.pinStroke,
-        whiteSpace: "nowrap",
-        cursor: "pointer",
-      }}
-      title={"必考 ⭐ — " + cn + (data && data.ipa ? " · " + data.ipa : "") + " · 点查 IPA + 发音"}
-    >
-      {!compact && <span>⭐</span>}
-      <strong style={{margin: compact ? "0" : "0 3px"}}>{word}</strong>
-      {!compact && cn && (
-        <span style={{fontSize: "0.82em", opacity: 0.75, fontWeight: 400}}>{cn}</span>
-      )}
-      {compact && <sup style={{fontSize: 9, marginLeft: 1, color: "#c08400"}}>⭐</sup>}
-    </span>
-  );
-}
-
-// ─── Must-Memorize Popup — 点击 ⭐ 词的详情卡（含 IPA + TTS） ──────
-function MustMemorizePopup(props) {
-  var data = props.data;
-  if (!data) return null;
-  var word = data.word;
-  var info = data.data || {};
-
-  var [playing, setPlaying] = useState(false);
-  var audioRef = useRef(null);
-
-  var playTTS = async function() {
-    if (playing) return;
-    setPlaying(true);
-    try {
-      var resp = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: word, voice: "en-US" })
-      });
-      if (!resp.ok) throw new Error("tts " + resp.status);
-      var blob = await resp.blob();
-      var url = URL.createObjectURL(blob);
-      var a = new Audio(url);
-      audioRef.current = a;
-      a.onended = function() { setPlaying(false); URL.revokeObjectURL(url); };
-      a.onerror = function() { setPlaying(false); URL.revokeObjectURL(url); };
-      await a.play();
-    } catch (e) {
-      console.warn("TTS failed:", e);
-      setPlaying(false);
-      // Fallback: 用浏览器原生 SpeechSynthesis
-      try {
-        var u = new SpeechSynthesisUtterance(word);
-        u.lang = "en-US";
-        u.rate = 0.9;
-        window.speechSynthesis.speak(u);
-      } catch (e2) {}
-    }
-  };
-
-  return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 2000,
-      background: "rgba(44, 36, 32, 0.55)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: 20,
-    }} onClick={props.onClose}>
-      <div style={{
-        background: "linear-gradient(135deg, #fef8df, #fbf0c0)",
-        maxWidth: 460, width: "100%",
-        borderRadius: 16,
-        padding: 24,
-        border: "1.5px solid #d4a050",
-        boxShadow: "0 16px 40px rgba(196,107,48,0.35)",
-      }} onClick={function(e) { e.stopPropagation(); }}>
-        <div style={{display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8}}>
-          <div style={{flex: 1}}>
-            <span style={{
-              fontSize: 10, padding: "2px 8px", borderRadius: 999,
-              background: "#c08400", color: "#fff8e8", letterSpacing: 1, fontWeight: 700, textTransform: "uppercase"
-            }}>⭐ 必背 · {info.pos || (data.cn === info.cn ? "单词" : "概念")}</span>
-            <h3 style={{margin: "10px 0 4px", fontFamily: FONT_DISPLAY, fontSize: 26, color: HC.ink, letterSpacing: "-0.01em"}}>
-              {word}
-            </h3>
-            <div style={{fontSize: 14, color: HC.inkLight, fontWeight: 600}}>{data.cn || info.cn}</div>
-            {info.ipa && (
-              <div style={{
-                marginTop: 8,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "4px 10px",
-                background: "rgba(255,255,255,0.6)",
-                borderRadius: 8,
-                fontFamily: "Times, serif",
-                fontSize: 14,
-                color: HC.pinStroke
-              }}>
-                {info.ipa}
-                <button onClick={playTTS} disabled={playing} style={{
-                  background: playing ? "#ccc" : HC.accent,
-                  color: "#fff8e8",
-                  border: "none",
-                  borderRadius: 999,
-                  padding: "2px 10px",
-                  fontSize: 12,
-                  cursor: playing ? "default" : "pointer",
-                  fontFamily: "inherit"
-                }} title="播放发音">
-                  {playing ? "🔊 播放中..." : "🔊 听发音"}
-                </button>
-              </div>
-            )}
-          </div>
-          <button onClick={props.onClose} style={{
-            background: "transparent", border: "none", fontSize: 22, cursor: "pointer",
-            color: HC.inkLight, lineHeight: 1, padding: 4
-          }}>✕</button>
-        </div>
-
-        {info.example && (
-          <div style={{
-            marginTop: 14, padding: "10px 12px",
-            background: "rgba(255,255,255,0.55)",
-            borderRadius: 10,
-            fontSize: 13.5, lineHeight: 1.6,
-            color: HC.text,
-            borderLeft: "3px solid " + HC.pinFill
-          }}>
-            <div style={{fontFamily: FONT_DISPLAY, fontStyle: "italic", color: HC.ink}}>
-              {info.example}
-            </div>
-            {info.exampleCn && (
-              <div style={{fontSize: 12, marginTop: 4, opacity: 0.8}}>{info.exampleCn}</div>
-            )}
-          </div>
-        )}
-
-        {info.defEn && (
-          <div style={{marginTop: 12, fontSize: 13, color: HC.text, lineHeight: 1.55}}>
-            <div style={{fontWeight: 600, color: HC.ink, marginBottom: 2}}>定义</div>
-            <div style={{marginBottom: 4, fontStyle: "italic"}}>{info.defEn}</div>
-            <div style={{fontSize: 12.5, opacity: 0.85}}>{info.defCn}</div>
-          </div>
-        )}
-
-        {info.untranslatable && (
-          <div style={{
-            marginTop: 12, padding: "8px 10px",
-            background: "rgba(196,107,48,0.12)",
-            borderRadius: 8,
-            fontSize: 11.5,
-            color: HC.pinStroke,
-            fontStyle: "italic",
-            borderLeft: "2px solid " + HC.accent
-          }}>
-            ⚠️ 这个词的中文翻译会扭曲它的真实意思，最好用英文 + 情境理解。
-          </div>
-        )}
-
-        <div style={{
-          marginTop: 14, fontSize: 11, color: HC.inkLight,
-          textAlign: "center", opacity: 0.7
-        }}>
-          这个词必须背 — 拼写测试一定会考。点页面任何地方关闭。
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Term popup — 点击 glossary 名词时展示 ─────────────────────────
-function TermPopup(props) {
-  var term = props.term;
-  if (!term) return null;
-  var entry = lookupTerm(term);
-  if (!entry) return null;
-  return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 2000,
-      background: "rgba(44, 36, 32, 0.55)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: 20,
-    }} onClick={props.onClose}>
-      <div style={{
-        background: HC.parchment,
-        maxWidth: 460, width: "100%",
-        borderRadius: 16,
-        padding: 22,
-        border: "1px solid " + HC.parchmentLo,
-        boxShadow: "0 16px 40px rgba(0,0,0,0.3)",
-      }} onClick={function(e) { e.stopPropagation(); }}>
-        <div style={{display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8}}>
-          <div>
-            <span style={{
-              fontSize: 10, padding: "2px 8px", borderRadius: 999,
-              background: HC.pinFill, color: "#fff8e8", letterSpacing: 1, fontWeight: 700, textTransform: "uppercase"
-            }}>{entry.type}</span>
-            <h3 style={{margin: "8px 0 2px", fontFamily: FONT_DISPLAY, fontSize: 20, color: HC.ink}}>{term}</h3>
-            <div style={{fontSize: 13, color: HC.inkLight, fontWeight: 600}}>{entry.cn}</div>
-          </div>
-          <button onClick={props.onClose} style={{
-            background: "transparent", border: "none", fontSize: 22, cursor: "pointer",
-            color: HC.inkLight, lineHeight: 1, padding: 4
-          }}>✕</button>
-        </div>
-        <div style={{fontSize: 13.5, color: HC.text, lineHeight: 1.65, marginTop: 10, whiteSpace: "pre-wrap"}}>
-          {entry.brief}
-        </div>
-        {(entry.when || entry.where) && (
-          <div style={{
-            marginTop: 12, paddingTop: 10, borderTop: "1px dashed " + HC.parchmentLo,
-            fontSize: 11, color: HC.inkLight, display: "flex", gap: 16, flexWrap: "wrap"
-          }}>
-            {entry.when && <span>📅 {entry.when}</span>}
-            {entry.where && <span>📍 {entry.where}</span>}
-          </div>
-        )}
-        <div style={{
-          marginTop: 12, fontSize: 10, color: HC.textSec, fontStyle: "italic", opacity: 0.8
-        }}>
-          点页面任何地方关闭
-        </div>
-      </div>
-    </div>
-  );
-}
+// ─── (MustMemorizePopup + TermPopup 已抽到 components/history-engine/popups.js) ───

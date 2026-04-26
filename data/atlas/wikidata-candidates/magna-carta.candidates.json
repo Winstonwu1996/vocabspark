@@ -1,0 +1,61 @@
+{
+  "topicId": "magna-carta",
+  "query": {
+    "id": "magna-carta",
+    "countryQid": "Q179876",
+    "yearFrom": 1200,
+    "yearTo": 1220,
+    "bbox": [
+      -12,
+      35,
+      35,
+      60
+    ]
+  },
+  "generatedAt": "2026-04-26T04:46:32.668Z",
+  "eventCount": 3,
+  "events": [
+    {
+      "qid": "Q4870911",
+      "labelEn": "Battle of Dover",
+      "labelZh": null,
+      "descEn": "1217 battle in the Straits of Dover",
+      "typeLabel": "naval battle",
+      "date": "1217-01-01",
+      "year": 1217,
+      "coords": [
+        1.311,
+        51.13
+      ],
+      "wikipedia": null
+    },
+    {
+      "qid": "Q1855461",
+      "labelEn": "Battle of Lincoln",
+      "labelZh": null,
+      "descEn": "battle of Lincoln, England in 1217",
+      "typeLabel": "battle",
+      "date": "1217-05-27",
+      "year": 1217,
+      "coords": [
+        -0.538653,
+        53.2333
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Lincoln_(1217)"
+    },
+    {
+      "qid": "Q1136870",
+      "labelEn": "Battle of Sandwich (1217)",
+      "labelZh": null,
+      "descEn": "battle in 1217",
+      "typeLabel": "naval battle",
+      "date": "1217-08-24",
+      "year": 1217,
+      "coords": [
+        1.42,
+        51.27027778
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Sandwich_(1217)"
+    }
+  ]
+}
