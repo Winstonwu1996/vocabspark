@@ -2,25 +2,32 @@ export const config = {
   maxDuration: 60,
 };
 
+// 支持任意数量的 DeepSeek key：DEEPSEEK_API_KEY (= 主), DEEPSEEK_API_KEY_2/3/4/5/...
+// 自动扫描 env，可无限扩展提升 RPM 容量。每个 key 独立 60 RPM，N 个 key = 60N RPM。
+const collectDeepSeekKeys = () => {
+  const keys = [];
+  if (process.env.DEEPSEEK_API_KEY) keys.push({ name: "deepseek-a", env: "DEEPSEEK_API_KEY" });
+  // 扫描 DEEPSEEK_API_KEY_2 到 _20（足够了）
+  for (let i = 2; i <= 20; i++) {
+    const envName = `DEEPSEEK_API_KEY_${i}`;
+    if (process.env[envName]) {
+      // a -> b -> c -> ... -> 命名规律
+      const letter = String.fromCharCode(96 + i); // 2 → 'b', 3 → 'c', ...
+      keys.push({ name: `deepseek-${letter}`, env: envName });
+    }
+  }
+  return keys;
+};
+
 const buildProviders = () => {
   const providers = [];
 
-  if (process.env.DEEPSEEK_API_KEY) {
+  for (const k of collectDeepSeekKeys()) {
     providers.push({
-      name: "deepseek-a",
+      name: k.name,
       family: "deepseek",
       url: "https://api.deepseek.com/v1/chat/completions",
-      apiKey: () => process.env.DEEPSEEK_API_KEY,
-      model: "deepseek-chat",
-    });
-  }
-
-  if (process.env.DEEPSEEK_API_KEY_2) {
-    providers.push({
-      name: "deepseek-b",
-      family: "deepseek",
-      url: "https://api.deepseek.com/v1/chat/completions",
-      apiKey: () => process.env.DEEPSEEK_API_KEY_2,
+      apiKey: ((envName) => () => process.env[envName])(k.env),
       model: "deepseek-chat",
     });
   }
@@ -49,13 +56,44 @@ const providerPacing = {
 };
 
 async function applyProviderPacing(providerName) {
-  const slot = providerPacing[providerName];
+  let slot = providerPacing[providerName];
+  // 自动为新加的 deepseek-* (deepseek-c/d/e/...) 创建默认 pacing slot
+  if (!slot && providerName.startsWith("deepseek-")) {
+    slot = providerPacing[providerName] = { nextAt: 0, gapMs: 180 };
+  }
   if (!slot) return;
   const now = Date.now();
   if (slot.nextAt > now) {
     await sleep(slot.nextAt - now);
   }
   slot.nextAt = Date.now() + slot.gapMs;
+}
+
+// ─── Circuit Breaker：连续失败时跳过 provider 60s ───
+// per-instance 内存状态（serverless 重启会重置，OK — 60s 短窗口）
+const providerCircuit = {};
+const CIRCUIT_THRESHOLD = 5;     // 连续失败 5 次触发熔断
+const CIRCUIT_COOLDOWN_MS = 60000; // 跳过 60 秒
+
+function isCircuitOpen(providerName) {
+  const c = providerCircuit[providerName];
+  return !!(c && c.blockedUntil && Date.now() < c.blockedUntil);
+}
+function recordCircuitFailure(providerName) {
+  const c = providerCircuit[providerName] || { failures: 0, blockedUntil: 0 };
+  c.failures += 1;
+  if (c.failures >= CIRCUIT_THRESHOLD) {
+    c.blockedUntil = Date.now() + CIRCUIT_COOLDOWN_MS;
+    c.failures = 0;
+    console.warn(`[circuit] ${providerName} OPEN for ${CIRCUIT_COOLDOWN_MS}ms after ${CIRCUIT_THRESHOLD} failures`);
+  }
+  providerCircuit[providerName] = c;
+}
+function recordCircuitSuccess(providerName) {
+  if (providerCircuit[providerName]) {
+    providerCircuit[providerName].failures = 0;
+    providerCircuit[providerName].blockedUntil = 0;
+  }
 }
 
 async function callProvider(provider, system, message, maxTokens, timeoutMs) {
@@ -98,9 +136,15 @@ async function callWithRetry(provider, system, message, maxTokens, timeoutMs) {
   for (let attempt = 0; attempt <= 2; attempt++) {
     try {
       await applyProviderPacing(provider.name);
-      return await callProvider(provider, system, message, maxTokens, timeoutMs);
+      const result = await callProvider(provider, system, message, maxTokens, timeoutMs);
+      recordCircuitSuccess(provider.name);
+      return result;
     } catch (err) {
       const isRetryable = err.status === 429 || err.name === "AbortError";
+      // 429 / timeout 计入熔断失败计数
+      if (err.status === 429 || err.name === "AbortError" || err.name === "TimeoutError") {
+        recordCircuitFailure(provider.name);
+      }
       if (isRetryable && attempt < 2) {
         await sleep(1000 * Math.pow(2, attempt));
         continue;
@@ -197,6 +241,11 @@ export default async function handler(req, res) {
   }
 
   for (const provider of orderedProviders) {
+    // 熔断器：跳过最近频繁失败的 provider
+    if (isCircuitOpen(provider.name)) {
+      errors.push(`${provider.name}: circuit_open`);
+      continue;
+    }
     try {
       const t0 = Date.now();
       const text = await callWithRetry(provider, system, message, tokens, timeoutMs);

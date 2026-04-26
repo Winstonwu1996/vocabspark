@@ -4382,19 +4382,33 @@ export default function App() {
       var unlearned = rawWords.filter(w => !wordStatusMap[w] || wordStatusMap[w] === "unlearned");
       if (unlearned.length === 0) unlearned = rawWords;
       var remainingQuota = getRemainingNewWordQuota();
+      // P1 硬限额：付费用户允许超额，free/guest 必须等明天或升级
+      var _isPaidNow = userTier === "basic" || userTier === "pro";
+      var _tierUnknown = userRef.current && !tierLoaded;
+      // free 用户的每日上限 cap 到 DAILY_LIMIT_REGISTERED；guest 到 DAILY_LIMIT_GUEST
+      var _dailyCap = _isPaidNow || _tierUnknown ? Infinity
+        : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
+      // 用户可调 dailyNewWords，但 free 不能超过硬上限
+      var _effectiveDaily = Math.min(dailyNewWords || 20, _dailyCap);
       if (remainingQuota <= 0) {
-        // 不硬挡，而是弹确认框让用户决定是否超额学习
-        var goExtra = await confirmAsync({
-          title: "今日目标已完成 🎉",
-          body: "今日 " + (dailyNewWords||20) + " 个新词目标已经达成。\n\n想继续超额学习吗？",
-          confirmText: "继续学习",
-          cancelText: "今天到这",
-        });
-        if (!goExtra) return;
-        // 超额模式：再给一批词
-        words = unlearned.slice(0, dailyNewWords || 20);
+        if (_isPaidNow || _tierUnknown) {
+          // 付费用户保留"超额学习"流程
+          var goExtra = await confirmAsync({
+            title: "今日目标已完成 🎉",
+            body: "今日 " + (dailyNewWords||20) + " 个新词目标已经达成。\n\n想继续超额学习吗？",
+            confirmText: "继续学习",
+            cancelText: "今天到这",
+          });
+          if (!goExtra) return;
+          words = unlearned.slice(0, dailyNewWords || 20);
+        } else {
+          // free / guest 硬限：弹 LimitModal（注册引导 / Pro 引导）
+          setShowLimitModal(true);
+          return;
+        }
       } else {
-        words = unlearned.slice(0, Math.min(dailyNewWords || 20, remainingQuota));
+        // 即使 quota 充裕，也用 _effectiveDaily 限制单次 batch 大小
+        words = unlearned.slice(0, Math.min(_effectiveDaily, remainingQuota));
       }
     }
     

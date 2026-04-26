@@ -10,6 +10,45 @@ export const config = {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// ─── Circuit Breaker（per-instance，Edge Runtime instance 共享内存）───
+const providerCircuit = {};
+const CIRCUIT_THRESHOLD = 5;
+const CIRCUIT_COOLDOWN_MS = 60000;
+function isCircuitOpen(name) {
+  const c = providerCircuit[name];
+  return !!(c && c.blockedUntil && Date.now() < c.blockedUntil);
+}
+function recordCircuitFailure(name) {
+  const c = providerCircuit[name] || { failures: 0, blockedUntil: 0 };
+  c.failures += 1;
+  if (c.failures >= CIRCUIT_THRESHOLD) {
+    c.blockedUntil = Date.now() + CIRCUIT_COOLDOWN_MS;
+    c.failures = 0;
+    console.warn(`[circuit] ${name} OPEN`);
+  }
+  providerCircuit[name] = c;
+}
+function recordCircuitSuccess(name) {
+  if (providerCircuit[name]) {
+    providerCircuit[name].failures = 0;
+    providerCircuit[name].blockedUntil = 0;
+  }
+}
+
+// 与 chat.js 一致：扫描任意数量 DeepSeek key (DEEPSEEK_API_KEY, _2, _3, ...)
+const collectDeepSeekKeys = () => {
+  const keys = [];
+  if (process.env.DEEPSEEK_API_KEY) keys.push({ name: "deepseek-a", env: "DEEPSEEK_API_KEY" });
+  for (let i = 2; i <= 20; i++) {
+    const envName = `DEEPSEEK_API_KEY_${i}`;
+    if (process.env[envName]) {
+      const letter = String.fromCharCode(96 + i);
+      keys.push({ name: `deepseek-${letter}`, env: envName });
+    }
+  }
+  return keys;
+};
+
 const buildProviders = (userApiKeys) => {
   const providers = [];
 
@@ -36,24 +75,16 @@ const buildProviders = (userApiKeys) => {
     return providers;
   }
 
-  if (process.env.DEEPSEEK_API_KEY) {
+  for (const k of collectDeepSeekKeys()) {
     providers.push({
-      name: "deepseek-a",
+      name: k.name,
       family: "deepseek",
       url: "https://api.deepseek.com/v1/chat/completions",
-      apiKey: process.env.DEEPSEEK_API_KEY,
+      apiKey: process.env[k.env],
       model: "deepseek-chat",
     });
   }
-  if (process.env.DEEPSEEK_API_KEY_2) {
-    providers.push({
-      name: "deepseek-b",
-      family: "deepseek",
-      url: "https://api.deepseek.com/v1/chat/completions",
-      apiKey: process.env.DEEPSEEK_API_KEY_2,
-      model: "deepseek-chat",
-    });
-  }
+
   if (process.env.GOOGLE_AI_API_KEY) {
     providers.push({
       name: "gemini",
@@ -133,6 +164,11 @@ export default async function handler(req) {
   const perProviderTimeoutMs = 120000;
 
   for (const provider of orderedProviders) {
+    // 熔断：跳过最近频繁失败的 provider
+    if (isCircuitOpen(provider.name)) {
+      errors.push(`${provider.name}: circuit_open`);
+      continue;
+    }
     for (let attempt = 0; attempt <= 1; attempt++) {
       try {
         const response = await fetch(provider.url, {
@@ -153,9 +189,12 @@ export default async function handler(req) {
           signal: AbortSignal.timeout(perProviderTimeoutMs),
         });
 
-        if (response.status === 429 && attempt < 1) {
-          await sleep(800 * Math.pow(2, attempt));
-          continue;
+        if (response.status === 429) {
+          recordCircuitFailure(provider.name);
+          if (attempt < 1) {
+            await sleep(800 * Math.pow(2, attempt));
+            continue;
+          }
         }
 
         if (!response.ok) {
@@ -165,6 +204,9 @@ export default async function handler(req) {
           console.error(`[chat-stream] ${provider.name} ${response.status}: ${text.slice(0, 200)}`);
           break; // 换下一个 provider
         }
+
+        // 成功开始流式响应：清零 circuit 失败计数
+        recordCircuitSuccess(provider.name);
 
         // 原生透传 provider 的 SSE body，客户端自行解析
         // Edge Runtime 原生支持 ReadableStream 透传，不会缓冲
@@ -179,6 +221,10 @@ export default async function handler(req) {
           },
         });
       } catch (err) {
+        // timeout / network error 计入熔断
+        if (err.name === "TimeoutError" || err.name === "AbortError") {
+          recordCircuitFailure(provider.name);
+        }
         errors.push(`${provider.name}: ${err.message || err.name}`);
         console.error(`[chat-stream] ${provider.name} threw:`, err.message);
         break;
