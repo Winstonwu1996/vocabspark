@@ -20,7 +20,9 @@ const HC = {
   textSec:     '#6b4f33',
 };
 
-export default function KeyFiguresRow({ figures, lang = 'cn' }) {
+// onLaunchAsRole: (figure) => void  — 用户点了"以此角色进入深度学"时调用
+//                                        AtlasLabPage 据此把 figure 存 localStorage + 打开 iframe
+export default function KeyFiguresRow({ figures, lang = 'cn', onLaunchAsRole, deepLearnEnabled }) {
   const [selected, setSelected] = useState(null);
 
   if (!figures || !Array.isArray(figures) || figures.length === 0) return null;
@@ -30,11 +32,15 @@ export default function KeyFiguresRow({ figures, lang = 'cn' }) {
     sub: '点选一个角色，从他的视角看这个 Topic',
     hookPrefix: '如果你是',
     closeBtn: '关闭',
+    launchBtn: '🎭 以此角色进入深度学 →',
+    launchHint: 'AI 会从该角色第 1 人称起手 · 类比/场景围绕该角色世界',
   } : {
     label: 'Figures',
     sub: 'Pick a role — see this Topic from their perspective',
     hookPrefix: 'If you were',
     closeBtn: 'Close',
+    launchBtn: '🎭 Enter as this role →',
+    launchHint: 'AI starts in 1st-person · analogies built around this role',
   };
 
   const pickLabel = (obj, fallback = '') => {
@@ -189,15 +195,51 @@ export default function KeyFiguresRow({ figures, lang = 'cn' }) {
                 {pickLabel(selected.hook)}
               </div>
             )}
-            {/* Future hint: integrate with conversation mode */}
-            <div style={{
-              marginTop: 16, fontSize: 10, color: HC.textSec,
-              fontStyle: 'italic', textAlign: 'center',
-            }}>
-              {lang === 'cn'
-                ? '（深度学版即将上线 — 你将能用这个角色身份与 AI 对话整个历史事件）'
-                : '(Coming in deep-learn mode: you will dialogue this event AS this character with AI)'}
-            </div>
+            {/* #2α Cosplay 入口 — 把该角色作为 roleContext 注入深度学 prompt */}
+            {deepLearnEnabled && onLaunchAsRole && (
+              <div style={{ marginTop: 16, textAlign: 'center' }}>
+                <button
+                  onClick={() => {
+                    onLaunchAsRole(selected);
+                    setSelected(null);
+                  }}
+                  style={{
+                    background: 'linear-gradient(135deg, #6c4499 0%, #553682 100%)',
+                    color: '#fff8e8',
+                    border: 'none',
+                    borderRadius: 999,
+                    padding: '10px 22px',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    boxShadow: '0 4px 14px rgba(108, 68, 153, 0.35)',
+                    transition: 'transform 0.15s, box-shadow 0.15s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
+                >
+                  {T.launchBtn}
+                </button>
+                <div style={{
+                  marginTop: 8, fontSize: 10, color: HC.textSec,
+                  fontStyle: 'italic',
+                }}>
+                  {T.launchHint}
+                </div>
+              </div>
+            )}
+            {/* Fallback hint when deep-learn 未开启 */}
+            {!deepLearnEnabled && (
+              <div style={{
+                marginTop: 16, fontSize: 10, color: HC.textSec,
+                fontStyle: 'italic', textAlign: 'center',
+              }}>
+                {lang === 'cn'
+                  ? '（深度学版即将上线 — 你将能用这个角色身份与 AI 对话整个历史事件）'
+                  : '(Coming in deep-learn mode: you will dialogue this event AS this character with AI)'}
+              </div>
+            )}
           </div>
         </div>
       )}

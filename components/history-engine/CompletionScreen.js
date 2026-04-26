@@ -36,8 +36,33 @@ export function CompletionScreen(props) {
     return function() { clearTimeout(t); };
   }, []);
 
+  // #1 Flipbook：进入 complete 时演"合上一章书"翻页动画 — 1.4s 后自然停在静止状态
+  // 物理隐喻：通关 = 我读完了一本书（不是做完了一道题）
+  // CSS rotateY + transform-origin 模拟书脊翻页，比第三方 PageFlip 库轻量 100x
+  var [bookOpen, setBookOpen] = useState(false);
+  useEffect(function() {
+    var t = setTimeout(function() { setBookOpen(true); }, 50);  // 微延迟触发动画
+    return function() { clearTimeout(t); };
+  }, []);
+
   return (
     <div style={{padding: "30px 0", position: "relative"}}>
+      {/* #1 Flipbook：合上书的视觉前奏 — 0.8s 翻页动画后内容显形 */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes bookCover {
+          0%   { transform: rotateY(-90deg); opacity: 0; }
+          50%  { opacity: 0.7; }
+          100% { transform: rotateY(0deg); opacity: 1; }
+        }
+        .completion-flipbook-wrap {
+          perspective: 1500px;
+          perspective-origin: center;
+        }
+        .completion-flipbook-wrap.book-open {
+          animation: bookCover 1.0s ease-out forwards;
+          transform-origin: left center;
+        }
+      ` }} />
       {/* U5: Confetti 雨动画 */}
       {showConfetti && (
         <div style={{
@@ -80,7 +105,24 @@ export function CompletionScreen(props) {
         </div>
       )}
 
+      <div className={"completion-flipbook-wrap " + (bookOpen ? "book-open" : "")}>
       <div className="completion-card">
+        {/* #1 Flipbook：左上角"已读完"印章，强化"合上一章书"的仪式感 */}
+        <div style={{
+          position: "absolute", top: 12, left: 12,
+          padding: "3px 10px",
+          background: "rgba(155, 44, 44, 0.12)",
+          border: "1.5px solid #9b2c2c",
+          borderRadius: 4,
+          fontSize: 9, fontWeight: 800, letterSpacing: 2,
+          color: "#9b2c2c",
+          fontFamily: FONT_DISPLAY,
+          textTransform: "uppercase",
+          transform: "rotate(-8deg)",
+          opacity: bookOpen ? 0.85 : 0,
+          transition: "opacity 0.6s ease-in 0.6s",
+          pointerEvents: "none",
+        }}>已读完 · COMPLETED</div>
         <div className="stamp">🏆</div>
         <h2>{topic.title.cn} 完成</h2>
         <div style={{color: HC.inkLight, fontSize: 13}}>{topic.title.en} · {topic.year}</div>
@@ -186,6 +228,7 @@ export function CompletionScreen(props) {
           }}>再做一遍</button>
         </div>
       </div>
+      </div>{/* /.completion-flipbook-wrap */}
 
       {/* —— Free Chat Section（Winston review #4） —— */}
       {showFreeChat && (

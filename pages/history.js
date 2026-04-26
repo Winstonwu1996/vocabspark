@@ -264,6 +264,12 @@ export default function HistoryPage() {
   // 整合 atlas-lab：?from=atlas&atlasId=magna-carta — 来自 atlas-lab 跳转，启用返回按钮 + 完成后回跳
   var [fromAtlas, setFromAtlas] = useState(null); // null | { atlasId: 'magna-carta' }
   var [autoBackTimer, setAutoBackTimer] = useState(null); // 完成后自动回跳倒计时（秒）
+  // Stage 4：embedded mode — 在 atlas-lab 的 iframe 里运行，隐藏顶部 nav + 完成 postMessage
+  var [embedded, setEmbedded] = useState(false);
+  // #2α Cosplay：从 atlas-lab 选了角色进来，AI 第一人称起手 + 类比围绕该角色世界
+  // 数据格式：{ figure: { name, role, bio, hook, emoji }, lang }
+  // 来源：localStorage.vocabspark_v1.pendingRole[topicId]（atlas-lab 写入）
+  var [pendingRole, setPendingRole] = useState(null);
 
   // mount 时从 URL 读 topicId；如果是 fresh user（无任何完成进度）+ 没指定 topicId，推 Tang/Song
   useEffect(function() {
@@ -275,14 +281,37 @@ export default function HistoryPage() {
       if (p.get("from") === "atlas") {
         setFromAtlas({ atlasId: p.get("atlasId") || null });
       }
+      // Stage 4：detect embedded mode（iframe 在 atlas-lab 内嵌）
+      if (p.get("embedded") === "1") {
+        setEmbedded(true);
+      }
+      // #2α Cosplay：?role=1 表示 atlas-lab 已把所选 figure 写入 localStorage.pendingRole
+      // 立刻读出来 + 清掉 pending（一次性 — 防止下次打开还套这个角色）
+      var resolveTopicId = (t && getTopic(t)) ? t : null;
+      if (p.get("role") === "1") {
+        var raw = localStorage.getItem("vocabspark_v1");
+        var d = raw ? JSON.parse(raw) : null;
+        var rolesByTopic = (d && d.pendingRole) || {};
+        // role 跟 topicId 绑定 — 找当前 topicId 对应的 pendingRole
+        var key = resolveTopicId || (d && d.historyData && d.historyData.lastTopicId) || "magna-carta-1215";
+        var pr = rolesByTopic[key];
+        if (pr && pr.figure) {
+          setPendingRole(pr);
+          // 一次性消费 — 清掉，防止下次打开 /history 还套这个角色
+          delete rolesByTopic[key];
+          d.pendingRole = rolesByTopic;
+          d.updatedAt = new Date().toISOString();
+          localStorage.setItem("vocabspark_v1", JSON.stringify(d));
+        }
+      }
       if (t && getTopic(t)) {
         setTopicId(t);
         return;
       }
       // S9: 没有 URL 参数 — 检查是否 fresh user
-      var raw = localStorage.getItem("vocabspark_v1");
-      var d = raw ? JSON.parse(raw) : null;
-      var completed = (d && d.historyData && d.historyData.completedTopics) || {};
+      var raw2 = localStorage.getItem("vocabspark_v1");
+      var d2 = raw2 ? JSON.parse(raw2) : null;
+      var completed = (d2 && d2.historyData && d2.historyData.completedTopics) || {};
       if (Object.keys(completed).length === 0) {
         // 全新用户 — 推 home advantage 的唐宋盛世
         setTopicId("tang-song-china");
@@ -435,6 +464,8 @@ export default function HistoryPage() {
         worldview: worldview,
         history: conversationLog,
         englishLevel: englishLevel,
+        // #2α Cosplay：用户从 atlas-lab 选了角色进入，注入 roleContext 让 AI 第一人称起手
+        roleContext: pendingRole,
       });
       var userPrompt = buildTurnPrompt(turn, { lastUserAnswer: lastUserAnswer });
       // 占位符注入
@@ -1061,6 +1092,39 @@ export default function HistoryPage() {
             </a>
           )}
 
+          {/* #2α Cosplay role banner — 让用户清楚知道"你在以这个角色的视角学" */}
+          {pendingRole && pendingRole.figure && (
+            <div style={{
+              marginBottom: 10,
+              padding: '10px 14px',
+              background: 'linear-gradient(135deg, #f3edf9 0%, #e9deef 100%)',
+              border: '1px solid rgba(108, 68, 153, 0.35)',
+              borderLeft: '3px solid #6c4499',
+              borderRadius: 10,
+              display: 'flex', alignItems: 'center', gap: 10,
+              fontSize: 13,
+            }}>
+              <span style={{ fontSize: 22, lineHeight: 1 }}>{pendingRole.figure.emoji || '🎭'}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, color: '#3d2c1a' }}>
+                  你正在以 <span style={{ color: '#6c4499' }}>{(pendingRole.figure.name && pendingRole.figure.name.cn) || ''}</span> 的视角进入这个 Topic
+                </div>
+                <div style={{ fontSize: 11, color: '#6b4f33', opacity: 0.85, marginTop: 2 }}>
+                  {(pendingRole.figure.role && pendingRole.figure.role.cn) || ''} · AI 会从该角色的世界起手对话
+                </div>
+              </div>
+              <button
+                onClick={() => setPendingRole(null)}
+                title="退出角色代入，回到普通对话"
+                style={{
+                  background: 'transparent', border: '1px solid rgba(108, 68, 153, 0.3)',
+                  color: '#6c4499', borderRadius: 999, padding: '3px 10px',
+                  fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >退出角色</button>
+            </div>
+          )}
+
           {/* ── Topic Hero ── */}
           <TopicHero topic={topic} phase={phase} />
 
@@ -1288,6 +1352,9 @@ function TopicHero(props) {
   if (!topic) return null;
   var phase = props.phase;
   var t = THROUGH_LINES[topic.throughLine] || {};
+  // #3 教材对照：让用户感觉"this is my actual schoolwork"
+  // textbookRef 数据格式：{ publisher, grade, chapter, section, page, hint }
+  var tb = topic.textbookRef;
   return (
     <div className="topic-hero">
       <div className="meta">
@@ -1295,6 +1362,34 @@ function TopicHero(props) {
       </div>
       <h1>{topic.title.cn} <span style={{fontSize: 16, fontWeight: 400, color: HC.inkLight}}>· {topic.title.en} ({topic.year})</span></h1>
       <div className="hook">{topic.oneLineHook.cn}</div>
+      {/* #3 教材对照 banner — 让 Willow 感觉"this is my actual schoolwork" */}
+      {tb && (
+        <div style={{
+          marginTop: 10,
+          padding: '8px 12px',
+          background: 'rgba(34, 160, 107, 0.10)',
+          border: '1px solid rgba(34, 160, 107, 0.30)',
+          borderLeft: '3px solid #22a06b',
+          borderRadius: 8,
+          display: 'flex', alignItems: 'center', gap: 8,
+          fontSize: 12, lineHeight: 1.45,
+        }}>
+          <span style={{ fontSize: 16, lineHeight: 1 }}>📖</span>
+          <div style={{ flex: 1, color: HC.text }}>
+            <span style={{ fontWeight: 700, color: '#1a7c52' }}>你课本对应章节</span>
+            <span style={{ marginLeft: 6, color: HC.inkLight }}>
+              {tb.publisher && (tb.publisher + " · ")}
+              {tb.grade && (tb.grade + " 年级 · ")}
+              {tb.chapter}{tb.section && (" - " + tb.section)}{tb.page && (" · p." + tb.page)}
+            </span>
+            {tb.hint && (
+              <div style={{ fontSize: 11, color: HC.inkLight, marginTop: 2, fontStyle: 'italic', opacity: 0.85 }}>
+                {tb.hint}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {phase !== "intro" && (
         <div style={{marginTop: 8, fontSize: 11.5, color: HC.inkLight}}>
           <span style={{

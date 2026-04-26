@@ -374,7 +374,31 @@ export default function AtlasLabPage({
           }}>
             <CausalSummary text={meta.causalSummary?.[lang] || meta.causalSummary?.cn} lang={lang} />
             {meta.keyFigures && meta.keyFigures.length > 0 && (
-              <KeyFiguresRow figures={meta.keyFigures} lang={lang} />
+              <KeyFiguresRow
+                figures={meta.keyFigures}
+                lang={lang}
+                deepLearnEnabled={meta.deepLearnEnabled}
+                // #2α 用户选择以某角色进入深度学：把 figure 存 localStorage + 打开 embed iframe
+                // pages/history.js mount 时读 pendingRole.<topicId>，传给 buildHistorySystemPrompt
+                onLaunchAsRole={(figure) => {
+                  if (!meta.deepLearnUrl) return;
+                  const histId = extractHistoryTopicId(meta.deepLearnUrl);
+                  if (typeof window !== 'undefined' && histId) {
+                    try {
+                      const raw = localStorage.getItem('vocabspark_v1');
+                      const d = raw ? JSON.parse(raw) : {};
+                      d.pendingRole = d.pendingRole || {};
+                      d.pendingRole[histId] = { figure, lang, ts: new Date().toISOString() };
+                      d.updatedAt = new Date().toISOString();
+                      localStorage.setItem('vocabspark_v1', JSON.stringify(d));
+                    } catch (_) {}
+                  }
+                  // 打开 embed iframe（带 role flag 让 history 知道有 pendingRole 要读）
+                  const url = (meta.deepLearnUrl || '/history') + '&embedded=1&role=1';
+                  setEmbedUrl(url);
+                  setLearningMode('embedded');
+                }}
+              />
             )}
           </div>
 
