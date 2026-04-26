@@ -66,6 +66,35 @@ export default function AtlasLabPage({
   const [completedHistoryTopics, setCompletedHistoryTopics] = useState({});  // {atlasId: true} 或 {historyTopicId: completionData}
   const [completionToast, setCompletionToast] = useState(null);  // null | { atlasId, xp }
 
+  // Stage 4：embed mode — 把 /history 14-轮苏格拉底引擎塞到 atlas-lab 里，避免页面跳转
+  // iframe + postMessage 实现单页面感，atlas 状态完全保留
+  const [learningMode, setLearningMode] = useState('browse');  // 'browse' | 'embedded'
+  const [embedUrl, setEmbedUrl] = useState(null);
+
+  // 监听 iframe 内 /history 的 postMessage（关闭 / 完成事件）
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = (event) => {
+      if (!event.data || typeof event.data !== 'object') return;
+      if (event.data.source !== 'history-engine') return;
+      if (event.data.type === 'close') {
+        setLearningMode('browse');
+        setEmbedUrl(null);
+      } else if (event.data.type === 'complete') {
+        setLearningMode('browse');
+        setEmbedUrl(null);
+        setCompletionToast({
+          historyTopicId: event.data.topicId,
+          atlasId: event.data.atlasId,
+          xp: event.data.xp || 175,
+        });
+        setCompletedHistoryTopics((prev) => ({ ...prev, [event.data.topicId]: { xpEarned: event.data.xp || 175 } }));
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     // 读 vocabspark_v1.historyData.completedTopics
@@ -553,8 +582,14 @@ export default function AtlasLabPage({
               ? '0 4px 14px rgba(34, 160, 107, 0.3)'
               : '0 4px 14px rgba(196, 107, 48, 0.3)';
             return (
-              <Link href={meta.deepLearnUrl || '/history'} style={{ textDecoration: 'none' }}>
-                <div style={{
+              <div
+                onClick={() => {
+                  // Stage 4：embed mode — 不跳页，把 /history 塞到 iframe 里覆盖 atlas
+                  const url = (meta.deepLearnUrl || '/history') + '&embedded=1';
+                  setEmbedUrl(url);
+                  setLearningMode('embedded');
+                }}
+                style={{
                   marginTop: 14,
                   padding: '14px 18px',
                   background: bgGrad,
@@ -570,17 +605,62 @@ export default function AtlasLabPage({
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                }}>
-                  <span style={{ fontSize: 28, lineHeight: 1 }}>{isDone ? '✓' : '🎯'}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>{ctaTitle}</div>
-                    <div style={{ fontSize: 12, opacity: 0.92 }}>{ctaSub}</div>
-                  </div>
-                  <span style={{ fontSize: 22, lineHeight: 1 }}>→</span>
+                }}
+              >
+                <span style={{ fontSize: 28, lineHeight: 1 }}>{isDone ? '✓' : '🎯'}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>{ctaTitle}</div>
+                  <div style={{ fontSize: 12, opacity: 0.92 }}>{ctaSub}</div>
                 </div>
-              </Link>
+                <span style={{ fontSize: 22, lineHeight: 1 }}>→</span>
+              </div>
             );
           })()}
+
+          {/* Stage 4：embed mode iframe overlay — 深度学不跳页 */}
+          {learningMode === 'embedded' && embedUrl && (
+            <div style={{
+              position: 'fixed', inset: 0, zIndex: 2500,
+              background: '#f4ead0',
+              display: 'flex', flexDirection: 'column',
+            }}>
+              <div style={{
+                flex: '0 0 44px',
+                background: 'linear-gradient(180deg, #2c2420 0%, #1a1410 100%)',
+                color: '#fff8e8',
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '0 14px',
+                borderBottom: '1px solid rgba(255,248,232,0.12)',
+                fontSize: 13,
+              }}>
+                <button
+                  onClick={() => { setLearningMode('browse'); setEmbedUrl(null); }}
+                  style={{
+                    background: 'rgba(255,248,232,0.12)',
+                    color: '#fff8e8',
+                    border: '1px solid rgba(255,248,232,0.25)',
+                    borderRadius: 999,
+                    padding: '5px 12px',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    fontWeight: 600,
+                  }}
+                >← {lang === 'cn' ? '返回 Atlas' : 'Back to Atlas'}</button>
+                <span style={{ flex: 1, textAlign: 'center', opacity: 0.85, fontWeight: 600 }}>
+                  {meta.title && (meta.title[lang] || meta.title.cn)}
+                </span>
+                <span style={{ fontSize: 11, opacity: 0.6 }}>
+                  {lang === 'cn' ? '深度学模式' : 'Deep Learn'}
+                </span>
+              </div>
+              <iframe
+                src={embedUrl}
+                style={{ flex: 1, border: 'none', width: '100%', background: '#f4ead0' }}
+                title="History Engine"
+              />
+            </div>
+          )}
 
           {/* 整合 /history：完成 Topic 后回 atlas 触发庆祝 toast */}
           {completionToast && (

@@ -671,6 +671,19 @@ export default function HistoryPage() {
       setAutoBackTimer(null);
       return;
     }
+    // Stage 4：embedded 模式 — 一进 complete 立刻 postMessage 给父 atlas（不需要 8 秒倒计时）
+    if (embedded && typeof window !== "undefined" && window.parent && window.parent !== window) {
+      try {
+        window.parent.postMessage({
+          source: "history-engine",
+          type: "complete",
+          topicId: topicId,
+          atlasId: fromAtlas.atlasId,
+          xp: topicXpEarned || 175,
+        }, "*");
+      } catch (e) { console.warn("postMessage to atlas failed:", e); }
+      return;
+    }
     var seconds = 8;
     setAutoBackTimer(seconds);
     var iv = setInterval(function() {
@@ -684,7 +697,7 @@ export default function HistoryPage() {
       }
     }, 1000);
     return function() { clearInterval(iv); };
-  }, [phase, fromAtlas, topicId]);
+  }, [phase, fromAtlas, topicId, embedded, topicXpEarned]);
 
   // ─── Render ──────────────────────────────────────────────────────
   return (
@@ -1061,16 +1074,19 @@ export default function HistoryPage() {
       ` }} />
 
       <div className="h-page">
-        <BrandNavBar
-          activeTab="history"
-          stats={{ xp: xp, total: 0, correct: 0 }}
-          user={user}
-          onUserCenterClick={function() { setShowUserCenter(true); }}
-        />
+        {/* Stage 4：embedded 模式下父 atlas-lab 已有 nav，这里不重复渲染 */}
+        {!embedded && (
+          <BrandNavBar
+            activeTab="history"
+            stats={{ xp: xp, total: 0, correct: 0 }}
+            user={user}
+            onUserCenterClick={function() { setShowUserCenter(true); }}
+          />
+        )}
 
         <div className="h-container">
-          {/* 整合 atlas-lab：来自 atlas 时显示返回按钮 */}
-          {fromAtlas && (
+          {/* 整合 atlas-lab：来自 atlas 时显示返回按钮（embedded 模式下父 atlas 也有，这里隐藏避免重复） */}
+          {fromAtlas && !embedded && (
             <a
               href={fromAtlas.atlasId ? "/atlas-lab/" + fromAtlas.atlasId : "/atlas-lab"}
               style={{
