@@ -2,6 +2,7 @@
 // 与 /api/chat 并存：/api/chat 走 Node Runtime（非流式），本端点走 Edge Runtime（流式透传）。
 // 客户端任何失败都会 fallback 到 /api/chat，不会影响生产稳定性。
 import { checkPerIpLimit } from "../../lib/ratelimit";
+import { getCached, setCached, cachedTextToSSEStream } from "../../lib/teachCache";
 
 export const config = {
   runtime: "edge",
@@ -114,7 +115,7 @@ export default async function handler(req) {
       headers: { "Content-Type": "application/json" },
     });
   }
-  const { system, message, maxTokens, preferredProviders, userApiKeys, jsonMode } = body || {};
+  const { system, message, maxTokens, preferredProviders, userApiKeys, jsonMode, cacheKey } = body || {};
   if (!system || !message) {
     return new Response(JSON.stringify({ error: "Missing system or message" }), {
       status: 400,
@@ -122,9 +123,29 @@ export default async function handler(req) {
     });
   }
 
-  // ─── Rate Limit (per IP, 50/day) ───
-  // BYO key 用户跳过限流
+  // BYO 检测（用户用自带 key 时跳过缓存 + 跳过 rate limit）
   const isBYO = userApiKeys && (userApiKeys.deepseek || userApiKeys.gemini);
+
+  // ─── Teach Cache Hit ───
+  // 客户端可传 cacheKey（如 "teach-core-v1:abandon:L2"）请求服务端缓存命中。
+  // 命中则秒回（封装为 SSE 流，客户端无感知）。
+  if (cacheKey && !isBYO) {
+    const cached = await getCached(cacheKey);
+    if (cached) {
+      return new Response(cachedTextToSSEStream(cached), {
+        status: 200,
+        headers: {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+          "Connection": "keep-alive",
+          "X-Provider": "cache",
+          "X-Cache": "HIT",
+        },
+      });
+    }
+  }
+
+  // ─── Rate Limit (per IP, 50/day) ───
   if (!isBYO) {
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -227,18 +248,65 @@ export default async function handler(req) {
         // 成功开始流式响应：清零 circuit 失败计数
         recordCircuitSuccess(provider.name);
 
-        // 原生透传 provider 的 SSE body，客户端自行解析
-        // Edge Runtime 原生支持 ReadableStream 透传，不会缓冲
-        return new Response(response.body, {
-          status: 200,
-          headers: {
-            "Content-Type": "text/event-stream; charset=utf-8",
-            "Cache-Control": "no-cache, no-transform",
-            "Connection": "keep-alive",
-            "X-Provider": provider.name,
-            "X-Provider-Family": provider.family || provider.name,
+        // 如果带 cacheKey 且未命中（已走到 LLM）→ 边透传边累积，完成后写缓存
+        // 否则直接透传（最小开销）
+        const cacheHeaders = {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+          "Connection": "keep-alive",
+          "X-Provider": provider.name,
+          "X-Provider-Family": provider.family || provider.name,
+          "X-Cache": cacheKey ? "MISS" : "BYPASS",
+        };
+
+        if (!cacheKey || isBYO) {
+          // 不缓存：原生透传，零额外开销
+          return new Response(response.body, { status: 200, headers: cacheHeaders });
+        }
+
+        // 累积模式：解析 SSE delta、累加 fullText、流出原始 chunk、结束时写缓存
+        const upstreamReader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = "";
+        let lineBuffer = "";
+        const teeStream = new ReadableStream({
+          async pull(controller) {
+            try {
+              const { done, value } = await upstreamReader.read();
+              if (done) {
+                if (fullText && fullText.length > 50) {
+                  // 后台写缓存（不 await，不阻塞响应关闭）
+                  setCached(cacheKey, fullText).catch(() => {});
+                }
+                controller.close();
+                return;
+              }
+              // 透传原始 bytes
+              controller.enqueue(value);
+              // 同时解析累积内容
+              lineBuffer += decoder.decode(value, { stream: true });
+              const lines = lineBuffer.split("\n");
+              lineBuffer = lines.pop() || "";
+              for (const line of lines) {
+                const t = line.trim();
+                if (!t || t[0] === ":" || !t.startsWith("data: ")) continue;
+                const payload = t.slice(6).trim();
+                if (payload === "[DONE]") continue;
+                try {
+                  const j = JSON.parse(payload);
+                  const delta = j?.choices?.[0]?.delta?.content;
+                  if (delta) fullText += delta;
+                } catch (e) {}
+              }
+            } catch (err) {
+              controller.error(err);
+            }
+          },
+          cancel() {
+            try { upstreamReader.cancel(); } catch (e) {}
           },
         });
+        return new Response(teeStream, { status: 200, headers: cacheHeaders });
       } catch (err) {
         // timeout / network error 计入熔断
         if (err.name === "TimeoutError" || err.name === "AbortError") {

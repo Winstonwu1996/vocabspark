@@ -2365,6 +2365,8 @@ export default function App() {
   var [teachData, setTeachData] = useState(null);            // JSON 结构（Phase 1 新路径，优先使用）
   var [teachWaitSec, setTeachWaitSec] = useState(0); // teach 加载已等待秒数（用于进度反馈）
   var [teachStreaming, setTeachStreaming] = useState(false); // 是否在流式生成中（用于显示光标+禁用按钮）
+  var [feedbackModal, setFeedbackModal] = useState(null); // E1: { word, contentType, snapshot } 弹反馈 modal
+  var [feedbackToast, setFeedbackToast] = useState(null); // 反馈提交后的 toast 文字
   var [recallChoice, setRecallChoice] = useState(null); // active recall 自测：null / "easy" / "fuzzy" / "hard"
   // B: teach 页面深度奖励 — 「能」按钮 10 秒倒计时禁用（强制读完才有资格说"会"）
   var [teachReadSec, setTeachReadSec] = useState(10);
@@ -7938,6 +7940,11 @@ export default function App() {
             </div>
           )}
           <button style={{...S.primaryBtn, opacity: teachStreaming ? 0.6 : 1, cursor: teachStreaming ? "progress" : "pointer"}} onClick={teachToSpectrum} disabled={loading || teachStreaming}>{teachStreaming ? "✨ 正在生成...": (spectrumData?"🎮 词义光谱挑战 →":"→ 下一个词")}</button>
+          {!teachStreaming && teachContent && teachContent !== "__FAILED__" && (
+            <div style={{textAlign:"right",marginTop:8}}>
+              <button onClick={function(){ setFeedbackModal({ word: currentWord, contentType: "teach", snapshot: (teachContent||"").slice(0, 600) }); }} style={{background:"none",border:"none",color:C.textSec,fontSize:11,cursor:"pointer",padding:"4px 8px",opacity:0.7}}>📋 这个讲解不太对？</button>
+            </div>
+          )}
         </>
         : teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解内容加载失败</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");setTeachData(null);callWithClientRetry(function(){return callAPI(sysP,buildTeachPrompt(currentWord,learned));}).then(function(raw){var finalJSON=raw?(tryJSON(raw)||parsePartialJSON(raw)):null;if(finalJSON&&finalJSON.opening&&finalJSON.teach){dataCache.current[currentWord].teachJSON=finalJSON;dataCache.current[currentWord].teach=null;dataCache.current[currentWord].teachFailed=false;setTeachData(finalJSON);}else{var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
         : !teachContent ? (() => {
@@ -8290,6 +8297,66 @@ export default function App() {
               </>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── E1: 内容反馈 MODAL ── */}
+      {feedbackModal && (
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)",zIndex:1002,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setFeedbackModal(null)}>
+          <div style={{background:C.card,borderRadius:20,padding:"24px 22px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
+            <h3 style={{fontSize:17,fontWeight:700,margin:"0 0 4px"}}>反馈这条 {feedbackModal.contentType === "teach" ? "讲解" : feedbackModal.contentType === "guess" ? "猜词题" : "光谱题"}</h3>
+            <p style={{fontSize:12,color:C.textSec,margin:"0 0 14px"}}>词：<strong style={{color:C.text}}>{feedbackModal.word}</strong></p>
+            <div style={{fontSize:13,color:C.text,marginBottom:8,fontWeight:600}}>问题类型</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
+              {[
+                {key:"wrong",label:"❌ 内容错误"},
+                {key:"inappropriate",label:"⚠️ 不适宜"},
+                {key:"off_topic",label:"🤔 跑题"},
+                {key:"language",label:"💬 语言问题"},
+              ].map(function(opt){
+                var sel = feedbackModal.reason === opt.key;
+                return <button key={opt.key} onClick={function(){ setFeedbackModal(Object.assign({}, feedbackModal, {reason: opt.key})); }} style={{padding:"10px 8px",borderRadius:8,border: sel ? "1.5px solid "+C.accent : "1px solid "+C.border, background: sel ? C.accentLight : C.bg, color: sel ? C.accent : C.text, fontFamily:FONT, fontSize:13, fontWeight:600, cursor:"pointer", textAlign:"center"}}>{opt.label}</button>;
+              })}
+            </div>
+            <textarea
+              placeholder="补充说明（可选）"
+              value={feedbackModal.detail || ""}
+              onChange={function(e){ setFeedbackModal(Object.assign({}, feedbackModal, {detail: e.target.value.slice(0, 300)})); }}
+              style={{width:"100%",padding:"10px 12px",borderRadius:8,border:"1px solid "+C.border,fontFamily:FONT,fontSize:13,resize:"vertical",minHeight:60,outline:"none",boxSizing:"border-box",marginBottom:14}}
+            />
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={function(){ setFeedbackModal(null); }} style={{...S.ghostBtn,flex:1,padding:"10px",justifyContent:"center"}}>取消</button>
+              <button
+                onClick={async function(){
+                  var payload = {
+                    userId: user?.id || null,
+                    word: feedbackModal.word,
+                    contentType: feedbackModal.contentType,
+                    contentSnapshot: feedbackModal.snapshot || "",
+                    reasonCategory: feedbackModal.reason || "other",
+                    reasonDetail: feedbackModal.detail || "",
+                  };
+                  setFeedbackModal(null);
+                  try {
+                    await fetch("/api/feedback", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
+                    setFeedbackToast("感谢反馈！我们会审核改进 ❤️");
+                  } catch (e) {
+                    setFeedbackToast("提交失败，请稍后再试");
+                  }
+                  setTimeout(function(){ setFeedbackToast(null); }, 3500);
+                }}
+                disabled={!feedbackModal.reason}
+                style={{...S.primaryBtn, flex:1, padding:"10px", justifyContent:"center", opacity: feedbackModal.reason ? 1 : 0.5, cursor: feedbackModal.reason ? "pointer" : "not-allowed"}}
+              >提交反馈</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── E1: 反馈提交 toast ── */}
+      {feedbackToast && (
+        <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:C.text,color:"#fff",padding:"12px 20px",borderRadius:24,fontSize:13,fontWeight:600,fontFamily:FONT,boxShadow:"0 8px 24px rgba(0,0,0,0.25)",zIndex:1003,animation:"fadeUp 0.25s ease-out"}}>
+          {feedbackToast}
         </div>
       )}
 
