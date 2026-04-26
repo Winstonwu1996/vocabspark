@@ -668,7 +668,11 @@ export default function HomePage() {
           </div>
           <p style={{ fontSize: 14, color: C.text, margin: "0 0 4px" }}>为女儿而写，献给每一位认真学习的你</p>
           <p style={{ fontSize: 12, color: C.textSec, margin: "0 0 8px" }}>Know U. Learning — Personal AI Language Tutor</p>
-          <p style={{ fontSize: 11, color: C.textSec, opacity: 0.6 }}>问题反馈：Winstonwu1996@icloud.com</p>
+          <p style={{ fontSize: 11, color: C.textSec, opacity: 0.6, marginBottom: 10 }}>问题反馈：Winstonwu1996@icloud.com</p>
+          <div style={{ display: "flex", gap: 14, justifyContent: "center", fontSize: 12, flexWrap: "wrap", paddingTop: 8, borderTop: "1px solid " + C.border, marginTop: 4 }}>
+            <Link href="/privacy" style={{ color: C.textSec, textDecoration: "none", opacity: 0.8 }}>🔒 隐私政策</Link>
+            <Link href="/terms" style={{ color: C.textSec, textDecoration: "none", opacity: 0.8 }}>📋 服务条款</Link>
+          </div>
         </div>
       </footer>
 

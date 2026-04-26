@@ -1,6 +1,119 @@
 /* ─── Know U. Learning — 用户中心侧边抽屉 ─── */
 import Link from 'next/link';
 import { C, FONT, S } from '../lib/theme';
+import { supabase } from '../lib/supabase';
+
+// ─── 数据与隐私：导出 / 删除账号 ─────────────────────────────────────────────
+// 取当前 session 的 access token（导出 / 删除都需要 Bearer 认证）
+async function getAuthToken() {
+  try {
+    var { data } = await supabase.auth.getSession();
+    return data?.session?.access_token || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// 触发浏览器下载
+function triggerDownload(blob, filename) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function () {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 100);
+}
+
+async function handleExportData() {
+  var token = await getAuthToken();
+  if (!token) {
+    alert('登录状态已过期，请重新登录后再导出。');
+    return;
+  }
+  try {
+    var resp = await fetch('/api/export', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    });
+    if (!resp.ok) {
+      var errBody = null;
+      try { errBody = await resp.json(); } catch (e) {}
+      alert('导出失败：' + ((errBody && errBody.error) || resp.status));
+      return;
+    }
+    var blob = await resp.blob();
+    // 从 Content-Disposition 取 filename，否则用兜底
+    var cd = resp.headers.get('Content-Disposition') || '';
+    var match = cd.match(/filename="?([^";]+)"?/i);
+    var filename = (match && match[1]) ||
+      ('knowu-data-' + new Date().toISOString().slice(0, 10) + '.json');
+    triggerDownload(blob, filename);
+  } catch (e) {
+    alert('导出失败：' + (e.message || e));
+  }
+}
+
+async function handleDeleteAccount(user) {
+  if (!user || !user.email) {
+    alert('无法确认账号信息，请重新登录。');
+    return;
+  }
+  // 第一次确认
+  var ok1 = window.confirm(
+    '⚠️ 此操作不可逆。\n\n你的全部学习数据（词汇进度、复习日程、统计、反馈）和账号本身将被永久删除，且无法恢复。\n\n继续吗？'
+  );
+  if (!ok1) return;
+
+  // 第二次输入邮箱
+  var typed = window.prompt(
+    '为防止误操作，请完整输入你的邮箱以确认删除：\n\n' + user.email,
+    ''
+  );
+  if (typed == null) return; // 用户取消
+  if (String(typed).trim().toLowerCase() !== String(user.email).trim().toLowerCase()) {
+    alert('邮箱不匹配，删除已取消。');
+    return;
+  }
+
+  var token = await getAuthToken();
+  if (!token) {
+    alert('登录状态已过期，请重新登录后再操作。');
+    return;
+  }
+
+  try {
+    var resp = await fetch('/api/delete-account', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmEmail: typed }),
+    });
+    var body = null;
+    try { body = await resp.json(); } catch (e) {}
+    if (!resp.ok) {
+      alert('删除失败：' + ((body && body.error) || resp.status) +
+        '\n\n如需协助请邮件联系 chompcloud@gmail.com');
+      return;
+    }
+    // 清本地状态 + 跳首页
+    try { await supabase.auth.signOut(); } catch (e) {}
+    try {
+      // 清掉所有 knowu / vocab 相关的 localStorage（保守起见全清）
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.clear();
+      }
+    } catch (e) {}
+    alert((body && body.message) || '账号已永久删除。');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
+  } catch (e) {
+    alert('删除失败：' + (e.message || e) + '\n\n如需协助请邮件联系 chompcloud@gmail.com');
+  }
+}
 
 var UserAvatar = ({ user, size }) => {
   var s = size || 36;
@@ -134,6 +247,18 @@ export default function UserCenter({ open, onClose, user, stats, studyStreak, st
                 )}
                 {isPaid && <Row icon="🌟" label="订阅方案" href="/plan" value="管理" />}
                 <Row icon="🔒" label="隐私声明" href="/vocab" />
+              </Section>
+
+              {/* Data & Privacy */}
+              <Section title="数据与隐私">
+                <Row icon="📥" label="导出我的数据" value="下载 →" onClick={handleExportData} />
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 0", cursor:"pointer" }} onClick={function(){ handleDeleteAccount(user); }}>
+                  <span style={{ fontSize:14, color:C.red }}>🗑️ 删除我的账号</span>
+                  <span style={{ fontSize:13, color:C.red, fontWeight:600 }}>不可逆 →</span>
+                </div>
+                <div style={{ fontSize:11, color:C.textSec, marginTop:4, lineHeight:1.5 }}>
+                  导出文件包含你的全部学习数据；删除账号会永久清除全部记录，无法恢复。
+                </div>
               </Section>
 
               {/* Logout */}

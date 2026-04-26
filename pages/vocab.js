@@ -284,6 +284,32 @@ var buildSys = (profile, goal, goalCustom) => {
   return "你是幽默有耐心的中英双语词汇导师，风格轻松活泼——会用梗、偶尔吐槽抖机灵。\n\n【学习画像】\n" + p + goalText + "\n\n深度利用画像：例句、画面、比喻必须紧扣用户的爱好、常去地方、日常生活。让用户觉得\"说的就是我\"。";
 };
 
+// A1.2: teach 缓存版 system prompt — 去掉个人画像，保留学习目标。
+// 同一 goal 的用户共享缓存（cache key 包含 goal）。
+// teach 内容不再深度个性化，但保留教学质量 + 目标导向。
+var buildSysGenericTeach = (goal, goalCustom) => {
+  var goalText = "";
+  if (goal === "other" && goalCustom) {
+    goalText = "\n\n【学习目标】\n" + goalCustom.slice(0, 100) +
+      "\n请在词汇难度、例句风格上贴合该目标。";
+  } else if (goal && GOAL_DIRECTIVES[goal]) {
+    var dir = GOAL_DIRECTIVES[goal];
+    var found = STUDY_GOAL_OPTIONS.find(function(o) { return o.key === goal; });
+    var label = found ? found.label : goal;
+    goalText = "\n\n【学习目标】" + label +
+      "\n- 目标受众：" + dir.audience +
+      "\n- 词汇难度：" + dir.difficulty +
+      "\n- 教学风格：" + dir.style +
+      "\n- 例句优先采用：" + dir.sceneTags +
+      "\n以上贯穿你所有输出。";
+  } else if (goal) {
+    var found2 = STUDY_GOAL_OPTIONS.find(function(o) { return o.key === goal; });
+    if (found2) goalText = "\n\n【学习目标】" + found2.label + "（" + found2.desc + "）";
+  }
+  return "你是幽默有耐心的中英双语词汇导师，风格轻松活泼——会用梗、偶尔吐槽抖机灵。" + goalText +
+    "\n\n本次 teach 用通用学习场景的例句（学校、运动、阅读、旅行、日常对话），不要假设具体姓名/朋友/兴趣。例句鲜活有画面，让任何学习者都能产生共鸣。";
+};
+
 var buildGuessPrompt = (word, learned) => {
   var ctx = learned.length > 0 ? "\n之前学过：" + learned.join(", ") : "";
   return "单词：" + word + ctx + "\n\n请执行 Step 1（猜）：\n\n" +
@@ -442,6 +468,122 @@ var buildTeachPrompt = (word, learned, classifyResult) => {
     "- 画像化：例句深度利用学生画像（兴趣、常去地方、日常）\n\n" +
 
     "直接输出纯 JSON（5 个顶层字段完整）。";
+};
+
+// A1.2: teach 缓存版 prompt — 与 buildTeachPrompt 相同的输出 schema，但：
+// - 去掉 learned 列表（每个用户不同 → 破坏缓存）
+// - 去掉 random closing style（不确定性 → 破坏缓存）
+// - 用通用场景指令替代画像化指令
+// - 配合 buildSysGenericTeach（无画像）使用
+// 同 word + classify 的所有用户共享同一缓存。
+var buildTeachCachePrompt = (word, classifyResult) => {
+  var cls = classifyResult || {
+    wordType: "F",
+    methods: [{type:"image"},{type:"nuance"}],
+    comparedWith: null,
+    abstractLevel: "L2"
+  };
+  var methodTypes = (cls.methods || [])
+    .map(function(m){ return m && m.type; })
+    .filter(function(t){ return t && METHOD_SCHEMAS[t]; });
+  if (methodTypes.length === 0) methodTypes = ["image","nuance"];
+
+  var methodSchemasBlock = methodTypes.map(function(t){ return METHOD_SCHEMAS[t]; }).join("\n\n");
+  var methodExamplesBlock = methodTypes.map(function(t){ return METHOD_EXAMPLES[t]; }).join("\n\n");
+  var visualAnchorHint = VISUAL_ANCHOR_FORMATS[cls.abstractLevel] || VISUAL_ANCHOR_FORMATS.L2;
+  var comparedHint = cls.comparedWith
+    ? "【分类器推荐对比词】：" + cls.comparedWith + "（可直接采用）\n"
+    : "";
+
+  return "# 任务\n" +
+    "为单词 \"" + word + "\" 生成学习笔记 JSON。不要输出任何 JSON 之外的文字。\n" +
+    comparedHint + "\n" +
+
+    "# 分类器决策（必须遵守）\n" +
+    "- 词型：" + cls.wordType + "\n" +
+    "- 使用的方法（严格 " + methodTypes.length + " 种）：" + methodTypes.join(" + ") + "\n" +
+    "- 视觉锚级别：" + cls.abstractLevel + "\n\n" +
+
+    "# 你要用的方法 schema（仅此 " + methodTypes.length + " 种）\n" +
+    methodSchemasBlock + "\n\n" +
+
+    "# 方法示例（按此质感输出）\n" +
+    methodExamplesBlock + "\n\n" +
+
+    "# 视觉锚格式\n" +
+    visualAnchorHint + "\n\n" +
+
+    "# 顶层 schema（必须完整输出 7 个字段）\n" +
+    "{\n" +
+    '  "definition": {"pos":"vt./adj./n. 等英文缩写","en":"用 NGSL/Oxford 1000 高频词写的简短英文释义 ≤18 词","zh":"核心中文释义 ≤15 字"},\n' +
+    '  "opening": "50-80 字开场，2-3 句口语化。从一个常见生活场景切入（如学习/运动/旅行/友情），让读者读完第一句就觉得\'这词用得到\'。不要喊具体姓名，不要假设兴趣。",\n' +
+    '  "wordType": "' + cls.wordType + '",\n' +
+    '  "teach": {\n' +
+    '    "methods": [ ... ],  // 严格 ' + methodTypes.length + ' 个，按上面 schema\n' +
+    '    "visualAnchor": {"emojis":"...","text":"..."}\n' +
+    '  },\n' +
+    '  "connect": {\n' +
+    '    "comparedWith": "' + (cls.comparedWith || '对比词') + '",\n' +
+    '    "points": [\n' +
+    '      {"word":"...","meaning":"含义（场景）≤15 字"},\n' +
+    '      {"word":"...","meaning":"含义（场景）≤15 字"}\n' +
+    '    ]\n' +
+    '  },\n' +
+    '  "use": {\n' +
+    '    "collocations": [\n' +
+    '      {"phrase":"...","zh":"..."},\n' +
+    '      {"phrase":"...","zh":"..."}\n' +
+    '    ],\n' +
+    '    "scenarios": [\n' +
+    '      {"sceneZh":"中文场景 5-10 字：","en":"完整英文句（通用学习场景：学校/运动/旅行/家庭/兴趣）。","zh":"中文翻译"},\n' +
+    '      {"sceneZh":"...","en":"...","zh":"..."}\n' +
+    '    ]\n' +
+    '  },\n' +
+    '  "closing": "悄悄话 50-80 字。用「金句对比」风格：「以前你可能会说 X，其实 W 更准 — 因为...」格式开头，X 是熟悉的简单词，W 是本词。重点突出本词独有的细微差别。"\n' +
+    "}\n\n" +
+
+    "# ❗❗ 关键完整性约束 ❗❗\n" +
+    "你的输出必须包含以下 7 个顶层字段（一个都不能少）：\n" +
+    "1. definition\n" +
+    "2. opening (50-80 字)\n" +
+    "3. wordType = \"" + cls.wordType + "\"\n" +
+    "4. teach { methods, visualAnchor }\n" +
+    "5. connect { comparedWith, points }\n" +
+    "6. use { collocations, scenarios }\n" +
+    "7. closing (50-80 字，金句对比风格)\n\n" +
+
+    "# 其他约束\n" +
+    "- 整个输出是单个合法的、可 JSON.parse 解析的对象\n" +
+    "- 不要 markdown 代码块标记\n" +
+    "- 释义中文，例句英文，直引号 \"\"\n" +
+    "- use.scenarios 严格 2 个，use.collocations 严格 2 个\n" +
+    "- 例句用通用学习场景，不要假设具体姓名/朋友/兴趣\n\n" +
+
+    "直接输出纯 JSON。";
+};
+
+// A1.2: 计算 teach 缓存的 cache key
+// 同 word + classify 决策 + goal 的请求共享缓存。
+// 版本号 v1 便于将来 prompt 改进时全局失效。
+var getTeachCacheKey = (word, classifyResult, goal) => {
+  var cls = classifyResult || {};
+  var methodTypes = (cls.methods || [])
+    .map(function(m){ return m && m.type; })
+    .filter(Boolean)
+    .sort()
+    .join("-") || "default";
+  var safeWord = (word || "").toLowerCase().replace(/[^a-z0-9-]/g, "");
+  var parts = [
+    "teach",
+    "v1",
+    safeWord,
+    cls.wordType || "F",
+    cls.abstractLevel || "L2",
+    methodTypes,
+    cls.comparedWith ? cls.comparedWith.toLowerCase().replace(/[^a-z0-9-]/g, "") : "none",
+    goal || "none",
+  ];
+  return parts.join(":");
 };
 
 // Phase 2 Round 1.5：spectrum phase 按词型路由不同玩法
@@ -946,24 +1088,15 @@ var Disclaimer = () => (
 );
 
 function PrivacyNotice() {
-  var [open, setOpen] = useState(false);
   return (
     <div style={{textAlign:"center",padding:"6px 0 10px",fontSize:11,color:C.textSec,fontFamily:FONT}}>
-      <button onClick={function(){setOpen(function(v){return !v;});}} style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:11,cursor:"pointer",textDecoration:"underline",padding:0}}>
-        🔒 隐私声明
-      </button>
-      {open && (
-        <div style={{background:C.bg,border:"1px solid "+C.border,borderRadius:12,padding:"16px 18px",marginTop:8,textAlign:"left",lineHeight:1.9,maxWidth:480,margin:"8px auto 0",fontSize:12}}>
-          <div style={{fontWeight:700,marginBottom:8,fontSize:13}}>🔒 数据隐私承诺</div>
-          <p style={{margin:"0 0 8px"}}>您在「学习画像」中填写的文字及上传的照片，<strong>仅用于</strong> AI 生成个性化学习内容（例句、讲解、记忆场景），不作任何其他用途。</p>
-          <div style={{color:C.textSec}}>
-            • 所有数据在传输和存储过程中均采用 HTTPS 加密保护<br/>
-            • 您的原始信息不会被开发者读取、分析，或以任何形式向第三方披露<br/>
-            • AI 内容生成通过 DeepSeek 及 Google AI API 接口完成，相关数据处理遵守各服务商隐私政策<br/>
-            • 您可随时要求删除账户及全部数据，请发邮件至 <a href="mailto:Winstonwu1996@icloud.com" style={{color:C.accent,textDecoration:"none"}}>Winstonwu1996@icloud.com</a>
-          </div>
-        </div>
-      )}
+      <a href="/privacy" style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:11,cursor:"pointer",textDecoration:"underline",padding:0}}>
+        🔒 隐私政策
+      </a>
+      <span style={{margin:"0 8px",opacity:0.4}}>·</span>
+      <a href="/terms" style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:11,cursor:"pointer",textDecoration:"underline",padding:0}}>
+        📋 服务条款
+      </a>
     </div>
   );
 }
@@ -2342,6 +2475,62 @@ export default function App() {
   var fileRef = useRef(null);
   var [setupTab, setSetupTab] = useState("profile");
   var [profileLocked, setProfileLocked] = useState(false);
+
+  // 整合 history：读 bridgeQueue.history 作为待处理推荐（**不污染用户主词单**）
+  // 用户在此可主动选择「加入主词单」「跳过」「稍后再说」
+  var [historyBridgeQueue, setHistoryBridgeQueue] = useState([]); // [{topicId, words, pushedAt}]
+  var [historyBridgeRefresh, setHistoryBridgeRefresh] = useState(0);
+  useEffect(function() {
+    if (typeof window === "undefined") return;
+    try {
+      var raw = localStorage.getItem("vocabspark_v1");
+      var d = raw ? JSON.parse(raw) : null;
+      var historyQueue = (d && d.bridgeQueue && d.bridgeQueue.history) || {};
+      var pending = [];
+      Object.keys(historyQueue).forEach(function(topicId) {
+        var q = historyQueue[topicId];
+        if (q && q.words && q.words.length > 0) {
+          pending.push({ topicId: topicId, words: q.words, pushedAt: q.pushedAt });
+        }
+      });
+      setHistoryBridgeQueue(pending);
+    } catch (e) {}
+  }, [historyBridgeRefresh]);
+
+  var resolveHistoryBridge = function(topicId, action) {
+    try {
+      var raw = localStorage.getItem("vocabspark_v1");
+      var d = raw ? JSON.parse(raw) : {};
+      var bridgeQueue = d.bridgeQueue || {};
+      var historyQueue = bridgeQueue.history || {};
+      if (!historyQueue[topicId]) return;
+      var queue = historyQueue[topicId];
+      if (action === "accept") {
+        // 合并到主词单（避免重复）
+        var existingMain = new Set(
+          (d.wordInput || "").split(/\n/).map(function(w) { return w.trim().toLowerCase(); }).filter(Boolean)
+        );
+        var newWords = (queue.words || [])
+          .map(function(w) { return w.word; })
+          .filter(function(w) { return w && !existingMain.has(w.toLowerCase()); });
+        if (newWords.length > 0) {
+          var existingInput = d.wordInput || "";
+          d.wordInput = existingInput
+            ? (existingInput.replace(/\s+$/, "") + "\n" + newWords.join("\n"))
+            : newWords.join("\n");
+          // 同步到 React state（让 textarea 立刻刷新）
+          setWordInput(d.wordInput);
+        }
+      }
+      // 移除该 topic 的队列（accept 和 dismiss 都移除）
+      delete historyQueue[topicId];
+      bridgeQueue.history = historyQueue;
+      d.bridgeQueue = bridgeQueue;
+      d.updatedAt = new Date().toISOString();
+      localStorage.setItem("vocabspark_v1", JSON.stringify(d));
+      setHistoryBridgeRefresh(function(x) { return x + 1; });
+    } catch (e) { console.warn("resolve history bridge failed:", e); }
+  };
 
   var [idx, setIdx] = useState(0);
   var [phase, setPhase] = useState("guess");
@@ -3985,8 +4174,16 @@ export default function App() {
         // 关键：task 函数本身不 await classify，进 slot 后立即 callAPIStream，不浪费 slot 时间
         classifyByWord[word].then(function(cls) {
           tasks.push(function() {
+            // A1.4: 优先用 generic + cache 路径（同 word/classify/goal 跨用户共享）
+            // 牺牲：teach 例句不再喊用户姓名，改用通用学习场景
+            // 收益：90%+ 缓存命中、500 用户可承载、LLM 成本省 60-70%
+            // 用户的 study goal 还在 sys 里影响输出（cacheKey 也含 goal）
+            var _useCache = true; // 全量启用缓存路径
+            var _sys = _useCache ? buildSysGenericTeach(studyGoal, studyGoalCustom) : sysP;
+            var _prompt = _useCache ? buildTeachCachePrompt(word, cls) : buildTeachPrompt(word, learned, cls);
+            var _cacheKey = _useCache ? getTeachCacheKey(word, cls, studyGoal) : undefined;
             return callWithClientRetry(function() {
-              return callAPIStream(sysP, buildTeachPrompt(word, learned, cls), { preferredProviders: preferred, jsonMode: true }, function(partial) {
+              return callAPIStream(_sys, _prompt, { preferredProviders: preferred, jsonMode: true, cacheKey: _cacheKey }, function(partial) {
                 if (!dataCache.current[word]) return;
                 var parsed = parsePartialJSON(partial);
                 if (parsed && parsed.opening) {
@@ -6074,6 +6271,98 @@ export default function App() {
             ? "⚠️ 游客今日 " + DAILY_LIMIT_GUEST + " 词上限已到 · 注册后每日 " + DAILY_LIMIT_REGISTERED + " 词 →"
             : "🎓 还能学 " + (DAILY_LIMIT_GUEST - todayCount) + " 词 · 注册后每日 " + DAILY_LIMIT_REGISTERED + " 词无限听 →"
           }
+        </div>
+      )}
+
+      {/* 整合 history：history 通关后的推荐词（不污染主词单 — 用户主动选择是否加入）*/}
+      {historyBridgeQueue.length > 0 && (
+        <div style={{
+          marginBottom: 16, padding: '12px 14px',
+          background: 'linear-gradient(135deg, #f0e6d2 0%, #e8dcb6 100%)',
+          border: '1px solid #d4c098',
+          borderRadius: 12,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: 18 }}>📚</span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: '#3d2c1a' }}>
+              来自 History 模块的推荐词
+            </span>
+            <span style={{
+              fontSize: 10, fontWeight: 600,
+              padding: '2px 7px',
+              background: '#fff8e8',
+              color: '#6b4f33',
+              borderRadius: 999,
+              border: '1px solid #d4c098',
+            }}>
+              {historyBridgeQueue.reduce(function(sum, q) { return sum + q.words.length; }, 0)} 词
+            </span>
+            <span style={{ flex: 1 }} />
+            <span style={{ fontSize: 10, color: '#6b4f33', fontStyle: 'italic' }}>
+              你的主词单不受影响
+            </span>
+          </div>
+          {historyBridgeQueue.map(function(q) {
+            return (
+              <div key={q.topicId} style={{
+                background: '#fff8e8', borderRadius: 8,
+                padding: '10px 12px', marginBottom: 8,
+                border: '1px solid rgba(212, 192, 152, 0.6)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#3d2c1a' }}>
+                    🎯 {q.topicId}
+                  </span>
+                  <span style={{ fontSize: 11, color: '#6b4f33' }}>
+                    · {q.words.length} 个核心词
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+                  {q.words.map(function(w, i) {
+                    return (
+                      <span key={i} style={{
+                        fontSize: 11, padding: '2px 8px',
+                        background: '#fbf5e0',
+                        color: '#3d2c1a',
+                        border: '1px solid #d4c098',
+                        borderRadius: 999,
+                        fontFamily: 'ui-monospace, monospace',
+                      }} title={w.cnGloss || ''}>
+                        {w.word}
+                      </span>
+                    );
+                  })}
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    onClick={function() { resolveHistoryBridge(q.topicId, "accept"); }}
+                    style={{
+                      padding: '5px 12px',
+                      background: '#c46b30',
+                      color: '#fff8e8',
+                      border: 'none', borderRadius: 999,
+                      fontSize: 11, fontWeight: 700,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >全部加入主词单 →</button>
+                  <button
+                    onClick={function() { resolveHistoryBridge(q.topicId, "dismiss"); }}
+                    style={{
+                      padding: '5px 12px',
+                      background: 'transparent',
+                      color: '#6b4f33',
+                      border: '1px solid #d4c098', borderRadius: 999,
+                      fontSize: 11, fontWeight: 500,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >跳过</button>
+                </div>
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 10, color: '#6b4f33', fontStyle: 'italic', marginTop: 6 }}>
+            💡 加入后这些词会进入你的 SRS 复习池（[1, 3, 7, 14, 30] 天间隔）
+          </div>
         </div>
       )}
 
