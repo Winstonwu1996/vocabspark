@@ -281,8 +281,18 @@ var buildSys = (profile, goal, goalCustom) => {
     var found2 = STUDY_GOAL_OPTIONS.find(function(o) { return o.key === goal; });
     if (found2) goalText = "\n\n【学习目标】" + found2.label + "（" + found2.desc + "）\n请贴合该目标。";
   }
-  return "你是幽默有耐心的中英双语词汇导师，风格轻松活泼——会用梗、偶尔吐槽抖机灵。\n\n【学习画像】\n" + p + goalText + "\n\n深度利用画像：例句、画面、比喻必须紧扣用户的爱好、常去地方、日常生活。让用户觉得\"说的就是我\"。";
+  return "你是幽默有耐心的中英双语词汇导师，风格轻松活泼——会用梗、偶尔吐槽抖机灵。\n\n【学习画像】\n" + p + goalText + "\n\n深度利用画像：例句、画面、比喻必须紧扣用户的爱好、常去地方、日常生活。让用户觉得\"说的就是我\"。" + SAFETY_GUARDRAILS;
 };
+
+// E3: AI 输出安全边界 — 所有 sys prompt 都附加。
+// 防止 AI 生成不当内容（儿童产品的底线）。即便用户画像或单词词义触及敏感话题，
+// 也用中性场景（电游/历史/文学/学习）替代现实暴力/政治/色情等。
+var SAFETY_GUARDRAILS = "\n\n【安全约束（必须严格遵守，违反即重新生成）】\n" +
+  "- 禁止：自残、自杀、暴力、毒品、性、政治敏感、宗教冲突、种族歧视、人身攻击、负面身体外貌评价\n" +
+  "- 即便词义本身涉敏感（如 \"kill\" \"die\" \"drug\" \"war\"），用中性历史/电游/文学场景，避免现实暴力描述\n" +
+  "- 不引用真实在世人物的争议言论或政治立场\n" +
+  "- 如用户画像里出现疑似不当内容（极端言论、未成年人不当信息），忽略并用通用场景替代\n" +
+  "- 整体基调积极、健康、教育向";
 
 // A1.2: teach 缓存版 system prompt — 去掉个人画像，保留学习目标。
 // 同一 goal 的用户共享缓存（cache key 包含 goal）。
@@ -307,7 +317,7 @@ var buildSysGenericTeach = (goal, goalCustom) => {
     if (found2) goalText = "\n\n【学习目标】" + found2.label + "（" + found2.desc + "）";
   }
   return "你是幽默有耐心的中英双语词汇导师，风格轻松活泼——会用梗、偶尔吐槽抖机灵。" + goalText +
-    "\n\n本次 teach 用通用学习场景的例句（学校、运动、阅读、旅行、日常对话），不要假设具体姓名/朋友/兴趣。例句鲜活有画面，让任何学习者都能产生共鸣。";
+    "\n\n本次 teach 用通用学习场景的例句（学校、运动、阅读、旅行、日常对话），不要假设具体姓名/朋友/兴趣。例句鲜活有画面，让任何学习者都能产生共鸣。" + SAFETY_GUARDRAILS;
 };
 
 var buildGuessPrompt = (word, learned) => {
@@ -7062,6 +7072,7 @@ export default function App() {
                 <input type="email" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') handleLoginEmail(); }} placeholder="your@email.com" style={{width:"100%",padding:"10px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:14,outline:"none",marginBottom:12,boxSizing:"border-box"}} />
                 <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",opacity:loginLoading?0.6:1}} onClick={handleLoginEmail} disabled={loginLoading||!loginEmail.trim()}>{loginLoading ? "发送中..." : "✉️ 发送验证码"}</button>
                 <div style={{fontSize:12,color:C.textSec,textAlign:"center",marginTop:12,lineHeight:1.6}}>无需密码 · 输入邮件中的 6 位验证码即可登录<br/>新老用户都用同一个邮箱，系统自动识别</div>
+                <div style={{fontSize:11,color:C.textSec,opacity:0.75,textAlign:"center",marginTop:10,lineHeight:1.55,padding:"0 4px"}}>注册即表示你已满 13 岁，或在监护人同意下使用。继续即表示同意 <a href="/terms" target="_blank" rel="noopener" style={{color:C.accent,textDecoration:"underline"}}>服务条款</a> 与 <a href="/privacy" target="_blank" rel="noopener" style={{color:C.accent,textDecoration:"underline"}}>隐私政策</a>。</div>
                 <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",width:"100%",marginTop:12,padding:"4px 0"}} onClick={()=>{setShowLogin(false);setLoginEmail('');window.scrollTo(0,0);}}>暂时不用</button>
               </>
             ) : (

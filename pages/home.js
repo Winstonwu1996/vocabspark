@@ -6,6 +6,7 @@ import { BrandNavBar, BrandUIcon } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
 import { supabase } from '../lib/supabase';
 import { loadLearningTime, formatTime } from '../lib/learningTimer';
+import { trackFunnel } from '../lib/analytics';
 
 /* ═══════════════════════════════════════════════════════
    Know U. Learning — 营销首页（已登录用户看 dashboard）
@@ -447,13 +448,17 @@ export default function HomePage() {
   var [showUserCenter, setShowUserCenter] = useState(false);
 
   useEffect(() => {
+    // 漏斗：进入 home 页（已登录 / 未登录区分）
     supabase.auth.getSession().then(function(result) {
       var s = result?.data?.session;
       if (s?.user) setUser(s.user);
       setAuthChecked(true);
+      trackFunnel('home_view', { has_user: !!(s && s.user) });
     });
     var { data: { subscription } } = supabase.auth.onAuthStateChange(function(event, session) {
       setUser(session?.user || null);
+      // 漏斗：登录态变化（SIGNED_IN / SIGNED_OUT 等）
+      if (event) trackFunnel('auth_state_change', { event: event, has_user: !!(session && session.user) });
     });
     return function() { subscription?.unsubscribe(); };
   }, []);
@@ -646,7 +651,8 @@ export default function HomePage() {
             <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, lineHeight:1.35 }}>看完了？让 AI 真正认识你 →</div>
             <p style={{ fontSize: 13, color: C.textSec, marginBottom: 22, lineHeight:1.7 }}>
               填一份「学习画像」（5 分钟）— 之后每个例句都是你的故事。<br/>
-              <span style={{ color:C.gold, fontWeight:700 }}>🎁 推广期全部免费</span> · 无需信用卡 · 随时退出
+              <span style={{ color:C.gold, fontWeight:700 }}>🎁 推广期全部免费</span>（至 2026-09-30）· 无需信用卡 · 随时退出<br/>
+              <span style={{ fontSize:11, color:C.textSec, opacity:0.75 }}>10/1 后改为付费方案，将提前 14 天通知所有注册用户</span>
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
               <Link href="/vocab?from=home" style={{ ...S.bigBtn, display: "inline-block", width: "auto", padding: "14px 28px", fontSize: 15, textDecoration: "none" }}>

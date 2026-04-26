@@ -225,6 +225,16 @@ export default function PlanPage() {
           </div>
         )}
 
+        {/* P8: 推广期透明声明 */}
+        {!currentSub && (
+          <div style={{ background:C.goldLight, border:"1px solid "+C.gold+"55", borderRadius:12, padding:"14px 18px", marginBottom:14, color:C.text, fontFamily:FONT }}>
+            <div style={{ fontSize:14, fontWeight:700, marginBottom:6, color:C.gold }}>🎁 推广期：所有功能全部免费（至 2026-09-30）</div>
+            <div style={{ fontSize:12, color:C.textSec, lineHeight:1.6 }}>
+              下面的付费方案是推广期结束后的预期价格。10/1 之前你**不会被收费**，无需信用卡；推广期结束前 14 天我们会邮件通知所有用户，到时你可以选择订阅或继续用免费层。
+            </div>
+          </div>
+        )}
+
         {/* 早鸟优惠横幅（仅未订阅用户可见） */}
         {!currentSub && (
           <div style={{ background:"linear-gradient(135deg, #e53e3e 0%, " + C.accent + " 100%)", borderRadius:14, padding:"16px 18px", marginBottom:14, color:"#fff", animation:"fadeUp 0.3s ease-out" }}>

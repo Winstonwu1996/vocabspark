@@ -1,7 +1,10 @@
 /* ─── Know U. Learning — 用户中心侧边抽屉 ─── */
+import { useState } from 'react';
 import Link from 'next/link';
 import { C, FONT, S } from '../lib/theme';
 import { supabase } from '../lib/supabase';
+import { trackFunnel } from '../lib/analytics';
+import FAQPanel from './FAQPanel';
 
 // ─── 数据与隐私：导出 / 删除账号 ─────────────────────────────────────────────
 // 取当前 session 的 access token（导出 / 删除都需要 Bearer 认证）
@@ -129,7 +132,18 @@ var UserAvatar = ({ user, size }) => {
 export { UserAvatar };
 
 export default function UserCenter({ open, onClose, user, stats, studyStreak, studyGoal, dailyNewWords, deepReviewDailyCap, userTier, newLearnedToday, onLogin, onLogout }) {
+  var [faqOpen, setFaqOpen] = useState(false);
   if (!open) return null;
+
+  // 漏斗：登录/退出/注册（注册由 onLogin 触发跳转 → 跳转目标页处理）
+  var handleLoginClick = function() {
+    trackFunnel('user_center_login_click', { has_user: !!user });
+    if (typeof onLogin === 'function') onLogin();
+  };
+  var handleLogoutClick = function() {
+    trackFunnel('user_center_logout_click', { email_domain: (user && user.email && user.email.split('@')[1]) || null });
+    if (typeof onLogout === 'function') onLogout();
+  };
   var pct = stats && stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
   var goalLabel = "";
   var GOALS = { ssat:"备考 SSAT", isee:"备考 ISEE", sat:"备考 SAT", toefl:"备考 TOEFL", ielts:"备考 IELTS", other:"其他目标" };
@@ -249,6 +263,11 @@ export default function UserCenter({ open, onClose, user, stats, studyStreak, st
                 <Row icon="🔒" label="隐私声明" href="/vocab" />
               </Section>
 
+              {/* FAQ — 常见问题入口 */}
+              <Section title="帮助与支持">
+                <Row icon="❓" label="常见问题" value="查看 →" onClick={function() { trackFunnel('faq_open', { source: 'user_center' }); setFaqOpen(true); }} />
+              </Section>
+
               {/* Data & Privacy */}
               <Section title="数据与隐私">
                 <Row icon="📥" label="导出我的数据" value="下载 →" onClick={handleExportData} />
@@ -263,7 +282,7 @@ export default function UserCenter({ open, onClose, user, stats, studyStreak, st
 
               {/* Logout */}
               <div style={{ marginTop:24, paddingTop:16, borderTop:"1px solid "+C.border }}>
-                <button onClick={onLogout} style={{ background:"transparent", border:"none", color:C.red, fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:FONT, padding:"8px 0" }}>退出登录</button>
+                <button onClick={handleLogoutClick} style={{ background:"transparent", border:"none", color:C.red, fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:FONT, padding:"8px 0" }}>退出登录</button>
               </div>
             </>
           ) : (
@@ -283,7 +302,11 @@ export default function UserCenter({ open, onClose, user, stats, studyStreak, st
                 📊 完整学习统计与智能复习日程
               </div>
 
-              <button onClick={onLogin} style={{ ...S.bigBtn, marginBottom:16 }}>登录 / 注册</button>
+              <button onClick={handleLoginClick} style={{ ...S.bigBtn, marginBottom:16 }}>登录 / 注册</button>
+
+              <Section title="帮助与支持">
+                <Row icon="❓" label="常见问题" value="查看 →" onClick={function() { trackFunnel('faq_open', { source: 'user_center_guest' }); setFaqOpen(true); }} />
+              </Section>
 
               <Section title="体验课程">
                 <Row icon="📖" label="Vocab · 词汇课" href="/vocab" value="免费体验" />
@@ -294,6 +317,9 @@ export default function UserCenter({ open, onClose, user, stats, studyStreak, st
           )}
         </div>
       </div>
+
+      {/* FAQ 抽屉 — 叠加在 UserCenter 上方 */}
+      <FAQPanel open={faqOpen} onClose={function() { setFaqOpen(false); }} />
     </>
   );
 }
