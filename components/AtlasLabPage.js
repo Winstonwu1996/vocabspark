@@ -62,6 +62,25 @@ export default function AtlasLabPage({
   const [selectedPin, setSelectedPin] = useState(null);
   const panelRef = useRef(null);
 
+  // Phase 2 #1：Atlas Lab chip 区折叠 — 选定 Topic 后再展示 40 个 chip 列表是冗余
+  // 折叠后保留时间轴上下文（prev/next）+ 年级 tab + 中英切换 始终可见
+  // localStorage 记忆用户偏好
+  const [chipBarCollapsed, setChipBarCollapsed] = useState(true);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const pref = localStorage.getItem('atlasChipBarMode');
+      if (pref === 'expanded') setChipBarCollapsed(false);
+    } catch (_) {}
+  }, []);
+  const toggleChipBar = () => {
+    setChipBarCollapsed(prev => {
+      const next = !prev;
+      try { localStorage.setItem('atlasChipBarMode', next ? 'collapsed' : 'expanded'); } catch (_) {}
+      return next;
+    });
+  };
+
   // 整合 /history：读 localStorage 完成记录 + ?completed= toast
   const [completedHistoryTopics, setCompletedHistoryTopics] = useState({});  // {atlasId: true} 或 {historyTopicId: completionData}
   const [completionToast, setCompletionToast] = useState(null);  // null | { atlasId, xp }
@@ -159,6 +178,12 @@ export default function AtlasLabPage({
   const currentGradeViews = (viewsByGrade[activeGrade] || []).slice().sort((a, b) =>
     (typeof a.year === 'number' ? a.year : 0) - (typeof b.year === 'number' ? b.year : 0)
   );
+
+  // Phase 2 #1：当前 Topic 在时间轴上的 prev/next 邻居（折叠态显示）
+  const activeIdxInGrade = currentGradeViews.findIndex(m => m.id === activeViewId);
+  const prevView = activeIdxInGrade > 0 ? currentGradeViews[activeIdxInGrade - 1] : null;
+  const nextView = (activeIdxInGrade >= 0 && activeIdxInGrade < currentGradeViews.length - 1)
+    ? currentGradeViews[activeIdxInGrade + 1] : null;
 
   // year → topicId 映射（CausalityPanel 时间链跳转用）
   const yearToTopicId = {};
@@ -288,7 +313,77 @@ export default function AtlasLabPage({
               })}
             </div>
 
-            {/* Topic chips（按时间序）— Link 路由切换 */}
+            {/* Phase 2 #1：折叠态 — 只显示当前 Topic + prev/next 邻居（一行内） */}
+            {chipBarCollapsed && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: '1 1 200px', minWidth: 0, flexWrap: 'wrap' }}>
+                {prevView && (
+                  <Link href={'/atlas-lab/' + prevView.id} style={{ textDecoration: 'none' }}>
+                    <span title={lang === 'cn' ? '上一个 Topic' : 'Previous Topic'} style={{
+                      padding: '4px 10px',
+                      background: HC.parchmentHi,
+                      color: HC.textSec,
+                      border: '1px solid ' + HC.border,
+                      borderRadius: 999,
+                      fontSize: 11, fontWeight: 500,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      whiteSpace: 'nowrap', maxWidth: 200,
+                      overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                      ← {prevView.title[lang] || prevView.title.cn} <span style={{ opacity: 0.6, fontSize: 10 }}>{formatYear(prevView.year)}</span>
+                    </span>
+                  </Link>
+                )}
+                {/* 当前 Topic（高亮，不可点） */}
+                <span style={{
+                  padding: '4px 10px',
+                  background: HC.accent,
+                  color: '#fff8e8',
+                  border: '1px solid ' + HC.accent,
+                  borderRadius: 999,
+                  fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  whiteSpace: 'nowrap',
+                }}>
+                  {meta.title?.[lang] || meta.title?.cn} <span style={{ opacity: 0.85, fontSize: 10 }}>{formatYear(meta.year)}</span>
+                </span>
+                {nextView && (
+                  <Link href={'/atlas-lab/' + nextView.id} style={{ textDecoration: 'none' }}>
+                    <span title={lang === 'cn' ? '下一个 Topic' : 'Next Topic'} style={{
+                      padding: '4px 10px',
+                      background: HC.parchmentHi,
+                      color: HC.textSec,
+                      border: '1px solid ' + HC.border,
+                      borderRadius: 999,
+                      fontSize: 11, fontWeight: 500,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      whiteSpace: 'nowrap', maxWidth: 200,
+                      overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                      {nextView.title[lang] || nextView.title.cn} <span style={{ opacity: 0.6, fontSize: 10 }}>{formatYear(nextView.year)}</span> →
+                    </span>
+                  </Link>
+                )}
+                <button
+                  onClick={toggleChipBar}
+                  title={lang === 'cn' ? '展开看本年级所有 Topic' : 'Expand to see all topics in grade'}
+                  style={{
+                    padding: '3px 8px',
+                    background: 'transparent',
+                    color: HC.textSec,
+                    border: '1px dashed ' + HC.border,
+                    borderRadius: 6,
+                    fontSize: 11, fontWeight: 500,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                  }}
+                >▼ {lang === 'cn' ? '展开 G' + activeGrade : 'Expand G' + activeGrade}</button>
+              </div>
+            )}
+
+            {/* Topic chips（按时间序）— Link 路由切换。仅展开态显示完整网格 */}
+            {!chipBarCollapsed && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, flex: '1 1 200px' }}>
               {currentGradeViews.map(m => {
                 const isActive = m.id === activeViewId;
@@ -353,7 +448,23 @@ export default function AtlasLabPage({
                   </Link>
                 );
               })}
+              <button
+                onClick={toggleChipBar}
+                title={lang === 'cn' ? '折叠回紧凑模式' : 'Collapse to compact mode'}
+                style={{
+                  padding: '3px 8px',
+                  background: 'transparent',
+                  color: HC.textSec,
+                  border: '1px dashed ' + HC.border,
+                  borderRadius: 6,
+                  fontSize: 11, fontWeight: 500,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                  marginLeft: 4,
+                }}
+              >▲ {lang === 'cn' ? '折叠' : 'Collapse'}</button>
             </div>
+            )}
 
             {/* CN/EN 切换 — 移入 sticky chip bar 末尾，任何屏幕滚动位置都能切换 */}
             <div style={{ display: 'flex', gap: 0, alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
