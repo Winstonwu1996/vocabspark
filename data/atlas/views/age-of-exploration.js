@@ -29,6 +29,7 @@ export const VIEW = {
       yearSnapshot:    'world_1492',
       highlightId:     'castile-1492',
     },
+    C:  { civs: 'early-modern-1500' },
     F:  { ids: ['gibraltar', 'english-channel'] },
     L4: {
       pins: ['palos-1492', 'san-salvador', 'granada-1492', 'lisbon-1492', 'tordesillas'],

@@ -26,6 +26,7 @@ export const VIEW = {
       yearSnapshot:    'world_500',
       highlightId:     'eastern-rome',
     },
+    C:  { civs: 'classical-100' },
     F:  { ids: ['bosporus', 'gibraltar', 'rhine', 'danube', 'alps', 'roman-roads'] },
     L4: {
       pins: ['constantinople-500', 'rome-500', 'ravenna', 'ctesiphon-500'],

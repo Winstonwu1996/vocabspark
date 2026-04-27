@@ -27,6 +27,7 @@ export const VIEW = {
       yearSnapshot:    'world_1200',
       highlightId:     'kamakura-japan',
     },
+    C:  { civs: 'east-asia-1000' },
     F:  { ids: ['great-wall', 'silk-road'] },
     L4: {
       pins: ['kyoto-1200', 'kamakura', 'dan-no-ura', 'hakata-bay'],

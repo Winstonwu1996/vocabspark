@@ -30,6 +30,7 @@ export const VIEW = {
       yearSnapshot:    'world_1715',
       highlightId:     'france-1715',
     },
+    C:  { civs: 'modern-1783' },
     F:  { ids: ['rhine', 'danube', 'alps', 'english-channel'] },
     L4: {
       pins: ['paris-1750', 'london-1750', 'amsterdam-1750', 'edinburgh-1750'],

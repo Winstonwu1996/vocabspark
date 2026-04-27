@@ -26,6 +26,7 @@ export const VIEW = {
       yearSnapshot:    'world_bc200',
       highlightId:     'maurya',
     },
+    C:  { civs: 'classical-bc500' },
     F:  { ids: ['silk-road', 'himalaya', 'tibetan-plateau'] },
     L4: {
       pins: ['pataliputra', 'kalinga', 'sarnath', 'taxila'],

@@ -27,6 +27,7 @@ export const VIEW = {
       modernPolities:  'north-america-modern',
       highlightId:     'usa-states-1830',
     },
+    C:  { civs: 'modern-1880' },
     F:  { ids: ['appalachians', 'mississippi'] },
     L4: {
       pins: ['seneca-falls-1848', 'liberator-1831', 'oberlin-1833', 'walden-pond-1845', 'washingtonian-temperance', 'dorothea-dix-1843'],

@@ -28,6 +28,7 @@ export const VIEW = {
       yearSnapshot:    'world_1815',
       highlightId:     'slave-states-1850',
     },
+    C:  { civs: 'modern-1880' },
     F:  { ids: [] },
     L4: {
       pins: ['compromise-1850', 'missouri-compromise-1820', 'harpers-ferry-1859', 'underground-rr', 'bleeding-kansas-1856'],

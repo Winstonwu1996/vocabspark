@@ -27,6 +27,7 @@ export const VIEW = {
       yearSnapshot:    'world_1700',
       highlightId:     'england-1687',
     },
+    C:  { civs: 'early-modern-1530' },
     F:  { ids: ['rhine', 'danube', 'alps', 'english-channel'] },
     L4: {
       pins: ['cambridge-1687', 'padua-galileo', 'paris-academie', 'royal-society-london', 'krakow-copernicus'],

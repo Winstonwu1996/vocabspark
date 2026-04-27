@@ -26,6 +26,7 @@ export const VIEW = {
       yearSnapshot:    'world_1000',
       highlightId:     'crusader-states',
     },
+    C:  { civs: 'medieval-1215' },
     F:  { ids: ['bosporus', 'jordan-river', 'silk-road'] },
     L4: {
       pins: ['jerusalem-1099', 'clermont-1095', 'constantinople-1095', 'antioch-1098', 'acre-1291', 'manzikert-1071'],

@@ -71,6 +71,17 @@ function setLocalCache(key, value) {
   } catch (_) {}
 }
 
+// 读 Vocab 模块的宠物名 — 全局共享一只 AI 宠物
+// 默认 "小毛球"（vocab.js defaultPet 的 name），用户可在 vocab 改名
+function getPetName() {
+  if (typeof window === 'undefined') return '小毛球';
+  try {
+    const raw = localStorage.getItem('vocabspark_v1');
+    const d = raw ? JSON.parse(raw) : null;
+    return (d && d.pet && d.pet.name) || '小毛球';
+  } catch (_) { return '小毛球'; }
+}
+
 // ─── 单行解读 hook（共享 fetch 逻辑） ─────────────────────────────────
 function useCausalExplain({ topicId, topicTitle, layer, entry, grade, lang }) {
   const [explanation, setExplanation] = useState(null);
@@ -111,7 +122,7 @@ function useCausalExplain({ topicId, topicTitle, layer, entry, grade, lang }) {
 }
 
 // ─── 时间链事件 chip — 点击弹 popover 显示 AI 解读 ───────────────────
-function TimelineEvent({ event, topicId, topicTitle, grade, lang, color }) {
+function TimelineEvent({ event, topicId, topicTitle, grade, lang, color, petName }) {
   const [open, setOpen] = useState(false);
   const { explanation, loading, error, fetchIt } = useCausalExplain({
     topicId, topicTitle, layer: 'event', entry: event, grade, lang,
@@ -176,7 +187,7 @@ function TimelineEvent({ event, topicId, topicTitle, grade, lang, color }) {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: color, letterSpacing: 0.5 }}>
-              🐾 kuKitty {lang === 'cn' ? '解读' : 'explains'}
+              🐾 {petName} {lang === 'cn' ? '解读' : 'explains'}
             </span>
             <button
               onClick={(e) => { e.stopPropagation(); setOpen(false); }}
@@ -197,7 +208,7 @@ function TimelineEvent({ event, topicId, topicTitle, grade, lang, color }) {
 }
 
 // ─── 一行因果 + 行下方 AI bubble（受 forceOpen 控制） ───────────────
-function CausalRow({ layerKey, meta, entry, topicId, topicTitle, grade, lang, forceOpen }) {
+function CausalRow({ layerKey, meta, entry, topicId, topicTitle, grade, lang, forceOpen, petName }) {
   const [openLocal, setOpenLocal] = useState(false);
   const { explanation, loading, error, fetchIt } = useCausalExplain({
     topicId, topicTitle, layer: layerKey, entry, grade, lang,
@@ -277,6 +288,7 @@ function CausalRow({ layerKey, meta, entry, topicId, topicTitle, grade, lang, fo
                   grade={grade}
                   lang={lang}
                   color={meta.color}
+                  petName={petName}
                 />
               </span>
             ))}
@@ -302,7 +314,7 @@ function CausalRow({ layerKey, meta, entry, topicId, topicTitle, grade, lang, fo
               fontSize: 10, fontWeight: 700, color: meta.color,
               marginBottom: 4, letterSpacing: 0.5,
             }}>
-              🐾 {lang === 'cn' ? 'kuKitty 解读' : 'kuKitty explains'}
+              🐾 {petName} {lang === 'cn' ? '解读' : 'explains'}
             </div>
             {loading && <div style={{ color: '#6b4f33', fontStyle: 'italic' }}>...</div>}
             {error && <div style={{ color: '#9b2c2c' }}>{error}</div>}
@@ -321,6 +333,16 @@ export default function CausalSummary({ text, lang = 'cn', topicId, topicTitle, 
 
   // 统一入口：一键展开所有 5 层
   const [expandAll, setExpandAll] = useState(false);
+
+  // 读 Vocab 全局宠物名（mount 时 + Vocab 改名同步刷新）
+  const [petName, setPetName] = useState('小毛球');
+  useEffect(() => {
+    setPetName(getPetName());
+    // 监听 storage 事件 — 用户在 Vocab 改名后这里也实时更新
+    const handler = () => setPetName(getPetName());
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
 
   if (!parsed) {
     return (
@@ -359,6 +381,7 @@ export default function CausalSummary({ text, lang = 'cn', topicId, topicTitle, 
                 grade={grade}
                 lang={lang}
                 forceOpen={expandAll}
+                petName={petName}
               />
             );
           }
@@ -379,7 +402,7 @@ export default function CausalSummary({ text, lang = 'cn', topicId, topicTitle, 
         })}
       </div>
 
-      {/* 统一入口：让 kuKitty 一次性解读全部（行内事件 chip 单独处理） */}
+      {/* 统一入口：让宠物一次性解读全部（行内事件 chip 单独处理） */}
       {interactive && !expandAll && (
         <div style={{ marginTop: 8, textAlign: 'center' }}>
           <button
@@ -404,7 +427,7 @@ export default function CausalSummary({ text, lang = 'cn', topicId, topicTitle, 
             }}
             title={lang === 'cn' ? '一键让 AI 帮你读懂这 5 层因果' : 'One-click AI explanation for all 5 layers'}
           >
-            🐾 {lang === 'cn' ? '让 kuKitty 帮我读懂这一页' : 'Let kuKitty explain this page'}
+            🐾 {lang === 'cn' ? `让 ${petName} 帮我读懂这一页` : `Let ${petName} explain this page`}
           </button>
         </div>
       )}

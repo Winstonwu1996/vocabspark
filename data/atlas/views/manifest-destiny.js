@@ -28,6 +28,7 @@ export const VIEW = {
       // 不指定 yearSnapshot — 全部 customPolygon
       highlightId:     'usa-1848',
     },
+    C:  { civs: 'modern-1880' },
     F:  { ids: ['mississippi', 'rocky-mountains', 'appalachians', 'rio-grande'] },
     L4: {
       pins: ['treaty-guadalupe-hidalgo-1848', 'alamo-1836', 'oregon-trail-1843', 'gold-rush-1848-49', 'gadsden-purchase-1853', 'mexican-american-war-1846'],

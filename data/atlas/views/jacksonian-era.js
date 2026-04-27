@@ -28,6 +28,7 @@ export const VIEW = {
       // 不指定 yearSnapshot — 全部 customPolygon（1830 在 1815/1880 之间无合适快照）
       highlightId:     'usa-states-1830',
     },
+    C:  { civs: 'modern-1880' },
     F:  { ids: ['mississippi', 'ohio-river', 'missouri-river', 'appalachians', 'rocky-mountains'] },
     L4: {
       pins: ['trail-of-tears-1830', 'andrew-jackson-1828', 'bank-of-us-veto', 'nullification-crisis', 'texas-revolution-1836'],

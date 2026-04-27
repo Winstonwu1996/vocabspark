@@ -18,21 +18,26 @@ const HC = {
   card:        '#fbf5e0',
 };
 
-export default function MapLegend({ lang = 'cn' }) {
+// homeCity / nowCity 由 AtlasLabPage 从 user profile 传入
+// 默认值 "中国" / "Irvine" 仅当用户未填 fromCity 时使用
+export default function MapLegend({ lang = 'cn', homeCity, nowCity }) {
+  const homeLabel = homeCity || (lang === 'cn' ? '中国' : 'China');
+  const nowLabel = nowCity || 'Irvine';
+
   const items = lang === 'cn' ? [
     { swatch: <PolitySwatch />,        label: '政体颜色',  hint: '主角国家深色 · 邻国浅色' },
     { swatch: <StarSwatch />,          label: '红星 pin',   hint: '因果焦点（可点击展开 4D 坐标）' },
     { swatch: <CircleSwatch />,        label: '白圈',       hint: '城市 / 事件位置' },
-    { swatch: <HomeSwatch />,          label: '家乡',       hint: '你的家乡（中国）' },
-    { swatch: <NowSwatch />,           label: '当前位置',   hint: '你现在的位置（Irvine）' },
+    { swatch: <HomeSwatch />,          label: '家乡',       hint: '你的家乡（' + homeLabel + '）' },
+    { swatch: <NowSwatch />,           label: '当前位置',   hint: '你现在的位置（' + nowLabel + '）' },
     { swatch: <ApTierSwatch />,        label: 'AP 进阶',     hint: '该年级 HSS 教材外，但 AP 必考' },
     { swatch: <ExtTierSwatch />,       label: '进阶',        hint: '教材延伸阅读，非 AP 重点' },
   ] : [
     { swatch: <PolitySwatch />,        label: 'Polity colors', hint: 'Focal=dark · Neighbors=light' },
     { swatch: <StarSwatch />,          label: 'Red star pin',  hint: 'Causal focal point (clickable)' },
     { swatch: <CircleSwatch />,        label: 'White circle',  hint: 'City / event location' },
-    { swatch: <HomeSwatch />,          label: 'Home',          hint: 'Your hometown (China)' },
-    { swatch: <NowSwatch />,           label: 'Now',           hint: 'Your current location (Irvine)' },
+    { swatch: <HomeSwatch />,          label: 'Home',          hint: 'Your hometown (' + homeLabel + ')' },
+    { swatch: <NowSwatch />,           label: 'Now',           hint: 'Your current location (' + nowLabel + ')' },
     { swatch: <ApTierSwatch />,        label: 'AP+',           hint: 'Beyond grade HSS, heavily AP-tested' },
     { swatch: <ExtTierSwatch />,       label: 'Extra',         hint: 'Curriculum extension, not core AP' },
   ];

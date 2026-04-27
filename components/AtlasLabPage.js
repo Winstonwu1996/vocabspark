@@ -641,7 +641,11 @@ export default function AtlasLabPage({
           )}
 
           {/* 持久图例 — 给 7 年级用户随时一眼能看懂的色/符号对照 */}
-          <MapLegend lang={lang} />
+          <MapLegend
+            lang={lang}
+            homeCity={userHomeCity ? userHomeCity.name : null}
+            nowCity={userNowCity ? userNowCity.name : null}
+          />
 
           {/* 地图 */}
           <div style={{ background: HC.card, padding: 8, borderRadius: 12, border: '1px solid ' + HC.border, marginBottom: 10, position: 'relative' }}>

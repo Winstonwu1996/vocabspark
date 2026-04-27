@@ -28,6 +28,7 @@ export const VIEW = {
       yearSnapshot:    'world_1800',
       highlightId:     'louisiana-purchase',
     },
+    C:  { civs: 'modern-1880' },
     F:  { ids: [] },
     L4: {
       pins: ['louisiana-purchase-1803', 'st-louis-1804', 'fort-mandan', 'astoria-pacific', 'trail-of-tears-1830'],

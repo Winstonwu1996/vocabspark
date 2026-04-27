@@ -30,6 +30,7 @@ export const VIEW = {
       yearSnapshot:    'world_1700',         // 1600 不在库 · 1700 最近（格局基本如此）
       highlightId:     'ottoman-1600',
     },
+    C:  { civs: 'early-modern-1530' },
     F:  { ids: ['silk-road', 'sahara-trade'] },
     L4: {
       pins: ['istanbul-1600', 'isfahan-1600', 'agra-1600', 'taj-mahal-future', 'selim-ottoman-1517', 'chaldiran-1514'],

@@ -31,6 +31,7 @@ export const VIEW = {
       // （world_1880 的 USA 是单一多边形，不能区分 Union/Confederacy）
       highlightId:     'union',
     },
+    C:  { civs: 'modern-1880' },
     F:  { ids: ['mississippi', 'ohio-river', 'missouri-river', 'appalachians', 'mason-dixon', 'rocky-mountains'] },
     L4: {
       pins: ['fort-sumter', 'gettysburg', 'atlanta-1864', 'appomattox', 'washington-dc', 'richmond'],

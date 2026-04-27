@@ -27,6 +27,7 @@ export const VIEW = {
       yearSnapshot:    'world_1300',
       highlightId:     'mali-empire',
     },
+    C:  { civs: 'eurasia-1347' },
     F:  { ids: ['niger-river', 'sahara-trade'] },
     L4: {
       pins: ['cairo-1324', 'timbuktu-1324', 'niani-1324', 'djenne', 'mecca-1324'],

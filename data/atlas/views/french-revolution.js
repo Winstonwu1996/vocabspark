@@ -30,6 +30,7 @@ export const VIEW = {
       yearSnapshot:    'world_1800',
       highlightId:     'france-revolution',
     },
+    C:  { civs: 'modern-1783' },
     F:  { ids: ['rhine', 'danube', 'alps', 'english-channel'] },
     L4: {
       pins: ['bastille', 'versailles-1789', 'paris-1789', 'concorde-guillotine', 'london-1789'],

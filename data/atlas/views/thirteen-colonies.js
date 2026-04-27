@@ -28,6 +28,7 @@ export const VIEW = {
       yearSnapshot:    'world_1715',
       highlightId:     'british-colonies',
     },
+    C:  { civs: 'modern-1783' },
     F:  { ids: [] },
     L4: {
       pins: ['jamestown-1607', 'plymouth-1620', 'philadelphia-1750', 'boston-1750', 'charleston-1750'],
