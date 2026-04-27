@@ -2,6 +2,10 @@
 //
 // 顶部世界小地图 — 显示用户家乡 + 现在 + 当前 Topic 在世界上的位置。
 // 用户先看世界，再钻进具体 Topic（DK Children's Atlas 经典 inset map 范式）。
+//
+// Phase 2 #2：默认折叠成一行 "📍 [Topic 标题] 在世界上哪里 ▼"
+// 第一次进 Topic 自动展开 2.5s（强制 onboarding 一次），之后随时可点开
+// 翻页隐喻：用 CSS rotateY 模拟"翻一页书"的物理感，对应 #1 flipbook 主题
 
 const C = {
   parchment:   '#f4ead0',
@@ -15,7 +19,7 @@ const C = {
   topicRed:    '#9b2c2c',
 };
 
-export default function WorldLocator({ overview, currentLocation, lang = 'cn' }) {
+export default function WorldLocator({ overview, currentLocation, lang = 'cn', collapsed = false, onToggle, topicTitle }) {
   if (!overview) return null;
 
   const T = lang === 'cn' ? {
@@ -24,30 +28,94 @@ export default function WorldLocator({ overview, currentLocation, lang = 'cn' })
     now: '现在 · Irvine',
     topic: '当前 Topic',
     hint: '先看世界再进入',
+    collapsedHint: '看 Topic 在世界上哪里',
+    expand: '▼ 展开',
+    collapse: '▲ 折叠',
   } : {
     title: '🌍 World Locator',
     home: 'Home · China',
     now: 'Now · Irvine',
     topic: 'Current Topic',
     hint: 'Zoom in from world view',
+    collapsedHint: 'See where this Topic is on Earth',
+    expand: '▼ Open',
+    collapse: '▲ Close',
   };
 
   const { viewBox, landPath, homePoint, nowPoint } = overview;
 
+  // ── 折叠态：一行高的可点击 banner ──
+  if (collapsed) {
+    return (
+      <div
+        onClick={onToggle}
+        style={{
+          background: C.parchmentHi,
+          padding: '8px 14px',
+          borderRadius: 10,
+          border: '1px solid #d4c098',
+          marginBottom: 10,
+          display: 'flex', alignItems: 'center', gap: 10,
+          cursor: 'pointer',
+          transition: 'background 0.15s, transform 0.15s',
+          fontSize: 12,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#f8eecf';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = C.parchmentHi;
+        }}
+      >
+        <span style={{ fontSize: 16, lineHeight: 1 }}>📍</span>
+        <span style={{ flex: 1, color: C.ink, fontWeight: 600 }}>
+          {topicTitle ? topicTitle + ' · ' : ''}{T.collapsedHint}
+        </span>
+        <span style={{ fontSize: 11, color: C.inkLight, opacity: 0.7 }}>{T.expand}</span>
+      </div>
+    );
+  }
+
+  // ── 展开态：完整世界地图 + 翻页动画 ──
   return (
-    <div style={{
-      background: C.parchmentHi,
-      padding: 8,
-      borderRadius: 12,
-      border: '1px solid #d4c098',
-      marginBottom: 10,
-      display: 'flex',
-      gap: 10,
-      alignItems: 'center',
-    }}>
+    <div
+      style={{
+        background: C.parchmentHi,
+        padding: 8,
+        borderRadius: 12,
+        border: '1px solid #d4c098',
+        marginBottom: 10,
+        display: 'flex',
+        gap: 10,
+        alignItems: 'center',
+        transformOrigin: 'top center',
+        animation: 'wlPageOpen 0.7s ease-out',
+      }}
+    >
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes wlPageOpen {
+          0%   { transform: rotateX(-30deg) scaleY(0.4); opacity: 0; }
+          50%  { opacity: 0.8; }
+          100% { transform: rotateX(0deg) scaleY(1); opacity: 1; }
+        }
+      ` }} />
       <div style={{ flex: '0 0 auto', minWidth: 110 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: C.ink, letterSpacing: 1 }}>
-          {T.title}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.ink, letterSpacing: 1 }}>
+            {T.title}
+          </div>
+          {onToggle && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggle(); }}
+              title={T.collapse}
+              style={{
+                fontSize: 10, padding: '2px 6px',
+                background: 'transparent', color: C.inkLight,
+                border: '1px solid ' + '#d4c098', borderRadius: 4,
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >▲</button>
+          )}
         </div>
         <div style={{ fontSize: 10, color: C.inkLight, fontStyle: 'italic', marginTop: 2 }}>
           {T.hint}

@@ -81,6 +81,37 @@ export default function AtlasLabPage({
     });
   };
 
+  // Phase 2 #2：世界定位卡折叠 — 默认收起一行 banner，第一次进 Topic 自动展开 2.5s
+  // localStorage 记 worldLocatorSeen[atlasId] 避免每次都强弹
+  // 设计意图：像翻一本书的第一页 — 看完一次就懂了，之后想看再点开
+  const [worldLocatorOpen, setWorldLocatorOpen] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !activeViewId) return;
+    try {
+      const raw = localStorage.getItem('vocabspark_v1');
+      const d = raw ? JSON.parse(raw) : null;
+      const seen = (d && d.worldLocatorSeen) || {};
+      if (!seen[activeViewId]) {
+        // 第一次进这个 Topic — 自动展开 2.5s 然后折叠
+        setWorldLocatorOpen(true);
+        const t = setTimeout(() => {
+          setWorldLocatorOpen(false);
+          // 标记已 seen
+          try {
+            const raw2 = localStorage.getItem('vocabspark_v1');
+            const d2 = raw2 ? JSON.parse(raw2) : {};
+            d2.worldLocatorSeen = d2.worldLocatorSeen || {};
+            d2.worldLocatorSeen[activeViewId] = true;
+            d2.updatedAt = new Date().toISOString();
+            localStorage.setItem('vocabspark_v1', JSON.stringify(d2));
+          } catch (_) {}
+        }, 2500);
+        return () => clearTimeout(t);
+      }
+    } catch (_) {}
+  }, [activeViewId]);
+  const toggleWorldLocator = () => setWorldLocatorOpen(prev => !prev);
+
   // 整合 /history：读 localStorage 完成记录 + ?completed= toast
   const [completedHistoryTopics, setCompletedHistoryTopics] = useState({});  // {atlasId: true} 或 {historyTopicId: completionData}
   const [completionToast, setCompletionToast] = useState(null);  // null | { atlasId, xp }
@@ -491,8 +522,15 @@ export default function AtlasLabPage({
 
           {/* 控件第二行已删除：mode 浮到地图右上 / CN-EN 移到 sticky chip bar 末尾 / layers 已浮层 */}
 
-          {/* 世界定位小地图 */}
-          <WorldLocator overview={worldOverview} currentLocation={worldLocation} lang={lang} />
+          {/* Phase 2 #2：世界定位 — 默认折叠一行 banner，第一次进 Topic 自动展开 2.5s 后折叠 */}
+          <WorldLocator
+            overview={worldOverview}
+            currentLocation={worldLocation}
+            lang={lang}
+            collapsed={!worldLocatorOpen}
+            onToggle={toggleWorldLocator}
+            topicTitle={meta.title?.[lang] || meta.title?.cn}
+          />
 
           {/* 标题 + 副标题 */}
           <div style={{ padding: '6px 12px 0' }}>
