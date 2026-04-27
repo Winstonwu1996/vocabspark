@@ -115,30 +115,90 @@ function buildPrompt({ topicId, topicTitle, layer, entry, grade }) {
   ].join('\n');
 }
 
-async function callDeepSeek({ system, message, maxTokens = 300 }) {
-  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: 'deepseek-chat',
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: message },
-      ],
-      max_tokens: maxTokens,
-      temperature: 0.6,
-    }),
-  });
-  if (!res.ok) {
-    throw new Error(`deepseek ${res.status}: ${(await res.text()).slice(0, 200)}`);
+// 多 key 轮转 + Gemini fallback — 跟生产 /api/causal-explain 完全一致
+function collectDeepSeekKeys() {
+  const keys = [];
+  if (process.env.DEEPSEEK_API_KEY) keys.push({ name: 'deepseek-a', env: 'DEEPSEEK_API_KEY' });
+  for (let i = 2; i <= 20; i++) {
+    const envName = `DEEPSEEK_API_KEY_${i}`;
+    if (process.env[envName]) {
+      keys.push({ name: `deepseek-${String.fromCharCode(96 + i)}`, env: envName });
+    }
   }
-  const json = await res.json();
-  const text = json?.choices?.[0]?.message?.content;
-  if (!text) throw new Error('deepseek empty response');
-  return text.trim();
+  return keys;
+}
+
+const DS_KEYS = collectDeepSeekKeys();
+let dsRotIdx = 0;
+
+async function callLLM({ system, message, maxTokens = 300 }) {
+  const errors = [];
+  // 多 DeepSeek key 轮转
+  for (let i = 0; i < DS_KEYS.length; i++) {
+    const k = DS_KEYS[(dsRotIdx + i) % DS_KEYS.length];
+    try {
+      const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env[k.env]}`,
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: message },
+          ],
+          max_tokens: maxTokens,
+          temperature: 0.6,
+        }),
+      });
+      if (res.status === 429) {
+        errors.push(`${k.name}: 429`);
+        continue;
+      }
+      if (!res.ok) {
+        errors.push(`${k.name}: ${res.status}`);
+        continue;
+      }
+      const json = await res.json();
+      const text = json?.choices?.[0]?.message?.content;
+      if (!text) { errors.push(`${k.name}: empty`); continue; }
+      dsRotIdx = (dsRotIdx + i + 1) % DS_KEYS.length;
+      return text.trim();
+    } catch (e) {
+      errors.push(`${k.name}: ${e.message}`);
+    }
+  }
+  // 全部 DeepSeek key 失败 → Gemini fallback
+  if (process.env.GOOGLE_AI_API_KEY) {
+    try {
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.GOOGLE_AI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: message },
+          ],
+          max_tokens: maxTokens,
+          temperature: 0.6,
+        }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const text = json?.choices?.[0]?.message?.content;
+        if (text) return text.trim();
+      }
+    } catch (e) {
+      errors.push(`gemini: ${e.message}`);
+    }
+  }
+  throw new Error(`All providers failed: ${errors.join(' | ')}`);
 }
 
 // ─── Upstash GET / SET ──────────────────────────────────
@@ -226,7 +286,7 @@ async function processView(view, viewFile) {
 
     try {
       const userPrompt = buildPrompt({ topicId, topicTitle, layer: t.layer, entry: t.entry, grade });
-      const explanation = await callDeepSeek({ system, message: userPrompt });
+      const explanation = await callLLM({ system, message: userPrompt });
       await cacheSet(cacheKey, explanation);
       count++;
       console.log(`  ✓ ${t.layer}: ${t.entry.slice(0, 30)}... → ${explanation.slice(0, 50)}...`);

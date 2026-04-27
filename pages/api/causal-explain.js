@@ -7,11 +7,13 @@
 // 设计：
 //   - 全局共享缓存（按 topicId + layer + grade + entry hash），不绑用户
 //   - 80%+ 命中率（条目+年级是有限组合）→ 月成本 < $5
-//   - DeepSeek-V3，input ~400 / output ~200 tokens, ~$0.0003/次 cache miss
+//   - 复用 lib/llm-providers.js — 跟 vocab 通路完全一致：
+//     DeepSeek-V3 多 key 轮转 + circuit breaker → Gemini fallback
 //   - 缓存 miss 时也 graceful：Upstash 挂了不阻塞，照样调 DeepSeek
 
 import { checkPerIpLimit } from "../../lib/ratelimit";
 import { buildCacheKey, cacheGet, cacheSet } from "../../lib/causal-cache";
+import { callLLM } from "../../lib/llm-providers";
 
 export const config = {
   maxDuration: 30,
@@ -56,38 +58,8 @@ function buildPrompt({ topicId, topicTitle, layer, entry, grade, lang }) {
   ].join("\n");
 }
 
-async function callDeepSeek({ system, message, maxTokens = 400 }) {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  if (!apiKey) throw new Error("DEEPSEEK_API_KEY not set");
-
-  const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "deepseek-chat",
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: message },
-      ],
-      max_tokens: maxTokens,
-      temperature: 0.6,  // 教学解读不需要太发散
-    }),
-    signal: AbortSignal.timeout(25000),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    throw new Error(`deepseek ${res.status}: ${errText.slice(0, 200)}`);
-  }
-
-  const json = await res.json();
-  const text = json?.choices?.[0]?.message?.content;
-  if (!text) throw new Error("deepseek empty response");
-  return text.trim();
-}
+// callLLM 已封装 multi-key DeepSeek 轮转 + Gemini fallback + circuit breaker + retry
+// 跟 /api/chat 完全同一套通路
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -125,11 +97,19 @@ export default async function handler(req, res) {
   const system = "你是 13 岁中国 ESL 学生 Willow 的历史课伙伴。她会读你的解读，所以语气要像朋友，不能像教科书。";
   const userPrompt = buildPrompt({ topicId, topicTitle, layer, entry, grade: normalizedGrade, lang: normalizedLang });
 
-  let explanation;
+  let explanation, providerUsed;
   try {
-    explanation = await callDeepSeek({ system, message: userPrompt, maxTokens: 300 });
+    const result = await callLLM({
+      system,
+      message: userPrompt,
+      maxTokens: 300,
+      timeoutMs: 25000,
+      temperature: 0.6,  // 教学解读不需要太发散
+    });
+    explanation = result.text.trim();
+    providerUsed = result.provider;
   } catch (err) {
-    console.warn("[causal-explain] deepseek call failed:", err.message);
+    console.warn("[causal-explain] all providers failed:", err.message);
     return res.status(502).json({ error: "ai_provider_error", detail: err.message });
   }
 
