@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { Analytics } from "@vercel/analytics/react";
 import NetworkBanner from "../components/NetworkBanner";
+import ErrorBoundary from "../components/ErrorBoundary";
 import { trackFunnel } from "../lib/analytics";
 // 副作用 import：触发 sentry.client.config.js 初始化（仅在浏览器）
 if (typeof window !== "undefined") {
@@ -25,10 +26,10 @@ export default function App({ Component, pageProps }) {
   }, [router.events]);
 
   return (
-    <>
+    <ErrorBoundary>
       <NetworkBanner />
       <Component {...pageProps} />
       <Analytics />
-    </>
+    </ErrorBoundary>
   );
 }

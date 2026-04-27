@@ -3,6 +3,7 @@ import Head from "next/head";
 import { supabase } from '../lib/supabase';
 import { C, FONT, FONT_DISPLAY, NUM, globalCSS, S, getWordTheme } from '../lib/theme';
 import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON, parsePartialJSON, callClassify, METHOD_SCHEMAS, METHOD_EXAMPLES, VISUAL_ANCHOR_FORMATS } from '../lib/api';
+import { trackFunnel } from '../lib/analytics';
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
 import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../components/PetAvatar';
@@ -4516,6 +4517,8 @@ export default function App() {
       guessStartRef.current = null;
     }
 
+    trackFunnel('guess_submit', { word: currentWord, correct: !!correct, streak_after: correct ? (stats.streak+1) : 0 });
+
     if (correct) { sfx.correct(); setBounceCorrect(true); setTimeout(function() { setBounceCorrect(false); }, 600); }
     else { sfx.wrong(); setShakeWrong(true); setTimeout(function() { setShakeWrong(false); }, 500); }
 
@@ -4532,6 +4535,7 @@ export default function App() {
   };
 
   var skipGuess = function() {
+    trackFunnel('guess_skip', { word: currentWord });
     save({ ...stats, total: stats.total+1, streak: 0, xp: stats.xp+3 });
     setPhaseDir(1); setPhase("teach");
   };
@@ -4593,6 +4597,7 @@ export default function App() {
   var startLearning = async function(resumeIdx) {
     var rawWords = wordInput.trim().split(/[\n,，、]+/).map(function(w) { return w.trim().toLowerCase(); }).filter(Boolean);
     if (!rawWords.length) { setError("请输入至少一个单词"); return; }
+    trackFunnel('learning_start', { word_count: rawWords.length, has_profile: !!(profile||'').trim(), is_resume: typeof resumeIdx === 'number', tier: userTier });
     if (!profile.trim()) {
       var continueAnyway = await confirmAsync({
         title: "还没填学习画像",
@@ -4632,6 +4637,7 @@ export default function App() {
           words = unlearned.slice(0, dailyNewWords || 20);
         } else {
           // free / guest 硬限：弹 LimitModal（注册引导 / Pro 引导）
+          trackFunnel('daily_limit_hit', { source: 'start_learning', has_user: !!userRef.current, tier: userTier });
           setShowLimitModal(true);
           return;
         }
@@ -4824,8 +4830,10 @@ export default function App() {
     // 这防止了 localStorage 缓存了 "free" 但用户实际是 Pro 的竞态场景
     var tierNotConfirmed = userRef.current && !tierLoaded;
     var limit = (isPaid || tierNotConfirmed) ? Infinity : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
-    if (!isPaid && !tierNotConfirmed && ds.count >= limit) { setShowLimitModal(true); return; }
+    if (!isPaid && !tierNotConfirmed && ds.count >= limit) { trackFunnel('daily_limit_hit', { source: 'go_next_word', has_user: !!userRef.current, tier: userTier, count: ds.count }); setShowLimitModal(true); return; }
     incrementDailyCount();
+    var _duration = wordStart ? (Date.now() - wordStart) : 0;
+    trackFunnel('word_complete', { word: currentWord, idx: idx, duration_ms: _duration, daily_count: ds.count + 1 });
     if (wordStart) {
       setWordTimings(function(prev) { return { ...prev, [currentWord]: { start: wordStart, end: Date.now(), duration: Date.now() - wordStart } }; });
     }

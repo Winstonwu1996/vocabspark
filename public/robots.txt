@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# 不需要被搜索引擎索引的路径
+Disallow: /api/
+Disallow: /vocab
+Disallow: /writing
+Disallow: /history
+Disallow: /atlas-lab/
+Disallow: /plan?
+
+Sitemap: https://knowulearning.com/sitemap.xml
