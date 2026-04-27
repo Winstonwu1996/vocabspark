@@ -1,0 +1,408 @@
+{
+  "course": "ap-us",
+  "tagPrefix": "AP-USH",
+  "extractedAt": "2026-04-26T06:22:29.354Z",
+  "units": [
+    {
+      "unit": 1,
+      "topics": [
+        {
+          "code": "AP-USH-1.1",
+          "num": 1,
+          "title": "Contextualizing"
+        },
+        {
+          "code": "AP-USH-1.2",
+          "num": 2,
+          "title": "Native American               Comparison       1.A Identify a historical concept,"
+        },
+        {
+          "code": "AP-USH-1.3",
+          "num": 3,
+          "title": "European Exploration in       Causation        1.A Identify a historical concept,"
+        },
+        {
+          "code": "AP-USH-1.4",
+          "num": 4,
+          "title": "Columbian Exchange,           Causation        3.A Identify and describe a claim"
+        },
+        {
+          "code": "AP-USH-1.5",
+          "num": 5,
+          "title": "Labor, Slavery, and           Causation        5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-USH-1.6",
+          "num": 6,
+          "title": "Cultural Interactions         Comparison       3.B Identify the evidence used in a"
+        },
+        {
+          "code": "AP-USH-1.7",
+          "num": 7,
+          "title": "Causation in Period"
+        }
+      ]
+    },
+    {
+      "unit": 2,
+      "topics": [
+        {
+          "code": "AP-USH-2.2",
+          "num": 2,
+          "title": "European Colonization         Comparison       1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-USH-2.3",
+          "num": 3,
+          "title": "The Regions of                Comparison       3.A Identify and describe a claim"
+        },
+        {
+          "code": "AP-USH-2.4",
+          "num": 4,
+          "title": "Transatlantic Trade           Causation        5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-USH-2.5",
+          "num": 5,
+          "title": "Interactions Between          Comparison       2.A Identify a source’s point of"
+        },
+        {
+          "code": "AP-USH-2.6",
+          "num": 6,
+          "title": "Slavery in the                Causation        5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-USH-2.8",
+          "num": 8,
+          "title": "Comparison in Period 2        Comparison     6.B Support an argument using"
+        }
+      ]
+    },
+    {
+      "unit": 3,
+      "topics": [
+        {
+          "code": "AP-USH-3.1",
+          "num": 1,
+          "title": "Contextualizing                          4.1 Contextualizing"
+        },
+        {
+          "code": "AP-USH-3.2",
+          "num": 2,
+          "title": "The Seven Years’ War          Causation        1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-USH-3.3",
+          "num": 3,
+          "title": "Taxation Without              Causation        2.A Identify a source’s point of"
+        },
+        {
+          "code": "AP-USH-3.4",
+          "num": 4,
+          "title": "Philosophical                 Continuity and   2.B Explain the point of view,"
+        },
+        {
+          "code": "AP-USH-3.5",
+          "num": 5,
+          "title": "The American                  Causation        6.B Support an argument using"
+        },
+        {
+          "code": "AP-USH-3.6",
+          "num": 6,
+          "title": "The Influence of              Comparison       3.A Identify and describe a claim"
+        },
+        {
+          "code": "AP-USH-3.7",
+          "num": 7,
+          "title": "The Articles of               Causation        3.B Identify the evidence used in a"
+        },
+        {
+          "code": "AP-USH-3.8",
+          "num": 8,
+          "title": "The Constitutional            Comparison       3.A Identify and describe a claim"
+        },
+        {
+          "code": "AP-USH-3.9",
+          "num": 9,
+          "title": "The Constitution              Continuity and   5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-USH-3.10",
+          "num": 10,
+          "title": "Shaping a                    Causation        2.A Identify a source’s point of"
+        },
+        {
+          "code": "AP-USH-3.11",
+          "num": 11,
+          "title": "Developing an                Continuity and   1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-USH-3.12",
+          "num": 12,
+          "title": "Movement in the              Continuity and   5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-USH-3.13",
+          "num": 13,
+          "title": "Continuity and Change        Continuity and   6.B Support an argument using"
+        }
+      ]
+    },
+    {
+      "unit": 4,
+      "topics": [
+        {
+          "code": "AP-USH-4.3",
+          "num": 3,
+          "title": "Politics and                  Comparison       2.B Explain the point of view,"
+        },
+        {
+          "code": "AP-USH-4.4",
+          "num": 4,
+          "title": "America on the                Causation        2.B Explain the point of view,"
+        },
+        {
+          "code": "AP-USH-4.5",
+          "num": 5,
+          "title": "Market Revolution:            Causation        6.B Support an argument using"
+        },
+        {
+          "code": "AP-USH-4.6",
+          "num": 6,
+          "title": "Market Revolution:            Comparison        5.B Explain how a historical"
+        },
+        {
+          "code": "AP-USH-4.7",
+          "num": 7,
+          "title": "Expanding Democracy           Causation        1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-USH-4.8",
+          "num": 8,
+          "title": "Jackson and                   Continuity and   3.D Explain how claims or evidence"
+        },
+        {
+          "code": "AP-USH-4.10",
+          "num": 10,
+          "title": "The Second Great             Causation         5.B Explain how a historical"
+        },
+        {
+          "code": "AP-USH-4.11",
+          "num": 11,
+          "title": "An Age of Reform             Comparison       3.B Identify the evidence used in a"
+        },
+        {
+          "code": "AP-USH-4.12",
+          "num": 12,
+          "title": "African Americans in         Continuity and   3.D Explain how claims or evidence"
+        },
+        {
+          "code": "AP-USH-4.13",
+          "num": 13,
+          "title": "The Society of               Causation        1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-USH-4.14",
+          "num": 14,
+          "title": "Causation in Period 4        Causation        6.C Use historical reasoning to"
+        }
+      ]
+    },
+    {
+      "unit": 5,
+      "topics": [
+        {
+          "code": "AP-USH-5.2",
+          "num": 2,
+          "title": "Manifest Destiny              Causation        1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-USH-5.3",
+          "num": 3,
+          "title": "The Mexican–American          Causation         3.C Compare the arguments or main"
+        },
+        {
+          "code": "AP-USH-5.6",
+          "num": 6,
+          "title": "Failure of Compromise         Causation         5.B Explain how a historical"
+        },
+        {
+          "code": "AP-USH-5.8",
+          "num": 8,
+          "title": "Military Conflict             Comparison       5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-USH-5.9",
+          "num": 9,
+          "title": "Government Policies           Continuity and   2.B Explain the point of view,"
+        },
+        {
+          "code": "AP-USH-5.10",
+          "num": 10,
+          "title": "Reconstruction               Causation        3.D Explain how claims or evidence"
+        },
+        {
+          "code": "AP-USH-5.11",
+          "num": 11,
+          "title": "Failure of                   Continuity        3.C Compare the arguments or main"
+        },
+        {
+          "code": "AP-USH-5.12",
+          "num": 12,
+          "title": "Comparison in Period 5       Comparison       6.C Use historical reasoning to"
+        }
+      ]
+    },
+    {
+      "unit": 6,
+      "topics": [
+        {
+          "code": "AP-USH-6.1",
+          "num": 1,
+          "title": "Contextualizing"
+        },
+        {
+          "code": "AP-USH-6.2",
+          "num": 2,
+          "title": "Westward Expansion:           Causation        1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-USH-6.3",
+          "num": 3,
+          "title": "Westward Expansion:"
+        },
+        {
+          "code": "AP-USH-6.5",
+          "num": 5,
+          "title": "Technological                 Causation         5.B Explain how a historical"
+        },
+        {
+          "code": "AP-USH-6.7",
+          "num": 7,
+          "title": "Labor in the Gilded Age       Continuity and   6.C Use historical reasoning to"
+        },
+        {
+          "code": "AP-USH-6.8",
+          "num": 8,
+          "title": "Immigration and               Continuity and    3.C Compare the arguments or main"
+        },
+        {
+          "code": "AP-USH-6.9",
+          "num": 9,
+          "title": "Responses to                  Comparison        5.B Explain how a historical"
+        },
+        {
+          "code": "AP-USH-6.13",
+          "num": 13,
+          "title": "Politics in the              Comparison       3.D Explain how claims or evidence"
+        },
+        {
+          "code": "AP-USH-6.14",
+          "num": 14,
+          "title": "Continuity and Change        Continuity and   6.D Corroborate, qualify, or modify"
+        }
+      ]
+    },
+    {
+      "unit": 7,
+      "topics": [
+        {
+          "code": "AP-USH-7.4",
+          "num": 4,
+          "title": "The Progressives              Comparison       2.C"
+        },
+        {
+          "code": "AP-USH-7.9",
+          "num": 9,
+          "title": "The Great Depression          Causation         5.B Explain how a historical"
+        },
+        {
+          "code": "AP-USH-7.10",
+          "num": 10,
+          "title": "The New Deal                 Continuity and    5.B Explain how a historical"
+        },
+        {
+          "code": "AP-USH-7.14",
+          "num": 14,
+          "title": "Postwar Diplomacy            Causation        2.B Explain the point of view,"
+        }
+      ]
+    },
+    {
+      "unit": 8,
+      "topics": [
+        {
+          "code": "AP-USH-8.3",
+          "num": 3,
+          "title": "The Red Scare                 Causation        2.B Explain the point of view,"
+        },
+        {
+          "code": "AP-USH-8.6",
+          "num": 6,
+          "title": "Early Steps in the            Causation        5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-USH-8.7",
+          "num": 7,
+          "title": "America as a                  Comparison        3.C Compare the arguments or main"
+        },
+        {
+          "code": "AP-USH-8.8",
+          "num": 8,
+          "title": "The Vietnam War               Causation        1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-USH-8.9",
+          "num": 9,
+          "title": "The Great Society             Continuity and    5.B Explain how a historical"
+        },
+        {
+          "code": "AP-USH-8.10",
+          "num": 10,
+          "title": "The African American         Comparison        5.B Explain how a historical"
+        },
+        {
+          "code": "AP-USH-8.11",
+          "num": 11,
+          "title": "The Civil Rights             Comparison        5.B Explain how a historical"
+        },
+        {
+          "code": "AP-USH-8.12",
+          "num": 12,
+          "title": "Youth Culture of             Continuity and    5.B Explain how a historical"
+        },
+        {
+          "code": "AP-USH-8.13",
+          "num": 13,
+          "title": "The Environment and          Causation        5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-USH-8.15",
+          "num": 15,
+          "title": "Continuity and Change        Continuity and   6.D Corroborate, qualify, or modify"
+        }
+      ]
+    },
+    {
+      "unit": 9,
+      "topics": [
+        {
+          "code": "AP-USH-9.2",
+          "num": 2,
+          "title": "Reagan and                    Continuity and    3.C Compare the arguments or main"
+        },
+        {
+          "code": "AP-USH-9.3",
+          "num": 3,
+          "title": "The End of the Cold War       Causation        1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-USH-9.7",
+          "num": 7,
+          "title": "Causation in Period"
+        }
+      ]
+    }
+  ],
+  "note": "© College Board · AP® is a trademark · Unit/Topic numbers + short titles are factual references only"
+}

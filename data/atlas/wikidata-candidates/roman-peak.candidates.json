@@ -1,0 +1,33 @@
+{
+  "topicId": "roman-peak",
+  "query": {
+    "id": "roman-peak",
+    "countryQid": "Q2277",
+    "yearFrom": 95,
+    "yearTo": 130,
+    "bbox": [
+      -15,
+      28,
+      60,
+      55
+    ]
+  },
+  "generatedAt": "2026-04-26T04:50:09.735Z",
+  "eventCount": 1,
+  "events": [
+    {
+      "qid": "Q4547511",
+      "labelEn": "Antioch earthquake of 115",
+      "labelZh": "115年安条克地震",
+      "descEn": "7.5-magnitude earthquake that struck Antakya in south-central Turkey on December 13, 115",
+      "typeLabel": "earthquake",
+      "date": "0115-12-12",
+      "year": 115,
+      "coords": [
+        36.1,
+        36.1
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/115_Antioch_earthquake"
+    }
+  ]
+}

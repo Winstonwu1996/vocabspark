@@ -1,0 +1,705 @@
+{
+  "topicId": "civil-war",
+  "query": {
+    "id": "civil-war",
+    "countryQid": "Q30",
+    "yearFrom": 1859,
+    "yearTo": 1866,
+    "bbox": [
+      -100,
+      24,
+      -65,
+      50
+    ]
+  },
+  "generatedAt": "2026-04-26T04:49:55.398Z",
+  "eventCount": 49,
+  "events": [
+    {
+      "qid": "Q24191110",
+      "labelEn": "The Great Slave Auction",
+      "labelZh": null,
+      "descEn": "auction of slave",
+      "typeLabel": "African slave trade",
+      "date": "1859-03-01",
+      "year": 1859,
+      "coords": [
+        -81.13,
+        32.085
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Great_Slave_Auction"
+    },
+    {
+      "qid": "Q7566313",
+      "labelEn": "South Bend train wreck",
+      "labelZh": null,
+      "descEn": "1859 train accident near South Bend, Indiana",
+      "typeLabel": "train wreck",
+      "date": "1859-06-27",
+      "year": 1859,
+      "coords": [
+        -86.21611111,
+        41.65694444
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/South_Bend_train_wreck"
+    },
+    {
+      "qid": "Q4872185",
+      "labelEn": "Battle of Rio Grande City",
+      "labelZh": null,
+      "descEn": "1859 battle",
+      "typeLabel": "battle",
+      "date": "1859-12-27",
+      "year": 1859,
+      "coords": [
+        -98.8203,
+        26.3788
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Rio_Grande_City"
+    },
+    {
+      "qid": "Q13581505",
+      "labelEn": "Battle of Pease River",
+      "labelZh": null,
+      "descEn": "1860 raid against Comanche Indians by Texas Rangers and militia",
+      "typeLabel": "battle",
+      "date": "1860-12-19",
+      "year": 1860,
+      "coords": [
+        -99.5951,
+        34.0698
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Pease_River"
+    },
+    {
+      "qid": "Q543165",
+      "labelEn": "Battle of Fort Sumter",
+      "labelZh": "桑特堡戰役",
+      "descEn": "bombardment of Fort Sumter, immediate cause and first battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-01-01",
+      "year": 1861,
+      "coords": [
+        -79.87496,
+        32.75241
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Fort_Sumter"
+    },
+    {
+      "qid": "Q1149680",
+      "labelEn": "Siege of Lexington",
+      "labelZh": "第一次列星頓之役",
+      "descEn": "1861 battle of the Trans-Mississippi Theater of the American Civil War",
+      "typeLabel": "siege",
+      "date": "1861-01-01",
+      "year": 1861,
+      "coords": [
+        -93.875,
+        39.1831
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/First_Battle_of_Lexington"
+    },
+    {
+      "qid": "Q1426037",
+      "labelEn": "Battle of Cheat Mountain",
+      "labelZh": null,
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-01-01",
+      "year": 1861,
+      "coords": [
+        -79.880555555,
+        38.621388888
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Cheat_Mountain"
+    },
+    {
+      "qid": "Q4871117",
+      "labelEn": "Battle of Gloucester Point",
+      "labelZh": null,
+      "descEn": "battle in the American civil war",
+      "typeLabel": "battle",
+      "date": "1861-05-07",
+      "year": 1861,
+      "coords": [
+        -76.49861111,
+        37.27
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Gloucester_Point_(1861)"
+    },
+    {
+      "qid": "Q5027283",
+      "labelEn": "Camp Jackson Affair",
+      "labelZh": "聖路易斯大屠殺",
+      "descEn": "Massacre during American Civil War",
+      "typeLabel": "massacre",
+      "date": "1861-05-10",
+      "year": 1861,
+      "coords": [
+        -90.236721,
+        38.636551
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Camp_Jackson_affair"
+    },
+    {
+      "qid": "Q4296967",
+      "labelEn": "Battle of Fairfax Court House",
+      "labelZh": "費爾費克斯首府前哨戰",
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-06-01",
+      "year": 1861,
+      "coords": [
+        -77.309166666,
+        38.844722222
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Fairfax_Court_House_(1861)"
+    },
+    {
+      "qid": "Q4297073",
+      "labelEn": "Battle of Arlington Mills",
+      "labelZh": null,
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-06-01",
+      "year": 1861,
+      "coords": [
+        -77.11638889,
+        38.86083333
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Arlington_Mills"
+    },
+    {
+      "qid": "Q1061090",
+      "labelEn": "Battle of Philippi",
+      "labelZh": "腓立比之役",
+      "descEn": "1861 early battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-06-03",
+      "year": 1861,
+      "coords": [
+        -80.039687,
+        39.151827
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Philippi_(1861)"
+    },
+    {
+      "qid": "Q4872037",
+      "labelEn": "Battle of Pig Point",
+      "labelZh": "皮格角之役",
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-06-05",
+      "year": 1861,
+      "coords": [
+        -76.435,
+        36.91666667
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Pig_Point"
+    },
+    {
+      "qid": "Q794695",
+      "labelEn": "Battle of Big Bethel",
+      "labelZh": "大伯特利之役",
+      "descEn": "1861 early battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-06-10",
+      "year": 1861,
+      "coords": [
+        -76.425,
+        37.0937
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Big_Bethel"
+    },
+    {
+      "qid": "Q4296979",
+      "labelEn": "Battle of Vienna",
+      "labelZh": "維也納之役 (維吉尼亞州)",
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-06-17",
+      "year": 1861,
+      "coords": [
+        -77.2564224,
+        38.9008351
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Vienna,_Virginia"
+    },
+    {
+      "qid": "Q2451867",
+      "labelEn": "Battle of Boonville",
+      "labelZh": "布恩維爾戰役",
+      "descEn": "1861 minor skirmish of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-06-17",
+      "year": 1861,
+      "coords": [
+        -92.659816666,
+        38.9591
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Boonville"
+    },
+    {
+      "qid": "Q2658952",
+      "labelEn": "Battle of Cole Camp",
+      "labelZh": null,
+      "descEn": "1861 skirmish of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-06-19",
+      "year": 1861,
+      "coords": [
+        -93.232501,
+        38.426467
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Cole_Camp"
+    },
+    {
+      "qid": "Q4871695",
+      "labelEn": "Battle of Mathias Point",
+      "labelZh": null,
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-06-27",
+      "year": 1861,
+      "coords": [
+        -77.04194444,
+        38.40027778
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Mathias_Point"
+    },
+    {
+      "qid": "Q1497885",
+      "labelEn": "Battle of Hoke's Run",
+      "labelZh": "瀑布市之役",
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-07-02",
+      "year": 1861,
+      "coords": [
+        -77.913365,
+        39.521423
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Hoke%27s_Run"
+    },
+    {
+      "qid": "Q670290",
+      "labelEn": "Engagement near Carthage",
+      "labelZh": null,
+      "descEn": "1861 battle of the Trans-Mississippi Theater of the American Civil War",
+      "typeLabel": "engagement",
+      "date": "1861-07-05",
+      "year": 1861,
+      "coords": [
+        -94.31,
+        37.177
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Carthage,_Missouri"
+    },
+    {
+      "qid": "Q1061267",
+      "labelEn": "Battle of Rich Mountain",
+      "labelZh": "里奇山之役",
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-07-11",
+      "year": 1861,
+      "coords": [
+        -79.933888888,
+        38.866111111
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Rich_Mountain"
+    },
+    {
+      "qid": "Q1958052",
+      "labelEn": "Battle of Corrick's Ford",
+      "labelZh": null,
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-07-13",
+      "year": 1861,
+      "coords": [
+        -79.685,
+        39.08777778
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Corrick%27s_Ford"
+    },
+    {
+      "qid": "Q4872332",
+      "labelEn": "Battle of Scary Creek",
+      "labelZh": null,
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-07-17",
+      "year": 1861,
+      "coords": [
+        -81.853333333,
+        38.433333333
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Scary_Creek"
+    },
+    {
+      "qid": "Q1497902",
+      "labelEn": "Battle of Blackburn's Ford",
+      "labelZh": "布力般淺灘之役",
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-07-18",
+      "year": 1861,
+      "coords": [
+        -77.449166666,
+        38.804166666
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Blackburn%27s_Ford"
+    },
+    {
+      "qid": "Q221469",
+      "labelEn": "First Battle of Bull Run",
+      "labelZh": "第一次馬納沙斯之役",
+      "descEn": "1861 first major land battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-07-21",
+      "year": 1861,
+      "coords": [
+        -77.5225,
+        38.815
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/First_Battle_of_Bull_Run"
+    },
+    {
+      "qid": "Q1894305",
+      "labelEn": "Battle of Athens",
+      "labelZh": null,
+      "descEn": "1861 American Civil War battle",
+      "typeLabel": "battle",
+      "date": "1861-08-05",
+      "year": 1861,
+      "coords": [
+        -91.696,
+        40.585
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Athens_(1861)"
+    },
+    {
+      "qid": "Q180659",
+      "labelEn": "Battle of Wilson's Creek",
+      "labelZh": "威爾遜克里克戰役",
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-08-10",
+      "year": 1861,
+      "coords": [
+        -93.4075,
+        37.1
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Wilson%27s_Creek"
+    },
+    {
+      "qid": "Q2196069",
+      "labelEn": "Battle of Kessler's Cross Lanes",
+      "labelZh": null,
+      "descEn": "battle of the American Civil War August 21, 1861",
+      "typeLabel": "battle",
+      "date": "1861-08-26",
+      "year": 1861,
+      "coords": [
+        -80.935,
+        38.235
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Kessler%27s_Cross_Lanes"
+    },
+    {
+      "qid": "Q2540993",
+      "labelEn": "Battle of Dry Wood Creek",
+      "labelZh": null,
+      "descEn": "American Civil War battle fought in Sep 1861 in Missouri",
+      "typeLabel": "battle",
+      "date": "1861-09-02",
+      "year": 1861,
+      "coords": [
+        -94.4862,
+        37.8197
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Dry_Wood_Creek"
+    },
+    {
+      "qid": "Q7202479",
+      "labelEn": "Platte Bridge Railroad Tragedy",
+      "labelZh": null,
+      "descEn": "Civil war attack in Missouri, U.S.",
+      "typeLabel": "train wreck",
+      "date": "1861-09-03",
+      "year": 1861,
+      "coords": [
+        -94.7059,
+        39.7253
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Platte_Bridge_Railroad_Tragedy"
+    },
+    {
+      "qid": "Q451711",
+      "labelEn": "Battle of Carnifex Ferry",
+      "labelZh": "卡尼菲克斯渡口之役",
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-09-10",
+      "year": 1861,
+      "coords": [
+        -80.938611111,
+        38.208888888
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Carnifex_Ferry"
+    },
+    {
+      "qid": "Q21711440",
+      "labelEn": "Battle of Lewinsville",
+      "labelZh": null,
+      "descEn": "1861 battle",
+      "typeLabel": "battle",
+      "date": "1861-09-11",
+      "year": 1861,
+      "coords": [
+        -77.197805555,
+        38.928888888
+      ],
+      "wikipedia": null
+    },
+    {
+      "qid": "Q2293850",
+      "labelEn": "Action at Blue Mills Landing",
+      "labelZh": null,
+      "descEn": "1861 battle of the Trans-Mississippi Theater of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-09-17",
+      "year": 1861,
+      "coords": [
+        -94.3842,
+        39.1931
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Action_at_Blue_Mills_Landing"
+    },
+    {
+      "qid": "Q2640011",
+      "labelEn": "Battle of Barbourville",
+      "labelZh": null,
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-09-19",
+      "year": 1861,
+      "coords": [
+        -83.87944444,
+        36.86111111
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Barbourville"
+    },
+    {
+      "qid": "Q1425892",
+      "labelEn": "Battle of Greenbrier River",
+      "labelZh": "綠薔薇河之役",
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-10-03",
+      "year": 1861,
+      "coords": [
+        -79.767777777,
+        38.534166666
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Greenbrier_River"
+    },
+    {
+      "qid": "Q2355732",
+      "labelEn": "Battle of Santa Rosa Island",
+      "labelZh": null,
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-10-09",
+      "year": 1861,
+      "coords": [
+        -87.2817,
+        30.3242
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Santa_Rosa_Island"
+    },
+    {
+      "qid": "Q4090339",
+      "labelEn": "Battle of the Head of Passes",
+      "labelZh": null,
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "naval battle",
+      "date": "1861-10-12",
+      "year": 1861,
+      "coords": [
+        -89.254,
+        29.157
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_the_Head_of_Passes"
+    },
+    {
+      "qid": "Q17515438",
+      "labelEn": "Battle of Bolivar Heights",
+      "labelZh": null,
+      "descEn": "1861 American Civil War battle",
+      "typeLabel": "battle",
+      "date": "1861-10-16",
+      "year": 1861,
+      "coords": [
+        -77.761388888,
+        39.323611111
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Bolivar_Heights"
+    },
+    {
+      "qid": "Q2618945",
+      "labelEn": "Engagement at Fredericktown",
+      "labelZh": null,
+      "descEn": "1861 battle of the Trans-Mississippi Theater of the American Civil War",
+      "typeLabel": "engagement",
+      "date": "1861-10-21",
+      "year": 1861,
+      "coords": [
+        -90.2969,
+        37.5434
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Engagement_at_Fredericktown"
+    },
+    {
+      "qid": "Q2143840",
+      "labelEn": "Battle of Camp Wildcat",
+      "labelZh": null,
+      "descEn": "1861 early battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-10-21",
+      "year": 1861,
+      "coords": [
+        -84.1996,
+        37.2634
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Camp_Wildcat"
+    },
+    {
+      "qid": "Q1497909",
+      "labelEn": "Battle of Ball's Bluff",
+      "labelZh": "李斯堡之役",
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-10-21",
+      "year": 1861,
+      "coords": [
+        -77.527428,
+        39.131525
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Ball%27s_Bluff"
+    },
+    {
+      "qid": "Q2128905",
+      "labelEn": "Action at Springfield",
+      "labelZh": null,
+      "descEn": "1861 battle of the Trans-Mississippi Theater of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-10-25",
+      "year": 1861,
+      "coords": [
+        -93.3205,
+        37.2035
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/First_Battle_of_Springfield"
+    },
+    {
+      "qid": "Q2889687",
+      "labelEn": "Battle of Port Royal",
+      "labelZh": "皇家港戰役",
+      "descEn": "1861 battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-11-07",
+      "year": 1861,
+      "coords": [
+        -80.66,
+        32.25
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Port_Royal"
+    },
+    {
+      "qid": "Q2353599",
+      "labelEn": "Battle of Belmont",
+      "labelZh": "伯蒙特之役",
+      "descEn": "battle of the American Civil War",
+      "typeLabel": "battle",
+      "date": "1861-11-07",
+      "year": 1861,
+      "coords": [
+        -89.124,
+        36.7657
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Belmont"
+    },
+    {
+      "qid": "Q1387925",
+      "labelEn": "Battle of Round Mountain",
+      "labelZh": null,
+      "descEn": "1861 battle of the American Civil War in Oklahoma",
+      "typeLabel": "battle",
+      "date": "1861-11-19",
+      "year": 1861,
+      "coords": [
+        -96.2869,
+        36.13
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Round_Mountain"
+    },
+    {
+      "qid": "Q4879504",
+      "labelEn": "Bee Creek Massacre",
+      "labelZh": null,
+      "descEn": null,
+      "typeLabel": "massacre",
+      "date": "1861-12-01",
+      "year": 1861,
+      "coords": [
+        -94.867,
+        39.382
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Bee_Creek_Massacre"
+    },
+    {
+      "qid": "Q16952554",
+      "labelEn": "Bog Wallow Ambush",
+      "labelZh": null,
+      "descEn": "1861 battle of the American civil War",
+      "typeLabel": "battle",
+      "date": "1861-12-04",
+      "year": 1861,
+      "coords": [
+        -77.26183333,
+        38.81066667
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Bog_Wallow_Ambush"
+    },
+    {
+      "qid": "Q1870843",
+      "labelEn": "Battle of Chusto-Talasah",
+      "labelZh": null,
+      "descEn": "1861 battle of the American Civil War in Oklahoma",
+      "typeLabel": "battle",
+      "date": "1861-12-09",
+      "year": 1861,
+      "coords": [
+        -95.9502,
+        36.2823
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Chusto-Talasah"
+    },
+    {
+      "qid": "Q1422914",
+      "labelEn": "Battle of Camp Allegheny",
+      "labelZh": "亞利加尼營之戰",
+      "descEn": "1861 United States historic place",
+      "typeLabel": "battle",
+      "date": "1861-12-13",
+      "year": 1861,
+      "coords": [
+        -79.724444444,
+        38.473888888
+      ],
+      "wikipedia": "https://en.wikipedia.org/wiki/Battle_of_Camp_Allegheny"
+    }
+  ]
+}

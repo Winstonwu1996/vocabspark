@@ -1,0 +1,258 @@
+{
+  "course": "ap-world",
+  "tagPrefix": "AP-WHAP",
+  "extractedAt": "2026-04-26T06:22:29.342Z",
+  "units": [
+    {
+      "unit": 1,
+      "topics": [
+        {
+          "code": "AP-WHAP-1.5",
+          "num": 5,
+          "title": "State Building in Africa    Continuity and   1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-WHAP-1.7",
+          "num": 7,
+          "title": "Comparison in                                     Economic Exchange"
+        }
+      ]
+    },
+    {
+      "unit": 2,
+      "topics": [
+        {
+          "code": "AP-WHAP-2.2",
+          "num": 2,
+          "title": "The Mongol Empire           Continuity and   5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-WHAP-2.3",
+          "num": 3,
+          "title": "Exchange in the             Causation        5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-WHAP-2.4",
+          "num": 4,
+          "title": "Trans-Saharan               Causation        1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-WHAP-2.6",
+          "num": 6,
+          "title": "Environmental                Causation       5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-WHAP-2.7",
+          "num": 7,
+          "title": "Comparison of"
+        }
+      ]
+    },
+    {
+      "unit": 3,
+      "topics": [
+        {
+          "code": "AP-WHAP-3.1",
+          "num": 1,
+          "title": "Empires Expand               Causation        1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-WHAP-3.2",
+          "num": 2,
+          "title": "Empires: Administration"
+        },
+        {
+          "code": "AP-WHAP-3.3",
+          "num": 3,
+          "title": "Empires: Belief Systems         Continuity and    2.B Explain the point of view,"
+        },
+        {
+          "code": "AP-WHAP-3.4",
+          "num": 4,
+          "title": "Comparison in"
+        }
+      ]
+    },
+    {
+      "unit": 4,
+      "topics": [
+        {
+          "code": "AP-WHAP-4.2",
+          "num": 2,
+          "title": "Exploration: Causes and     Causation         5.B Explain how a historical"
+        },
+        {
+          "code": "AP-WHAP-4.3",
+          "num": 3,
+          "title": "Columbian Exchange          Causation        3.B Identify the evidence used in a"
+        },
+        {
+          "code": "AP-WHAP-4.4",
+          "num": 4,
+          "title": "Maritime Empires            Continuity and   2.A Identify a source’s point of"
+        },
+        {
+          "code": "AP-WHAP-4.5",
+          "num": 5,
+          "title": "Maritime Empires            Continuity and   3.A Identify and describe a claim"
+        },
+        {
+          "code": "AP-WHAP-4.7",
+          "num": 7,
+          "title": "Changing Social              Continuity and   3.D Explain how claims or evidence"
+        },
+        {
+          "code": "AP-WHAP-4.8",
+          "num": 8,
+          "title": "Continuity and Change             SIO       5.9 Society and the"
+        }
+      ]
+    },
+    {
+      "unit": 5,
+      "topics": [
+        {
+          "code": "AP-WHAP-5.1",
+          "num": 1,
+          "title": "The Enlightenment            Continuity and   3.A Identify and describe a claim"
+        },
+        {
+          "code": "AP-WHAP-5.2",
+          "num": 2,
+          "title": "Nationalism and              Causation         3.C Compare the arguments or main"
+        },
+        {
+          "code": "AP-WHAP-5.3",
+          "num": 3,
+          "title": "Industrial Revolution        Causation        1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-WHAP-5.4",
+          "num": 4,
+          "title": "Industrialization            Continuity and   5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-WHAP-5.5",
+          "num": 5,
+          "title": "Technology of the            Causation        1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-WHAP-5.6",
+          "num": 6,
+          "title": "Industrialization:           Causation        5.A Identify patterns among or"
+        },
+        {
+          "code": "AP-WHAP-5.7",
+          "num": 7,
+          "title": "Economic Developments        Continuity and    5.B Explain how a historical"
+        },
+        {
+          "code": "AP-WHAP-5.8",
+          "num": 8,
+          "title": "Reactions to the             Causation        2.B Explain the point of view,"
+        },
+        {
+          "code": "AP-WHAP-5.10",
+          "num": 10,
+          "title": "Continuity and Change"
+        }
+      ]
+    },
+    {
+      "unit": 6,
+      "topics": [
+        {
+          "code": "AP-WHAP-6.1",
+          "num": 1,
+          "title": "Rationales for               Causation        4.B"
+        },
+        {
+          "code": "AP-WHAP-6.2",
+          "num": 2,
+          "title": "State Expansion from         Comparison       4.B"
+        },
+        {
+          "code": "AP-WHAP-6.4",
+          "num": 4,
+          "title": "Global Economic              Continuity and    2.B Explain the point of view,"
+        },
+        {
+          "code": "AP-WHAP-6.5",
+          "num": 5,
+          "title": "Economic Imperialism         Causation        4.B"
+        },
+        {
+          "code": "AP-WHAP-6.6",
+          "num": 6,
+          "title": "Causes of Migration in       Causation         5.B Explain how a historical"
+        },
+        {
+          "code": "AP-WHAP-6.7",
+          "num": 7,
+          "title": "Effects of Migration         Causation        5.B Explain how a historical"
+        },
+        {
+          "code": "AP-WHAP-6.8",
+          "num": 8,
+          "title": "Causation in the             Causation       6.D Corroborate, qualify, or modify"
+        }
+      ]
+    },
+    {
+      "unit": 7,
+      "topics": [
+        {
+          "code": "AP-WHAP-7.9",
+          "num": 9,
+          "title": "Causation in"
+        }
+      ]
+    },
+    {
+      "unit": 8,
+      "topics": [
+        {
+          "code": "AP-WHAP-8.2",
+          "num": 2,
+          "title": "The Cold War                 Causation        2.B Explain the point of view,"
+        },
+        {
+          "code": "AP-WHAP-8.3",
+          "num": 3,
+          "title": "Effects of the Cold War      Comparison        5.B Explain how a historical"
+        },
+        {
+          "code": "AP-WHAP-8.5",
+          "num": 5,
+          "title": "Decolonization After         Comparison        5.B Explain how a historical"
+        },
+        {
+          "code": "AP-WHAP-8.6",
+          "num": 6,
+          "title": "Newly Independent            Continuity and   3.D Explain how claims or evidence"
+        },
+        {
+          "code": "AP-WHAP-8.8",
+          "num": 8,
+          "title": "End of the Cold War          Causation       1.B Explain a historical concept,"
+        },
+        {
+          "code": "AP-WHAP-8.9",
+          "num": 9,
+          "title": "Causation in the"
+        }
+      ]
+    },
+    {
+      "unit": 9,
+      "topics": [
+        {
+          "code": "AP-WHAP-9.9",
+          "num": 9,
+          "title": "Continuity and Change"
+        }
+      ]
+    }
+  ],
+  "note": "© College Board · AP® is a trademark · Unit/Topic numbers + short titles are factual references only"
+}

@@ -728,16 +728,16 @@ function buildEuropeModern() {
     return `<text x="${r.x}" y="${r.y}" text-anchor="middle" font-size="${r.fontSize}" font-weight="${fontWeight}" letter-spacing="1.5" fill="${fillColor}" opacity="0.9" pointer-events="none">${r.name}</text>`;
   }).join('');
 
-  // —— "↳ 以前是 XXX" 历史回响注 — 核心 aha 触发点（中文，让她秒懂） ——
+  // —— "↳ 以前是 XXX" 历史回响注 — U11：调整位置避开城市标签 ——
   const HISTORY_ECHO_NOTES = [
-    { lon: 31,  lat: 38,  text: '↳ 以前是拜占庭帝国',         highlight: true },
-    { lon: 10,  lat: 53,  text: '↳ 以前是神圣罗马帝国核心',   highlight: false },
-    { lon: 13,  lat: 41.3,text: '↳ 以前是教皇国 + 城邦',     highlight: false },
-    { lon: 19,  lat: 45.5,text: '↳ 匈牙利（一直就叫这个）',   highlight: false },
-    { lon: -1,  lat: 51.7,text: '↳ 英格兰王国（一直是这片）', highlight: false },
+    { lon: 33,    lat: 37.5, text: '↳ 1200 年是拜占庭帝国',     highlight: true,  dy: 0  }, // 土耳其
+    { lon: 9,     lat: 49.5, text: '↳ 1200 年是神圣罗马帝国核心', highlight: false, dy: 0  }, // 德国南部
+    { lon: 14,    lat: 39.8, text: '↳ 1200 年是教皇国 + 城邦',   highlight: false, dy: 0  }, // 意大利南端
+    { lon: 21,    lat: 45,   text: '↳ 匈牙利（一直没变）',         highlight: false, dy: 0  }, // 匈牙利
+    { lon: -3.5,  lat: 53.5, text: '↳ 英格兰（1000 年没变）',     highlight: false, dy: 22 }, // 英国 — 下移避开国名
   ].map(n => {
     const [x, y] = projection([n.lon, n.lat]);
-    return { ...n, x, y };
+    return { ...n, x, y: y + (n.dy || 0) };
   });
 
   const echoNotes = HISTORY_ECHO_NOTES.map(n =>
@@ -840,6 +840,291 @@ function buildEuropeModern() {
   return svg;
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// MAP 4: tang-china.svg (U10)
+//   - 中心 [108°E, 33°N]，覆盖东亚 + 中亚（丝路）
+//   - 唐宋时期主要都城 + 4 大地理要素
+//   - DK 风格 + 古典中国元素（朱色印章、毛笔字感）
+// ─────────────────────────────────────────────────────────────────────
+
+function buildTangChina() {
+  const W = 900;
+  const H = 700;
+
+  // 东亚 + 中亚范围
+  const eastAsiaBounds = {
+    type: 'Polygon',
+    coordinates: [[
+      [60, 18],   // SW（中亚南端）
+      [145, 18],  // SE（朝鲜半岛南）
+      [145, 55],  // NE（蒙古东）
+      [60, 55],   // NW（中亚北）
+      [60, 18],
+    ]]
+  };
+
+  const projection = geoMercator()
+    .center([108, 35])
+    .scale(900)
+    .translate([W / 2, H / 2 - 20]);
+
+  const pathGen = geoPath(projection);
+
+  // 滤出东亚国家
+  const NON_TARGET = new Set([
+    '784', '364', '368', '462', '748',  // UAE Iran Iraq Maldives Eswatini
+  ]);
+  const features = countries.features.filter(f => {
+    if (NON_TARGET.has(f.id)) return false;
+    const c = geoCentroid(f);
+    return c[0] >= 60 && c[0] <= 145 && c[1] >= 18 && c[1] <= 55;
+  });
+
+  // 唐朝大致控制范围（高亮）— 用 ISO 数字代码表示中国
+  const TANG_REALM_IDS = ['156']; // China (modern)
+  const tangPaths = features.map(f => {
+    const isTangCore = TANG_REALM_IDS.includes(f.id);
+    const fill = isTangCore ? '#d97149' : C.land;
+    const opacity = isTangCore ? 0.65 : 0.4;
+    const strokeWidth = isTangCore ? 1.0 : 0.55;
+    return `<path d="${pathGen(f)}" fill="${fill}" fill-opacity="${opacity}" stroke="${C.ink}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>`;
+  }).join('\n    ');
+
+  // 城市坐标
+  const cities = {
+    changan: projection([108.94, 34.34]),    // 长安 (今西安)
+    luoyang: projection([112.46, 34.62]),    // 洛阳
+    kaifeng: projection([114.30, 34.79]),    // 开封 (北宋首都)
+    yangzhou: projection([119.43, 32.39]),   // 扬州
+    hangzhou: projection([120.16, 30.27]),   // 杭州 (南宋首都)
+    guangzhou: projection([113.27, 23.13]),  // 广州 (海上丝路起点)
+    quanzhou: projection([118.69, 24.87]),   // 泉州 (宋代第一大港)
+    dunhuang: projection([94.66, 40.14]),    // 敦煌 (丝路要冲)
+    samarkand: projection([66.97, 39.65]),   // 撒马尔罕 (丝路另一端)
+  };
+
+  // 长城路径（北方简化曲线）
+  const greatWallPath = (() => {
+    const points = [
+      [97, 41], [102, 39.5], [105, 38.5], [108, 39], [112, 40.5],
+      [116, 40.4], [119, 40.2], [122, 40], [124, 40.5]
+    ];
+    return points.map((p, i) => {
+      const [x, y] = projection(p);
+      return (i === 0 ? 'M' : 'L') + ' ' + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+  })();
+
+  // 黄河路径（简化）
+  const yellowRiverPath = (() => {
+    const points = [
+      [96, 35], [100, 36], [105, 36], [108, 38], [112, 36],
+      [115, 35.5], [118, 35.7], [121, 36.8], [123, 37.5]
+    ];
+    return points.map((p, i) => {
+      const [x, y] = projection(p);
+      return (i === 0 ? 'M' : 'L') + ' ' + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+  })();
+
+  // 长江路径（简化）
+  const yangtzePath = (() => {
+    const points = [
+      [91, 33], [96, 31], [101, 30], [104, 29], [107, 30],
+      [110, 30.5], [114, 30.5], [117, 31], [120, 31.5], [122, 31.8]
+    ];
+    return points.map((p, i) => {
+      const [x, y] = projection(p);
+      return (i === 0 ? 'M' : 'L') + ' ' + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+  })();
+
+  // 京杭大运河（隋朝挖，唐宋兴）
+  const grandCanalPath = (() => {
+    const points = [
+      [116.4, 39.9],   // 北京
+      [117.2, 39.1],   // 天津
+      [115.0, 35.8],   // 河北南
+      [116.5, 33.4],   // 商丘
+      [117.2, 31.8],   // 安徽北
+      [119.4, 32.4],   // 扬州
+      [120.2, 30.3],   // 杭州
+    ];
+    return points.map((p, i) => {
+      const [x, y] = projection(p);
+      return (i === 0 ? 'M' : 'L') + ' ' + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+  })();
+
+  // 丝绸之路（陆上路径 — 长安到撒马尔罕）
+  const silkRoadPath = (() => {
+    const points = [
+      [108.94, 34.34], // 长安
+      [104.7, 38.0],   // 兰州
+      [97.0, 39.6],    // 嘉峪关
+      [94.66, 40.14],  // 敦煌
+      [88.0, 41.5],    // 吐鲁番
+      [80.0, 41.0],    // 库车
+      [76.0, 39.5],    // 喀什
+      [69.0, 39.5],    // 撒马尔罕方向
+      [66.97, 39.65],  // 撒马尔罕
+    ];
+    return points.map((p, i) => {
+      const [x, y] = projection(p);
+      return (i === 0 ? 'M' : 'L') + ' ' + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+  })();
+
+  // 城市标记
+  const cityMarkers = `
+    <!-- 长安 — 唐都，特殊样式 -->
+    <g class="capital-changan">
+      <circle cx="${cities.changan[0]}" cy="${cities.changan[1]}" r="7" fill="${C.pinFill}" stroke="${C.pinStroke}" stroke-width="1" opacity="0.4"/>
+      <circle cx="${cities.changan[0]}" cy="${cities.changan[1]}" r="4" fill="${C.pinFill}" stroke="${C.pinStroke}" stroke-width="1.1"/>
+      <circle cx="${cities.changan[0]}" cy="${cities.changan[1]}" r="1.5" fill="${C.parchmentHi}"/>
+      <text x="${cities.changan[0]}" y="${cities.changan[1] - 12}" text-anchor="middle" font-size="13" font-weight="700" fill="${C.pinStroke}" font-family="serif">长安 Chang'an</text>
+      <text x="${cities.changan[0]}" y="${cities.changan[1] + 18}" text-anchor="middle" font-size="9" fill="${C.textSec}" font-style="italic">Tang capital · 100M people</text>
+    </g>
+    <!-- 其他大都市 -->
+    ${[
+      ['luoyang', '洛阳', 'Luoyang'],
+      ['kaifeng', '开封', 'Kaifeng (Song)'],
+      ['yangzhou', '扬州', 'Yangzhou'],
+      ['hangzhou', '杭州', 'Hangzhou'],
+      ['guangzhou', '广州', 'Guangzhou'],
+      ['quanzhou', '泉州', 'Quanzhou'],
+      ['dunhuang', '敦煌', 'Dunhuang'],
+      ['samarkand', '撒马尔罕', 'Samarkand'],
+    ].map(([key, cn, en]) => {
+      const [x, y] = cities[key];
+      return `
+        <g>
+          <circle cx="${x}" cy="${y}" r="3" fill="${C.parchmentHi}" stroke="${C.ink}" stroke-width="0.8"/>
+          <circle cx="${x}" cy="${y}" r="1.2" fill="${C.ink}"/>
+          <text x="${x + 6}" y="${y - 4}" font-size="11" font-weight="600" fill="${C.text}" font-family="serif">${cn}</text>
+          <text x="${x + 6}" y="${y + 6}" font-size="8" fill="${C.textSec}" font-style="italic">${en}</text>
+        </g>`;
+    }).join('')}
+  `;
+
+  // 区域名标
+  const regionLabels = `
+    <text x="${projection([105, 40])[0]}" y="${projection([105, 40])[1]}" text-anchor="middle" font-size="22" font-weight="700" letter-spacing="3" fill="${C.text}" opacity="0.32" font-family="serif">中 国</text>
+    <text x="${projection([85, 32])[0]}" y="${projection([85, 32])[1]}" text-anchor="middle" font-size="11" font-weight="600" fill="${C.inkLight}" opacity="0.7" font-family="serif">青藏高原</text>
+    <text x="${projection([100, 50])[0]}" y="${projection([100, 50])[1]}" text-anchor="middle" font-size="11" font-weight="600" fill="${C.inkLight}" opacity="0.7" font-family="serif">蒙古草原</text>
+    <text x="${projection([130, 38])[0]}" y="${projection([130, 38])[1]}" text-anchor="middle" font-size="10" font-weight="600" fill="${C.inkLight}" opacity="0.7" font-family="serif">朝鲜半岛</text>
+    <text x="${projection([138, 36])[0]}" y="${projection([138, 36])[1]}" text-anchor="middle" font-size="10" font-weight="600" fill="${C.inkLight}" opacity="0.7" font-family="serif">日本</text>
+    <text x="${projection([105, 22])[0]}" y="${projection([105, 22])[1]}" text-anchor="middle" font-size="10" font-weight="600" fill="${C.inkLight}" opacity="0.7" font-family="serif">越南</text>
+  `;
+
+  // 图例
+  const legendX = W - 200;
+  const legendY = H - 180;
+  const legend = `
+    <g transform="translate(${legendX} ${legendY})" font-size="9" fill="${C.text}" font-family="serif">
+      <rect width="180" height="160" fill="${C.parchmentHi}" stroke="${C.ink}" stroke-width="0.6" opacity="0.95"/>
+      <text x="90" y="14" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="1.5">唐宋盛世 · 618-1279</text>
+      <line x1="10" y1="32" x2="34" y2="32" stroke="#0288d1" stroke-width="2"/>
+      <text x="38" y="35">长江 / 黄河</text>
+      <line x1="10" y1="50" x2="34" y2="50" stroke="#5d4037" stroke-width="2.5" stroke-dasharray="3,2"/>
+      <text x="38" y="53">长城</text>
+      <line x1="10" y1="68" x2="34" y2="68" stroke="#1565c0" stroke-width="2"/>
+      <text x="38" y="71">京杭大运河</text>
+      <line x1="10" y1="86" x2="34" y2="86" stroke="#a07cb8" stroke-width="1.6" stroke-dasharray="4,3"/>
+      <text x="38" y="89">陆上丝绸之路</text>
+      <circle cx="22" cy="106" r="3" fill="#9b2c2c" stroke="${C.pinStroke}" stroke-width="0.8"/>
+      <text x="38" y="109">唐都长安</text>
+      <circle cx="22" cy="124" r="2" fill="${C.parchmentHi}" stroke="${C.ink}" stroke-width="0.6"/>
+      <text x="38" y="127">其他主要都市</text>
+      <text x="90" y="148" text-anchor="middle" font-size="9" font-style="italic" fill="${C.textSec}">同时代欧洲：黑暗时代</text>
+    </g>
+  `;
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" font-family="'Iowan Old Style','Hoefler Text','Songti SC','PingFang SC','Microsoft YaHei',Georgia,serif">
+  <defs>
+    ${HANDDRAWN_FILTER}
+    <radialGradient id="parchment-gradient-tang" cx="50%" cy="45%" r="75%">
+      <stop offset="0%"  stop-color="${C.parchmentHi}"/>
+      <stop offset="65%" stop-color="${C.parchment}"/>
+      <stop offset="100%" stop-color="${C.parchmentLo}"/>
+    </radialGradient>
+    <linearGradient id="ocean-gradient-tang" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${C.ocean}" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="${C.ocean}" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 羊皮纸背景 -->
+  <rect width="${W}" height="${H}" fill="url(#parchment-gradient-tang)"/>
+  <rect width="${W}" height="${H}" fill="${C.parchment}" filter="url(#parchment-texture)"/>
+
+  <!-- 内框 -->
+  <rect x="14" y="14" width="${W - 28}" height="${H - 28}" fill="none" stroke="${C.ink}" stroke-width="1.2" opacity="0.85"/>
+  <rect x="20" y="20" width="${W - 40}" height="${H - 40}" fill="none" stroke="${C.ink}" stroke-width="0.4" opacity="0.5"/>
+
+  <!-- 海洋背景 -->
+  <rect x="28" y="28" width="${W - 56}" height="${H - 56}" fill="url(#ocean-gradient-tang)" opacity="0.4"/>
+
+  <!-- 陆地（按国家） -->
+  <g class="lands" filter="url(#soft-shadow)">
+    ${tangPaths}
+  </g>
+
+  <!-- 区域名标 -->
+  <g class="region-labels">
+    ${regionLabels}
+  </g>
+
+  <!-- 江河长城 -->
+  <g class="rivers" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="${yellowRiverPath}" stroke="#c08560" stroke-width="2.2" opacity="0.85"/>
+    <path d="${yangtzePath}" stroke="#0288d1" stroke-width="2.2" opacity="0.85"/>
+    <path d="${greatWallPath}" stroke="#5d4037" stroke-width="2.5" stroke-dasharray="6,3" opacity="0.75"/>
+    <path d="${grandCanalPath}" stroke="#1565c0" stroke-width="2" stroke-dasharray="2,2" opacity="0.85"/>
+  </g>
+
+  <!-- 河流标注 -->
+  <text x="${projection([113, 35])[0]}" y="${projection([113, 35])[1] - 8}" font-size="10" font-style="italic" fill="#c08560" font-weight="600" font-family="serif">黄河</text>
+  <text x="${projection([114, 30.5])[0]}" y="${projection([114, 30.5])[1] + 12}" font-size="10" font-style="italic" fill="#0288d1" font-weight="600" font-family="serif">长江</text>
+  <text x="${projection([110, 40.5])[0]}" y="${projection([110, 40.5])[1] - 8}" font-size="10" font-style="italic" fill="#5d4037" font-weight="600" font-family="serif">长 城</text>
+  <text x="${projection([117, 33.5])[0]}" y="${projection([117, 33.5])[1] - 6}" font-size="9" font-style="italic" fill="#1565c0" font-weight="600" font-family="serif">京杭大运河</text>
+
+  <!-- 丝绸之路（虚线 + 标） -->
+  <path d="${silkRoadPath}" stroke="#a07cb8" stroke-width="1.6" stroke-dasharray="4,3" fill="none" opacity="0.85"/>
+  <text x="${projection([88, 41.5])[0]}" y="${projection([88, 41.5])[1] - 8}" font-size="10" font-style="italic" fill="#a07cb8" font-weight="700" font-family="serif">丝 绸 之 路</text>
+
+  <!-- 城市标记 -->
+  ${cityMarkers}
+
+  <!-- 装饰：朱色印章 (右上) -->
+  <g transform="translate(${W - 80} 80)">
+    <rect width="48" height="48" fill="${C.pinFill}" stroke="${C.pinStroke}" stroke-width="1" opacity="0.85" rx="3"/>
+    <text x="24" y="22" text-anchor="middle" font-size="14" fill="${C.parchmentHi}" font-weight="700" font-family="serif">大唐</text>
+    <text x="24" y="38" text-anchor="middle" font-size="14" fill="${C.parchmentHi}" font-weight="700" font-family="serif">盛世</text>
+  </g>
+
+  <!-- 罗经 -->
+  ${compassRose(75, 100, 30, 'N')}
+
+  <!-- 角花 -->
+  ${corner(40, 40, 1, '1 1')}
+  ${corner(W - 40, 40, 1, '-1 1')}
+  ${corner(40, H - 40, 1, '1 -1')}
+  ${corner(W - 40, H - 40, 1, '-1 -1')}
+
+  <!-- 图例 -->
+  ${legend}
+
+  <!-- 标题 -->
+  <text x="${W / 2}" y="44" text-anchor="middle" font-size="22" font-weight="700" letter-spacing="6" fill="${C.text}" font-family="serif">唐 宋 盛 世</text>
+  <text x="${W / 2}" y="62" text-anchor="middle" font-size="11" fill="${C.textSec}" font-style="italic">Tang &amp; Song China · 618-1279 · 世界文明之巅</text>
+
+  <text x="${W / 2}" y="${H - 22}" text-anchor="middle" font-size="9" font-style="italic" fill="${C.textSec}" opacity="0.7">Know U. Learning · 现代海岸线 · 历史路径示意</text>
+</svg>`;
+
+  return svg;
+}
+
 // ── 写文件 ────────────────────────────────────────────────────────────────
 const outDir = path.join(ROOT, 'public', 'maps');
 fs.mkdirSync(outDir, { recursive: true });
@@ -855,5 +1140,9 @@ console.log(`✓ europe-1200.svg (${(europeSvg.length / 1024).toFixed(1)} KB)`);
 const europeModernSvg = buildEuropeModern();
 fs.writeFileSync(path.join(outDir, 'europe-modern.svg'), europeModernSvg);
 console.log(`✓ europe-modern.svg (${(europeModernSvg.length / 1024).toFixed(1)} KB)`);
+
+const tangChinaSvg = buildTangChina();
+fs.writeFileSync(path.join(outDir, 'tang-china.svg'), tangChinaSvg);
+console.log(`✓ tang-china.svg (${(tangChinaSvg.length / 1024).toFixed(1)} KB)`);
 
 console.log('\nMaps built.');
