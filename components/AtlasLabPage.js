@@ -550,7 +550,13 @@ export default function AtlasLabPage({
             border: '1px solid ' + HC.border,
             margin: '6px 0',
           }}>
-            <CausalSummary text={meta.causalSummary?.[lang] || meta.causalSummary?.cn} lang={lang} />
+            <CausalSummary
+              text={meta.causalSummary?.[lang] || meta.causalSummary?.cn}
+              lang={lang}
+              topicId={meta.id || activeViewId}
+              topicTitle={meta.title?.cn || meta.title?.en}
+              grade={meta.grade}
+            />
             {meta.keyFigures && meta.keyFigures.length > 0 && (
               <KeyFiguresRow
                 figures={meta.keyFigures}
