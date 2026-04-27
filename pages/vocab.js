@@ -339,7 +339,13 @@ var buildGuessPrompt = (word, learned) => {
     "     ✓ give up (正解) | continue (反义) | hug tightly (无关) | look back at (形近混淆)\n" +
     "   选项长度建议 1-3 个词，整个选项 ≤ 25 字符。\n" +
     "   **不能出现中文** — 全英文选项。\n" +
-    "   context 句子贴合主义项，让正解在上下文里通顺。\n\n" +
+    "   context 句子贴合主义项，让正解在上下文里通顺。\n" +
+    "   ❌❌❌ **关键约束（多义词不混淆）**：4 个选项必须**只对应 context 暗示的同一个义项**。\n" +
+    "   严禁把目标词的\"另一个义项\"作干扰项 — 那会让用户选了\"也对\"的答案被判错，极度困惑。\n" +
+    "     反例 1：right 的 context 在判断真伪 → ❌ 选项里有 \"left\"（这是 right=右 的反义，混淆义项）\n" +
+    "     反例 2：bank 的 context 在金融 → ❌ 选项里有 \"river edge\"（这是 bank=河岸 义项）\n" +
+    "     反例 3：carpenter 的 context 在工地 → ❌ 选项里出现这个词的其它义项（虽然主义项就是木匠）\n" +
+    "   正确做法：3 个干扰项都围绕 context 暗示的那 1 个义项做反义/无关/形近。\n\n" +
     "IMPORTANT: 直接输出JSON，不要任何前导文字：\n" +
     '{"phonetic":"/音标/","context":"English-only sentence with _____","options":{"A":"simple English option (1-3 words)","B":"...","C":"...","D":"..."},"answer":"字母","hint":"中文小提示"}';
 };
