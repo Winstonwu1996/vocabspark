@@ -581,7 +581,8 @@ var buildTeachCachePrompt = (word, classifyResult) => {
 
 // A1.2: 计算 teach 缓存的 cache key
 // 同 word + classify 决策 + goal 的请求共享缓存。
-// 版本号 v1 便于将来 prompt 改进时全局失效。
+// v2 (2026-04-27)：v1 阶段写入了不完整 JSON 污染缓存（chompcloud bug），
+// 升版本号让所有旧缓存失效，配合服务端 JSON 验证（chat-stream.js）防再发。
 var getTeachCacheKey = (word, classifyResult, goal) => {
   var cls = classifyResult || {};
   var methodTypes = (cls.methods || [])
@@ -592,7 +593,7 @@ var getTeachCacheKey = (word, classifyResult, goal) => {
   var safeWord = (word || "").toLowerCase().replace(/[^a-z0-9-]/g, "");
   var parts = [
     "teach",
-    "v1",
+    "v2",
     safeWord,
     cls.wordType || "F",
     cls.abstractLevel || "L2",

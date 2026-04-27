@@ -274,8 +274,19 @@ export default async function handler(req) {
             try {
               const { done, value } = await upstreamReader.read();
               if (done) {
+                // 关键：写缓存前验证内容完整性，避免不完整 JSON 污染所有后续用户
+                let valid = false;
                 if (fullText && fullText.length > 50) {
-                  // 后台写缓存（不 await，不阻塞响应关闭）
+                  if (jsonMode) {
+                    // teach 是 JSON 模式，必须能解析才缓存
+                    try { JSON.parse(fullText); valid = true; } catch (e) {
+                      console.warn(`[chat-stream] cache skip - invalid JSON for ${cacheKey}: ${e.message}`);
+                    }
+                  } else {
+                    valid = true;
+                  }
+                }
+                if (valid) {
                   setCached(cacheKey, fullText).catch(() => {});
                 }
                 controller.close();
