@@ -1,0 +1,48 @@
+{
+  "id": "song-taizu",
+  "wikidataId": "Q7471",
+  "name": {
+    "en": "Emperor Taizu of Song",
+    "cn": "宋太祖",
+    "alternates": [
+      "Zhao Kuangyin",
+      "Tai Zu",
+      "太祖",
+      "啟運立極英武睿文神德聖功至明大孝皇帝",
+      "趙匡胤"
+    ]
+  },
+  "lifespan": {
+    "birth": "0927-03-26",
+    "death": "0976-11-19"
+  },
+  "civilization": "song-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "founding emperor of the Song Dynasty (reigned 960-976)",
+    "cn": "中國宋朝開國皇帝"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q7471"
+  ],
+  "fetchedAt": "2026-04-27T05:55:33.278Z",
+  "schemaVersion": 1
+}

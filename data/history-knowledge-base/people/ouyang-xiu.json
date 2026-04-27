@@ -1,0 +1,48 @@
+{
+  "id": "ouyang-xiu",
+  "wikidataId": "Q334323",
+  "name": {
+    "en": "Ouyang Xiu",
+    "cn": "歐陽修",
+    "alternates": [
+      "文忠",
+      "文忠公",
+      "永叔",
+      "六一居士",
+      "欧阳修"
+    ]
+  },
+  "lifespan": {
+    "birth": "1007-08-06",
+    "death": "1072-09-22"
+  },
+  "civilization": "song-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "Chinese poet, historian and statesman (1007–1072)",
+    "cn": "北宋官員、文學家"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q334323"
+  ],
+  "fetchedAt": "2026-04-27T05:55:35.098Z",
+  "schemaVersion": 1
+}

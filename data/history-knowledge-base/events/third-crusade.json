@@ -1,0 +1,47 @@
+{
+  "id": "third-crusade",
+  "wikidataId": "Q51655",
+  "name": {
+    "en": "Third Crusade",
+    "cn": "第三次十字军东征",
+    "alternates": [
+      "Cruzada de reyes"
+    ]
+  },
+  "date": "1192-09-09",
+  "dateRange": {
+    "start": "1189-01-01",
+    "end": "1192-01-01"
+  },
+  "place": null,
+  "civilization": null,
+  "topicsAppearing": [
+    "magna-carta",
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "attempt by European leaders to reconquer the Holy Land from Saladin",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "religious war",
+    "cn": "宗教戰爭"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q51655"
+  ],
+  "fetchedAt": "2026-04-27T05:55:46.092Z",
+  "schemaVersion": 1
+}

@@ -1,0 +1,51 @@
+{
+  "id": "wu-zetian",
+  "wikidataId": "Q9738",
+  "name": {
+    "en": "Wu Zetian",
+    "cn": "武則天",
+    "alternates": [
+      "Zetian dasheng huanghou",
+      "Wuzetian",
+      "Wu mei",
+      "shunsheng huanghou",
+      "Empress Consort Wu",
+      "天后",
+      "武则天",
+      "武媚娘"
+    ]
+  },
+  "lifespan": {
+    "birth": "0624-02-20",
+    "death": "0705-12-20"
+  },
+  "civilization": "tang-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "founding empress of Zhou dynasty (r. 690–705); de facto ruler of Tang dynasty from 665 to 690",
+    "cn": "武周皇帝，中國史上唯一的女皇帝"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q9738"
+  ],
+  "fetchedAt": "2026-04-27T05:55:37.938Z",
+  "schemaVersion": 1
+}

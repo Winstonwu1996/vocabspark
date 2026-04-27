@@ -1,0 +1,38 @@
+[
+  { "type": "people",  "id": "king-john",            "qid": "Q129308",  "civilization": "medieval-england", "topicsAppearing": ["magna-carta"] },
+  { "type": "people",  "id": "stephen-langton",      "qid": "Q465329",  "civilization": "medieval-england", "topicsAppearing": ["magna-carta"] },
+  { "type": "people",  "id": "pope-innocent-iii",    "qid": "Q128076",  "civilization": "medieval-papacy",  "topicsAppearing": ["magna-carta", "crusades"] },
+  { "type": "people",  "id": "william-marshal",      "qid": "Q348911",  "civilization": "medieval-england", "topicsAppearing": ["magna-carta"] },
+  { "type": "people",  "id": "henry-iii-england",    "qid": "Q160311",  "civilization": "medieval-england", "topicsAppearing": ["magna-carta"] },
+  { "type": "people",  "id": "philip-ii-france",     "qid": "Q34428",   "civilization": "medieval-france",  "topicsAppearing": ["magna-carta", "crusades"] },
+  { "type": "people",  "id": "richard-i-england",    "qid": "Q42305",   "civilization": "medieval-england", "topicsAppearing": ["magna-carta", "crusades"] },
+
+  { "type": "people",  "id": "wang-anshi",           "qid": "Q319618",  "civilization": "song-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "sima-guang",           "qid": "Q33566",   "civilization": "song-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "song-shenzong",        "qid": "Q7483",    "civilization": "song-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "song-taizu",           "qid": "Q7471",    "civilization": "song-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "su-shi",               "qid": "Q36020",   "civilization": "song-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "ouyang-xiu",           "qid": "Q334323",  "civilization": "song-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "fan-zhongyan",         "qid": "Q381822",  "civilization": "song-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "tang-taizong",         "qid": "Q9701",    "civilization": "tang-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "wu-zetian",            "qid": "Q9738",    "civilization": "tang-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "li-bai",               "qid": "Q7071",    "civilization": "tang-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "du-fu",                "qid": "Q33772",   "civilization": "tang-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "an-lushan",            "qid": "Q360559",  "civilization": "tang-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "bi-sheng",             "qid": "Q200662",  "civilization": "song-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "zhu-xi",               "qid": "Q9397",    "civilization": "song-china",       "topicsAppearing": ["tang-song"] },
+  { "type": "people",  "id": "charlemagne",          "qid": "Q3044",    "civilization": "carolingian",      "topicsAppearing": ["tang-song", "magna-carta"] },
+
+  { "type": "events",  "id": "magna-carta-1215",     "qid": "Q12519",   "topicsAppearing": ["magna-carta"] },
+  { "type": "events",  "id": "first-barons-war",     "qid": "Q2086498", "topicsAppearing": ["magna-carta"] },
+  { "type": "events",  "id": "third-crusade",        "qid": "Q51655",   "topicsAppearing": ["magna-carta", "crusades"] },
+  { "type": "events",  "id": "habeas-corpus-act-1679", "qid": "Q492004", "topicsAppearing": ["magna-carta"] },
+
+  { "type": "events",  "id": "an-lushan-rebellion",  "qid": "Q253774",  "topicsAppearing": ["tang-song"] },
+  { "type": "events",  "id": "wang-anshi-reforms",   "qid": "Q17035931","topicsAppearing": ["tang-song"] },
+  { "type": "events",  "id": "jingkang-incident",    "qid": "Q1326831", "topicsAppearing": ["tang-song"] },
+
+  { "type": "places",  "id": "runnymede",            "qid": "Q9324032", "topicsAppearing": ["magna-carta"] },
+  { "type": "places",  "id": "kaifeng",              "qid": "Q208471",  "topicsAppearing": ["tang-song"] },
+  { "type": "places",  "id": "hangzhou",             "qid": "Q4970",    "topicsAppearing": ["tang-song"] }
+]

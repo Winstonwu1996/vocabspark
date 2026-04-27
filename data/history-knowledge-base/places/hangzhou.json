@@ -1,0 +1,47 @@
+{
+  "id": "hangzhou",
+  "wikidataId": "Q4970",
+  "name": {
+    "en": "Hangzhou",
+    "cn": "杭州市",
+    "alternates": [
+      "Yuch",
+      "Quinzay",
+      "Quinzai",
+      "Quinsay",
+      "Quinsai",
+      "Hángzhōu",
+      "Hángzhōu shì",
+      "杭城"
+    ]
+  },
+  "civilization": null,
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "capital of Zhejiang Province, China",
+    "cn": "亞洲城市，中華人民共和國浙江省省會"
+  },
+  "wikidataInstanceOf": {
+    "en": "prefecture-level city",
+    "cn": "地级市"
+  },
+  "wikidataCountry": {
+    "en": "People's Republic of China",
+    "cn": "中华人民共和国"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q4970"
+  ],
+  "fetchedAt": "2026-04-27T05:55:52.567Z",
+  "schemaVersion": 1
+}

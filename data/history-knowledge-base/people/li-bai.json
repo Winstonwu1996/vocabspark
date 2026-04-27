@@ -1,0 +1,51 @@
+{
+  "id": "li-bai",
+  "wikidataId": "Q7071",
+  "name": {
+    "en": "Li Bai",
+    "cn": "李白",
+    "alternates": [
+      "Tai-pai",
+      "Tai Pai",
+      "T'ai-pai",
+      "T'ai Pai",
+      "Li Taibai",
+      "太白",
+      "李太白",
+      "青莲居士"
+    ]
+  },
+  "lifespan": {
+    "birth": "0701-05-23",
+    "death": "0762-12-04"
+  },
+  "civilization": "tang-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "Classical Chinese poet of the Tang dynasty (701–762)",
+    "cn": "唐代詩人"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q7071"
+  ],
+  "fetchedAt": "2026-04-27T05:55:38.866Z",
+  "schemaVersion": 1
+}

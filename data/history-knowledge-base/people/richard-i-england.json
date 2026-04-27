@@ -1,0 +1,52 @@
+{
+  "id": "richard-i-england",
+  "wikidataId": "Q42305",
+  "name": {
+    "en": "Richard I of England",
+    "cn": "理查一世",
+    "alternates": [
+      "Richard Cœur de Lion",
+      "Cœur de Lion",
+      "Richard I",
+      "Richard the Lionheart",
+      "Lionheart",
+      "狮心王理查",
+      "狮心王",
+      "獅心理查"
+    ]
+  },
+  "lifespan": {
+    "birth": "1157-09-15",
+    "death": "1199-04-13"
+  },
+  "civilization": "medieval-england",
+  "topicsAppearing": [
+    "magna-carta",
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "King of England from 1189 to 1199 (1157–1199)",
+    "cn": "英國君主（1189-1199）"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q42305"
+  ],
+  "fetchedAt": "2026-04-27T05:55:29.553Z",
+  "schemaVersion": 1
+}

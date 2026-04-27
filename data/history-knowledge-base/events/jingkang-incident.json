@@ -1,0 +1,50 @@
+{
+  "id": "jingkang-incident",
+  "wikidataId": "Q1326831",
+  "name": {
+    "en": "Jingkang Incident",
+    "cn": "靖康之变",
+    "alternates": [
+      "二圣北狩",
+      "靖康之乱",
+      "靖康之禍",
+      "靖康之耻",
+      "靖康之變"
+    ]
+  },
+  "date": "1125-09-01",
+  "dateRange": {
+    "start": "1125-09-08",
+    "end": "1127-03-08"
+  },
+  "place": null,
+  "civilization": null,
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "1125 battle",
+    "cn": "金朝攻陷開封致使北宋滅亡的一場戰爭"
+  },
+  "wikidataInstanceOf": {
+    "en": "battle",
+    "cn": "戰役"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q1326831"
+  ],
+  "fetchedAt": "2026-04-27T05:55:49.550Z",
+  "schemaVersion": 1
+}

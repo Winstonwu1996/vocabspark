@@ -1,0 +1,51 @@
+{
+  "id": "wang-anshi",
+  "wikidataId": "Q319618",
+  "name": {
+    "en": "Wang Anshi",
+    "cn": "王安石",
+    "alternates": [
+      "Wang, Anshi, 1021-1086",
+      "Huanlang",
+      "Banshan laoren",
+      "Jinggong",
+      "Jiefu",
+      "介甫",
+      "王荊公",
+      "半山老人"
+    ]
+  },
+  "lifespan": {
+    "birth": "1021-12-14",
+    "death": "1086-05-27"
+  },
+  "civilization": "song-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "Song Dynasty chancellor and poet (1021-1086)",
+    "cn": "中国宋朝的政治家、文学家、思想家（1021-1086）"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q319618"
+  ],
+  "fetchedAt": "2026-04-27T05:55:30.377Z",
+  "schemaVersion": 1
+}

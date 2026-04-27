@@ -11,7 +11,11 @@
     "build": "next build",
     "start": "next start",
     "validate:atlas": "node scripts/validate-atlas.mjs",
-    "test:atlas": "node scripts/test-atlas-renderer.mjs"
+    "test:atlas": "node scripts/test-atlas-renderer.mjs",
+    "kb:fetch": "node scripts/fetch-wikidata-batch.mjs --manifest data/history-knowledge-base/_manifest.json",
+    "kb:search": "node scripts/wikidata-search.mjs",
+    "kb:fact-check": "node scripts/fact-check-topic.mjs",
+    "kb:fact-check:all": "node scripts/fact-check-topic.mjs --all"
   },
   "dependencies": {
     "@sentry/nextjs": "^8.55.1",

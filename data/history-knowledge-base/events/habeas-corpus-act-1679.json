@@ -1,0 +1,47 @@
+{
+  "id": "habeas-corpus-act-1679",
+  "wikidataId": "Q492004",
+  "name": {
+    "en": "Habeas Corpus Act 1679",
+    "cn": "人身保護令修正案",
+    "alternates": [
+      "habeas corpus",
+      "Habeas Corpus",
+      "Habeas Corpus Act",
+      "人身保护令",
+      "《人身保护法》"
+    ]
+  },
+  "date": "1679-05-27",
+  "dateRange": null,
+  "place": null,
+  "civilization": null,
+  "topicsAppearing": [
+    "magna-carta"
+  ],
+  "wikidataDescription": {
+    "en": "United Kingdom law",
+    "cn": "英国1679年颁布的保护人身权利的法律"
+  },
+  "wikidataInstanceOf": {
+    "en": "Act of the Parliament of England",
+    "cn": "英格兰议会法案"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q492004"
+  ],
+  "fetchedAt": "2026-04-27T05:55:46.919Z",
+  "schemaVersion": 1
+}

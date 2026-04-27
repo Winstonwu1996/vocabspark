@@ -1,0 +1,52 @@
+{
+  "id": "pope-innocent-iii",
+  "wikidataId": "Q128076",
+  "name": {
+    "en": "Innocent III",
+    "cn": "諾森三世",
+    "alternates": [
+      "Pope Innozenz III",
+      "Pope Innocenzo III",
+      "Pope Innocenz III",
+      "Pope Innocentius III",
+      "Pope Innocent III",
+      "伊諾增三世",
+      "伊諾森三世",
+      "伊諾生三世"
+    ]
+  },
+  "lifespan": {
+    "birth": "1160-02-29",
+    "death": "1216-07-23"
+  },
+  "civilization": "medieval-papacy",
+  "topicsAppearing": [
+    "magna-carta",
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "Head of the Catholic Church from 1198 to 1216",
+    "cn": "天主教會第176任教宗"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q128076"
+  ],
+  "fetchedAt": "2026-04-27T05:55:25.775Z",
+  "schemaVersion": 1
+}

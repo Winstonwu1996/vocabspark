@@ -1,0 +1,42 @@
+{
+  "id": "sima-guang",
+  "wikidataId": "Q33566",
+  "name": {
+    "en": "Sima Guang",
+    "cn": "司馬光",
+    "alternates": []
+  },
+  "lifespan": {
+    "birth": "1019-01-01",
+    "death": "1086-01-01"
+  },
+  "civilization": "song-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "Chinese politician, writer, and historian during the Northern Song dynasty (1019–1086)",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q33566"
+  ],
+  "fetchedAt": "2026-04-27T05:55:31.312Z",
+  "schemaVersion": 1
+}

@@ -1,0 +1,51 @@
+{
+  "id": "tang-taizong",
+  "wikidataId": "Q9701",
+  "name": {
+    "en": "Emperor Taizong of Tang",
+    "cn": "唐太宗",
+    "alternates": [
+      "Wenwu dasheng daguang xiao huangdi",
+      "Tang Taizong",
+      "Tang Tai-tsung",
+      "Li Huangdi",
+      "Li Shimin",
+      "文",
+      "太宗",
+      "唐大宗"
+    ]
+  },
+  "lifespan": {
+    "birth": "0598-01-30",
+    "death": "0649-07-13"
+  },
+  "civilization": "tang-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "Chinese emperor of the Tang Dynasty (598-649) (r. 626-649)",
+    "cn": "中国唐朝第2任皇帝"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q9701"
+  ],
+  "fetchedAt": "2026-04-27T05:55:36.925Z",
+  "schemaVersion": 1
+}

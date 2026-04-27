@@ -1,0 +1,44 @@
+{
+  "id": "stephen-langton",
+  "wikidataId": "Q465329",
+  "name": {
+    "en": "Stephen Langton",
+    "cn": "史蒂芬·朗顿",
+    "alternates": [
+      "斯德望·朗頓"
+    ]
+  },
+  "lifespan": {
+    "birth": "1150-01-01",
+    "death": "1228-07-16"
+  },
+  "civilization": "medieval-england",
+  "topicsAppearing": [
+    "magna-carta"
+  ],
+  "wikidataDescription": {
+    "en": "English cleric; Archbishop of Canterbury",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q465329"
+  ],
+  "fetchedAt": "2026-04-27T05:55:24.934Z",
+  "schemaVersion": 1
+}

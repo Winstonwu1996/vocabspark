@@ -1,0 +1,51 @@
+{
+  "id": "zhu-xi",
+  "wikidataId": "Q9397",
+  "name": {
+    "en": "Zhu Xi",
+    "cn": "朱熹",
+    "alternates": [
+      "Zhuzi",
+      "Zhu Wengong",
+      "Zhu Kaoting",
+      "Zhu Hui'an",
+      "Zhu Dunweng",
+      "文",
+      "紫陽",
+      "季延"
+    ]
+  },
+  "lifespan": {
+    "birth": "1130-10-25",
+    "death": "1200-04-30"
+  },
+  "civilization": "song-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "Chinese historian, Neoconfucian philosopher, poet, and politician during the Song dynasty (1130–1200)",
+    "cn": "中國南宋理學家 (1130–1200)"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q9397"
+  ],
+  "fetchedAt": "2026-04-27T05:55:42.437Z",
+  "schemaVersion": 1
+}

@@ -1,0 +1,49 @@
+{
+  "id": "du-fu",
+  "wikidataId": "Q33772",
+  "name": {
+    "en": "Du Fu",
+    "cn": "杜甫",
+    "alternates": [
+      "Fu Du",
+      "少陵野老",
+      "杜少陵",
+      "杜工部",
+      "杜拾遗",
+      "杜拾遺"
+    ]
+  },
+  "lifespan": {
+    "birth": "0712-01-01",
+    "death": "0770-01-01"
+  },
+  "civilization": "tang-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "Tang dynasty Chinese poet (712–770)",
+    "cn": "唐代詩人"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q33772"
+  ],
+  "fetchedAt": "2026-04-27T05:55:39.748Z",
+  "schemaVersion": 1
+}

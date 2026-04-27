@@ -1,0 +1,45 @@
+{
+  "id": "runnymede",
+  "wikidataId": "Q9324032",
+  "name": {
+    "en": "Runnymede",
+    "cn": "蘭尼米德區",
+    "alternates": [
+      "Runnymede District",
+      "Runnymede (unparished area)",
+      "Borough of Runnymede",
+      "兰尼米德区",
+      "兰尼米德市",
+      "能利美得"
+    ]
+  },
+  "civilization": null,
+  "topicsAppearing": [
+    "magna-carta"
+  ],
+  "wikidataDescription": {
+    "en": "local government district with borough status in Surrey, England",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "non-metropolitan district",
+    "cn": "非都市區"
+  },
+  "wikidataCountry": {
+    "en": "United Kingdom",
+    "cn": "英国"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q9324032"
+  ],
+  "fetchedAt": "2026-04-27T05:55:50.642Z",
+  "schemaVersion": 1
+}

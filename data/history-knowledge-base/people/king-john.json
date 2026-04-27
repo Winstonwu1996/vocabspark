@@ -1,0 +1,51 @@
+{
+  "id": "king-john",
+  "wikidataId": "Q129308",
+  "name": {
+    "en": "John, King of England",
+    "cn": "约翰",
+    "alternates": [
+      "King John of England",
+      "John of England",
+      "John I Lackland",
+      "King John",
+      "John Lackland",
+      "无地王",
+      "无地王约翰",
+      "約翰王"
+    ]
+  },
+  "lifespan": {
+    "birth": "1166-12-31",
+    "death": "1216-10-26"
+  },
+  "civilization": "medieval-england",
+  "topicsAppearing": [
+    "magna-carta"
+  ],
+  "wikidataDescription": {
+    "en": "King of England from 1199 to 1216",
+    "cn": "英格蘭國王"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q129308"
+  ],
+  "fetchedAt": "2026-04-27T05:55:23.899Z",
+  "schemaVersion": 1
+}

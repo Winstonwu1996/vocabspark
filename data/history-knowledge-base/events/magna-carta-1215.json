@@ -1,0 +1,46 @@
+{
+  "id": "magna-carta-1215",
+  "wikidataId": "Q12519",
+  "name": {
+    "en": "Magna Carta",
+    "cn": "大憲章",
+    "alternates": [
+      "The Great Charter of the Liberties of England",
+      "Magna Charta",
+      "Magna Carta Libertatum",
+      "Great Charter"
+    ]
+  },
+  "date": "?",
+  "dateRange": null,
+  "place": null,
+  "civilization": null,
+  "topicsAppearing": [
+    "magna-carta"
+  ],
+  "wikidataDescription": {
+    "en": "charter of rights agreed between King John of England and the nobility in 1215",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "charter",
+    "cn": "鑑札"
+  },
+  "wikidataCountry": {
+    "en": "Kingdom of England",
+    "cn": "英格兰王国"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q12519"
+  ],
+  "fetchedAt": "2026-04-27T05:55:44.139Z",
+  "schemaVersion": 1
+}

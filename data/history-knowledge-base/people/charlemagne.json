@@ -1,0 +1,52 @@
+{
+  "id": "charlemagne",
+  "wikidataId": "Q3044",
+  "name": {
+    "en": "Charlemagne",
+    "cn": "查理大帝",
+    "alternates": [
+      "Karl the Great",
+      "Emperor Charlemagne",
+      "Charles the Great",
+      "Charlemagne the Franc",
+      "Carlus Magnus",
+      "查理曼",
+      "卡爾大帝",
+      "查理曼大帝"
+    ]
+  },
+  "lifespan": {
+    "birth": "0742-04-06",
+    "death": "0814-02-01"
+  },
+  "civilization": "carolingian",
+  "topicsAppearing": [
+    "tang-song",
+    "magna-carta"
+  ],
+  "wikidataDescription": {
+    "en": "king of Franks, regarded as the first Holy Roman Emperor (747–814) (742-814)",
+    "cn": "法兰克国王，神圣罗马帝国皇帝"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q3044"
+  ],
+  "fetchedAt": "2026-04-27T05:55:43.281Z",
+  "schemaVersion": 1
+}

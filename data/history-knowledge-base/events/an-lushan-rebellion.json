@@ -1,0 +1,44 @@
+{
+  "id": "an-lushan-rebellion",
+  "wikidataId": "Q253774",
+  "name": {
+    "en": "An Lushan Rebellion",
+    "cn": "安史之亂",
+    "alternates": []
+  },
+  "date": "0755-12-20",
+  "dateRange": {
+    "start": "0755-12-20",
+    "end": "0763-02-21"
+  },
+  "place": null,
+  "civilization": null,
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "rebellion against the Tang dynasty of China in 755 C.E",
+    "cn": "安祿山與史思明發動的反唐叛亂"
+  },
+  "wikidataInstanceOf": {
+    "en": "rebellion",
+    "cn": "起義"
+  },
+  "wikidataCountry": {
+    "en": "Tang dynasty",
+    "cn": "唐朝"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q253774"
+  ],
+  "fetchedAt": "2026-04-27T05:55:47.831Z",
+  "schemaVersion": 1
+}

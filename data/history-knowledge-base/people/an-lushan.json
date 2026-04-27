@@ -1,0 +1,50 @@
+{
+  "id": "an-lushan",
+  "wikidataId": "Q360559",
+  "name": {
+    "en": "An Lushan",
+    "cn": "安祿山",
+    "alternates": [
+      "Ngan Lu-shan",
+      "An Lu-shan",
+      "Rokhshan",
+      "On Luk Shan",
+      "On Look Shan",
+      "燕剌王",
+      "安禄山"
+    ]
+  },
+  "lifespan": {
+    "birth": "0703-01-01",
+    "death": "0757-02-02"
+  },
+  "civilization": "tang-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "Chinese general and emperor of Yan",
+    "cn": "中国古代历史人物"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q360559"
+  ],
+  "fetchedAt": "2026-04-27T05:55:40.589Z",
+  "schemaVersion": 1
+}

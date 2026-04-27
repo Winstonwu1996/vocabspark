@@ -1,0 +1,51 @@
+{
+  "id": "song-shenzong",
+  "wikidataId": "Q7483",
+  "name": {
+    "en": "Emperor Shenzong of Song",
+    "cn": "宋神宗",
+    "alternates": [
+      "Zhao Zhongzhen",
+      "Zhao Xu",
+      "Shen Zong",
+      "神宗",
+      "趙頊",
+      "宋神宗赵顼",
+      "紹天法古運德建功英文烈武欽仁聖孝皇帝",
+      "赵顼"
+    ]
+  },
+  "lifespan": {
+    "birth": "1048-05-31",
+    "death": "1085-04-07"
+  },
+  "civilization": "song-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "6th emperor of the Northern Song Dynasty",
+    "cn": "宋朝第6位皇帝"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q7483"
+  ],
+  "fetchedAt": "2026-04-27T05:55:32.210Z",
+  "schemaVersion": 1
+}

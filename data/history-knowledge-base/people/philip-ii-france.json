@@ -1,0 +1,50 @@
+{
+  "id": "philip-ii-france",
+  "wikidataId": "Q34428",
+  "name": {
+    "en": "Philip II of France",
+    "cn": "腓力二世",
+    "alternates": [
+      "Philip Augustus",
+      "Philippe II",
+      "Philip II",
+      "腓力二世 (法兰西)",
+      "腓力二世·奥古斯都",
+      "菲利浦·奧古斯都"
+    ]
+  },
+  "lifespan": {
+    "birth": "1165-08-28",
+    "death": "1223-07-21"
+  },
+  "civilization": "medieval-france",
+  "topicsAppearing": [
+    "magna-carta",
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "King of France, and the first to be called by that title (1165–1223)",
+    "cn": "法國國王"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q34428"
+  ],
+  "fetchedAt": "2026-04-27T05:55:28.505Z",
+  "schemaVersion": 1
+}

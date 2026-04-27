@@ -1,0 +1,48 @@
+{
+  "id": "first-barons-war",
+  "wikidataId": "Q2086498",
+  "name": {
+    "en": "First Barons' War",
+    "cn": "第一次諸侯戰爭",
+    "alternates": [
+      "第一次男爵战争",
+      "第一次男爵戰爭",
+      "第一次诸侯战争"
+    ]
+  },
+  "date": "1215-01-01",
+  "dateRange": {
+    "start": "1215-01-01",
+    "end": "1217-01-01"
+  },
+  "place": null,
+  "civilization": null,
+  "topicsAppearing": [
+    "magna-carta"
+  ],
+  "wikidataDescription": {
+    "en": "civil war in the Kingdom of England (1215-1217)",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "civil war",
+    "cn": "内战"
+  },
+  "wikidataCountry": {
+    "en": "Kingdom of England",
+    "cn": "英格兰王国"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q2086498"
+  ],
+  "fetchedAt": "2026-04-27T05:55:45.077Z",
+  "schemaVersion": 1
+}

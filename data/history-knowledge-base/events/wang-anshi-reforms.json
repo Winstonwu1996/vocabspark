@@ -1,0 +1,50 @@
+{
+  "id": "wang-anshi-reforms",
+  "wikidataId": "Q17035931",
+  "name": {
+    "en": "New Policies",
+    "cn": "熙寧變法",
+    "alternates": [
+      "Wang Anshi's Reform",
+      "熙丰变法",
+      "熙宁变法",
+      "王安石变法",
+      "王安石變法"
+    ]
+  },
+  "date": "1069-01-01",
+  "dateRange": {
+    "start": "1069-01-01",
+    "end": "1086-01-01"
+  },
+  "place": null,
+  "civilization": null,
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "Wang Anshi's Reform in the Northern Song Dynasty",
+    "cn": "北宋王安石變法"
+  },
+  "wikidataInstanceOf": {
+    "en": "",
+    "cn": "改革運動"
+  },
+  "wikidataCountry": {
+    "en": "Northern Song dynasty",
+    "cn": "北宋"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q17035931"
+  ],
+  "fetchedAt": "2026-04-27T05:55:48.649Z",
+  "schemaVersion": 1
+}

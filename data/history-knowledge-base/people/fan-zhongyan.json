@@ -1,0 +1,51 @@
+{
+  "id": "fan-zhongyan",
+  "wikidataId": "Q381822",
+  "name": {
+    "en": "Fan Zhongyan",
+    "cn": "范仲淹",
+    "alternates": [
+      "Zhushuo",
+      "Longtu Laozi",
+      "Xiwen",
+      "Wenzheng",
+      "文正",
+      "希文",
+      "朱說",
+      "范文正公"
+    ]
+  },
+  "lifespan": {
+    "birth": "0989-01-01",
+    "death": "1052-06-19"
+  },
+  "civilization": "song-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "Chinese poet, politician, philosopher and writer (989–1052)",
+    "cn": "北宋政治人物"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q381822"
+  ],
+  "fetchedAt": "2026-04-27T05:55:36.014Z",
+  "schemaVersion": 1
+}

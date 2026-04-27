@@ -1,0 +1,47 @@
+{
+  "id": "william-marshal",
+  "wikidataId": "Q348911",
+  "name": {
+    "en": "William Marshal, 1st Earl of Pembroke",
+    "cn": "第一代彭布罗克伯爵威廉·马歇尔",
+    "alternates": [
+      "Williame le Mareschal",
+      "William the Marshal",
+      "William Marshal",
+      "第一代彭布鲁克伯爵威廉·马歇尔"
+    ]
+  },
+  "lifespan": {
+    "birth": "1146-01-01",
+    "death": "1219-05-21"
+  },
+  "civilization": "medieval-england",
+  "topicsAppearing": [
+    "magna-carta"
+  ],
+  "wikidataDescription": {
+    "en": "Anglo-Norman soldier and statesman (1146-1219)",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q348911"
+  ],
+  "fetchedAt": "2026-04-27T05:55:26.706Z",
+  "schemaVersion": 1
+}

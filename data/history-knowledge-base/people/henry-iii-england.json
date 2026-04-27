@@ -1,0 +1,45 @@
+{
+  "id": "henry-iii-england",
+  "wikidataId": "Q160311",
+  "name": {
+    "en": "Henry III of England",
+    "cn": "亨利三世",
+    "alternates": [
+      "Henry of Winchester",
+      "Henry III"
+    ]
+  },
+  "lifespan": {
+    "birth": "1207-10-08",
+    "death": "1272-11-23"
+  },
+  "civilization": "medieval-england",
+  "topicsAppearing": [
+    "magna-carta"
+  ],
+  "wikidataDescription": {
+    "en": "King of England from 1216 to 1272",
+    "cn": "英格兰国王，爱尔兰领主和阿基坦公爵"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q160311"
+  ],
+  "fetchedAt": "2026-04-27T05:55:27.580Z",
+  "schemaVersion": 1
+}

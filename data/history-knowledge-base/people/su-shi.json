@@ -1,0 +1,51 @@
+{
+  "id": "su-shi",
+  "wikidataId": "Q36020",
+  "name": {
+    "en": "Su Shi",
+    "cn": "蘇軾",
+    "alternates": [
+      "zi Zizhan",
+      "Su Tung-p'o",
+      "Su Shih",
+      "Su shi",
+      "hao Dongpo jushi",
+      "文忠",
+      "苏东坡",
+      "东坡居士"
+    ]
+  },
+  "lifespan": {
+    "birth": "1037-01-14",
+    "death": "1101-08-31"
+  },
+  "civilization": "song-china",
+  "topicsAppearing": [
+    "tang-song"
+  ],
+  "wikidataDescription": {
+    "en": "Chinese writer and politician (1037–1101)",
+    "cn": "中國宋朝文學家、政治家、藝術家"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q36020"
+  ],
+  "fetchedAt": "2026-04-27T05:55:34.199Z",
+  "schemaVersion": 1
+}
