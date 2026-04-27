@@ -1,0 +1,41 @@
+{
+  "id": "council-of-clermont",
+  "wikidataId": "Q49964",
+  "name": {
+    "en": "Council of Clermont",
+    "cn": "克莱芒会议",
+    "alternates": []
+  },
+  "date": "1095-11-01",
+  "dateRange": null,
+  "place": null,
+  "civilization": null,
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "mixed synod of ecclesiastics and laymen of the Catholic Church in 1095",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "synod",
+    "cn": "教会会议"
+  },
+  "wikidataCountry": {
+    "en": "France",
+    "cn": "法國"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q49964"
+  ],
+  "fetchedAt": "2026-04-27T06:35:34.387Z",
+  "schemaVersion": 1
+}

@@ -703,7 +703,7 @@ export default function HistoryPage() {
   return (
     <>
       <Head>
-        <title>历史 · Magna Carta — Know U. Learning</title>
+        <title>{"历史 · " + (topic && topic.title && topic.title.cn ? topic.title.cn : "Magna Carta") + " — Know U. Learning"}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </Head>
       <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
@@ -1507,7 +1507,7 @@ function GeographySection(props) {
           )}
 
           {/* Country 视图（zoom into England area，仅 Magna Carta） */}
-          {mapView === "country" && !isTangSong && (
+          {mapView === "country" && topic.id === "magna-carta-1215" && (
             <div>
               <div style={{padding: "8px 12px", background: HC.parchmentLo, borderRadius: 8, fontSize: 12.5, marginBottom: 10, lineHeight: 1.5}}>
                 <strong>🇬🇧 英国 — 1215 年</strong>。Runnymede 的红章是签 Magna Carta 的草地。
@@ -2433,6 +2433,14 @@ function IntroScreen(props) {
               <li>代入虚构的农家女儿 — 用现代藤校决策做类比</li>
               <li>过一关核心词汇 + 概念背诵 — <strong>不背不算完成</strong></li>
             </>
+          ) : topic.id === "crusades-1099" ? (
+            <>
+              <li>跟 AI 聊 13 轮 — 三方视角（拉丁/拜占庭/穆斯林）走完 1099 占耶路撒冷 → 1187 萨拉丁夺回 → 1291 Acre 陷</li>
+              <li>看 1099 年的黎凡特地图 — 君士坦丁堡 = 今天的伊斯坦布尔；耶路撒冷三教共圣</li>
+              <li>读 900 年前的真东西 — Pope Urban II 1095 Clermont 演说 + Ibn al-Athir 1099 耶路撒冷陷落记</li>
+              <li>代入 Yusuf 或 Layla（13 岁穆斯林学生），体会战争中孩子的视角</li>
+              <li>过一关核心词汇 + 概念背诵 — <strong>不背不算完成</strong></li>
+            </>
           ) : (
             <>
               <li>跟 AI 聊 13 轮 — 从校规类比开始，慢慢引到 Magna Carta</li>
@@ -2447,6 +2455,8 @@ function IntroScreen(props) {
           <strong style={{color: HC.teal}}>桥接：</strong>
           {topic.id === "tang-song-china" ? (
             <>这次"反向桥" — 用你已熟的<strong>唐宋历史</strong>对照同时代欧洲，建立『中国 vs 西方』两套不同治理逻辑的认知。</>
+          ) : topic.id === "crusades-1099" ? (
+            <>这次我们用<strong>唐宋政教关系</strong>作中国锚点 — 同时期（1099）宋神宗变法、王安石主持，中国走的是『皇权统摄宗教』而非欧洲的『教皇 vs 皇帝』之争。</>
           ) : (
             <>这次我们用<strong>唐律疏议 (651 AD)</strong>作中国史锚点 — 比 Magna Carta 早 564 年。</>
           )}

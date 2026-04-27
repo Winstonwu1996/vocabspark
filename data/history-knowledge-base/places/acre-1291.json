@@ -1,0 +1,45 @@
+{
+  "id": "acre-1291",
+  "wikidataId": "Q126084",
+  "name": {
+    "en": "Acre",
+    "cn": "阿科",
+    "alternates": [
+      "St. Jean d'Acre",
+      "‘Akká",
+      "Akko",
+      "Akka",
+      "阿卡",
+      "阿卡老城"
+    ]
+  },
+  "civilization": null,
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "city in Israel",
+    "cn": "以色列北部区城市"
+  },
+  "wikidataInstanceOf": {
+    "en": "city",
+    "cn": "城市"
+  },
+  "wikidataCountry": {
+    "en": "Israel",
+    "cn": "以色列"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q126084"
+  ],
+  "fetchedAt": "2026-04-27T06:35:43.824Z",
+  "schemaVersion": 1
+}

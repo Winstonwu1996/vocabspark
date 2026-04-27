@@ -4,11 +4,15 @@ export const VIEW = {
   id: 'crusades',
   grade: 7,
   topicTier: 'core',
+  // 整合原 /history 模块的深度学版（13 轮苏格拉底 + 三方视角 + Mastery Gate）
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=crusades-1099&from=atlas&atlasId=crusades',
   standardsAlignment: [
     { code: 'CA-HSS-7.6.4', label: { cn: 'CA HSS-7.6.4 十字军东征 — 起源 / 进程 / 后果', en: 'CA HSS-7.6.4 Crusades — origins / events / outcomes' } },
+    { code: 'AP-WHAP-1.6',  label: { cn: 'AP World Unit 1.6 中世纪宗教冲突', en: 'AP World Unit 1.6 Religious Conflict in Medieval Era' } },
   ],
   title:    { cn: '十字军东征', en: 'Crusades' },
-  subtitle: { cn: '1099 · 第一次十字军占耶路撒冷 · 拉丁基督教 vs 伊斯兰世界', en: '1099 · First Crusade takes Jerusalem · Latin Christendom vs Islamic world' },
+  subtitle: { cn: '1099 · 第一次十字军占耶路撒冷 · 三方视角（拉丁/拜占庭/伊斯兰）', en: '1099 · First Crusade takes Jerusalem · 3-civilization view' },
   year: 1099,
 
   camera: {
@@ -74,7 +78,7 @@ export const VIEW = {
         en: 'You\'re a Norman noble\'s second son — your brother inherits, you get nothing. Urban II promised "crusaders are forgiven sins + can win land in the Holy Land." You sold your inheritance for armor and horse, marched with 50,000 across Europe and Byzantium. At Antioch (1098) you ate boiled leather to survive the siege. In 1099 Jerusalem you massacred the city — chronicles say "blood reached the horses\' bellies."',
       },
       hook: {
-        cn: '如果你是骑士 — 你出征前 Urban II 说"屠杀异教徒是赎罪"。你在耶路撒冷砍了一个 8 岁穆斯林女孩。回家后你晚上做梦还是真信"我赎了罪"？',
+        cn: '如果你是骑士 — 你出征前 Urban II 说"杀异教徒是赎罪"。回家后你晚上做梦。"我真的赎了罪吗？" — 你信吗？',
         en: 'If you were the knight — Urban II told you "killing infidels redeems sin." You cut down an 8-year-old Muslim girl in Jerusalem. Back home, do you still believe "I was forgiven," or do nightmares come?',
       },
     },

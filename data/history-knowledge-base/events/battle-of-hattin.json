@@ -1,0 +1,49 @@
+{
+  "id": "battle-of-hattin",
+  "wikidataId": "Q233568",
+  "name": {
+    "en": "Battle of Hattin",
+    "cn": "哈丁战役",
+    "alternates": [
+      "Battle of Hattin (1187)"
+    ]
+  },
+  "date": "1187-07-10",
+  "dateRange": {
+    "start": "1187-07-10",
+    "end": "1187-07-11"
+  },
+  "place": {
+    "lon": 35.459555555,
+    "lat": 32.798305555
+  },
+  "civilization": null,
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "Victory of Saladin against Crusader states, 1187",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "battle",
+    "cn": "戰役"
+  },
+  "wikidataCountry": {
+    "en": "Kingdom of Jerusalem",
+    "cn": "耶路撒冷王國"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q233568"
+  ],
+  "fetchedAt": "2026-04-27T06:35:35.570Z",
+  "schemaVersion": 1
+}

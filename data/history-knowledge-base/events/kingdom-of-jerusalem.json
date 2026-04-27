@@ -1,0 +1,44 @@
+{
+  "id": "kingdom-of-jerusalem",
+  "wikidataId": "Q55502",
+  "name": {
+    "en": "Kingdom of Jerusalem",
+    "cn": "耶路撒冷王國",
+    "alternates": [
+      "Latin Kingdom of Jerusalem",
+      "Jerusalem"
+    ]
+  },
+  "date": "?",
+  "dateRange": null,
+  "place": null,
+  "civilization": null,
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "medieval Christian kingdom in the Middle East",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "Crusader states",
+    "cn": "十字軍國家"
+  },
+  "wikidataCountry": {
+    "en": "Syria",
+    "cn": "敘利亞"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q55502"
+  ],
+  "fetchedAt": "2026-04-27T06:35:39.276Z",
+  "schemaVersion": 1
+}

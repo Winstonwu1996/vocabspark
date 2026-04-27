@@ -34,5 +34,24 @@
 
   { "type": "places",  "id": "runnymede",            "qid": "Q9324032", "topicsAppearing": ["magna-carta"] },
   { "type": "places",  "id": "kaifeng",              "qid": "Q208471",  "topicsAppearing": ["tang-song"] },
-  { "type": "places",  "id": "hangzhou",             "qid": "Q4970",    "topicsAppearing": ["tang-song"] }
+  { "type": "places",  "id": "hangzhou",             "qid": "Q4970",    "topicsAppearing": ["tang-song"] },
+
+  { "type": "people",  "id": "pope-urban-ii",        "qid": "Q30578",   "civilization": "medieval-papacy",  "topicsAppearing": ["crusades"] },
+  { "type": "people",  "id": "saladin",              "qid": "Q8581",    "civilization": "ayyubid",          "topicsAppearing": ["crusades"] },
+  { "type": "people",  "id": "bohemond-of-taranto",  "qid": "Q220806",  "civilization": "medieval-france",  "topicsAppearing": ["crusades"] },
+  { "type": "people",  "id": "godfrey-of-bouillon",  "qid": "Q76721",   "civilization": "medieval-france",  "topicsAppearing": ["crusades"] },
+  { "type": "people",  "id": "alexios-i-komnenos",   "qid": "Q41600",   "civilization": "byzantine",        "topicsAppearing": ["crusades"] },
+  { "type": "people",  "id": "anna-komnene",         "qid": "Q179284",  "civilization": "byzantine",        "topicsAppearing": ["crusades"] },
+
+  { "type": "events",  "id": "first-crusade",        "qid": "Q51649",   "topicsAppearing": ["crusades"] },
+  { "type": "events",  "id": "council-of-clermont",  "qid": "Q49964",   "topicsAppearing": ["crusades"] },
+  { "type": "events",  "id": "battle-of-hattin",     "qid": "Q233568",  "topicsAppearing": ["crusades"] },
+  { "type": "events",  "id": "battle-of-manzikert",  "qid": "Q200032",  "topicsAppearing": ["crusades"] },
+  { "type": "events",  "id": "crusader-states",      "qid": "Q190967",  "topicsAppearing": ["crusades"] },
+  { "type": "events",  "id": "kingdom-of-jerusalem", "qid": "Q55502",   "topicsAppearing": ["crusades"] },
+
+  { "type": "places",  "id": "jerusalem",            "qid": "Q1218",    "topicsAppearing": ["crusades"] },
+  { "type": "places",  "id": "constantinople",       "qid": "Q16869",   "topicsAppearing": ["crusades"] },
+  { "type": "places",  "id": "antioch",              "qid": "Q200441",  "topicsAppearing": ["crusades"] },
+  { "type": "places",  "id": "acre-1291",            "qid": "Q126084",  "topicsAppearing": ["crusades"] }
 ]

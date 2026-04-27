@@ -1,0 +1,49 @@
+{
+  "id": "bohemond-of-taranto",
+  "wikidataId": "Q220806",
+  "name": {
+    "en": "Bohemond I of Antioch",
+    "cn": "博希蒙德一世",
+    "alternates": [
+      "Bohemund I",
+      "Bohemond of Taranto",
+      "Bohemond",
+      "Boamund",
+      "塔兰托伯爵博希蒙德一世",
+      "塔兰托的博希蒙德"
+    ]
+  },
+  "lifespan": {
+    "birth": "1054-01-01",
+    "death": "1111-03-10"
+  },
+  "civilization": "medieval-france",
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "Prince of Taranto and Prince of Antioch",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q220806"
+  ],
+  "fetchedAt": "2026-04-27T06:35:29.506Z",
+  "schemaVersion": 1
+}

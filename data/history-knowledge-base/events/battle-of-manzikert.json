@@ -1,0 +1,48 @@
+{
+  "id": "battle-of-manzikert",
+  "wikidataId": "Q200032",
+  "name": {
+    "en": "Battle of Manzikert",
+    "cn": "曼齊刻爾特戰役",
+    "alternates": [
+      "The Battle of Manzikert",
+      "Malazgirt",
+      "曼齐刻尔特战役"
+    ]
+  },
+  "date": "1071-09-01",
+  "dateRange": null,
+  "place": {
+    "lon": 42.539166666,
+    "lat": 39.144722222
+  },
+  "civilization": null,
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "1071 battle between the Byzantine Empire and Seljuk Turks",
+    "cn": "拜占庭帝國與1071年的塞爾柱剋土耳其人之間的戰鬥"
+  },
+  "wikidataInstanceOf": {
+    "en": "battle",
+    "cn": "戰役"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q200032"
+  ],
+  "fetchedAt": "2026-04-27T06:35:36.648Z",
+  "schemaVersion": 1
+}

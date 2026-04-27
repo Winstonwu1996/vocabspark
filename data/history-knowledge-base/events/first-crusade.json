@@ -1,0 +1,44 @@
+{
+  "id": "first-crusade",
+  "wikidataId": "Q51649",
+  "name": {
+    "en": "First Crusade",
+    "cn": "第一次十字军东征",
+    "alternates": []
+  },
+  "date": "1096-01-01",
+  "dateRange": {
+    "start": "1096-01-01",
+    "end": "1099-01-01"
+  },
+  "place": null,
+  "civilization": null,
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "1096–1099 Christian conquest of the Holy Land",
+    "cn": "军事行动"
+  },
+  "wikidataInstanceOf": {
+    "en": "religious war",
+    "cn": "宗教戰爭"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q51649"
+  ],
+  "fetchedAt": "2026-04-27T06:35:33.537Z",
+  "schemaVersion": 1
+}

@@ -1,0 +1,46 @@
+{
+  "id": "godfrey-of-bouillon",
+  "wikidataId": "Q76721",
+  "name": {
+    "en": "Godfrey of Bouillon",
+    "cn": "布永的戈弗雷",
+    "alternates": [
+      "Godefroy V de Bouillon, Duc de Basse-Lorraine",
+      "Godefroy de Bouillon",
+      "布永的戈德弗里"
+    ]
+  },
+  "lifespan": {
+    "birth": "1060-01-01",
+    "death": "1100-07-25"
+  },
+  "civilization": "medieval-france",
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "Medieval Frankish knight",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q76721"
+  ],
+  "fetchedAt": "2026-04-27T06:35:30.527Z",
+  "schemaVersion": 1
+}

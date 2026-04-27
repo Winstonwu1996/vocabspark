@@ -1,0 +1,46 @@
+{
+  "id": "anna-komnene",
+  "wikidataId": "Q179284",
+  "name": {
+    "en": "Anna Komnene",
+    "cn": "安娜·科穆宁娜",
+    "alternates": [
+      "Anna Comnena",
+      "安娜·康內娜",
+      "安娜·康尼娜"
+    ]
+  },
+  "lifespan": {
+    "birth": "1083-12-07",
+    "death": "1153-01-01"
+  },
+  "civilization": "byzantine",
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "Byzantine princess and historian",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q179284"
+  ],
+  "fetchedAt": "2026-04-27T06:35:32.540Z",
+  "schemaVersion": 1
+}

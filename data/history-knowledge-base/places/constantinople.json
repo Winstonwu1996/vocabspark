@@ -1,0 +1,44 @@
+{
+  "id": "constantinople",
+  "wikidataId": "Q16869",
+  "name": {
+    "en": "Constantinople",
+    "cn": "君士坦丁堡",
+    "alternates": [
+      "Tzargrad",
+      "Tsarigrad",
+      "Tsargorod",
+      "Czargrad",
+      "The City of the World's Desire"
+    ]
+  },
+  "civilization": null,
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "capital of the Eastern Roman, Latin and Ottoman Empires, currently Istanbul, Turkey",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "ancient city",
+    "cn": "古城"
+  },
+  "wikidataCountry": {
+    "en": "Turkey",
+    "cn": "土耳其"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q16869"
+  ],
+  "fetchedAt": "2026-04-27T06:35:41.682Z",
+  "schemaVersion": 1
+}

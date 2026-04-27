@@ -1,0 +1,70 @@
+{
+  "id": "saladin",
+  "wikidataId": "Q8581",
+  "name": {
+    "en": "Saladin",
+    "cn": "萨拉丁",
+    "alternates": [
+      "Yusuf ibn Ayyub",
+      "Ṣalāḥ ad-Dīn Yūsuf ibn Ayyūb alarabi",
+      "Saladin Ayyūbid",
+      "Salah ad-Din",
+      "沙拉丁",
+      "撒拉丁",
+      "薩拉丁"
+    ]
+  },
+  "lifespan": {
+    "birth": "1138-01-01",
+    "death": "1193-03-11"
+  },
+  "civilization": "ayyubid",
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "Sultan of Egypt and founder of the Ayyubid dynasty (1137–1193)",
+    "cn": "阿尤布王朝第一位苏丹 (1137–1193)"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "Kurdish-Arab military leader who united Egypt and Syria under the Ayyubid dynasty. Recaptured Jerusalem from the Crusaders in 1187 (Battle of Hattin → Siege of Jerusalem), triggering the Third Crusade. Famous in both Muslim and Christian sources for chivalric treatment of enemies.",
+    "cn": "库尔德-阿拉伯裔的军事领袖，建立 Ayyubid 王朝，统一埃及与叙利亚。1187 年 Hattin 战役后重夺耶路撒冷（被十字军占领 88 年后），引发第三次十字军东征。穆斯林与基督教史料里都以善待敌人闻名。"
+  },
+  "commonMisconceptions": [
+    {
+      "claim": "Saladin was 'the noble Muslim' to contrast with 'barbaric Crusaders'",
+      "correction": "This is a 19th-century Romantic invention (Walter Scott's Talisman 1825). Saladin's actual reputation in his own time was mixed: he ordered massacres of certain garrisons (e.g., Templar/Hospitaller captives after Hattin), and was criticized by some Muslim contemporaries for being too lenient with Christian civilians in Jerusalem. He was a politically pragmatic commander, not a saint. ALSO: framing Crusaders as uniformly barbaric ignores complex period reality (some respected local Christians/Muslims, intermarriage occurred, Frankish nobility partly assimilated).",
+      "severity": "high"
+    },
+    {
+      "claim": "Saladin was Arab",
+      "correction": "Saladin was ethnically Kurdish, born in Tikrit (modern Iraq). Operated within Arab-Islamic culture and patronized Arabic scholarship, but his ethnic identity was Kurdish — relevant for modern Kurdish nationalism that claims him.",
+      "severity": "low"
+    }
+  ],
+  "neutralityNotes": "Avoid 'noble Saladin vs evil Crusaders' framing — this is Western Romantic literary tradition (Walter Scott), not history. Equally avoid the reverse 'Crusader heroes vs Muslim invaders' — Crusaders were the invaders by any geographic standard. Frame both sides as complex political actors operating within their period's logic. Note: in this period the cultural/scholarly center of the Mediterranean was Islamic (Baghdad's House of Wisdom, Cordoba), not Christian Europe. But this should be stated as fact, not as 'East was superior' claim.",
+  "keyEvents": ["battle-of-hattin", "third-crusade"],
+  "primarySourceQuotes": [
+    {
+      "text": "I shall cross this sea to their islands to pursue them until there remains no one on the face of the earth who does not acknowledge Allah, or until I die.",
+      "context": "Reported by Saladin's biographer Baha ad-Din Ibn Shaddad. Possibly polemical exaggeration — typical of period biographies of leaders.",
+      "url": "https://www.fordham.edu/halsall/source/saladin1.asp",
+      "language": "arabic"
+    }
+  ],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q8581",
+    "https://www.britannica.com/biography/Saladin",
+    "https://sourcebooks.fordham.edu/source/saladin1.asp"
+  ],
+  "fetchedAt": "2026-04-27T06:35:28.477Z",
+  "schemaVersion": 1
+}

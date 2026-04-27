@@ -1,0 +1,47 @@
+{
+  "id": "antioch",
+  "wikidataId": "Q200441",
+  "name": {
+    "en": "Antioch",
+    "cn": "安条克",
+    "alternates": [
+      "Syrian Antioch",
+      "Antiokheia",
+      "Antioch on the Orontes",
+      "Antioch of Syria",
+      "Antioch near Daphne",
+      "安塔基亞",
+      "安提基亚",
+      "安提阿"
+    ]
+  },
+  "civilization": null,
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "ancient Greek city in southern Turkey",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "ancient city",
+    "cn": "古城"
+  },
+  "wikidataCountry": {
+    "en": "Turkey",
+    "cn": "土耳其"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q200441"
+  ],
+  "fetchedAt": "2026-04-27T06:35:42.722Z",
+  "schemaVersion": 1
+}

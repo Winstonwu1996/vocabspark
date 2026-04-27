@@ -1,0 +1,71 @@
+{
+  "id": "pope-urban-ii",
+  "wikidataId": "Q30578",
+  "name": {
+    "en": "Urban II",
+    "cn": "烏爾巴諾二世",
+    "alternates": [
+      "Pope Urban II",
+      "Pope Blessed Urban II",
+      "Ottone de Châtillon",
+      "厄本二世",
+      "教宗烏爾巴諾二世",
+      "烏爾班二世",
+      "烏爾般二世",
+      "烏耳班二世"
+    ]
+  },
+  "lifespan": {
+    "birth": "1035-01-01",
+    "death": "1099-08-04"
+  },
+  "civilization": "medieval-papacy",
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "11th century pope and initiator of the Crusades",
+    "cn": "天主教會第159任教宗"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "Pope from 1088 to 1099. At the Council of Clermont (Nov 1095), preached the speech that launched the First Crusade. Died two weeks before news of Jerusalem's capture (15 Jul 1099) reached Rome.",
+    "cn": "1088-1099 在位的教皇。1095 年 11 月在 Clermont 会议上演讲，号召发动第一次十字军东征。1099 年 8 月去世，比 7 月十字军攻陷耶路撒冷的消息传到罗马还早两周。"
+  },
+  "commonMisconceptions": [
+    {
+      "claim": "Urban II called the Crusade purely out of religious devotion",
+      "correction": "Modern historians (Tyerman, Riley-Smith) emphasize multiple intertwined motives: (1) responding to Byzantine Emperor Alexios I's plea for military aid (1095); (2) consolidating papal authority over secular kings (Investiture Controversy was active); (3) channeling violent European nobility outward (Peace and Truce of God movements); (4) reuniting Eastern and Western churches after 1054 schism. Religious zeal was real but inseparable from geopolitics.",
+      "severity": "high"
+    },
+    {
+      "claim": "Urban II's speech text we have is what he actually said",
+      "correction": "Five chronicler versions exist (Fulcher of Chartres, Robert the Monk, Baldric of Dol, Guibert of Nogent, William of Malmesbury), all written years after the fact. They diverge on key details. We do NOT have a verbatim record. Treat as 'probable themes' not transcript.",
+      "severity": "medium"
+    }
+  ],
+  "neutralityNotes": "Avoid framing as 'evil mastermind' OR 'enlightened liberator' — both are 19th-century projections. He acted within his era's logic: papal authority, religious universalism, military elite outlets. The Crusades caused immense suffering AND created cultural exchange (Greek/Arabic/Latin scholarship transfer); both must be acknowledged. Do NOT contrast with 'East had no holy wars' — that's false (Tang/Song fought wars on religious grounds against Tibet, Uyghurs; Mongol conquests had cosmological framing).",
+  "keyEvents": ["council-of-clermont", "first-crusade"],
+  "primarySourceQuotes": [
+    {
+      "text": "Deus vult! (God wills it!)",
+      "context": "Crowd's reported response to Urban II's Clermont speech, Nov 1095. First recorded in Fulcher of Chartres' Gesta Francorum (~1106).",
+      "url": "https://sourcebooks.fordham.edu/source/urban2-fulcher.asp",
+      "language": "latin"
+    }
+  ],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q30578",
+    "https://sourcebooks.fordham.edu/source/urban2-fulcher.asp",
+    "https://www.britannica.com/biography/Urban-II"
+  ],
+  "fetchedAt": "2026-04-27T06:35:27.147Z",
+  "schemaVersion": 1
+}

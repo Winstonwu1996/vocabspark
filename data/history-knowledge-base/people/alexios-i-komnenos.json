@@ -1,0 +1,49 @@
+{
+  "id": "alexios-i-komnenos",
+  "wikidataId": "Q41600",
+  "name": {
+    "en": "Alexios I Komnenos",
+    "cn": "阿历克塞一世",
+    "alternates": [
+      "Alexius Comnenus",
+      "阿莱克修斯一世",
+      "阿莱克修斯",
+      "亚历克修斯一世",
+      "亚历克塞一世",
+      "亞歷克賽一世"
+    ]
+  },
+  "lifespan": {
+    "birth": "1048-01-01",
+    "death": "1118-08-15"
+  },
+  "civilization": "byzantine",
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "Byzantine emperor (1048–1118)",
+    "cn": "拜占庭皇帝"
+  },
+  "wikidataInstanceOf": {
+    "en": "human",
+    "cn": "人類"
+  },
+  "wikidataCountry": {
+    "en": "",
+    "cn": ""
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q41600"
+  ],
+  "fetchedAt": "2026-04-27T06:35:31.493Z",
+  "schemaVersion": 1
+}

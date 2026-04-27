@@ -1,0 +1,45 @@
+{
+  "id": "crusader-states",
+  "wikidataId": "Q190967",
+  "name": {
+    "en": "Crusader states",
+    "cn": "十字軍國家",
+    "alternates": [
+      "Outremer",
+      "海外",
+      "十字軍國"
+    ]
+  },
+  "date": "?",
+  "dateRange": null,
+  "place": null,
+  "civilization": null,
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "Christian states in the Levant, 1098–1291",
+    "cn": ""
+  },
+  "wikidataInstanceOf": {
+    "en": "",
+    "cn": ""
+  },
+  "wikidataCountry": {
+    "en": "Kingdom of Jerusalem",
+    "cn": "耶路撒冷王國"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q190967"
+  ],
+  "fetchedAt": "2026-04-27T06:35:38.101Z",
+  "schemaVersion": 1
+}

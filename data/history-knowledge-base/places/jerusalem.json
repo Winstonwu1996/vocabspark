@@ -1,0 +1,43 @@
+{
+  "id": "jerusalem",
+  "wikidataId": "Q1218",
+  "name": {
+    "en": "Jerusalem",
+    "cn": "耶路撒冷",
+    "alternates": [
+      "Yerushalayim",
+      "J'lem",
+      "Aelia Capitolina",
+      "Al-Quds"
+    ]
+  },
+  "civilization": null,
+  "topicsAppearing": [
+    "crusades"
+  ],
+  "wikidataDescription": {
+    "en": "city in the Middle East, holy to the three Abrahamic religions",
+    "cn": "圣城"
+  },
+  "wikidataInstanceOf": {
+    "en": "city",
+    "cn": "城市"
+  },
+  "wikidataCountry": {
+    "en": "Palestine",
+    "cn": "巴勒斯坦"
+  },
+  "summary": {
+    "en": "?",
+    "cn": "?"
+  },
+  "commonMisconceptions": [],
+  "neutralityNotes": "?",
+  "keyEvents": [],
+  "primarySourceQuotes": [],
+  "sources": [
+    "https://www.wikidata.org/wiki/Q1218"
+  ],
+  "fetchedAt": "2026-04-27T06:35:40.705Z",
+  "schemaVersion": 1
+}
