@@ -85,6 +85,29 @@ export default function AtlasLabPage({
   // localStorage 记 worldLocatorSeen[atlasId] 避免每次都强弹
   // 设计意图：像翻一本书的第一页 — 看完一次就懂了，之后想看再点开
   const [worldLocatorOpen, setWorldLocatorOpen] = useState(false);
+
+  // 修复 #1：读用户 profile 里的家乡城市 — 不能默认所有用户都来自中国
+  const [userHomeCity, setUserHomeCity] = useState(null);  // { name, coord }
+  const [userNowCity, setUserNowCity] = useState(null);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('vocabspark_v1');
+      const d = raw ? JSON.parse(raw) : null;
+      const hp = (d && d.historyProfile) || null;
+      // 动态加载坐标查询表（避免在服务端 SSR 时报错）
+      import('../lib/atlas-projection').then((mod) => {
+        if (hp && hp.fromCity) {
+          const coord = mod.lookupHomeCoord(hp.fromCity);
+          setUserHomeCity({ name: hp.fromCity, coord });
+        }
+        if (hp && hp.city) {
+          // current city（默认 Irvine — 但 profile 也可能填 Cupertino / Boston 等）
+          setUserNowCity({ name: hp.city, coord: null });  // 美国城市暂不查坐标，用 SSR 默认 Irvine
+        }
+      }).catch(() => {});
+    } catch (_) {}
+  }, []);
   useEffect(() => {
     if (typeof window === 'undefined' || !activeViewId) return;
     try {
@@ -92,11 +115,11 @@ export default function AtlasLabPage({
       const d = raw ? JSON.parse(raw) : null;
       const seen = (d && d.worldLocatorSeen) || {};
       if (!seen[activeViewId]) {
-        // 第一次进这个 Topic — 自动展开 2.5s 然后折叠
-        setWorldLocatorOpen(true);
-        const t = setTimeout(() => {
+        // 第一次进这个 Topic — 延迟 600ms（给用户先看到 collapsed banner 一眼）后自动展开 4.4s 然后折叠
+        // 总流程：先看到一行 banner（红色 📖 展开徽章 + 脉动）→ 翻页动画 1.1s → 展开停留 → 自动收回
+        const openT = setTimeout(() => setWorldLocatorOpen(true), 600);
+        const closeT = setTimeout(() => {
           setWorldLocatorOpen(false);
-          // 标记已 seen
           try {
             const raw2 = localStorage.getItem('vocabspark_v1');
             const d2 = raw2 ? JSON.parse(raw2) : {};
@@ -105,8 +128,8 @@ export default function AtlasLabPage({
             d2.updatedAt = new Date().toISOString();
             localStorage.setItem('vocabspark_v1', JSON.stringify(d2));
           } catch (_) {}
-        }, 2500);
-        return () => clearTimeout(t);
+        }, 5000);  // 600ms wait + 1.1s flip + 3.3s view = 5s 总
+        return () => { clearTimeout(openT); clearTimeout(closeT); };
       }
     } catch (_) {}
   }, [activeViewId]);
@@ -523,6 +546,7 @@ export default function AtlasLabPage({
           {/* 控件第二行已删除：mode 浮到地图右上 / CN-EN 移到 sticky chip bar 末尾 / layers 已浮层 */}
 
           {/* Phase 2 #2：世界定位 — 默认折叠一行 banner，第一次进 Topic 自动展开 2.5s 后折叠 */}
+          {/* 修复 #1：传用户 profile 的家乡城市 — 不再写死中国 */}
           <WorldLocator
             overview={worldOverview}
             currentLocation={worldLocation}
@@ -530,6 +554,9 @@ export default function AtlasLabPage({
             collapsed={!worldLocatorOpen}
             onToggle={toggleWorldLocator}
             topicTitle={meta.title?.[lang] || meta.title?.cn}
+            homeCityLabel={userHomeCity ? userHomeCity.name : null}
+            homeCoord={userHomeCity ? userHomeCity.coord : null}
+            nowCityLabel={userNowCity ? userNowCity.name : null}
           />
 
           {/* 标题 + 副标题 */}

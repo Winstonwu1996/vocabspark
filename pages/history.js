@@ -1649,6 +1649,7 @@ function ProfileSetup(props) {
   var [age, setAge] = useState(parsedFields.userAge || 13);
   var [grade, setGrade] = useState(7);
   var [city, setCity] = useState("");
+  var [fromCity, setFromCity] = useState(parsedFields.userPriorCity && parsedFields.userPriorCity !== "中国" ? parsedFields.userPriorCity : "");
   var [schoolName, setSchoolName] = useState("");
   var [schoolType, setSchoolType] = useState("public");
   var [interest, setInterest] = useState("");
@@ -1687,7 +1688,7 @@ function ProfileSetup(props) {
 
   var saveManual = function() {
     if (!name.trim() || !city.trim()) {
-      alert("请填名字 + 城市");
+      alert("请填名字 + 现在的城市");
       return;
     }
     props.onSave({
@@ -1695,6 +1696,7 @@ function ProfileSetup(props) {
       age: parseInt(age) || 13,
       grade: parseInt(grade) || 7,
       city: city.trim(),
+      fromCity: fromCity.trim(),  // #1：家乡城市，可空（默认按 "中国" 处理）
       schoolName: schoolName.trim(),
       schoolType: schoolType,
       interest: interest.trim(),
@@ -1783,6 +1785,10 @@ function ProfileSetup(props) {
 
             <Field label="所在城市 *" required hint="如 Irvine / Cupertino / Bellevue / Boston">
               <input value={city} onChange={function(e){setCity(e.target.value);}} placeholder="Irvine" style={S.input} />
+            </Field>
+
+            <Field label="来美国之前的家乡（选填）" hint="如 上海 / 北京 / 深圳 / 成都 — 让 AI 用你的家乡当历史锚点">
+              <input value={fromCity} onChange={function(e){setFromCity(e.target.value);}} placeholder="上海" style={S.input} />
             </Field>
 
             <Field label="学校类型">

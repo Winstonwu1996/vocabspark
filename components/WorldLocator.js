@@ -6,6 +6,23 @@
 // Phase 2 #2：默认折叠成一行 "📍 [Topic 标题] 在世界上哪里 ▼"
 // 第一次进 Topic 自动展开 2.5s（强制 onboarding 一次），之后随时可点开
 // 翻页隐喻：用 CSS rotateY 模拟"翻一页书"的物理感，对应 #1 flipbook 主题
+//
+// 修复 #1：homePoint 不写死中国 — 由 props 传入用户家乡坐标 + 城市名（从 profile 读）
+
+// 服务端 SSR overview 用的是 equirectangular 投影，scale=115，translate=(WL_W/2, WL_H/2)
+// 这里要把动态的 [lon, lat] 投到同样的坐标系
+function projectEquirect(lonLat, viewBox) {
+  if (!Array.isArray(lonLat) || lonLat.length !== 2) return null;
+  // viewBox = "0 0 720 240"
+  var parts = (viewBox || '0 0 720 240').split(' ').map(Number);
+  var W = parts[2] || 720, H = parts[3] || 240;
+  var scale = 115;  // 跟 atlas-renderer.js renderWorldOverview 保持一致
+  var lon = lonLat[0], lat = lonLat[1];
+  // d3 equirectangular: x = scale * lon * (π/180); y = -scale * lat * (π/180)
+  var x = W / 2 + scale * lon * Math.PI / 180;
+  var y = H / 2 - scale * lat * Math.PI / 180;
+  return [x, y];
+}
 
 const C = {
   parchment:   '#f4ead0',
@@ -19,13 +36,30 @@ const C = {
   topicRed:    '#9b2c2c',
 };
 
-export default function WorldLocator({ overview, currentLocation, lang = 'cn', collapsed = false, onToggle, topicTitle }) {
+export default function WorldLocator({
+  overview,
+  currentLocation,
+  lang = 'cn',
+  collapsed = false,
+  onToggle,
+  topicTitle,
+  homeCityLabel,   // #1: 用户家乡城市名（如 "上海"），无则默认 "中国"
+  homeCoord,       // #1: 用户家乡坐标 [lon, lat]，无则用 SSR overview 默认 (北京)
+  nowCityLabel,    // 用户当前城市名（默认 Irvine）
+  nowCoord,        // 用户当前坐标
+}) {
   if (!overview) return null;
+
+  // 默认显示文案 — 但优先用 user profile 的真实家乡
+  const homeLabel = homeCityLabel ? '家乡 · ' + homeCityLabel : '家乡 · 中国';
+  const nowLabel = nowCityLabel ? '现在 · ' + nowCityLabel : '现在 · Irvine';
+  const homeLabelEn = homeCityLabel ? 'Home · ' + homeCityLabel : 'Home · China';
+  const nowLabelEn = nowCityLabel ? 'Now · ' + nowCityLabel : 'Now · Irvine';
 
   const T = lang === 'cn' ? {
     title: '🌍 世界定位',
-    home: '家乡 · 中国',
-    now: '现在 · Irvine',
+    home: homeLabel,
+    now: nowLabel,
     topic: '当前 Topic',
     hint: '先看世界再进入',
     collapsedHint: '看 Topic 在世界上哪里',
@@ -33,8 +67,8 @@ export default function WorldLocator({ overview, currentLocation, lang = 'cn', c
     collapse: '▲ 折叠',
   } : {
     title: '🌍 World Locator',
-    home: 'Home · China',
-    now: 'Now · Irvine',
+    home: homeLabelEn,
+    now: nowLabelEn,
     topic: 'Current Topic',
     hint: 'Zoom in from world view',
     collapsedHint: 'See where this Topic is on Earth',
@@ -42,41 +76,64 @@ export default function WorldLocator({ overview, currentLocation, lang = 'cn', c
     collapse: '▲ Close',
   };
 
-  const { viewBox, landPath, homePoint, nowPoint } = overview;
+  // overview 来自 SSR（默认北京 + Irvine）。如果 user 传了真实坐标，client-side 重投影
+  const { viewBox, landPath } = overview;
+  const homePoint = homeCoord ? projectEquirect(homeCoord, viewBox) : overview.homePoint;
+  const nowPoint = nowCoord ? projectEquirect(nowCoord, viewBox) : overview.nowPoint;
 
-  // ── 折叠态：一行高的可点击 banner ──
+  // ── 折叠态：一行高的可点击 banner（带 subtle pulse 吸引视线）──
   if (collapsed) {
     return (
-      <div
-        onClick={onToggle}
-        style={{
-          background: C.parchmentHi,
-          padding: '8px 14px',
-          borderRadius: 10,
-          border: '1px solid #d4c098',
-          marginBottom: 10,
-          display: 'flex', alignItems: 'center', gap: 10,
-          cursor: 'pointer',
-          transition: 'background 0.15s, transform 0.15s',
-          fontSize: 12,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = '#f8eecf';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = C.parchmentHi;
-        }}
-      >
-        <span style={{ fontSize: 16, lineHeight: 1 }}>📍</span>
-        <span style={{ flex: 1, color: C.ink, fontWeight: 600 }}>
-          {topicTitle ? topicTitle + ' · ' : ''}{T.collapsedHint}
-        </span>
-        <span style={{ fontSize: 11, color: C.inkLight, opacity: 0.7 }}>{T.expand}</span>
-      </div>
+      <>
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes wlBannerPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(155, 44, 44, 0); }
+            50%      { box-shadow: 0 0 0 4px rgba(155, 44, 44, 0.15); }
+          }
+          .wl-banner {
+            animation: wlBannerPulse 3s ease-in-out 2;
+          }
+        ` }} />
+        <div
+          className="wl-banner"
+          onClick={onToggle}
+          style={{
+            background: C.parchmentHi,
+            padding: '10px 14px',
+            borderRadius: 10,
+            border: '1px solid #d4c098',
+            marginBottom: 10,
+            display: 'flex', alignItems: 'center', gap: 10,
+            cursor: 'pointer',
+            transition: 'background 0.15s, transform 0.15s',
+            fontSize: 12,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#f8eecf';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = C.parchmentHi;
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          <span style={{ fontSize: 18, lineHeight: 1 }}>📍</span>
+          <span style={{ flex: 1, color: C.ink, fontWeight: 600 }}>
+            {topicTitle ? topicTitle + ' · ' : ''}{T.collapsedHint}
+          </span>
+          <span style={{
+            fontSize: 11, color: C.topicRed, opacity: 0.85, fontWeight: 700,
+            padding: '2px 8px',
+            background: 'rgba(155,44,44,0.1)',
+            borderRadius: 999,
+            border: '1px solid rgba(155,44,44,0.3)',
+          }}>📖 {T.expand}</span>
+        </div>
+      </>
     );
   }
 
-  // ── 展开态：完整世界地图 + 翻页动画 ──
+  // ── 展开态：完整世界地图 + 翻页动画（1.1s 长动画让 user 看清"翻一页书") ──
   return (
     <div
       style={{
@@ -88,15 +145,27 @@ export default function WorldLocator({ overview, currentLocation, lang = 'cn', c
         display: 'flex',
         gap: 10,
         alignItems: 'center',
-        transformOrigin: 'top center',
-        animation: 'wlPageOpen 0.7s ease-out',
+        animation: 'wlPageOpen 1.1s cubic-bezier(0.34, 1.56, 0.64, 1)',
       }}
     >
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes wlPageOpen {
-          0%   { transform: rotateX(-30deg) scaleY(0.4); opacity: 0; }
-          50%  { opacity: 0.8; }
-          100% { transform: rotateX(0deg) scaleY(1); opacity: 1; }
+          0%   {
+            transform: perspective(1500px) rotateX(-75deg);
+            transform-origin: top center;
+            opacity: 0;
+            box-shadow: 0 0 0 rgba(0,0,0,0);
+          }
+          40% {
+            opacity: 0.6;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+          }
+          100% {
+            transform: perspective(1500px) rotateX(0deg);
+            transform-origin: top center;
+            opacity: 1;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+          }
         }
       ` }} />
       <div style={{ flex: '0 0 auto', minWidth: 110 }}>
@@ -144,7 +213,7 @@ export default function WorldLocator({ overview, currentLocation, lang = 'cn', c
             <circle cx={homePoint[0]} cy={homePoint[1]} r={2.5} fill={C.homeBlue} />
             <text x={homePoint[0]} y={homePoint[1] - 8} textAnchor="middle" fontSize={9} fontWeight={700} fill={C.homeBlue}
               stroke={C.parchmentHi} strokeWidth={2.5} paintOrder="stroke fill" fontFamily="serif">
-              {lang === 'cn' ? '家乡' : 'Home'}
+              {homeCityLabel || (lang === 'cn' ? '家乡' : 'Home')}
             </text>
           </g>
         )}
