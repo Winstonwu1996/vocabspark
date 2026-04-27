@@ -643,9 +643,19 @@ export default function HomePage() {
           {/* SVG 对比插画 */}
           <VsArt />
 
-          {/* 个性化例句样本卡 */}
+          {/* 个性化例句样本卡 + 即时 CTA — P3 哇时刻强化 */}
           <div style={{ marginBottom: 28 }}>
             <KnowUExampleCard />
+            <div style={{ textAlign:"center", marginTop:14 }}>
+              <div style={{ fontSize:13, color:C.text, marginBottom:10, lineHeight:1.6 }}>
+                ☝️ 这些都是 AI 用每个学生的画像编的真实例句。<br/>
+                <strong style={{color:C.accent}}>填一份你自己的画像，就能看到属于你的版本。</strong>
+              </div>
+              <Link href={user ? "/vocab" : "/vocab?from=home"} style={{ display:"inline-block", padding:"10px 22px", background:C.accent, color:"#fff", borderRadius:999, fontSize:14, fontWeight:700, textDecoration:"none", boxShadow:"0 4px 12px rgba(196,107,48,0.25)" }}>
+                {user ? "继续我的学习 →" : "5 分钟填画像 · 看我的版本 →"}
+              </Link>
+              <div style={{ fontSize:11, color:C.textSec, marginTop:8, opacity:0.8 }}>免费 · 无需信用卡 · 推广期 9/30 截止前所有功能免费</div>
+            </div>
           </div>
 
           {/* 4 张差异化卡 — 2x2 四宫格（桌面），手机自适应单列 */}
