@@ -468,9 +468,9 @@ export default function HomePage() {
   return (
     <div style={{ background: C.bg, minHeight: "100vh", fontFamily: FONT, color: C.text }}>
       <Head>
-        <title>Know U. Learning — AI 英语私教，每个单词都是你的故事</title>
+        <title>Know U. Learning — AI 英语 + 历史私教，跟课内 HSS / AP 完全对齐</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="AI 了解你的生活、朋友、爱好，为你定制每一个例句。Vocab 词汇课 + Writing 写作课 + Reading 阅读课，三位一体的英语学习平台。" />
+        <meta name="description" content="AI 用你的世界讲历史、教单词。40 个 Topic 因果地图（Annales 5 层框架）+ 14 轮苏格拉底对话 + 中国史锚点（唐律 / 天子）。Vocab + Writing + History + Reading 四位一体 — 跟 Houghton Mifflin 教材、CA HSS 课标、AP World History 完全对齐。" />
       </Head>
       <style dangerouslySetInnerHTML={{ __html: globalCSS + `
         @keyframes floatLogo { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
@@ -494,16 +494,86 @@ export default function HomePage() {
       )}
 
       {/* ═══ ECOSYSTEM — SVG 大插画 + 3 产品卡（删掉中间文字卡） ═══ */}
+      {/* ═══ 历史模块 hero — 5 分钟承诺，单一 CTA ═══ */}
+      <FadeInSection>
+        <section id="history-flagship" style={{ ...container, padding: "32px 20px" }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #f4ead0 0%, #e8dcb6 100%)',
+            border: '2px solid #d4c098',
+            borderRadius: 16,
+            padding: '28px 24px',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span style={{
+                fontSize: 10, fontWeight: 700, padding: '3px 10px',
+                background: '#9b2c2c', color: '#fff8e8', borderRadius: 999,
+                letterSpacing: 1.5, textTransform: 'uppercase',
+              }}>新上线 · NEW</span>
+              <span style={{ fontSize: 11, color: '#6b4f33', fontStyle: 'italic' }}>
+                跟课内 HSS / AP World History 完全对齐
+              </span>
+            </div>
+            <h2 style={{
+              fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 700,
+              color: '#3d2c1a', margin: '0 0 10px', lineHeight: 1.25,
+              letterSpacing: '-0.02em',
+            }}>
+              5 分钟，让孩子真正<span style={{ color: '#9b2c2c' }}>看懂为什么发生</span><br />
+              不是死记 1215 大宪章签了什么 — 是从地理 → 气候 → 经济 → 制度 → 事件，
+              <br />一层层把"原因"讲清楚。
+            </h2>
+            <div style={{
+              fontSize: 13, color: '#3d2c1a', lineHeight: 1.7,
+              marginTop: 14, marginBottom: 18,
+            }}>
+              <div>🌐 <strong>40 个 Topic</strong> 从古希腊到二战，全球唯一的 <strong>5 层因果地图</strong>（Annales 学派框架）</div>
+              <div>🦉 <strong>14 轮苏格拉底对话</strong> · AI 不讲答案，引导孩子自己想出来</div>
+              <div>🌉 <strong>中国史做锚点</strong> · 用她已熟的唐律、天子、家国天下对照西方历史</div>
+              <div>🎭 <strong>Cosplay 角色代入</strong> · 选 King John / 反叛男爵 / 同龄人，第一人称进入历史</div>
+              <div>📖 <strong>对应你课本</strong> · Houghton Mifflin / McGraw-Hill 章节直接对照</div>
+            </div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Link href="/atlas-lab/magna-carta" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '12px 22px',
+                background: 'linear-gradient(135deg, #c46b30 0%, #b85a25 100%)',
+                color: '#fff8e8',
+                borderRadius: 999,
+                fontSize: 14, fontWeight: 700,
+                textDecoration: 'none',
+                boxShadow: '0 4px 14px rgba(196, 107, 48, 0.3)',
+                transition: 'transform 0.15s',
+              }}>🎯 5 分钟看懂大宪章 →</Link>
+              <Link href="/atlas-lab/tang-song" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '12px 22px',
+                background: 'transparent',
+                color: '#3d2c1a',
+                border: '1.5px solid #d4c098',
+                borderRadius: 999,
+                fontSize: 14, fontWeight: 600,
+                textDecoration: 'none',
+              }}>或者从唐宋盛世开始 →</Link>
+            </div>
+            <div style={{ fontSize: 11, color: '#6b4f33', marginTop: 10, fontStyle: 'italic', opacity: 0.85 }}>
+              开始 30-45 分钟深度学：14 轮对话 + 5 层因果 + 必背词汇 mastery 通关
+            </div>
+          </div>
+        </section>
+      </FadeInSection>
+
       <FadeInSection>
         <section id="ecosystem" style={{ ...container, padding: "32px 20px" }}>
-          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, textAlign: "center", letterSpacing: "-0.02em", marginBottom: 6 }}>三位一体 · 学习闭环</h2>
-          <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 20 }}>读、写、词汇相互赋能 — 学过的词在写作中自然出现</p>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, textAlign: "center", letterSpacing: "-0.02em", marginBottom: 6 }}>四位一体 · 学习闭环</h2>
+          <p style={{ fontSize: 14, color: C.textSec, textAlign: "center", marginBottom: 20 }}>词、写、读、史相互赋能 — 历史里学的词流入 Vocab，Vocab 学的词流回 Writing</p>
 
           {/* 大幅 SVG 闭环插画 */}
           <EcosystemArt />
 
-          {/* 3 Product Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+          {/* 4 Product Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
             {/* Vocab */}
             <div style={{ background: C.card, borderRadius: 14, border: "1px solid " + C.border, borderTop: "4px solid " + C.accent, padding: "20px", boxShadow: C.shadow }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -531,6 +601,20 @@ export default function HomePage() {
                 <li>📊 六维能力雷达图可视化成长</li>
               </ul>
               <Link href="/writing" style={{ ...S.primaryBtn, textDecoration: "none", display: "block", textAlign: "center", padding: "10px", fontSize: 14, background: C.purple }}>体验写作课 →</Link>
+            </div>
+            {/* History · 历史课（atlas + 14轮 Socratic） */}
+            <div style={{ background: C.card, borderRadius: 14, border: "1px solid " + C.border, borderTop: "4px solid #9b2c2c", padding: "20px", boxShadow: C.shadow }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>🦉 History · 历史课</div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#9b2c2c', background: 'rgba(155, 44, 44, 0.12)', padding: "2px 8px", borderRadius: 10 }}>新上线</span>
+              </div>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 16px", fontSize: 13, color: C.textSec, lineHeight: 2 }}>
+                <li>🌐 40 Topic 因果地图（Annales 5 层）</li>
+                <li>🦉 14 轮苏格拉底对话 — AI 不给答案</li>
+                <li>🌉 中国史做锚点（唐律 / 天子）</li>
+                <li>🎭 Cosplay 角色代入 + 必背词进 Vocab</li>
+              </ul>
+              <Link href="/atlas-lab/magna-carta" style={{ ...S.primaryBtn, textDecoration: "none", display: "block", textAlign: "center", padding: "10px", fontSize: 14, background: '#9b2c2c' }}>开始大宪章 →</Link>
             </div>
             {/* Reading */}
             <div style={{ background: C.card, borderRadius: 14, border: "1px solid " + C.border, borderTop: "4px solid " + C.teal, padding: "20px", boxShadow: C.shadow, opacity: 0.85 }}>
