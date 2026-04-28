@@ -286,14 +286,27 @@ var buildSys = (profile, goal, goalCustom) => {
 };
 
 // E3: AI 输出安全边界 — 所有 sys prompt 都附加。
-// 防止 AI 生成不当内容（儿童产品的底线）。即便用户画像或单词词义触及敏感话题，
-// 也用中性场景（电游/历史/文学/学习）替代现实暴力/政治/色情等。
-var SAFETY_GUARDRAILS = "\n\n【安全约束（必须严格遵守，违反即重新生成）】\n" +
-  "- 禁止：自残、自杀、暴力、毒品、性、政治敏感、宗教冲突、种族歧视、人身攻击、负面身体外貌评价\n" +
-  "- 即便词义本身涉敏感（如 \"kill\" \"die\" \"drug\" \"war\"），用中性历史/电游/文学场景，避免现实暴力描述\n" +
-  "- 不引用真实在世人物的争议言论或政治立场\n" +
-  "- 如用户画像里出现疑似不当内容（极端言论、未成年人不当信息），忽略并用通用场景替代\n" +
-  "- 整体基调积极、健康、教育向";
+// 重要：是"内容场景引导"，不是"拒绝生成"。
+// 任何标准词汇（包括 assault/kill/war/battle/antagonist 等冲突类常见词）
+// 必须正常完整教学，只是用安全场景替代现实暴力描述。
+var SAFETY_GUARDRAILS = "\n\n【内容场景引导（注意：是引导例句场景，不是拒绝词汇）】\n" +
+  "✅ 任何英文标准词汇都必须正常、完整、详尽教学，包含所有 schema 字段。\n" +
+  "✅ 涉及冲突/暴力/竞争语义的词（assault, battle, kill, die, war, attack, antagonist, fight 等）\n" +
+  "   是日常英语阅读和考试核心词，**必须详细完整教学**，绝不拒绝、不跳过、不缩短输出。\n" +
+  "✅ 例句场景偏好（按优先级）：\n" +
+  "   1. 体育竞技（球场对抗、比赛冲撞）\n" +
+  "   2. 历史/经典文学（中世纪战争、莎士比亚悲剧）\n" +
+  "   3. 电子游戏（王者荣耀团战、魔兽世界 boss 战）\n" +
+  "   4. 自然现象（暴风雨袭击海岸、冰川撞击岩石）\n" +
+  "   5. 抽象表达（信念冲撞、思想交锋、内心挣扎）\n" +
+  "❌ 避免（仅在例句层面避免，不是拒绝词汇）：\n" +
+  "   - 现实校园暴力 / 家暴 / 真实战争血腥细节\n" +
+  "   - 自残自杀的具体描述（但 \"struggle\" \"despair\" 等情绪词可正常教）\n" +
+  "   - 毒品具体使用方式（但 \"addict\" \"abuse\" 词义可正常教，用对学习/手机依赖等场景）\n" +
+  "   - 性的露骨描述（但 \"intimate\" \"affection\" 等可正常教）\n" +
+  "   - 真实在世政客的争议立场\n" +
+  "   - 种族/宗教歧视性描述\n" +
+  "整体基调：积极、健康、教育向，但**不因为词义敏感而拒绝或简化教学**。";
 
 // A1.2: teach 缓存版 system prompt — 去掉个人画像，保留学习目标。
 // 同一 goal 的用户共享缓存（cache key 包含 goal）。
@@ -4614,7 +4627,11 @@ export default function App() {
     var startIdx = typeof resumeIdx === "number" ? resumeIdx : 0;
     var words = rawWords;
     if (startIdx === 0) {
-      var unlearned = rawWords.filter(w => !wordStatusMap[w] || wordStatusMap[w] === "unlearned");
+      // "error" 状态的词允许重学（之前因 LLM 失败被标记，新代码修复后应能成功）
+      var unlearned = rawWords.filter(w => {
+        var s = wordStatusMap[w];
+        return !s || s === "unlearned" || s === "error";
+      });
       if (unlearned.length === 0) unlearned = rawWords;
       var remainingQuota = getRemainingNewWordQuota();
       // P1 硬限额：付费用户允许超额，free/guest 必须等明天或升级
