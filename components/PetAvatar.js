@@ -144,6 +144,13 @@ export var PetAvatar = function(props) {
   var accessories = props.accessories || {}; // { hat?, face?, wings? }
   var t = SPECIES_THEME[species] || SPECIES_THEME.kitten;
 
+  // 进化的"实质感"：每个 species 头部大小不同，让升级有明显的"长大了"视觉
+  // kitten 0.85（小奶娃）→ cat 1.0（标准）→ tiger 1.1（壮）→ lion 1.2（王者气场）
+  var headScale = species === "kitten" ? 0.85
+                : species === "cat"    ? 1.0
+                : species === "tiger"  ? 1.1
+                : 1.2;
+
   var anim = "none";
   if (animate) {
     if (mood === "celebrate") anim = "petWiggle 0.8s ease-in-out infinite";
@@ -158,6 +165,9 @@ export var PetAvatar = function(props) {
         {/* ─── 翅膀（最底层背景） ─── */}
         {accessories.wings && renderAccessory(accessories.wings, t.line)}
 
+        {/* ─── 头部 + 五官打包做整体缩放（让 kitten/cat/tiger/lion 有明显大小差异）─── */}
+        <g transform={"translate(50 55) scale(" + headScale + ") translate(-50 -55)"}>
+
         {/* ─── 鬃毛（仅 lion） ─── */}
         {t.mane && (
           <g>
@@ -168,6 +178,13 @@ export var PetAvatar = function(props) {
               var cy = 55 + 42 * Math.sin(rad);
               return <circle key={i} cx={cx} cy={cy} r="6" fill={t.mane} />;
             })}
+            {/* lion 加皇冠般金色光环 — 王者气场 */}
+            <g opacity="0.85">
+              {[10, 30, 50, 70, 90].map(function(p, i) {
+                var x = 18 + p * 0.65;
+                return <path key={i} d={"M " + x + " 18 L " + (x+2) + " 8 L " + (x+4) + " 18 Z"} fill="#ffd700" stroke="#c4751b" strokeWidth="0.5" />;
+              })}
+            </g>
           </g>
         )}
 
@@ -179,6 +196,47 @@ export var PetAvatar = function(props) {
         <path d={"M " + (mood === "sad" ? "74 46 L 70 30 L 62 42" : "75 40 L 70 22 L 62 38") + " Z"} fill={t.body} stroke={t.line} strokeWidth="0.5" />
         <path d={"M " + (mood === "sad" ? "28 44 L 30 33 L 35 40" : "27 38 L 30 26 L 35 36") + " Z"} fill={t.innerEar} />
         <path d={"M " + (mood === "sad" ? "72 44 L 70 33 L 65 40" : "73 38 L 70 26 L 65 36") + " Z"} fill={t.innerEar} />
+
+        {/* ─── kitten 幼态特征：呆毛 + 大泪滴形眼睛区（更萌）+ 红腮 ─── */}
+        {species === "kitten" && (
+          <g>
+            {/* 呆毛 */}
+            <path d="M 50 22 Q 47 14 50 10 Q 53 14 50 22" fill={t.line} stroke={t.line} strokeWidth="0.6" strokeLinejoin="round" />
+            {/* 红润大腮 */}
+            <ellipse cx="28" cy="62" rx="5.5" ry="3.5" fill={t.blush} opacity="0.85" />
+            <ellipse cx="72" cy="62" rx="5.5" ry="3.5" fill={t.blush} opacity="0.85" />
+          </g>
+        )}
+
+        {/* ─── cat 成猫特征：长胡须 + 项圈 + 加大斑点 ─── */}
+        {species === "cat" && (
+          <g>
+            {/* 长胡须 — 6 根 */}
+            <g stroke={t.line} strokeWidth="0.7" strokeLinecap="round" fill="none" opacity="0.7">
+              <path d="M 16 58 L 28 60" />
+              <path d="M 14 62 L 28 63" />
+              <path d="M 16 67 L 28 65" />
+              <path d="M 84 58 L 72 60" />
+              <path d="M 86 62 L 72 63" />
+              <path d="M 84 67 L 72 65" />
+            </g>
+            {/* 项圈 + 铃铛 */}
+            <ellipse cx="50" cy="80" rx="22" ry="3" fill="#d97e3a" stroke={t.line} strokeWidth="0.6" />
+            <circle cx="50" cy="82" r="2.4" fill="#ffd700" stroke={t.line} strokeWidth="0.5" />
+            <circle cx="50" cy="82" r="0.6" fill={t.line} />
+          </g>
+        )}
+
+        {/* ─── tiger 老虎特征：耳尖白毛（已加） + 鼻梁亮带 ─── */}
+        {species === "tiger" && (
+          <g>
+            {/* 耳尖白毛 */}
+            <ellipse cx="30" cy="24" rx="2" ry="3" fill="#fff" opacity="0.9" />
+            <ellipse cx="70" cy="24" rx="2" ry="3" fill="#fff" opacity="0.9" />
+            {/* 鼻梁正面亮带 */}
+            <path d="M 47 40 L 50 50 L 53 40" fill="#fff" opacity="0.55" />
+          </g>
+        )}
 
         {/* ─── 老虎条纹 ─── */}
         {species === "tiger" && (
@@ -302,6 +360,8 @@ export var PetAvatar = function(props) {
 
         {/* ─── 脸饰（盖在眼睛上，最高层） ─── */}
         {accessories.face && renderAccessory(accessories.face, t.line)}
+
+        </g>
       </svg>
     </div>
   );

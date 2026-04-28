@@ -3380,7 +3380,22 @@ export default function App() {
     if (d.settings?.studyGoal) setStudyGoal(d.settings.studyGoal);
     if (d.settings?.dailyNewWords) setDailyNewWords(d.settings.dailyNewWords);
     if (d.settings?.deepReviewDailyCap) setDeepReviewDailyCap(d.settings.deepReviewDailyCap);
-    if (d.pet) setPet(d.pet);
+    // 关键修复：pet.totalFed 单调递增，本地较高时保留本地（防止 sync 没完成就关浏览器，
+    // 下次拉云端旧数据覆盖本地新进度的回退 bug）
+    if (d.pet) {
+      setPet(function(currentPet) {
+        if (!currentPet) return d.pet;
+        var localFed = Number(currentPet.totalFed) || 0;
+        var cloudFed = Number(d.pet.totalFed) || 0;
+        if (localFed > cloudFed) {
+          console.log('[applyCloudData] keeping local pet (totalFed ' + localFed + ' > cloud ' + cloudFed + ')');
+          return currentPet;
+        }
+        // 即便取云端的，也合并本地配饰解锁（数组并集，避免回退）
+        var unionUnlocked = Array.from(new Set((currentPet.unlocked||[]).concat(d.pet.unlocked||[])));
+        return Object.assign({}, d.pet, { unlocked: unionUnlocked });
+      });
+    }
     // 恢复学习 session（关键：闪退/换设备登录后从 idx 继续，不要从头开始）
     if (d.session?.wordList?.length > 0 && d.session.idx < d.session.wordList.length) {
       setWordList(d.session.wordList);
