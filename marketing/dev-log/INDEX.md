@@ -6,6 +6,11 @@
 
 ## 2026 年 4 月
 
+### [2026-04-27] [wire-runtime-and-ui-hard-ban.md](entries/2026-04-27-wire-runtime-and-ui-hard-ban.md)
+**theme**：失败-恢复 / Willow 时刻 / AI 协作 · **arc**：resolution
+新架构上线那一刻，女儿试 4 轮就抓出我没修干净的洞——AI 又让她"去看地图"。
+**扎心金句**：「做产品最危险的不是大坑——是你以为修干净了的小裂缝，其实还在漏。」
+
 ### [2026-04-27] [narrative-validation-6cases.md](entries/2026-04-27-narrative-validation-6cases.md)
 **theme**：失败-恢复 / AI 协作 · **arc**：resolution
 6 段对照测试验证新架构，意外发现 AI 给 Layla 编了"篮子、饼、五条街"——内容里根本没有。

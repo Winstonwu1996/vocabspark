@@ -35,6 +35,10 @@ import {
 import {
   buildHistorySystemPrompt,
   buildTurnPrompt,
+  buildNarrativeSystemPrompt,
+  buildNarrativeTurnPrompt,
+  deriveTurnObjective,
+  deriveTurnConstraints,
   buildDefinitionEvalPrompt,
   buildApplicationEvalPrompt,
   buildFreeChatSystemPrompt,
@@ -261,6 +265,24 @@ export default function HistoryPage() {
   var [topicId, setTopicId] = useState("magna-carta-1215");
   var topic = getTopic(topicId);
 
+  // ── narrative-driven 架构：当前 topic 的 canonical narrative（mount 时拉一次）──
+  // 有 narrative 走新 prompt builder（稳定内核 + 千人千面）；
+  // 没 narrative 走旧 prompt builder（向后兼容未迁移的 Topic）
+  var [narrativeData, setNarrativeData] = useState(null); // { metadata, body } | null
+  var [narrativeLoading, setNarrativeLoading] = useState(true);
+  useEffect(function() {
+    if (!topicId) return;
+    setNarrativeLoading(true);
+    setNarrativeData(null);
+    fetch("/api/narrative?topicId=" + encodeURIComponent(topicId))
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(d) {
+        if (d && d.body) setNarrativeData({ metadata: d.metadata || {}, body: d.body });
+      })
+      .catch(function() { /* 静默 fallback 走旧 prompt builder */ })
+      .finally(function() { setNarrativeLoading(false); });
+  }, [topicId]);
+
   // 整合 atlas-lab：?from=atlas&atlasId=magna-carta — 来自 atlas-lab 跳转，启用返回按钮 + 完成后回跳
   var [fromAtlas, setFromAtlas] = useState(null); // null | { atlasId: 'magna-carta' }
   var [autoBackTimer, setAutoBackTimer] = useState(null); // 完成后自动回跳倒计时（秒）
@@ -455,19 +477,50 @@ export default function HistoryPage() {
       setError("AI 反应慢了 — 网络可能不稳。再等等或刷新页面。");
     }, 10000);
     try {
-      var sys = buildHistorySystemPrompt({
-        topic: topic,
-        profile: profileText,
-        userName: profileFields.userName,
-        userAge: profileFields.userAge,
-        userSchool: profileFields.userSchool,
-        worldview: worldview,
-        history: conversationLog,
-        englishLevel: englishLevel,
-        // #2α Cosplay：用户从 atlas-lab 选了角色进入，注入 roleContext 让 AI 第一人称起手
-        roleContext: pendingRole,
-      });
-      var userPrompt = buildTurnPrompt(turn, { lastUserAnswer: lastUserAnswer });
+      // ── 分流：有 narrative → 走 two-tier 架构（Opus 写内容 + DeepSeek 跑对话）
+      //          没 narrative → 走旧 prompt builder（兼容未迁移 Topic）──
+      var sys, userPrompt;
+      if (narrativeData && narrativeData.body) {
+        sys = buildNarrativeSystemPrompt({
+          topic: topic,
+          narrativeBody: narrativeData.body,
+          narrativeMetadata: narrativeData.metadata || {},
+          profile: profileText,
+          userName: profileFields.userName,
+          userAge: profileFields.userAge,
+          userSchool: profileFields.userSchool,
+          worldview: worldview,
+          history: conversationLog,
+          englishLevel: englishLevel,
+          roleContext: pendingRole,
+        });
+        // 自动派生 objective / narrativePoint / askAbout / constraints
+        // （turn 自身可显式覆盖；没覆盖就走 deriveTurnObjective 默认）
+        var derived = deriveTurnObjective(turn);
+        var enrichedTurn = Object.assign({}, turn, {
+          objective: derived.objective,
+          narrativePoint: derived.narrativePoint,
+          askAbout: derived.askAbout,
+          constraints: deriveTurnConstraints(turn),
+        });
+        userPrompt = buildNarrativeTurnPrompt(enrichedTurn, {
+          lastUserAnswer: lastUserAnswer,
+          totalTurns: (topic.conversationTurns && topic.conversationTurns.length) || 13,
+        });
+      } else {
+        sys = buildHistorySystemPrompt({
+          topic: topic,
+          profile: profileText,
+          userName: profileFields.userName,
+          userAge: profileFields.userAge,
+          userSchool: profileFields.userSchool,
+          worldview: worldview,
+          history: conversationLog,
+          englishLevel: englishLevel,
+          roleContext: pendingRole,
+        });
+        userPrompt = buildTurnPrompt(turn, { lastUserAnswer: lastUserAnswer });
+      }
       // 占位符注入
       sys = injectPlaceholders(sys, profileFields);
       userPrompt = injectPlaceholders(userPrompt, profileFields);
