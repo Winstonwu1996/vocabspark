@@ -14,6 +14,7 @@
     "validate:narratives": "node scripts/validate-narratives.mjs",
     "test:atlas": "node scripts/test-atlas-renderer.mjs",
     "test:narrative-batch": "node scripts/test-narrative-batch.mjs",
+    "test:willow": "node scripts/willow-simulator.mjs",
     "kb:fetch": "node scripts/fetch-wikidata-batch.mjs --manifest data/history-knowledge-base/_manifest.json",
     "kb:search": "node scripts/wikidata-search.mjs",
     "kb:fact-check": "node scripts/fact-check-topic.mjs",

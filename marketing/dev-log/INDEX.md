@@ -6,6 +6,11 @@
 
 ## 2026 年 4 月
 
+### [2026-04-28] [pipeline-and-deliver-provoke.md](entries/2026-04-28-pipeline-and-deliver-provoke.md)
+**theme**：教育哲学 / AI 协作 · **arc**：insight
+"我都没明白上一个我就要答下一个"——女儿一句话催生 4-slot Deliver-Provoke 节奏 + Anti-Guessing Test + 12 步流水线锁定。
+**扎心金句**：「我做产品本来是为了让她学好历史。结果她一句话把我推向一件比'教好历史'大得多的事——怎么训练她'敢想 + 能想'。」
+
 ### [2026-04-27] [wire-runtime-and-ui-hard-ban.md](entries/2026-04-27-wire-runtime-and-ui-hard-ban.md)
 **theme**：失败-恢复 / Willow 时刻 / AI 协作 · **arc**：resolution
 新架构上线那一刻，女儿试 4 轮就抓出我没修干净的洞——AI 又让她"去看地图"。
