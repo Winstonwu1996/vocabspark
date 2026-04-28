@@ -6,6 +6,11 @@
 
 ## 2026 年 4 月
 
+### [2026-04-28] [92-percent-baseline.md](entries/2026-04-28-92-percent-baseline.md)
+**theme**：教育哲学 / AI 协作 · **arc**：resolution
+"89.6 你心里满意吗"——老婆一句话推我从"过门槛"做到 92.2%。4 种虚拟 13 岁验证："开小差型"才是最难的孩子状态。
+**扎心金句**：「给孩子的东西，'够'和'好'之间的 4%，她真的感觉得到。」
+
 ### [2026-04-28] [pipeline-and-deliver-provoke.md](entries/2026-04-28-pipeline-and-deliver-provoke.md)
 **theme**：教育哲学 / AI 协作 · **arc**：insight
 "我都没明白上一个我就要答下一个"——女儿一句话催生 4-slot Deliver-Provoke 节奏 + Anti-Guessing Test + 12 步流水线锁定。
