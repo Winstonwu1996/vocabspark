@@ -1,4 +1,4 @@
-import { checkPerIpLimit } from "../../lib/ratelimit";
+import { checkPerIpLimit, checkPerUserLimit } from "../../lib/ratelimit";
 
 export const config = {
   maxDuration: 60,
@@ -167,15 +167,21 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Missing system or message" });
   }
 
-  // ─── Rate Limit (per IP, 50/day) ───
-  // BYO key 用户用自己的 quota，跳过限流
+  // ─── Rate Limit ───
+  // 优先级：BYO 跳过 → 登录用户 user-level（200/分）→ 游客 IP-level（30/小时）
   const isBYO = userApiKeys && (userApiKeys.deepseek || userApiKeys.gemini);
   if (!isBYO) {
-    const ip =
-      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
-      req.headers["x-real-ip"] ||
-      "unknown";
-    const rl = await checkPerIpLimit(ip);
+    const userId = req.headers["x-user-id"];
+    let rl;
+    if (userId && typeof userId === "string" && userId.length > 0) {
+      rl = await checkPerUserLimit(userId);
+    } else {
+      const ip =
+        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+        req.headers["x-real-ip"] ||
+        "unknown";
+      rl = await checkPerIpLimit(ip);
+    }
     if (!rl.allowed) {
       return res.status(429).json({ error: "请求过于频繁，请稍后再试" });
     }

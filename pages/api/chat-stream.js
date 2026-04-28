@@ -1,7 +1,7 @@
 // Edge Runtime SSE 流式端点 — 只用于 teach 等纯文本任务
 // 与 /api/chat 并存：/api/chat 走 Node Runtime（非流式），本端点走 Edge Runtime（流式透传）。
 // 客户端任何失败都会 fallback 到 /api/chat，不会影响生产稳定性。
-import { checkPerIpLimit } from "../../lib/ratelimit";
+import { checkPerIpLimit, checkPerUserLimit } from "../../lib/ratelimit";
 import { getCached, setCached, cachedTextToSSEStream } from "../../lib/teachCache";
 
 export const config = {
@@ -145,13 +145,20 @@ export default async function handler(req) {
     }
   }
 
-  // ─── Rate Limit (per IP, 50/day) ───
+  // ─── Rate Limit ───
+  // 优先级：BYO 跳过 → 登录用户 user-level（200/分）→ 游客 IP-level（30/小时）
   if (!isBYO) {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
-    const rl = await checkPerIpLimit(ip);
+    const userId = req.headers.get("x-user-id");
+    let rl;
+    if (userId && userId.length > 0) {
+      rl = await checkPerUserLimit(userId);
+    } else {
+      const ip =
+        req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        req.headers.get("x-real-ip") ||
+        "unknown";
+      rl = await checkPerIpLimit(ip);
+    }
     if (!rl.allowed) {
       return new Response(JSON.stringify({ error: "请求过于频繁，请稍后再试" }), {
         status: 429,
