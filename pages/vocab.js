@@ -5451,23 +5451,47 @@ export default function App() {
     var has = item.meaning && item.meaning !== "（释义将随学习自动补全）" && item.meaning.trim();
     if (has) return;
     setQuickReviewMeaningLoading(true);
+    var meaning = "";
+    var failReason = "";
+    // 路径 1: 免费 mymemory API（无 rate limit，速度快，质量足够）
     try {
-      var prompt = "给出英文单词 \"" + item.word + "\" 的中文释义。要求：用一句话，不超过 20 字，包含主要词性（如：名/动/形）。直接输出释义，不要其他文字。";
-      var raw = await callAPIFast("你是简洁的英汉词典助手", prompt);
-      var meaning = (raw || "").trim().replace(/^["「『\s]+|["」』\s]+$/g, "").slice(0, 60);
-      if (meaning) {
-        setQuickReviewQueue(function(q) {
-          var nq = q.slice();
-          if (nq[idx]) nq[idx] = Object.assign({}, nq[idx], { meaning: meaning });
-          return nq;
-        });
-        upsertReviewWordData(item.word, { meaning: meaning });
+      var resp = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(item.word) + "&langpair=en|zh-CN", { signal: AbortSignal.timeout(5000) });
+      var data = await resp.json();
+      var t = data?.responseData?.translatedText || "";
+      // 简单清洗 + 校验：mymemory 偶尔返回原英文（无翻译），过滤掉
+      t = t.trim();
+      if (t && t.toLowerCase() !== item.word.toLowerCase() && /[一-鿿]/.test(t)) {
+        meaning = t.slice(0, 60);
       }
-    } catch(e) {
-      // 失败保持原状，UI 显示提示
-    } finally {
-      setQuickReviewMeaningLoading(false);
+    } catch(e) { failReason = "dict timeout"; }
+    // 路径 2: 兜底用 LLM（仅 path1 失败时）
+    if (!meaning) {
+      try {
+        var prompt = "给出英文单词 \"" + item.word + "\" 的中文释义。一句话 ≤ 20 字，含词性（名/动/形）。直接输出释义。";
+        var raw = await callAPIFast("你是简洁的英汉词典助手", prompt);
+        meaning = (raw || "").trim().replace(/^["「『\s]+|["」』\s]+$/g, "").slice(0, 60);
+      } catch(e) {
+        failReason = e.message || "LLM failed";
+        console.warn("[ensureQuickReviewMeaning] LLM fallback failed:", failReason);
+      }
     }
+    if (meaning) {
+      setQuickReviewQueue(function(q) {
+        var nq = q.slice();
+        if (nq[idx]) nq[idx] = Object.assign({}, nq[idx], { meaning: meaning });
+        return nq;
+      });
+      upsertReviewWordData(item.word, { meaning: meaning });
+    } else {
+      // 失败时给出具体提示而不是静默
+      setQuickReviewQueue(function(q) {
+        var nq = q.slice();
+        if (nq[idx]) nq[idx] = Object.assign({}, nq[idx], { meaning: "释义加载失败，请凭印象判断" });
+        return nq;
+      });
+      console.warn("[ensureQuickReviewMeaning] all paths failed for " + item.word + ": " + failReason);
+    }
+    setQuickReviewMeaningLoading(false);
   };
 
   var markQuickReview = function(result) {
