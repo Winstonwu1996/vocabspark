@@ -7239,21 +7239,21 @@ export default function App() {
 
       {/* ── SHARE MODAL (setup screen) ── */}
       {showShare && (
-        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>
-          <div style={{background:C.card,borderRadius:20,padding:"28px 24px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
-            <div style={{fontSize:36,marginBottom:6}}>📤</div>
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20,animation:"fadeIn 0.2s ease-out"}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>
+          <div style={{background:C.card,borderRadius:20,padding:"28px 24px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) backwards"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:36,marginBottom:6,animation:"popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards",animationDelay:"0.1s"}}>📤</div>
             <h3 style={{fontSize:18,fontWeight:700,margin:"0 0 4px"}}>推荐给朋友</h3>
             <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,margin:"0 0 18px"}}>觉得好用？让身边的华人朋友也试试~</p>
             <div style={{background:C.bg,borderRadius:12,padding:14,marginBottom:14,display:"inline-block"}}>
               <img src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fknowulearning.com&bgcolor=faf7f2&color=2c2420&margin=6"} width={160} height={160} alt="访问 knowulearning.com 的二维码" style={{display:"block",borderRadius:6}} />
             </div>
             <div style={{fontSize:12,color:C.textSec,marginBottom:16}}>📱 手机扫码 / 长按保存发朋友圈</div>
-            <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>{"AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉\n👉 knowulearning.com"}</div>
+            <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>{"AI 英语私教，用孩子真实生活的场景一对一教英语 🎉\n👉 knowulearning.com"}</div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {typeof navigator !== "undefined" && navigator.share && (
-                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{ try { await navigator.share({ title:"Vocab by Know U. — AI 英语私教", text:"AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉", url:"https://knowulearning.com" }); } catch(e){} }}>📱 分享到微信 / 其他 App</button>
+                <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{ try { await navigator.share({ title:"Vocab by Know U. — AI 英语私教", text:"AI 英语私教，用孩子真实生活的场景一对一教英语 🎉", url:"https://knowulearning.com" }); } catch(e){} }}>📱 分享到微信 / 其他 App</button>
               )}
-              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{ navigator.clipboard?.writeText("AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接")); }}>📋 复制邀请文案</button>
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{ navigator.clipboard?.writeText("AI 英语私教，用孩子真实生活的场景一对一教英语 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接")); }}>📋 复制邀请文案</button>
               <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>关闭</button>
             </div>
           </div>
@@ -8882,9 +8882,9 @@ export default function App() {
 
       {/* ── SHARE MODAL ── */}
       {showShare && (
-        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>
-          <div style={{background:C.card,borderRadius:20,padding:"28px 24px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
-            <div style={{fontSize:36,marginBottom:6}}>📤</div>
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20,animation:"fadeIn 0.2s ease-out"}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>
+          <div style={{background:C.card,borderRadius:20,padding:"28px 24px",maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) backwards"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:36,marginBottom:6,animation:"popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards",animationDelay:"0.1s"}}>📤</div>
             <h3 style={{fontSize:18,fontWeight:700,margin:"0 0 4px"}}>推荐给朋友</h3>
             <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,margin:"0 0 18px"}}>觉得好用？让身边的华人朋友也试试~</p>
 
@@ -8896,18 +8896,18 @@ export default function App() {
 
             {/* 邀请文案 */}
             <div style={{background:C.accentLight,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.text,lineHeight:1.7,textAlign:"left"}}>
-              {"AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉\n👉 knowulearning.com"}
+              {"AI 英语私教，用孩子真实生活的场景一对一教英语 🎉\n👉 knowulearning.com"}
             </div>
 
             {/* 按钮区 */}
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {typeof navigator !== "undefined" && navigator.share && (
                 <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}} onClick={async()=>{
-                  try { await navigator.share({ title:"Vocab by Know U. — AI 英语私教", text:"AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉", url:"https://knowulearning.com" }); } catch(e){}
+                  try { await navigator.share({ title:"Vocab by Know U. — AI 英语私教", text:"AI 英语私教，用孩子真实生活的场景一对一教英语 🎉", url:"https://knowulearning.com" }); } catch(e){}
                 }}>📱 分享到微信 / 其他 App</button>
               )}
               <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={()=>{
-                navigator.clipboard?.writeText("AI 英语私教，效果堪比真人私教，用你的真实生活场景 1 对 1 教英语 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接"));
+                navigator.clipboard?.writeText("AI 英语私教，用孩子真实生活的场景一对一教英语 🎉 knowulearning.com").then(()=>alert("✅ 已复制！可以粘贴到微信/抖音/朋友圈")).catch(()=>alert("请手动复制上方链接"));
               }}>📋 复制邀请文案</button>
               <button style={{background:"transparent",border:"none",color:C.textSec,fontFamily:FONT,fontSize:13,cursor:"pointer",padding:"4px 0"}} onClick={()=>{setShowShare(false);window.scrollTo(0,0);}}>关闭</button>
             </div>
