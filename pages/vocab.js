@@ -6426,7 +6426,7 @@ export default function App() {
         }}>
           {todayCount >= DAILY_LIMIT_GUEST
             ? "⚠️ 游客今日 " + DAILY_LIMIT_GUEST + " 词上限已到 · 注册后每日 " + DAILY_LIMIT_REGISTERED + " 词 →"
-            : "🎓 还能学 " + (DAILY_LIMIT_GUEST - todayCount) + " 词 · 注册后每日 " + DAILY_LIMIT_REGISTERED + " 词无限听 →"
+            : "🎓 还能学 " + (DAILY_LIMIT_GUEST - todayCount) + " 词 · 注册后每日 " + DAILY_LIMIT_REGISTERED + " 词 + 云同步 →"
           }
         </div>
       )}
