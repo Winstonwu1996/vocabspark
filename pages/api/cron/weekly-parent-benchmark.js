@@ -22,6 +22,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { sendParentEmail } from '../../../lib/email.js';
 import { buildSummaryEmail, buildWakeupEmail } from '../../../lib/parent-email-templates.js';
+import { aggregateWeeklyForParent } from '../../../lib/parent-email-aggregator.js';
 
 var supabase = process.env.SUPABASE_SERVICE_ROLE_KEY ? createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -65,46 +66,46 @@ export default async function handler(req, res) {
     var studentName = meta.name || meta.userName || '孩子';
 
     try {
-      // Phase B4 stub：跨模块 aggregation
-      // 现在简化为：拉 user_progress 看看有没有最近活动
-      var { data: progress } = await supabase
+      // 拉 user_progress
+      var { data: progressRow } = await supabase
         .from('user_progress')
         .select('progress_data, updated_at')
         .eq('user_id', u.id)
         .single();
 
-      // 用 updated_at 判断本周是否活跃（粗略）
-      var oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      var hasActivity = progress && progress.updated_at && new Date(progress.updated_at) > oneWeekAgo;
+      var progressData = progressRow?.progress_data || {};
+      var weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      // Phase B4 跨模块聚合
+      var agg = await aggregateWeeklyForParent({
+        user: u,
+        progressData: progressData,
+        weekStart: weekStart,
+        weekEnd: new Date(),
+        supabase: supabase,
+      });
 
       var emailContent;
       var emailType;
 
-      var dateRange = formatDateRange(oneWeekAgo, new Date());
-
-      if (hasActivity) {
-        // TODO Phase B4: 真聚合 — 从 progress_data + 各模块表拉具体数据
+      if (agg.hasActivity) {
         emailType = 'weekly-summary';
         emailContent = buildSummaryEmail({
-          studentName: studentName,
-          dateRange: dateRange,
-          // 占位数据 — Phase B4 替换
-          history: progress.progress_data && progress.progress_data.historyData ? {
-            topicTitle: '（待 Phase B4 聚合具体 Topic）',
-          } : null,
-          vocab: { newCount: 0 },  // 占位
+          studentName: agg.studentName,
+          dateRange: agg.dateRange,
+          vocab: agg.vocab,
+          history: agg.history,
+          writing: agg.writing,
+          cognitiveHighlight: agg.cognitiveHighlight,
+          concerns: agg.concerns,
         });
       } else {
         emailType = 'wakeup';
-        // 找上次活动 Topic（Phase B4 真实拉取）
-        var lastTopic = progress?.progress_data?.historyData?.lastTopicId || null;
         emailContent = buildWakeupEmail({
-          studentName: studentName,
-          dateRange: dateRange,
-          lastActivity: lastTopic ? {
-            date: progress.updated_at ? new Date(progress.updated_at).toLocaleDateString('zh-CN') : null,
-            topic: lastTopic,
-          } : null,
+          studentName: agg.studentName,
+          dateRange: agg.dateRange,
+          lastActivity: agg.lastActivity,
+          lastTopicHook: agg.lastTopicHook,
         });
       }
 
@@ -136,11 +137,4 @@ export default async function handler(req, res) {
     total_users: allUsers.length,
     ...results,
   });
-}
-
-function formatDateRange(start, end) {
-  var fmt = function(d) {
-    return (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日';
-  };
-  return fmt(start) + ' - ' + fmt(end);
 }
