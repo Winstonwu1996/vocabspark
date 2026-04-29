@@ -133,6 +133,44 @@ export { UserAvatar };
 
 export default function UserCenter({ open, onClose, user, stats, studyStreak, studyGoal, dailyNewWords, deepReviewDailyCap, userTier, newLearnedToday, onLogin, onLogout }) {
   var [faqOpen, setFaqOpen] = useState(false);
+
+  // ── 家长邮箱设置（Phase B2）──
+  var [parentEmail, setParentEmail] = useState('');
+  var [parentEmailSubscribed, setParentEmailSubscribed] = useState(true);
+  var [parentEmailEdit, setParentEmailEdit] = useState(false);
+  var [parentEmailSaving, setParentEmailSaving] = useState(false);
+  var [parentEmailMsg, setParentEmailMsg] = useState('');
+  useEffect(function() {
+    if (user && user.user_metadata) {
+      setParentEmail(user.user_metadata.parent_email || '');
+      setParentEmailSubscribed(user.user_metadata.parent_email_subscribed !== false);
+    }
+  }, [user]);
+  var saveParentEmail = async function() {
+    setParentEmailSaving(true);
+    setParentEmailMsg('');
+    try {
+      var emailToSave = (parentEmail || '').trim();
+      if (emailToSave && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToSave)) {
+        setParentEmailMsg('邮箱格式不对');
+        setParentEmailSaving(false);
+        return;
+      }
+      var { error } = await supabase.auth.updateUser({
+        data: {
+          parent_email: emailToSave || null,
+          parent_email_subscribed: parentEmailSubscribed,
+        },
+      });
+      if (error) throw error;
+      setParentEmailMsg('已保存 ✓');
+      setParentEmailEdit(false);
+      setTimeout(function() { setParentEmailMsg(''); }, 3000);
+    } catch (e) {
+      setParentEmailMsg('保存失败：' + (e.message || ''));
+    }
+    setParentEmailSaving(false);
+  };
   // A11y：ESC 关闭抽屉（键盘用户）
   useEffect(function () {
     if (!open) return;
@@ -273,6 +311,55 @@ export default function UserCenter({ open, onClose, user, stats, studyStreak, st
               {/* FAQ — 常见问题入口 */}
               <Section title="帮助与支持">
                 <Row icon="❓" label="常见问题" value="查看 →" onClick={function() { trackFunnel('faq_open', { source: 'user_center' }); setFaqOpen(true); }} />
+              </Section>
+
+              {/* Parent Benchmark — Phase B2 */}
+              <Section title="爸妈周报">
+                <div style={{ padding:"10px 0", fontSize:12, color:C.textSec, lineHeight:1.55 }}>
+                  每周一早 8 点给爸妈邮箱发一封周报：
+                  <br/>· 这周学了啥、卡在哪、晚饭桌可以问她什么
+                  <br/>· 没学习就发"唤醒邮件"含具体回归 hook
+                  <br/>· 不影响孩子端体验 — 给爸妈的并行轨道
+                </div>
+
+                {!parentEmailEdit ? (
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", borderTop:"1px solid "+C.divider }}>
+                    <div>
+                      <div style={{ fontSize:13, fontWeight:600, color:C.text }}>
+                        📧 {parentEmail || "（未设置）"}
+                      </div>
+                      <div style={{ fontSize:11, color:C.textSec, marginTop:2 }}>
+                        {parentEmail ? (parentEmailSubscribed ? "✓ 已订阅周报" : "⏸ 已暂停") : "添加家长邮箱后开始接收"}
+                      </div>
+                    </div>
+                    <button onClick={function(){ setParentEmailEdit(true); }} style={{ padding:"4px 10px", border:"1px solid "+C.border, borderRadius:8, background:"#fff", fontSize:11.5, color:C.accent, cursor:"pointer", fontFamily:"inherit" }}>
+                      {parentEmail ? "修改" : "添加"}
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ padding:"10px 0", borderTop:"1px solid "+C.divider }}>
+                    <input
+                      type="email"
+                      value={parentEmail}
+                      onChange={function(e){ setParentEmail(e.target.value); }}
+                      placeholder="爸妈的邮箱（如 dad@example.com）"
+                      style={{ width:"100%", padding:"8px 10px", border:"1px solid "+C.border, borderRadius:8, fontSize:13, fontFamily:"inherit", marginBottom:8 }}
+                    />
+                    <label style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:C.textSec, marginBottom:10, cursor:"pointer" }}>
+                      <input type="checkbox" checked={parentEmailSubscribed} onChange={function(e){ setParentEmailSubscribed(e.target.checked); }} />
+                      订阅周一周报
+                    </label>
+                    <div style={{ display:"flex", gap:6 }}>
+                      <button onClick={saveParentEmail} disabled={parentEmailSaving} style={{ flex:1, padding:"6px 10px", background:C.accent, color:"#fff", border:"none", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"inherit", opacity: parentEmailSaving ? 0.5 : 1 }}>
+                        {parentEmailSaving ? "保存中..." : "保存"}
+                      </button>
+                      <button onClick={function(){ setParentEmailEdit(false); }} style={{ padding:"6px 10px", background:"transparent", color:C.textSec, border:"1px solid "+C.border, borderRadius:8, fontSize:12, cursor:"pointer", fontFamily:"inherit" }}>
+                        取消
+                      </button>
+                    </div>
+                    {parentEmailMsg && <div style={{ marginTop:6, fontSize:11.5, color: parentEmailMsg.indexOf('失败') >= 0 ? C.accent : C.green }}>{parentEmailMsg}</div>}
+                  </div>
+                )}
               </Section>
 
               {/* Data & Privacy */}
