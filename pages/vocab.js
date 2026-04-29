@@ -1090,12 +1090,12 @@ var speakWord = async (word) => {
 
 var SpeakBtn = ({ text, size }) => {
   var s = size || 28;
-  return <button onClick={() => speak(text)} title={"播放: " + text} aria-label={"播放: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
+  return <button className="knowu-speak" onClick={() => speak(text)} title={"播放: " + text} aria-label={"播放: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
 };
 
 var SpeakWordBtn = ({ text, size }) => {
   var s = size || 38;
-  return <button onClick={() => speakWord(text)} title={"朗读单词: " + text} aria-label={"朗读单词: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
+  return <button className="knowu-speak" onClick={() => speakWord(text)} title={"朗读单词: " + text} aria-label={"朗读单词: " + text} style={{ background: C.accentLight, border: "none", borderRadius: "50%", width: s, height: s, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: Math.round(s*0.5), verticalAlign: "middle", marginLeft: 4, flexShrink: 0 }}>🔊</button>;
 };
 
 /* ─── Brand: imported from components/BrandNavBar.js ─── */
