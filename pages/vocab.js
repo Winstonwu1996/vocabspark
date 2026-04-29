@@ -8047,7 +8047,7 @@ export default function App() {
                         <div style={{fontWeight:700,fontSize:15,marginBottom:4,color:C.teal}}>✅ 已登录</div>
                         <div style={{fontSize:13,color:C.textSec,marginBottom:12}}>{user.email}</div>
                         <div style={{fontSize:13,color:C.text,lineHeight:1.9}}>
-                          {userTier==="pro" ? <>✨ <strong>Pro 会员</strong> · 每日无限学习<br/></> : userTier==="basic" ? <>🎯 <strong>Basic 会员</strong> · 每日无限学习<br/></> : <>🎉 <strong>推广期</strong> · 每日 {DAILY_LIMIT_REGISTERED} 词<br/></>}
+                          {userTier==="pro" ? <>✨ <strong>Pro 会员</strong> · 不限词数 + 不限时长<br/></> : userTier==="basic" ? <>🎯 <strong>Basic 会员</strong> · 每天 1 小时正式学习<br/></> : <>🎉 <strong>推广期</strong> · 每日 {DAILY_LIMIT_REGISTERED} 词<br/></>}
                           ☁️ 学习进度自动云端同步<br/>
                           📱 跨设备继续学习
                         </div>
