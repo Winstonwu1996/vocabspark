@@ -6987,7 +6987,7 @@ export default function App() {
           })()}
 
           <div style={{fontSize:12,color:C.textSec,fontWeight:700,margin:"2px 0 8px"}}>编辑词表</div>
-          <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={5} placeholder="arduous\nbenevolent" />
+          <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={5} placeholder={"abandon\nacquire\narduous\nbenevolent\n\n（每行一个英文单词）"} />
           <div style={{fontSize:13,color:C.textSec,marginTop:4}}>{wordInput.trim() ? "共 "+parseWordsFromInput(wordInput).length+" 个词" : ""}</div>
 
         </div>
@@ -8009,7 +8009,7 @@ export default function App() {
                     <button style={{...S.ghostBtn,borderColor:C.red,color:C.red}} onClick={() => { setShowSettings(false); startDeepReview(); }}>🔴 重点攻克</button>
                   </div>
 
-                  <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={8} placeholder="arduous\nbenevolent" />
+                  <textarea style={S.textarea} value={wordInput} onChange={e => setWordInput(e.target.value)} rows={8} placeholder={"abandon\nacquire\narduous\nbenevolent\n\n（每行一个英文单词）"} />
                   <div style={{fontSize:13,color:C.textSec,margin:"6px 0 12px"}}>{wordInput.trim() ? "共 "+wordInput.trim().split(/[\n,，、]+/).filter(w=>w.trim()).length+" 个词" : ""}</div>
                   <button style={S.primaryBtn} onClick={() => { setShowSettings(false); startLearning(0); }}>✨ 重新开始</button>
                 </div>
