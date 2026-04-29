@@ -5951,7 +5951,7 @@ export default function App() {
     var qr = quickReviewQueue[quickReviewIdx];
     return (
       <div style={S.root}><div className="vs-desktop-container" style={S.container}>
-        <div style={S.topBar}><button style={S.backBtn} aria-label="返回主页" onClick={() => setScreen("setup")}>←</button><div style={{fontSize:13,color:C.textSec}}>快速复习 {quickReviewIdx+1}/{quickReviewQueue.length}</div></div>
+        <div style={S.topBar}><button style={S.backBtn} aria-label="退出返回 Vocab 主页" onClick={() => setScreen("setup")}>← 退出</button><div style={{fontSize:13,color:C.textSec}}>快速复习 {quickReviewIdx+1}/{quickReviewQueue.length}</div></div>
         <div style={{...S.card, textAlign:"center", padding:"30px 20px"}}>
           <div style={S.tag}>🔄 快速复习</div>
           <h2 style={{fontSize:34,margin:"8px 0 4px"}}>{qr?.word}</h2>
@@ -6027,7 +6027,7 @@ export default function App() {
     };
     return (
       <div style={S.root}><div className="vs-desktop-container" style={S.container}>
-        <div style={S.topBar}><button style={S.backBtn} aria-label="返回主页" onClick={() => setScreen("setup")}>←</button><div style={{fontSize:13,color:C.textSec}}>重点攻克 {deepReviewIdx+1}/{deepReviewQueue.length}</div></div>
+        <div style={S.topBar}><button style={S.backBtn} aria-label="退出返回 Vocab 主页" onClick={() => setScreen("setup")}>← 退出</button><div style={{fontSize:13,color:C.textSec}}>重点攻克 {deepReviewIdx+1}/{deepReviewQueue.length}</div></div>
         <div style={{...S.card, padding:"24px 20px"}}>
           <div style={{...S.tag, background:C.redLight, color:C.red}}>🔴 深度复习</div>
           <h2 style={{fontSize:30,margin:"8px 0 10px"}}>{dw}</h2>
@@ -7863,7 +7863,7 @@ export default function App() {
         </div>
       )}
       <div style={S.topBar}>
-        <button style={S.backBtn} aria-label="返回主页" onClick={async function(){
+        <button style={S.backBtn} aria-label="退出学习返回 Vocab 主页" onClick={async function(){
           if (phase === "done") { setScreen("setup"); return; }
           var ok = await confirmAsync({
             title: "退出学习？",
@@ -7872,7 +7872,11 @@ export default function App() {
             cancelText: "继续学",
           });
           if (ok) setScreen("setup");
-        }}>←</button>
+        }}>← 退出</button>
+        {/* Logo 链回 Know U. 首页（学习中也能跳到首页查看其他模块） */}
+        <a href="/" aria-label="回 Know U. Learning 首页" style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:8,background:"transparent",cursor:"pointer",flexShrink:0,transition:"background 0.15s ease",textDecoration:"none"}} onMouseEnter={function(e){e.currentTarget.style.background=C.accentLight;}} onMouseLeave={function(e){e.currentTarget.style.background="transparent";}}>
+          <BrandUIcon size={22} />
+        </a>
         <div style={S.progressWrap}>
           <div style={{...S.progressTrack, position:"relative", overflow:"visible"}}>
             <div style={{...S.progressFill, width: smoothLessonPct + "%", transition: "none"}} />
