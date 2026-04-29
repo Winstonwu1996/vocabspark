@@ -146,20 +146,28 @@ export default async function handler(req) {
   }
 
   // ─── Rate Limit ───
-  // 优先级：BYO 跳过 → 登录用户 user-level（200/分）→ 游客 IP-level（30/小时）
   if (!isBYO) {
     const userId = req.headers.get("x-user-id");
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
     let rl;
     if (userId && userId.length > 0) {
       rl = await checkPerUserLimit(userId);
     } else {
-      const ip =
-        req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-        req.headers.get("x-real-ip") ||
-        "unknown";
       rl = await checkPerIpLimit(ip);
     }
     if (!rl.allowed) {
+      // 诊断：429 时记录 IP / UA / referer 用于事后分析 bot
+      console.warn("[chat-stream][429]", JSON.stringify({
+        ip,
+        ua: (req.headers.get("user-agent") || "").slice(0, 120),
+        ref: (req.headers.get("referer") || "").slice(0, 80),
+        origin: req.headers.get("origin") || "",
+        hasUid: !!userId,
+        ts: new Date().toISOString(),
+      }));
       return new Response(JSON.stringify({ error: "请求过于频繁，请稍后再试" }), {
         status: 429,
         headers: { "Content-Type": "application/json" },
