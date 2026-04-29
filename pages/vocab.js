@@ -8279,7 +8279,7 @@ export default function App() {
       )}
 
       {phase === "guess" && (
-        <div style={{...S.card, animation: shakeWrong ? "shake 0.4s ease" : bounceCorrect ? "bounce 0.5s ease" : phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+        <div style={{...S.card, animation: shakeWrong ? "shake 0.4s ease" : bounceCorrect ? "bounce 0.5s ease" : phaseDir===1 ? "phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)" : "fadeUp 0.3s ease-out"}}>
           <div style={S.tag}>🎯 猜一猜</div>
           {!guessData ? <div style={{padding:"8px 0"}}>
             <div style={{background:C.border,borderRadius:8,height:60,marginBottom:12,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
@@ -8323,7 +8323,7 @@ export default function App() {
         </div>
       )}
 
-      {phase === "teach" && <div style={{...S.card, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+      {phase === "teach" && <div style={{...S.card, animation: phaseDir===1 ? "phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)" : "fadeUp 0.3s ease-out"}}>
         <div style={{...S.tag,background:C.tealLight,color:C.teal}}>📖 学习笔记</div>
         {/* Phase 1：优先 JSON 渲染路径 */}
         {teachData ? <>
@@ -8460,7 +8460,7 @@ export default function App() {
       </div>}
 
       {phase === "spectrum" && spectrumData && spectrumData.type === "behavior_match" && (
-        <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+        <div style={{...S.specCard, animation: phaseDir===1 ? "phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)" : "fadeUp 0.3s ease-out"}}>
           <BehaviorMatchGame
             data={spectrumData}
             sfx={sfx}
@@ -8473,7 +8473,7 @@ export default function App() {
       )}
 
       {phase === "spectrum" && spectrumData && spectrumData.type === "collocation_fill" && (
-        <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+        <div style={{...S.specCard, animation: phaseDir===1 ? "phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)" : "fadeUp 0.3s ease-out"}}>
           <CollocationFillGame
             data={spectrumData}
             sfx={sfx}
@@ -8486,7 +8486,7 @@ export default function App() {
       )}
 
       {phase === "spectrum" && spectrumData && spectrumData.type === "morph_fill" && (
-        <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+        <div style={{...S.specCard, animation: phaseDir===1 ? "phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)" : "fadeUp 0.3s ease-out"}}>
           <MorphFillGame
             data={spectrumData}
             sfx={sfx}
@@ -8499,7 +8499,7 @@ export default function App() {
       )}
 
       {phase === "spectrum" && spectrumData && spectrumData.type === "mnemonic_fill" && (
-        <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+        <div style={{...S.specCard, animation: phaseDir===1 ? "phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)" : "fadeUp 0.3s ease-out"}}>
           <MnemonicFillGame
             data={spectrumData}
             sfx={sfx}
@@ -8512,7 +8512,7 @@ export default function App() {
       )}
 
       {phase === "spectrum" && spectrumData && spectrumData.type === "context_choice" && (
-        <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+        <div style={{...S.specCard, animation: phaseDir===1 ? "phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)" : "fadeUp 0.3s ease-out"}}>
           <ContextChoiceGame
             data={spectrumData}
             sfx={sfx}
@@ -8524,7 +8524,7 @@ export default function App() {
         </div>
       )}
 
-      {phase === "spectrum" && spectrumData && !spectrumData.type && <div style={{...S.specCard, animation: phaseDir===1 ? "slideInRight 0.28s ease-out" : "fadeUp 0.3s ease-out"}}>
+      {phase === "spectrum" && spectrumData && !spectrumData.type && <div style={{...S.specCard, animation: phaseDir===1 ? "phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)" : "fadeUp 0.3s ease-out"}}>
         <div style={S.specTag}>🎮 词义光谱挑战</div>
         <div style={S.specHint}>按程度【从弱到强】排列！</div>
         {spectrumData.scenario && <div style={S.specScenario}>{spectrumData.scenario}</div>}
@@ -8554,7 +8554,7 @@ export default function App() {
 
       {/* Round 4: speed_match 类型走新组件，旧 fill_blank 类型继续走下方传统填空 UI（兼容旧 cache） */}
       {phase === "review" && reviewData?.type === "speed_match" && (
-        <div style={{...S.card, animation:"slideInRight 0.28s ease-out"}}>
+        <div style={{...S.card, animation:"phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)"}}>
           <SpeedMatchGame
             data={reviewData}
             sfx={sfx}
@@ -8566,7 +8566,7 @@ export default function App() {
         </div>
       )}
 
-      {phase === "review" && reviewData?.type !== "speed_match" && <div style={{...S.card, animation:"slideInRight 0.28s ease-out"}}>
+      {phase === "review" && reviewData?.type !== "speed_match" && <div style={{...S.card, animation:"phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)"}}>
         <div style={{...S.tag,background:C.purpleLight,color:C.purple}}>🏆 复习关卡</div>
         {!reviewData?.questions ? <div style={{padding:"8px 0"}}>
           <div style={{background:C.border,borderRadius:8,height:18,width:"55%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
@@ -8599,7 +8599,7 @@ export default function App() {
         </>}
       </div>}
 
-      {phase === "cloze" && <div style={{...S.card, animation:"slideInRight 0.28s ease-out"}}>
+      {phase === "cloze" && <div style={{...S.card, animation:"phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)"}}>
         <div style={{...S.tag,background:C.goldLight,color:C.gold}}>📝 阅读填空挑战</div>
         {!clozeData?.questions ? <div style={{padding:"8px 0"}}>
           <div style={{background:C.border,borderRadius:8,height:18,width:"50%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
