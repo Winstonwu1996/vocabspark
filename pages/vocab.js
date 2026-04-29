@@ -8226,8 +8226,18 @@ export default function App() {
             })}
           </div>
           <p style={{fontSize:14, color:C.textSec, marginBottom:20, lineHeight:1.6}}>{batchTip}</p>
-          <div style={{background:C.border, borderRadius:8, height:12, overflow:"hidden", marginBottom:12}}>
-            <div style={{height:"100%", background:"linear-gradient(90deg, "+C.accent+", "+C.gold+")", borderRadius:8, transition:"none", width: batchUiPct + "%"}} />
+          <div style={{background:C.border, borderRadius:8, height:14, overflow:"hidden", marginBottom:12, boxShadow:"inset 0 1px 2px rgba(0,0,0,0.06)"}}>
+            <div style={{
+              height:"100%",
+              // 三段渐变 + 200% 背景 + shimmer 扫光：进度条显得"活"
+              background: "linear-gradient(90deg, " + C.accent + " 0%, " + C.gold + " 50%, " + C.accent + " 100%)",
+              backgroundSize: "200% 100%",
+              animation: "progressShimmer 2.5s ease-in-out infinite",
+              borderRadius:8,
+              transition:"none",
+              width: batchUiPct + "%",
+              boxShadow: "0 0 8px " + C.accent + "66, inset 0 1px 0 rgba(255,255,255,0.35)",
+            }} />
           </div>
           <div style={{fontSize:13, color:C.textSec}}>{Math.min(100, Math.round(batchUiPct))}%</div>
         </div>
