@@ -3405,7 +3405,26 @@ export default function App() {
         if (lvl > MAX_LVL) lvl = MAX_LVL;
         normalized[w] = Object.assign({}, entry, { reviewLevel: lvl });
       });
-      setReviewWordData(normalized);
+      // 与 wordStatusMap 同思路：sync 没完成就关浏览器时本地 reviewLevel 更高，
+      // 云端覆盖会让用户"忘了"那些复习成果。合并：本地独有 / 本地 reviewLevel
+      // 更高的，保留本地。
+      setReviewWordData(function(local) {
+        if (!local || Object.keys(local).length === 0) return normalized;
+        var merged = Object.assign({}, normalized);
+        Object.keys(local).forEach(function(w) {
+          var localEntry = local[w];
+          if (!localEntry) return;
+          var cloudEntry = merged[w];
+          if (!cloudEntry) {
+            merged[w] = localEntry;
+          } else {
+            var lLvl = Number(localEntry.reviewLevel) || 0;
+            var cLvl = Number(cloudEntry.reviewLevel) || 0;
+            if (lLvl > cLvl) merged[w] = localEntry;
+          }
+        });
+        return merged;
+      });
     }
     if (d.settings?.studyGoal) setStudyGoal(d.settings.studyGoal);
     if (d.settings?.dailyNewWords) setDailyNewWords(d.settings.dailyNewWords);
