@@ -8432,7 +8432,7 @@ export default function App() {
         })() : <>
           <div style={{marginBottom:20, position:"relative"}}>
             <Md text={teachContent} />
-            {teachStreaming && <span style={{display:"inline-block",width:8,height:16,background:C.accent,marginLeft:2,verticalAlign:"-2px",animation:"cursorBlink 0.9s steps(1) infinite"}} aria-hidden="true" />}
+            {teachStreaming && <span style={{display:"inline-block",width:10,height:18,background:"linear-gradient(180deg,"+C.accent+","+C.gold+")",marginLeft:3,verticalAlign:"-3px",borderRadius:2,animation:"streamingCursor 1.1s ease-in-out infinite",boxShadow:"0 0 6px "+C.accent+"99"}} aria-hidden="true" />}
           </div>
           <button style={{...S.primaryBtn, opacity: teachStreaming ? 0.6 : 1, cursor: teachStreaming ? "progress" : "pointer"}} onClick={teachToSpectrum} disabled={loading || teachStreaming}>{teachStreaming ? "✨ 正在生成...": (spectrumData?"🎮 词义光谱挑战 →":"→ 下一个词")}</button>
         </>}
