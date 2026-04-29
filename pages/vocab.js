@@ -8144,7 +8144,8 @@ export default function App() {
               {hideTargetWord
                 ? <h2 style={{ ...S.wordTitle, fontSize: 38, margin:0, color: C.textSec, letterSpacing: "0.15em" }}>?????</h2>
                 : <>
-                    <h2 style={{ ...S.wordTitle, fontSize: 38, margin:0 }}>{currentWord}</h2>
+                    {/* key={currentWord} 让每次切词时重新挂载触发 wordReveal 进场动画 */}
+                    <h2 key={currentWord} style={{ ...S.wordTitle, fontSize: 38, margin:0, animation: "wordReveal 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards" }}>{currentWord}</h2>
                     <SpeakWordBtn text={currentWord} size={36} />
                   </>
               }
