@@ -8688,10 +8688,10 @@ export default function App() {
           <div style={{background:"linear-gradient(135deg, "+C.tealLight+" 0%, "+C.accentLight+" 100%)",borderRadius:14,padding:"18px 16px",marginBottom:16,border:"1px solid "+C.border}}>
             <div style={{fontWeight:800,fontSize:14,color:C.teal,marginBottom:12}}>📋 今日学习报告</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:12}}>
-              <div style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:C.green}}>{stats.correct}</div><div style={{fontSize:11,color:C.textSec}}>猜对</div></div>
-              <div style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:C.red}}>{stats.total-stats.correct}</div><div style={{fontSize:11,color:C.textSec}}>猜错</div></div>
-              <div style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:C.accent}}>{accuracy}%</div><div style={{fontSize:11,color:C.textSec}}>正确率</div></div>
-              <div style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:C.gold}}>{stats.bestStreak}</div><div style={{fontSize:11,color:C.textSec}}>最佳连对</div></div>
+              <div style={{textAlign:"center"}}><div style={{...NUM,fontSize:24,fontWeight:800,color:C.green}}>{stats.correct}</div><div style={{fontSize:11,color:C.textSec,marginTop:2}}>猜对</div></div>
+              <div style={{textAlign:"center"}}><div style={{...NUM,fontSize:24,fontWeight:800,color:C.red}}>{stats.total-stats.correct}</div><div style={{fontSize:11,color:C.textSec,marginTop:2}}>猜错</div></div>
+              <div style={{textAlign:"center"}}><div style={{...NUM,fontSize:24,fontWeight:800,color:C.accent}}>{accuracy}<span style={{fontSize:14,opacity:0.7,marginLeft:1}}>%</span></div><div style={{fontSize:11,color:C.textSec,marginTop:2}}>正确率</div></div>
+              <div style={{textAlign:"center"}}><div style={{...NUM,fontSize:24,fontWeight:800,color:C.gold}}>{stats.bestStreak}</div><div style={{fontSize:11,color:C.textSec,marginTop:2}}>最佳连对</div></div>
             </div>
             {ts && <div style={{background:"rgba(255,255,255,0.7)",borderRadius:10,padding:"10px 14px",textAlign:"left",fontSize:13,lineHeight:1.7}}>
               <div>⚡ <strong>最快：</strong>{ts.fastest[0]} ({Math.round(ts.fastest[1].duration/1000)}s)</div>
