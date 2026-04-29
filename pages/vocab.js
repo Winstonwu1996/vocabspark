@@ -7386,17 +7386,21 @@ export default function App() {
           position: "fixed",
           bottom: 90,
           right: 18,
-          maxWidth: 240,
-          padding: "10px 14px",
-          background: C.accent,
+          maxWidth: 260,
+          padding: "12px 16px",
+          // 渐变与 streakToast 同语系（accent → gold），但反向，避免完全一样
+          background: "linear-gradient(135deg, " + C.accent + " 0%, " + C.gold + " 100%)",
           color: "#fff",
-          borderRadius: 12,
+          borderRadius: 16,
           fontSize: 13,
           fontWeight: 700,
-          boxShadow: "0 6px 24px rgba(196,107,48,0.35)",
-          animation: "fadeUp 0.3s ease-out",
+          // 多层阴影 + 内顶部高光（与 streakToast 一致的"奖牌质感"）
+          boxShadow: "0 10px 32px rgba(196,107,48,0.4), 0 0 0 3px rgba(255,215,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4)",
+          // 用 popIn 替代 fadeUp，给宠物事件更"跳"的反馈
+          animation: "popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards",
           zIndex: 1100,
           fontFamily: FONT,
+          letterSpacing: "0.01em",
         }}>
           {petToast}
         </div>
