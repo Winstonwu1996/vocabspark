@@ -4452,10 +4452,10 @@ export default function App() {
       setGuessData(d.guess);
       if (d.guess.phonetic) setPhonetic(d.guess.phonetic);
     } else if (d?.guessFailed && !d?.guess) {
-      setGuessData({ context: "内容加载失败", options: null, _failed: true });
+      setGuessData({ context: "题目暂时没准备好", options: null, _failed: true });
     } else if (d?.guessRaw) {
       // 响应到达但 JSON parse 失败 — 显示原始文本
-      setGuessData({ context: d.guessRaw.substring(0,300) || "格式异常", options: null });
+      setGuessData({ context: d.guessRaw.substring(0,300) || "AI 这次没说清楚 — 再试一次？", options: null });
     } else {
       // guess 还在加载中 — 保持 guessData=null（UI 自动显示骨架屏），启动轮询
       var guessPollWord = word;
@@ -4467,11 +4467,11 @@ export default function App() {
           clearInterval(guessPollRef.current);
           clearTimeout(guessTimeoutRef.current);
         } else if (cached?.guessFailed) {
-          setGuessData({ context: "内容加载失败", options: null, _failed: true });
+          setGuessData({ context: "题目暂时没准备好", options: null, _failed: true });
           clearInterval(guessPollRef.current);
           clearTimeout(guessTimeoutRef.current);
         } else if (cached?.guessRaw) {
-          setGuessData({ context: cached.guessRaw.substring(0,300) || "格式异常", options: null });
+          setGuessData({ context: cached.guessRaw.substring(0,300) || "AI 这次没说清楚 — 再试一次？", options: null });
           clearInterval(guessPollRef.current);
           clearTimeout(guessTimeoutRef.current);
         }
@@ -4479,7 +4479,7 @@ export default function App() {
       // 25s 超时兜底（实际 guess 通常 5-10s 到达）
       guessTimeoutRef.current = setTimeout(function() {
         if (guessPollRef.current) clearInterval(guessPollRef.current);
-        setGuessData(function(prev) { return prev || { context: "内容加载失败", options: null, _failed: true }; });
+        setGuessData(function(prev) { return prev || { context: "题目暂时没准备好", options: null, _failed: true }; });
       }, 25000);
     }
     // Phase 1：优先 JSON（teachJSON），降级 Markdown（teach）
@@ -8312,7 +8312,7 @@ export default function App() {
               // 答对/答错时叠加 reveal 动画（金光 / 红圈 + 脉动），加强反馈获得感
               var revealAnim = ok ? "correctReveal 0.6s ease-out forwards" : bad ? "wrongReveal 0.4s ease-out forwards" : "none";
               return <button key={k} data-option-btn="true" data-selected={sel ? "true" : "false"} disabled={guessSubmitted} style={{...S.optionBtn,background:bg,borderColor:bdr,color:clr,boxShadow:shadow,animation:revealAnim}} onClick={()=>setSelectedOption(k)}><span data-option-key="true" style={S.optionKey}>{k}</span>{v}{ok?" ✓":""}{bad?" ✗":""}</button>;
-            })}</div> : guessData._failed ? <div style={{textAlign:"center",padding:"12px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>猜题加载失败</div><button style={S.primaryBtn} onClick={function(){setGuessData(null);callWithClientRetry(function(){return callAPIFast(sysP,buildGuessPrompt(currentWord,learned));}).then(function(raw){var parsed=tryJSON(raw);if(parsed?.context&&parsed?.options){dataCache.current[currentWord].guess=parsed;dataCache.current[currentWord].guessFailed=false;setGuessData(parsed);}else{setGuessData({context:"格式异常",options:null});}}).catch(function(){setGuessData({context:"内容加载失败",options:null,_failed:true});});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={skipGuess}>直接学习 →</button></div> : <div style={{fontSize:14,color:C.textSec,marginBottom:14}}>选项异常，请跳过</div>}
+            })}</div> : guessData._failed ? <div style={{textAlign:"center",padding:"12px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>猜词题暂时加载不出来</div><button style={S.primaryBtn} onClick={function(){setGuessData(null);callWithClientRetry(function(){return callAPIFast(sysP,buildGuessPrompt(currentWord,learned));}).then(function(raw){var parsed=tryJSON(raw);if(parsed?.context&&parsed?.options){dataCache.current[currentWord].guess=parsed;dataCache.current[currentWord].guessFailed=false;setGuessData(parsed);}else{setGuessData({context:"AI 这次没说清楚",options:null});}}).catch(function(){setGuessData({context:"题目暂时没准备好",options:null,_failed:true});});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={skipGuess}>直接学习 →</button></div> : <div style={{fontSize:14,color:C.textSec,marginBottom:14}}>选项暂时没准备好，可以直接跳过看讲解</div>}
             {!guessSubmitted && guessData.hint && <button style={S.hintBtn} onClick={()=>setShowHint(true)}>{showHint?"💡 "+guessData.hint:"💡 提示"}</button>}
             {guessSubmitted && <div style={{...S.resultBanner, background:selectedOption===guessData.answer?C.greenLight:C.goldLight, borderColor:selectedOption===guessData.answer?C.green:C.gold}}>{selectedOption===guessData.answer?"🎉 猜对了！+15 XP":"😯 正确答案："+guessData.answer+"—"+guessData.options[guessData.answer]}<div style={{fontSize:13,marginTop:4,color:C.textSec}}>✨ 即将进入学习...</div></div>}
             {!guessSubmitted && <div style={S.btnRow}>
@@ -8424,7 +8424,7 @@ export default function App() {
             </div>
           )}
         </>
-        : teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解内容加载失败</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");setTeachData(null);callWithClientRetry(function(){return callAPI(sysP,buildTeachPrompt(currentWord,learned));}).then(function(raw){var finalJSON=raw?(tryJSON(raw)||parsePartialJSON(raw)):null;if(finalJSON&&finalJSON.opening&&finalJSON.teach){dataCache.current[currentWord].teachJSON=finalJSON;dataCache.current[currentWord].teach=null;dataCache.current[currentWord].teachFailed=false;setTeachData(finalJSON);}else{var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
+        : teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解暂时加载不出来</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");setTeachData(null);callWithClientRetry(function(){return callAPI(sysP,buildTeachPrompt(currentWord,learned));}).then(function(raw){var finalJSON=raw?(tryJSON(raw)||parsePartialJSON(raw)):null;if(finalJSON&&finalJSON.opening&&finalJSON.teach){dataCache.current[currentWord].teachJSON=finalJSON;dataCache.current[currentWord].teach=null;dataCache.current[currentWord].teachFailed=false;setTeachData(finalJSON);}else{var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
         : !teachContent ? (() => {
           // 根据等待秒数动态展示不同提示，给用户进度感
           var s = teachWaitSec;
