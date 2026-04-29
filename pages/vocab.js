@@ -8067,8 +8067,22 @@ export default function App() {
       )}
 
       {streakToast && (
-        <div style={{position:"fixed",top:80,left:"50%",transform:"translateX(-50%)",zIndex:1100,background:"linear-gradient(135deg, "+C.gold+" 0%, "+C.accent+" 100%)",color:"#fff",padding:"10px 24px",borderRadius:20,fontSize:15,fontWeight:800,boxShadow:"0 6px 24px rgba(0,0,0,0.2)",animation:"fadeUp 0.3s ease-out",whiteSpace:"nowrap"}}>
-          🔥 {streakToast}
+        <div style={{
+          position:"fixed", top:80, left:"50%",
+          // transform 在 animation 里包了 translateX(-50%)，这里不用单独写，动画 forwards 接管
+          zIndex:1100,
+          background:"linear-gradient(135deg, "+C.gold+" 0%, "+C.accent+" 100%)",
+          color:"#fff", padding:"12px 26px", borderRadius:24,
+          fontSize:16, fontWeight:800,
+          // 加 glow + 内 highlight 让 toast 像"奖牌"
+          boxShadow: "0 8px 32px rgba(196,107,48,0.45), 0 0 0 4px rgba(255,215,0,0.2), inset 0 1px 0 rgba(255,255,255,0.4)",
+          // 0.55s overshoot pop 替代 fadeUp，连对获得感更强
+          animation: "streakPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards",
+          whiteSpace:"nowrap",
+          letterSpacing: "0.02em",
+        }}>
+          <span style={{display:"inline-block",animation:"bounce 0.8s ease-in-out infinite",marginRight:6}}>🔥</span>
+          {streakToast}
         </div>
       )}
 
