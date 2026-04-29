@@ -4729,6 +4729,19 @@ export default function App() {
       }
     }
     
+    // 防御性 boundary check：确保 words 非空且 startIdx 在范围内
+    // 之前如果意外越界，applyWordData(undefined) 会让用户陷入永久骨架屏 25s 后才超时
+    if (!words.length || startIdx >= words.length) {
+      console.warn('[startLearning] empty words or out-of-range startIdx', { wordsLen: words.length, startIdx: startIdx });
+      setError("没有可学习的单词，请检查词表或目标设置");
+      return;
+    }
+    if (!words[startIdx]) {
+      console.warn('[startLearning] words[startIdx] is falsy', { startIdx: startIdx, slice: words.slice(0, 3) });
+      setError("词表数据异常，请重新上传词表");
+      return;
+    }
+
     var startLearned = startIdx > 0 ? words.slice(0, startIdx) : [];
     setWordList(words); setIdx(startIdx); setLearned(startLearned); setError("");
     dataCache.current = {};
