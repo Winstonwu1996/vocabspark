@@ -2,8 +2,48 @@
 
 **目标**：把 Phase B 的家长邮件系统从代码就绪 → 真能发邮件 → 周一早 8 自动跑。
 
-**总用时**：~30 分钟
+**总用时**：~30 分钟（**如果你的 Supabase OTP 已经在用 Resend SMTP，省到 ~15 分钟**——见 [Step 1.0 快速路径](#step-10-如果你已经在用-resend-跑-otp-推荐先看这条)）
 **总成本**：$0（Resend 免费 3000 封/月，Vercel Cron 已包含）
+
+---
+
+## Step 1.0：如果你已经在用 Resend 跑 OTP（推荐先看这条）
+
+**判断方法**：Supabase Dashboard → Authentication → Emails → SMTP Settings —— 如果 Host 是 `smtp.resend.com`，你已经有 Resend 账号 + 域名验证 + （可能）付费套餐。
+
+**这种情况下省略 Step 1**——直接走"快速路径"：
+
+### 1.0.1 在 Resend Dashboard 创建**第二个独立 API key**
+
+https://resend.com/api-keys → **Create API Key**
+
+- **Name**: `Know U. Parent Email`（跟 OTP 那个区分开）
+- **Permission**: **Sending access**
+- **Domain**: 选你已经验证的域名（OTP 用的那个）
+
+⚠️ **不要复用 Supabase OTP 那个 key**——理由：
+- 风险隔离：一份 key 出事两边都瘫
+- 用量追踪：Resend Dashboard 看到的发送量混在一起分不清
+- Rotation 安全：可以独立换 key 不影响 OTP 登录
+- 紧急隔离：家长邮件被 spam-flag 不连累 OTP 送达率
+
+**生产 SaaS 标准做法 = 一个用途一个 key**。
+
+### 1.0.2 From 域名直接复用
+
+OTP 用什么 from 地址（如 `noreply@yourdomain.com`），家长邮件可以**直接用同一个域名**——
+DKIM / SPF / DMARC 已经配好，不用重新验证 DNS。
+
+- 用同地址 `noreply@yourdomain.com` —— 区分靠 subject
+- 或 `parents@yourdomain.com` —— 更明确（同样无需重新验证 DNS）
+
+### 1.0.3 跳过 Step 1.1 / 1.2 / 1.3——直接进 [Step 2](#step-2本地测试5-分钟)
+
+把 1.0.1 拿到的 `re_xxx` key 填进 `.env.local` 即可。完成。
+
+---
+
+## Step 1：注册 Resend 账号（**仅当你还没用 Resend**）
 
 ---
 
