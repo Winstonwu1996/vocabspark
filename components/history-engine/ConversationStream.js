@@ -249,9 +249,17 @@ export function ConversationStream(props) {
               onClick={props.onSubmit}
             >发送</button>
           </div>
-          <div style={{fontSize: 11, color: HC.textSec, marginTop: 4, textAlign: "right"}}>
-            <kbd style={{padding: "1px 4px", background: HC.tealLight, borderRadius: 3, fontSize: 10}}>Cmd</kbd>+
-            <kbd style={{padding: "1px 4px", background: HC.tealLight, borderRadius: 3, fontSize: 10}}>Enter</kbd> 发送
+          <div style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            marginTop: 4, fontSize: 11, color: HC.textSec
+          }}>
+            <span title="爸妈看不到这段聊天，他们只能看到学习统计" style={{color: HC.green || "#6a8e57", fontWeight: 500}}>
+              🔒 这段聊天爸妈看不到
+            </span>
+            <span>
+              <kbd style={{padding: "1px 4px", background: HC.tealLight, borderRadius: 3, fontSize: 10}}>Cmd</kbd>+
+              <kbd style={{padding: "1px 4px", background: HC.tealLight, borderRadius: 3, fontSize: 10}}>Enter</kbd> 发送
+            </span>
           </div>
         </div>
       )}

@@ -322,6 +322,37 @@ export default function UserCenter({ open, onClose, user, stats, studyStreak, st
                   <br/>· 不影响孩子端体验 — 给爸妈的并行轨道
                 </div>
 
+                {/* 隐私承诺 — 给孩子看的（核心信任建立点）*/}
+                <div style={{
+                  padding:"12px 14px", marginTop:6, marginBottom:8,
+                  background:C.greenLight, borderRadius:10,
+                  border:"1px solid "+C.green+"33",
+                  fontSize:12, lineHeight:1.7, color:C.text
+                }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:C.green, marginBottom:6 }}>
+                    🔒 我们对你的隐私承诺
+                  </div>
+                  <div style={{ marginBottom:4 }}>
+                    <strong style={{color:C.green}}>✅ 爸妈能看到</strong>：
+                    <span style={{color:C.textSec}}>完成度、卡点提示、晚饭桌可问的具体题目（统计层）</span>
+                  </div>
+                  <div style={{ marginBottom:4 }}>
+                    <strong style={{color:"#b35543"}}>❌ 爸妈看不到</strong>：
+                    <span style={{color:C.textSec}}>你和 AI 老师的聊天内容</span>
+                  </div>
+                  <div style={{ marginBottom:4 }}>
+                    <strong style={{color:"#b35543"}}>❌ 爸妈看不到</strong>：
+                    <span style={{color:C.textSec}}>你的个人设置（兴趣、目标、profile）</span>
+                  </div>
+                  <div style={{ marginBottom:4 }}>
+                    <strong style={{color:"#b35543"}}>❌ 爸妈看不到</strong>：
+                    <span style={{color:C.textSec}}>你按"我累了 / 我没懂 / 跳过"按钮的次数</span>
+                  </div>
+                  <div style={{ fontSize:11, color:C.textSec, marginTop:6, fontStyle:"italic" }}>
+                    周报是从你的学习统计自动生成的——任何时候你都可以暂停 / 取消订阅。
+                  </div>
+                </div>
+
                 {!parentEmailEdit ? (
                   <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", borderTop:"1px solid "+C.divider }}>
                     <div>
