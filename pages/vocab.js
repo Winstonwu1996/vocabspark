@@ -3361,7 +3361,25 @@ export default function App() {
     if (d.wordInput) setWordInput(d.wordInput);
     if (d.profile) { setProfile(d.profile); setProfileLocked(true); }
     if (d.stats) setStats(function(s) { return {...s, ...d.stats}; });
-    if (d.wordStatusMap) setWordStatusMap(d.wordStatusMap);
+    if (d.wordStatusMap) {
+      // 与 pet 修复同思路（昨天 chompcloud bug）：sync 没完成就关浏览器时，本地比云端新。
+      // 状态等级 mastered > learning > skipped/uncertain/error > unlearned —— 单向递进。
+      // 合并：本地独有 / 状态等级更高的，保留本地；其余取云端。防止 mastered 被回退。
+      setWordStatusMap(function(local) {
+        if (!local || Object.keys(local).length === 0) return d.wordStatusMap;
+        var rank = { unlearned: 0, error: 1, skipped: 2, uncertain: 2, learning: 3, mastered: 4 };
+        var merged = Object.assign({}, d.wordStatusMap);
+        Object.keys(local).forEach(function(w) {
+          var localSt = local[w];
+          if (!localSt) return;
+          var cloudSt = merged[w];
+          if (!cloudSt || (rank[localSt] || 0) > (rank[cloudSt] || 0)) {
+            merged[w] = localSt;
+          }
+        });
+        return merged;
+      });
+    }
     if (d.reviewWordData) {
       // P1-5: reviewLevel normalization — 防止 migration 数据让 level 永远停在 0
       // 历史数据可能 reviewLevel=undefined/NaN/负数，统一规整成 0..(MAX-1) 范围内
