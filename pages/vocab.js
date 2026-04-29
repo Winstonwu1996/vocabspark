@@ -8429,10 +8429,13 @@ export default function App() {
           // 根据等待秒数动态展示不同提示，给用户进度感
           var s = teachWaitSec;
           var msg, mainColor;
-          if (s < 6) { msg = "📖 AI 正在理解你的学习画像..."; mainColor = C.textSec; }
-          else if (s < 15) { msg = "🤔 正在为 " + currentWord + " 编写专属讲解..."; mainColor = C.teal; }
-          else if (s < 25) { msg = "⚡ AI 思考中... 稍慢一点"; mainColor = C.gold; }
-          else { msg = "⏳ 还需要一点时间，马上好..."; mainColor = C.accent; }
+          // 文案逻辑：随等待时间逐渐'拟人化'，避免单调"加载中..."
+          // 6s 内：建立期待（AI 在做事）→ 15s 内：定位到具体词 →
+          // 25s 内：拟人化承认慢 → 25s+：给希望 + 微歉意
+          if (s < 6) { msg = "📖 AI 正在读你的学习画像..."; mainColor = C.textSec; }
+          else if (s < 15) { msg = "🤔 正在为「" + currentWord + "」编个属于你的例句..."; mainColor = C.teal; }
+          else if (s < 25) { msg = "⚡ AI 想得有点慢，再等等..."; mainColor = C.gold; }
+          else { msg = "⏳ 高峰期 AI 排队中，马上好 — 你的耐心值得更好的讲解 ❤️"; mainColor = C.accent; }
           return <div style={{padding:"8px 0"}}>
             <div style={{background:C.border,borderRadius:8,height:20,width:"70%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
             <div style={{background:C.border,borderRadius:8,height:14,width:"100%",marginBottom:8,animation:"skeletonPulse 1.2s ease-in-out infinite",animationDelay:"0.1s"}}/>
