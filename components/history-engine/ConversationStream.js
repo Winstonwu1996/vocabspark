@@ -191,6 +191,42 @@ export function ConversationStream(props) {
             </div>
           </details>
 
+          {/* ── 3 个用户主动按钮（"累/没懂/跳过"）— 用户主动声明状态 = 100% 准确 ── */}
+          {props.onEscapeAction && (
+            <div style={{
+              display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap",
+              fontSize: 11.5
+            }}>
+              <button
+                onClick={function() { props.onEscapeAction("tired"); }}
+                title="切纯讲故事模式 — AI 不再问问题"
+                style={{
+                  padding: "5px 10px", border: "1px solid " + HC.parchmentLo,
+                  borderRadius: 999, background: "transparent",
+                  color: HC.textSec, cursor: "pointer", fontFamily: "inherit"
+                }}
+              >😴 累了，听就好</button>
+              <button
+                onClick={function() { props.onEscapeAction("dont-understand"); }}
+                title="AI 换角度重讲 — 更具象、更全面"
+                style={{
+                  padding: "5px 10px", border: "1px solid " + HC.parchmentLo,
+                  borderRadius: 999, background: "transparent",
+                  color: HC.textSec, cursor: "pointer", fontFamily: "inherit"
+                }}
+              >🤔 我没懂</button>
+              <button
+                onClick={function() { props.onEscapeAction("skip"); }}
+                title="1 句话总结进下一轮"
+                style={{
+                  padding: "5px 10px", border: "1px solid " + HC.parchmentLo,
+                  borderRadius: 999, background: "transparent",
+                  color: HC.textSec, cursor: "pointer", fontFamily: "inherit"
+                }}
+              >⏭️ 跳过</button>
+            </div>
+          )}
+
           <div className="row" style={{alignItems: "flex-end"}}>
             <textarea
               value={props.userInput}

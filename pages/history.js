@@ -634,6 +634,41 @@ export default function HistoryPage() {
     advanceTurn();
   };
 
+  // ─── 用户主动 escape action（累/没懂/跳过）—— 100% 准确，不靠 AI 自动诊断 ───
+  // 三种 action 触发不同的 prompt 分支（lib/history-prompts.js 处理）
+  var handleEscapeAction = function(action) {
+    var turn = topic.conversationTurns[turnIndex];
+    // 把 escape signal 当成"用户回答"加入 log，让 AI 下一轮看到
+    var escapeContent;
+    if (action === "tired") {
+      escapeContent = "[用户主动信号: 累了，请切纯讲故事模式 — 不要再问问题，直接讲完再问'继续吗']";
+    } else if (action === "dont-understand") {
+      escapeContent = "[用户主动信号: 没懂 — 请换角度重讲，**更具象、更生动、信息更全面**（不是更短）]";
+    } else if (action === "skip") {
+      escapeContent = "[用户主动信号: 跳过 — 1 句话总结进下一轮]";
+    } else {
+      return;
+    }
+    setConversationLog(function(prev) {
+      return prev.concat([{
+        role: "user",
+        turn: turn.n,
+        content: escapeContent,
+        timestamp: new Date().toISOString(),
+        isEscape: true,
+        escapeAction: action,
+      }]);
+    });
+    setUserInput("");
+    if (action === "skip") {
+      // 跳过 = 直接下一轮（让 AI 在下一轮做总结）
+      advanceTurn();
+    } else {
+      // 累 / 没懂 = 仍然推进到下一轮 AI 回应（AI 看到 escape signal 后切模式）
+      advanceTurn();
+    }
+  };
+
   // ─── 启动 conversation ─────────────────────────────────────────
   var startConversation = function() {
     setPhase("conversation");
@@ -1286,6 +1321,7 @@ export default function HistoryPage() {
               onTermClick={setActiveTerm}
               onMustClick={setActiveMust}
               onJumpToMap={jumpToMap}
+              onEscapeAction={handleEscapeAction}
               error={error}
             />
           )}
