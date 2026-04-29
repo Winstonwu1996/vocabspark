@@ -6,6 +6,11 @@
 
 ## 2026 年 4 月
 
+### [2026-04-29] [vivid-always-3layer.md](entries/2026-04-29-vivid-always-3layer.md)
+**theme**：教育哲学 / AI 协作 · **arc**：insight
+"明朝那些事儿教我的事"——distracted 从最弱 persona 变最强（89.6% → 97.9%）。砍掉 4 模式状态机的简化胜利。
+**扎心金句**：「AI 负责教好课。用户负责告诉 AI 自己状态。家长负责真分心兜底。三层责任不能让 AI 一个人扛——这跟养孩子一样。」
+
 ### [2026-04-28] [92-percent-baseline.md](entries/2026-04-28-92-percent-baseline.md)
 **theme**：教育哲学 / AI 协作 · **arc**：resolution
 "89.6 你心里满意吗"——老婆一句话推我从"过门槛"做到 92.2%。4 种虚拟 13 岁验证："开小差型"才是最难的孩子状态。
