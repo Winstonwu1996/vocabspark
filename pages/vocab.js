@@ -8852,11 +8852,11 @@ export default function App() {
 
       {/* ── DAILY LIMIT MODAL ── */}
       {showLimitModal && (
-        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{setShowLimitModal(false);window.scrollTo(0,0);}}>
-          <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:360,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"fadeUp 0.25s ease-out"}} onClick={e=>e.stopPropagation()}>
-            <div style={{fontSize:48,marginBottom:8}}>🎓</div>
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20,animation:"fadeIn 0.2s ease-out"}} onClick={()=>{setShowLimitModal(false);window.scrollTo(0,0);}}>
+          <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:360,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"modalPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) backwards"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:48,marginBottom:8,animation:"bounce 1.2s ease-in-out infinite"}}>🎓</div>
             <h3 style={{fontSize:19,fontWeight:700,margin:"0 0 8px"}}>{user ? "今日学习完成！" : "今天的体验课结束了"}</h3>
-            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 16px"}}>{user ? "免费用户每天可学 "+DAILY_LIMIT_REGISTERED+" 词，想学更多可以升级 Pro" : "你刚才体验了 AI 1 对 1 的私教效果："}</p>
+            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 16px"}}>{user ? "免费用户每天可学 "+DAILY_LIMIT_REGISTERED+" 词。想学更多？看看 AI 私教课方案" : "你刚才体验了 AI 一对一私教的效果："}</p>
             {!user && <div style={{background:C.bg,borderRadius:10,padding:"12px 14px",marginBottom:12,fontSize:13,lineHeight:1.7,textAlign:"left"}}>
               {"🎯 AI 根据你的兴趣和生活定制了讲解"}<br/>
               {"🧠 这种个性化教学，传统私教每小时 $100+"}<br/>
