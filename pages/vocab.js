@@ -2713,6 +2713,18 @@ export default function App() {
   var spectrumPollRef = useRef(null);
   var guessPollRef = useRef(null);
   var guessTimeoutRef = useRef(null);
+
+  // 组件卸载（用户离开 /vocab）时清掉所有正在跑的 poll/timeout，
+  // 防内存泄漏 + 防 setState on unmounted component
+  useEffect(function() {
+    return function() {
+      if (teachTimeoutRef.current) clearTimeout(teachTimeoutRef.current);
+      if (teachPollRef.current) clearInterval(teachPollRef.current);
+      if (spectrumPollRef.current) clearInterval(spectrumPollRef.current);
+      if (guessPollRef.current) clearInterval(guessPollRef.current);
+      if (guessTimeoutRef.current) clearTimeout(guessTimeoutRef.current);
+    };
+  }, []);
   var speedWaitAbortRef = useRef(false);
   var [photoLoading, setPhotoLoading] = useState(false);
 
