@@ -6518,7 +6518,7 @@ export default function App() {
             );
           })}
           <div style={{ fontSize: 10, color: '#6b4f33', fontStyle: 'italic', marginTop: 6 }}>
-            💡 加入后这些词会进入你的 SRS 复习池（[1, 3, 7, 14, 30] 天间隔）
+            💡 加入后会按科学间隔（明天 / 3 天 / 7 天 / 2 周 / 1 个月）安排复习
           </div>
         </div>
       )}
