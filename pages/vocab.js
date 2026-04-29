@@ -336,32 +336,108 @@ var buildSysGenericTeach = (goal, goalCustom) => {
 
 var buildGuessPrompt = (word, learned) => {
   var ctx = learned.length > 0 ? "\n之前学过：" + learned.join(", ") : "";
-  return "单词：" + word + ctx + "\n\n请执行 Step 1（猜）：\n\n" +
-    "1. 给出这个单词的IPA音标\n" +
-    "2. context 字段：1-2 句**纯英文**语境句（⚠️ 必须全英文，不能含任何中文、拼音、中文标点），用 _____ 代替目标单词，深度利用学习画像的场景（兴趣/常去地方/日常）。\n" +
-    "   ✅ 好范例：\"William just pulled off a clutch Pentakill in Honor of Kings, and immediately rushed to _____ the new season pass before the Jay Chou collab skin expired.\"\n" +
-    "   ❌ 禁止：中英混合（如\"William 在《王者荣耀》里 _____\"）、纯中文、中文标点\n" +
-    "3. 给出 4 个**英文**选项（A/B/C/D），只有 1 个正确含义。这是同义词识别题，让用户用英文思考英文。\n" +
-    "   ⚠️ **正确答案** 必须用 1-2 个最简单、最常见的英文词替代目标词的主义项（用 NGSL/Oxford 1000 高频词），\n" +
-    "   不能用比目标词还难的同义词。例如：\n" +
-    "   ✅ abandon → \"give up\" (✓ 简单短语) ❌ \"forsake\" (✗ 比目标词还生僻)\n" +
-    "   ✅ resilient → \"strong\" 或 \"tough\" ❌ \"durable\"\n" +
-    "   ✅ euphoria → \"great joy\" ❌ \"elation\"\n" +
-    "   ✅ account → \"bank record\" ❌ \"ledger\"\n" +
-    "   ✅ subject → \"topic\" ❌ \"matter\"\n" +
-    "   3 个干扰项也用同样简单词，类型混合：1 个反义、1 个无关、1 个形近/相关但不对。例如 abandon 的：\n" +
-    "     ✓ give up (正解) | continue (反义) | hug tightly (无关) | look back at (形近混淆)\n" +
-    "   选项长度建议 1-3 个词，整个选项 ≤ 25 字符。\n" +
-    "   **不能出现中文** — 全英文选项。\n" +
-    "   context 句子贴合主义项，让正解在上下文里通顺。\n" +
-    "   ❌❌❌ **关键约束（多义词不混淆）**：4 个选项必须**只对应 context 暗示的同一个义项**。\n" +
-    "   严禁把目标词的\"另一个义项\"作干扰项 — 那会让用户选了\"也对\"的答案被判错，极度困惑。\n" +
-    "     反例 1：right 的 context 在判断真伪 → ❌ 选项里有 \"left\"（这是 right=右 的反义，混淆义项）\n" +
-    "     反例 2：bank 的 context 在金融 → ❌ 选项里有 \"river edge\"（这是 bank=河岸 义项）\n" +
-    "     反例 3：carpenter 的 context 在工地 → ❌ 选项里出现这个词的其它义项（虽然主义项就是木匠）\n" +
-    "   正确做法：3 个干扰项都围绕 context 暗示的那 1 个义项做反义/无关/形近。\n\n" +
-    "IMPORTANT: 直接输出JSON，不要任何前导文字：\n" +
-    '{"phonetic":"/音标/","context":"English-only sentence with _____","options":{"A":"simple English option (1-3 words)","B":"...","C":"...","D":"..."},"answer":"字母","hint":"中文小提示"}';
+  return "单词：" + word + ctx + "\n\n" +
+
+    "【任务定位】priming（预热）题，不是测试。学生还没学过这个词，目的是\n" +
+    "让他借 context 形成对词义的猜测/期待，下一步 teach phase 才正式讲解。\n" +
+    "题目要友好、有代入感、单焦点。\n\n" +
+
+    "─── 1. selectedSense（义项锁定）───\n" +
+    "如果这个词有多个常见义项（如 address: 处理/谈论/地址；run: 跑/经营/运行；\n" +
+    "bank: 银行/河岸；right: 右/正确），先选定本题用哪个义项。\n" +
+    "context 和 4 个 options 必须**全部锁住**这一个义项，严禁出现跨义项干扰项。\n" +
+    "如词只有一个常见义项，selectedSense.id 填 1，其它字段照常。\n\n" +
+
+    "─── 2. context（低噪声画像句）───\n" +
+    "1-2 句**纯英文**语境句（不能含任何中文、拼音、中文标点），用 _____ 代替目标词。\n" +
+    "两条原则同时满足：\n\n" +
+    "  【画像化】（KnowU 差异化，必须保留）\n" +
+    "    • 从学习画像里挑 **1 个**最熟悉的事物作锚点：兴趣大类 / 朋友或家人名 /\n" +
+    "      常去地点 / 日常场景。锚点应该是用户一眼能识别的（如 'Honor of Kings'\n" +
+    "      / 'Mom' / 'school cafeteria'）\n" +
+    "    • 锚点可以跨题反复使用，建立持续代入感\n\n" +
+    "  【焦点纯度】（保证目标词被识别）\n" +
+    "    • 一句话**只放 1 个画像锚点**，不要堆砌（不要同时出现 'Pentakill +\n" +
+    "      Honor of Kings + Jay Chou collab skin' 这种）\n" +
+    "    • 句子主体用学生 L2 已掌握的简单词（NGSL/Oxford 1000 内）\n" +
+    "    • 目标词 _____ 左右各 ≤ 4 词的范围内**不能有其他生词**\n" +
+    "    • 句长 12-18 词，目标词成为整句**唯一的语义新信息**\n" +
+    "    • context 必须 unambiguously 锁住 selectedSense，不允许跨义项解读\n\n" +
+    "  ✅ 好范例（abandon, 锁\"放弃\"义项）：\n" +
+    "    \"After three losing matches in Honor of Kings, William finally _____ the game.\"\n" +
+    "    （1 锚点 + 简单主体 + 'finally' 语义压力 → 单一锁定 abandon=give up）\n\n" +
+    "  ❌ 反例 1（信息过载，目标词被淹没）：\n" +
+    "    \"William just pulled off a clutch Pentakill in Honor of Kings, and rushed\n" +
+    "    to _____ the new season pass before the Jay Chou collab skin expired.\"\n\n" +
+    "  ❌ 反例 2（无画像，丢掉代入感，等同剑桥词典）：\n" +
+    "    \"He decided to _____ his old plan.\"\n\n" +
+    "  ❌ 反例 3（义项允许多解 — address 锁\"处理\"义但 context 同时允许\"谈论\"）：\n" +
+    "    \"Please _____ the audience.\"  ← 这句 deal with / speak to 都通\n\n" +
+
+    "─── 3. options（4 选项，易混区分而非近义替代）───\n" +
+    "正确答案：1-3 个英文词最贴近 selectedSense（求精准，不强求最高频替代）。\n\n" +
+    "  ❌ 旧设计错位：用 'give up / leave behind / discard' 三个都接近的近义短语\n" +
+    "    作选项 — 这是 paraphrase 题，不是 vocabulary 题，会结构性制造\"两答案\n" +
+    "    都对\"。\n\n" +
+    "  ✅ 新设计：3 个干扰项按以下类型组合（用学生最容易误解为目标词但实际不同的词）：\n" +
+    "    类型 A — **L1 干扰常见误解**：中国学生最容易把目标词理解成什么\n" +
+    "      （如 abandon 常被误以为 hate / dislike；resilient 被误以为 lazy）\n" +
+    "    类型 B — **形近但完全不同义**：拼写或词根类似但意思无关\n" +
+    "      （如 abandon vs absorb；resilient vs resident）\n" +
+    "    类型 C — **明显反义或语用错配**：简单的反向词\n" +
+    "      （如 abandon 反义 keep / continue）\n\n" +
+    "  约束：\n" +
+    "    • 4 选项语义场**互不重叠**（这是消除\"两答案都对\"的核心）\n" +
+    "    • 选项长度差 ≤ 1 词，避免长度暗示（cuing effect）\n" +
+    "    • 单个选项 1-3 词，≤ 25 字符\n" +
+    "    • 全英文，不能出现中文\n\n" +
+    "  ✅ abandon 范例（锁\"放弃\"义项）：\n" +
+    "    A: give up (正解)  |  B: dislike (L1 误解)  |  C: absorb (形近)  |  D: keep (反义)\n\n" +
+
+    "─── 4. acceptableAnswers + disambiguation（自检）───\n" +
+    "  acceptableAnswers: 列出**学生选了也可接受**的选项字母（语义等价集）。\n" +
+    "    理想情况只有 1 个 = answer。如果你按上面新设计做对了干扰项，就该只有 1 个。\n" +
+    "    如果你不确定干扰项是否完全语义不重叠，把可能可接受的也列出来 — 宁可宽容也别误判。\n" +
+    "  disambiguation: 简短自检，说明为什么 B/C/D 不在 acceptableAnswers 内 —\n" +
+    "    这一步逼你认真区分干扰项是否真的不重叠。\n\n" +
+
+    "─── 5. otherSenses（多义词教学钩子）───\n" +
+    "  如果目标词有 selectedSense 之外的常见义项，列 1-2 个最常用的，banner 会用\n" +
+    "  这个展示词的多面性。如目标词单义，留空数组 []。\n\n" +
+
+    "─── 完整 JSON 输出（直接输出，不要前导文字）───\n" +
+    "{\n" +
+    '  "phonetic": "/IPA/",\n' +
+    '  "selectedSense": {"id":1,"definitionEn":"...","definitionZh":"..."},\n' +
+    '  "context": "English-only sentence with _____ (12-18 words, 1 profile anchor)",\n' +
+    '  "options": {"A":"...","B":"...","C":"...","D":"..."},\n' +
+    '  "answer": "A/B/C/D",\n' +
+    '  "acceptableAnswers": ["A"],\n' +
+    '  "disambiguation": "为什么 B/C/D 都不可接受的简短理由",\n' +
+    '  "otherSenses": [{"definitionEn":"...","definitionZh":"..."}],\n' +
+    '  "hint": "中文小提示"\n' +
+    "}";
+};
+
+// 规范化 LLM 返回的 guess JSON：
+// - answer: "a " / "Answer: A" / "A." 都映射回 "A"；非 [A-D] 视为缺失
+// - acceptableAnswers: 缺失/空数组 fallback 到 [answer]，每个元素同样字母规范化
+// 在 dataCache 写入点调一次，下游 UI/判断逻辑都拿规范化后的对象。
+var normalizeGuessData = (raw) => {
+  if (!raw || typeof raw !== "object") return raw;
+  var parseLetter = (x) => {
+    var m = String(x || "").toUpperCase().match(/[A-D]/);
+    return m ? m[0] : null;
+  };
+  var ans = parseLetter(raw.answer);
+  if (ans) raw.answer = ans;
+  if (Array.isArray(raw.acceptableAnswers) && raw.acceptableAnswers.length > 0) {
+    raw.acceptableAnswers = raw.acceptableAnswers.map(parseLetter).filter(Boolean);
+  }
+  if (!Array.isArray(raw.acceptableAnswers) || raw.acceptableAnswers.length === 0) {
+    raw.acceptableAnswers = ans ? [ans] : [];
+  }
+  return raw;
 };
 
 // Phase 1.5：generator prompt — 接受 classifyResult，动态裁剪 schema 到选中方法
@@ -4263,7 +4339,7 @@ export default function App() {
           return callWithClientRetry(function() {
             return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred });
           }).then(function(raw) {
-            dataCache.current[word].guess = raw ? tryJSON(raw) : null;
+            dataCache.current[word].guess = raw ? normalizeGuessData(tryJSON(raw)) : null;
             dataCache.current[word].guessRaw = raw;
             if ((dataCache.current[word].teach || dataCache.current[word].teachJSON) && (dataCache.current[word].guess || dataCache.current[word].guessRaw)) {
               readyWordSet.add(word);
@@ -4579,7 +4655,12 @@ export default function App() {
   var submitGuess = function() {
     if (!selectedOption) return;
     setGuessSubmitted(true);
-    var correct = guessData?.answer && selectedOption === guessData.answer;
+    // acceptableAnswers 判断：宽容到所有 LLM 标记的语义等价选项；缺失时退化为 [answer]
+    var acceptable = (Array.isArray(guessData?.acceptableAnswers) && guessData.acceptableAnswers.length > 0)
+      ? guessData.acceptableAnswers
+      : (guessData?.answer ? [guessData.answer] : []);
+    var correct = acceptable.includes(selectedOption);
+    var perfect = !!guessData?.answer && selectedOption === guessData.answer;
 
     // A: 答题速度检测 — 用时 < 15s 弹软提示（不影响 XP / 节奏，只是温和提醒）
     if (guessStartRef.current) {
@@ -4595,7 +4676,7 @@ export default function App() {
       guessStartRef.current = null;
     }
 
-    trackFunnel('guess_submit', { word: currentWord, correct: !!correct, streak_after: correct ? (stats.streak+1) : 0 });
+    trackFunnel('guess_submit', { word: currentWord, correct: !!correct, perfect: !!perfect, streak_after: correct ? (stats.streak+1) : 0 });
 
     if (correct) { sfx.correct(); setBounceCorrect(true); setTimeout(function() { setBounceCorrect(false); }, 600); }
     else { sfx.wrong(); setShakeWrong(true); setTimeout(function() { setShakeWrong(false); }, 500); }
@@ -8306,11 +8387,14 @@ export default function App() {
               <span style={{flex:1,lineHeight:1.8}}>
                 {guessData.context.replace(/_+/g, "\x00").split("\x00").map(function(seg, i, arr) {
                   if (i === arr.length - 1) return <span key={i}>{seg}</span>;
-                  var isCorrect = selectedOption === guessData.answer;
+                  var acceptable = (Array.isArray(guessData.acceptableAnswers) && guessData.acceptableAnswers.length > 0)
+                    ? guessData.acceptableAnswers
+                    : (guessData.answer ? [guessData.answer] : []);
+                  var isCorrect = guessSubmitted && acceptable.includes(selectedOption);
                   return [
                     <span key={"t"+i}>{seg}</span>,
                     guessSubmitted
-                      ? <span key={"f"+i} style={{fontWeight:700, color: isCorrect ? C.green : C.red, display:"inline-block", animation:"fillIn 0.4s ease-out", padding:"0 2px", borderRadius:4, background: isCorrect ? C.greenLight : C.redLight}}>{guessData.answer}</span>
+                      ? <span key={"f"+i} style={{fontWeight:700, color: isCorrect ? C.green : C.red, display:"inline-block", animation:"fillIn 0.4s ease-out", padding:"0 4px", borderRadius:4, background: isCorrect ? C.greenLight : C.redLight}}>{currentWord}</span>
                       : <span key={"b"+i} style={{display:"inline-block",minWidth:80,padding:"2px 14px",margin:"0 3px",background:C.accentLight,borderBottom:"2px solid "+C.accent,borderRadius:4,color:C.accent+"66",fontWeight:700,textAlign:"center",letterSpacing:2}}>___</span>
                   ];
                 })}
@@ -8318,16 +8402,53 @@ export default function App() {
               <SpeakBtn text={guessData.context.replace(/_+/g, currentWord)} size={26} />
             </div>
             {guessData.options ? <div style={S.optionGrid}>{Object.entries(guessData.options).map(([k,v]) => {
-              var sel=selectedOption===k, ok=guessSubmitted&&k===guessData.answer, bad=guessSubmitted&&sel&&k!==guessData.answer;
+              var acceptable = (Array.isArray(guessData.acceptableAnswers) && guessData.acceptableAnswers.length > 0)
+                ? guessData.acceptableAnswers
+                : (guessData.answer ? [guessData.answer] : []);
+              var sel = selectedOption === k;
+              var isAnswer = guessSubmitted && k === guessData.answer;          // 最贴 context 的最优答案 → 金 ★
+              var isAcceptable = guessSubmitted && acceptable.includes(k) && !isAnswer; // 也对但非最优 → 绿 ✓
+              var isWrongPicked = guessSubmitted && sel && !acceptable.includes(k);     // 用户选错 → 红 ✗
               var bg=C.bg, bdr=C.border, clr=C.text;
-              if(ok){bg=C.greenLight;bdr=C.green;clr=C.green;} else if(bad){bg=C.redLight;bdr=C.red;clr=C.red;} else if(sel){bg=C.accentLight;bdr=C.accent;clr=C.accent;}
-              var shadow = ok ? "0 0 0 2px "+C.green+"33" : bad ? "0 0 0 2px "+C.red+"33" : sel ? "0 0 0 2px "+C.accent+"33" : "none";
-              // 答对/答错时叠加 reveal 动画（金光 / 红圈 + 脉动），加强反馈获得感
-              var revealAnim = ok ? "correctReveal 0.6s ease-out forwards" : bad ? "wrongReveal 0.4s ease-out forwards" : "none";
-              return <button key={k} data-option-btn="true" data-selected={sel ? "true" : "false"} disabled={guessSubmitted} style={{...S.optionBtn,background:bg,borderColor:bdr,color:clr,boxShadow:shadow,animation:revealAnim}} onClick={()=>setSelectedOption(k)}><span data-option-key="true" style={S.optionKey}>{k}</span>{v}{ok?" ✓":""}{bad?" ✗":""}</button>;
-            })}</div> : guessData._failed ? <div style={{textAlign:"center",padding:"12px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>猜词题暂时加载不出来</div><button style={S.primaryBtn} onClick={function(){setGuessData(null);callWithClientRetry(function(){return callAPIFast(sysP,buildGuessPrompt(currentWord,learned));}).then(function(raw){var parsed=tryJSON(raw);if(parsed?.context&&parsed?.options){dataCache.current[currentWord].guess=parsed;dataCache.current[currentWord].guessFailed=false;setGuessData(parsed);}else{setGuessData({context:"AI 这次没说清楚",options:null});}}).catch(function(){setGuessData({context:"题目暂时没准备好",options:null,_failed:true});});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={skipGuess}>直接学习 →</button></div> : <div style={{fontSize:14,color:C.textSec,marginBottom:14}}>选项暂时没准备好，可以直接跳过看讲解</div>}
+              if (isAnswer) { bg=C.goldLight; bdr=C.gold; clr=C.gold; }
+              else if (isAcceptable) { bg=C.greenLight; bdr=C.green; clr=C.green; }
+              else if (isWrongPicked) { bg=C.redLight; bdr=C.red; clr=C.red; }
+              else if (sel) { bg=C.accentLight; bdr=C.accent; clr=C.accent; }
+              var shadow = isAnswer ? "0 0 0 2px "+C.gold+"55" : isAcceptable ? "0 0 0 2px "+C.green+"33" : isWrongPicked ? "0 0 0 2px "+C.red+"33" : sel ? "0 0 0 2px "+C.accent+"33" : "none";
+              var revealAnim = isAnswer || isAcceptable ? "correctReveal 0.6s ease-out forwards" : isWrongPicked ? "wrongReveal 0.4s ease-out forwards" : "none";
+              var marker = isAnswer ? " ★" : isAcceptable ? " ✓" : isWrongPicked ? " ✗" : "";
+              return <button key={k} data-option-btn="true" data-selected={sel ? "true" : "false"} disabled={guessSubmitted} style={{...S.optionBtn,background:bg,borderColor:bdr,color:clr,boxShadow:shadow,animation:revealAnim}} onClick={()=>setSelectedOption(k)}><span data-option-key="true" style={S.optionKey}>{k}</span>{v}{marker}</button>;
+            })}</div> : guessData._failed ? <div style={{textAlign:"center",padding:"12px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>猜词题暂时加载不出来</div><button style={S.primaryBtn} onClick={function(){setGuessData(null);callWithClientRetry(function(){return callAPIFast(sysP,buildGuessPrompt(currentWord,learned));}).then(function(raw){var parsed=normalizeGuessData(tryJSON(raw));if(parsed?.context&&parsed?.options){dataCache.current[currentWord].guess=parsed;dataCache.current[currentWord].guessFailed=false;setGuessData(parsed);}else{setGuessData({context:"AI 这次没说清楚",options:null});}}).catch(function(){setGuessData({context:"题目暂时没准备好",options:null,_failed:true});});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={skipGuess}>直接学习 →</button></div> : <div style={{fontSize:14,color:C.textSec,marginBottom:14}}>选项暂时没准备好，可以直接跳过看讲解</div>}
             {!guessSubmitted && guessData.hint && <button style={S.hintBtn} onClick={()=>setShowHint(true)}>{showHint?"💡 "+guessData.hint:"💡 提示"}</button>}
-            {guessSubmitted && <div style={{...S.resultBanner, background:selectedOption===guessData.answer?C.greenLight:C.goldLight, borderColor:selectedOption===guessData.answer?C.green:C.gold}}>{selectedOption===guessData.answer?"🎉 猜对了！+15 XP":"😯 正确答案："+guessData.answer+"—"+guessData.options[guessData.answer]}<div style={{fontSize:13,marginTop:4,color:C.textSec}}>✨ 即将进入学习...</div></div>}
+            {guessSubmitted && (() => {
+              var acceptable = (Array.isArray(guessData.acceptableAnswers) && guessData.acceptableAnswers.length > 0)
+                ? guessData.acceptableAnswers
+                : (guessData.answer ? [guessData.answer] : []);
+              var perfect = !!guessData.answer && selectedOption === guessData.answer;
+              var correct = acceptable.includes(selectedOption);
+              var ansLabel = (guessData.options && guessData.answer && guessData.options[guessData.answer]) || guessData.answer || "?";
+              var others = Array.isArray(guessData.otherSenses)
+                ? guessData.otherSenses.filter(function(s){ return s && (s.definitionZh || s.definitionEn); })
+                : [];
+              var bg, bdr, head;
+              if (perfect) {
+                bg = C.greenLight; bdr = C.green;
+                head = "🎉 猜对了！+15 XP";
+              } else if (correct) {
+                bg = C.greenLight; bdr = C.green;
+                head = "✓ 也对！+15 XP — 最贴这个 context 的是 " + (guessData.answer || "?") + "（" + ansLabel + "）";
+              } else {
+                bg = C.goldLight; bdr = C.gold;
+                head = "😯 正确答案：" + (guessData.answer || "?") + " — " + ansLabel;
+              }
+              return <div style={{...S.resultBanner, background:bg, borderColor:bdr}}>
+                {head}
+                {others.length > 0 && <div style={{fontSize:13, marginTop:6, color:C.textSec, paddingTop:6, borderTop:"1px dashed "+C.border}}>
+                  💡 顺便：{currentWord} 还有{others.map(function(s){ return s.definitionZh || s.definitionEn; }).join(" / ")}的意思
+                </div>}
+                <div style={{fontSize:13, marginTop:4, color:C.textSec}}>✨ 即将进入学习...</div>
+              </div>;
+            })()}
             {!guessSubmitted && <div style={S.btnRow}>
               {guessData.options && <button style={S.primaryBtn} onClick={submitGuess} disabled={!selectedOption||loading}>提交 →</button>}
               <button style={guessData.options?S.ghostBtn:S.primaryBtn} onClick={skipGuess} disabled={loading}>{guessData.options?"跳过":"→ 直接学习"}</button>
