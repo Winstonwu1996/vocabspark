@@ -7342,6 +7342,14 @@ export default function App() {
                       border: "1.5px solid " + (isEquipped ? C.accent : owned ? C.green+"66" : C.border),
                       borderRadius: 12, padding: "10px 8px",
                       position:"relative", textAlign:"center",
+                      transition: "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
+                      // 已装备卡片：金色 ring + 微浮起；已购买未装备：浅绿 ring
+                      boxShadow: isEquipped
+                        ? "0 0 0 3px " + C.gold + "44, 0 6px 20px " + C.accent + "33"
+                        : owned
+                        ? "0 2px 8px " + C.green + "22"
+                        : "0 1px 3px rgba(0,0,0,0.05)",
+                      transform: isEquipped ? "translateY(-2px)" : "translateY(0)",
                     }}>
                       {/* gender 标 */}
                       <span style={{position:"absolute",top:6,right:6,fontSize:9,fontWeight:700,color:GENDER_COLOR[acc.gender],background:"#fff",padding:"1px 6px",borderRadius:4,border:"1px solid "+GENDER_COLOR[acc.gender]+"44"}}>{GENDER_LABEL[acc.gender]}</span>
