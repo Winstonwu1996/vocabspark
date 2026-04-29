@@ -8219,7 +8219,8 @@ export default function App() {
           </div>
           {stats.streak > 0 && (
             <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
-              <div style={S.streakBadge}>{stats.streak >= 5 ? "🔥×"+stats.streak : "🔥 "+stats.streak}</div>
+              {/* key={streak} 触发每次 +1 时 streakBump 数字弹动 */}
+              <div key={"streak-"+stats.streak} style={{...S.streakBadge, animation:"streakBump 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)"}}>{stats.streak >= 5 ? "🔥×"+stats.streak : "🔥 "+stats.streak}</div>
               {stats.streak >= 3 && <div style={{ fontSize:10, color:C.gold, fontWeight:600, opacity:0.8 }}>连对中</div>}
             </div>
           )}
