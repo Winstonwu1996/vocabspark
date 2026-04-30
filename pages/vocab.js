@@ -2923,9 +2923,13 @@ export default function App() {
           setIdx(d.session.idx);
           setLearned(d.session.learned || []);
         }
-        // 学习宠物：首次访问自动初始化（用 setPet，不调 savePet 避免初始化触发 sync）
+        // chompcloud 2026-04-30 修复：mount 阶段创建 default pet 时**不调 doSave**。
+        // 原 bug：本地 pet 缺失（迁移/换浏览器）→ 创建 default + doSave 写本地
+        // → syncToCloud 把 default pet 推上云端覆盖用户真实进度。
+        // 现在 default 只活在 React state，未登录用户首次喂食时 savePet 才持久化（那时
+        // 已是真值）；登录用户由 _applyCloudData 拉云端 pet 覆盖。
         if (d?.pet) setPet(d.pet);
-        else { var initial = defaultPet(); setPet(initial); doSave({ pet: initial }); }
+        else { setPet(defaultPet()); }
       } catch(e) {}
     }).catch(function() {});
 
@@ -3277,6 +3281,9 @@ export default function App() {
   var _syncPendingRef = useRef(false);
   var _syncRetryCountRef = useRef(0);
   var _lastSyncAtRef = useRef(0); // 上次成功 sync 的时间戳（leading edge 用）
+  // chompcloud 2026-04-30 修复：登录用户的首次 sync 必须等 _applyCloudData 完成。
+  // 否则 mount 创建的 default pet 会在云端 pet 拉到之前被 push 上云端覆盖真实进度。
+  var _cloudReadyRef = useRef(false);
   var _bcRef = useRef(null); // BroadcastChannel 多 tab 同步
   var MAX_SYNC_RETRIES = 3;
   var SYNC_DEBOUNCE_MS = 500;
@@ -3322,16 +3329,38 @@ export default function App() {
     if (_syncInFlightRef.current) { _syncPendingRef.current = true; return; }
     var u = userRef.current;
     if (!u) return;
+    // chompcloud 2026-04-30 修复闸门：登录用户在 _applyCloudData 完成前不允许 push。
+    // 否则 mount 创建的 default pet（或其它未拉云端的本地状态）会覆盖云端真实数据。
+    // _applyCloudData 会在登录后/页面加载时拉云端并设 _cloudReadyRef = true 解锁。
+    if (!_cloudReadyRef.current) {
+      console.warn('[sync] blocked: _applyCloudData not yet completed; preventing default-state overwrite');
+      _syncPendingRef.current = true; // 等云端拉到再 trigger
+      return;
+    }
     _syncInFlightRef.current = true;
     setSyncStatus("syncing");
     try {
       var fullData = await loadSave();
       if (!fullData) { _syncInFlightRef.current = false; setSyncStatus("idle"); return; }
-      // 反数据丢失保护：如果本地 reviewWordData 比 wordStatusMap 少太多，拒绝同步
+      // 反数据丢失保护 1：reviewWordData 比 wordStatusMap 少太多
       var wsmCount = Object.keys(fullData.wordStatusMap || {}).length;
       var rwdCount = Object.keys(fullData.reviewWordData || {}).length;
       if (wsmCount > 20 && rwdCount < wsmCount * 0.3) {
         console.warn('[sync] blocked: reviewWordData (' + rwdCount + ') much smaller than wordStatusMap (' + wsmCount + '). Skip sync to protect cloud data.');
+        _syncInFlightRef.current = false; setSyncStatus("error");
+        return;
+      }
+      // 反数据丢失保护 2：pet 看似 default 或完全缺失，但 stats 显示已学过 50+ 词
+      // chompcloud 2026-04-30 兜底：万一闸门失效，也防止 default/缺失 pet 覆盖云端真实进度。
+      // 触发条件：
+      //   (a) pet 字段缺失（fullData.pet 为 falsy）— 例如新浏览器登录前 doSave 未带 pet
+      //   (b) pet.totalFed=0 且 unlocked=[] — mount 创建的 default pet
+      var _pet = fullData.pet;
+      var _statsTotal = (fullData.stats || {}).total || 0;
+      var _petLooksDefault = !_pet ||
+        ((Number(_pet.totalFed) || 0) === 0 && (!_pet.unlocked || _pet.unlocked.length === 0));
+      if (_petLooksDefault && _statsTotal > 50) {
+        console.warn('[sync] blocked: pet looks default/missing but stats.total=' + _statsTotal + '. Likely race; skip sync.');
         _syncInFlightRef.current = false; setSyncStatus("error");
         return;
       }
@@ -3527,6 +3556,8 @@ export default function App() {
       setIdx(d.session.idx);
       setLearned(d.session.learned || []);
     }
+    // chompcloud 2026-04-30 修复：标记云端数据已应用，解锁后续 syncToCloud。
+    _cloudReadyRef.current = true;
   };
 
   // ── Auth actions ──
@@ -3607,6 +3638,7 @@ export default function App() {
       localStorage.removeItem("vocabspark_tier");
     } catch(e) {}
     setUser(null); userRef.current = null;
+    _cloudReadyRef.current = false; // 登出后下次登录前 sync 闸门重置
     setUserTier("free");
     // 重置 React 状态
     setWordInput(""); setProfile(""); setProfileLocked(false);
@@ -3780,6 +3812,8 @@ export default function App() {
         _applyCloudData(cloudData);
         setShowWelcome(false);
       } else {
+        // 云端无数据（首次注册用户）→ 标记 cloud-ready 后允许首次 push
+        _cloudReadyRef.current = true;
         syncToCloud();
       }
       _loadTier(u.id);
