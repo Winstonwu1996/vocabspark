@@ -2941,28 +2941,43 @@ export default function App() {
   }, []);
 
   // ── 词表自动保存（防止 textarea 编辑后未持久化） ──
+  // L3：删词 ≥ 3 弹 ConfirmModal，确认后设 intent='user_edit_wordInput' 让服务端守卫放行
   var wordInputSaveTimer = useRef(null);
   useEffect(function() {
     if (wordInputSaveTimer.current) clearTimeout(wordInputSaveTimer.current);
-    wordInputSaveTimer.current = setTimeout(function() {
-      if (wordInput && wordInput.trim()) {
-        loadSave().then(function(d) {
-          d = d || {};
-          if (d.wordInput !== wordInput) {
-            // 防大数据丢失：如果旧词表明显比新词表大（差距 >100 词），拒绝保存
-            // 这种情况通常是 bug（session 回填、状态错乱等）导致的意外缩减
-            var oldCount = (d.wordInput || '').split('\n').filter(Boolean).length;
-            var newCount = wordInput.split('\n').filter(Boolean).length;
-            if (oldCount > 100 && newCount < oldCount / 2) {
-              console.warn('[wordInput autosave] blocked: oldCount=' + oldCount + ' newCount=' + newCount + ' (too much shrinkage)');
-              return;
-            }
-            d.wordInput = wordInput;
-            doSave(d);
-            if (userRef.current) syncToCloud();
-          }
+    wordInputSaveTimer.current = setTimeout(async function() {
+      if (!wordInput || !wordInput.trim()) return; // 空输入不保存
+      var d = (await loadSave()) || {};
+      if (d.wordInput === wordInput) return;
+
+      var oldWords = (d.wordInput || '').split('\n').map(function(w){ return w.trim(); }).filter(Boolean);
+      var newWords = wordInput.split('\n').map(function(w){ return w.trim(); }).filter(Boolean);
+      var newSet = new Set(newWords);
+      var deleted = oldWords.filter(function(w){ return !newSet.has(w); });
+
+      if (deleted.length >= 3) {
+        // 检测到删词，弹确认避免误操作（race / paste 错版本 / 误选删除）
+        var preview = deleted.slice(0, 5).join('、');
+        if (deleted.length > 5) preview += ' 等';
+        var ok = await confirmAsync({
+          title: '检测到删除 ' + deleted.length + ' 个词',
+          body: '前几个：' + preview + '\n\n确认要从词库移除这些词吗？\n（取消会恢复你的词表，进度不受影响）',
+          confirmText: '确认删除',
+          cancelText: '取消，恢复词表',
+          variant: 'danger',
         });
+        if (!ok) {
+          // 回滚：把 React state 重置回旧词表
+          setWordInput(d.wordInput || '');
+          return;
+        }
+        // 用户主动确认删词 → 设 intent，让服务端 L1 守卫放行 wordInput 缩水
+        _intentRef.current = 'user_edit_wordInput';
       }
+
+      d.wordInput = wordInput;
+      doSave(d);
+      if (userRef.current) syncToCloud();
     }, 2000);
     return function() { if (wordInputSaveTimer.current) clearTimeout(wordInputSaveTimer.current); };
   }, [wordInput]);
@@ -3284,6 +3299,9 @@ export default function App() {
   // chompcloud 2026-04-30 修复：登录用户的首次 sync 必须等 _applyCloudData 完成。
   // 否则 mount 创建的 default pet 会在云端 pet 拉到之前被 push 上云端覆盖真实进度。
   var _cloudReadyRef = useRef(false);
+  // L3：用户主动操作 wordInput 时设此 intent，sync 时一起发给服务端解锁 wordInput 缩水保护
+  // 'user_edit_wordInput' / 'user_upload' / 'user_clear'，发出后立即清空
+  var _intentRef = useRef(null);
   var _bcRef = useRef(null); // BroadcastChannel 多 tab 同步
   var MAX_SYNC_RETRIES = 3;
   var SYNC_DEBOUNCE_MS = 500;
@@ -3365,10 +3383,13 @@ export default function App() {
         return;
       }
       fullData.updatedAt = new Date().toISOString();
+      // L3 intent：sync 后立即清空，避免下次普通 sync 误带
+      var _currentIntent = _intentRef.current;
+      _intentRef.current = null;
       var r = await fetch('/api/sync', {
         method: 'POST',
         headers: await getAuthHeaders(true),
-        body: JSON.stringify({ userId: u.id, data: fullData, clientVersion: syncVersionRef.current }),
+        body: JSON.stringify({ userId: u.id, data: fullData, clientVersion: syncVersionRef.current, intent: _currentIntent }),
       });
 
       if (r.status === 409) {
@@ -3394,6 +3415,7 @@ export default function App() {
           _applyCloudData(merged);
           // 重推合并后的数据（带新 version）
           try {
+            // 重推时不带 intent（merged 是双方合并结果，wordInput 取并集不会缩水）
             var r2 = await fetch('/api/sync', {
               method: 'POST',
               headers: await getAuthHeaders(true),
@@ -3680,21 +3702,21 @@ export default function App() {
     setWordDetailsMap({});
     setStats({ xp: 0, streak: 0, lastStudyDate: null });
     setWordInput("");
-    
-    var emptyData = {
-      wordList: [],
-      learned: [],
-      idx: 0,
-      profile: "",
-      targetDate: "",
-      wordStatusMap: {},
-      wordDetailsMap: {},
-      stats: { xp: 0, streak: 0, lastStudyDate: null },
-      updatedAt: new Date().getTime()
-    };
+
     if (userRef.current) {
-      // P1-4 修复：直接 await _doSync()（不走 debounce），保证 reset 后立刻推送清零数据
-      try { await _doSync(); } catch(e) { console.warn('[reset] sync failed:', e.message); }
+      // L1 守卫部署后 _doSync 会拒绝 wsm/rwd 缩水。reset 走专用端点 /api/reset
+      // 服务端权威清零（保留 profile/wordInput/settings/tipDismissed），绕过缩水保护。
+      try {
+        var rr = await fetch('/api/reset', {
+          method: 'POST',
+          headers: await getAuthHeaders(true),
+          body: JSON.stringify({ userId: userRef.current.id }),
+        });
+        if (rr.ok) {
+          var rj = await rr.json();
+          if (rj.version) syncVersionRef.current = rj.version;
+        }
+      } catch(e) { console.warn('[reset] /api/reset failed:', e.message); }
     }
 
     alert('✅ 所有记录已清除，应用已重置为初始状态。');
@@ -4782,6 +4804,8 @@ export default function App() {
       var d = await loadSave() || {};
       d.wordInput = finalWordInput;
       await doSave(d);
+      // L3 intent：上传是用户主动行为，授权服务端守卫放行 wordInput 长度变化
+      _intentRef.current = 'user_upload';
       if (userRef.current) syncToCloud();
     } catch (err) { setError("文件解析失败: " + err.message); setFileLabel(file.name); }
     if (fileRef.current) fileRef.current.value = "";
