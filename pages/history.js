@@ -1330,6 +1330,7 @@ export default function HistoryPage() {
           {phase === "conversation" && topic && (
             <ConversationStream
               topic={topic}
+              effectiveTurns={effectiveTurns}
               turnIndex={turnIndex}
               conversationLog={conversationLog}
               aiStreaming={aiStreaming}

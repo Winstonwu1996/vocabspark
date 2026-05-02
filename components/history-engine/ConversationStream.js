@@ -70,9 +70,13 @@ export function ConversationStream(props) {
     return function() { clearTimeout(t1); clearTimeout(t2); };
   }, [log.length, props.aiStreaming, props.aiThinking, turnIndex]);
 
-  // 完成所有 13 轮？
-  var allDone = turnIndex >= topic.conversationTurns.length;
-  var currentTurn = !allDone ? topic.conversationTurns[turnIndex] : null;
+  // 完成所有轮？
+  // Story-First Pedagogy 桥接：
+  //   优先用 props.effectiveTurns（pages/history.js 通过 getEffectiveTurns 注入）
+  //   fallback 到 topic.conversationTurns（向后兼容 — 如果 host 还没传 effectiveTurns）
+  var turns = props.effectiveTurns || topic.conversationTurns || [];
+  var allDone = turnIndex >= turns.length;
+  var currentTurn = !allDone ? turns[turnIndex] : null;
 
   // 当前 AI 轮已经流完了？
   var currentAILogged = currentTurn && log.find(function(e) {
