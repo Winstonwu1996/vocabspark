@@ -37,12 +37,17 @@ import {
   buildTurnPrompt,
   buildNarrativeSystemPrompt,
   buildNarrativeTurnPrompt,
+  buildStoryboardTurnPrompt,
   deriveTurnObjective,
   deriveTurnConstraints,
   buildDefinitionEvalPrompt,
   buildApplicationEvalPrompt,
   buildFreeChatSystemPrompt,
 } from '../lib/history-prompts';
+import {
+  getEffectiveTurns,
+  isStoryboardTopic,
+} from '../lib/history-runtime';
 import {
   loadProfile,
   parseProfileFields,
@@ -157,7 +162,7 @@ export default function HistoryPage() {
         userName: profileFields.userName,
       });
       // 加上"当前主对话进度"作为参考（让 AI 知道她已经学到哪了）
-      sys += "\n\n【当前主对话进度】她在主对话第 " + (turnIndex + 1) + " / " + topic.conversationTurns.length + " 轮（move = " + (topic.conversationTurns[turnIndex] || {}).move + "）。这是侧边追问，不要打断主对话节奏，只回答她侧边问题。";
+      sys += "\n\n【当前主对话进度】她在主对话第 " + (turnIndex + 1) + " / " + effectiveTurns.length + " 轮（move = " + (effectiveTurns[turnIndex] || {}).move + "）。这是侧边追问，不要打断主对话节奏，只回答她侧边问题。";
       sys = injectPlaceholders(sys, profileFields);
 
       var historyContext = newLog.slice(-6).map(function(e) {
@@ -264,6 +269,11 @@ export default function HistoryPage() {
   // S9 难度梯度：默认 Magna Carta（已成熟），但 fresh user 第一次推 Tang/Song（home advantage 难度低）
   var [topicId, setTopicId] = useState("magna-carta-1215");
   var topic = getTopic(topicId);
+  // ─── Story-First Pedagogy 桥接（见 docs/STORY_FIRST_PEDAGOGY.md）───
+  // 如 Topic 有 storyboard（lib/history-storyboards/{topicId}.js）走新模型，
+  // 否则 fallback 到旧 conversationTurns。effectiveTurns 屏蔽这个差异。
+  var effectiveTurns = topic ? getEffectiveTurns(topicId, topic) : [];
+  var isStoryboard = isStoryboardTopic(topicId);
 
   // ── narrative-driven 架构：当前 topic 的 canonical narrative（mount 时拉一次）──
   // 有 narrative 走新 prompt builder（稳定内核 + 千人千面）；
@@ -346,7 +356,7 @@ export default function HistoryPage() {
     if (typeof window === "undefined") return;
     setSidekickLog(loadSidekickLog(topicId));
     var inProg = loadInProgress(topicId);
-    if (inProg && inProg.turnIndex > 0 && inProg.turnIndex < (topic ? topic.conversationTurns.length : 13)) {
+    if (inProg && inProg.turnIndex > 0 && inProg.turnIndex < (topic ? effectiveTurns.length : 13)) {
       setSavedSession(inProg);
     } else {
       setSavedSession(null);
@@ -494,19 +504,30 @@ export default function HistoryPage() {
           englishLevel: englishLevel,
           roleContext: pendingRole,
         });
-        // 自动派生 objective / narrativePoint / askAbout / constraints
-        // （turn 自身可显式覆盖；没覆盖就走 deriveTurnObjective 默认）
-        var derived = deriveTurnObjective(turn);
-        var enrichedTurn = Object.assign({}, turn, {
-          objective: derived.objective,
-          narrativePoint: derived.narrativePoint,
-          askAbout: derived.askAbout,
-          constraints: deriveTurnConstraints(turn),
-        });
-        userPrompt = buildNarrativeTurnPrompt(enrichedTurn, {
-          lastUserAnswer: lastUserAnswer,
-          totalTurns: (topic.conversationTurns && topic.conversationTurns.length) || 13,
-        });
+        // ─── Story-First Pedagogy 分支 ───
+        // 如果 turn 是 storyboard 节点（_storyboardNode 存在）走新 prompt builder
+        // 否则用旧 buildNarrativeTurnPrompt（13-turn forced Socratic 模式）
+        if (turn._storyboardNode) {
+          userPrompt = buildStoryboardTurnPrompt(turn._storyboardNode, {
+            lastUserAnswer: lastUserAnswer,
+            totalNodes: effectiveTurns.length,
+            isResumeFromBranch: false,  // TODO Stage 2.2.b: 从 branch state 读
+          });
+        } else {
+          // 自动派生 objective / narrativePoint / askAbout / constraints
+          // （turn 自身可显式覆盖；没覆盖就走 deriveTurnObjective 默认）
+          var derived = deriveTurnObjective(turn);
+          var enrichedTurn = Object.assign({}, turn, {
+            objective: derived.objective,
+            narrativePoint: derived.narrativePoint,
+            askAbout: derived.askAbout,
+            constraints: deriveTurnConstraints(turn),
+          });
+          userPrompt = buildNarrativeTurnPrompt(enrichedTurn, {
+            lastUserAnswer: lastUserAnswer,
+            totalTurns: effectiveTurns.length || 13,
+          });
+        }
       } else {
         sys = buildHistorySystemPrompt({
           topic: topic,
@@ -586,14 +607,14 @@ export default function HistoryPage() {
     var nextIdx = turnIndex + 1;
     setTurnIndex(nextIdx);
     // O6：每次推进保存进度（mid-conversation only）
-    if (nextIdx > 0 && nextIdx < topic.conversationTurns.length && phase === "conversation") {
+    if (nextIdx > 0 && nextIdx < effectiveTurns.length && phase === "conversation") {
       saveInProgress(topicId, {
         turnIndex: nextIdx,
         conversationLog: conversationLog,
       });
     }
     // 走完最后一轮 → 清掉 in-progress
-    if (nextIdx >= topic.conversationTurns.length) {
+    if (nextIdx >= effectiveTurns.length) {
       clearInProgress(topicId);
     }
   };
@@ -602,7 +623,7 @@ export default function HistoryPage() {
   useEffect(function() {
     if (phase !== "conversation") return;
     if (!topic) return;
-    var turn = topic.conversationTurns[turnIndex];
+    var turn = effectiveTurns[turnIndex];
     if (!turn) return;
     if (turn.role === "ai" || turn.role === "ai-eval") {
       // 如已经有这轮的 log（避免重复 fetch）
@@ -621,7 +642,7 @@ export default function HistoryPage() {
   var submitUserResponse = function() {
     if (!userInput.trim()) return;
     var content = userInput.trim();
-    var turn = topic.conversationTurns[turnIndex];
+    var turn = effectiveTurns[turnIndex];
     setConversationLog(function(prev) {
       return prev.concat([{
         role: "user",
@@ -637,7 +658,7 @@ export default function HistoryPage() {
   // ─── 用户主动 escape action（累/没懂/跳过）—— 100% 准确，不靠 AI 自动诊断 ───
   // 三种 action 触发不同的 prompt 分支（lib/history-prompts.js 处理）
   var handleEscapeAction = function(action) {
-    var turn = topic.conversationTurns[turnIndex];
+    var turn = effectiveTurns[turnIndex];
     // 把 escape signal 当成"用户回答"加入 log，让 AI 下一轮看到
     var escapeContent;
     if (action === "tired") {
