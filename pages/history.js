@@ -47,6 +47,7 @@ import {
 import {
   getEffectiveTurns,
   isStoryboardTopic,
+  getPrewrittenContent,
 } from '../lib/history-runtime';
 import {
   loadProfile,
@@ -478,6 +479,32 @@ export default function HistoryPage() {
   // ─── AI 调用核心 ────────────────────────────────────────────────
   var fetchAIForTurn = async function(turn, lastUserAnswer) {
     if (!turn || turn.role === "user") return;
+
+    // ⭐ Story-First Pedagogy v3：Opus prewritten content 短路
+    // 如果 storyboard 节点有 prewritten content（hook + story phase）——
+    // 直接交付——skip API call——零 hallucination + 零延迟 + 零成本
+    var prewritten = getPrewrittenContent(turn, englishLevel === 'high' ? 'en' : 'cn');
+    if (prewritten) {
+      var prewrittenEntry = {
+        role: "ai",
+        turn: turn.n,
+        move: turn.move,
+        content: injectPlaceholders(prewritten, profileFields),
+        timestamp: new Date().toISOString(),
+        _prewritten: true,
+      };
+      setConversationLog(function(prev) { return prev.concat([prewrittenEntry]); });
+      // 模拟 streaming 节奏（让用户感觉自然——不是瞬间出现一大段）
+      setAiThinking(false);
+      // 自动进入下一节点（如果当前节点不需用户答）
+      if (turn.move === "geo") setGeoOpen(true);
+      if (turn.autoAdvance) {
+        setTimeout(function() { advanceTurn(); }, 1500);
+      }
+      return;
+    }
+
+    // ── synthesis + meta + branch 等需要 AI 实时生成 → 走 DeepSeek
     setAiThinking(true);
     setAiStreaming("");
     setError("");
