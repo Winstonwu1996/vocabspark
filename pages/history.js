@@ -48,6 +48,8 @@ import {
   getEffectiveTurns,
   isStoryboardTopic,
   getPrewrittenContent,
+  hasTopicLenses,
+  getTopicLenses,
 } from '../lib/history-runtime';
 import {
   loadProfile,
@@ -270,10 +272,16 @@ export default function HistoryPage() {
   // S9 难度梯度：默认 Magna Carta（已成熟），但 fresh user 第一次推 Tang/Song（home advantage 难度低）
   var [topicId, setTopicId] = useState("magna-carta-1215");
   var topic = getTopic(topicId);
-  // ─── Story-First Pedagogy 桥接（见 docs/STORY_FIRST_PEDAGOGY.md）───
+  // ─── Story-First Pedagogy v3 桥接（见 docs/STORY_FIRST_PEDAGOGY.md）───
   // 如 Topic 有 storyboard（lib/history-storyboards/{topicId}.js）走新模型，
-  // 否则 fallback 到旧 conversationTurns。effectiveTurns 屏蔽这个差异。
-  var effectiveTurns = topic ? getEffectiveTurns(topicId, topic) : [];
+  // 否则 fallback 到旧 conversationTurns。
+  // v3 lens 模型：用户可选不同角色视角看同一事件——effectiveTurns 按 lens 加载
+  var [selectedLensId, setSelectedLensId] = useState(null);
+  var topicLenses = topic ? getTopicLenses(topicId) : [];
+  var hasLensesForTopic = hasTopicLenses(topicId);
+  // 没选时默认第一个 lens（通常 king-john）；老 Topic 无 lens 时 selectedLensId 无效
+  var effectiveLensId = selectedLensId || (hasLensesForTopic && topicLenses[0] ? topicLenses[0].id : null);
+  var effectiveTurns = topic ? getEffectiveTurns(topicId, topic, effectiveLensId) : [];
   var isStoryboard = isStoryboardTopic(topicId);
 
   // ── narrative-driven 架构：当前 topic 的 canonical narrative（mount 时拉一次）──
@@ -1326,6 +1334,17 @@ export default function HistoryPage() {
               curriculum={curriculum}
               historyProfile={historyProfile}
               englishLevel={englishLevel}
+              topicLenses={topicLenses}
+              hasLensesForTopic={hasLensesForTopic}
+              selectedLensId={effectiveLensId}
+              onSelectLens={function(lensId) {
+                setSelectedLensId(lensId);
+                // 切 lens 重置进度（不同 lens 节点数量不同——log 会错位）
+                setConversationLog([]);
+                setTurnIndex(0);
+                setSavedSession(null);
+                clearInProgress(topicId);
+              }}
               onSetEnglishLevel={function(v) {
                 setEnglishLevelState(v);
                 saveEnglishLevel(v);
@@ -1335,6 +1354,7 @@ export default function HistoryPage() {
                 setConversationLog([]);
                 setTurnIndex(0);
                 setSavedSession(null);
+                setSelectedLensId(null);  // 切 Topic 重置 lens 选择
                 // 不重置 phase — 让她在 intro 屏看新 Topic
               }}
               onShowWalkthrough={function() { setShowWalkthrough(true); }}
@@ -2604,6 +2624,15 @@ function IntroScreen(props) {
       {/* N4: 通史脉络图 — 已学 + 待学 Topic 一览（点 Topic 卡可切换）*/}
       <ThroughLineMap topic={topic} onSwitch={props.onSwitchTopic} />
 
+      {/* ── Phase 3: Lens 选择卡（如 Topic 有多个 lens 可选）── */}
+      {props.hasLensesForTopic && props.topicLenses && props.topicLenses.length > 1 && (
+        <LensSelector
+          lenses={props.topicLenses}
+          selectedLensId={props.selectedLensId}
+          onSelect={props.onSelectLens}
+        />
+      )}
+
       {/* O6: 上次未完成？给"继续上次"和"重新开始"两个按钮 */}
       {props.savedSession && props.savedSession.turnIndex ? (
         <div style={{
@@ -2663,6 +2692,108 @@ function IntroScreen(props) {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── LensSelector — Phase 3 视角选择卡（Story-First Pedagogy v3）──
+// 用户在 Topic intro 选择 1 个 lens 进入对话
+// 每 lens = 1 个角色视角看同一历史事件——基础事实相同——情绪/角度/局限性不同
+// 跑完 1 个 lens 后用户可回 intro 选另一个 lens 重学（DBQ 训练）
+function LensSelector(props) {
+  var lenses = props.lenses || [];
+  var selectedId = props.selectedLensId;
+  var onSelect = props.onSelect || function() {};
+
+  // 角色 emoji（匹配每个 lens 的 id）
+  var lensIcon = {
+    'king-john': '👑',
+    'stephen-langton': '✍️',
+    'tom-villein': '🐑',
+  };
+
+  return (
+    <div style={{
+      background: HC.card,
+      padding: 18,
+      borderRadius: 16,
+      border: "1px solid " + HC.border,
+      marginBottom: 14,
+    }}>
+      <h3 style={{
+        margin: "0 0 6px",
+        fontFamily: FONT_DISPLAY,
+        fontSize: 16,
+        color: HC.ink,
+      }}>
+        🎭 选个视角进入这段历史
+      </h3>
+      <div style={{
+        fontSize: 12,
+        color: HC.textSec,
+        marginBottom: 12,
+        lineHeight: 1.55,
+      }}>
+        同一事件，不同角色看法不同。基础事实一样——情绪、角度、看到什么、看不到什么——完全不同。
+        跑完一个 lens 还可以回来换另一个重学。
+      </div>
+      <div style={{display: "flex", flexDirection: "column", gap: 10}}>
+        {lenses.map(function(lens) {
+          var active = selectedId === lens.id;
+          var icon = lensIcon[lens.id] || '🎭';
+          var minutes = Math.round(lens.nodeCount * 2.5);
+          return (
+            <button
+              key={lens.id}
+              onClick={function() { onSelect(lens.id); }}
+              style={{
+                textAlign: "left",
+                padding: "12px 14px",
+                background: active ? HC.accentLight : "transparent",
+                border: "2px solid " + (active ? HC.accent : HC.border),
+                borderRadius: 12,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                color: HC.text,
+                transition: "all 0.15s ease",
+              }}
+            >
+              <div style={{display: "flex", alignItems: "center", gap: 8, marginBottom: 4}}>
+                <span style={{fontSize: 22}}>{icon}</span>
+                <strong style={{fontSize: 14.5, color: HC.ink}}>
+                  {lens.nameCn} {lens.name !== lens.nameCn && '· ' + lens.name}
+                </strong>
+                {active && (
+                  <span style={{
+                    marginLeft: "auto",
+                    fontSize: 11,
+                    color: HC.accent,
+                    fontWeight: 600,
+                  }}>已选 ✓</span>
+                )}
+              </div>
+              <div style={{fontSize: 12, color: HC.teal, marginBottom: 4, fontWeight: 500}}>
+                {lens.role}
+              </div>
+              <div style={{fontSize: 12.5, color: HC.text, lineHeight: 1.55, marginBottom: 6}}>
+                {lens.description}
+              </div>
+              <div style={{fontSize: 11, color: HC.textSec, opacity: 0.85}}>
+                {lens.nodeCount} 节 · 约 {minutes} 分钟
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      <div style={{
+        marginTop: 10,
+        fontSize: 11,
+        color: HC.textSec,
+        fontStyle: "italic",
+        opacity: 0.85,
+      }}>
+        💡 第一次建议从 King John（戏剧性最强）开始；之后想看不同角度再换。
+      </div>
     </div>
   );
 }
