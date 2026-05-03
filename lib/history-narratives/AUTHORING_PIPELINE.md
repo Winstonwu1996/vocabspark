@@ -6,7 +6,7 @@
 
 ## 设计哲学
 
-**六个不可妥协的原则**（所有 Topic 共享）：
+**七个不可妥协的原则**（所有 Topic 共享）：
 
 1. **教材为锚** — narrative 建在教材之上，不替代教材。第 0 节明示教材出处（页码、章节）
 2. **Rule 0 中性** — "我作为一个中国人认为西方有其制度优势，但东方也有其制度优势。" Whig / 反向 essentialism 都拒
@@ -14,6 +14,51 @@
 4. **3 层架构各司其职**（2026-04-28 钉死）— Atlas（抽象）/ 对话（VIVID）/ Mastery（抽象）
 5. **明朝那些事儿密度**（2026-04-28 钉死）— 累不累跟字数无关跟抽象度有关；§3-§5 写作硬约束
 6. **VIVID always 不上状态机**（2026-04-29 钉死）— AI 自动诊断学生状态不可靠（DeepSeek 搞不定 nuance）；改用用户主动按钮 + 家长报告
+7. **⛔ 文化对应硬禁**（2026-05-02 加，根因）— 描述非中国历史时绝对不可用中国概念词类比翻译——这是 LLM 经典 culturalization bug——会篡改历史事实
+
+---
+
+## ⛔ 第 7 条详解：文化对应硬禁（写 narrative + 写 storyboard + runtime prompt 三处必须执行）
+
+**问题**：LLM 倾向把外国术语翻译成中国读者熟悉概念，但这是**类别错误**（category error）。
+
+**事故案例**：
+- ❌ Magna Carta 1215 narrative 把 wax seal / Great Seal 翻译成"玉玺"——历史事实是青铜印模 + 红蜡，不是玉——AI 经过 7 处自我强化，下游 storyboard + runtime 都污染。修复成本高。
+
+**禁用对照表**（写 narrative / storyboard / 改 prompt 时必须扫此表）：
+
+| ❌ 错误（中国化）| ✅ 正确（保留异域） | 错误后果 |
+|---|---|---|
+| 玉玺 / 御印 | 王室印玺 / Great Seal / wax seal / 蜡封印 | 篡改物质文化（玉 vs 青铜+蜡）|
+| 龙袍 | 王室袍 / 加冕袍 / coronation robe | 篡改服饰文化 |
+| 金銮殿 / 御书房 | 王座厅 / audience hall / Westminster Hall | 篡改建筑文化 |
+| 翰林 / 起居注 | 修士 / 编年史家 / chronicler / scribe | 篡改职业文化 |
+| 庙 / 宝刹 | 大教堂 / cathedral / 清真寺 / mosque | 篡改宗教文化 |
+| 朕 / 卿 / 圣上 | 国王 / 陛下 / King Y | 篡改语用文化 |
+| 太子 | 王储 / heir apparent / Crown Prince | 西方有自己 inheritance 体系 |
+| 宰相 / 丞相 | 大法官 / Chancellor / 大主教 / Archbishop | 西方分权体系不同 |
+| 皇后 | 王后 / Queen consort / Queen regent | 不是所有 Queen 都对应皇后 |
+| 圣旨 | 王令 / royal writ / charter / 教皇敕令 | 政教文化不同 |
+| 锦衣卫 / 东厂 | 私人卫队 / 御林军 / household guard | 中国特殊机构不可类比 |
+| 通宝 / 银两 | 金币 / 银马克 silver mark / dinar / shilling | 货币体系不同 |
+| 四书五经 / 八股 | 经院哲学 / Latin grammar / Aristotle | 教育体系不同 |
+| 江山 / 社稷 | 王国 / kingdom / realm | 中国"江山"不可对应 |
+
+**写作 + 修改约束**：
+- 写新 narrative 时——草稿完成后必须 grep 此表所有关键词
+- 写 storyboard / 改 prompt 时同样必须 grep
+- 任何 agent 协助生成时——prompt 必须包含此表（不是参考——是硬约束）
+- pre-commit lint 脚本 `scripts/check-narrative-cultural-fit.mjs` 自动扫描（待实现）
+
+**例外**：
+- 用户**明确**做中欧对照时——可以**并列**说"中国玉玺 vs 欧洲 Great Seal"——但**不能**把 Great Seal 单独叫"玉玺"
+- 同时代中国部分（§8）描述中国时——可以正常用玉玺/龙袍等——这是**真的中国**
+
+**根因解释**（给写 narrative 的人理解为什么这条重要）：
+LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——这是**统计偏差**不是**事实**——
+我们的产品对历史**事实**精确度比"流畅 metaphor"重要 100x——
+如果让中国孩子从 narrative 学到"1215 英国有玉玺"——我们就是在**教错的历史**——
+这违反第 1 条"教材为锚"原则——产品价值崩塌。
 
 ---
 
