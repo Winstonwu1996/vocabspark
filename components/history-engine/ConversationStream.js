@@ -20,6 +20,66 @@ import { HC } from './theme';
 import { renderBilingualText } from './bilingual';
 import { VoiceInputButton } from '../VoiceInputButton';
 
+// ─── Phase Divider — Story-First Pedagogy v3 视觉相位提示 ─────────
+// 当 AI 节点 move 从 cosplay (hook/story) 跳到 synthesis/meta，
+// 插入一个视觉 divider 让用户知道"已经跳出 cosplay，现在是 narrator 引导思考 / 反思"
+function PhaseDivider(props) {
+  var phase = props.phase;
+  var config = phase === "synthesis"
+    ? {
+        icon: "🤔",
+        title: "思考时间",
+        subtitle: "现在跳出角色——回头看，问几个问题",
+        bg: "rgba(95, 168, 160, 0.10)",     // 淡 teal — 凉色暗示理性
+        border: "1px solid rgba(95, 168, 160, 0.35)",
+        titleColor: "#4a8a82",
+      }
+    : phase === "meta"
+    ? {
+        icon: "✨",
+        title: "收尾反思",
+        subtitle: "走完这段历史 — 你带走什么",
+        bg: "rgba(196, 107, 48, 0.08)",     // 淡橙 — 暖色收尾
+        border: "1px solid rgba(196, 107, 48, 0.30)",
+        titleColor: "#a85525",
+      }
+    : null;
+
+  if (!config) return null;
+
+  return (
+    <div style={{
+      margin: "20px 0 14px",
+      padding: "12px 16px",
+      background: config.bg,
+      border: config.border,
+      borderRadius: 12,
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+    }}>
+      <span style={{fontSize: 22}}>{config.icon}</span>
+      <div>
+        <div style={{
+          fontSize: 13.5,
+          fontWeight: 700,
+          color: config.titleColor,
+          marginBottom: 2,
+        }}>
+          {config.title}
+        </div>
+        <div style={{
+          fontSize: 11.5,
+          color: HC.textSec,
+          lineHeight: 1.5,
+        }}>
+          {config.subtitle}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Source Card（史料卡） ─────────────────────────────────────────
 export function SourceCard(props) {
   var src = props.source;
@@ -112,11 +172,29 @@ export function ConversationStream(props) {
           }
           // AI bubble
           var isGeoTurn = entry.move === "geo";
+
+          // ─── Phase divider 检测（Story-First Pedagogy v3）───
+          // 当 AI 节点 move 从 hook/story 跳到 synthesis 或 meta——
+          // 在前面插一个视觉 divider 提示用户："已经跳出 cosplay，现在是反思 / 思考"
+          var prevAiEntry = null;
+          for (var pi = i - 1; pi >= 0; pi--) {
+            if (log[pi].role === "ai") { prevAiEntry = log[pi]; break; }
+          }
+          var prevPhase = prevAiEntry ? prevAiEntry.move : null;
+          var phaseDivider = null;
+          if ((entry.move === "synthesis" && prevPhase !== "synthesis") ||
+              (entry.move === "meta" && prevPhase !== "meta")) {
+            phaseDivider = (
+              <PhaseDivider key={"div-" + i} phase={entry.move} />
+            );
+          }
+
           return (
             <div key={i}>
+              {phaseDivider}
               <div className="bubble-row ai">
                 <div className="avatar">🦉</div>
-                <div className={"bubble ai " + (entry.isFallback ? "fallback" : "")}>
+                <div className={"bubble ai " + (entry.isFallback ? "fallback" : "") + (entry.move === "synthesis" || entry.move === "meta" ? " analytical" : "")}>
                   {renderBilingualText(entry.content, { topic: topic, onTermClick: props.onTermClick, onMustClick: props.onMustClick })}
                 </div>
               </div>
