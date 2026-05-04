@@ -62,7 +62,7 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 
 ---
 
-## ⛔ 第 8 条：Lens 写作 6 类硬规则（多轮 4-agent review 总结，2026-05-04 加）
+## ⛔ 第 8 条：Lens 写作 8 类硬规则（多轮 4-agent review 总结，2026-05-04 加；G/H 5-3 加）
 
 经过 Magna Carta + Crusades + Black Death 三个 Topic 的 4-agent review（每个 Topic 7thgrader / AP teacher / ESL teacher / Chinese teacher 各跑一遍）后总结。**所有规则都来自具体事故**——事故已修，规则防再发。
 
@@ -129,6 +129,54 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 3. **角色对白禁止中英 code-mix**（"不是 abstract" / "我 confused"）—— narrator 可以用术语 + gloss，**角色不能**
 4. **角色 vocabulary 与角色年龄/身份匹配**：14 岁女孩不说"世界观" / "意识形态" / "结构性" —— 用她那个年龄会说的话
 
+### G. Em-dash 密度预算（防 Black Death "—" 蔓延事故）
+
+**事故**：
+- Magna Carta 已收过一轮"em-dash 太多"用户反馈，但**修复没回流到全局规则**
+- Crusades + Black Death lens 又重复同样问题——Agnolo lens N1 hook 一段约 12 个 em-dash 链
+- 用户反馈："长破折号还是使用太多。这个问题我们在大宪章那里应该已经修复过了，为什么后面生成的还是有，是不是我们在大宪章部分的修改没有反向优化到我们的策略里"
+
+**根因**：LLM 中文生成偏好用 "——" 替代逗号 + 句号 + 括号——单个 OK，连成 "X——Y——Z——A——B" 是节奏 tic 不是 voice
+
+**规则**：
+1. **每句最多 1 个 em-dash**（中文 "——" / 英文 "—"）；用 em-dash **替代** comma 是 OK，**串联** 是不 OK
+2. **绝不**出现 "X——Y——Z——A" 4 段以上的 em-dash 链
+3. **lens card description 字段**禁止 em-dash（用句号）—— 这是用户第一眼看见的 UI，密度敏感
+4. 用 em-dash 预算的 mental model：把它当成 *英文 em-dash* —— 一段最多 1-2 个，正常 prose 应主要用句号 / 逗号 / 括号
+
+**自检**：lens 写完后 grep "——.*——.*——" 看 3-em-dash 连接的句子，**这种基本是要拆**
+
+### H. Lens card description 字段 schema（防 LensSelector "你扮演 X" 重复事故）
+
+**事故**：
+- LensSelector 卡片 description 字段被写成"故事概括"——"你扮演 X——他 Y——他 Z——他 ABCDE"——
+- 用户反馈："不够简洁，比如每一个开头都是你扮演谁谁谁，但其实只要在整个板块上表明角色扮演，下面就不用啰嗦的每一个都重复一遍。类似的，这部分应该类似一个人物简介一样，清晰明快的介绍，而不是这里就表达的像讲故事一样。讲故事是在正文部分的任务。"
+
+**规则**——`description` 字段写作 schema：
+1. **不要**前缀 "你扮演 X"——LensSelector 卡片 header 已经有 "选个视角进入这段历史" 总说明
+2. **3-4 句**完整中文句子，**句号收尾**，不用 em-dash
+3. 句子结构（character profile 模式）：
+   - **句 1**：角色身份 + 一句关键设定（年龄/职业/家族）
+   - **句 2**：一个具体的开场钩子时刻或细节（具体时间 + 动作 + 物，不展开 plot）
+   - **句 3**：这个 lens 让用户经历什么（不剧透 emotional payoff，不展开后半段细节）
+4. **禁止**：
+   - 罗列整个 plot timeline 的"X 然后 Y 然后 Z 然后 ABC"
+   - 揭示跨 lens 对位 echo（如 Devorah lens 不要预先告诉用户"Yitzhak 跟 Konrad lens 是同一人"——让用户自己发现）
+   - 长 em-dash 链
+   - "**你会经历**" / "**你会发现**" 这种重复 voice marker
+
+**正例**（Magna Carta King John lens 5-3 修订版）：
+> 英格兰国王，在位 17 年丢掉了诺曼底、和教皇打了 6 年、被自己贵族打输一场内战。1215 年 6 月 15 日被逼盖印 Magna Carta，但当晚就在写信请求教皇废掉它。这个 lens 让你从 perpetrator-loser 内部看这张纸是怎么诞生的。
+
+3 句、1 个 em-dash 都没有、character profile 不是 plot summary。
+
+**反例**（Devorah lens 旧版）：
+> 你扮演 Devorah bat Yitzhak——一个虚构的 14 岁 Strasbourg 犹太女孩（与用户女儿 Willow 同龄段代入设计）——她父亲 Yitzhak ben Abraham 是 *Judengasse* 的银匠——1348 年 11 月某日早上 8 岁基督徒邻居 Klara 走过她家窗户没看她——她 14 岁第一次懂"邻居会变"——1349 年 2 月 13 日晚基督徒邻居 Brigitta 冒生命危险藏她家 5 口在地窖——2 月 14 日地窖里念 *Tehillim* 第 23 篇 30 多遍——半夜父亲跪给 Hans...
+
+15 个 em-dash 串联、罗列整个 plot、揭示 cross-lens echo、有 "你扮演" 前缀、有 "你会经历" 重复——**5 项 schema 违反**。
+
+---
+
 ### F. 数学 + 年代自检（防 664/564 + Bohemond 42/43 + Kristallnacht 1933/1938 事故）
 
 **事故**：
@@ -155,6 +203,8 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 - ✅ Dev-note 隔离（D）
 - ✅ 角色称谓一致 + 中英 code-mix 禁（E）
 - ✅ 数学 + 年代自检（F）
+- ✅ Em-dash 密度预算（G）—— 5-3 加
+- ✅ Lens card description schema（H）—— 5-3 加
 - ✅ Cultural ban 14 词（第 7 条）
 
 **不能前置（必须 case-by-case 跑 4-agent review）**：

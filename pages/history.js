@@ -1330,6 +1330,7 @@ export default function HistoryPage() {
           {phase === "intro" && !needsProfileSetup && (
             <IntroScreen
               topic={topic}
+              topicId={topicId}
               onStart={startConversation}
               curriculum={curriculum}
               historyProfile={historyProfile}
@@ -2630,6 +2631,7 @@ function IntroScreen(props) {
           lenses={props.topicLenses}
           selectedLensId={props.selectedLensId}
           onSelect={props.onSelectLens}
+          topicId={props.topicId}
         />
       )}
 
@@ -2710,7 +2712,22 @@ function LensSelector(props) {
     'king-john': '👑',
     'stephen-langton': '✍️',
     'tom-villein': '🐑',
+    'roger-toulouse': '⚔️',
+    'alexios': '🦅',
+    'aisha-jerusalem': '🧕',
+    'agnolo-siena': '🪶',
+    'konrad-strasbourg': '🪓',
+    'devorah-strasbourg': '🕯️',
   };
+
+  // 第一次建议哪个 lens（每 Topic 不同——按戏剧强度 / 入门难度）
+  var firstChoiceHint = {
+    'magna-carta-1215': { id: 'king-john',     reason: '戏剧性最强' },
+    'crusades-1099':    { id: 'roger-toulouse', reason: '4 年 + 4 个动机最容易代入' },
+    'black-death-1347': { id: 'agnolo-siena',   reason: '5 月 8 日第一笔字最容易切入' },
+  };
+  var firstHint = firstChoiceHint[props.topicId];
+  var firstLens = firstHint && lenses.find(function(l) { return l.id === firstHint.id; });
 
   return (
     <div style={{
@@ -2734,8 +2751,7 @@ function LensSelector(props) {
         marginBottom: 12,
         lineHeight: 1.55,
       }}>
-        同一事件，不同角色看法不同。基础事实一样——情绪、角度、看到什么、看不到什么——完全不同。
-        跑完一个 lens 还可以回来换另一个重学。
+        同一事件，不同角色看法不同。基础事实一样，情绪、角度、看到什么、看不到什么完全不同。跑完一个 lens 还能回来换另一个。
       </div>
       <div style={{display: "flex", flexDirection: "column", gap: 10}}>
         {lenses.map(function(lens) {
@@ -2785,15 +2801,17 @@ function LensSelector(props) {
           );
         })}
       </div>
-      <div style={{
-        marginTop: 10,
-        fontSize: 11,
-        color: HC.textSec,
-        fontStyle: "italic",
-        opacity: 0.85,
-      }}>
-        💡 第一次建议从 King John（戏剧性最强）开始；之后想看不同角度再换。
-      </div>
+      {firstLens && (
+        <div style={{
+          marginTop: 10,
+          fontSize: 11,
+          color: HC.textSec,
+          fontStyle: "italic",
+          opacity: 0.85,
+        }}>
+          💡 第一次建议从 {firstLens.nameCn || firstLens.name}（{firstHint.reason}）开始，之后换其他角度。
+        </div>
+      )}
     </div>
   );
 }
