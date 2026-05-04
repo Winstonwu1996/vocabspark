@@ -1289,7 +1289,7 @@ export default function HistoryPage() {
           <TopicHero topic={topic} phase={phase} />
 
           {/* ── Geography Section ── */}
-          {topic && (
+          {topic && topic.geography && (
             <GeographySection
               topic={topic}
               isOpen={geoOpen}
