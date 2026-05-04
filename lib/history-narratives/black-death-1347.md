@@ -250,7 +250,7 @@ authorNotes: |
 
 **但是**——
 **没人听他的**。
-**1349 年 1 月 24 日 Strasbourg 屠杀 2000 个犹太人**（直接活活烧死）——
+**1349 年 2 月 14 日（Saint Valentine's Day） Strasbourg 屠杀 2000 个犹太人**（直接活活烧死）——
 **1349 年 8 月 24 日 Mainz 屠杀 6000 个犹太人**——
 **整个 Rhineland 几十个犹太社区被灭**。
 
@@ -835,14 +835,14 @@ Ibn al-Wardi **用 plague 当一个证明**这个神学观念。
 
 ---
 
-#### Strasbourg 犹太人 Rachel（1349 年 1 月被烧死）
+#### Strasbourg 犹太人 Rachel（1349 年 2 月 14 日被烧死）
 
 **Rachel——34 岁——Strasbourg 一个 Jewish 银匠的妻子**——
 **两个孩子 6 岁和 4 岁**——
 **1348 年秋天 plague 还没到 Strasbourg**——
 **但 Rhineland 谣言已经在传**：**犹太人在井里下毒**。
 
-**1349 年 1 月 24 日 —— 那一天**：
+**1349 年 2 月 14 日（Saint Valentine's Day） —— 那一天**：
 
 - **早上 Strasbourg 行政长官 Schwarber 抵抗**——他不想烧人——
 - **但 craft guild（行会）+ 主教**联合压力——他被罢免——
@@ -859,7 +859,7 @@ Ibn al-Wardi **用 plague 当一个证明**这个神学观念。
 
 ##### 这一天的历史重量
 
-**1349 年 1 月 24 日 Strasbourg**——
+**1349 年 2 月 14 日（Saint Valentine's Day） Strasbourg**——
 **对犹太历史的意义**——**比 Holocaust 更早 + 更深**——
 **因为这是欧洲反犹的"模板**事件"**：
 - **疫情 → 找替罪羊 → 屠杀犹太人**
@@ -983,7 +983,7 @@ Ibn al-Wardi **用 plague 当一个证明**这个神学观念。
 **两个不同文明的两个文学家**——
 **面对同一个灾难**——**用同一种文学反应**（**通过书写来抗拒虚无**）。
 
-### 1349 年 1 月 24 日 — Strasbourg 屠杀犹太人
+### 1349 年 2 月 14 日（Saint Valentine's Day） — Strasbourg 屠杀犹太人
 
 **Strasbourg——欧洲反犹史最黑的一天**——
 **2000 犹太人被烧死**（详情见 §3 Rachel 故事）。

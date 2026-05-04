@@ -142,7 +142,7 @@ This was **the prelude — 30 years before the plague arrived.** **People were a
 1346  Mongols besiege Caffa (Crimea) — catapult plague corpses over the walls (first recorded biological warfare)
 1347  October — Genoese ships flee Caffa, unload in Sicily
 1348  Spring — plague reaches Avignon (papal seat); summer — England
-1349  January 24 — Strasbourg massacres Jews; Europe's darkest antisemitic year
+1349  Feb 14 — Strasbourg massacres Jews (Saint Valentine's Day); Europe's darkest antisemitic year
 1349  April-September — Black Death peaks in England (London loses 60%)
 1350  Decameron completed (Boccaccio in Florence: "10 youths flee plague to the countryside, tell stories")
 1352  First European wave ends (but recurring outbreaks continue to the 1665 Great Plague of London)
@@ -212,7 +212,7 @@ He issued a second bull in January 1349. **He personally received Jewish refugee
 
 **No one listened.**
 
-**On January 24, 1349, Strasbourg burned 2,000 Jews to death.** **On August 24, 1349, Mainz killed 6,000.** **Dozens of Jewish communities across the entire Rhineland were wiped out.**
+**On February 14, 1349 (Saint Valentine's Day), Strasbourg burned 2,000 Jews to death.** **On August 24, 1349, Mainz killed 6,000.** **Dozens of Jewish communities across the entire Rhineland were wiped out.**
 
 **This was the darkest year of antisemitism in European history before the Holocaust.** **The 1349 pogroms became the "template" for the next 600 years of European Jew-hatred** — **the seed of 1881 Russia and 1933 Nazi Germany was planted right here.**
 
@@ -608,11 +608,11 @@ This is **medieval Islamic egalitarianism in action.** Islam, more than medieval
 
 ---
 
-#### Rachel — 34-year-old Jewish woman, Strasbourg, January 1349
+#### Rachel — 34-year-old Jewish woman, Strasbourg, February 14, 1349
 
 **Rachel — 34 years old — wife of a Jewish silversmith in Strasbourg.** **Two children, ages 6 and 4.** **Plague hadn't yet reached Strasbourg in autumn 1348.** **But the rumors had: "The Jews are poisoning the wells."**
 
-**January 24, 1349 — the day:**
+**February 14, 1349 (Saint Valentine's Day) — the day:**
 
 - **Morning. The Strasbourg city governor, Schwarber, resists.** **He doesn't want to burn anyone.**
 - **But the craft guilds and the bishop pressure him out.** **He is removed from office.**
@@ -627,7 +627,7 @@ This is **medieval Islamic egalitarianism in action.** Islam, more than medieval
 
 ##### The historical weight of that day
 
-**January 24, 1349, Strasbourg.** **Its meaning for Jewish history is older and deeper than the Holocaust** — because this is the **template event** of European antisemitism:
+**February 14, 1349 (Saint Valentine's Day), Strasbourg.** **Its meaning for Jewish history is older and deeper than the Holocaust** — because this is the **template event** of European antisemitism:
 
 **Pandemic → find a scapegoat → kill the Jews.**
 
@@ -718,7 +718,7 @@ This is **medieval Islamic egalitarianism in action.** Islam, more than medieval
 
 **This is one of history's strange moments:** **two writers from two different civilizations, facing the same catastrophe, choosing the same response — pushing back against meaninglessness through the act of writing.**
 
-### January 24, 1349 — Strasbourg massacres the Jews
+### February 14, 1349 (Saint Valentine's Day) — Strasbourg massacres the Jews
 
 **Strasbourg — Europe's darkest day of antisemitism.** **2,000 Jews burned to death.** (Full account in §3, Rachel's story.)
 
