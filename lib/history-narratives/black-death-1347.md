@@ -467,6 +467,72 @@ authorNotes: |
 
 ---
 
+#### Agnolo di Tura del Grasso（约 1313-1363，Siena chronicler）
+
+##### 出身：Siena 一个工会账房，业余 chronicler
+
+**约 1313 年生于 Siena**——
+**他自己署名 "Agnolo di Tura, 也叫 grasso（"胖子"）"**——
+**这不是别人给他取的外号——是他自己在 Cronaca 里这么写自己**——
+
+**Agnolo 是 Siena 鞋匠工会的 bookkeeper（账房）**——
+**他每天的本职工作**是：**给工会记账、收会费、登记新成员**——
+**业余他写一本 *Cronaca senese*（《Siena 编年史》）**——
+**记录从 1300 到 1351 年 Siena 城邦发生的一切**——
+**这是中世纪意大利城邦"市民修史"传统的一部分**：
+**学问不是垄断在修士手里——账房和工匠也写历史**。
+
+**他的 Cronaca 1900 年代被现代历史学家在 Siena 国家档案馆重新发现**——
+**今天读 Black Death 历史的所有书都引他**——**因为他是为数不多的"幸存者从内部写"的同代记录**。
+
+##### 他的 5 个孩子 + 1348 年 7 月那 9 天
+
+**Agnolo 1348 年 35 岁**——**有妻子和 5 个孩子**——
+**1348 年 5 月 plague 进 Siena**——
+**6-9 月 plague 顶峰**——**Siena 死了 30000 人，约占总人口 50-60%**——
+
+**1348 年 7 月底 Agnolo 自己 5 个孩子——一周内一个一个死**——
+**他亲手埋了 5 个**——**挖了 5 个坑**——
+
+**他在 Cronaca 里只写了一句**（这是 Black Death 历史最锋利的一句）：
+
+> **"E io, Agnolo di Tura, detto el grasso, soppellii con le mie mane cinque mei figliuoli in una fossa; e così fece molti altri ancora. E furono molti che furono coperti di terra così poco, che e cani li discivellavano e mangiavano per la città molti corpi."**
+>
+> **"我，Agnolo di Tura，绰号'胖子'，亲手把我的五个孩子埋进一个坑里。还有许多人也是这样做的。许多尸体被土盖得很浅，狗把他们扒出来在城里吃。"**
+
+**但他没停笔**——
+**1348 年 8 月 plague 高峰过后**——
+**他继续写 Cronaca**——
+**他没有写"为什么"——但后来的历史学家从他的 Cronaca 里推断**——
+**他大概想：**"如果我不写这个，没人会知道我们活过。"**
+
+##### 1351 年——他写完 Cronaca 最后一笔
+
+**1351 年 Black Death 第一波在 Siena 结束**——
+**Agnolo 把 Cronaca 写完最后一笔**——**然后停笔**——
+**他活到 1363 年（50 岁）才死**（很可能是第二波 plague，但具体死因不确定）——
+**但 Cronaca 1351 之后他没再续**——
+
+**为什么停笔？**
+**这是 lens 留给孩子思考的真问题**——
+**也许他写完那一年终于"写够了"**——
+**也许他不再相信"记录"能换来任何东西**——
+**也许他终于愿意让自己——只是个鞋匠工会的账房——而不是 chronicler**。
+
+> ⚠️ **教学要点**：**Agnolo vs Boccaccio**——
+> **同一年同一地区（Tuscany）的两位 chronicler**——
+> **Boccaccio 是文学家——把 plague 写成 *Decameron* 的框架**——
+> **Agnolo 是账房——把 plague 写成账本**——
+> **两个人留给后世的不一样**：
+> - **Boccaccio 的《Decameron》**变成**文艺复兴文学起点**
+> - **Agnolo 的 Cronaca**变成**Black Death 历史最重要的一手史料**
+>
+> **历史的"声音"不只来自天才作家**——
+> **也来自一个会记账的胖子鞋匠工会账房**——
+> **他记录死亡只是因为他"会记账"——但他记的就是历史**。
+
+---
+
 ### 伊斯兰方
 
 #### Ibn al-Wardi（伊本·瓦尔迪，约 1290-1349）

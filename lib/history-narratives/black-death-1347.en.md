@@ -362,6 +362,56 @@ He saw with his own eyes:
 
 ---
 
+#### Agnolo di Tura del Grasso (c. 1313-1363, Sienese chronicler)
+
+##### Background: a guild bookkeeper in Siena, an amateur chronicler
+
+**Born in Siena around 1313.** **He signed his work "Agnolo di Tura, called *grasso* (the Fat)."** **The nickname is not an outsider's joke — he gave it to himself in his own *Cronaca*.**
+
+**Agnolo was the bookkeeper of the Siena shoemakers' guild.** **His daily work was recording dues, registering new members, balancing the guild's accounts.** In his spare time he wrote a *Cronaca senese* (*Chronicle of Siena*) — recording everything that happened in the city-state from 1300 to 1351.
+
+**This was part of a medieval Italian city-state tradition: history was no longer the monopoly of monks and clerics. Bookkeepers, merchants, and craftsmen wrote it too.**
+
+**His *Cronaca* was rediscovered by modern historians in the early 20th century in the Siena state archives.** **Today, every serious book on the Black Death cites him** — because he is one of the very few survivors who wrote the plague *from inside*.
+
+##### His five children, and those nine days in July 1348
+
+**Agnolo was 35 in 1348.** **He had a wife and five children.** **The plague reached Siena in May 1348.** **It peaked from June through September.** **Siena lost about 30,000 people — roughly 50–60% of the population.**
+
+**In late July 1348, Agnolo's five children died one after another within a single week.** **He buried all five with his own hands — five graves.**
+
+He recorded only one sentence in the *Cronaca* — the most razor-sharp single line in the entire historical record of the Black Death:
+
+> **"E io, Agnolo di Tura, detto el grasso, soppellii con le mie mane cinque mei figliuoli in una fossa; e così fece molti altri ancora. E furono molti che furono coperti di terra così poco, che e cani li discivellavano e mangiavano per la città molti corpi."**
+>
+> **"I, Agnolo di Tura, called the Fat, buried my five children with my own hands in a single pit. And many others did the same. So many bodies were covered with so little earth that the dogs dug them up and ate them in the city."**
+
+**But he did not stop writing.** **After the peak passed in August 1348, he kept writing the *Cronaca*.** **He never wrote down "why."** **But later historians, reading his *Cronaca*, infer one possible motive:** **"If I do not write this, no one will know we lived."**
+
+##### 1351 — He finishes the *Cronaca* and lays the pen down
+
+**The first wave of the Black Death ended in Siena in 1351.** **Agnolo wrote the final entry of his *Cronaca*. Then he stopped writing.** **He lived another twelve years and died in 1363, at about 50** (most likely in the second wave of plague, though the exact cause is uncertain). **But he never resumed the *Cronaca* after 1351.**
+
+**Why did he stop?**
+**This is the real question the lens leaves for the reader.**
+**Maybe by then he had written enough.**
+**Maybe he no longer believed that recording could redeem anything.**
+**Maybe he was finally ready to be only what he had always been — a guild bookkeeper, not a chronicler.**
+
+> ⚠️ **Teaching note: Agnolo vs. Boccaccio.**
+> **Two chroniclers of the same year, the same region (Tuscany).**
+> **Boccaccio was a literary writer. He turned plague into the framing device of the *Decameron*.**
+> **Agnolo was a bookkeeper. He turned plague into a ledger.**
+> **What each man left behind is different:**
+> - **Boccaccio's *Decameron* became the starting point of Renaissance literature.**
+> - **Agnolo's *Cronaca* became the most important primary source for Black Death history.**
+>
+> **History's voice does not come only from genius writers.**
+> **It also comes from a fat man who happened to keep the books for the shoemakers' guild.**
+> **He recorded the dying because he "knew how to keep records." But what he recorded was history.**
+
+---
+
 ### The Islamic Side
 
 #### Ibn al-Wardi (c. 1290-1349)
