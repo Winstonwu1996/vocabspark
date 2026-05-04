@@ -62,6 +62,112 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 
 ---
 
+## ⛔ 第 8 条：Lens 写作 6 类硬规则（多轮 4-agent review 总结，2026-05-04 加）
+
+经过 Magna Carta + Crusades + Black Death 三个 Topic 的 4-agent review（每个 Topic 7thgrader / AP teacher / ESL teacher / Chinese teacher 各跑一遍）后总结。**所有规则都来自具体事故**——事故已修，规则防再发。
+
+写 lens / storyboard / agent prompt 时——这 6 类规则与第 7 条文化禁用**同级硬约束**——不是建议，是必须。
+
+### A. Anti-fabrication 显式化（防 Alexios 私人日记 + Agnolo una fossa 事故）
+
+**事故**：
+- Crusades Alexios lens 5 处伪造"私人日记"+ 假《Alexiad》卷数引证（N8/N10/N11/N12 散布）
+- Black Death Agnolo lens 把 documented "in una fossa"（一个坑）戏剧化为"5 separate pits in own field"，没显式标合成
+
+**规则**：
+1. 戏剧化人物 internal thought / 没在 source record 里的细节时——**必须**用"this lens lets you hear what was turning in [X]'s mind"或"这一段是 lens 让你听见——他没写下来，也没说出口——但他自己知道"框架
+2. **禁止**伪造 documented quote / journal / archive citation 让戏剧化看起来"有据"
+3. documented quote **必须完整**引用——要缩短用 ellipsis "..." 标记，不要砍头去尾让 quote 看起来像独立短句
+4. lens 内合成细节（虚构人物名/年龄/场景）——**显式**标"this is dramatic interior monologue / lens invention; the documented record is X"
+
+### B. Synthesis 节点纪律（防 Konrad N10 学者堆 + N11 道德懦夫 + Tyerman 错位事故）
+
+**事故**：
+- Black Death Konrad N10 一节堆 4 个学者（Arendt + Milgram + Aristotle + Williams）—— 12 岁 ESL 直接 skip
+- Black Death Konrad N11 标签 "moral-coward reading" 预判答案 —— DBQ 中立性丢失
+- Crusades Roger N10 把 Tyerman 归为"organized murder"立场 —— Tyerman 实际是 synthesizing 派，不接受这个归位
+
+**规则**：
+1. **每个 synthesis 节点最多 1-2 个 named scholar**——其余用学派通称（"modern critical reading" / "trauma-aware historiography" / "structural-victim reading"）
+2. **学派归属必须精确**——不要用某学者名字代言他实际不持有的立场。Cohn 不是道德派 / Tyerman 不是 organized-murder 派 / Norwich 不是 critical-of-Alexios 派
+3. **Synthesis 标签必须中立**——用 neutral school name（"transitional-justice reading"）而**不是**预判性形容词（"moral-coward reading"）
+4. **"两边都站得住" + "想 30 秒。" 收尾**——不预判用户答案
+
+### C. Voice 标杆对齐（防 Crusades 读法 A/B 不一致事故）
+
+**事故**：
+- Crusades 全 lens 用「读法 A / 读法 B」+「想 30 秒答」，与 Magna Carta sign-off 后的标杆「一种说法 / 另一种说法 / 想 30 秒。」不一致
+- Black Death lens 1 inherited 同样旧 voice，Chinese reviewer 直接抓
+
+**规则**（lens 起草必须遵守）：
+- **CN**：「**一种说法**」+「**另一种说法**」+「想 30 秒。」（句号收尾）
+- **EN**：「**One view —**」+「**The other view —**」+「Take thirty seconds.」+「Both sides stand.」
+- **禁止**：「读法 A / B」/「Reading A / B」/「论点 A / B」/「想 30 秒答」/「你的论证比结论重要」/「Your reasoning matters more」
+- 此规则**所有 lens** 必须遵守，不论 Topic
+
+### D. Dev-note 严格隔离（防 Konrad N6 narrative kernel §3 泄漏事故）
+
+**事故**：Black Death Konrad N6 EN 字段："The narrative kernel §3 chapter on Rachel confirms it" —— 开发笔记字面泄漏到学生 EN 内容
+
+**规则**：
+- 学生 facing 的 `cn:` / `en:` 字段**绝对禁止**出现以下 dev-meta：
+  - "narrative kernel §X" / "per spec" / "see lens design"
+  - "narrativeRef" 字段值的字面引用
+  - 任何 lens 设计 brief 里的内部术语
+- "lens 让你..." / "this lens lets you hear..." **是允许的**（这是面向学生的元说明，不是 dev-note）
+
+### E. 角色称谓 + 语言一致性（防 Devorah Aba 滑回 + abstract code-mix + 世界观事故）
+
+**事故**：
+- Black Death Devorah lens *Aba* 滑回"我爸" 2 处（半夜 Hans 节）—— voice break
+- Black Death Devorah N7 "不是 abstract" 中英 code-mix —— 14 岁角色对白不会用英文术语
+- Black Death Devorah N5 "心里第一次有了一个不简单的世界观" —— "世界观" 14 岁不会用
+
+**规则**：
+1. **家庭称谓在 lens 内一致**：*Aba* / *Ima* / *Bubbe* / *baba* / *ummi* / *父亲* —— 用一种就一直用一种，**不滑回**中文常规称谓
+2. **Cultural ban 14 词** + 中国家庭称谓（娘亲 / 相公 / 父亲大人 / 舅舅 / 姨夫）+ 中国官职（宰相 / 丞相 / 尚书 / 将军）严禁出现在非中国 lens
+3. **角色对白禁止中英 code-mix**（"不是 abstract" / "我 confused"）—— narrator 可以用术语 + gloss，**角色不能**
+4. **角色 vocabulary 与角色年龄/身份匹配**：14 岁女孩不说"世界观" / "意识形态" / "结构性" —— 用她那个年龄会说的话
+
+### F. 数学 + 年代自检（防 664/564 + Bohemond 42/43 + Kristallnacht 1933/1938 事故）
+
+**事故**：
+- Magna Carta 664 → 564 数学错（1215 - 651 = 564，不是 664）—— Willow 抓出来
+- Crusades Bohemond 1097 年 "42 岁" → 43（1054 生 + 1097 = 43）；Anna 1099 "16 岁" → 15（1083/12 生 + 1099/8 = 15 岁 8 月）
+- Black Death Kristallnacht "1933 年" → 1938（实际 1938/11/9-10）；Wannsee Conference 1942（不是 1933）
+
+**规则**：
+1. **所有"X 年前 / X 年后"算术**自检：`(event_year - reference_year)` 必须等于声明的差值
+2. **所有人物年龄**自检：`(event_year - birth_year)` 必须等于声明的年龄；月份精度（生日是否过）影响结果时显式说明
+3. **重要事件年份**写完后对照标准 reference（维基 / AP textbook）：Kristallnacht 1938 / Wannsee 1942 / Strasbourg massacre 1349/02/14 / Nicaea 1097/05/19 / Magna Carta 1215/06/15 等
+4. lens 草稿写完后**必须 grep 所有具体数字 + 年份**，与 narrative kernel + 维基对照
+
+---
+
+## ⚠️ Pre-prompt vs Case-by-Case 决策表
+
+经验：**不是所有 review 反馈都能 pre-prompt 化**。前置规则只能覆盖**确定性 + 可执行 + 跨 Topic 一致**的内容。
+
+**可前置（已加入第 8 条 A-F）**：
+- ✅ Anti-fabrication framing（A）
+- ✅ Synthesis 学者密度 + 中立标签（B）
+- ✅ Voice 标杆对齐（C）
+- ✅ Dev-note 隔离（D）
+- ✅ 角色称谓一致 + 中英 code-mix 禁（E）
+- ✅ 数学 + 年代自检（F）
+- ✅ Cultural ban 14 词（第 7 条）
+
+**不能前置（必须 case-by-case 跑 4-agent review）**：
+- ❌ 具体事实精度（具体年份/数字/名字/引文）—— 每 Topic 不一样，需 AP teacher 真实 review
+- ❌ Counter-frame essentialism risk —— synthesis 节点 framing 是否塌成单一答案，需要专家判断
+- ❌ ESL Lexile 800-1000 实测 —— 需要 ESL teacher 真实评估
+- ❌ Cultural sensitivity nuance（如 Devorah "let go" vs "recognize" 是否反映 Jewish memory tradition / 拉丁兵屠 Aisha 父亲场景的文化精度）—— 需要文化专家
+- ❌ 角色心理 plausibility（14 岁创伤性否认是否成立 / 12 岁穆斯林神学疑问是否过早）—— 需要儿童心理学/阅读专家
+
+**结论**：第 8 条 A-F 防的是"低层 systemic 错误"（事故重复发生 + 跨 Topic 一致 + 可机械检测）。**4-agent review 仍然必跑**——它防的是"高层 substantive 错误"（具体事实 + 文化 + 教学法判断）。
+
+---
+
 ## 产品 3 层架构
 
 ```
