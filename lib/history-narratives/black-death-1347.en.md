@@ -635,7 +635,7 @@ This is **medieval Islamic egalitarianism in action.** Islam, more than medieval
 
 - **1881 Russia (the same pattern)**
 - **1903 Kishinev (the same pattern)**
-- **1933 Kristallnacht (the same pattern)**
+- **1938 Kristallnacht (the same pattern)**
 - **1942 Wannsee Conference: the Holocaust as the largest copy of the template**
 
 **The Holocaust didn't appear out of nowhere in 1942.** **It had 600 years of "rehearsal."** **1349 Strasbourg was the first major rehearsal.** **The Holocaust was the final version.**
