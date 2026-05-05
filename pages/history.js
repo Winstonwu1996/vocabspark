@@ -1352,8 +1352,9 @@ export default function HistoryPage() {
           <TopicHero topic={topic} phase={phase} />
 
           {/* ── Geography Section ── */}
-          {/* 5-5: atlas → role 进入流程下隐藏 — 用户已在 atlas-lab 看过完整地图,不重复 */}
-          {topic && topic.geography && !(pendingRole && pendingRole.figure) && (
+          {/* 5-5: simplifiedMode (embedded / fromAtlas / pendingRole) 时隐藏 */}
+          {/*       — 用户已在 atlas-lab 看过完整地图,不重复 */}
+          {topic && topic.geography && !embedded && !fromAtlas && !(pendingRole && pendingRole.figure) && (
             <GeographySection
               topic={topic}
               isOpen={geoOpen}
@@ -1404,6 +1405,7 @@ export default function HistoryPage() {
               selectedLensId={effectiveLensId}
               pendingRole={pendingRole}
               embedded={embedded}
+              fromAtlas={fromAtlas}
               effectiveTurns={effectiveTurns}
               onSelectLens={function(lensId) {
                 setSelectedLensId(lensId);
@@ -2703,9 +2705,16 @@ function IntroScreen(props) {
   if (!topic) return null;
   var curriculum = props.curriculum;
   var hp = props.historyProfile;
-  // 5-5: atlas → role 进入流程下,简化页面元素
-  // - hidePendingRoleNoise: 有 pendingRole 时隐藏 lens 模式无关元素(英文比例 / 通史脉络切换)
+  // 5-5: 多层守卫 — pendingRole 异步读 localStorage 可能首次 render null,
+  //       所以同时用 embedded(URL 同步读)+ fromAtlas(URL 同步读)+ hasLensesForTopic(配置同步)
   var hasPendingRole = !!(props.pendingRole && props.pendingRole.figure);
+  var isEmbedded = !!props.embedded;
+  var isFromAtlas = !!props.fromAtlas;
+  var hasLenses = !!props.hasLensesForTopic;
+  // 用 OR 组合:任一条件触发就 simplify(覆盖 SSR 首次 render 时 pendingRole 还没 set 的情况)
+  var simplifiedMode = hasPendingRole || isEmbedded || isFromAtlas;
+  // englishLevel toggle: lens 模式 prewritten,这个滑动条永远无效 → hasLenses 也隐藏
+  var hideEnglishLevel = simplifiedMode || hasLenses;
   // - lens 节点数: 优先用 effectiveTurns,fallback 12
   var lensTurnCount = (props.effectiveTurns && props.effectiveTurns.length) || 12;
   return (
@@ -2733,8 +2742,8 @@ function IntroScreen(props) {
         </div>
       )}
 
-      {/* ── 英文比例选择（N3）—— 5-5: lens 模式下 prewritten,这个 toggle 无效,隐藏 ── */}
-      {!hasPendingRole && props.englishLevel !== undefined && (
+      {/* ── 英文比例选择（N3）—— 5-5: lens 模式下 prewritten,这个 toggle 无效,永远隐藏 ── */}
+      {!hideEnglishLevel && props.englishLevel !== undefined && (
         <div style={{
           padding: "8px 12px",
           background: HC.parchmentHi,
@@ -2778,8 +2787,8 @@ function IntroScreen(props) {
           fontSize: 12, color: HC.text, lineHeight: 1.55,
           borderLeft: "3px solid " + HC.accent
         }}>
-          {/* 5-5: hasPendingRole 时 Geography 已隐藏(用户已在 atlas 看过),提示改成 atlas 入口 */}
-          {hasPendingRole ? (
+          {/* 5-5: simplifiedMode 时 Geography 已隐藏(用户已在 atlas 看过),提示改成 atlas 入口 */}
+          {simplifiedMode ? (
             <>📍 <strong>完整地图</strong>已经在 Atlas Lab 那边看过了 — 等下需要随时回去翻 <a href={"/atlas-lab/" + (topic.geography && topic.geography.atlasViewId ? topic.geography.atlasViewId : "")} target="_blank" rel="noopener noreferrer" style={{color: HC.accent, fontWeight: 600}}>Atlas Lab →</a><br/></>
           ) : (
             <>📍 <strong>页面顶部的「Where this happened」</strong>就是地图区 — 任何时候都可以点开看,再翻过来看今天。<br/></>
@@ -2844,9 +2853,10 @@ function IntroScreen(props) {
         </div>
       </div>
 
-      {/* N4: 通史脉络图 — 已学 + 待学 Topic 一览（点 Topic 卡可切换）*/}
-      {/* 5-5: atlas → role 进入流程下隐藏(避免"重新选 Topic"破坏 immersion) */}
-      {!hasPendingRole && (
+      {/* N4: 通史脉络图 — 已学 + 待学 Topic 一览(点 Topic 卡可切换) */}
+      {/* 5-5: simplifiedMode (atlas→role / embedded / fromAtlas) 下隐藏 */}
+      {/*       (避免"重新选 Topic"破坏 immersion + iframe 内 page 切换会撑爆 parent) */}
+      {!simplifiedMode && (
         <ThroughLineMap topic={topic} onSwitch={props.onSwitchTopic} />
       )}
 
