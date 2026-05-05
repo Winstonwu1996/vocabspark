@@ -87,29 +87,43 @@ EN 语法：
 
 写完后 grep `——.*——.*——` 看 3-em-dash 句，**这种基本是要拆**。
 
-### 第 8 条 I — 外语术语最少化（5-4 加）
+### 第 8 条 I — 外语术语最少化 + 不用 `*italic*` markdown（5-4 两轮加）
 
-**默认只用中文 + 英文**两种语言。所有非中英术语需要"必须保留"的理由——**外语 italic 是认知成本**。
+#### I.1 — 不用 `*italic*` markdown markup（绝对硬规则，5-4 第二轮加）
 
-**保留外语 italic 的合理场景**（符合下面 4 类才保）：
-1. **家庭称谓**（已选定一致用）：*Aba* / *baba* / *Ima* / *Bubbe* / *ummi*——身份标识，"爸爸"丢文化具体性
-2. **真实历史专有名词 / 书名**：*Cronaca senese* / *Palazzo Pubblico* / *Alexiad* / *Decameron* / *Tehillim*
-3. **不可译制度术语**：*podestà* / *Bürgermeister* / *fossa comune* / *Judengasse*
-4. **历史引文 + 仪式语**：*Deus vult* / *Pater Noster* / *Adonai roi lo echsar*
+**禁止**：lens 内容字段（`cn:` / `en:`）中**任何位置**使用 `*X*` 单星号 italic 语法。
 
-**删除 italic 的场景**：
-- 有完全对应中英文的："il Grasso" → "胖子 Agnolo"（删 italic）
+**理由**：bilingual.js 渲染器只处理 `**bold**`，不处理 `*italic*`——`*Aba*` 在 UI 直接显示字面 asterisks，视觉噪音。
+
+**保留 `**bold**`** 的场景：
+- 关键词强调（每段 250 字 CN 最多 2-3 个 bold）
+- Synthesis 节点 "**一种说法**" / "**另一种说法**" 框架
+
+#### I.2 — 默认只用中文 + 英文两种语言
+
+**保留外语原文的合理场景**（写作 bare 形式，**不加** `*` markup）：
+1. **家庭称谓**（已选定一致用）：Aba / baba / Ima / Bubbe / ummi
+2. **真实历史专有名词 / 书名**：Cronaca senese / Palazzo Pubblico / Alexiad / Decameron / Tehillim
+3. **不可译制度术语**：podestà / Bürgermeister / fossa comune / Judengasse
+4. **历史引文 + 仪式语**：Deus vult / Pater Noster / Adonai roi lo echsar
+
+**删除外语的场景**（直接换中文）：
+- 有完全对应中英文的："il Grasso" → "胖子 Agnolo"
 - 普通职业名："bookkeeper" → "记账员"
 - 普通来源标识："da Genova" → "来自 Genoa"
 - 重复出现的术语首次 inline gloss 后续直接用中文
 
-**密度上限**：每段（约 250 字 CN）最多 **2-3 个** italic 外语术语。超过砍。
+**密度上限**：每段（约 250 字 CN）最多 **2-3 个** 外语 token。超过砍。
 
-**反例**（一段 5+ italic 外语 token）：
+**反例**（5+ italic token + 满屏 asterisks）：
 > 我叫 Agnolo di Tura，人家叫我 *il Grasso*——"胖子 Agnolo"——这是我自己写在 *Cronaca* 笔记本第一页的称呼。我在 Siena 鞋匠工会（*Arte dei Calzolai*）做 *bookkeeper*——记账员
 
-**正例**：
-> 我叫 Agnolo di Tura，人家叫我"胖子 Agnolo"。这是我自己写在编年史笔记本第一页的称呼。我在 Siena 鞋匠工会（*Arte dei Calzolai*）做记账员
+**正例**（删 asterisk + 删装饰性外语 + 保留必要 proper noun）：
+> 我叫 Agnolo di Tura，人家叫我"胖子 Agnolo"。这是我自己写在编年史笔记本第一页的称呼。我在 Siena 鞋匠工会（Arte dei Calzolai）做记账员
+
+**自检**：
+- `grep -n "\\*[^*]" <file>.js` —— 必须空（除 `**bold**`）
+- 每段 250 字 CN 数外语 token，**＞ 3 个砍**
 
 ### 第 8 条 H — Lens card description 字段 schema
 

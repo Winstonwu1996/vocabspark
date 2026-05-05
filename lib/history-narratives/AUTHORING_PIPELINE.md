@@ -129,38 +129,62 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 3. **角色对白禁止中英 code-mix**（"不是 abstract" / "我 confused"）—— narrator 可以用术语 + gloss，**角色不能**
 4. **角色 vocabulary 与角色年龄/身份匹配**：14 岁女孩不说"世界观" / "意识形态" / "结构性" —— 用她那个年龄会说的话
 
-### I. 外语术语最少化（防外语灌输认知负担事故，5-4 加）
+### I. 外语术语最少化 + 不用 `*italic*` markdown markup（5-4 加，5-4 第二轮加 markup 部分）
 
-**事故**：用户 5-4 反馈："除非不得不写出来的无法对应的术语，否则尽量少用希腊文这些，只要英语和中文。其他的语言灌输是认知负担。"
+**事故 1**：用户 5-4 反馈："除非不得不写出来的无法对应的术语，否则尽量少用希腊文这些，只要英语和中文。其他的语言灌输是认知负担。"
+
+**事故 2**（5-4 第二轮）：用户测 Black Death，反馈"`*` 这个符号也太多了，一样要去掉，干扰阅读。"
+
+**根因发现**：`components/history-engine/bilingual.js` 渲染器只处理 `**bold**`，**不处理** `*italic*`。所以 `*Aba*` 在 UI 渲染成字面的 "*Aba*"——asterisks 全部可见，认知噪音。
 
 **根因**：lens 内容里大量 italic 外语术语（拉丁文 / 希腊文 / 阿拉伯文 / 希伯来文 / 意第绪文 / 德文 / 意大利文）—— 一段话 5+ 外语 italic word 时，12 岁 ESL 学生认知负载超额。一些 italic 是必要的（家庭称谓 / 不可译制度），但很多是装饰性的。
 
 **规则**：
-1. **默认只用中文 + 英文**两种语言。所有非中英术语都需要"必须保留"的理由
-2. **保留外语 italic 的合理场景**：
-   - **家庭称谓**（已经选定一致用）：*Aba* / *baba* / *Ima* / *Bubbe* / *ummi* —— 这些是身份标识，"爸爸"丢失文化具体性
-   - **真实历史专有名词 / 书名**：*Cronaca senese* (书名) / *Palazzo Pubblico* (建筑名) / *Alexiad* / *Decameron* / *Tehillim*（诗篇希伯来名）—— 这些是 proper noun
-   - **文化制度术语没有英中一对一翻译**：*podestà* / *Bürgermeister* / *fossa comune* / *Judengasse* —— 这些有具体制度内涵
-   - **真实历史引文 + 仪式语**：*Deus vult* / *Pater Noster* / *Adonai roi lo echsar* —— 文化具体性的核心
-3. **删除外语 italic 的场景**：
-   - 有完全对应中英文的：*il Grasso* "胖子 Agnolo" → "胖子 Agnolo"（删 italic，外号意义中文已 carry）
-   - *bookkeeper* → "记账员"（普通职业名）
-   - *da Genova* → "来自 Genoa" 或 "热那亚商人"（普通来源标识）
-   - *Cronaca* notebook → "编年史笔记本"（除非作书名 *Cronaca senese* 标）
-4. **每段（约 250 字 CN）最多 2-3 个 italic 外语术语**——超过就是认知超负荷
-5. **首次出现 inline gloss 后续直接用中文**：第一次 *podestà*（市长），后续就用 "市长"或 "*podestà*" (首次后不再括号)。**不要每次都给 italic**
 
-**反例**（一段中 italic 过密，cognitive load 爆炸）：
-> 我叫 Agnolo di Tura，人家叫我 *il Grasso*——"胖子 Agnolo"——这是我自己写在 *Cronaca* 笔记本第一页的称呼。我在 Siena 鞋匠工会（*Arte dei Calzolai*）做 *bookkeeper*——记账员——每周二 + 周五早上去 *Palazzo Pubblico*（市政厅）查档案、做账。
+#### I.1 — 不用 `*italic*` markdown markup（绝对硬规则）
 
-5 个 italic 外语 + 5 个 inline gloss = 一段消化 10 个外语 token。
+**禁止**：lens 内容字段（`cn:` / `en:`）中**任何位置**使用 `*X*` 单星号 markdown italic 语法。
 
-**正例**（保留必要的 italic，删除装饰性的）：
-> 我叫 Agnolo di Tura，人家叫我"胖子 Agnolo"。这是我自己写在编年史笔记本第一页的称呼。我在 Siena 鞋匠工会（*Arte dei Calzolai*）做记账员：每周二、周五早上去 *Palazzo Pubblico*（市政厅）查档案、做账。
+**理由**：渲染器只处理 `**bold**`，不处理 `*italic*`——`*Aba*` 在 UI 直接显示字面 asterisks，是视觉噪音。
 
-2 个 italic（工会名 + 建筑名 — proper nouns）+ 2 个 gloss = 同样信息，认知负载减半。
+**保留 `**bold**`（双星号）的场景**：
+- 关键词强调（每段 250 字 CN 最多 2-3 个 bold）
+- Synthesis 节点的"**一种说法**" / "**另一种说法**"框架
+- 其他不要滥用
 
-**自检**：lens 写完后看每段 italic 外语 token 数。**＞ 3 个就要砍**。
+#### I.2 — 默认只用中文 + 英文两种语言
+
+所有非中英术语都需要"必须保留"的理由。
+
+**保留外语原文的合理场景**（写作 bare 形式，**不加** `*` markup）：
+- **家庭称谓**（已经选定一致用）：Aba / baba / Ima / Bubbe / ummi —— 这些是身份标识，"爸爸"丢失文化具体性
+- **真实历史专有名词 / 书名**：Cronaca senese (书名) / Palazzo Pubblico (建筑名) / Alexiad / Decameron / Tehillim（诗篇希伯来名）—— 这些是 proper noun
+- **文化制度术语没有英中一对一翻译**：podestà / Bürgermeister / fossa comune / Judengasse —— 这些有具体制度内涵
+- **真实历史引文 + 仪式语**：Deus vult / Pater Noster / Adonai roi lo echsar —— 文化具体性的核心
+
+**删除外语原文的场景**（直接换中文）：
+- 有完全对应中英文的：il Grasso "胖子 Agnolo" → "胖子 Agnolo"（外号意义中文已 carry）
+- bookkeeper → "记账员"（普通职业名）
+- da Genova → "来自 Genoa" 或 "热那亚商人"（普通来源标识）
+- Cronaca notebook → "编年史笔记本"（除非作书名 *Cronaca senese* 标——但仍 no asterisks）
+
+**每段（约 250 字 CN）最多 2-3 个外语 token**——超过就是认知超负荷。
+
+**首次出现 inline gloss 后续直接用中文**：第一次"podestà（市长）"，后续就用"市长"。不要重复给 token。
+
+**反例**（一段 5+ 外语 token + asterisk 全可见）：
+> 我叫 Agnolo di Tura，人家叫我 *il Grasso*——"胖子 Agnolo"——这是我自己写在 *Cronaca* 笔记本第一页的称呼。我在 Siena 鞋匠工会（*Arte dei Calzolai*）做 *bookkeeper*——记账员——每周二早上去 *Palazzo Pubblico*（市政厅）查档案。
+
+5 个 italic markup + 5 个 inline gloss = 一段消化 10 个外语 token + 满屏 asterisks。
+
+**正例**（保留必要的外语 bare 形式，删 asterisks，删装饰性 italic）：
+> 我叫 Agnolo di Tura，人家叫我"胖子 Agnolo"。这是我自己写在编年史笔记本第一页的称呼。我在 Siena 鞋匠工会（Arte dei Calzolai）做记账员：每周二、周五早上去 Palazzo Pubblico（市政厅）查档案、做账。
+
+2 个外语保留（工会名 + 建筑名 proper nouns）+ 0 个 asterisk markup = 同样信息，视觉清爽。
+
+**自检**：
+- `grep -n "\\*[^*]" <file>.js` —— 必须空（除 `**bold**` 双星号）
+- 每段 250 字 CN 数外语 token，**＞ 3 个就要砍**
 
 ---
 
