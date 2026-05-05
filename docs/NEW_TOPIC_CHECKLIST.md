@@ -147,6 +147,16 @@
 - [ ] **判断**：刚加的规则是否影响**已 ship 的内容**？
   - 影响：Voice / em-dash / 文化禁用 / 角色称谓 / synthesis 标签——这种是 content-level，已有内容受影响
   - 不影响：Topic 元数据字段 / 流程步骤 / lens card description——这种只影响新写
+- [ ] **关键纪律：覆盖所有节点，不只是触发点**（5-4 第四轮加，Agnolo N5 二次事故教训）：
+  - **不允许** 只修用户指出的那个节点（如只修 N2 / 不扫 N3-N12）
+  - **必须** 写 grep query 扫**全 Topic 所有节点 + 全 lens**，找完所有 hit 一次修干净
+  - 具体例子：5-4 加规则 J（anti-fab framing 不进角色 monologue）后只修 Agnolo N2
+    没扫 N5/N6/N8——结果 Agnolo N5 再次出现 meta 撞断 character voice 事故
+  - **grep 模板**：
+    ```bash
+    grep -nE "documented record|这一节最难写|重要史实校对|这个 lens|这个视角 [让给]|lens 让你|Agnolo 自己" lib/history-storyboards/*.js
+    # 应该返回 0 lines（除头注释 + narrativeRef 元数据）
+    ```
 - [ ] **如果影响**：开 retro-pass task：
   - 列出已 ship 的所有 Topic（这次新规则要 retro 的）
   - **优先级**：按"用户最近 / 最常用"排序——例 5-3 Black Death 是 founder 正在测，最优先
