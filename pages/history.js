@@ -2751,7 +2751,7 @@ function LensSelector(props) {
         marginBottom: 12,
         lineHeight: 1.55,
       }}>
-        同一事件，不同角色看法不同。基础事实一样，情绪、角度、看到什么、看不到什么完全不同。跑完一个 lens 还能回来换另一个。
+        同一事件，不同角色看法不同。基础事实一样，情绪、角度、看到什么、看不到什么完全不同。跑完一个视角还能回来换另一个。
       </div>
       <div style={{display: "flex", flexDirection: "column", gap: 10}}>
         {lenses.map(function(lens) {

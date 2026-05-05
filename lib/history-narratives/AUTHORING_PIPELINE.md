@@ -62,7 +62,7 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 
 ---
 
-## ⛔ 第 8 条：Lens 写作 9 类硬规则（多轮 4-agent review 总结，2026-05-04 加；G/H 5-3 加；I 5-4 加）
+## ⛔ 第 8 条：Lens 写作 11 类硬规则（多轮 4-agent review 总结，2026-05-04 加；G/H 5-3；I 5-4；J/K 5-4 第三轮加）
 
 经过 Magna Carta + Crusades + Black Death 三个 Topic 的 4-agent review（每个 Topic 7thgrader / AP teacher / ESL teacher / Chinese teacher 各跑一遍）后总结。**所有规则都来自具体事故**——事故已修，规则防再发。
 
@@ -233,6 +233,84 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 > 你扮演 Devorah bat Yitzhak——一个虚构的 14 岁 Strasbourg 犹太女孩（与用户女儿 Willow 同龄段代入设计）——她父亲 Yitzhak ben Abraham 是 *Judengasse* 的银匠——1348 年 11 月某日早上 8 岁基督徒邻居 Klara 走过她家窗户没看她——她 14 岁第一次懂"邻居会变"——1349 年 2 月 13 日晚基督徒邻居 Brigitta 冒生命危险藏她家 5 口在地窖——2 月 14 日地窖里念 *Tehillim* 第 23 篇 30 多遍——半夜父亲跪给 Hans...
 
 15 个 em-dash 串联、罗列整个 plot、揭示 cross-lens echo、有 "你扮演" 前缀、有 "你会经历" 重复——**5 项 schema 违反**。
+
+---
+
+### J. Anti-fabrication framing 不进角色第一人称 monologue（5-4 第三轮加，用户实测抓到事故）
+
+**事故**：用户测 Black Death Agnolo N2，正在读"我 1313 年生在 Siena..."第一人称叙述，
+中间突然冒出一段红色加粗：
+
+> **这个 lens 给了他们名字和年龄。但你必须知道：documented record 只确认 5 个孩子这件事，
+> 名字和年龄是这个 lens 给你听见这一家具体的样子的虚构补充：**
+
+用户反馈"出现了一段很突兀的 lens 相关的话"——这是**侵入角色第一人称 monologue 的 meta-commentary**。
+
+**根因**：第 8 条 A（anti-fabrication）防 Alexios "私人日记"伪引证有效，但 framing
+位置错了——把"lens 让你听见"meta 标注塞进了角色叙述里，破坏 immersion。
+
+**规则**：
+1. **角色第一人称叙述里禁止出现"lens 让你..."/"lens 给了..."/"documented record only
+   confirms..."等 meta 标注**——这些破坏 character voice
+2. anti-fabrication 透明化的**正确位置**：
+   - **Lens card description 字段**（一次性，进入故事前用户看到）：可声明哪些是史料 / 哪些是
+     lens 叙事补充
+   - **专门的 narrator 节点**（如 N9 跨时间 zoom，cosplay: 'narrator'）：narrator 可用
+     "now narrator tells you..."框架引入合成内容
+   - **节点 deliverGoal / engagementHook 字段**（不是用户主体阅读区）
+3. **角色 monologue 中如果不得不有合成内容**（如虚构姓名 / 年龄 / 内心戏剧），处理：
+   - 内嵌 1 个**括号短句**化解：例 `"...5 个孩子（孩子名字是叙事性补充——史料只确认数量）"`——
+     不是大段红字
+   - 或更彻底：**根本不在角色 monologue 里揭示是合成**，让用户阅读完整后通过 lens card
+     description 上的全局声明已知"虚构 X 具体细节"
+4. 已 ship 的内容如有违反，retro-pass 移除或转 to 括号短句
+
+**反例**（Agnolo N2 现状，5-4 用户抓到）：
+> 我 1313 年生在 Siena。我爸 Tura di Bartolomeo 也是 Arte dei Calzolai 的人...
+> 到 1348 年 5 月，我们家有 5 个孩子。**这个 lens 给了他们名字和年龄。但你必须知道：
+> documented record 只确认 5 个孩子这件事，名字和年龄是这个 lens 给你听见这一家具体的样子
+> 的虚构补充：**
+
+3 句长 meta 红字直接撞断 Agnolo 的口吻。
+
+**正例**（修订）：
+> 到 1348 年 5 月，我们家有 5 个孩子（名字和年龄是叙事性补充——史料只确认数量）：
+> 老大男孩 Niccolò，12 岁...
+
+1 个括号短句，character voice 不断，meta 透明性也保住。
+
+### K. 用户 facing 文本不用"lens"工程词——改"视角"/"这一遍"（5-4 第三轮加）
+
+**事故**：用户反馈"lens 这个词太工程化了，不是用户语言"。
+
+**根因**：lens 是 Story-First Pedagogy v2 的内部架构术语（lib/history-storyboards/...），
+不是 12 岁中文学生的日常词。让用户读这个词破坏 immersion。
+
+**规则**：
+1. **学生 facing 字段**（lens 内容 cn:/en: + lens.description + LensSelector header/subtitle/hint
+   + meta 节点桥到下一 lens 的话）**禁止使用** "lens" 这个英文词
+2. **替换词表**（按上下文选最合适的）：
+   - "这个 lens 让你..." → "**这个视角让你...**"
+   - "这个 lens 给你..." → "**这一遍让你...**"
+   - "跑完一个 lens 还能换另一个" → "**跑完一个视角还能换另一个**"
+   - "换 lens 重玩" → "**换视角重玩**"
+   - "做完 Konrad lens 后..." → "**做完 Konrad 这一遍后...**"
+   - "下个 lens" → "**下个视角**"
+3. **保留** "lens" 的场景（仅这些）：
+   - 文件代码注释（开发者读的）：`// lens 1: Roger...`
+   - 设计文档（AUTHORING_PIPELINE / lens-author.md / NEW_TOPIC_CHECKLIST）
+   - 字段名（schemaVersion / lens.id / lens.role）—— 这些是 schema 不是文案
+4. EN 侧 "lens" 仍然是英文里的标准词（"this lens lets you hear"），EN 用户可读，**但**
+   要节制使用，每节点最多 1 次
+
+**自检**：
+```bash
+grep -nE '"[^"]*\blens\b[^"]*"' lib/history-storyboards/*.js | grep -v '^//'
+# 学生 facing 字符串里 "lens" 应该 = 0（除 EN content fields 节制使用）
+
+grep -nE '\blens\b' pages/history.js
+# Topic switcher 区域应当没有 "lens" 字面，全部用 "视角" / "这一遍"
+```
 
 ---
 
