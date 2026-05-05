@@ -25,51 +25,27 @@ import { VoiceInputButton } from '../VoiceInputButton';
 // MP3 路径：/audio/{topicId}/{lensId}/n{N}.mp3（build-time 预生成）
 function AudioPlayer(props) {
   // props: { topicId, lensId, turnId, englishLevel }
-  var [audio, setAudio] = useState(null);
+  // ⚠️ 所有 hook 必须在顶部 unconditional——React Rules of Hooks
   var [playing, setPlaying] = useState(false);
   var [available, setAvailable] = useState(null);  // null = 未检测，true/false = 已检测
   var [progress, setProgress] = useState(0);
   var audioRef = useRef(null);
 
-  // 仅 EN mode 显示
-  if (props.englishLevel !== 'high') return null;
-  if (!props.topicId || !props.lensId || typeof props.turnId === 'undefined') return null;
+  // 计算 src（即使 props 不全也算一个，避免 src 在不同 render 时长度变化触发 useEffect 依赖问题）
+  var canShow = props.englishLevel === 'high' && props.topicId && props.lensId && typeof props.turnId !== 'undefined';
+  var src = canShow ? '/audio/' + props.topicId + '/' + props.lensId + '/n' + props.turnId + '.wav' : null;
 
-  var src = '/audio/' + props.topicId + '/' + props.lensId + '/n' + props.turnId + '.mp3';
-
-  // HEAD 检测文件是否存在（lazy — 只在首次显示时跑）
+  // HEAD 检测文件存在（仅在 canShow 时执行）
   useEffect(function () {
-    if (available !== null) return;
+    if (!canShow || !src) {
+      setAvailable(false);
+      return;
+    }
+    if (available !== null) return;  // 已检测过
     fetch(src, { method: 'HEAD' })
       .then(function (r) { setAvailable(r.ok); })
       .catch(function () { setAvailable(false); });
-  }, [src]);
-
-  if (available === false) return null;       // 没文件 — 干脆不显示
-  if (available === null) return null;        // 加载中 — 暂不显示
-
-  function togglePlay() {
-    if (!audioRef.current) {
-      var a = new Audio(src);
-      a.addEventListener('ended', function () {
-        setPlaying(false);
-        setProgress(0);
-      });
-      a.addEventListener('timeupdate', function () {
-        if (a.duration) setProgress(a.currentTime / a.duration);
-      });
-      audioRef.current = a;
-    }
-    if (playing) {
-      audioRef.current.pause();
-      setPlaying(false);
-    } else {
-      // 暂停其他正在播放的（全局唯一）
-      window.dispatchEvent(new CustomEvent('audio-pause-all'));
-      audioRef.current.play();
-      setPlaying(true);
-    }
-  }
+  }, [src, canShow]);
 
   // 监听全局暂停事件（其他 AudioPlayer 开播时停自己）
   useEffect(function () {
@@ -92,6 +68,33 @@ function AudioPlayer(props) {
       }
     };
   }, []);
+
+  // ⚠️ 所有 hook 调完再做 conditional return
+  if (!canShow) return null;
+  if (available === false) return null;
+  if (available === null) return null;
+
+  function togglePlay() {
+    if (!audioRef.current) {
+      var a = new Audio(src);
+      a.addEventListener('ended', function () {
+        setPlaying(false);
+        setProgress(0);
+      });
+      a.addEventListener('timeupdate', function () {
+        if (a.duration) setProgress(a.currentTime / a.duration);
+      });
+      audioRef.current = a;
+    }
+    if (playing) {
+      audioRef.current.pause();
+      setPlaying(false);
+    } else {
+      window.dispatchEvent(new CustomEvent('audio-pause-all'));
+      audioRef.current.play();
+      setPlaying(true);
+    }
+  }
 
   return (
     <div style={{

@@ -9,7 +9,7 @@
  *   node scripts/generate-audio.mjs --topic black-death-1347 --lens agnolo-siena --node 1
  *   node scripts/generate-audio.mjs --dry-run            # 仅显示计划，不生成
  *
- * 输出：public/audio/{topic}/{lens}/n{N}.mp3
+ * 输出：public/audio/{topic}/{lens}/n{N}.wav  (VibeVoice 原生输出 24kHz mono WAV)
  *
  * 前置（本机）：
  *   git clone https://github.com/microsoft/VibeVoice.git ~/dev/VibeVoice
@@ -74,41 +74,65 @@ function pickVoice(voiceMap, topicId, lensId, cosplay) {
 
 // ─── 调 VibeVoice Python 脚本 ──
 
-function runVibeVoice(text, voiceName, outputDir, outputBaseName) {
+async function runVibeVoice(text, voiceName, outputDir, outputBaseName) {
+  var tmpTxtPath = join(outputDir, '.tmp_' + outputBaseName + '.txt');
+  var vibeOutput = join(outputDir, '.tmp_' + outputBaseName + '_generated.wav');
+  var finalOutput = join(outputDir, outputBaseName + '.wav');
+
+  await fs.writeFile(tmpTxtPath, text, 'utf-8');
+
+  // 优先用 venv python（VIBEVOICE_PATH/.venv/bin/python），fallback 系统 python
+  var venvPython = join(VIBEVOICE_PATH, '.venv', 'bin', 'python');
+  var pythonExec = 'python';
+  try {
+    await fs.access(venvPython);
+    pythonExec = venvPython;
+  } catch (e) { /* 用系统 python */ }
+
   return new Promise(function (resolve, reject) {
-    var tmpTxtPath = join(outputDir, '.tmp_' + outputBaseName + '.txt');
-    fs.writeFile(tmpTxtPath, text, 'utf-8').then(function () {
-      // 调用 VibeVoice 自带 demo script
-      var pyScript = join(VIBEVOICE_PATH, 'demo', 'realtime_model_inference_from_file.py');
-      var pyArgs = [
-        pyScript,
-        '--model_path', 'microsoft/VibeVoice-Realtime-0.5B',
-        '--txt_path', tmpTxtPath,
-        '--speaker_name', voiceName.replace('en-', '').split('_')[0],  // "en-Carter_man" → "Carter"
-        '--output_dir', outputDir
-      ];
+    var pyScript = join(VIBEVOICE_PATH, 'demo', 'realtime_model_inference_from_file.py');
+    var pyArgs = [
+      pyScript,
+      '--model_path', 'microsoft/VibeVoice-Realtime-0.5B',
+      '--txt_path', tmpTxtPath,
+      '--speaker_name', voiceName.replace('en-', '').split('_')[0],
+      '--output_dir', outputDir
+    ];
 
-      console.log('  → python ' + pyArgs.join(' '));
+    var proc = spawn(pythonExec, pyArgs, {
+      cwd: VIBEVOICE_PATH,
+      stdio: ['inherit', 'pipe', 'pipe']
+    });
 
-      var proc = spawn('python', pyArgs, {
-        cwd: VIBEVOICE_PATH,
-        stdio: ['inherit', 'inherit', 'inherit']
-      });
+    proc.stdout.on('data', function (data) {
+      var s = data.toString();
+      if (s.indexOf('Saved') >= 0 || s.indexOf('Error') >= 0 || s.indexOf('Generated') >= 0) {
+        process.stdout.write(s);
+      }
+    });
+    proc.stderr.on('data', function (data) {
+      var s = data.toString();
+      // 过滤进度条 spam
+      if (s.indexOf('it/s') < 0 && s.indexOf('it]') < 0) {
+        process.stderr.write(s);
+      }
+    });
 
-      proc.on('close', function (code) {
-        // 删 tmp
-        fs.unlink(tmpTxtPath).catch(function () {});
-
-        if (code !== 0) {
-          reject(new Error('VibeVoice exited code ' + code));
-          return;
-        }
+    proc.on('close', function (code) {
+      fs.unlink(tmpTxtPath).catch(function () {});
+      if (code !== 0) {
+        reject(new Error('VibeVoice exited code ' + code));
+        return;
+      }
+      fs.rename(vibeOutput, finalOutput).then(function () {
         resolve();
+      }).catch(function (err) {
+        reject(new Error('rename failed: ' + err.message));
       });
+    });
 
-      proc.on('error', function (err) {
-        reject(err);
-      });
+    proc.on('error', function (err) {
+      reject(err);
     });
   });
 }
@@ -176,11 +200,11 @@ async function main() {
         }
 
         var voiceName = pickVoice(voiceMap, topicId, lensId, node.cosplay);
-        var outputMP3 = join(lensOutputDir, 'n' + node.id + '.mp3');
+        var outputWAV = join(lensOutputDir, 'n' + node.id + '.wav');
 
         // 已存在则 skip（除非 NODE_FILTER 强制）
         try {
-          await fs.access(outputMP3);
+          await fs.access(outputWAV);
           if (!NODE_FILTER) {
             console.log('  [n' + node.id + '] ✅ 已存在 → skip');
             totalSkip++;
@@ -191,14 +215,14 @@ async function main() {
         console.log('  [n' + node.id + '] phase=' + node.phase + ' cosplay=' + (node.cosplay || '-') + ' voice=' + voiceName + ' chars=' + enText.length);
 
         if (DRY_RUN) {
-          console.log('    [DRY-RUN] would generate → ' + outputMP3);
+          console.log('    [DRY-RUN] would generate → ' + outputWAV);
           continue;
         }
 
         try {
           await runVibeVoice(enText, voiceName, lensOutputDir, 'n' + node.id);
           totalGen++;
-          console.log('    ✅ ' + outputMP3);
+          console.log('    ✅ ' + outputWAV);
         } catch (e) {
           console.error('    ❌ ' + e.message);
         }
