@@ -327,20 +327,30 @@ export default function HistoryPage() {
         setEmbedded(true);
       }
       // #2α Cosplay：?role=1 表示 atlas-lab 已把所选 figure 写入 localStorage.pendingRole
+      // 5-5 加：?lens=1 表示 atlas figure 是 lens-derived，pendingLensId 也已写入 → 自动选 lens
       // 立刻读出来 + 清掉 pending（一次性 — 防止下次打开还套这个角色）
       var resolveTopicId = (t && getTopic(t)) ? t : null;
       if (p.get("role") === "1") {
         var raw = localStorage.getItem("vocabspark_v1");
         var d = raw ? JSON.parse(raw) : null;
         var rolesByTopic = (d && d.pendingRole) || {};
+        var lensIdsByTopic = (d && d.pendingLensId) || {};
         // role 跟 topicId 绑定 — 找当前 topicId 对应的 pendingRole
         var key = resolveTopicId || (d && d.historyData && d.historyData.lastTopicId) || "magna-carta-1215";
         var pr = rolesByTopic[key];
+        var pl = lensIdsByTopic[key];
         if (pr && pr.figure) {
           setPendingRole(pr);
-          // 一次性消费 — 清掉，防止下次打开 /history 还套这个角色
           delete rolesByTopic[key];
           d.pendingRole = rolesByTopic;
+        }
+        // 5-5: 如果 atlas 传了 lensId，自动选 lens 跳过 IntroScreen lens selector
+        if (pl && pl.lensId && p.get("lens") === "1") {
+          setSelectedLensId(pl.lensId);
+          delete lensIdsByTopic[key];
+          d.pendingLensId = lensIdsByTopic;
+        }
+        if (pr || pl) {
           d.updatedAt = new Date().toISOString();
           localStorage.setItem("vocabspark_v1", JSON.stringify(d));
         }
@@ -716,38 +726,65 @@ export default function HistoryPage() {
     advanceTurn();
   };
 
-  // ─── 用户主动 escape action（累/没懂/跳过）—— 100% 准确，不靠 AI 自动诊断 ───
-  // 三种 action 触发不同的 prompt 分支（lib/history-prompts.js 处理）
+  // ─── tiredMode auto-advance：听模式开启时,每节点渲染后 N 秒自动 advance ───
+  useEffect(function () {
+    if (!tiredMode) return;
+    if (phase !== "conversation") return;
+    var turn = effectiveTurns[turnIndex];
+    if (!turn) return;
+    // 不自动跳过 synthesis (真问题节点) — 这些需要用户主动思考答
+    if (turn.expectsRealAnswer) return;
+    // 已是最后一节就不再 advance (走 mastery)
+    if (turnIndex >= effectiveTurns.length - 1) return;
+    // 等当前节点 AI entry 出现在 log 里再开始计时 (避免 turn 切换时立刻 advance)
+    var found = conversationLog.find(function (e) { return e.role === "ai" && e.turn === turn.n; });
+    if (!found) return;
+    var contentLen = (found.content || '').length;
+    // 字数估算阅读时间: 中文每字 0.3 秒 + 8 秒 buffer
+    var ms = Math.min(30000, Math.max(6000, contentLen * 300 + 4000));
+    var timer = setTimeout(function () { advanceTurn(); }, ms);
+    return function () { clearTimeout(timer); };
+  }, [tiredMode, turnIndex, phase, conversationLog]);
+
+  // ─── 用户主动 escape action — 5-5 重设计契合 Story-First v2 prewritten 模式 ───
+  //
+  // 旧设计: 注入"用户消息"让 AI 下一轮看到 escape signal 后切模式
+  //   问题: prewritten content 短路 AI → signal 完全丢弃 → "累了/没懂"是 dead code
+  //
+  // 新设计:
+  //   tired      → toggle "听模式" (audio auto-play + auto-advance) — 状态保持到 toggle off
+  //   dont-understand → inline 显示 deliverGoal hint (一句话核心) — 不调 AI
+  //   skip       → advance to next turn — 不变
+  var [tiredMode, setTiredMode] = useState(false);
+  var [hintByTurn, setHintByTurn] = useState({});  // { turnIdx: deliverGoal_string }
+
   var handleEscapeAction = function(action) {
     var turn = effectiveTurns[turnIndex];
-    // 把 escape signal 当成"用户回答"加入 log，让 AI 下一轮看到
-    var escapeContent;
+    if (!turn) return;
+
     if (action === "tired") {
-      escapeContent = "[用户主动信号: 累了，请切纯讲故事模式 — 不要再问问题，直接讲完再问'继续吗']";
-    } else if (action === "dont-understand") {
-      escapeContent = "[用户主动信号: 没懂 — 请换角度重讲，**更具象、更生动、信息更全面**（不是更短）]";
-    } else if (action === "skip") {
-      escapeContent = "[用户主动信号: 跳过 — 1 句话总结进下一轮]";
-    } else {
+      // toggle 听模式
+      setTiredMode(function(prev) { return !prev; });
       return;
     }
-    setConversationLog(function(prev) {
-      return prev.concat([{
-        role: "user",
-        turn: turn.n,
-        content: escapeContent,
-        timestamp: new Date().toISOString(),
-        isEscape: true,
-        escapeAction: action,
-      }]);
-    });
-    setUserInput("");
+
+    if (action === "dont-understand") {
+      // 显示当前节点的 deliverGoal 作为 hint (lens runtime 字段)
+      var hint = (turn.deliverGoal && turn.deliverGoal !== '[fallback]')
+        ? turn.deliverGoal
+        : (turn.engagementHook || '这一节核心信息已在上面正文，再读一次试试。');
+      setHintByTurn(function(prev) {
+        var next = Object.assign({}, prev);
+        next[turnIndex] = hint;
+        return next;
+      });
+      return;
+    }
+
     if (action === "skip") {
-      // 跳过 = 直接下一轮（让 AI 在下一轮做总结）
+      // 跳过 — advance to next turn 不变
       advanceTurn();
-    } else {
-      // 累 / 没懂 = 仍然推进到下一轮 AI 回应（AI 看到 escape signal 后切模式）
-      advanceTurn();
+      return;
     }
   };
 
@@ -1458,6 +1495,8 @@ export default function HistoryPage() {
                 onMustClick={setActiveMust}
                 onJumpToMap={jumpToMap}
                 onEscapeAction={handleEscapeAction}
+                tiredMode={tiredMode}
+                hintByTurn={hintByTurn}
                 error={error}
               />
             </>

@@ -51,8 +51,13 @@
 
 ---
 
-## Phase 3 — 注册到 UI（3 处必改）
+## Phase 3 — 注册到 UI（4 处必改）
 
+- [ ] **`data/atlas/views/<topic>.js`**（5-5 加机制）：
+  - 加 `deepLearnEnabled: true` + `deepLearnUrl: '/history?topicId=<topic-id>&from=atlas&atlasId=<atlas-id>'`
+  - **不要** hardcode `keyFigures: [...]` ——5-5 起 deepLearn Topic 的 keyFigures 自动从 lens 派生
+  - 用注释代替 keyFigures：`// 关键人物自动派生自 lib/history-storyboards/<topic-id>.js 的 lenses object`
+  - 这是机制护城河 — 防 atlas 5 角色 vs lens 3 lens 不通信事故（5-5 founder 抓到）
 - [ ] **`lib/history-topics.js`**：
   - 加 `<TOPIC>` 完整元数据 export（参考 `lib/history-topics/_template.js` 模板）
   - 加到 `HISTORY_TOPICS` object

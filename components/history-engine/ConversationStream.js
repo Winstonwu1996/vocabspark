@@ -332,6 +332,24 @@ export function ConversationStream(props) {
 
   return (
     <div>
+      {/* 5-5: tired mode banner — 听就好模式开启时显示 */}
+      {props.tiredMode && (
+        <div style={{
+          marginBottom: 8,
+          padding: '6px 12px',
+          background: 'rgba(196, 107, 48, 0.12)',
+          border: '1px solid rgba(196, 107, 48, 0.30)',
+          borderRadius: 8,
+          fontSize: 11.5,
+          color: '#a85525',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}>
+          <span>😌</span>
+          <span><strong>听模式</strong>—— 节点会自动推进，不用点继续。点 [😌 听模式 ✓] 关闭。</span>
+        </div>
+      )}
       <div className="conv-stream" id="conv-anchor">
         {log.map(function(entry, i) {
           // 史料卡（C7：source / source-tang-code 都触发）
@@ -385,6 +403,23 @@ export function ConversationStream(props) {
                   )}
                 </div>
               </div>
+              {/* 5-5: "我没懂" hint — 用户点了"我没懂"后,在该 AI 节点下方显示 deliverGoal 一句话核心 */}
+              {props.hintByTurn && props.hintByTurn[entry.turn - 1] && (
+                <div style={{
+                  marginLeft: 40, marginTop: 6, marginBottom: 8,
+                  padding: '8px 12px',
+                  background: 'rgba(95, 168, 160, 0.12)',
+                  border: '1px solid rgba(95, 168, 160, 0.35)',
+                  borderRadius: 8,
+                  fontSize: 12.5,
+                  color: '#3d2c1a',
+                  lineHeight: 1.55,
+                }}>
+                  <span style={{fontSize: 13, marginRight: 6}}>💡</span>
+                  <span style={{fontWeight: 600, color: '#4a8a82', marginRight: 4}}>核心一句话:</span>
+                  {props.hintByTurn[entry.turn - 1]}
+                </div>
+              )}
               {/* 地图轮 — 加快速跳到地图区域的链接（Winston review #2） */}
               {isGeoTurn && (
                 <div className="bubble-row ai" style={{marginTop: 4, marginLeft: 40}}>
@@ -460,7 +495,12 @@ export function ConversationStream(props) {
             </div>
           </details>
 
-          {/* ── 3 个用户主动按钮（"累/没懂/跳过"）— 用户主动声明状态 = 100% 准确 ── */}
+          {/* ── 3 个用户主动按钮 — 5-5 重设计契合 Story-First v2 prewritten 模式 ── */}
+          {/* 旧设计依赖 AI 调用，但 prewritten 短路 AI → 旧"累了/没懂"是 dead code */}
+          {/* 新设计:                                                            */}
+          {/*   累了 → toggle "听就好" 模式 (audio auto-play + auto-advance)       */}
+          {/*   没懂 → 显示当前节点的 deliverGoal hint (一句话核心，不调 AI)         */}
+          {/*   跳过 → advance 不变                                                */}
           {props.onEscapeAction && (
             <div style={{
               display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap",
@@ -468,16 +508,19 @@ export function ConversationStream(props) {
             }}>
               <button
                 onClick={function() { props.onEscapeAction("tired"); }}
-                title="切纯讲故事模式 — AI 不再问问题"
+                title="开启自动模式 - 音频自动播 + 节点自动推进，不用点继续"
                 style={{
-                  padding: "5px 10px", border: "1px solid " + HC.parchmentLo,
-                  borderRadius: 999, background: "transparent",
-                  color: HC.textSec, cursor: "pointer", fontFamily: "inherit"
+                  padding: "5px 10px",
+                  border: "1px solid " + (props.tiredMode ? HC.accent : HC.parchmentLo),
+                  borderRadius: 999,
+                  background: props.tiredMode ? HC.accent : "transparent",
+                  color: props.tiredMode ? "#fff8e8" : HC.textSec,
+                  cursor: "pointer", fontFamily: "inherit"
                 }}
-              >😴 累了，听就好</button>
+              >{props.tiredMode ? "😌 听模式 ✓" : "😴 累了，听就好"}</button>
               <button
                 onClick={function() { props.onEscapeAction("dont-understand"); }}
-                title="AI 换角度重讲 — 更具象、更全面"
+                title="显示这一段的核心一句话提示"
                 style={{
                   padding: "5px 10px", border: "1px solid " + HC.parchmentLo,
                   borderRadius: 999, background: "transparent",
@@ -486,7 +529,7 @@ export function ConversationStream(props) {
               >🤔 我没懂</button>
               <button
                 onClick={function() { props.onEscapeAction("skip"); }}
-                title="1 句话总结进下一轮"
+                title="跳过这一节，进下一节"
                 style={{
                   padding: "5px 10px", border: "1px solid " + HC.parchmentLo,
                   borderRadius: 999, background: "transparent",

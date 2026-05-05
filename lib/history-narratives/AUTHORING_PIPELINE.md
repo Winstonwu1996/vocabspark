@@ -62,6 +62,47 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 
 ---
 
+## ⛔ 第 9 条：Atlas keyFigures 必须从 lens 派生（5-5 加，systemic）
+
+**事故**（founder 5-5 测试时抓到）：
+- Atlas Lab 38 个 Topic 各有 5 个 keyFigures（旧设计）
+- History Story-First v2 起 lens 系统（每 Topic 3 个 lens）
+- 两套并存,**没约束机制**——atlas 跟 lens 各写各的,drift 严重
+- 实测：Magna Carta atlas 5 角色仅 1.5 个对应 lens / Crusades 2/5 / **Black Death 0/5**
+- 用户点 atlas Pope figure → history 显示 banner "Pope 视角" 但内容 = 默认 lens (King John) 故事 — 严重错配
+
+**根因**：两套 character 系统并存，没 single source of truth 约束。
+
+**规则**：
+1. Topic 有 lens (deepLearnEnabled=true) → atlas keyFigures **必须**从 history lens 派生
+2. `data/atlas/views/<topic>.js` **不允许** hardcode `keyFigures: [...]` (会被 SSR override)
+3. lens schema (`lib/history-storyboards/<topic>.js` lenses object) 是 single source of truth
+4. lens entry **必须** 有：`icon` (emoji) + `name: { cn, en }` + `role: { cn, en }` + `description: { cn, en }`
+5. atlas → history 跳转传 lensId (绑定具体 lens)，history 自动选 lens 跳过 IntroScreen 二次选择
+
+**实现位置**：
+- `lib/atlas-views.js` `getEffectiveKeyFigures(view)` / `getEffectiveKeyFiguresSync(view, mod)`
+- `pages/atlas-lab/[viewId].js` getStaticProps 调用 helper 注入派生 keyFigures
+- `components/AtlasLabPage.js` onLaunchAsRole 写 `pendingLensId` localStorage
+- `pages/history.js` 读 pendingLensId 自动 setSelectedLensId
+
+**自检**：
+```bash
+# 验证 deepLearn Topic 的 atlas view 不再 hardcode keyFigures
+grep -l "deepLearnEnabled: true" data/atlas/views/*.js | while read f; do
+  if grep -q "^\s*keyFigures: \[" "$f"; then
+    echo "❌ $f still has hardcoded keyFigures (should be auto-derived)"
+  fi
+done
+# 应该 0 输出
+
+# 模块加载测试
+node --input-type=module -e "import('lib/atlas-views.js').then(async m => { var f = await m.getEffectiveKeyFigures(m.findView('magna-carta')); console.log(f.length); })"
+# 应该返回 lens 数量 (Magna Carta = 3)
+```
+
+---
+
 ## ⛔ 第 8 条：Lens 写作 11 类硬规则（多轮 4-agent review 总结，2026-05-04 加；G/H 5-3；I 5-4；J/K 5-4 第三轮加）
 
 经过 Magna Carta + Crusades + Black Death 三个 Topic 的 4-agent review（每个 Topic 7thgrader / AP teacher / ESL teacher / Chinese teacher 各跑一遍）后总结。**所有规则都来自具体事故**——事故已修，规则防再发。

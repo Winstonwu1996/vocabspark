@@ -598,14 +598,21 @@ export default function AtlasLabPage({
                     try {
                       const raw = localStorage.getItem('vocabspark_v1');
                       const d = raw ? JSON.parse(raw) : {};
+                      // 5-5: 如果 figure 有 lensId（lens-derived），写 pendingLensId 让 history 自动选 lens
+                      // 兼容老 pendingRole 字段（用于 banner 显示 + AI prompt context）
                       d.pendingRole = d.pendingRole || {};
                       d.pendingRole[histId] = { figure, lang, ts: new Date().toISOString() };
+                      if (figure.lensId) {
+                        d.pendingLensId = d.pendingLensId || {};
+                        d.pendingLensId[histId] = { lensId: figure.lensId, ts: new Date().toISOString() };
+                      }
                       d.updatedAt = new Date().toISOString();
                       localStorage.setItem('vocabspark_v1', JSON.stringify(d));
                     } catch (_) {}
                   }
-                  // 打开 embed iframe（带 role flag 让 history 知道有 pendingRole 要读）
-                  const url = (meta.deepLearnUrl || '/history') + '&embedded=1&role=1';
+                  // 打开 embed iframe；带 role flag (老兼容) + lens flag (新)
+                  const flagSuffix = figure.lensId ? '&embedded=1&role=1&lens=1' : '&embedded=1&role=1';
+                  const url = (meta.deepLearnUrl || '/history') + flagSuffix;
                   setEmbedUrl(url);
                   setLearningMode('embedded');
                 }}
@@ -757,10 +764,10 @@ export default function AtlasLabPage({
               ? (lang === 'cn' ? '✓ 已通关 — 想再挑战？' : '✓ Completed — challenge again?')
               : (lang === 'cn' ? '想真正懂这个 Topic？' : 'Want to truly understand this Topic?');
             const ctaSub = isDone
-              ? (lang === 'cn' ? '重新走一遍 14 轮对话 + Mastery Gate（XP 不会重复给）'
-                              : 'Re-run 14-turn dialogue + Mastery Gate (no double XP)')
-              : (lang === 'cn' ? '开始 30-45 分钟深度学：14 轮苏格拉底对话 + 5 层因果 + 必背词汇 mastery gate'
-                              : '30-45 min deep dive: 14-turn Socratic dialogue + 5 layers + mastery gate');
+              ? (lang === 'cn' ? '重新走一遍 12 节多视角学习 + 通关测试（XP 不会重复给）'
+                              : 'Re-run 12-section multi-perspective learning + Mastery (no double XP)')
+              : (lang === 'cn' ? '开始约 30 分钟深度学：选一个角色，从 ta 的视角走 12 节，结尾通关 + 家长晚饭桌话题'
+                              : '~30 min deep dive: pick a character, walk 12 sections from their lens + mastery + family dinner-table conversation');
             const bgGrad = isDone
               ? 'linear-gradient(135deg, #22a06b 0%, #1a7c52 100%)'
               : 'linear-gradient(135deg, ' + HC.accent + ' 0%, #b85a25 100%)';
