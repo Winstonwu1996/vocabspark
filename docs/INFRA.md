@@ -156,38 +156,59 @@ vercel env pull .env.production.local --environment=production  # production
 
 ## 9. 域名 / DNS
 
-主域名 `knowulearning.com`（DNS provider 待确认是 Cloudflare / Namecheap / GoDaddy 哪家）。
+主域名 `knowulearning.com`：
+- **注册商 + DNS Provider**：Namecheap（https://www.namecheap.com/）
+- 管理面板：登录 Namecheap → Account → Domain List → 找 `knowulearning.com` → 点 **Manage**
+- DNS 编辑：在 Manage 页内点 **Advanced DNS** tab
 
 当前 DNS 记录：
-- `www.knowulearning.com` → Vercel `vocabspark` 项目（A 记录或 CNAME 到 `cname.vercel-dns.com`）
-- `noreply@knowulearning.com` 收发 → Resend SMTP（DKIM/SPF 已验证）
+- `www.knowulearning.com` → Vercel `vocabspark` 项目（CNAME 到 `cname.vercel-dns.com`）
+- `noreply@knowulearning.com` 收发 → Resend SMTP（DKIM/SPF TXT 已配 + 验证）
 - `hello@knowulearning.com` → 收信地址
 
-### 给新项目配 stock.knowulearning.com 的步骤
+### 给新项目配 stock.knowulearning.com 的步骤（Namecheap 操作）
 
-**Step 1：DNS 加 CNAME 记录**（在 knowulearning.com 主域名 DNS 管理后台）
+**Step 1：Namecheap 加 CNAME 记录**
 
-```
-Type:    CNAME
-Name:    stock
-Value:   cname.vercel-dns.com
-TTL:     Auto / 3600
-Proxy:   关闭（Cloudflare 用户必须设 DNS only / 灰色云朵）
-```
+1. 登录 Namecheap → Domain List → `knowulearning.com` → **Manage**
+2. **Advanced DNS** tab → 滚到 "HOST RECORDS" 区
+3. 点 **ADD NEW RECORD**
+4. 填：
+   ```
+   Type:        CNAME Record
+   Host:        stock
+   Value:       cname.vercel-dns.com.       ← 末尾的点很关键，Namecheap 自动补
+   TTL:         Automatic
+   ```
+5. 点绿色对勾 ✓ 保存
+6. 等 ~5-30 分钟 DNS 全球传播（Namecheap 一般 5 分钟内）
 
 **Step 2：Vercel 新项目 Add Domain**
 
-1. Settings → Domains → Add Domain
+1. Vercel Dashboard → 新项目 → Settings → Domains → **Add Domain**
 2. 输入 `stock.knowulearning.com`
 3. Vercel 自动验证 DNS + 签 SSL（Let's Encrypt）
-4. 1-5 分钟后看到 ✅ Valid Configuration
+4. 等到看到 ✅ Valid Configuration
 
-**如果 CNAME 不行**（少见情况），用 A 记录：
-```
-Type: A     Name: stock     Value: 76.76.21.21
+**Namecheap 不需要关 proxy**（不像 Cloudflare）—— Namecheap 没有 proxy 功能，CNAME 直接生效。
+
+### 验证 DNS 是否传播
+
+```bash
+dig stock.knowulearning.com CNAME +short
+# 应返回：cname.vercel-dns.com.
 ```
 
-**Cloudflare 特别注意**：必须 DNS only（灰色云），不能 proxied（橙色云），否则 SSL 验证卡住。
+或用 https://dnschecker.org 输入 `stock.knowulearning.com` 选 CNAME 看全球节点。
+
+### 如果 CNAME 不工作（罕见），改用 A 记录
+
+```
+Type:   A Record
+Host:   stock
+Value:  76.76.21.21
+TTL:    Automatic
+```
 
 ---
 
@@ -275,7 +296,8 @@ var doSave = async (d) => {
 4. **Vercel CDN 缓存 `/vocab` 静态页 3 小时** → deploy 后用户 hard refresh 也可能拿不到新版本，需要等 CDN 失效
 5. **Vercel env pull 偶尔在 token 字段写入 literal `\n`** → 本地 source .env 报 parse error，要手动清
 6. **Supabase Free tier 没 PITR/backup** → 全靠应用层做快照（已实现 L2）
-7. **Cloudflare proxied DNS 阻挡 Vercel SSL 验证** → 子域必须 DNS only
+7. **Cloudflare proxied DNS 阻挡 Vercel SSL 验证** → 子域必须 DNS only（**当前域在 Namecheap 不涉及，但若未来迁 CF 注意**）
+8. **Namecheap CNAME 末尾要带点** → `cname.vercel-dns.com.` 而非 `cname.vercel-dns.com`（Namecheap UI 会自动补，但手动复制粘贴时容易丢）
 
 ---
 
