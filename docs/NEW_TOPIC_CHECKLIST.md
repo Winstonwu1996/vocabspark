@@ -105,20 +105,50 @@
 
 ---
 
-## Phase 5.5 — Audio 预生成（5-4 加，VibeVoice TTS 集成）
+## Phase 5.5 — Audio 预生成（5-4 加；5-5 升级 hash check + 纪律）
 
-- [ ] **lib/audio/voice-map.json 加新角色**：
-  - 每个新 lens cosplay 名字（如 'Konrad of Strasbourg' / 'Devorah bat Yitzhak'）→ 选 1 个 VibeVoice voice
-  - 可选 voice：en-Carter / en-Davis / en-Frank / en-Mike / en-Emma / en-Grace（仅 6 EN voices）
-  - 跨 Topic voice 重用 OK（用户单 Topic navigate）
-  - 加 narrator voice
-- [ ] **跑 audio 批量生成**（per `scripts/AUDIO_SETUP.md`）：
-  ```bash
-  node scripts/generate-audio.mjs --topic <topic-id>
-  ```
-  时间：M1/M2 约 10-15 分钟 / lens
-- [ ] **验证文件**：`public/audio/<topic-id>/<lens-id>/n1.mp3` ~ `n12.mp3` 全部存在
+> ⚠️ **严格纪律**：audio 是 **content-derived static asset**——只在内容 ship-ready
+> 时跑。**不能** 在 iteration phase 跑（5-4 第一次跑 Agnolo lens 8/12 后用户提醒：
+> "如果后面我们改动了文字，不是白做了吗"）。
+
+**前置硬条件**（必须**全部**满足才跑 audio）：
+- [ ] Phase 1 narrative kernel + Sarah audit pass
+- [ ] Phase 2 lens 起草 + 4-agent review + **所有 P0 修完**
+- [ ] Phase 5 Willow simulator + founder 实测 5 分钟 pass
+- [ ] **若 PIPELINE 第 7/8 条加了新规则**——已经 retro-pass 应用（Phase 7.5 纪律）
+- [ ] **content lock 决定**——明示"这一版 ship-ready，audio 可生"
+
+### 跑 audio（idempotent — 5-5 加 hash check）
+
+```bash
+# 1. lib/audio/voice-map.json 加新角色 → voice 映射
+# 2. 跑生成（已有 hash 的节点会 skip；内容变了的会自动重生）
+node scripts/generate-audio.mjs --topic <topic-id>
+```
+
+**Hash check 机制**（5-5 加）：
+- 每个生成的 audio 旁边存一个 `.hash` 文件 = sha256(EN_text + voice_name)
+- 重新跑脚本时:
+  - hash 匹配 → skip（"已存在 + hash 匹配"）
+  - hash 不匹配 → 重生（"内容/voice 变了 → 重生"）
+  - 文件不存在 → 生成
+- 可选 voice：en-Carter / en-Davis / en-Frank / en-Mike / en-Emma / en-Grace（仅 6 EN voices）
+- 跨 Topic voice 重用 OK（用户单 Topic navigate）
+
+时间：M1/M2 约 10-15 分钟 / lens（12 节点 × ~5-6 min）
+
+### 完工后
+
+- [ ] **验证文件**：`public/audio/<topic-id>/<lens-id>/n1.mp3` ~ `n12.mp3` + `.hash` 全部存在
 - [ ] **commit `public/audio/<topic-id>/` 进 git**（必跟 ship 一起）
+
+### 内容更新后必做（5-5 纪律）
+
+如果 ship 之后**又改了** lens 内容（任何 P1 fix / retro-pass / typo 修），audio 就脏了。
+**必须**：
+1. 重跑 `node scripts/generate-audio.mjs --topic <topic-id>` — 自动只重生 hash 不匹配的节点
+2. commit 新 audio 文件
+3. 不允许 ship 有 audio 但内容已变 — 这等于"用户听到的 voice 跟读到的字不一致"
 
 ## Phase 6 — Ship
 

@@ -27,6 +27,7 @@ import { promises as fs } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 
 var __dirname = dirname(fileURLToPath(import.meta.url));
 var REPO_ROOT = join(__dirname, '..');
@@ -215,16 +216,27 @@ async function main() {
 
         var voiceName = pickVoice(voiceMap, topicId, lensId, node.cosplay);
         var outputMP3 = join(lensOutputDir, 'n' + node.id + '.mp3');
-        var outputWAV = join(lensOutputDir, 'n' + node.id + '.wav');  // legacy fallback
+        var outputWAV = join(lensOutputDir, 'n' + node.id + '.wav');
+        var hashFile = join(lensOutputDir, 'n' + node.id + '.hash');
 
-        // 已存在 .mp3 或 .wav 则 skip（除非 NODE_FILTER 强制）
-        var existsMP3 = false, existsWAV = false;
+        // ⭐ content-hash check：只有内容 + voice 都没变才 skip
+        // 哈希 = sha256(EN_text + voice_name)，存在 .hash 文件
+        var contentHash = createHash('sha256').update(enText + '|' + voiceName).digest('hex');
+        var existsMP3 = false, existsWAV = false, savedHash = null;
         try { await fs.access(outputMP3); existsMP3 = true; } catch (e) {}
         try { await fs.access(outputWAV); existsWAV = true; } catch (e) {}
-        if ((existsMP3 || existsWAV) && !NODE_FILTER) {
-          console.log('  [n' + node.id + '] ✅ 已存在 → skip');
+        try { savedHash = await fs.readFile(hashFile, 'utf-8'); savedHash = savedHash.trim(); } catch (e) {}
+
+        if ((existsMP3 || existsWAV) && savedHash === contentHash && !NODE_FILTER) {
+          console.log('  [n' + node.id + '] ✅ 已存在 + hash 匹配 → skip');
           totalSkip++;
           continue;
+        }
+        if ((existsMP3 || existsWAV) && savedHash !== contentHash) {
+          console.log('  [n' + node.id + '] 🔄 内容/voice 变了 → 重生');
+          // 删除旧文件（hash mismatch = 重生）
+          try { await fs.unlink(outputMP3); } catch (e) {}
+          try { await fs.unlink(outputWAV); } catch (e) {}
         }
 
         console.log('  [n' + node.id + '] phase=' + node.phase + ' cosplay=' + (node.cosplay || '-') + ' voice=' + voiceName + ' chars=' + enText.length);
@@ -236,6 +248,8 @@ async function main() {
 
         try {
           await runVibeVoice(enText, voiceName, lensOutputDir, 'n' + node.id);
+          // 写 .hash 文件标记"这个 audio 对应这个 content + voice"
+          await fs.writeFile(hashFile, contentHash, 'utf-8');
           totalGen++;
           console.log('    ✅ ' + outputMP3);
         } catch (e) {
