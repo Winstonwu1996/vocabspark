@@ -62,7 +62,7 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 
 ---
 
-## ⛔ 第 8 条：Lens 写作 8 类硬规则（多轮 4-agent review 总结，2026-05-04 加；G/H 5-3 加）
+## ⛔ 第 8 条：Lens 写作 9 类硬规则（多轮 4-agent review 总结，2026-05-04 加；G/H 5-3 加；I 5-4 加）
 
 经过 Magna Carta + Crusades + Black Death 三个 Topic 的 4-agent review（每个 Topic 7thgrader / AP teacher / ESL teacher / Chinese teacher 各跑一遍）后总结。**所有规则都来自具体事故**——事故已修，规则防再发。
 
@@ -128,6 +128,41 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 2. **Cultural ban 14 词** + 中国家庭称谓（娘亲 / 相公 / 父亲大人 / 舅舅 / 姨夫）+ 中国官职（宰相 / 丞相 / 尚书 / 将军）严禁出现在非中国 lens
 3. **角色对白禁止中英 code-mix**（"不是 abstract" / "我 confused"）—— narrator 可以用术语 + gloss，**角色不能**
 4. **角色 vocabulary 与角色年龄/身份匹配**：14 岁女孩不说"世界观" / "意识形态" / "结构性" —— 用她那个年龄会说的话
+
+### I. 外语术语最少化（防外语灌输认知负担事故，5-4 加）
+
+**事故**：用户 5-4 反馈："除非不得不写出来的无法对应的术语，否则尽量少用希腊文这些，只要英语和中文。其他的语言灌输是认知负担。"
+
+**根因**：lens 内容里大量 italic 外语术语（拉丁文 / 希腊文 / 阿拉伯文 / 希伯来文 / 意第绪文 / 德文 / 意大利文）—— 一段话 5+ 外语 italic word 时，12 岁 ESL 学生认知负载超额。一些 italic 是必要的（家庭称谓 / 不可译制度），但很多是装饰性的。
+
+**规则**：
+1. **默认只用中文 + 英文**两种语言。所有非中英术语都需要"必须保留"的理由
+2. **保留外语 italic 的合理场景**：
+   - **家庭称谓**（已经选定一致用）：*Aba* / *baba* / *Ima* / *Bubbe* / *ummi* —— 这些是身份标识，"爸爸"丢失文化具体性
+   - **真实历史专有名词 / 书名**：*Cronaca senese* (书名) / *Palazzo Pubblico* (建筑名) / *Alexiad* / *Decameron* / *Tehillim*（诗篇希伯来名）—— 这些是 proper noun
+   - **文化制度术语没有英中一对一翻译**：*podestà* / *Bürgermeister* / *fossa comune* / *Judengasse* —— 这些有具体制度内涵
+   - **真实历史引文 + 仪式语**：*Deus vult* / *Pater Noster* / *Adonai roi lo echsar* —— 文化具体性的核心
+3. **删除外语 italic 的场景**：
+   - 有完全对应中英文的：*il Grasso* "胖子 Agnolo" → "胖子 Agnolo"（删 italic，外号意义中文已 carry）
+   - *bookkeeper* → "记账员"（普通职业名）
+   - *da Genova* → "来自 Genoa" 或 "热那亚商人"（普通来源标识）
+   - *Cronaca* notebook → "编年史笔记本"（除非作书名 *Cronaca senese* 标）
+4. **每段（约 250 字 CN）最多 2-3 个 italic 外语术语**——超过就是认知超负荷
+5. **首次出现 inline gloss 后续直接用中文**：第一次 *podestà*（市长），后续就用 "市长"或 "*podestà*" (首次后不再括号)。**不要每次都给 italic**
+
+**反例**（一段中 italic 过密，cognitive load 爆炸）：
+> 我叫 Agnolo di Tura，人家叫我 *il Grasso*——"胖子 Agnolo"——这是我自己写在 *Cronaca* 笔记本第一页的称呼。我在 Siena 鞋匠工会（*Arte dei Calzolai*）做 *bookkeeper*——记账员——每周二 + 周五早上去 *Palazzo Pubblico*（市政厅）查档案、做账。
+
+5 个 italic 外语 + 5 个 inline gloss = 一段消化 10 个外语 token。
+
+**正例**（保留必要的 italic，删除装饰性的）：
+> 我叫 Agnolo di Tura，人家叫我"胖子 Agnolo"。这是我自己写在编年史笔记本第一页的称呼。我在 Siena 鞋匠工会（*Arte dei Calzolai*）做记账员：每周二、周五早上去 *Palazzo Pubblico*（市政厅）查档案、做账。
+
+2 个 italic（工会名 + 建筑名 — proper nouns）+ 2 个 gloss = 同样信息，认知负载减半。
+
+**自检**：lens 写完后看每段 italic 外语 token 数。**＞ 3 个就要砍**。
+
+---
 
 ### G. Em-dash 密度预算（防 Black Death "—" 蔓延事故）
 
@@ -205,6 +240,7 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 - ✅ 数学 + 年代自检（F）
 - ✅ Em-dash 密度预算（G）—— 5-3 加
 - ✅ Lens card description schema（H）—— 5-3 加
+- ✅ 外语术语最少化（I）—— 5-4 加
 - ✅ Cultural ban 14 词（第 7 条）
 
 **不能前置（必须 case-by-case 跑 4-agent review）**：
