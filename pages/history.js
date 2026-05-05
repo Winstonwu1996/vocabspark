@@ -1352,7 +1352,8 @@ export default function HistoryPage() {
           <TopicHero topic={topic} phase={phase} />
 
           {/* ── Geography Section ── */}
-          {topic && topic.geography && (
+          {/* 5-5: atlas → role 进入流程下隐藏 — 用户已在 atlas-lab 看过完整地图,不重复 */}
+          {topic && topic.geography && !(pendingRole && pendingRole.figure) && (
             <GeographySection
               topic={topic}
               isOpen={geoOpen}
@@ -1699,6 +1700,96 @@ function GeographySection(props) {
     setMapView(isTangSong ? "country" : "continent");
   }, [topic.id]);
 
+  // 5-5: useAtlasLink:true 的 Topic 没专属手画 SVG (Crusades / Black Death)
+  // → 显示文字 orientation + Atlas Lab 链接 card,而不是用错位的 europe-1200 凑数
+  if (geo.useAtlasLink) {
+    var atlasUrl = geo.atlasViewId ? "/atlas-lab/" + geo.atlasViewId : "/atlas-lab";
+    return (
+      <div className="geo-card" id="geo-anchor">
+        <button className={"geo-toggle " + (props.isOpen ? "open" : "")} onClick={props.onToggle}>
+          <span style={{fontSize: 18}}>📍</span>
+          <span>Where this happened — {geo.worldOrient.orientNote.cn}</span>
+          <span className="arrow" style={{marginLeft: "auto"}}>▼</span>
+        </button>
+        {props.isOpen && (
+          <div className="geo-body" style={{padding: "16px 18px"}}>
+            {/* 文字 orientation */}
+            <div style={{
+              padding: "10px 14px",
+              background: HC.parchmentLo,
+              borderRadius: 8,
+              fontSize: 13,
+              color: HC.text,
+              lineHeight: 1.6,
+              marginBottom: 12,
+            }}>
+              <strong>📌 {geo.worldOrient.orientNote.cn}</strong>
+            </div>
+            {/* Why matters 文字 */}
+            {geo.whyMatters && geo.whyMatters.cn && (
+              <div style={{
+                fontSize: 12.5,
+                color: HC.text,
+                lineHeight: 1.65,
+                marginBottom: 14,
+                opacity: 0.92,
+              }}>
+                {geo.whyMatters.cn}
+              </div>
+            )}
+            {/* Scale anchors */}
+            {geo.scaleAnchors && geo.scaleAnchors.length > 0 && (
+              <ul style={{
+                margin: 0, paddingLeft: 18, fontSize: 12, color: HC.textSec,
+                lineHeight: 1.7, marginBottom: 14,
+              }}>
+                {geo.scaleAnchors.map(function(a, i) {
+                  return <li key={i}>{a.cn}</li>;
+                })}
+              </ul>
+            )}
+            {/* Atlas Lab link card */}
+            <a
+              href={atlasUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "block",
+                padding: "12px 16px",
+                background: "linear-gradient(135deg, #fef3d2 0%, #fbe8a8 100%)",
+                border: "1px solid #d4a050",
+                borderRadius: 10,
+                textDecoration: "none",
+                color: HC.text,
+                fontSize: 13,
+                fontWeight: 600,
+                textAlign: "center",
+                transition: "transform 0.15s, box-shadow 0.15s",
+              }}
+              onMouseEnter={function(e) {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(212, 160, 80, 0.35)";
+              }}
+              onMouseLeave={function(e) {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              🗺️ 完整地图(政治多边形 + 地理要素 + 历史 / 现代翻转)在 Atlas Lab →
+            </a>
+            <div style={{
+              marginTop: 6, fontSize: 10.5, color: HC.textSec, fontStyle: "italic",
+              textAlign: "center", opacity: 0.85,
+            }}>
+              新标签页打开 · 看完回来继续这里的对话
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // 默认: 现有手画 SVG 渲染分支(Magna Carta / Tang-Song)
   return (
     <div className="geo-card" id="geo-anchor">
       <button className={"geo-toggle " + (props.isOpen ? "open" : "")} onClick={props.onToggle}>
@@ -2687,8 +2778,13 @@ function IntroScreen(props) {
           fontSize: 12, color: HC.text, lineHeight: 1.55,
           borderLeft: "3px solid " + HC.accent
         }}>
-          📍 <strong>页面顶部的「Where this happened」</strong>就是地图区 — 任何时候都可以点开看 1200 年的欧洲，再翻过来看今天。<br/>
-          ⭐ AI 说话里**金色的词**点一下能看 IPA + 听发音；<span style={{color: HC.teal, fontWeight: 600}}>蓝色虚线下划线的人名地名</span>点一下看解释。
+          {/* 5-5: hasPendingRole 时 Geography 已隐藏(用户已在 atlas 看过),提示改成 atlas 入口 */}
+          {hasPendingRole ? (
+            <>📍 <strong>完整地图</strong>已经在 Atlas Lab 那边看过了 — 等下需要随时回去翻 <a href={"/atlas-lab/" + (topic.geography && topic.geography.atlasViewId ? topic.geography.atlasViewId : "")} target="_blank" rel="noopener noreferrer" style={{color: HC.accent, fontWeight: 600}}>Atlas Lab →</a><br/></>
+          ) : (
+            <>📍 <strong>页面顶部的「Where this happened」</strong>就是地图区 — 任何时候都可以点开看,再翻过来看今天。<br/></>
+          )}
+          ⭐ AI 说话里**金色的词**点一下能看 IPA + 听发音;<span style={{color: HC.teal, fontWeight: 600}}>蓝色虚线下划线的人名地名</span>点一下看解释。
           {/* B3: 重看 walkthrough 入口 */}
           {props.onShowWalkthrough && (
             <span style={{
