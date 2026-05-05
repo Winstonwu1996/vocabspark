@@ -139,6 +139,32 @@
   - 任何"漏掉 X 字段导致 runtime error" → 加进 `_template.js` 必填字段注释
   - 任何"漏掉 X 步导致问题" → 加进本 checklist
 
+### 7.5 — **Retro-pass 已有内容**（5-3 加，关键漏洞修复）
+
+> 当 Phase 7 给规则库加了**新规则**，**已有内容必须 retro-pass 重新过一遍**。
+> 否则会发生："规则修过了，为什么后面生成的还是有？" —— 真实事故见 5-3 Black Death em-dash。
+
+- [ ] **判断**：刚加的规则是否影响**已 ship 的内容**？
+  - 影响：Voice / em-dash / 文化禁用 / 角色称谓 / synthesis 标签——这种是 content-level，已有内容受影响
+  - 不影响：Topic 元数据字段 / 流程步骤 / lens card description——这种只影响新写
+- [ ] **如果影响**：开 retro-pass task：
+  - 列出已 ship 的所有 Topic（这次新规则要 retro 的）
+  - **优先级**：按"用户最近 / 最常用"排序——例 5-3 Black Death 是 founder 正在测，最优先
+  - 写 retro-prompt（参考 lens-author.md §V，但任务是"应用规则 X 到已有内容 Y"，不是从头起草）
+  - Spawn agent 跑 retro-pass，落盘**不 commit**
+  - 主线前台过一遍（同 Phase 2 纪律）
+  - commit
+- [ ] **回流 checklist 本身**：把 retro-pass 步骤纪律写进规则文档——下次新规则加时自动 trigger
+
+**为什么这是机制最关键的 missing piece**：
+没有 retro-pass step，**每次新规则**只覆盖**新内容**，已有内容 silent drift。
+用户测试已有内容时会反复抓到"修过又有"——破坏对机制的信任。
+
+**Retro-pass 的频次**：
+- 新规则一加进 PIPELINE/lens-author，**当天**对最常用 Topic 跑 retro
+- 其他 Topic 在下次实测前跑 retro
+- 不要积累"历史债"——3 个规则更新后再 retro 4 个 Topic 是噩梦
+
 ---
 
 ## 规则护城河 — 三层封装
