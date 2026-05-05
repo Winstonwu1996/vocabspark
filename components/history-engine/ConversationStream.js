@@ -585,8 +585,8 @@ export function ConversationStream(props) {
       {allDone && (
         <div className="continue-bar" style={{flexDirection: "column", gap: 12, padding: "20px 0"}}>
           <div style={{fontSize: 13, color: HC.textSec, textAlign: "center"}}>
-            13 轮对话完成 — 现在进入记忆考核。<br/>
-            ✏️ 拼写测试 + 概念定义 + 应用题，必过才算完成。
+            全部对话完成 — 现在进入记忆考核。<br/>
+            ✏️ 拼写测试 + 概念定义 + 应用题,必过才算完成。
           </div>
           <button className="continue-btn" style={{background: HC.accent, fontSize: 15, padding: "14px 36px"}} onClick={props.onStartMastery}>
             开始记忆考核 ✏️

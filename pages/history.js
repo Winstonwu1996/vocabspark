@@ -1401,6 +1401,9 @@ export default function HistoryPage() {
               topicLenses={topicLenses}
               hasLensesForTopic={hasLensesForTopic}
               selectedLensId={effectiveLensId}
+              pendingRole={pendingRole}
+              embedded={embedded}
+              effectiveTurns={effectiveTurns}
               onSelectLens={function(lensId) {
                 setSelectedLensId(lensId);
                 // 切 lens 重置进度（不同 lens 节点数量不同——log 会错位）
@@ -2609,6 +2612,11 @@ function IntroScreen(props) {
   if (!topic) return null;
   var curriculum = props.curriculum;
   var hp = props.historyProfile;
+  // 5-5: atlas → role 进入流程下,简化页面元素
+  // - hidePendingRoleNoise: 有 pendingRole 时隐藏 lens 模式无关元素(英文比例 / 通史脉络切换)
+  var hasPendingRole = !!(props.pendingRole && props.pendingRole.figure);
+  // - lens 节点数: 优先用 effectiveTurns,fallback 12
+  var lensTurnCount = (props.effectiveTurns && props.effectiveTurns.length) || 12;
   return (
     <div style={{padding: "20px 0"}}>
       {/* ── 已识别的画像 + 课程 banner ── */}
@@ -2634,8 +2642,8 @@ function IntroScreen(props) {
         </div>
       )}
 
-      {/* ── 英文比例选择（N3） ── */}
-      {props.englishLevel !== undefined && (
+      {/* ── 英文比例选择（N3）—— 5-5: lens 模式下 prewritten,这个 toggle 无效,隐藏 ── */}
+      {!hasPendingRole && props.englishLevel !== undefined && (
         <div style={{
           padding: "8px 12px",
           background: HC.parchmentHi,
@@ -2700,18 +2708,30 @@ function IntroScreen(props) {
             </>
           ) : topic.id === "crusades-1099" ? (
             <>
-              <li>跟 AI 聊 13 轮 — 三方视角（拉丁/拜占庭/穆斯林）走完 1099 占耶路撒冷 → 1187 萨拉丁夺回 → 1291 Acre 陷</li>
+              <li>跟 AI 聊 {lensTurnCount} 节 — 走完 1099 占耶路撒冷 → 1187 萨拉丁夺回 → 1291 Acre 陷</li>
               <li>看 1099 年的黎凡特地图 — 君士坦丁堡 = 今天的伊斯坦布尔；耶路撒冷三教共圣</li>
               <li>读 900 年前的真东西 — Pope Urban II 1095 Clermont 演说 + Ibn al-Athir 1099 耶路撒冷陷落记</li>
-              <li>代入 Yusuf 或 Layla（13 岁穆斯林学生），体会战争中孩子的视角</li>
+              <li>过一关核心词汇 + 概念背诵 — <strong>不背不算完成</strong></li>
+            </>
+          ) : topic.id === "black-death-1347" ? (
+            <>
+              <li>跟 AI 聊 {lensTurnCount} 节 — 走完 1347 Caffa 围城 → Messina 登陆 → 1349 Strasbourg 屠犹</li>
+              <li>看欧亚瘟疫传播路径 — 黑海 → 地中海 → 阿尔卑斯 → 整个欧洲 4 年扫完</li>
+              <li>读 700 年前的真东西 — Agnolo di Tura《Cronaca senese》"亲手埋 5 子"那一句</li>
+              <li>过一关核心词汇 + 概念背诵 — <strong>不背不算完成</strong></li>
+            </>
+          ) : topic.id === "magna-carta-1215" ? (
+            <>
+              <li>跟 AI 聊 {lensTurnCount} 节 — 从校规类比起手,慢慢引到 Magna Carta</li>
+              <li>看 1200 年的欧洲地图,翻过来看今天的欧洲（君士坦丁堡 = 伊斯坦布尔！）</li>
+              <li>读 800 年前的真东西 — Clause 39 原文 + 中文释义</li>
               <li>过一关核心词汇 + 概念背诵 — <strong>不背不算完成</strong></li>
             </>
           ) : (
             <>
-              <li>跟 AI 聊 13 轮 — 从校规类比开始，慢慢引到 Magna Carta</li>
-              <li>看 1200 年的欧洲地图，翻过来看今天的欧洲（君士坦丁堡 = 伊斯坦布尔！）</li>
-              <li>读 800 年前的真东西 — Clause 39 原文 + 中文释义</li>
-              <li>代入一个想象的 13 岁角色，体会那天的难抉择</li>
+              <li>跟 AI 聊 {lensTurnCount} 节</li>
+              <li>看历史地图 + 翻看现代版</li>
+              <li>读原始史料</li>
               <li>过一关核心词汇 + 概念背诵 — <strong>不背不算完成</strong></li>
             </>
           )}
@@ -2729,7 +2749,10 @@ function IntroScreen(props) {
       </div>
 
       {/* N4: 通史脉络图 — 已学 + 待学 Topic 一览（点 Topic 卡可切换）*/}
-      <ThroughLineMap topic={topic} onSwitch={props.onSwitchTopic} />
+      {/* 5-5: atlas → role 进入流程下隐藏(避免"重新选 Topic"破坏 immersion) */}
+      {!hasPendingRole && (
+        <ThroughLineMap topic={topic} onSwitch={props.onSwitchTopic} />
+      )}
 
       {/* ── Phase 3: Lens 选择卡（如 Topic 有多个 lens 可选）── */}
       {props.hasLensesForTopic && props.topicLenses && props.topicLenses.length > 1 && (
@@ -2944,7 +2967,7 @@ function Walkthrough(props) {
     {
       icon: "🦉",
       title: "AI 用你的世界讲历史",
-      body: "13 轮对话从你的校规出发，慢慢引到 Magna Carta。不是讲课 — 是聊天。",
+      body: "12 节对话从你的校规出发,慢慢引到 Magna Carta。不是讲课 — 是聊天。",
     },
     {
       icon: "⭐",
