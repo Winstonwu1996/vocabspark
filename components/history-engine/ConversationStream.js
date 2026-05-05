@@ -15,10 +15,126 @@
 //   topic, conversationLog, turnIndex, aiStreaming, aiThinking, error, userInput,
 //   onInputChange, onSubmit, onAdvance, onStartMastery, onTermClick, onMustClick,
 //   onJumpToMap
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { HC } from './theme';
 import { renderBilingualText } from './bilingual';
 import { VoiceInputButton } from '../VoiceInputButton';
+
+// ─── Audio Player — VibeVoice TTS 一键朗读（5-4 加） ─────────────────
+// 仅 EN mode + entry 是 prewritten + 对应 MP3 文件存在时显示
+// MP3 路径：/audio/{topicId}/{lensId}/n{N}.mp3（build-time 预生成）
+function AudioPlayer(props) {
+  // props: { topicId, lensId, turnId, englishLevel }
+  var [audio, setAudio] = useState(null);
+  var [playing, setPlaying] = useState(false);
+  var [available, setAvailable] = useState(null);  // null = 未检测，true/false = 已检测
+  var [progress, setProgress] = useState(0);
+  var audioRef = useRef(null);
+
+  // 仅 EN mode 显示
+  if (props.englishLevel !== 'high') return null;
+  if (!props.topicId || !props.lensId || typeof props.turnId === 'undefined') return null;
+
+  var src = '/audio/' + props.topicId + '/' + props.lensId + '/n' + props.turnId + '.mp3';
+
+  // HEAD 检测文件是否存在（lazy — 只在首次显示时跑）
+  useEffect(function () {
+    if (available !== null) return;
+    fetch(src, { method: 'HEAD' })
+      .then(function (r) { setAvailable(r.ok); })
+      .catch(function () { setAvailable(false); });
+  }, [src]);
+
+  if (available === false) return null;       // 没文件 — 干脆不显示
+  if (available === null) return null;        // 加载中 — 暂不显示
+
+  function togglePlay() {
+    if (!audioRef.current) {
+      var a = new Audio(src);
+      a.addEventListener('ended', function () {
+        setPlaying(false);
+        setProgress(0);
+      });
+      a.addEventListener('timeupdate', function () {
+        if (a.duration) setProgress(a.currentTime / a.duration);
+      });
+      audioRef.current = a;
+    }
+    if (playing) {
+      audioRef.current.pause();
+      setPlaying(false);
+    } else {
+      // 暂停其他正在播放的（全局唯一）
+      window.dispatchEvent(new CustomEvent('audio-pause-all'));
+      audioRef.current.play();
+      setPlaying(true);
+    }
+  }
+
+  // 监听全局暂停事件（其他 AudioPlayer 开播时停自己）
+  useEffect(function () {
+    function handler() {
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+        setPlaying(false);
+      }
+    }
+    window.addEventListener('audio-pause-all', handler);
+    return function () { window.removeEventListener('audio-pause-all', handler); };
+  }, []);
+
+  // 卸载时停
+  useEffect(function () {
+    return function () {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  return (
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      marginTop: 6,
+      padding: '4px 10px',
+      borderRadius: 999,
+      background: playing ? HC.accent : 'rgba(0,0,0,0.04)',
+      color: playing ? '#fff8e8' : HC.textSec,
+      fontSize: 11,
+      cursor: 'pointer',
+      userSelect: 'none',
+      fontFamily: 'inherit',
+      transition: 'background 0.15s',
+    }}
+    onClick={togglePlay}
+    title={playing ? '暂停' : '朗读 (VibeVoice)'}>
+      <span style={{ fontSize: 13 }}>{playing ? '⏸' : '🔊'}</span>
+      <span>{playing ? '暂停' : '朗读'}</span>
+      {playing && progress > 0 && (
+        <span style={{
+          display: 'inline-block',
+          width: 30,
+          height: 3,
+          background: 'rgba(255,255,255,0.3)',
+          borderRadius: 2,
+          marginLeft: 4,
+          overflow: 'hidden',
+        }}>
+          <span style={{
+            display: 'block',
+            width: Math.round(progress * 100) + '%',
+            height: '100%',
+            background: '#fff8e8',
+            transition: 'width 0.2s',
+          }} />
+        </span>
+      )}
+    </div>
+  );
+}
 
 // ─── Phase Divider — Story-First Pedagogy v3 视觉相位提示 ─────────
 // 当 AI 节点 move 从 cosplay (hook/story) 跳到 synthesis/meta，
@@ -196,6 +312,15 @@ export function ConversationStream(props) {
                 <div className="avatar">🦉</div>
                 <div className={"bubble ai " + (entry.isFallback ? "fallback" : "") + (entry.move === "synthesis" || entry.move === "meta" ? " analytical" : "")}>
                   {renderBilingualText(entry.content, { topic: topic, onTermClick: props.onTermClick, onMustClick: props.onMustClick })}
+                  {/* 5-4: VibeVoice 一键朗读（仅 EN mode + prewritten + MP3 存在）*/}
+                  {entry._prewritten && (
+                    <AudioPlayer
+                      topicId={props.topicId}
+                      lensId={props.lensId}
+                      turnId={entry.turn}
+                      englishLevel={props.englishLevel}
+                    />
+                  )}
                 </div>
               </div>
               {/* 地图轮 — 加快速跳到地图区域的链接（Winston review #2） */}

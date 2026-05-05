@@ -105,6 +105,21 @@
 
 ---
 
+## Phase 5.5 — Audio 预生成（5-4 加，VibeVoice TTS 集成）
+
+- [ ] **lib/audio/voice-map.json 加新角色**：
+  - 每个新 lens cosplay 名字（如 'Konrad of Strasbourg' / 'Devorah bat Yitzhak'）→ 选 1 个 VibeVoice voice
+  - 可选 voice：en-Carter / en-Davis / en-Frank / en-Mike / en-Emma / en-Grace（仅 6 EN voices）
+  - 跨 Topic voice 重用 OK（用户单 Topic navigate）
+  - 加 narrator voice
+- [ ] **跑 audio 批量生成**（per `scripts/AUDIO_SETUP.md`）：
+  ```bash
+  node scripts/generate-audio.mjs --topic <topic-id>
+  ```
+  时间：M1/M2 约 10-15 分钟 / lens
+- [ ] **验证文件**：`public/audio/<topic-id>/<lens-id>/n1.mp3` ~ `n12.mp3` 全部存在
+- [ ] **commit `public/audio/<topic-id>/` 进 git**（必跟 ship 一起）
+
 ## Phase 6 — Ship
 
 - [ ] **Commit 单一**：

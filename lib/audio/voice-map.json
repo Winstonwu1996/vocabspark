@@ -1,0 +1,64 @@
+{
+  "_comment": "VibeVoice-Realtime-0.5B 音色分配。基于角色档案盲分，可按实际听感调整。",
+  "_vibevoice_voices": {
+    "en-Carter_man": "成熟温暖男声，适合学者 / 编年史家",
+    "en-Davis_man": "深沉权威男声，适合统治者 / 中年权重",
+    "en-Emma_woman": "清亮年轻女声，适合 12-15 岁女孩",
+    "en-Frank_man": "自然对话感男声，适合 20-30 岁青年",
+    "en-Grace_woman": "温柔女声，适合带创伤底色的女孩",
+    "en-Mike_man": "中年男声，自然、可粗可细",
+    "in-Samuel_man": "印度英男声，目前不用"
+  },
+
+  "_global_default": "en-Davis_man",
+
+  "magna-carta-1215": {
+    "king-john": {
+      "King John":          { "voice": "en-Davis_man",  "note": "暴君 + 失败者 — 深沉权威带苦" }
+    },
+    "stephen-langton": {
+      "Stephen Langton":    { "voice": "en-Carter_man", "note": "Canterbury 大主教 + 学者 — 温暖学者感" }
+    },
+    "tom-villein": {
+      "Tom（13 岁农奴男孩）": { "voice": "en-Frank_man",  "note": "13 岁少年 — Frank 最接近少年口吻；非完美但较好" },
+      "Tom":                { "voice": "en-Frank_man",  "note": "alias 别名" }
+    },
+    "_narrator": "en-Mike_man"
+  },
+
+  "crusades-1099": {
+    "roger-toulouse": {
+      "Roger de Toulouse":  { "voice": "en-Frank_man",  "note": "21-25 岁南法骑士 — 自然年轻男" }
+    },
+    "alexios": {
+      "Alexios I Komnenos": { "voice": "en-Davis_man",  "note": "拜占庭皇帝 — 中年权威，跨 24-62 岁" }
+    },
+    "aisha-jerusalem": {
+      "Aisha bint Yusuf":   { "voice": "en-Emma_woman", "note": "12 岁穆斯林女孩 — 清亮年轻" }
+    },
+    "_narrator": "en-Mike_man"
+  },
+
+  "black-death-1347": {
+    "agnolo-siena": {
+      "Agnolo di Tura":     { "voice": "en-Carter_man", "note": "35 岁 Siena 编年史家 — 学者感 + 有重量" }
+    },
+    "konrad-strasbourg": {
+      "Konrad of Strasbourg": { "voice": "en-Mike_man", "note": "38 岁屠夫 + 议员 — 厚重中年自然口吻" }
+    },
+    "devorah-strasbourg": {
+      "Devorah bat Yitzhak": { "voice": "en-Grace_woman", "note": "14 岁犹太女孩 — Grace 带温度，承得住地窖 + 森林创伤底色" }
+    },
+    "_narrator": "en-Davis_man"
+  },
+
+  "_reuse_note": "跨 Topic 有 voice 重用（因只 6 EN voices）。但用户是按 Topic 走的，每个 Topic 内部 voice 唯一不冲突，UX 上不会混淆。",
+
+  "_revision_history": [
+    {
+      "date": "2026-05-04",
+      "action": "首版盲分 — 听完 demo 后可改",
+      "by": "Claude based on character profiles in storyboards"
+    }
+  ]
+}

@@ -1441,6 +1441,9 @@ export default function HistoryPage() {
               </div>
               <ConversationStream
                 topic={topic}
+                topicId={topicId}
+                lensId={effectiveLensId}
+                englishLevel={englishLevel}
                 effectiveTurns={effectiveTurns}
                 turnIndex={turnIndex}
                 conversationLog={conversationLog}
