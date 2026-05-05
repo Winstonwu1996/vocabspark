@@ -2880,26 +2880,37 @@ function LensSelector(props) {
                 transition: "all 0.15s ease",
               }}
             >
-              <div style={{display: "flex", alignItems: "center", gap: 8, marginBottom: 4}}>
-                <span style={{fontSize: 22}}>{icon}</span>
-                <strong style={{fontSize: 14.5, color: HC.ink}}>
-                  {lens.nameCn} {lens.name !== lens.nameCn && '· ' + lens.name}
-                </strong>
-                {active && (
-                  <span style={{
-                    marginLeft: "auto",
-                    fontSize: 11,
-                    color: HC.accent,
-                    fontWeight: 600,
-                  }}>已选 ✓</span>
-                )}
-              </div>
-              <div style={{fontSize: 12, color: HC.teal, marginBottom: 4, fontWeight: 500}}>
-                {lens.role}
-              </div>
-              <div style={{fontSize: 12.5, color: HC.text, lineHeight: 1.55, marginBottom: 6}}>
-                {lens.description}
-              </div>
+              {/* 5-5: lens 字段升级为 bilingual {cn, en} 后,这里用 helper 提取字符串 */}
+              {(() => {
+                var nameCn = (lens.name && typeof lens.name === 'object') ? lens.name.cn : (lens.nameCn || lens.name || '');
+                var nameEn = (lens.name && typeof lens.name === 'object') ? lens.name.en : (typeof lens.name === 'string' ? lens.name : '');
+                var roleStr = (lens.role && typeof lens.role === 'object') ? lens.role.cn : (lens.role || '');
+                var descStr = (lens.description && typeof lens.description === 'object') ? lens.description.cn : (lens.description || '');
+                return (
+                  <>
+                    <div style={{display: "flex", alignItems: "center", gap: 8, marginBottom: 4}}>
+                      <span style={{fontSize: 22}}>{icon}</span>
+                      <strong style={{fontSize: 14.5, color: HC.ink}}>
+                        {nameCn}{nameEn && nameEn !== nameCn ? ' · ' + nameEn : ''}
+                      </strong>
+                      {active && (
+                        <span style={{
+                          marginLeft: "auto",
+                          fontSize: 11,
+                          color: HC.accent,
+                          fontWeight: 600,
+                        }}>已选 ✓</span>
+                      )}
+                    </div>
+                    <div style={{fontSize: 12, color: HC.teal, marginBottom: 4, fontWeight: 500}}>
+                      {roleStr}
+                    </div>
+                    <div style={{fontSize: 12.5, color: HC.text, lineHeight: 1.55, marginBottom: 6}}>
+                      {descStr}
+                    </div>
+                  </>
+                );
+              })()}
               <div style={{fontSize: 11, color: HC.textSec, opacity: 0.85}}>
                 {lens.nodeCount} 节 · 约 {minutes} 分钟
               </div>
@@ -2915,7 +2926,7 @@ function LensSelector(props) {
           fontStyle: "italic",
           opacity: 0.85,
         }}>
-          💡 第一次建议从 {firstLens.nameCn || firstLens.name}（{firstHint.reason}）开始，之后换其他角度。
+          💡 第一次建议从 {(firstLens.name && typeof firstLens.name === 'object') ? firstLens.name.cn : (firstLens.nameCn || firstLens.name || '')}（{firstHint.reason}）开始，之后换其他角度。
         </div>
       )}
     </div>
