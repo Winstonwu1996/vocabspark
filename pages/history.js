@@ -263,7 +263,7 @@ export default function HistoryPage() {
   var [curriculum, setCurriculum] = useState(null);
 
   // —— N3: 英文比例（low/balanced/high）——
-  var [englishLevel, setEnglishLevelState] = useState("balanced");
+  var [englishLevel, setEnglishLevelState] = useState("high");  // 5-4: 默认 EN; lens 内容 high=EN, 其他=CN
 
   // —— U4: 首次 walkthrough ——
   var [showWalkthrough, setShowWalkthrough] = useState(false);
@@ -672,6 +672,32 @@ export default function HistoryPage() {
       fetchAIForTurn(turn, lastUser);
     }
   }, [phase, turnIndex]);
+
+  // ─── 5-4: 切换 CN/EN 时重渲染过去的 prewritten AI 条目 ────────────────
+  // englishLevel 变化时,把 conversationLog 里所有 _prewritten: true 的 AI 条目
+  // 重新拿当前语言的 prewritten content 替换 — 让用户回看也是新语言
+  useEffect(function() {
+    if (phase !== "conversation") return;
+    if (!topic) return;
+    if (conversationLog.length === 0) return;
+    var lang = englishLevel === 'high' ? 'en' : 'cn';
+    var needsUpdate = false;
+    var updated = conversationLog.map(function(entry) {
+      if (entry.role !== "ai" || !entry._prewritten || typeof entry.turn === 'undefined') return entry;
+      // 找到对应的 turn 节点
+      var turn = effectiveTurns.find(function(t) { return t.n === entry.turn; });
+      if (!turn) return entry;
+      var newContent = getPrewrittenContent(turn, lang);
+      if (!newContent) return entry;
+      var injected = injectPlaceholders(newContent, profileFields);
+      if (injected !== entry.content) {
+        needsUpdate = true;
+        return Object.assign({}, entry, { content: injected });
+      }
+      return entry;
+    });
+    if (needsUpdate) setConversationLog(updated);
+  }, [englishLevel]);  // 仅 englishLevel 变化时触发,避免无限循环
 
   // ─── 用户提交答案 ────────────────────────────────────────────────
   var submitUserResponse = function() {
@@ -1376,24 +1402,62 @@ export default function HistoryPage() {
 
           {/* ── Phase: conversation ── */}
           {phase === "conversation" && topic && (
-            <ConversationStream
-              topic={topic}
-              effectiveTurns={effectiveTurns}
-              turnIndex={turnIndex}
-              conversationLog={conversationLog}
-              aiStreaming={aiStreaming}
-              aiThinking={aiThinking}
-              userInput={userInput}
-              onInputChange={setUserInput}
-              onSubmit={submitUserResponse}
-              onAdvance={advanceTurn}
-              onStartMastery={startMasteryGate}
-              onTermClick={setActiveTerm}
-              onMustClick={setActiveMust}
-              onJumpToMap={jumpToMap}
-              onEscapeAction={handleEscapeAction}
-              error={error}
-            />
+            <>
+              {/* CN/EN 语言切换（5-4 加，default EN）*/}
+              <div style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginBottom: 6,
+                gap: 4,
+              }}>
+                {[
+                  { v: "high",     l: "EN" },
+                  { v: "balanced", l: "中" },
+                ].map(function(opt) {
+                  var active = englishLevel === opt.v || (opt.v === "balanced" && englishLevel !== "high");
+                  return (
+                    <button
+                      key={opt.v}
+                      onClick={function() {
+                        setEnglishLevelState(opt.v);
+                        saveEnglishLevel(opt.v);
+                      }}
+                      style={{
+                        padding: "3px 10px",
+                        background: active ? HC.accent : "transparent",
+                        color: active ? "#fff8e8" : HC.textSec,
+                        border: "1px solid " + (active ? HC.accent : HC.border),
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        opacity: active ? 1 : 0.7,
+                      }}
+                      title={opt.v === "high" ? "切换英文" : "切换中文"}
+                    >{opt.l}</button>
+                  );
+                })}
+              </div>
+              <ConversationStream
+                topic={topic}
+                effectiveTurns={effectiveTurns}
+                turnIndex={turnIndex}
+                conversationLog={conversationLog}
+                aiStreaming={aiStreaming}
+                aiThinking={aiThinking}
+                userInput={userInput}
+                onInputChange={setUserInput}
+                onSubmit={submitUserResponse}
+                onAdvance={advanceTurn}
+                onStartMastery={startMasteryGate}
+                onTermClick={setActiveTerm}
+                onMustClick={setActiveMust}
+                onJumpToMap={jumpToMap}
+                onEscapeAction={handleEscapeAction}
+                error={error}
+              />
+            </>
           )}
 
           {/* ── Term popup (glossary lookup) ── */}
