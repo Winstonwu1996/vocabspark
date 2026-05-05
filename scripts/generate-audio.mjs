@@ -124,8 +124,22 @@ async function runVibeVoice(text, voiceName, outputDir, outputBaseName) {
         reject(new Error('VibeVoice exited code ' + code));
         return;
       }
+      // rename .tmp_n5_generated.wav → n5.wav，再用 ffmpeg 转 MP3 (-10x size)
       fs.rename(vibeOutput, finalOutput).then(function () {
-        resolve();
+        var mp3Output = finalOutput.replace(/\.wav$/, '.mp3');
+        var ffmpeg = spawn('ffmpeg', [
+          '-y', '-i', finalOutput,
+          '-codec:a', 'libmp3lame', '-qscale:a', '4',  // VBR ~128kbps,够语音质量
+          mp3Output
+        ], { stdio: ['ignore', 'ignore', 'ignore'] });
+        ffmpeg.on('close', function (ffCode) {
+          if (ffCode === 0) {
+            // 转换成功,删 WAV 节省空间(可选——保留 WAV 备份的话注释掉下面这行)
+            fs.unlink(finalOutput).catch(function () {});
+          }
+          resolve();
+        });
+        ffmpeg.on('error', function () { resolve(); });  // ffmpeg 失败不致命,WAV 还在
       }).catch(function (err) {
         reject(new Error('rename failed: ' + err.message));
       });
@@ -200,29 +214,30 @@ async function main() {
         }
 
         var voiceName = pickVoice(voiceMap, topicId, lensId, node.cosplay);
-        var outputWAV = join(lensOutputDir, 'n' + node.id + '.wav');
+        var outputMP3 = join(lensOutputDir, 'n' + node.id + '.mp3');
+        var outputWAV = join(lensOutputDir, 'n' + node.id + '.wav');  // legacy fallback
 
-        // 已存在则 skip（除非 NODE_FILTER 强制）
-        try {
-          await fs.access(outputWAV);
-          if (!NODE_FILTER) {
-            console.log('  [n' + node.id + '] ✅ 已存在 → skip');
-            totalSkip++;
-            continue;
-          }
-        } catch (e) { /* 不存在,继续 */ }
+        // 已存在 .mp3 或 .wav 则 skip（除非 NODE_FILTER 强制）
+        var existsMP3 = false, existsWAV = false;
+        try { await fs.access(outputMP3); existsMP3 = true; } catch (e) {}
+        try { await fs.access(outputWAV); existsWAV = true; } catch (e) {}
+        if ((existsMP3 || existsWAV) && !NODE_FILTER) {
+          console.log('  [n' + node.id + '] ✅ 已存在 → skip');
+          totalSkip++;
+          continue;
+        }
 
         console.log('  [n' + node.id + '] phase=' + node.phase + ' cosplay=' + (node.cosplay || '-') + ' voice=' + voiceName + ' chars=' + enText.length);
 
         if (DRY_RUN) {
-          console.log('    [DRY-RUN] would generate → ' + outputWAV);
+          console.log('    [DRY-RUN] would generate → ' + outputMP3);
           continue;
         }
 
         try {
           await runVibeVoice(enText, voiceName, lensOutputDir, 'n' + node.id);
           totalGen++;
-          console.log('    ✅ ' + outputWAV);
+          console.log('    ✅ ' + outputMP3);
         } catch (e) {
           console.error('    ❌ ' + e.message);
         }

@@ -21,8 +21,13 @@ import { renderBilingualText } from './bilingual';
 import { VoiceInputButton } from '../VoiceInputButton';
 
 // ─── Audio Player — VibeVoice TTS 一键朗读（5-4 加） ─────────────────
-// 仅 EN mode + entry 是 prewritten + 对应 MP3 文件存在时显示
-// MP3 路径：/audio/{topicId}/{lensId}/n{N}.mp3（build-time 预生成）
+// 仅 EN mode + entry 是 prewritten + 对应音频文件存在时显示
+// 路径：/audio/{topicId}/{lensId}/n{N}.wav（build-time 预生成）
+
+// ⚡ 模块级 HEAD 缓存——避免切页面时重复探测同一 URL
+// Map<src, true|false>
+var __audioAvailableCache = new Map();
+
 function AudioPlayer(props) {
   // props: { topicId, lensId, turnId, englishLevel }
   // ⚠️ 所有 hook 必须在顶部 unconditional——React Rules of Hooks
@@ -31,21 +36,68 @@ function AudioPlayer(props) {
   var [progress, setProgress] = useState(0);
   var audioRef = useRef(null);
 
-  // 计算 src（即使 props 不全也算一个，避免 src 在不同 render 时长度变化触发 useEffect 依赖问题）
+  // 计算 src(优先 MP3 — 文件 ~10x 小;若 .mp3 不存在 fallback .wav)
   var canShow = props.englishLevel === 'high' && props.topicId && props.lensId && typeof props.turnId !== 'undefined';
-  var src = canShow ? '/audio/' + props.topicId + '/' + props.lensId + '/n' + props.turnId + '.wav' : null;
+  var basePath = canShow ? '/audio/' + props.topicId + '/' + props.lensId + '/n' + props.turnId : null;
+  // src 用动态决定:先尝试 .mp3,fallback .wav
+  var srcMP3 = basePath ? basePath + '.mp3' : null;
+  var srcWAV = basePath ? basePath + '.wav' : null;
+  // 实际用的 src 在 useEffect 里根据 cache 决定;这里给 srcMP3 做主探测
+  var src = srcMP3;
 
-  // HEAD 检测文件存在（仅在 canShow 时执行）
+  // 实际可用的 src（先 mp3 探测，404 fallback wav）—— 在 state 里
+  var [resolvedSrc, setResolvedSrc] = useState(null);
+
+  // HEAD 检测文件存在；优先 .mp3 / fallback .wav；用模块级缓存避免重复
   useEffect(function () {
-    if (!canShow || !src) {
+    if (!canShow || !srcMP3) {
       setAvailable(false);
+      setResolvedSrc(null);
       return;
     }
-    if (available !== null) return;  // 已检测过
-    fetch(src, { method: 'HEAD' })
-      .then(function (r) { setAvailable(r.ok); })
-      .catch(function () { setAvailable(false); });
-  }, [src, canShow]);
+    // 已检测过 mp3 —— 直接读缓存
+    if (__audioAvailableCache.has(srcMP3)) {
+      var mp3Ok = __audioAvailableCache.get(srcMP3);
+      if (mp3Ok) {
+        setAvailable(true);
+        setResolvedSrc(srcMP3);
+        return;
+      }
+      // mp3 不存在,试 wav cache
+      if (__audioAvailableCache.has(srcWAV)) {
+        var wavOk = __audioAvailableCache.get(srcWAV);
+        setAvailable(wavOk);
+        setResolvedSrc(wavOk ? srcWAV : null);
+        return;
+      }
+    }
+    if (available !== null && resolvedSrc !== null) return;
+
+    // 先探 mp3
+    fetch(srcMP3, { method: 'HEAD' })
+      .then(function (r) {
+        __audioAvailableCache.set(srcMP3, r.ok);
+        if (r.ok) {
+          setAvailable(true);
+          setResolvedSrc(srcMP3);
+          return null;
+        }
+        // mp3 不存在,fallback wav
+        return fetch(srcWAV, { method: 'HEAD' });
+      })
+      .then(function (r) {
+        if (!r) return;
+        __audioAvailableCache.set(srcWAV, r.ok);
+        setAvailable(r.ok);
+        setResolvedSrc(r.ok ? srcWAV : null);
+      })
+      .catch(function () {
+        __audioAvailableCache.set(srcMP3, false);
+        __audioAvailableCache.set(srcWAV, false);
+        setAvailable(false);
+        setResolvedSrc(null);
+      });
+  }, [srcMP3, srcWAV, canShow]);
 
   // 监听全局暂停事件（其他 AudioPlayer 开播时停自己）
   useEffect(function () {
@@ -59,11 +111,15 @@ function AudioPlayer(props) {
     return function () { window.removeEventListener('audio-pause-all', handler); };
   }, []);
 
-  // 卸载时停
+  // 卸载时彻底释放（pause + 清空 src 取消 in-flight 下载 + null）
   useEffect(function () {
     return function () {
       if (audioRef.current) {
-        audioRef.current.pause();
+        try {
+          audioRef.current.pause();
+          audioRef.current.src = '';     // 取消任何在下载的字节
+          audioRef.current.load();        // 触发 abort
+        } catch (e) { /* 忽略 */ }
         audioRef.current = null;
       }
     };
@@ -75,8 +131,11 @@ function AudioPlayer(props) {
   if (available === null) return null;
 
   function togglePlay() {
+    if (!resolvedSrc) return;
     if (!audioRef.current) {
-      var a = new Audio(src);
+      var a = new Audio();
+      a.preload = 'metadata';
+      a.src = resolvedSrc;
       a.addEventListener('ended', function () {
         setPlaying(false);
         setProgress(0);
