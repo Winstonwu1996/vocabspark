@@ -1491,8 +1491,8 @@ export default function HistoryPage() {
           {phase === "conversation" && topic && (
             <>
               {/* CN/EN 语言切换（5-4 加，default EN）*/}
-              {/* 5-5 R6: lens 模式 prewritten 内容固定,这个 toggle 无效 → 不渲染 */}
-              {!hasLensesForTopic && (
+              {/* 5-5: lens 模式下 _prewrittenContent 实际有 cn/en 双语,toggle 切换 */}
+              {/*       触发 line 728 useEffect 替换所有已渲染 AI 消息为新语言 → toggle 必须保留 */}
               <div style={{
                 display: "flex",
                 justifyContent: "flex-end",
@@ -1528,7 +1528,6 @@ export default function HistoryPage() {
                   );
                 })}
               </div>
-              )}
               <ConversationStream
                 topic={topic}
                 topicId={topicId}
