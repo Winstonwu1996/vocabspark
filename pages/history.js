@@ -460,7 +460,15 @@ export default function HistoryPage() {
     setSidekickLog(loadSidekickLog(topicId));
 
     // U4: 第一次进 history → 显示 walkthrough
-    if (!hasSeenWalkthrough()) {
+    // 5-5 R1: atlas/embedded/role 流程下不弹 — 用户已在 atlas-lab onboarding 看过,
+    //         iframe 内 modal 重叠让人窒息;且 Walkthrough 文案 topic-agnostic,
+    //         直接 URL (path C) 才需要这个引导.
+    // URL flag 同步读(避免 state race condition):
+    var __searchParamsForWalkthrough = (typeof window !== "undefined") ? new URLSearchParams(window.location.search) : null;
+    var __isEmbeddedFlag = !!(__searchParamsForWalkthrough && __searchParamsForWalkthrough.get("embedded") === "1");
+    var __isFromAtlasFlag = !!(__searchParamsForWalkthrough && __searchParamsForWalkthrough.get("from") === "atlas");
+    var __isRoleFlag = !!(__searchParamsForWalkthrough && __searchParamsForWalkthrough.get("role") === "1");
+    if (!hasSeenWalkthrough() && !__isEmbeddedFlag && !__isFromAtlasFlag && !__isRoleFlag) {
       setShowWalkthrough(true);
     }
 
@@ -1447,6 +1455,8 @@ export default function HistoryPage() {
           {phase === "conversation" && topic && (
             <>
               {/* CN/EN 语言切换（5-4 加，default EN）*/}
+              {/* 5-5 R6: lens 模式 prewritten 内容固定,这个 toggle 无效 → 不渲染 */}
+              {!hasLensesForTopic && (
               <div style={{
                 display: "flex",
                 justifyContent: "flex-end",
@@ -1482,6 +1492,7 @@ export default function HistoryPage() {
                   );
                 })}
               </div>
+              )}
               <ConversationStream
                 topic={topic}
                 topicId={topicId}
@@ -2861,13 +2872,44 @@ function IntroScreen(props) {
       )}
 
       {/* ── Phase 3: Lens 选择卡（如 Topic 有多个 lens 可选）── */}
+      {/* 5-5 R3: atlas → role 进入流程 (hasPendingRole) 时,用户已在 atlas 选过 figure → */}
+      {/*         不显示 prominent LensSelector;换成 collapsed details "↻ 换视角" 入口 */}
       {props.hasLensesForTopic && props.topicLenses && props.topicLenses.length > 1 && (
-        <LensSelector
-          lenses={props.topicLenses}
-          selectedLensId={props.selectedLensId}
-          onSelect={props.onSelectLens}
-          topicId={props.topicId}
-        />
+        hasPendingRole ? (
+          <details style={{
+            marginTop: 8,
+            padding: "8px 12px",
+            background: HC.parchmentHi,
+            border: "1px solid " + HC.border,
+            borderRadius: 10,
+            fontSize: 12,
+          }}>
+            <summary style={{
+              cursor: "pointer",
+              fontWeight: 600,
+              color: HC.textSec,
+              listStyle: "none",
+              userSelect: "none",
+            }}>
+              ↻ 想换其他视角看这段历史?
+            </summary>
+            <div style={{ marginTop: 8 }}>
+              <LensSelector
+                lenses={props.topicLenses}
+                selectedLensId={props.selectedLensId}
+                onSelect={props.onSelectLens}
+                topicId={props.topicId}
+              />
+            </div>
+          </details>
+        ) : (
+          <LensSelector
+            lenses={props.topicLenses}
+            selectedLensId={props.selectedLensId}
+            onSelect={props.onSelectLens}
+            topicId={props.topicId}
+          />
+        )
       )}
 
       {/* O6: 上次未完成？给"继续上次"和"重新开始"两个按钮 */}
@@ -3073,7 +3115,7 @@ function Walkthrough(props) {
     {
       icon: "🦉",
       title: "AI 用你的世界讲历史",
-      body: "12 节对话从你的校规出发,慢慢引到 Magna Carta。不是讲课 — 是聊天。",
+      body: "AI 跟你聊 10-12 节走完一段历史,从你熟悉的事情起手——不是讲课,是聊天。",
     },
     {
       icon: "⭐",
@@ -3095,8 +3137,8 @@ function Walkthrough(props) {
     },
     {
       icon: "🌍",
-      title: "页面顶部地图 4 层",
-      body: "世界 → 欧洲 → 英国 → 地理要素。任何时候都可以展开看，1200 年地图能翻转看今天。",
+      title: "顶部 Where this happened",
+      body: "页面顶部有地图区,任何时候都能展开看历史地图,有的还能翻到今天对比。Atlas Lab 还有更深的地图。",
     },
     {
       icon: "🤔",
