@@ -431,17 +431,47 @@ export default function HistoryPage() {
     var loaded = loadProfile();
     setProfileText(loaded.profile || "");
 
+    // 5-5 R2: atlas/embedded/role 流程下不阻塞 ProfileSetup —
+    //         lens prewritten 内容不消费 profile 字段, 强制填表浪费 funnel.
+    //         自动 save 一个 placeholder profile, 后续 IntroScreen 显示
+    //         "🎯 还没填画像" hint chip 让用户随时回填.
+    var __searchParamsForProfile = (typeof window !== "undefined") ? new URLSearchParams(window.location.search) : null;
+    var __skipProfileBlock = !!(__searchParamsForProfile && (
+      __searchParamsForProfile.get("embedded") === "1" ||
+      __searchParamsForProfile.get("from") === "atlas" ||
+      __searchParamsForProfile.get("role") === "1"
+    ));
+
     if (hp) {
       // 已有结构化 profile
       setHistoryProfile(hp);
       setProfileFields(historyProfileToFields(hp));
       setCurriculum(loadCurriculum());
+    } else if (__skipProfileBlock) {
+      // R2: atlas-route 不阻塞 — 自动用 placeholder profile, 不弹 ProfileSetup
+      var placeholderProfile = {
+        name: "你",
+        age: 13,
+        grade: 7,
+        city: "Irvine",
+        fromCity: "中国",
+        schoolName: "",
+        schoolType: "public",
+        interest: "",
+        parentWord: "爸妈",
+        placeholder: true,  // AI prompt 见到 placeholder=true 跳过个性化字段
+      };
+      saveHistoryProfile(placeholderProfile);
+      setHistoryProfile(placeholderProfile);
+      setProfileFields(historyProfileToFields(placeholderProfile));
+      setCurriculum(loadCurriculum());
+      setNeedsProfileSetup(false);
     } else if (loaded.profile) {
       // 有 vocab 的自由文本 profile，但没结构化版本 → 仍展示 setup 让她确认 + 字段化
       setNeedsProfileSetup(true);
       setProfileFields(parseProfileFields(loaded.profile));
     } else {
-      // 完全没有 profile → 必须 setup
+      // 完全没有 profile → 展示 setup, 但加了 [稍后再说] 按钮 (见 ProfileSetup 组件)
       setNeedsProfileSetup(true);
       setProfileFields({});
     }
@@ -592,6 +622,8 @@ export default function HistoryPage() {
           history: conversationLog,
           englishLevel: englishLevel,
           roleContext: pendingRole,
+          // 5-5 R2: 用户选 [稍后再说] → placeholder=true,prompt 不强行带个人字段
+          placeholder: !!(historyProfile && historyProfile.placeholder),
         });
         userPrompt = buildTurnPrompt(turn, { lastUserAnswer: lastUserAnswer });
       }
@@ -1415,6 +1447,10 @@ export default function HistoryPage() {
               embedded={embedded}
               fromAtlas={fromAtlas}
               effectiveTurns={effectiveTurns}
+              onShowProfileSetup={function() {
+                // 5-5 R2: placeholder profile 用户随时回填 — 重新打开 ProfileSetup
+                setNeedsProfileSetup(true);
+              }}
               onSelectLens={function(lensId) {
                 setSelectedLensId(lensId);
                 // 切 lens 重置进度（不同 lens 节点数量不同——log 会错位）
@@ -2076,6 +2112,22 @@ function ProfileSetup(props) {
     });
   };
 
+  // 5-5 R2: 稍后再说 — 用 placeholder profile 跳过 setup, 不阻塞学习
+  var saveSkipped = function() {
+    props.onSave({
+      name: "你",
+      age: 13,
+      grade: 7,
+      city: "Irvine",
+      fromCity: "中国",
+      schoolName: "",
+      schoolType: "public",
+      interest: "",
+      parentWord: "爸妈",
+      placeholder: true,  // AI prompt 见到 placeholder=true 跳过个性化字段
+    });
+  };
+
   return (
     <div style={{padding: "16px 0"}}>
       <div style={{
@@ -2258,6 +2310,28 @@ function ProfileSetup(props) {
                 fontFamily: "inherit",
                 opacity: (!name.trim() || !city.trim()) ? 0.5 : 1,
               }}>开始学习 →</button>
+            </div>
+            {/* 5-5 R2: 稍后再说 — 不阻塞,用 placeholder profile 直接进 */}
+            <div style={{
+              marginTop: 12, textAlign: "center",
+            }}>
+              <button onClick={saveSkipped} style={{
+                background: "transparent",
+                border: "none",
+                color: HC.textSec,
+                fontSize: 12,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                textDecoration: "underline",
+                opacity: 0.85,
+                padding: 4,
+              }}>稍后再填,先开始学 →</button>
+              <div style={{
+                fontSize: 10.5, color: HC.textSec,
+                fontStyle: "italic", marginTop: 2, opacity: 0.7,
+              }}>
+                AI 会用通用方式跟你聊,随时可以回来填画像让 AI 用你名字 / 学校讲
+              </div>
             </div>
           </div>
         )}
@@ -2728,10 +2802,45 @@ function IntroScreen(props) {
   var hideEnglishLevel = simplifiedMode || hasLenses;
   // - lens 节点数: 优先用 effectiveTurns,fallback 12
   var lensTurnCount = (props.effectiveTurns && props.effectiveTurns.length) || 12;
+  // 5-5 R2: placeholder profile 表示用户跳过了 setup → 显示 "还没填画像" hint
+  var isPlaceholderProfile = !!(hp && hp.placeholder);
   return (
     <div style={{padding: "20px 0"}}>
       {/* ── 已识别的画像 + 课程 banner ── */}
-      {hp && (
+      {/* R2: placeholder profile (跳过了 setup) → 显示 "🎯 还没填画像" hint chip 替代 */}
+      {isPlaceholderProfile ? (
+        <div style={{
+          padding: "8px 14px",
+          background: "linear-gradient(135deg, #fef3d2 0%, #fbe8a8 100%)",
+          border: "1px dashed #d4a050",
+          borderRadius: 10,
+          fontSize: 12,
+          color: HC.text,
+          marginBottom: 8,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          flexWrap: "wrap",
+        }}>
+          <span style={{fontSize: 14}}>🎯</span>
+          <span style={{flex: 1, minWidth: 0}}>
+            还没填画像 — AI 会用通用方式跟你聊。
+          </span>
+          {props.onShowProfileSetup && (
+            <button onClick={props.onShowProfileSetup} style={{
+              background: HC.accent,
+              color: "#fff8e8",
+              border: "none",
+              borderRadius: 999,
+              padding: "4px 12px",
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}>30 秒填一下 →</button>
+          )}
+        </div>
+      ) : hp && (
         <div style={{
           padding: "10px 14px",
           background: HC.tealLight,
