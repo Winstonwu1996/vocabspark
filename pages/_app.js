@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { Analytics } from "@vercel/analytics/react";
 import NetworkBanner from "../components/NetworkBanner";
+import BetaBadge from "../components/BetaBadge";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { trackFunnel } from "../lib/analytics";
 // 副作用 import：触发 sentry.client.config.js 初始化（仅在浏览器）
@@ -29,6 +30,7 @@ export default function App({ Component, pageProps }) {
     <ErrorBoundary>
       <NetworkBanner />
       <Component {...pageProps} />
+      <BetaBadge />
       <Analytics />
     </ErrorBoundary>
   );
