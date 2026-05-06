@@ -12,8 +12,14 @@
 import { useState, useEffect } from 'react';
 import { C, FONT } from '../lib/theme';
 
-// 慢网络判定：3g 及以下都算慢（地铁/校园弱信号常见 3g）
-var SLOW_TYPES = { 'slow-2g': 1, '2g': 1, '3g': 1 };
+// 5-5: 阈值收紧 — Chrome 经常把正常 4G/WiFi 误判成 'effectiveType=3g'
+//      (基于 RTT/带宽综合推算,不等于真的 3G 网络)。3g 误报率太高,顶部全屏
+//      banner 扰动 + 30 秒提示让用户先入为主以为系统慢。
+//      只在真正慢的网络(slow-2g/2g)或 RTT 极高(>2000ms)/带宽极低(<150kbps) 时触发。
+var SLOW_TYPES = { 'slow-2g': 1, '2g': 1 };
+// 真实指标兜底 — 即使 effectiveType=3g/4g, 若 RTT 或 downlink 极差也认为慢
+var RTT_THRESHOLD_MS = 2000;        // > 2 秒延迟才算慢
+var DOWNLINK_THRESHOLD_MBPS = 0.15; // < 150 kbps 才算慢
 
 export default function NetworkBanner() {
   // 状态机：'ok' | 'slow' | 'offline' | 'recovering'
@@ -35,11 +41,14 @@ export default function NetworkBanner() {
                null;
 
     // 计算当前应该是什么状态（不含 recovering，那个是过渡态）
+    // 5-5: 三层判定 — effectiveType 精确慢档 OR RTT 极高 OR downlink 极低
     var computeStatus = function () {
       if (!navigator.onLine) return 'offline';
-      if (conn && conn.effectiveType && SLOW_TYPES[conn.effectiveType]) {
-        return 'slow';
-      }
+      if (!conn) return 'ok';
+      var effSlow = conn.effectiveType && SLOW_TYPES[conn.effectiveType];
+      var rttHigh = typeof conn.rtt === 'number' && conn.rtt > RTT_THRESHOLD_MS;
+      var dlLow   = typeof conn.downlink === 'number' && conn.downlink < DOWNLINK_THRESHOLD_MBPS;
+      if (effSlow || rttHigh || dlLow) return 'slow';
       return 'ok';
     };
 
