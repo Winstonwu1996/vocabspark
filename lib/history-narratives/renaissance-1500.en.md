@@ -385,7 +385,7 @@ and uses the state resources freed up by the Reconquista to fund Columbus** —
 **Italy's Mediterranean centrality begins to wobble —
 the wealth center starts shifting west to Spain / Portugal / northern Europe**.
 
-**5. August 1494 — King Charles VIII of France, age 18, invades Italy with 25,000 troops**
+**5. August 1494 — King Charles VIII of France, age 24, invades Italy with 25,000 troops**
 **The French king came to claim the throne of Naples (a dynastic lawsuit)** —
 **Charles brought cannons + infantry — Europe's first army that **rewrote warfare with gunpowder**** —
 **Italian city-states' old defenses + mercenary *condottieri* (mercenary captains) could not hold against artillery** —
