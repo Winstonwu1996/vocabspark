@@ -434,7 +434,7 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 **Along the way he** built alliances: **every tribe that resented the Aztecs joined him** —
 **This is** Cortés's true "invention":
 - **Not military genius — but** alliance diplomacy
-- **The Aztec Empire in 1519 ruled 6 million people** — but **many subjugated tribes** wanted to revolt
+- **The Aztec Empire in 1519 is estimated to have ruled 6-25 million people** (large scholarly dispute — Cook & Borah estimate 25 million / Sanders estimates 12-15 million / Rosenblat estimates 4.5 million; this narrative uses 6 million as a conservative low-end framing) — but **many subjugated tribes** wanted to revolt
 - **Cortés exploited this** internal split: **by November when he reached Tenochtitlán — he had 500 Spanish + thousands of Indigenous allies**
 
 ##### November 8, 1519 — Meeting Moctezuma
@@ -647,7 +647,12 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 
 **The book is only 60+ pages — but** with **explosive force** —
 **Bartolomé methodically + systematically** documents Spanish atrocities in the Caribbean + Central America:
-- **Hispaniola 1492 had 3 million Taíno → in 1542 only 200 left** — he **saw with his own eyes** —
+- **Hispaniola 1492 had an estimated 300,000-1,000,000 Taíno → in 1542 only 200 left** — he **saw with his own eyes** —
+  > ⚠️ **Scholarly dispute** — **the 1492 population of Hispaniola** has no consensus:
+  > **Bartolomé's contemporary record says 3 million** — but **modern scholars generally consider this exaggerated** —
+  > **Cook & Borah (1971) estimate 8 million** — criticized as too high —
+  > **Rosenblat (1954) estimates 100,000** — criticized as too low —
+  > **Modern mainstream textbooks take the middle**: **300,000-1,000,000** — this is the unified figure used throughout this narrative.
 - **Spaniards** burning whole villages + cutting off hands + roasting in tar + feeding to dogs + raping + working people to death —
 - **Specific names + specific places + specific years** — **not vague summaries**
 
@@ -797,7 +802,8 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 
 **Born around 1502** — **his father was the Inca emperor Huayna Capac** —
 **The Inca Empire by 1500** already covered **today's Peru + Ecuador + Bolivia + parts of Colombia + Chile + Argentina** —
-**6,000 km long — the largest empire in the world** at the time —
+**6,000 km north-south — the largest north-south span of any empire of its time + the largest empire in the Americas** —
+**Note**: in 1500 the Ottoman Empire + Ming China had larger total areas than the Inca, but **neither had a long north-south configuration** — **the Inca had the truly unique "6,000 km longitudinal" structure** —
 **Much bigger than the Aztec Empire** —
 
 **1525-1527 — smallpox spread from northern America to the Incas** —
@@ -1071,9 +1077,9 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 **In 1504 she starved to death in the mountains** —
 
 **Her entire family** was wiped out within 5 years —
-**1492 Hispaniola had an estimated 3 million Taíno** —
+**1492 Hispaniola had an estimated 300,000-1,000,000 Taíno** (scholarly dispute — see §3 Bartolomé section footnote) —
 **By 1542 only 200 were left** —
-**Anacaona Jr. is** one of the 5-10 million Taíno who died in genocide — **a nameless one** —
+**Anacaona Jr. is** one of the high-end estimate of 5-10 million Indigenous people across the entire Caribbean (Taíno + Caribs + Lucayans) who died in genocide — **a nameless one** —
 **She** has no grave — **no monument** —
 **Bartolomé de las Casas's 1542 book made the world know** Queen Anacaona — but **a niece like Anacaona Jr.** is unknown.
 
@@ -1154,6 +1160,30 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 > **3 months later Isabella approves Columbus's plan** —
 > **A perfect convergence** — this is the contingent power of 1492.
 
+### March 31, 1492 — Alhambra Decree (Edict of Expulsion)
+
+> **Isabella + Ferdinand issued the Alhambra Decree** —
+> **Ordering all Jews to convert to Christianity by July 31 or leave Spain** —
+> **By the end of August** about 100,000 Sephardic Jews were expelled —
+> **Of them** ~50,000 went to Portugal / ~20,000 to the Ottoman Empire / ~10,000 to North Africa —
+>
+> **The Iberian Peninsula's 700 years of Muslim + Jewish + Christian pluralism** — **in 3 months** became a single Christian state —
+> **The same royal treasury** that **4 months later** funded Columbus's voyage —
+> **The end of the Reconquista + expulsion of Jews + start of colonization** were **one event chain** — **not three separate events** —
+>
+> **Sephardic Jews crowded out of Spanish ports in early August 1492** — including the **port of Palos** — which was also where **Columbus departed on August 3** —
+> **The Jewish deadline was July 31 — Columbus sailed August 3** —
+> **They were nearly the same wave of ships** leaving the same coastline — but **completely opposite fates**:
+> One group was **forced** to leave their thousand-year home — another group **chose** to sail and conquer a new world —
+> **The same Atlantic — simultaneously carrying** refugee flight + colonial expansion — this is the soul image of 1492.
+
+### April 17, 1492 — Capitulations of Santa Fe
+
+> **Isabella + Ferdinand formally approved Columbus** at the Santa Fe encampment outside Granada —
+> **Signed granting him**: **Admiral title + 10% of revenues + hereditary rights** —
+> **Just 17 days after the Alhambra Decree** — **the same monarchs simultaneously signed** the expulsion + the funding of colonization —
+> **The same "Christian purification" state logic** — **expelling Jews internally / colonizing externally**.
+
 ### October 12, 1492 — Columbus Reaches the Bahamas
 
 > Rodrigo de Triana shouts "land" —
@@ -1166,6 +1196,20 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 > Forced gold tribute on Taíno + cutting off hands + enslavement begins —
 > **This is the "operating template" of European colonialism** —
 > **For the next 400 years** — Spain / Portugal / England / France / Netherlands **repeat** this template.
+
+### May 4, 1493 — *Inter Caetera* Papal Bull (Legal Origin of the Doctrine of Discovery)
+
+> **Pope Alexander VI issued the *Inter Caetera* bull** —
+> **Core clause**: **Christians may "legitimately conquer" non-Christian lands** —
+> **"Non-Christians have no true property rights"** —
+> **This is the legal foundation of 500 years of colonization** —
+> **Repeatedly cited by English / French / Dutch / American / Canadian / Australian colonial law**:
+> - **1823 U.S. Supreme Court *Johnson v. M'Intosh***  — directly cited the Doctrine of Discovery to deny Indigenous land rights
+> - **2005 U.S. Supreme Court *City of Sherrill v. Oneida Indian Nation*** — Justice Ginsburg **cited the Doctrine of Discovery**
+> - **March 30, 2023 — the Vatican formally repudiated the Doctrine of Discovery** — **Pope Francis declared this 530-year-old bull "is not part of Catholic doctrine"** —
+>
+> **From May 4, 1493 → March 30, 2023 — a 530-year legal framework** — **only formally ended in the 21st century** —
+> **This echoes §6's long-tail "500-year echo"**: **1492 is not ancient — it is the legal + moral architecture **still being digested today**.
 
 ### 1494 — Treaty of Tordesillas
 
@@ -1196,6 +1240,39 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 > **Brazil** became **a Portuguese colony** — until independence in 1822 —
 > **Today Brazilians speak Portuguese** — directly traceable to Cabral on April 22, 1500 —
 > **Accidentally** changed the language of the largest country in South America.
+>
+> ⚠️ **Scholarly dispute**: **Was Cabral's "drift" an accident or done with prior knowledge?** —
+> **The 1494 Treaty of Tordesillas drew the line at 46° west longitude — roughly today's eastern Brazil** — **the eastern nub of Brazil just happened to fall on the Portuguese side** —
+> **Coincidence? Or had Portugal already learned from leftover Dias 1488 intelligence that there was land in the South Atlantic?** —
+> **Scholars haven't resolved this in 500 years** — **this is one of the deepest mysteries of the Age of Exploration**.
+
+### 1502 — First Enslaved Africans Reach Hispaniola
+
+> **The same year as Columbus's fourth voyage — Governor Nicolás de Ovando** brought a small number of enslaved Africans to Hispaniola —
+> **Individual colonists' personal slaves** — **not yet systematized trade** —
+> **But** this was **the first recorded enslaved Africans in the Americas** —
+> **117 years before Virginia 1619** — **118 years before Adisa's 1620 story**.
+
+### 1518 — Charles V's Asiento — Systematic Start of the Atlantic Slave Trade
+
+> **Spain's Charles V issued the asiento (royal license)** — authorizing **4,000 enslaved Africans direct shipment to Hispaniola** —
+> **No longer routed through Spain — directly from West Africa to the Caribbean** —
+> **This is the official beginning of the Atlantic slave trade as a** systematic + institutionalized **enterprise** —
+> **Before 1518**: individual enslaved people + individual traders —
+> **After 1518**: **systematic trade + royal license + large-scale transportation** —
+> **Over the next 370 years** this system **shipped 12 million Africans** —
+> **Textbooks barely cover 1518** — but **this year is more important than 1619** — it is **the true Year 1 of the Atlantic slave trade**.
+
+### 1530s — Portugal → Brazilian Sugar Plantations
+
+> **From the 1530s Portugal** systematically **shipped enslaved Africans → Brazil** —
+> **1532 Portugal's São Vicente — the first sugar plantation** —
+> **Brazil became** the first large-scale experimental ground for **sugar + enslaved labor plantation systems** —
+> **Over the next 300 years**: **Brazil absorbed** 40% of the entire Atlantic slave trade (about 4.8 million Africans) —
+> **10 times more than the 13 North American colonies** —
+> **This was** the largest destination of the Atlantic slave trade — but because Anglophone historiography centers **North American slavery**, **the scale of Brazil's** is often **obscured** —
+>
+> ⚠️ **Key insight**: **Adisa's 1620 story (§3) is the 100th year of an already mature Atlantic slave trade system — not its starting point**. The true starting points are 1502 / 1518 / 1530s — **Virginia 1619 is a landmark of Anglophone narrative**, not **a landmark on the global timeline**.
 
 ### 1502-1504 — Columbus's Fourth Voyage
 
@@ -1215,16 +1292,18 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 > 11 ships + 500 men + Doña Marina + 80,000 Tlaxcalan allies + smallpox —
 > **An Aztec Empire of 6 million people conquered in 2 years**.
 
-### 1519-1522 — Magellan's Circumnavigation
+### 1519-1522 — Magellan-Elcano Circumnavigation
 
 > Ferdinand Magellan was Portuguese **serving Spain** (the Portuguese king ignored him) —
 > **5 ships + 270 men** set out from Seville —
 > November 1520 he **found the passage at the southern tip of South America** (the Strait of Magellan) —
-> April 27, 1521 **Magellan himself was killed in the Philippines** (fighting the Lapu-Lapu people) —
-> September 1522 — only **1 ship + 18 men** returned to Seville —
+> **April 27, 1521 — Magellan himself was killed by the Lapu-Lapu chief on Mactan island in the Philippines** — **he did not live to complete the circumnavigation** —
+> **The remaining sailors were taken over by Juan Sebastián Elcano (a Basque sailor)** —
+> **September 6, 1522 — Elcano returned to Seville with the *Victoria* + 18 men** —
 > **Completed the first circumnavigation** — 3 years —
 > **Proved the Earth is a sphere + the oceans are connected** —
-> **In ironic contrast to Columbus's miscalculation**: **Columbus got the Earth wrong** and accidentally found the Americas — **Magellan got the Earth right** and proved it.
+> **In ironic contrast to Columbus's miscalculation**: **Columbus got the Earth wrong** and accidentally found the Americas — **Magellan got the Earth right** but **didn't live to prove it** — **Elcano was the one who actually completed the circumnavigation** — but **for 500 years European history has called this "Magellan's circumnavigation"** — **this is the politics of naming** —
+> **The scholarly consensus is "Magellan-Elcano expedition"** — the 19th-century English historiographical simplification that credited the whole feat to Magellan alone is a version distorted by naming bias.
 
 ### 1530-1533 — Pizarro Conquers the Inca (see §3)
 
@@ -1239,6 +1318,30 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 > **For the next 250 years European understanding of Spanish colonialism was shaped by this book** —
 > "Black Legend" forms — **Protestant nations used it against Spain** —
 > **Accidentally shaped** the "gentle" image of English / Dutch colonialism (false — they too were violent).
+
+### 1542 — Francis Xavier Reaches Goa, India (the First Stop of Jesuit Global Expansion)
+
+> **Francis Xavier (one of the 7 founding Jesuits, 1506-1552) reached the Portuguese colony of Goa in May 1542** —
+> **This is the first time Jesuits**, founded officially in 1540, **moved into Asia** —
+> **During the Counter-Reformation 1545-1563 — Jesuits redirected the Catholic Church from European fracture toward global expansion** —
+> **This is the religious engine of the Age of Exploration directly produced by the Reformation** —
+> **Reformation + Age of Exploration are not two parallel things — they drive each other**.
+
+### 1549 — Xavier Reaches Kagoshima, Japan (Jesuits Enter East Asia for the First Time)
+
+> **Francis Xavier reached Kagoshima, Japan in August 1549** —
+> **This was the European Catholic Church's** first formal entry into East Asia —
+> **For the next 50 years** Jesuits proselytized in Japan — **until Tokugawa Ieyasu's 1614 ban** —
+> **Japanese Catholic adherents peaked at about 300,000** — followed by **persecution** + the 1637 Shimabara Rebellion → **national isolation**.
+
+### 1583 — Matteo Ricci Reaches Macao → 1601 Beijing
+
+> **Italian Jesuit Matteo Ricci (1552-1610) reached Macao in 1583** —
+> **Learned Chinese + wore Confucian robes + studied the Four Books** — **18 years of disciplined study** —
+> **In 1601 he reached Beijing** — **the Wanli Emperor received him** — **the first European missionary to enter the Chinese imperial court** —
+> **For the next 250 years — Jesuits were the largest bridge of China-Europe cultural exchange** —
+> **Chinese edition of Euclid's *Elements* + Kunyu Wanguo Quantu world map + Western astronomy transmitted to China** — and at the same time **Chinese philosophy transmitted to Europe** (Voltaire read Confucius) —
+> **Until the 1773 papal dissolution of the Jesuits + the 1900 Boxer Rebellion** — **this bridge fully broke**.
 
 ### 1545 — Potosí Silver Mine Found
 
@@ -1444,7 +1547,7 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 #### The 4 **Parts** of This Book
 
 **Part 1 — Hispaniola** (the first Spanish colony — colonized starting with Columbus's second voyage in 1493):
-- **1492 had 3 million Taíno** —
+- **1492 estimated 300,000-1,000,000 Taíno** (Bartolomé himself wrote 3 million, modern scholars take the middle range — see §3 footnote) —
 - **1542 only 200 left** —
 - **Detailed causes**: massacre + forced labor + smallpox + famine + suicide (**many Taíno mothers killed their own infants** — to **prevent them becoming enslaved**)
 
@@ -1471,7 +1574,7 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 > **I must write it down** — **otherwise** these **crimes** will be **buried forever** —
 >
 > **In Hispaniola — Spain's first colony** — when **I arrived** (1502) —
-> **The island had** about **1 million Taíno Indians** —
+> **The island had** about **1 million Taíno Indians** (Bartolomé's contemporary estimate — modern scholars use a 300,000-1,000,000 range, see footnote above) —
 > **When I left (1547)** — only **a few hundred remained** —
 >
 > **The ways of dying include**:
@@ -1759,6 +1862,23 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 - **In 1500 Europe was on the economic edge of the world**
 - **By 1700 Europe controlled 50% of the global economy**
 - **For the next 250 years Europe expanded** — until the two World Wars in the 1900s when it declined
+
+#### But Indigenous Resistance Was Continuous for 500 Years — "Conquest" Was Never an Ending
+
+> ⚠️ **Anti-Whig reinforcement**: the "Europe becomes global hegemon" line above reads like a triumphal march — but **between 1500 and 1700 Indigenous resistance was continuous** —
+> **"Conquest" was never an ending — it is continuous resistance**:
+>
+> - **1572 Túpac Amaru I executed** — the last Inca remnant resistance in the Vilcabamba mountains ended (already covered in §3 Atahualpa section)
+> - **1680 Pueblo Revolt** — the Pueblo people of New Mexico united in revolt — **drove the Spanish out of New Mexico for 12 years** — this is **the most successful Indigenous American uprising against European colonization**
+> - **1781 Túpac Amaru II Uprising** — 250,000 Andeans participated — **the largest Indigenous uprising in American history** — defeated and executed, but its spirit **to this day** is a Peruvian national symbol
+> - **1791 Haitian Revolution** — Haiti's enslaved Africans + free people of color united in revolt — by 1804 they had **defeated Napoleon's army + founded the first nation in the Americas built by an enslaved people's revolt** —
+> - **19th century Tecumseh** — North American Indigenous confederacy resisting U.S. westward expansion
+> - **20th century AIM** (American Indian Movement) — the 1968-1978 American Indian sovereignty movement
+> - **21st century Standing Rock** — the 2016-2017 Sioux + global Indigenous protest against the Dakota Access Pipeline
+>
+> **From 1572 Túpac Amaru I to 2016 Standing Rock — 450 years of** Indigenous resistance **never stopped** —
+> **"Conquest" is European historiography's simplification** — **the truth is: 500 continuous years of resistance + revolt + cultural preservation + sovereignty rebuilding** —
+> **History education can't let "Europe won" become the only narrative** — **resisters are also history**.
 
 ### Medium-Term (1700-1900)
 
@@ -2275,7 +2395,8 @@ After 2014  Many US states change it to Indigenous Peoples' Day
 |---|---|---|
 | **Christopher Columbus** | Genoese navigator 1451-1506 | Miscalculated Earth's size → accidentally arrived in the Americas → colonized Hispaniola → fell from favor late in life |
 | **Vasco da Gama** | Portuguese navigator 1469-1524 | 1498 completed the route around Africa to India — opened the maritime spice route |
-| **Ferdinand Magellan** | Portuguese in Spanish service 1480-1521 | 1519-1522 circumnavigation — himself killed in the Philippines in 1521 |
+| **Ferdinand Magellan** | Portuguese in Spanish service 1480-1521 | 1519 set sail — killed on Mactan island in the Philippines on April 27, 1521 — did not live to complete the circumnavigation |
+| **Juan Sebastián Elcano** | Basque sailor in Spanish service ~1487-1526 | Took command after Magellan's death — returned to Seville on September 6, 1522 with the *Victoria* + 18 men — the man who actually completed the first circumnavigation |
 | **Hernán Cortés** | Spanish conquistador 1485-1547 | 11 ships + 500 men + Doña Marina + 80,000 Tlaxcalan + smallpox → Aztec destroyed |
 | **Francisco Pizarro** | Spanish conquistador 1478-1541 | 168 men + 60 horses + Cajamarca kidnapping of Atahualpa → Inca destroyed |
 | **Doña Marina / Malinche** | Cortés's translator + companion ~1500-1551 | Sold into slavery by her mother at 6 → at 19 given to Cortés → catalyst of conquest → first mestizo mother |
