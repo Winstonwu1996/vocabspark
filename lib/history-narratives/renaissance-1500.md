@@ -344,16 +344,79 @@ authorNotes: |
 **Botticelli + Michelangelo 都参加葬礼**——
 **Florence 一个时代结束**。
 
-##### 后续：Lorenzo 死后的 6 年崩溃
+##### 后续:Lorenzo 死后 23 个月里同时发生的 6 件大事
 
-**Lorenzo 死后儿子 Piero II（"Piero 不幸"）接班**——
-**Piero 没有他爸的政治本事**——
-**1494 年法王 Charles VIII 入侵意大利**——
-**Piero 太软弱让 Charles 进 Florence**——
-**Florence 市民大怒**——**Medici 家族被赶出 Florence**——
+**Lorenzo 1492 年 4 月 8 日死——到 1494 年 11 月 17 日 Charles VIII 入 Florence**——
+**这中间 23 个月发生的事是 Renaissance 全球史的拐点**——
+**不是 Florence 一个城市的事——是**地中海 + 大西洋 + 全球同时发生的连环爆**——
+**按时间顺序排**:
 
-**接下来 4 年（1494-1498）—— Savonarola 神权统治**——
-（详情见下面）。
+**1. 1492 年 4 月 8 日 — Lorenzo 死,Piero II 接班**
+**Lorenzo 临死前自己评价 3 个儿子**:
+> **"我有 3 个儿子:一个傻子,一个聪明人,一个好人。"**
+
+**Piero II 是那个**傻子**——21 岁接班 + 没他爸的政治嗅觉**——
+**那个"聪明人"是次子 Giovanni——后来 1513 年当上教皇 Leo X**——
+**那个"好人"是三儿子 Giuliano——一辈子做次要的政治角色**——
+——这一句话浓缩了 Lorenzo 对 Medici 家族未来的清醒判断:**老大撑不住**。
+
+**2. 1492 年 7 月 — 西班牙驱逐犹太人**
+**1492 年 1 月 — Reconquista（西班牙基督教夺回半岛 700 年战争）完成**——
+**同年 3 月 — Ferdinand 跟 Isabella 颁布 *Alhambra Decree* 驱逐西班牙犹太人**——
+**7 月 — 大约 15-20 万犹太人被强制离开西班牙**——
+**他们带着 capital + 拉比传统书 + 印刷术知识——逃到 Florence / Venice / Antwerp / Ottoman Empire**——
+——这一波难民**间接喂养 Renaissance 印刷业大爆发**——
+**Florence + Venice 的印刷店从 1480s 起几年内冒出来,1492 后又上一台阶**。
+
+**3. 1492 年 8 月 3 日 — 哥伦布从 Palos 出航**
+**几乎同一周——西班牙刚驱逐犹太人——
+就用 Reconquista 释放出来的国家资金资助哥伦布**——
+——**驱犹 + 大航海是同一笔钱的两面**——
+**Renaissance 的全球史从这一周开始**。
+
+**4. 1492 年 10 月 12 日 — 哥伦布登上 Bahamas**
+**哥伦布以为自己到了亚洲——其实是新大陆**——
+**这条消息要到 1493 年春才回 Europe**——
+**Renaissance 的世界地图永远改写**——
+**从此意大利的地中海中心地位开始动摇——
+财富中心逐渐西移到 Spain / Portugal / 北欧**。
+
+**5. 1494 年 8 月 — 法王 Charles VIII 18 岁带 25,000 大军入侵意大利**
+**法王要争夺 Naples 王位（继承权官司）**——
+**Charles 带火炮 + 步兵——是欧洲第一支**用火药彻底改写战争**的军队**——
+**意大利城邦的旧式防御 + 雇佣兵 *condottieri*（雇佣兵）在火炮面前不堪一击**——
+**Charles 一路南下——经 Milan + Florence + Rome + Naples——
+所到之处**意大利城邦投降**。
+
+**6. 1494 年 11 月 9 日 — Florence 民众把 Piero II 赶出城**
+**Charles VIII 11 月初兵临 Florence**——
+**Piero II 软弱——没武装抵抗——
+直接给法王割让 Pisa + 几个边境城堡换"和平"**——
+**Florence 民众发现公爵卖城求安——大怒**——
+**11 月 9 日**冲进 Medici 宫**——
+**Piero II + 全家流亡——Medici 从此离开 Florence 18 年**——
+
+**11 月 17 日 — Charles VIII 进 Florence**——
+**他被 Savonarola 接见**——**Savonarola 已经在街头讲了 4 年"先知 vision"**——
+**Lorenzo 死的真空里——他变成 Florence 唯一的"道德权威"**——
+**11 月底 Savonarola 实际控制 Florence 政治**——
+**这就是为什么从下一段起的 4 年(1494-1498)叫"Savonarola 神权统治"**——
+**他不是天降——他是**填补 23 个月里 Medici 真空 + Charles 入侵 + 全城恐慌**形成的真空。
+
+**Botticelli 在这 23 个月里精神 swing**——
+**Lorenzo 时代他画 *Birth of Venus*(1485)——异教维纳斯 + 古典神话 + 优雅 humanism**——
+**Lorenzo 死后他逐步靠近 Savonarola——
+1500 年画 *Mystical Nativity*(神秘耶诞)——画风变得严肃 + 神秘 + 反 humanism**——
+——**一个画家的画风彻底改写——
+就在这 23 个月**Florence 灵魂换轨**的窗口里完成**。
+
+——**这 23 个月是 Renaissance 最高密度的"全球同步爆"**——
+**Florence 老板换 + Spain 驱犹 + 哥伦布到美洲 + 法军入侵 + Savonarola 接管**——
+**5 件事在 600 多天里互相喂养**——
+**这就是为什么 Sarah Chen audit 说**"不能用 4 行带过"**——
+**用 4 行带过——
+学生会觉得 Savonarola 是天降 + 哥伦布跟 Renaissance 没关系**——
+**那是 narrative 的因果链断了**。
 
 ---
 
@@ -930,6 +993,79 @@ authorNotes: |
 **patron 一变 + 项目就变**——
 **这种**结构性脆弱**是 Renaissance 工作的常态。
 
+##### 1538 年 — 遇到 Vittoria Colonna,Michelangelo 唯一的精神同伴
+
+**1538 年 Michelangelo 63 岁**——**他刚画完 Sistine Chapel 的 *Last Judgment*（最后审判,1536-41）**——
+**这时他**已经活成 Renaissance 的活化石**——**朋友陆续死光 + 教皇换了一个又一个**——
+**他**在 Rome 一个公共讲座上**遇到了**Vittoria Colonna**(46 岁)——
+**他俩都没结过婚 + 都已经过半生 + 都对宗教改革的氛围敏感**——
+
+**Vittoria Colonna 是谁**？
+- **生在罗马名门 Colonna 家族**(中世纪末意大利最古老的贵族之一)
+- **19 岁嫁给 Pescara 侯爵**——丈夫 1525 年战死——她**26 岁守寡**——
+- **从此再也没有再嫁**——**用余生写诗 + 研究神学 + 跟改革派来往**
+- **是 Renaissance 第一个**自己出版诗集**的女性**——*Rime*(《诗集》,1538 年第一版)
+- **她是 *spirituali*(意大利"内部改革派")的核心成员**——
+  这一派**反对 Luther 的分裂——但**同情 Luther 对教会腐败的批评**——他们想**从天主教内部改革**
+
+——**Vittoria 不是普通的女 patron**——
+**她**懂诗 + 懂神学 + 懂建筑**——
+**Michelangelo 跟她的友谊**建立在**思想完全平等**上**——
+**不是"赞助人 vs 被赞助"——是**两个老灵魂在 1530s 的精神风暴中互相辨认**。
+
+##### 一百多首十四行诗 — Michelangelo 唯一对外公开的"软"
+
+**Michelangelo 一辈子是个**铁汉形象**——
+**他**讨厌交际 + 不刮胡子 + 衣服脏 + 跟所有人打架**——
+**但**遇到 Vittoria 之后**——他**开始写诗**——
+
+**他给 Vittoria 写了 100 多首十四行诗(*sonnetti*）**——
+**主题包括**：
+- **她作为他**精神上的"指路人"**——比 Beatrice 之于 Dante,但是真实通信不是文学幻想
+- **老年面对死亡的焦虑 + 救赎的渴望**
+- **柏拉图式的"灵魂 vs 肉体"——
+  这一点很 Renaissance:用古典哲学语言谈论基督教灵魂**
+
+**Vittoria 也写诗回应他**——**她的诗集 *Rime* 收了若干给 Michelangelo 的篇章**——
+**两人这种"诗对答"——是 Renaissance 极少的男女知识分子真正平等的互动留档**——
+**这些诗 18 世纪才被系统编辑出版**——
+**今天在牛津 Bodleian 图书馆 + 梵蒂冈图书馆有手稿**。
+
+> 💡 **这一遍让你听见 Michelangelo 老年内心的转向**——
+> **不是 Sarah Chen audit 推测的"突然变软"——
+> 是一个 60 多岁的 *artigiano*(匠人)终于在精神上找到一个**可以平等对话的人**——
+> 他写"我的灵魂在你面前赤裸"——这种语言他对教皇 / 朋友 / 学生从来不用——
+> **只对 Vittoria 用**。
+
+##### 1547 年 2 月 25 日 — Vittoria 去世
+
+**1547 年 Vittoria 57 岁**——**她在 Rome 一个修道院因病去世**——
+**Michelangelo 72 岁——他在另一座城市赶不及回来**——
+**他错过了她临终前的最后一面**——
+
+**几年后他给朋友 Condivi 的信里有一句留下来的原话**(意大利语):
+> *"a gran dolore mi rimase, di non aver baciata la fronte"*
+> (它给我留下巨大的悲痛,因为我没能吻她的额头)
+
+——**这是 Michelangelo 一辈子**最少见的"软"语言**——
+**他活了 88 岁——这一句话成了**他对 Vittoria 关系的全部官方记录**——
+**之后 17 年(1547-1564)他还活着——但**再没遇到第二个 Vittoria**——
+**他**带着这个遗憾走完最后 17 年**——
+**老年 Michelangelo 越来越退出社交 + 越来越孤独 + 越来越靠宗教自慰**——
+**这一切都跟**1547 失去 Vittoria**有结构关系**。
+
+> ⚠️ **教学要点**:Vittoria Colonna 改变了我们看 Renaissance 性别故事的方式——
+> **不只是 Isabella d'Este 那种**"权势女 patron"**例外**——
+> 也有 Vittoria 这种**"思想平等的女知识分子"**——
+> **她不靠丈夫 + 不靠儿子 + 不靠美貌**——
+> 她靠**自己的诗 + 神学 + 改革派网络**——
+> 在 Michelangelo 这种铁汉心里**留下永久空缺**。
+>
+> Renaissance 的女性故事不是**只有少数贵族 patron 例外**——
+> **也有思想平等的同行**——
+> **Sarah Chen audit 强调这一段必须在 Michelangelo 内部写——不能切到独立的"女性视角"段——
+> 因为这是**关于 Michelangelo 老年内心**的事,不是关于 Vittoria 一个人的传记**。
+
 ##### 1564 年 2 月 18 日 — 88 岁死
 
 **Michelangelo 活到 88 岁**——
@@ -951,6 +1087,116 @@ authorNotes: |
 ——一个 88 岁的人临终说"我刚开始学"——
 **这是 Renaissance 精神的最高表达**——
 **永远在学习 + 永远不满足**。
+
+---
+
+#### Raphael Sanzio（1483-1520）
+
+##### 出身：Urbino 宫廷画家之子
+
+**1483 年生在 Urbino**（意大利中部小城邦）——
+**他爸爸 Giovanni Santi 是 Urbino 公爵 Federico da Montefeltro 的宫廷画家**——
+**Raphael 出生那一年——Da Vinci 已经 31 岁 + Michelangelo 已经 8 岁**——
+**他是三巨头里最年轻的一个**。
+
+**8 岁失去妈妈 + 11 岁失去爸爸**——
+**他从小在父亲的画室长大——耳濡目染**fresco（湿壁画,颜料趁石灰未干画上去）**+ 油画技法**——
+**他没受过 Da Vinci 那种私生子式的"野学徒"——他是**画家世家的儿子**——
+**这个出身让他从一开始就懂"画画是一门可以系统学的手艺"**。
+
+##### 22 岁来 Florence — 站在两位巨人肩膀上
+
+**1505 年 22 岁——Raphael 来到 Florence**——
+**当时 Florence 同时住着 Da Vinci(53 岁,刚画完 Mona Lisa 草图)+ Michelangelo(30 岁,刚雕完 David)**——
+**这是人类历史上罕见的"三天才同城"瞬间**——
+
+**Raphael 干的事是**：**仔细看 + 学**——
+- **从 Da Vinci 学 sfumato（烟熏式柔和光影）**——
+- **从 Michelangelo 学**人体解剖式的力量感**——
+- **他没有抄——他**消化两人的长处变成自己的语言**——
+
+——**这是 Renaissance 学习方式的典型**——
+**不是"原创天才"——是**站在前人肩膀上**——
+**Raphael 的伟大不是发明新技法——是**综合 + 温润化**前人的发明**。
+
+##### 25 岁 1508 — 被 Julius II 召到 Rome
+
+**1508 年 25 岁——教皇 Julius II 把 Raphael 召到 Rome**——
+**同一年——Michelangelo 也在 Rome 开始画 Sistine Chapel 天顶**——
+**Julius 让 Raphael 画 Vatican 的另一组房间——*Stanze*（教皇起居室,共 4 间）**——
+**两个人**隔着几条走廊**同时为 Julius 工作**——
+
+**Raphael 画 Stanza della Segnatura（签字室,教皇审批文件的房间）**——
+**这间屋子的墙壁上有 4 幅大 fresco**：
+- **东墙：哲学（*The School of Athens*）**
+- **西墙：神学（*Disputa*）**
+- **南墙：诗歌（Parnassus 山）**
+- **北墙：法律 / 正义**
+
+——**这是 Renaissance "古典 + 基督教 + 艺术 + 法律" 4 个支柱的视觉百科全书**——
+**Raphael 用 4 面墙总结了**人文主义全部知识结构**。
+
+##### *The School of Athens*（雅典学派,1509-1511）— 一张画讲完 Renaissance
+
+**这一幅 fresco 是 Raphael 26 岁那年画的**——
+**画面上**：**古希腊罗马 50+ 位哲学家 + 数学家**齐聚在一个**仿罗马 Pantheon 的拱顶大厅**——
+**正中间两个人——往画面深处走**：
+
+- **左边 Plato**（柏拉图）——**右手食指指天**——意思是"真理在理想世界,不在地面"——
+  **Raphael 用 Da Vinci 当 Plato 的模特**——你看那张脸 + 大胡子 + 眯眼神态——就是 Da Vinci——
+  **这是 Raphael 对 53 岁 Da Vinci 的致敬**
+
+- **右边 Aristotle**（亚里士多德）——**右手摊开下压地面**——意思是"真理在经验里,在地上"——
+  **这两个手势浓缩了西方哲学 2000 年最大的分歧**:
+  **理念论 vs 经验论 / 演绎 vs 归纳 / Plato 学派 vs Aristotle 学派**
+
+**画面前景台阶上——一个孤独的人**坐在大理石块上**写字 + 托腮发愁**——
+**这是 Heraclitus（哲学家,主张万物流变）**——
+**Raphael 用 Michelangelo 当 Heraclitus 的模特**——
+**那种沉重 + 闷闷不乐 + 肌肉发达的体型——就是 Michelangelo**——
+**画面右下角——一个穿黑帽子的年轻人探出头看你——那是 Raphael 自己**——
+**他把自己藏进一群古希腊哲学家中间**。
+
+——**这一幅画 7 年级娃可以**用手指**在课本插图里找出每个人**：
+**Plato 食指指天 + Aristotle 食指指地 + Heraclitus 在台阶上发愁 + Pythagoras 蹲着写算式 + Euclid 弯腰画几何 + Ptolemy 拿地球仪 + Raphael 戴黑帽子**——
+**这就是为什么 AP Art History 把这一幅列为 required work**——
+**它**一张画讲完了**Renaissance 三件事**：
+1. **古典回归**（一屋子古希腊哲学家）
+2. **三巨头互相致敬**（Plato = Da Vinci / Heraclitus = Michelangelo / Raphael 自画藏右下）
+3. **Plato vs Aristotle 哲学传承**（指天 vs 指地的手势对峙）
+
+##### 1520 年 4 月 6 日 — 37 岁突然死
+
+**Raphael 一辈子顺风顺水**——
+**Julius 死了换 Leo X(Lorenzo de' Medici 的二儿子)继续重用他**——
+**他在 Rome 既画画又设计建筑——管 St. Peter's 教堂工地**——
+**1520 年春天——他 37 岁——突然发高烧**——
+**烧了约 15 天**——
+**4 月 6 日 Good Friday（耶稣受难日）那天死**——
+
+**当时人传**他"太美少年累死"——
+**Vasari 后来在《Lives》里写**：他"过度沉湎于爱情" 让身体崩溃——
+**现代医学推测可能是急性 typhoid（伤寒）或者其他**fever-发热综合症**——
+
+——**他的葬礼**整个 Rome 来人**——
+**Raphael 的遗体被葬在他自己设计装饰的 Pantheon（罗马万神殿）**——
+**墓碑上是文学家 Pietro Bembo 写的两行拉丁文**：
+> **生时,Nature 怕被他超越;**
+> **死时,Nature 怕跟他同死。**
+
+——**Raphael 是 Renaissance 三巨头里**最早死 + 最年轻死**的一个**——
+**Da Vinci 67 岁死 + Michelangelo 88 岁死 + Raphael 37 岁死**——
+**如果 Raphael 多活 30 年——他可能盖过 Michelangelo**——
+**但他 37 岁就走——这是 Renaissance 最大的"假如"**。
+
+> ⚠️ **教学要点**：Raphael 跟 Da Vinci / Michelangelo 三个人**是**截然不同的人格**——
+> - **Da Vinci**：野路子天才,什么都想搞,半成品多
+> - **Michelangelo**:**痛苦的工匠,一辈子跟自己跟 patron 打架**
+> - **Raphael**：**温润的综合者**,**懂如何让客户开心 + 让自己也舒服**
+>
+> Raphael 教我们一件事：**Renaissance 不止"野天才"路线——也有**"温润综合"路线**——
+> **三种人格能同时存在 + 互相致敬 + 互不替代**——
+> **这是 Renaissance 真正的多元**。
 
 ---
 
