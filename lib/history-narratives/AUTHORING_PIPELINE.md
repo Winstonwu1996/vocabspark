@@ -62,6 +62,45 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 
 ---
 
+## ⛔ 第 12 条: Lens node `expectsRealAnswer` 默认 false + 4 agent review 必查 N1 hook em-dash 链 (5-7+ Tang-Song ship hotfix)
+
+**事故** (founder 5-7+ Tang-Song D4 ship 后 30 分钟内抓到):
+- Tang-Song 3 lens × 12 nodes = 36 nodes 全部 `expectsRealAnswer: true` (lens-author agent 默认全设)
+- 用户每个 hook + narrative 节点都被卡——必须写 reflection 才能 advance——「没有下一步」
+- 同时 Su Shi N1+N2+N12 em-dash 链密度 18+/11+/10+ (P0 fixer regex 漏覆盖,只修 N3-N11)
+
+**对照已 ship Topics**:
+- AoE: 7 true / 29 false (19% reflection)
+- Mali: 14 true / 22 false (39% reflection)
+- Reformation: ~6 reflection
+- **Tang-Song bug: 36 / 0 = 100%** ← 100% require input bug
+
+**根因**: 两层
+1. lens-author agent prompt 没明示 `expectsRealAnswer` 默认 (大多数 narrative/hook 节点应 false, 只 reflection/synthesis 节点 true)
+2. P0 fixer em-dash 链 regex 漏覆盖 N1+N2+N12 (只修 N3-N11)
+
+**规则**:
+1. **Lens node `expectsRealAnswer` 默认 false** — 只 N11 (synthesis) + N12 (closing meta/reflection) 设 true. 其他 narrative + hook + story 节点全 false 让用户能 advance.
+2. **比例约束**: 每 lens 最多 2-3 个 `expectsRealAnswer: true` (1/4 比例上限). 跨 Topic 整体 reflection 比例 < 40%.
+3. **4-agent review 必查**: 7thgrader + Maria 必查 「expectsRealAnswer 比例」 + 「N1 hook em-dash 密度」 — 哪个偏高 P0 阻 ship.
+4. **P0 fixer em-dash regex 必覆盖全 12 nodes** — 不能只 N3-N11. SOP 加自检命令: `for n in 1 2 ... 12; do grep ...; done`.
+
+**自检**:
+```bash
+# 全 lens 节点 expectsRealAnswer 比例
+grep -c "expectsRealAnswer: true" lens.js  # 期望 ~6 (N11+N12 per lens)
+grep -c "expectsRealAnswer: false" lens.js # 期望 ~30 (其他 narrative)
+
+# Em-dash 链全 12 nodes 检查
+for i in $(seq 1 12); do
+  echo "N$i:"
+  grep -A 100 "id: '.*-n$i'" lens.js | head -50 | grep -c "——" || echo 0
+done
+# 任一节点 > 8 个 em-dash = chain risk, 需 P0 fix
+```
+
+---
+
 ## ⛔ 第 11 条:Topic data 字段嵌套引号 + commit 前强制 node --check (5-6 加,systemic,build error 抓到)
 
 **事故** (founder 5-6 Renaissance ship 时抓到):
