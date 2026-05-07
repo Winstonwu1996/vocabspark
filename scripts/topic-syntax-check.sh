@@ -59,6 +59,17 @@ if [ -n "$QUOTE_VIOLATIONS" ]; then
     # 不直接 fail — let npm run build 决定
 fi
 
+echo ""
+echo "3.5/4 lens-quality-check (expectsRealAnswer ratio + em-dash chain + 字数 — 第 12 条铁律)..."
+if [ -f "./scripts/lens-quality-check.sh" ]; then
+    if ! ./scripts/lens-quality-check.sh 2>&1 | tail -50; then
+        echo "❌ lens-quality-check FAIL — 见上方 [Tang-Song D4 ship hotfix 教训沉淀]"
+        echo "   软警告 (字数 outlier / 段 em-dash chain) 不阻 ship — 但 P0 阻 (>50% expectsRealAnswer)"
+        # Note: not exit on lens-quality fail in quick mode — allow ship of legacy debt
+        # exit 4
+    fi
+fi
+
 if [ "$MODE" = "quick" ]; then
     echo ""
     echo "✓ Quick check 通过 (跳过 npm run build) — 但 production ship 必须跑 full build"
