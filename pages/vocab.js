@@ -390,7 +390,12 @@ var buildGuessPrompt = (word, learned) => {
     "    • 4 选项语义场**互不重叠**（这是消除\"两答案都对\"的核心）\n" +
     "    • 选项长度差 ≤ 1 词，避免长度暗示（cuing effect）\n" +
     "    • 单个选项 1-3 词，≤ 25 字符\n" +
-    "    • 全英文，不能出现中文\n\n" +
+    "    • 全英文，不能出现中文\n" +
+    "    • ❌❌❌ **严禁任一选项等于目标词本身或其同根词形**（如目标词\n" +
+    "      retraction，则 retraction / retract / retracted / retracting /\n" +
+    "      retracts / retractive 全部禁止；目标词 abandon 则 abandoned /\n" +
+    "      abandoning / abandonment 全部禁止）—— 出现就让 guess 题秒变\n" +
+    "      送分，毫无意义。这是最高优先级硬约束，违反则整题作废。\n\n" +
     "  ✅ abandon 范例（锁\"放弃\"义项）：\n" +
     "    A: give up (正解)  |  B: dislike (L1 误解)  |  C: absorb (形近)  |  D: keep (反义)\n\n" +
 
@@ -422,8 +427,10 @@ var buildGuessPrompt = (word, learned) => {
 // 规范化 LLM 返回的 guess JSON：
 // - answer: "a " / "Answer: A" / "A." 都映射回 "A"；非 [A-D] 视为缺失
 // - acceptableAnswers: 缺失/空数组 fallback 到 [answer]，每个元素同样字母规范化
+// - **新**：检测选项是否含目标词本身或同根词形（LLM 偶尔违反硬约束）
+//   命中 → 标 _invalidOptions=true 让 UI 走重试路径（避免给学生送分题）
 // 在 dataCache 写入点调一次，下游 UI/判断逻辑都拿规范化后的对象。
-var normalizeGuessData = (raw) => {
+var normalizeGuessData = (raw, targetWord) => {
   if (!raw || typeof raw !== "object") return raw;
   var parseLetter = (x) => {
     var m = String(x || "").toUpperCase().match(/[A-D]/);
@@ -437,6 +444,37 @@ var normalizeGuessData = (raw) => {
   if (!Array.isArray(raw.acceptableAnswers) || raw.acceptableAnswers.length === 0) {
     raw.acceptableAnswers = ans ? [ans] : [];
   }
+
+  // 兜底校验：选项不能包含目标词本身或同根词形（retraction → retract/retracted/...）
+  // LLM 偶尔违反 prompt 硬约束，客户端再过一道
+  if (targetWord && raw.options && typeof raw.options === "object") {
+    var w = String(targetWord).toLowerCase().trim();
+    if (w.length >= 4) {
+      // 取词干（粗略：去掉常见后缀）作为同根词检测的 prefix
+      var stem = w
+        .replace(/(?:tion|sion|ment|ness|able|ible|ance|ence|ous|ive|ize|ise|ify)$/i, "")
+        .replace(/(?:ing|ies|ied|ed|er|est|ly|ful|less|al|ic|ist|ism|s)$/i, "")
+        .replace(/e$/i, "");
+      var checkStem = stem.length >= 3 ? stem : w.slice(0, Math.min(5, w.length - 1));
+      var optionViolations = [];
+      Object.entries(raw.options).forEach(function(entry) {
+        var k = entry[0];
+        var v = String(entry[1] || "").toLowerCase().trim();
+        if (!v) return;
+        // 完全等于目标词
+        if (v === w) { optionViolations.push(k + ":exact"); return; }
+        // 选项是单个词（不含空格）且以词干开头 → 大概率同根词形
+        if (!v.includes(" ") && v.length >= 4 && v.startsWith(checkStem) && Math.abs(v.length - w.length) <= 5) {
+          optionViolations.push(k + ":cognate(" + v + ")");
+        }
+      });
+      if (optionViolations.length > 0) {
+        console.warn("[guess] invalid options for word '" + targetWord + "':", optionViolations.join(", "));
+        raw._invalidOptions = true; // UI 检测此 flag → 视作 guess 加载失败 → 触发重试按钮
+      }
+    }
+  }
+
   return raw;
 };
 
@@ -4395,7 +4433,12 @@ export default function App() {
           return callWithClientRetry(function() {
             return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred });
           }).then(function(raw) {
-            dataCache.current[word].guess = raw ? normalizeGuessData(tryJSON(raw)) : null;
+            dataCache.current[word].guess = raw ? normalizeGuessData(tryJSON(raw), word) : null;
+            // 兜底：选项含目标词本身/同根词 → 视作失败让 UI 给重试按钮
+            if (dataCache.current[word].guess && dataCache.current[word].guess._invalidOptions) {
+              dataCache.current[word].guessFailed = true;
+              dataCache.current[word].guess = null;
+            }
             dataCache.current[word].guessRaw = raw;
             if ((dataCache.current[word].teach || dataCache.current[word].teachJSON) && (dataCache.current[word].guess || dataCache.current[word].guessRaw)) {
               readyWordSet.add(word);
@@ -8476,7 +8519,7 @@ export default function App() {
               var revealAnim = isAnswer || isAcceptable ? "correctReveal 0.6s ease-out forwards" : isWrongPicked ? "wrongReveal 0.4s ease-out forwards" : "none";
               var marker = isAnswer ? " ★" : isAcceptable ? " ✓" : isWrongPicked ? " ✗" : "";
               return <button key={k} data-option-btn="true" data-selected={sel ? "true" : "false"} disabled={guessSubmitted} style={{...S.optionBtn,background:bg,borderColor:bdr,color:clr,boxShadow:shadow,animation:revealAnim}} onClick={()=>setSelectedOption(k)}><span data-option-key="true" style={S.optionKey}>{k}</span>{v}{marker}</button>;
-            })}</div> : guessData._failed ? <div style={{textAlign:"center",padding:"12px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>猜词题暂时加载不出来</div><button style={S.primaryBtn} onClick={function(){setGuessData(null);callWithClientRetry(function(){return callAPIFast(sysP,buildGuessPrompt(currentWord,learned));}).then(function(raw){var parsed=normalizeGuessData(tryJSON(raw));if(parsed?.context&&parsed?.options){dataCache.current[currentWord].guess=parsed;dataCache.current[currentWord].guessFailed=false;setGuessData(parsed);}else{setGuessData({context:"AI 这次没说清楚",options:null});}}).catch(function(){setGuessData({context:"题目暂时没准备好",options:null,_failed:true});});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={skipGuess}>直接学习 →</button></div> : <div style={{fontSize:14,color:C.textSec,marginBottom:14}}>选项暂时没准备好，可以直接跳过看讲解</div>}
+            })}</div> : guessData._failed ? <div style={{textAlign:"center",padding:"12px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>猜词题暂时加载不出来</div><button style={S.primaryBtn} onClick={function(){setGuessData(null);callWithClientRetry(function(){return callAPIFast(sysP,buildGuessPrompt(currentWord,learned));}).then(function(raw){var parsed=normalizeGuessData(tryJSON(raw),currentWord);if(parsed?.context&&parsed?.options&&!parsed._invalidOptions){dataCache.current[currentWord].guess=parsed;dataCache.current[currentWord].guessFailed=false;setGuessData(parsed);}else{setGuessData({context:parsed?._invalidOptions?"AI 这次给了无效选项 — 再试一次？":"AI 这次没说清楚",options:null,_failed:!!parsed?._invalidOptions});}}).catch(function(){setGuessData({context:"题目暂时没准备好",options:null,_failed:true});});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={skipGuess}>直接学习 →</button></div> : <div style={{fontSize:14,color:C.textSec,marginBottom:14}}>选项暂时没准备好，可以直接跳过看讲解</div>}
             {!guessSubmitted && guessData.hint && <button style={S.hintBtn} onClick={()=>setShowHint(true)}>{showHint?"💡 "+guessData.hint:"💡 提示"}</button>}
             {guessSubmitted && (() => {
               var acceptable = (Array.isArray(guessData.acceptableAnswers) && guessData.acceptableAnswers.length > 0)
