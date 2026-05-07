@@ -88,6 +88,16 @@
   node --check lib/history-storyboards/index.js
   node --check pages/history.js
   ```
+- [ ] **🔥 完整 SWC build 必跑**（5-6 加,Renaissance ship build error 教训 — node --check 不能 catch quote nesting bug）:
+  ```bash
+  npm run build
+  # 必须全过.SWC parser 比 node parser 严格,会 catch ASCII " 嵌入 outer "..." 字符串等
+  # 提交前不跑 build = production deploy 50% 概率 fail.
+  ```
+  或用 helper script:
+  ```bash
+  ./scripts/topic-syntax-check.sh <topic-id>
+  ```
 - [ ] **Module load test 全过**：
   ```bash
   node --input-type=module -e "import('lib/history-storyboards/index.js').then(m => { ... })"

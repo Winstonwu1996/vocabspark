@@ -62,6 +62,42 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 
 ---
 
+## ⛔ 第 11 条:Topic data 字段嵌套引号 + commit 前强制 node --check (5-6 加,systemic,build error 抓到)
+
+**事故** (founder 5-6 Renaissance ship 时抓到):
+- Renaissance Topic entry 我用 Python 脚本生成 JS 文件时,在 `cn: "..."` 字段内嵌了 ASCII `"` 引号 (例:`但"碎片化竞争 vs 大一统"的差异...`)
+- webpack/SWC parser 把内层 ASCII `"` 当字符串闭合 → SyntaxError: `Expected ',', got '碎片化竞争'`
+- 本地 `node --check` 是 PASS 的 (因为 Node ES module parser 有 fallback),但 Vercel build (SWC) fail
+- **production deploy 跑了 build error,需要 hotfix + rebuild**
+
+**根因**: 三层
+1. 用 Python 脚本拼装 JS 文件 — quote nesting 风险高
+2. commit 前没跑 build verification (只跑 node --check 不够)
+3. 没有 lint rule 检测 quote nesting pattern
+
+**规则**:
+1. **Topic data entry 不许 Python 脚本拼装** — 必须用 `lib/history-topics/_template.js` 拷贝 + Read/Edit 字段
+2. CN/EN 字段内嵌引号:
+   - **优先**: 中文方头括号「」(如 `「碎片化竞争 vs 大一统」`)
+   - **次选**: escape `\"` (如 `"... \"碎片化\" ..."`)
+   - **禁止**: 直接 ASCII `"` 嵌入 outer `"..."` 字符串
+3. **commit 前必跑** `npm run build` (本地完整 SWC build),不只 `node --check`. node --check 不能 catch quote nesting bug.
+4. CI pipeline (Vercel preview) build 失败 = 不许 merge main.
+
+**实现位置**:
+- `lib/history-topics/_template.js` — 新 Topic 起 entry 必须 copy 这个 template (待建,founder 5-6 todo)
+- `scripts/topic-syntax-check.sh` — 跑 node --check + npm run build subset on Topic files
+- `docs/NEW_TOPIC_CHECKLIST.md` Phase 4 加强:不只 `node --check`,跑 `npm run build` 才 ship
+
+**自检**:
+```bash
+# Pre-commit 强制跑这个
+node --check lib/history-topics.js lib/history-storyboards/*.js pages/history.js && npm run build
+# Build 全过 = ship-ready
+```
+
+---
+
 ## ⛔ 第 10 条：Atlas content 严禁 hardcode 用户专属字段（5-5 加,systemic,founder 实测发现）
 
 **事故**（founder 5-5 互联网 beta 测试前抓到）：

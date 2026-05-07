@@ -3126,6 +3126,9 @@ function LensSelector(props) {
     'lorenzo-medici': '👑',
     'savonarola': '🔥',
     'lucia-widow': '🪞',
+    'martin-luther': '📜',
+    'erasmus': '✍️',
+    'sister-agnes': '🕊️',
   };
 
   // 第一次建议哪个 lens（每 Topic 不同——按戏剧强度 / 入门难度）
@@ -3134,6 +3137,7 @@ function LensSelector(props) {
     'crusades-1099':    { id: 'roger-toulouse', reason: '4 年 + 4 个动机最容易代入' },
     'black-death-1347': { id: 'agnolo-siena',   reason: '5 月 8 日第一笔字最容易切入' },
     'renaissance-1500': { id: 'lucia-widow',    reason: '同龄锚点 + 镜子 micro-detail 情感冲击最深' },
+    'reformation-1517': { id: 'sister-agnes',   reason: '字数严控 + 1539 修道院最后看小册子 + N12 谜题钩子' },
   };
   var firstHint = firstChoiceHint[props.topicId];
   var firstLens = firstHint && lenses.find(function(l) { return l.id === firstHint.id; });
