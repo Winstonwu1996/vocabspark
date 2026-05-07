@@ -34,6 +34,11 @@ authorNotes: |
 > **Through-line**：tech-disruption（黄金 + 盐 + 跨撒哈拉商路）+ religion-vs-state（Islam 进入西非 + 跟传统宗教融合）
 > **难度**：4/5（地理远 + 名字陌生 + 史料部分口传）
 > **预期时长**：35-40 min（13 轮对话）
+>
+> **⚠️ 时间范围学界争议**：本 narrative 全程用 **1235-1610**——这是 textbook 简化时间锚（跟 AoE narrative 保持一致）。
+> 学界严谨范围是 **c.1235 (Sundiata 推翻 Sosso) → c.1670 (Bambara 推翻最后名义王朝)**——
+> 关键节点：1235 Kirina 战役 → 1324 Mansa Musa 朝圣 → 1591 Songhai/摩洛哥 Tondibi → c.1610 Mali 实际不存在 (虽然名义王朝拖到 1670)。
+> 「**1235-1610**」与「**1235-1670**」严格定义都成立——本 narrative 用前者是 textbook 习惯——后者是学界严谨用法。
 
 ---
 
@@ -55,13 +60,17 @@ authorNotes: |
 >   **领土 1,800,000 km²**——比同期英国 + 法国加起来大 5 倍——
 >   **人口 4000-5000 万**——比同期欧洲总人口 1/3
 > - **Mansa Musa 1324 朝圣不只**"豪华"**——它**改变全球经济**：
->   **他在 Cairo 慷慨给金子——Cairo 黄金价格暴跌**——
->   **接下来 12 年 Cairo 经济衰退**——这是**人类历史第一次有记录的**通货膨胀**事件——
->   一个人**破坏整个城市经济**
-> - **Timbuktu 14 世纪有**Sankoré 大学**——25,000 学生——
->   **比同期 Oxford / Bologna 大学还大**——
->   **图书馆藏 700,000 件手稿**——研究**伊斯兰法 + 数学 + 天文 + 医学 + 历史**——
->   **学生从摩洛哥 + 埃及 + 阿拉伯半岛 + 安达卢西亚来学习**——
+>   **他在 Cairo 1 个月散金——Cairo 黄金价格下降约 25%**（al-'Umari 同代记录，学界认可）——
+>   **接下来约 5-10 年 Cairo 经济受挫**（学界争议程度——部分研究认为 Black Death 1347-1349 才是 Mamluk 经济真正崩溃；al-'Umari 称影响持续到他写书时约 12 年——但是个人观察，不是经济数据）——
+>   **这是人类历史**第一次有记录的「单一外来财富注入引发的通货膨胀事件」**——
+>   **不是「人类第一次通胀」**（罗马 3 世纪 Diocletian 通胀 + 中国汉武帝五铢钱 + 元朝 14 世纪交钞 hyperinflation 都更早）——
+>   而是**第一次有记录的「单笔金子破坏一国经济」事件**——一个人**破坏整个城市经济**
+> - **Timbuktu 14-16 世纪有 *Sankoré* 大学**——三个数字必须分开三个时间点（这是常见混淆）：
+>   ① **14 世纪 Mansa Musa 时期**：约 **5,000-10,000 学者**（学界 estimate range）——
+>   ② **16 世纪 Askia Muhammad（Songhai）鼎盛期**：Timbuktu 三大清真寺学者社区峰值约 **25,000**（不是 14 世纪）——
+>   ③ **21 世纪 Timbuktu Manuscripts Project 幸存数**：全区约 **70 万件手稿**（包括 Sankoré + 私人 + 沙漠藏匿 + Bamako 抢救出来的）——**不是 14 世纪 Sankoré 单一馆藏**——
+>   **跟 16 世纪同代欧洲对照**：Oxford ~1,500 / Bologna ~2,000 / Sorbonne ~10,000——**16 世纪 Timbuktu 学者社区比同代欧洲三大都大**——
+>   **课程**：**伊斯兰法 + 数学 + 天文 + 医学 + 历史**——**学生从摩洛哥 + 埃及 + 阿拉伯半岛 + 安达卢西亚来**——
 >   **课本几乎不写这些**——给孩子的印象是"非洲没有大学"——**完全错误**
 > - **Sundiata 史诗**（Mali Empire 起源故事）是**人类最伟大的口传史诗之一**——
 >   **类似希腊 Iliad / 印度 Mahabharata**——但**因为口传**——
@@ -95,12 +104,19 @@ authorNotes: |
 **他正在去 Mecca 朝圣的路上**——
 **他**带 12,000 个奴隶**——每人**捧 4 磅黄金**——
 **他**带 80 头骆驼**——每头**驮 300 磅黄金**——
-**总共**18 吨黄金**——**今天价值 4-10 亿美金**——
+**总共**18 吨黄金**——**今天价值约 4-10 亿美金**（仅参考——14 世纪和 21 世纪没有可比 metric）——
 
-**他**在 Cairo 停 3 个月**——他**慷慨给金子给 Cairo 民众**——
-**结果**：**Cairo 黄金价格**暴跌——**接下来 12 年 Cairo 经济衰退**——
+**⚠️ 这 12,000 enslaved 不是抽象数字 — 是 12,000 个有名字的人**——
+**这是 Mali Empire 跨撒哈拉奴贩传统的体现**——**Mali 也是跨撒哈拉奴贩主要参与方**（1000-1900 约 1700 万非洲人被运到北非 + 中东）——
+**这跟 16-19 世纪跨大西洋奴贩 1500-1888 约 1200 万**是两个不同的奴贩体系——但**不能因为 Mali 是非洲帝国就回避**——**Mali 既是西非伟大文明也是跨撒哈拉奴贩主要参与方，两者都真**。
 
-**这是**人类历史第一次有记录的"通货膨胀"事件**——
+**他**在 Cairo 停 3 个月**——他**散金给 Cairo 民众**——
+**结果**：**Cairo 黄金价格下降约 25%**（al-'Umari 同代记录的定性描述——没有具体经济数据）——
+**接下来约 5-10 年 Cairo 经济受挫**（al-'Umari 称影响持续约 12 年——是个人观察——学界争议程度，部分研究认为 Black Death 1347-1349 才是 Mamluk 经济真正崩溃）——
+
+**这是**人类历史**第一次有记录的「单一外来财富注入引发的通货膨胀事件」**——
+**不是「第一次通货膨胀」**（罗马 3 世纪 Diocletian + 中国汉武帝五铢钱 + 元朝 14 世纪交钞都更早）——
+而是**第一次有记录的「单笔金子破坏一国经济」事件**——
 **一个人**破坏一个城市经济**——
 **也是 14 世纪欧洲 + 中东第一次**意识到**：
 **非洲不是"野蛮 + 部落"——非洲有**大帝国 + 大财富 + 大学**——
@@ -186,7 +202,7 @@ authorNotes: |
 **5. 奴隶**
 - **Mali 有奴隶制**——但**跟跨大西洋奴隶制不同**：
 - **Mali 奴隶**许多是**战争俘虏 + 罪犯**
-- **奴隶**有些**爬到高位**（包括军队领导 + Mansa Musa 的母亲据说是奴隶出身）
+- **奴隶**有些**爬到高位**（包括军队领导——**部分阿拉伯文献 al-'Umari 1340 记录 Mansa Musa 母亲是奴隶出身**——**学界有争议**：Levtzion 1973 认为是 al-'Umari 误传 / Conrad 2005 认为有可能——若属实显示 Mali 奴隶制度的流动性远比跨大西洋奴隶制度大）
 - **奴隶**可以**赎身 + 自由**
 - **跟跨大西洋奴隶制完全不同**——但**Mali 商人**也跨撒哈拉贩奴**到**北非——这是非洲奴隶贸易的另一个体系**
 
@@ -316,7 +332,7 @@ authorNotes: |
 **他**颁布**Kurukan Fuga 宪章**——
 **这是**人类最早的**人权宪章**之一**：
 
-**Kurukan Fuga 7 个核心条款**：
+**Kurukan Fuga 7 个核心条款**（**注**：1998 UNESCO 认证版本是**44 条**——经 Mande 学者集成——这里列的是**核心 7 条**民间简化版——学界争议哪些是 1235 原始口传 + 哪些是 13-14 世纪累加——但**核心人权 + 男女 + 儿童 + 战俘**条款都在 1235 原始口传中）：
 
 1. **保护人的尊严**——任何**人**都不能**奴役 + 侮辱**
 2. **男女平等**——女性有发言权
@@ -378,13 +394,14 @@ authorNotes: |
 ##### 1312 年 — 32 岁登基
 
 **1312 年——前任皇帝 Abu Bakr II 离奇消失**——
-**学界**关于 Abu Bakr II 的故事**：**他出海探险**——**带 2,000 艘船 + 几千人想跨大西洋**——
-**没回来**——
-**这是 Mansa Musa 自己跟 Cairo 学者说的**——
-**有些学者**认为这可能**真的**——**14 世纪西非船能横跨大西洋吗？争议大**——
-**有些学者认为**Abu Bakr II 只是**死于政变**——**Mansa Musa 编故事掩盖**——
 
-**不论真相**——1312 年 Mansa Musa 32 岁登基**——他**接班 Mali Empire**鼎盛期**。
+**⚠️ Abu Bakr II 跨大西洋故事的学界争议**：
+**唯一来源是 Mansa Musa 1324 自己跟 Cairo 学者 al-'Umari 说的**——**前任皇帝带 2,000 艘船 + 几千人想跨大西洋**——**没回来**——
+**主流学界**（Levtzion 1973 / Brooks 1993）**认为很可能是 Mansa Musa 政治叙事**——**掩盖 Abu Bakr II 死于政变**+**14 世纪西非船没有跨大西洋技术能力**——
+**Pre-Columbian-African-contact 假说**（Van Sertima 1976 *They Came Before Columbus*）是激进 Afrocentric 史学核心议题——**但至今没有考古证据**——**大多数学界不接受**——
+**这是 contested fact**——不是 confirmed history。
+
+**不论 Abu Bakr II 真相**——1312 年 Mansa Musa 32 岁登基**——他**接班 Mali Empire**鼎盛期**。
 
 ##### 1312-1324 — 巩固帝国
 
@@ -416,12 +433,12 @@ authorNotes: |
 
 **朝圣是**伊斯兰教**5 大义务**之一——但 Mansa Musa 把它变成**史上最大规模的政治 + 经济**展示**：
 - **60,000 人队伍**
-- **12,000 个奴隶**——每人**捧 4 磅黄金**
+- **12,000 个奴隶**（**注**：这 12,000 enslaved 是 Mali 跨撒哈拉奴贩链条上的人——**Mansa Musa 朝圣队伍同时是 Mali Empire 跨撒哈拉奴贩传统的体现**——见 §11 Q4）——每人**捧 4 磅黄金**
 - **80 头骆驼**——每头**驮 300 磅黄金**
 - **他妻子 + 500 个侍从女**
 - **数千头骆驼 + 马 + 食物**
 
-**总价值**约 18 吨黄金**——**今天价值**4-10 亿美金**——
+**总价值**约 18 吨黄金**——**今天价值约 4-10 亿美金**（仅参考——14 世纪和 21 世纪没有可比 metric）——
 
 ##### 路线 — 从 Niani 到 Mecca
 
@@ -449,12 +466,13 @@ authorNotes: |
 - **买大量 Cairo 货物**——付**金子**
 - **资助**Cairo 学者 + 清真寺**
 
-**结果**：**Cairo 黄金价格**暴跌 25%**——
-**接下来 12 年——Cairo 经济**严重通货膨胀**——
-**1336 年（Mansa Musa 死那年）Cairo 物价才**慢慢恢复**——
+**结果**：**Cairo 黄金价格下降约 25%**（al-'Umari 1300-1349 同代埃及学者——这是**他个人定性观察**，**不是经济数据**）——
+**接下来约 5-10 年 Cairo 经济受挫**（al-'Umari 自己写「持续到我写本书时约 12 年还在影响」——但 al-'Umari 是文学性记述——现代经济史 Goldberg 2012 / Borsch 2005 估计实际影响 5-10 年——程度学界争议——部分研究认为 Black Death 1347-1349 才是 Mamluk 经济真正崩溃）——
+**1336 年左右（Mansa Musa 死前后）Cairo 物价**慢慢恢复**——
 
-——**这是**人类历史第一次有记录的"通货膨胀"事件**——
-**一个人**破坏一个国家 12 年经济**——**这种规模的财富动员**——
+——**这是**人类历史**第一次有记录的「单一外来财富注入引发的通货膨胀事件」**——
+**不是「第一次通货膨胀」**——罗马 3 世纪 Diocletian 银币贬值 + 中国汉武帝五铢钱通胀 + 13-14 世纪元朝交钞 hyperinflation **都早于 Mansa Musa 1324**——
+而是**第一次有记录的「单笔金子破坏一国经济」事件**——**这种规模的单笔财富动员**——
 **14 世纪欧洲 + 中国都没见过——欧洲对 Mali Empire 的认知从这一刻起**永远**改变了。
 
 ##### Cairo 礼仪危机 — Mansa Musa 的尊严
@@ -515,16 +533,25 @@ authorNotes: |
 - **欧洲对西非黄金的认知**——**直接刺激**150 年后葡萄牙南下**
 - **伊斯兰教在西非传播**——**今天**马里 + 塞内加尔 + 尼日尔 + 几内亚**90%+ 穆斯林**——直接源于 Mansa Musa**
 
-> ⚠️ **教学要点**：Mansa Musa 是**14 世纪世界最富的人**——
-> **Time Magazine 2015 年**估算**：他的财富折合今天**4000 亿美金**——
-> **比 21 世纪所有亿万富翁**都富**——
-> **比 Andrew Carnegie / John Rockefeller / Bill Gates / Jeff Bezos**都富**——
-> **课本几乎不写他**——给孩子的印象是"历史最富的人都是欧美"**——完全错误**。
+> ⚠️ **教学要点**：Mansa Musa 是**14 世纪世界最富的统治者之一**——
+> **同代量级**：Mamluk Sultan al-Nasir Muhammad（埃及）+ 元朝皇帝 Yesun Temür（中国）+ Charles IV（法国）——
+> **几个量级相近的同代统治者**——他**没有"绝对最富"地位**。
 >
-> **学历史**——必须**纠正这种偏见**——
+> **⚠️ 史料警告 — '4000 亿美金 比 Bezos 富'是 popular myth**：
+> Time Magazine + Money.com 2015 年的「**4000 亿美金**」是**popular media 非学术 estimate**——
+> 学界（Levtzion 1973 / Hunwick 2003 / Gomez 2018）共识：**14 世纪和 21 世纪没有可比 metric**——
+> Mali 黄金不在国际市场流通 + GDP per capita 概念不存在 + comparable-purchasing-power 计算不可能——
+> **「比 Bezos 富」是 Black History Month 热度产物**——**不是学术 estimate**。
+> 学界共识：**Mansa Musa 是同代世界最富之一——但'有史以来最富'是过度简化**。
+>
+> **史实 OK 的部分**：1324 在 Cairo 1 个月散金导致 Cairo 黄金贬值约 25%（al-'Umari 同代记录，学界认可）——
+> 这是 monetary supply shock 经典案例——但**不是「他比 Bezos 富 X 倍」式数字**。
+>
+> **课本几乎不写他**——给孩子的印象是"历史最富的人都是欧美"——这种偏见也错——
+> **学历史**——必须**纠正这种偏见**——但**不能用 popular myth 反过来过度补偿**。
 > **14 世纪世界经济中心**有 3 个**：
 > **欧洲 (Florence + Venice)**+**中东 (Cairo + Baghdad)**+**西非 (Timbuktu + Niani)**——
-> **Mali Empire 是**当之无愧的全球经济中心之一**。
+> **Mali Empire 是**当之无愧的全球经济中心之一**——这点学界稳。
 
 ---
 
@@ -547,9 +574,13 @@ authorNotes: |
 - **1351-1354**：**Granada（西班牙摩尔人最后据点）+ Mali Empire**——这是他**最后一次大旅行**
 - **1354-1369**：**老年在摩洛哥写《Rihla》（旅行记）**
 
-**他**总共旅行**117,000 km**——比 Marco Polo 的 24,000 km 大 **5 倍**——
+**他**总里程**学界估计 75,000-117,000 km**（30 年游历 1325-1354——Dunn 1986 给 ~75,000 / Mackintosh-Smith 2001 给 ~117,000——high-end estimate）——
+**Marco Polo 1271-1295 24 年估计 15,000-25,000 km**（Larner 1999）——
+**Ibn Battuta 是 Marco Polo 的 3-5 倍**（不是精确「5 倍」——这是 popular oversimplification）——
 **他访问 44 个现代国家**——**比 Marco Polo 多**——
-**他是**14 世纪最大旅行家——也是**人类历史最大旅行家之一**。
+**他是**14 世纪最大旅行家**之一**——
+**同代还有汪大渊**（1311-1350 写《岛夷志略》1349——访东南亚 + 印度洋——元朝民间航海家）+ **Odoric of Pordenone**（1286-1331 方济各会修士访华 1318-1330）——
+**14 世纪 Islamic 网络密度顶级**——这才是重点，不是「Ibn Battuta 比 Marco Polo 大 X 倍」式比较。
 
 ##### 1352-1353 — 在 Mali 8 个月
 
@@ -633,12 +664,14 @@ authorNotes: |
 - **被翻译成**几乎所有主要语言**——但**直到 19 世纪**才被欧洲学界**认真研究
 - **今天 21 世纪学界**：**Ibn Battuta Rihla 是**14 世纪最伟大旅行文献**——**比 Marco Polo 更全 + 更可靠**
 
-> ⚠️ **教学要点**：Ibn Battuta 比 Marco Polo 大 5 倍**——**但**Marco Polo 在西方课本里**远更出名**——
-> **这是**欧洲中心**narrative 的偏见**——
+> ⚠️ **教学要点**：**Ibn Battuta 学界估 75,000-117,000 km vs Marco Polo 估 15,000-25,000 km**——
+> **3-5 倍范围**（不是精确「5 倍」——Mackintosh-Smith 2001 给的 117,000 是 high-end estimate）——
+> **但**Marco Polo 在西方课本里**远更出名**——**这是**欧洲中心**narrative 的偏见**——
 > **学历史**不能只**用 Marco Polo 标准**衡量旅行家**——
-> **必须**承认 Ibn Battuta**作为**14 世纪世界最大旅行家**——
+> **必须**承认 Ibn Battuta**作为**14 世纪世界最大旅行家之一**——
+> **同代还有元朝汪大渊《岛夷志略》1349 + Odoric of Pordenone 方济各会修士 1318-1330** —— **14 世纪是 Islamic + 中亚 + 东亚长途旅行的黄金时代**——
 > **没有任何欧洲人**像 Ibn Battuta 那样**走那么远 + 写那么详细**——
-> **课本应该**双线讲**：**Marco Polo + Ibn Battuta**同等**重视**。
+> **课本应该**双线讲**：**Marco Polo + Ibn Battuta + 汪大渊**——**14 世纪三大长途旅行家同等重视**。
 
 ---
 
@@ -648,21 +681,32 @@ authorNotes: |
 
 **Sankoré 大清真寺 + 大学**位于 Timbuktu**——
 **1325 年 Mansa Musa 朝圣后**资助大规模重建**——
-**接下来 250 年——Sankoré 大学**世界最大**学习中心之一**：
+**接下来 250 年——Sankoré + Djinguereber + Sidi Yahya 三大清真寺**构成**世界最大学习中心之一**——
 
-- **峰值学生 25,000**——比同期 Oxford / Bologna 大学还大**
-- **教师 100+**——来自摩洛哥 + 埃及 + 阿拉伯半岛 + 安达卢西亚 + 西非**
-- **图书馆藏 700,000 件手稿**——**当时世界最大图书馆之一**
+> ⚠️ **三个数字三个时间点 — 不要混（学界 Saad 1983 / Hunwick 2003 / Gomez 2018 共识）**：
+>
+> - **14 世纪 Mansa Musa 时期 Sankoré 学者规模**：**估约 5,000-10,000**（学界 estimate range——14 世纪具体数字 inconclusive）
+> - **16 世纪 Askia Muhammad（Songhai 帝国）鼎盛期**：**Timbuktu 三大清真寺学者社区峰值 25,000**——**这不是 14 世纪 Mansa Musa 时期，是 16 世纪 Songhai 时期**
+> - **21 世纪 Timbuktu Manuscripts Project 数字 70 万件手稿**：是**全 Timbuktu 区幸存到 2010s 的数字**（包括 Sankoré + 私人家族藏 + 沙漠藏匿 + 2012 抢救到 Bamako 的）——**不是 14 世纪 Sankoré 单一图书馆藏量**
+>
+> **常见错误**：把 16 世纪 Songhai 帝国 25,000 数字 + 21 世纪幸存 70 万手稿数字**直接挂在 14 世纪 Mali Empire Mansa Musa 头上**——这是 popular media oversimplification——narrative 必须三个时点分开。
+
+**14 世纪 Sankoré 大学 (Mansa Musa 时期)**：
+- **约 5,000-10,000 学者**——已经是当时世界最大学习中心之一
+- **教师**来自摩洛哥 + 埃及 + 阿拉伯半岛 + 安达卢西亚 + 西非
 - **课程**：**Quran + Hadith + Sharia 法律 + 数学 + 天文 + 医学 + 历史 + 阿拉伯文学**
 
-**比同期欧洲大学**：
-- **Oxford 1300 年代约 1,500 学生 / 100,000 件手稿**
-- **Bologna 1300 年代约 2,000 学生 / 50,000 件手稿**
-- **Sorbonne (Paris) 1300 年代约 10,000 学生**
+**16 世纪鼎盛期对照（Askia Muhammad / Songhai 帝国）**：
+- **Timbuktu 三大清真寺学者社区峰值 25,000**——
+- **同代欧洲对照（16 世纪）**：
+  - **Oxford 1500s 约 1,500 学生 / ~100,000 手稿**
+  - **Bologna 1500s 约 2,000 学生 / ~50,000 手稿**
+  - **Sorbonne (Paris) 1500s 约 10,000 学生**
 
-——**Sankoré 大学是**14 世纪世界最大大学**——
-**比任何欧洲大学大**——但**课本几乎不写**——
-**这是**欧洲中心**narrative 的**最严重偏见**之一。
+——**16 世纪鼎盛期 Timbuktu 学者社区**比同代 Oxford + Bologna + Sorbonne 加起来都大**——
+但**14 世纪 Mansa Musa 时期 Sankoré 已经是世界一流学习中心之一**——
+**Ibn Battuta 1352 没记录学生数（Rihla 没给数字）——25,000 是 16 世纪 al-Sa'di 等源回望 Askia 时期**——
+**说"非洲没大学"是欧洲中心 narrative 最严重偏见之一**——但**用错时点的数字反过来打偏见**——也是反 Whig 史学的硬伤。
 
 ##### 1591 年 — 摩洛哥入侵 + 学者大流亡
 
@@ -815,9 +859,20 @@ authorNotes: |
 
 **Sundiata 死**——**他儿子 Mansa Wali 继位**——**Mali 稳定扩张**。
 
+### 1235 之前 — Ghana Empire（Wagadou）c.300-1235
+
+**Ghana Empire**（Soninke 语「**Wagadou**」/ *italic*：原民族用法）是**西非第一个大型黄金贸易帝国**——
+**c.300-1235 持续 900 多年**——**首都 Kumbi Saleh**——
+**7-13 世纪鼎盛期**控制跨撒哈拉黄金 + 盐贸易——
+**1076 Almoravid（北非柏柏尔穆斯林王朝）入侵**——Ghana 受重创——
+**1235 年被 Sundiata 接管**——**「Mali」名字取代「Ghana」**——
+**但 Ghana 帝国是西非黄金贸易传统的**根**——Mali 不是凭空 1235 出现的**。
+
+**今天加纳共和国（1957 独立）用 Ghana 这个名字** + **1960 马里用 Mali 这个名字** = **非洲后殖民时代主动 reclaim 古帝国名字**——**两个现代国家都不是古帝国的直接领土传承**——是**符号-文化传承**。
+
 ### 1280-1300 — Mali 鼎盛前期扩张
 
-**Mali 征服 Wagadou + 部分 Songhai**——**Mali 北部进入撒哈拉边缘**——
+**Mali 征服 Wagadou 残余 + 部分 Songhai**——**Mali 北部进入撒哈拉边缘**——
 **1300 年 Mali Empire 已经是西非最大政治**实体**。
 
 ### 1312 — Mansa Musa 登基
@@ -826,7 +881,9 @@ authorNotes: |
 
 ### 1324-1325 — 朝圣 Mecca + Cairo 通货膨胀（详见 §3）
 
-> 18 吨黄金——Cairo 黄金价格暴跌——12 年通胀——
+> 18 吨黄金——Cairo 黄金价格下降约 25%（al-'Umari 同代记录）——
+> 影响 5-10 年（学界争议，Black Death 1347 影响纠缠）——
+> 第一次有记录的「单笔金子破坏一国经济」事件（不是第一次通胀——罗马 + 元朝交钞都早）——
 > 欧洲 + 中东第一次意识到 Mali 帝国规模——
 > 间接刺激 1430s 葡萄牙南下找黄金——大航海时代根源之一。
 
@@ -837,9 +894,20 @@ authorNotes: |
 **Djinguereber Mosque**+ **Sankoré Mosque** + 宫殿**全部**他时期建**——
 **今天 21 世纪 Timbuktu**这些建筑**还在**——**联合国教科文世界遗产**。
 
+### 1347-1352 — Black Death 在 Mali 的「未知数」
+
+**1347 Black Death 进入 Cairo + 阿拉伯世界**（Mali 主要贸易伙伴）→
+**1348 摩洛哥 Sijilmasa**（跨撒哈拉商队北端起点）**受影响**→
+**1349-1350 跨撒哈拉商队是否传 Black Death 到 Mali 是学界 active debate**——
+**Green 2014 / Gomez 2018 认为 Walata + Timbuktu 1349 可能受影响**——
+**但没有同代记录**（口传传承不完整 + 阿拉伯文献缺失）——
+**Black Death 不可能不影响 Mali**——但**narrative 完全没承认这点是 14 世纪 Mali 历史最大未知数之一**——
+**Ibn Battuta 1349 自己在摩洛哥亲身经历 Black Death**（家人大部分死，§3 line 547）→**1352 他到 Mali**——
+**他没记录 Mali plague**——但**也没有问**——所以 Mali Black Death 到底有没有传——是 14 世纪 Mali 历史最大谜团。
+
 ### 1352-1353 — Ibn Battuta 在 Mali 8 个月（详见 §3）
 
-> 14 世纪最大旅行家——他描述 Mali "比我去过任何国家都安全"——
+> 14 世纪最大旅行家之一——他描述 Mali "比我去过任何国家都安全"——
 > 这是非洲不是"野蛮 + 部落"的最有力证据。
 
 ### 1370s — Mali 开始衰退
@@ -1168,7 +1236,7 @@ authorNotes: |
 > **不背 Quran 的孩子**会被**caned**——
 >
 > **4. 教育**——
-> **Sankoré 大学**有 25,000 学生**——
+> **Sankoré 大学**学者社区**广**——**14 世纪 Mansa Musa 时期估约 5,000-10,000 学者**——
 > **学**Quran + Hadith + 法律 + 数学 + 天文 + 医学**——
 > **大学的**imam**是**Maliki 法的**最高权威之一**——
 >
@@ -1226,14 +1294,21 @@ authorNotes: |
 **Mali 皇室**不是**孤立**——他们**追踪伊斯兰世界知识**——
 **这跟**14 世纪欧洲**差异巨大**——欧洲国王**几乎不认识**远方学者**。
 
-**第 4 层：Sankoré 大学 25,000 学生**
+**第 4 层：Sankoré 大学规模（14 世纪 vs 16 世纪不要混）**
 
-**Ibn Battuta 是**亲眼见**——他**没有**夸大**——
-**因为他是**严格学者**——他**知道大学规模**——
-**25,000 学生**比同期 Oxford / Bologna 大**——
-**这一数字 Ibn Battuta**第一次**告诉伊斯兰世界**——
-**Mansa Musa 1324 朝圣的**"形象"**+ Ibn Battuta 1352 的"详细记录"**——
-**让 14 世纪伊斯兰世界**真正理解 Mali Empire**。
+**⚠️ 史料注意**：上面节选「Sankoré 25,000 学生」这种说法在 popular sources 里很常见——
+但**学界共识（Saad 1983 / Hunwick 2003 / Gomez 2018）**：
+- **Ibn Battuta 1352 *Rihla* 实际没给学生具体数字**——只说 Mali 教育普及——上面节选是**编辑简化**（节选的"25,000"是 popular media 加进去的，不是 Ibn Battuta 1352 原文）
+- **「25,000」是 16 世纪 Askia Muhammad / Songhai 帝国时期 Timbuktu 三大清真寺社区峰值**——**不是 14 世纪 Mansa Musa 时期 Sankoré**
+- **14 世纪 Sankoré 学界 estimate 约 5,000-10,000 学者**——**已经是当时世界一流**
+
+**Ibn Battuta 1352 真说的是**：**Mali 孩子从 5 岁起严格学 Quran**+**Mansa 法庭公正**+**Sankoré 学者社区繁荣**——
+他**没量化**——但**定性描述足以**让 14 世纪伊斯兰世界**重新认识 Mali Empire**——
+**Mansa Musa 1324 朝圣的「形象」+ Ibn Battuta 1352 的「定性详细记录」**——
+**两者一起**让 14 世纪伊斯兰世界**真正理解 Mali**。
+
+**教学要点**：当我们 anti-Eurocentric 时——**用 popular myth 数字打回去**和**用学界严谨 estimate 打回去**——
+后者更**可持续**——前者会被 AP grader 戳穿。
 
 **第 5 层：他的批判 + 赞美混合**
 
@@ -1775,9 +1850,9 @@ authorNotes: |
 
 ### 误解 4："非洲只卖奴隶——没有学者"
 
-**错**——**Sankoré 大学 25,000 学生**——**比同时代 Oxford 大 15 倍**——**藏 70 万件手稿**——**研究**伊斯兰法 + 数学 + 天文 + 医学**——
+**错**——**14 世纪 Mansa Musa 时期 Sankoré 估约 5,000-10,000 学者**——**16 世纪 Askia Muhammad 鼎盛期 Timbuktu 学者社区峰值 25,000**——**21 世纪幸存到 Bamako + 沙漠 + 私人家族藏的 Timbuktu 手稿全区约 70 万件**——**研究**伊斯兰法 + 数学 + 天文 + 医学**——
 **Ahmad Baba 等学者**等同欧洲文艺复兴大师**——
-**说"非洲没学者"是**100% 虚假**。
+**说"非洲没学者"是**100% 虚假**——但**注意三个数字三个时间点不要混**（14 世纪 Mali / 16 世纪 Songhai / 21 世纪幸存——是不同时点）。
 
 ### 误解 5："跨撒哈拉商路是小规模"
 
@@ -1799,12 +1874,12 @@ authorNotes: |
 ### 误解 7："非洲从来没有书面文明"
 
 **错**——**14-16 世纪 Timbuktu**：
-- **Sankoré 大学 70 万件手稿**
+- **14 世纪 Sankoré 估约 5,000-10,000 学者写手稿**——**16 世纪 Askia 鼎盛期峰值 25,000**——**21 世纪幸存到 2010s 的 Timbuktu 手稿全区估 70 万件**（Timbuktu Manuscripts Project）
 - **阿拉伯文 + Manding 语**（用阿拉伯字母写）
 - **写**法律 + 历史 + 数学 + 天文 + 诗歌**
 
-——**14 世纪 Timbuktu 识字率比同时代欧洲**乡村高**——
-**说"非洲无书面文明"是**100% 虚假**。
+——**14 世纪 Timbuktu 伊斯兰核心区识字率应该比同代欧洲乡村高**（确切数字学界没共识）——
+**说"非洲无书面文明"是**100% 虚假**——但纠正这个偏见时**用学界 estimate range 而不是 popular myth 数字**——后者会被 AP grader 戳穿。
 
 ---
 
@@ -1822,18 +1897,31 @@ authorNotes: |
 
 ### Q2. Mansa Musa 18 吨黄金 vs 21 世纪亿万富翁
 
-**Mansa Musa 1324 财富折合今天 4000 亿美金**——
-**比 21 世纪所有亿万富翁都富**：
+**⚠️ 史料注意**：流行文章常引「**Mansa Musa 财富折合今天 4000 亿美金 比 Bezos 富**」——
+这是**Time Magazine + Money.com 2015 popular estimate**——**学界不认可**——
+14 世纪和 21 世纪**没有可比 metric**（Mali 黄金不在国际市场流通 + GDP per capita 概念不存在）——
+「**4000 亿美金**」是**Black History Month 热度产物**——不是**严谨学术数字**。
+
+**学界共识**：**Mansa Musa 是 14 世纪世界最富统治者之一**——同代量级是 Mamluk Sultan / 元朝皇帝 / 法国王——
+**但「有史以来最富」是过度简化**。
+
+**有据可查的 monetary impact**：1324 朝圣 1 个月在 Cairo 散金导致 Cairo 黄金贬值约 25%（al-'Umari 同代记录）——
+**这是 monetary supply shock 经典案例**——不是「比 Bezos 富 X 倍」式数字。
+
+**21 世纪比较**（仅参考——non-rigorous）：
 - Bezos 2024 年 ~2000 亿美金
 - Musk 2024 年 ~2400 亿美金
 - Bill Gates ~1300 亿美金
-- 等等
 
 **问题**：**Mansa Musa**作为非洲皇帝**——**为什么**21 世纪人**记不住他**？
 - 是**种族**？
 - 是**文化**？
 - 是**历史 narrative 的偏见**？
 - 是**Mali Empire 后续衰退**让他变得**"不重要"**？
+
+**追问**：当**纠正欧洲中心偏见**时——**用 popular myth（4000 亿）反向**对不对？
+**还是**——**用学界严谨 estimate（"同代世界最富之一"）+ Cairo 25% 贬值** 这种**hard data**——
+这两种 anti-Eurocentric 哪种更**站得住**？AP World DBQ 训练里 grader 会怎么 grade？
 
 ### Q3. Joseph Needham Question — Mali 版本
 
@@ -1931,8 +2019,8 @@ authorNotes: |
 | **Sundiata** | Mali Empire 创始人 (c. 1217-1255) | "Sundiata defeated Soumaoro at the Battle of Kirina in 1235." |
 | **Mansa Musa** | Mali Empire 鼎盛皇帝 (c. 1280-1337) | "Mansa Musa's 1324 pilgrimage made Mali famous globally." |
 | **Niani** | Mali Empire 首都 | "Niani was the political center of Mali Empire." |
-| **Timbuktu** | Mali Empire 北部学术 + 商业中心 | "Timbuktu had Sankoré University and 700,000 manuscripts." |
-| **Sankoré University** | Timbuktu 14-16 世纪世界级大学 | "Sankoré had 25,000 students at peak." |
+| **Timbuktu** | Mali Empire 北部学术 + 商业中心 | "Timbuktu manuscripts surviving today (across the region) total ~700,000 (Timbuktu Manuscripts Project, 2010s)." |
+| **Sankoré University** | Timbuktu 14-16 世纪世界级大学 | "Sankoré had ~5,000-10,000 scholars in the 14th century (Mansa Musa era); the wider Timbuktu scholarly community peaked around 25,000 in the 16th century under Askia Muhammad." |
 | **Marabout** | 伊斯兰宗教学者（Mali 特别强大） | "Marabout were among the most respected scholars in the Islamic world." |
 | **Kurukan Fuga** | Sundiata 1235 颁布的人权宪章 | "Kurukan Fuga predates Magna Carta in protecting all people." |
 | **trans-Saharan trade** | 跨撒哈拉贸易（盐 + 黄金 + 学术） | "Trans-Saharan trade was the world's second-largest before steam." |
@@ -1958,7 +2046,7 @@ authorNotes: |
 | **Abu Bakr II** | Mansa Musa 前任皇帝 | 1312 跨大西洋探险消失——Mali 唯一一次海洋扩张尝试 |
 | **Mansa Sulayman** | Mansa Musa 侄子，1341-60 | 接见 Ibn Battuta——Mali 中后期皇帝 |
 | **Abu Ishaq al-Sahili** | 安达卢西亚建筑师 | Mansa Musa 1325 带回——设计 Djinguereber + Sankoré 大清真寺 |
-| **Ibn Battuta** | 摩洛哥 Maliki 学者 1304-1369 | 14 世纪最大旅行家——117,000 km——1352-53 Mali 8 个月——写 Rihla |
+| **Ibn Battuta** | 摩洛哥 Maliki 学者 1304-1369 | 14 世纪最大旅行家之一——学界估 75,000-117,000 km（3-5 倍 Marco Polo）——1352-53 Mali 8 个月——写 *Rihla* |
 | **Abd al-Rahman al-Sa'di** | Timbuktu marabout 1594-1655 | 写《苏丹编年史》——目击 1591 摩洛哥占领 + Sankoré 学者大流亡 |
 | **Ahmad Baba** | Sankoré 最伟大学者 1556-1627 | 1591 被绑架到 Marrakech——关 12 年——1603 被释放——非洲版亚里士多德 |
 | **Sonni Ali** | Songhai 皇帝 1464-1492 | 1468 攻陷 Timbuktu——Mali 失去北部 |

@@ -3132,6 +3132,9 @@ function LensSelector(props) {
     'columbus': '⛵',
     'las-casas': '⛪',
     'anacaona-jr': '🪶',
+    'mansa-musa': '👑',
+    'ibn-battuta': '🧭',
+    'aisha-1413': '📖',
   };
 
   // 第一次建议哪个 lens（每 Topic 不同——按戏剧强度 / 入门难度）
@@ -3142,6 +3145,7 @@ function LensSelector(props) {
     'renaissance-1500': { id: 'lucia-widow',    reason: '同龄锚点 + 镜子 micro-detail 情感冲击最深' },
     'reformation-1517': { id: 'sister-agnes',   reason: '字数严控 + 1539 修道院最后看小册子 + N12 谜题钩子' },
     'age-of-exploration-1492': { id: 'anacaona-jr', reason: '12 岁 Taíno 女孩同龄锚点 + 5 年家族灭族最强情感入口 + areíto 文化 carrier (per Sarah audit)' },
+    'mali-empire-1235':        { id: 'aisha-1413',  reason: '14 岁 Mande 女孩同龄锚点 + female-literacy-carrier + N5 12,000 enslaved + N12 4-Topic information preservation closing' },
   };
   var firstHint = firstChoiceHint[props.topicId];
   var firstLens = firstHint && lenses.find(function(l) { return l.id === firstHint.id; });

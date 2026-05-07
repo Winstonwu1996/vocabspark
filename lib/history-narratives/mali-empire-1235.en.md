@@ -38,6 +38,11 @@ authorNotes: |
 > **Through-line**: tech-disruption (gold + salt + trans-Saharan trade routes) + religion-vs-state (Islam enters West Africa + fuses with traditional religions)
 > **Difficulty**: 4/5 (geography distant + names unfamiliar + sources partly oral)
 > **Expected duration**: 35-40 min (13-turn dialogue)
+>
+> **⚠️ Date-range scholarly note**: This narrative uses **1235-1610** throughout — this is a textbook-style simplified anchor (kept consistent with the parallel AoE narrative).
+> The strict scholarly range is **c.1235 (Sundiata defeats Sosso) → c.1670 (Bambara overthrow the last nominal dynasty)** —
+> key markers: 1235 Battle of Kirina → 1324 Mansa Musa pilgrimage → 1591 Songhai/Morocco Tondibi → c.1610 Mali ceases to exist in practice (though a nominal Keita dynasty survives until c.1670).
+> Both **1235-1610** (textbook convention) and **1235-1670** (strict scholarly definition) are defensible — this narrative uses the former for pedagogical clarity.
 
 ---
 
@@ -59,13 +64,17 @@ authorNotes: |
 >   **territory: 1,800,000 km²** — five times the size of England + France combined —
 >   **population: 40-50 million** — about a third of Europe's total population at the time
 > - **Mansa Musa's 1324 pilgrimage wasn't just "lavish"** — it **changed global economics**:
->   **He was so generous with gold in Cairo that gold prices in Cairo crashed** —
->   **For the next 12 years Cairo's economy suffered** — this is the **first recorded inflation event in human history** —
->   one person **wrecking an entire city's economy**
-> - **Timbuktu in the 14th century had Sankoré University** — **25,000 students** —
->   **larger than Oxford or Bologna at the same time** —
->   **library held 700,000 manuscripts** — researching **Islamic law + mathematics + astronomy + medicine + history** —
->   **students came from Morocco + Egypt + Arabian Peninsula + Andalusia to study** —
+>   **In one month of gold-dispensing in Cairo, Cairo gold prices fell about 25%** (al-'Umari first-hand record, accepted by scholars) —
+>   **For roughly the next 5-10 years Cairo's economy suffered** (scholarly debate over the magnitude — some research argues the Black Death 1347-1349 was the real Mamluk economic collapse; al-'Umari claims the impact lasted ~12 years up to when he was writing — but his account is qualitative, not economic data) —
+>   This is **the first recorded "single-injection-of-foreign-wealth-causing-inflation" event in human history** —
+>   **NOT "humanity's first inflation"** (3rd-century Roman Diocletian inflation + Han-dynasty Wu-di's *wuzhu* coin debasement + 14th-century Yuan-dynasty *jiaochao* paper hyperinflation all precede Mansa Musa) —
+>   It is rather **the first recorded "one batch of gold breaking a country's economy" event** — one person **wrecking an entire city's economy**
+> - **Timbuktu had *Sankoré* University in the 14th-16th centuries** — three numbers must be kept separate across three time periods (this is a common confusion):
+>   ① **14th century, Mansa Musa era**: about **5,000-10,000 scholars** (scholarly estimate range) —
+>   ② **16th century, Askia Muhammad / Songhai peak**: Timbuktu's three-mosque scholarly community peaked at about **25,000** (NOT 14th century) —
+>   ③ **21st-century Timbuktu Manuscripts Project surviving figure**: about **700,000 manuscripts across the region** (including Sankoré + private family holdings + desert-buried + the Bamako rescue collection from 2012) — **NOT a single 14th-century library holding** —
+>   **Compared to 16th-century European universities**: Oxford ~1,500 / Bologna ~2,000 / Sorbonne ~10,000 — **the 16th-century Timbuktu scholarly community was larger than all three European peers combined** —
+>   **Curriculum**: **Islamic law + mathematics + astronomy + medicine + history** — **students came from Morocco + Egypt + Arabia + Andalusia** —
 >   **Your textbook barely writes any of this** — leaving kids with the impression "Africa had no universities" — **completely false**
 > - **The Sundiata Epic** (Mali's origin story) is **one of humanity's greatest oral epics** —
 >   **comparable to Homer's *Iliad* or India's *Mahabharata*** — but **because it's oral** —
@@ -99,12 +108,19 @@ authorNotes: |
 **He was on his way to Mecca for pilgrimage** —
 **With him: 12,000 enslaved attendants** — each carrying **4 pounds of gold** —
 **80 camels** — each loaded with **300 pounds of gold** —
-**Total: 18 tons of gold** — **today's value: $400 million to $1 billion** —
+**Total: 18 tons of gold** — **today's value: roughly $400 million to $1 billion** (reference only — there is no rigorous comparable metric between the 14th and 21st centuries) —
+
+**⚠️ Those 12,000 enslaved are NOT an abstract figure — they were 12,000 people with names** —
+**They were also a manifestation of Mali Empire's trans-Saharan slave-trade tradition** — **Mali was a major participant in the trans-Saharan slave trade** (1000-1900: roughly 17 million Africans transported to North Africa + the Middle East) —
+**This is a separate system from the 16th-19th-century trans-Atlantic slave trade** (1500-1888: about 12 million) — but **the fact that Mali was an African empire does NOT exempt it from this scrutiny** — **Mali was both a great West African civilization AND a major trans-Saharan slave-trade participant — both are true**.
 
 **He stopped in Cairo for 3 months** — **handing out gold to ordinary Cairenes** —
-**Result**: **Cairo's gold price crashed** — **Cairo's economy suffered for the next 12 years** —
+**Result**: **Cairo's gold price fell about 25%** (al-'Umari first-hand qualitative record — no precise economic data) —
+**Cairo's economy suffered for roughly the next 5-10 years** (al-'Umari claims a ~12-year impact up to when he was writing — but that's a personal observation; modern economic historians like Goldberg 2012 / Borsch 2005 estimate 5-10 years, with debate over magnitude — some argue the Black Death 1347-1349 was the real Mamluk economic collapse) —
 
-**This is the **first recorded inflation event in human history**** —
+**This is the **first recorded "single foreign-wealth-injection causing inflation" event in human history**** —
+**NOT "humanity's first inflation"** (3rd-century Roman Diocletian + Han Wu-di's *wuzhu* + 14th-century Yuan *jiaochao* hyperinflation all precede 1324) —
+But rather **the first recorded "one batch of gold breaking a country's economy" event** —
 **one person wrecking one city's economy** —
 **Also the first time** in the 14th century **Europe and the Middle East realized**:
 **Africa is not "tribal + backwards" — Africa has **giant empires + giant wealth + universities**** —
@@ -190,7 +206,7 @@ authorNotes: |
 **5. Enslaved people**
 - **Mali had slavery** — but **different from trans-Atlantic slavery**:
 - **Mali enslaved many** **war captives + criminals**
-- **Enslaved people** sometimes **rose to high positions** (including military leaders + Mansa Musa's mother was reportedly born enslaved)
+- **Enslaved people** sometimes **rose to high positions** (including military leaders — **some Arabic sources, primarily al-'Umari (1340), record Mansa Musa's mother as having been born enslaved** — **scholars debate this**: Levtzion 1973 thinks al-'Umari may have garbled it; Conrad 2005 thinks it could be true — if true, it shows that Mali's enslavement system had far more upward mobility than trans-Atlantic chattel slavery)
 - **Enslaved people could ransom themselves to freedom**
 - **Completely different from trans-Atlantic chattel slavery** — but **Mali merchants did sell some captives across the Sahara to North Africa** — this is **another system of African slavery** — but operated under different rules
 
@@ -320,7 +336,7 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 **He proclaimed the **Kurukan Fuga charter**** —
 **This is **one of the earliest human rights charters in human history**:**
 
-**Kurukan Fuga's 7 core articles:**
+**Kurukan Fuga's 7 core articles** (**note**: the 1998 UNESCO-recognized version has **44 articles** — compiled by Mande scholars — what follows is the **simplified popular 7-article core**; scholars debate which are 1235 originals vs. 13th-14th-century accretions — but the **core human-rights + gender + children + war-captive** articles are all in the 1235 oral tradition):
 
 1. **Protect human dignity** — no person can be **enslaved or humiliated**
 2. **Gender equality** — women have voice
@@ -382,13 +398,14 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 ##### 1312 — Crowned at Age 32
 
 **1312 — the previous emperor Abu Bakr II strangely disappeared** —
-**Scholars on Abu Bakr II's story**: **He set out on an expedition** — **brought 2,000 ships and several thousand men trying to cross the Atlantic** —
-**Never returned** —
-**Mansa Musa himself told this to scholars in Cairo** —
-**Some scholars** **think it could be true** — **could 14th-century West African ships cross the Atlantic? Heated debate** —
-**Some scholars think** Abu Bakr II just **died in a coup** — **Mansa Musa fabricated the story to cover** —
 
-**Regardless of the truth** — in 1312 Mansa Musa at 32 ascended — he **inherited Mali Empire at its peak**.
+**⚠️ Scholarly dispute over the Abu Bakr II trans-Atlantic story**:
+**The single source is Mansa Musa himself, told to Cairo scholar al-'Umari in 1324** — **his predecessor took 2,000 ships and several thousand men attempting an Atlantic crossing** — **never returned** —
+**Mainstream scholarship** (Levtzion 1973 / Brooks 1993) **considers it most likely a Mansa Musa political narrative** — **covering up Abu Bakr II's death in a coup** + **14th-century West African vessels lacked trans-Atlantic technical capability** —
+**The Pre-Columbian-African-contact hypothesis** (Van Sertima 1976, *They Came Before Columbus*) is a core thesis of radical Afrocentric historiography — **but no archaeological evidence has ever been found** — **the majority of scholars do not accept it** —
+**This is a contested fact**, not confirmed history.
+
+**Regardless of the Abu Bakr II truth** — in 1312 Mansa Musa at 32 ascended — he **inherited Mali Empire at its peak**.
 
 ##### 1312-1324 — Consolidating the Empire
 
@@ -420,7 +437,7 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 
 **Hajj is **one of the 5 pillars of Islam** — but Mansa Musa turned it into **the largest political + economic display in history**:**
 - **60,000 person caravan**
-- **12,000 enslaved attendants** — each carrying **4 pounds of gold**
+- **12,000 enslaved attendants** (**note**: these 12,000 enslaved people were on the Mali Empire trans-Saharan slave-trade chain — **the pilgrimage caravan was simultaneously a manifestation of Mali's trans-Saharan slave-trade tradition** — see §11 Q4) — each carrying **4 pounds of gold**
 - **80 camels** — each carrying **300 pounds of gold**
 - **His wives + 500 lady attendants**
 - **Thousands of camels + horses + food**
@@ -453,12 +470,13 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 - **Bought massive quantities of Cairo goods** — paid in **gold**
 - **Funded **Cairo scholars + mosques**
 
-**Result**: **Cairo's gold price crashed by 25%** —
-**For the next 12 years — Cairo's economy suffered severe inflation** —
-**Only by 1336 (the year Mansa Musa died) did Cairo prices slowly recover** —
+**Result**: **Cairo's gold price fell about 25%** (al-'Umari, 1300-1349 contemporary Egyptian scholar — this is **his personal qualitative observation**, **not economic data**) —
+**For roughly the next 5-10 years Cairo's economy suffered** (al-'Umari himself wrote "the gold value remained depressed up to when I was writing this book, about 12 years" — but al-'Umari was writing literarily, not economically; modern economic historians Goldberg 2012 / Borsch 2005 estimate 5-10 years — magnitude debated — some argue the Black Death 1347-1349 was the real Mamluk economic collapse) —
+**By around 1336 (close to when Mansa Musa died), Cairo prices slowly recovered** —
 
-— **This is **the first recorded inflation event in human history**** —
-**One person wrecking a country's economy for 12 years** — **a scale of wealth deployment** —
+— **This is **the first recorded "single foreign-wealth-injection causing inflation" event in human history**** —
+**NOT "humanity's first inflation"** — 3rd-century Roman Diocletian silver debasement + Han Wu-di's *wuzhu* coin inflation + 13th-14th-century Yuan *jiaochao* paper hyperinflation **all precede Mansa Musa 1324** —
+But rather **the first recorded "one batch of gold breaking a country's economy" event** — **a scale of single-event wealth deployment** —
 **That neither 14th-century Europe nor China had seen** — **Europe's understanding of the Mali Empire** **changed permanently** from this moment.
 
 ##### Cairo's Etiquette Crisis — Mansa Musa's Dignity
@@ -519,16 +537,25 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 - **Europe's awareness of West African gold** — directly **stimulated Portugal sailing south 150 years later**
 - **Islam's spread in West Africa** — **today** Mali + Senegal + Niger + Guinea **are 90%+ Muslim** — directly tracing back to Mansa Musa**
 
-> ⚠️ **Teaching point**: Mansa Musa was **the wealthiest person in the 14th century** —
-> **Time Magazine in 2015 estimated**: **his wealth in today's terms = $400 billion** —
-> **More than any 21st-century billionaire** —
-> **More than Andrew Carnegie / John Rockefeller / Bill Gates / Jeff Bezos** —
-> **Textbooks barely write about him** — leaving kids with the impression "the wealthiest people in history were all European or American" — **completely false**.
+> ⚠️ **Teaching point**: Mansa Musa was **one of the wealthiest rulers of the 14th century** —
+> **Comparable contemporaries**: Mamluk Sultan al-Nasir Muhammad (Egypt) + Yuan Emperor Yesun Temür (China) + Charles IV (France) —
+> **Several rulers of comparable order of magnitude** — he held **no absolute "richest ever" title**.
 >
-> **Studying history** must **correct this bias** —
+> **⚠️ Source warning — "$400 billion, richer than Bezos" is a popular myth**:
+> The "**$400 billion**" figure from Time Magazine + Money.com (2015) is a **popular-media non-academic estimate** —
+> Scholarly consensus (Levtzion 1973 / Hunwick 2003 / Gomez 2018): **There is no comparable metric between the 14th century and the 21st** —
+> Mali gold did not circulate on an international market + GDP-per-capita didn't exist as a concept + comparable-purchasing-power calculations are impossible —
+> **"Richer than Bezos" is a Black History Month media artifact** — **not a scholarly estimate**.
+> Scholarly consensus: **Mansa Musa was one of the wealthiest contemporaries of his era — but "the richest person in history" is an oversimplification**.
+>
+> **What IS historically defensible**: in 1324 his month of gold-dispensing in Cairo caused Cairo gold prices to drop about 25% (al-'Umari first-hand record, accepted by scholars) —
+> This is a textbook monetary supply shock case — but **NOT a "X times richer than Bezos" headline figure**.
+>
+> **Textbooks barely write about him** — leaving kids with the impression "the wealthiest people in history were all European or American" — that bias is also wrong —
+> **Studying history** must **correct this bias** — but **without using popular myth as overcorrection**.
 > **In the 14th century there were **3 world economic centers**:**
 > **Europe (Florence + Venice) + Middle East (Cairo + Baghdad) + West Africa (Timbuktu + Niani)** —
-> **Mali Empire was indisputably **one of the world's economic centers**.
+> **Mali Empire was indisputably **one of the world's economic centers** — that part is scholarly-solid.
 
 ---
 
@@ -551,9 +578,13 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 - **1351-1354**: **Granada (last Moorish stronghold in Spain) + Mali Empire** — this was his **last great journey**
 - **1354-1369**: **old age in Morocco — wrote his *Rihla* (Travels)**
 
-**Total distance traveled: 117,000 km** — **5 times Marco Polo's 24,000 km** —
+**Total distance — scholarly estimate range: 75,000-117,000 km** (30 years of travel, 1325-1354 — Dunn 1986 gives ~75,000; Mackintosh-Smith 2001 reaches ~117,000 high-end) —
+**Marco Polo 1271-1295 (24 years) — scholarly estimate 15,000-25,000 km** (Larner 1999) —
+**Ibn Battuta covered **3-5 times Marco Polo's distance** (NOT a precise "5x" — that's popular oversimplification) —
 **Visited 44 modern countries** — **more than Marco Polo** —
-**He is **the greatest traveler of the 14th century — and one of the greatest in human history**.
+**He is **one of the greatest travelers of the 14th century** —
+**Contemporary peers**: Wang Dayuan 汪大渊 (1311-1350, Yuan-dynasty Chinese maritime traveler — *Daoyi Zhilüe* 岛夷志略 1349 covering Southeast Asia + Indian Ocean) + Odoric of Pordenone (1286-1331, Franciscan friar in China 1318-1330) —
+**14th century was the golden age of Islamic + Central-Asian + East-Asian long-distance travel networks** — that's the real point, not "Ibn Battuta vs. Marco Polo by X-fold ratio".
 
 ##### 1352-1353 — Eight Months in Mali
 
@@ -637,12 +668,14 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 - **Translated into **almost all major languages** — but **not seriously studied by European academia until the 19th century**
 - **Today's 21st-century academic consensus**: **Ibn Battuta's *Rihla* is the greatest travel document of the 14th century** — **more comprehensive + more reliable than Marco Polo's**
 
-> ⚠️ **Teaching point**: **Ibn Battuta traveled 5x as far as Marco Polo** — **but Marco Polo is far more famous in Western textbooks** —
-> **This is **Eurocentric narrative bias**** —
+> ⚠️ **Teaching point**: **Ibn Battuta scholarly estimate 75,000-117,000 km vs. Marco Polo estimate 15,000-25,000 km** —
+> **a 3-5x range** (NOT a precise "5x" — Mackintosh-Smith's 117,000 is a high-end estimate) —
+> **but Marco Polo is far more famous in Western textbooks** — **this is Eurocentric narrative bias** —
 > **Studying history** can't only use **the Marco Polo standard** for travelers —
-> **Must **recognize Ibn Battuta as **the greatest traveler of the 14th century**** —
+> **Must recognize Ibn Battuta as one of the greatest travelers of the 14th century** —
+> **Contemporary peers include Wang Dayuan's *Daoyi Zhilüe* (1349, Yuan-dynasty China) and Odoric of Pordenone (Franciscan friar in China, 1318-1330)** — **the 14th century was the golden age of long-distance travel across Islamic + Central-Asian + East-Asian networks** —
 > **No European traveled as far or wrote as much as Ibn Battuta** —
-> **Textbooks should **dual-track** Marco Polo + Ibn Battuta** with **equal weight**.
+> **Textbooks should give **Marco Polo + Ibn Battuta + Wang Dayuan** — the 14th century's three great travelers — equal weight**.
 
 ---
 
@@ -650,23 +683,34 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 
 ##### What Was Sankoré University?
 
-**Sankoré Grand Mosque + University was located in **Timbuktu**** —
+**The Sankoré Grand Mosque + University was located in Timbuktu** —
 **1325 — Mansa Musa funded its massive expansion after his pilgrimage** —
-**For the next 250 years — Sankoré University was **one of the world's largest centers of learning**:**
+**For the next 250 years — Sankoré + Djinguereber + Sidi Yahya — these three mosques formed one of the world's largest centers of learning** —
 
-- **Peak student body 25,000** — **larger than contemporary Oxford or Bologna**
-- **Faculty 100+** — from Morocco + Egypt + Arabia + Andalusia + West Africa
-- **Library held 700,000 manuscripts** — **one of the largest libraries in the world**
+> ⚠️ **Three numbers, three time periods — do not conflate (scholarly consensus: Saad 1983 / Hunwick 2003 / Gomez 2018)**:
+>
+> - **14th-century Sankoré scholar population (Mansa Musa era)**: **estimated 5,000-10,000** (scholarly estimate range — exact 14th-century figures are inconclusive)
+> - **16th-century peak under Askia Muhammad (Songhai Empire)**: **Timbuktu's three-mosque scholarly community peaked at ~25,000** — **this is 16th-century Songhai, NOT 14th-century Mali under Mansa Musa**
+> - **21st-century Timbuktu Manuscripts Project figure of ~700,000 manuscripts**: this is **the surviving total for the entire Timbuktu region as of the 2010s** (Sankoré + private family holdings + desert-buried collections + the 2012 Bamako rescue collection) — **NOT a 14th-century single-library holding**
+>
+> **Common error**: bolting the 16th-century Songhai-era 25,000 figure + the 21st-century 700,000-manuscript surviving figure **directly onto 14th-century Mansa Musa-era Mali Empire**. That's popular-media oversimplification — the narrative must keep the three time points separate.
+
+**14th-century Sankoré University (Mansa Musa era):**
+- **About 5,000-10,000 scholars** — already one of the world's largest centers of learning at the time
+- **Faculty** drawn from Morocco + Egypt + Arabia + Andalusia + West Africa
 - **Curriculum**: **Quran + Hadith + Sharia law + mathematics + astronomy + medicine + history + Arabic literature**
 
-**Comparison to contemporary European universities:**
-- **Oxford in the 1300s ~1,500 students / 100,000 manuscripts**
-- **Bologna in the 1300s ~2,000 students / 50,000 manuscripts**
-- **Sorbonne (Paris) in the 1300s ~10,000 students**
+**16th-century peak comparison (Askia Muhammad / Songhai Empire):**
+- **Timbuktu three-mosque scholarly community peaked at ~25,000** —
+- **Compared to contemporary 16th-century European universities**:
+  - **Oxford in the 1500s ~1,500 students / ~100,000 manuscripts**
+  - **Bologna in the 1500s ~2,000 students / ~50,000 manuscripts**
+  - **Sorbonne (Paris) in the 1500s ~10,000 students**
 
-— **Sankoré University was **the largest university in the world in the 14th century**** —
-**Bigger than any European university** — but **textbooks barely write about it** —
-**This is one of the **most severe Eurocentric biases**.
+— **At its 16th-century peak, the Timbuktu scholarly community was larger than Oxford + Bologna + Sorbonne combined** —
+but **already in the 14th-century Mansa Musa era, Sankoré was a world-class center of learning** —
+**Ibn Battuta's *Rihla* (1352) does not give a student count — the 25,000 figure comes from 16th-century al-Sa'di et al. looking back at the Askia era** —
+**Saying "Africa had no universities" is one of the most severe Eurocentric biases** — but **fighting that bias with figures attached to the wrong time period is itself a structural weakness in anti-Whig history**.
 
 ##### 1591 — Moroccan Invasion + The Great Scholar Diaspora
 
@@ -819,9 +863,20 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 
 **Sundiata dies** — **his son Mansa Wali succeeds** — **Mali stable expansion**.
 
+### Before 1235 — Ghana Empire (Wagadou) c.300-1235
+
+**The Ghana Empire** (Soninke: *Wagadou* — the indigenous name) was **West Africa's first major gold-trading empire** —
+**c.300-1235, lasting over 900 years** — **capital Kumbi Saleh** —
+**At its 7th-13th-century peak it controlled trans-Saharan gold + salt trade** —
+**1076 Almoravid (North African Berber Muslim dynasty) invasion** struck Ghana hard —
+**1235 — Sundiata absorbed it** — **the name "Mali" replaced "Ghana"** —
+**But the Ghana Empire is the **root** of West African gold-trade tradition — Mali did NOT appear from thin air in 1235**.
+
+**Modern Ghana (independent 1957) reclaimed the name Ghana** + **modern Mali (independent 1960) reclaimed the name Mali** = **post-colonial African deliberate reclamation of ancient-empire names** — **neither modern state is a direct territorial successor** to the ancient empire — they are **symbolic-cultural heirs**.
+
 ### 1280-1300 — Mali Pre-Peak Expansion
 
-**Mali conquers Wagadou + parts of Songhai** — **Mali's north reaches the Sahara edge** —
+**Mali conquers the remnants of Wagadou + parts of Songhai** — **Mali's north reaches the Sahara edge** —
 **By 1300 Mali Empire is **the largest political entity in West Africa**.
 
 ### 1312 — Mansa Musa Crowned
@@ -830,7 +885,9 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 
 ### 1324-1325 — Mecca Pilgrimage + Cairo Inflation (see §3)
 
-> 18 tons of gold — Cairo gold price crashed — 12 years of inflation —
+> 18 tons of gold — Cairo gold price fell ~25% (al-'Umari first-hand record) —
+> Impact 5-10 years (debated, entangled with Black Death 1347) —
+> First recorded "one batch of gold breaks a country's economy" event (NOT first inflation — Roman + Yuan *jiaochao* both precede) —
 > Europe + Middle East first realized Mali Empire's scale —
 > Indirectly stimulated 1430s Portugal sailing south for gold — root cause of the Age of Exploration.
 
@@ -841,9 +898,20 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 **Djinguereber Mosque + Sankoré Mosque + palaces** — all built in his time —
 **Today in the 21st century these buildings still stand in Timbuktu** — **UNESCO World Heritage**.
 
+### 1347-1352 — The Black Death "unknown" in Mali
+
+**1347 Black Death reaches Cairo + the Arab world** (Mali's primary trade partner) →
+**1348 Sijilmasa, Morocco** (the northern terminus of trans-Saharan caravans) **affected** →
+**1349-1350: whether trans-Saharan caravans carried Black Death into Mali is an active scholarly debate** —
+**Green 2014 / Gomez 2018 argue Walata + Timbuktu were likely affected in 1349** —
+**but no contemporaneous records survive** (oral-tradition gaps + missing Arabic sources) —
+**Black Death cannot have failed to affect Mali** — but **the narrative has not acknowledged this; it is one of the largest unknowns in 14th-century Mali history** —
+**Ibn Battuta in 1349 personally lived through Black Death in Morocco** (most of his family died — see §3) → **arrives in Mali 1352** —
+**He records no plague in Mali** — but **he also did not ask** — whether Black Death actually reached Mali is one of the 14th century's biggest Mali mysteries.
+
 ### 1352-1353 — Ibn Battuta in Mali for 8 Months (see §3)
 
-> The greatest traveler of the 14th century — he wrote that Mali was "safer than any country I've visited" —
+> One of the greatest travelers of the 14th century — he wrote that Mali was "safer than any country I've visited" —
 > This is the strongest evidence that Africa was not "tribal + backwards."
 
 ### 1370s — Mali Begins to Decline
@@ -1171,7 +1239,7 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 > **Children who don't memorize the Quran **are caned** —
 >
 > **4. Education** —
-> **Sankoré University has 25,000 students** —
+> **Sankoré University has a wide scholarly community** — **about 5,000-10,000 scholars in the 14th-century Mansa Musa era (scholarly estimate)** —
 > **They study **Quran + Hadith + law + mathematics + astronomy + medicine** —
 > **The university's imam is **one of the highest authorities in Maliki law** —
 >
@@ -1229,14 +1297,17 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 **The Mali court was not **isolated** — they **tracked Islamic-world knowledge** —
 **This is starkly different from **14th-century Europe** — European kings **barely knew distant scholars**.
 
-**Layer 4: Sankoré University's 25,000 students**
+**Layer 4: Sankoré University's scale (14th vs 16th century — do not conflate)**
 
-**Ibn Battuta saw it firsthand** — **he did not exaggerate** —
-**Because he was **a strict scholar** — he **knew university scale** —
-**25,000 students were larger than contemporary Oxford or Bologna** —
-**This number — Ibn Battuta first told the Islamic world** —
-**Mansa Musa's 1324 pilgrimage **"image"** + Ibn Battuta's 1352 **"detailed account"** —
-**Together gave the 14th-century Islamic world a true understanding of Mali Empire**.
+**⚠️ Source note**: The phrase "Sankoré has 25,000 students" appears constantly in popular sources — but **the scholarly consensus (Saad 1983 / Hunwick 2003 / Gomez 2018) is**:
+- **Ibn Battuta's 1352 *Rihla* gives no specific student count** — only that Mali's Quran education was universal — the "25,000" inserted in the simplified excerpt above is **popular-media editing**, not from Ibn Battuta's original text.
+- **The 25,000 figure refers to 16th-century Askia Muhammad / Songhai-era Timbuktu's three-mosque scholarly community at peak** — **NOT 14th-century Mansa Musa-era Sankoré**.
+- **14th-century Sankoré is estimated at 5,000-10,000 scholars** — already among the world's leading centers of learning.
+
+**What Ibn Battuta actually documents in 1352**: Mali children learn the Quran strictly from age 5 + the Mansa's court is just + Sankoré's scholarly community is thriving — he **didn't quantify**, but the **qualitative description was enough** for the 14th-century Islamic world to rethink Mali Empire.
+**Mansa Musa's 1324 pilgrimage "image" + Ibn Battuta's 1352 "qualitative detailed account"** — **together** gave the 14th-century Islamic world a real understanding of Mali.
+
+**Teaching point**: When pushing back on Eurocentric bias — using popular-myth numbers vs. rigorous scholarly estimates — the latter is far more durable. The former gets shredded under AP grading.
 
 **Layer 5: His criticism + admiration mix**
 
@@ -1778,9 +1849,9 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 
 ### Misconception 4: "Africa only sold slaves — had no scholars"
 
-**Wrong** — **Sankoré University had 25,000 students** — **15 times the size of contemporary Oxford** — **held 700,000 manuscripts** — **researching **Islamic law + mathematics + astronomy + medicine** —
+**Wrong** — **14th-century Mansa Musa-era Sankoré had ~5,000-10,000 scholars** — **16th-century Askia Muhammad-era Timbuktu scholarly community peaked at ~25,000** — **the 21st-century surviving Timbuktu manuscript total across the region (Bamako rescue + desert + private family holdings) is ~700,000** — **researching **Islamic law + mathematics + astronomy + medicine** —
 **Ahmad Baba and other scholars **were equivalent to European Renaissance masters** —
-**Saying "Africa had no scholars" is **100% false**.
+**Saying "Africa had no scholars" is **100% false** — but **note: three numbers, three time periods — do not conflate** (14th-century Mali / 16th-century Songhai / 21st-century surviving — different time points).
 
 ### Misconception 5: "Trans-Saharan trade was small-scale"
 
@@ -1802,12 +1873,12 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 ### Misconception 7: "Africa never had a written civilization"
 
 **Wrong** — **In the 14th-16th centuries Timbuktu had**:
-- **Sankoré University's 700,000 manuscripts**
+- **14th-century Sankoré ~5,000-10,000 scholars writing manuscripts** — **16th-century Askia peak ~25,000** — **21st-century surviving Timbuktu manuscript total across the region ~700,000** (Timbuktu Manuscripts Project)
 - **Arabic + Manding** (written with Arabic letters)
 - **Wrote **law + history + mathematics + astronomy + poetry**
 
-— **14th-century Timbuktu had a higher literacy rate than contemporary rural Europe** —
-**Saying "Africa had no written civilization" is **100% false**.
+— **14th-century Timbuktu's Islamic core probably had a higher literacy rate than contemporary rural Europe** (exact figures debated by scholars) —
+**Saying "Africa had no written civilization" is **100% false** — but to refute that bias, **use scholarly estimate ranges, not popular myth figures** — the latter gets shredded under AP grading.
 
 ---
 
@@ -1825,18 +1896,31 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 
 ### Q2. Mansa Musa's 18 tons of gold vs. 21st-century billionaires
 
-**Mansa Musa's 1324 wealth converted to today is $400 billion** —
-**More than any 21st-century billionaire**:
+**⚠️ Source caution**: Popular articles often cite "**Mansa Musa's wealth = $400 billion today, richer than Bezos**" —
+this is a **Time Magazine + Money.com 2015 popular estimate** — **not endorsed by scholars** —
+the 14th and 21st centuries have **no comparable metric** (Mali gold didn't circulate on an international market + GDP-per-capita didn't exist as a concept) —
+the "**$400 billion**" figure is a **Black History Month media artifact** — not a **rigorous scholarly number**.
+
+**Scholarly consensus**: **Mansa Musa was one of the wealthiest rulers of the 14th century** — comparable to Mamluk Sultans / Yuan emperors / French kings —
+**but "richest person in history" is an oversimplification**.
+
+**What IS documentable as monetary impact**: in 1324, the month of gold-dispensing in Cairo caused Cairo gold prices to drop about 25% (al-'Umari first-hand record) —
+**This is a textbook monetary supply shock case** — not a "X times richer than Bezos" figure.
+
+**21st-century comparison** (reference only — non-rigorous):
 - Bezos in 2024 ~$200 billion
 - Musk in 2024 ~$240 billion
 - Bill Gates ~$130 billion
-- etc.
 
 **Question**: **Mansa Musa **as an African emperor** — **why don't 21st-century people remember him**?
 - Is it **race**?
 - Is it **culture**?
 - Is it **bias in historical narrative**?
 - Is it because **Mali Empire's later decline** made him **"unimportant"**?
+
+**Follow-up**: When **correcting Eurocentric bias** — is using a popular myth ("$400 billion") as the counter-argument the right approach?
+**Or** — is using a scholarly-rigorous estimate ("one of the wealthiest contemporaries") + Cairo 25% gold-price drop (hard data) more defensible?
+Which anti-Eurocentric framing **holds up** in an AP World DBQ where graders check sourcing?
 
 ### Q3. Joseph Needham Question — Mali Version
 
@@ -1934,8 +2018,8 @@ September 22, 1960   Mali independence — using the name "Mali"
 | **Sundiata** | Mali Empire founder (c. 1217-1255) | "Sundiata defeated Soumaoro at the Battle of Kirina in 1235." |
 | **Mansa Musa** | Mali Empire's peak emperor (c. 1280-1337) | "Mansa Musa's 1324 pilgrimage made Mali famous globally." |
 | **Niani** | Mali Empire capital | "Niani was the political center of Mali Empire." |
-| **Timbuktu** | Mali Empire's northern scholarship + commerce center | "Timbuktu had Sankoré University and 700,000 manuscripts." |
-| **Sankoré University** | Timbuktu 14th-16th century world-class university | "Sankoré had 25,000 students at peak." |
+| **Timbuktu** | Mali Empire's northern scholarship + commerce center | "Timbuktu manuscripts surviving today across the region total ~700,000 (Timbuktu Manuscripts Project, 2010s)." |
+| **Sankoré University** | Timbuktu 14th-16th century world-class university | "Sankoré had ~5,000-10,000 scholars in the 14th century (Mansa Musa era); the wider Timbuktu scholarly community peaked at ~25,000 in the 16th century under Askia Muhammad." |
 | **Marabout** | Islamic religious scholar (especially powerful in Mali) | "Marabout were among the most respected scholars in the Islamic world." |
 | **Kurukan Fuga** | Sundiata's 1235 human rights charter | "Kurukan Fuga predates Magna Carta in protecting all people." |
 | **trans-Saharan trade** | Trans-Saharan trade (salt + gold + scholarship) | "Trans-Saharan trade was the world's second-largest before steam." |
@@ -1961,7 +2045,7 @@ September 22, 1960   Mali independence — using the name "Mali"
 | **Abu Bakr II** | Mansa Musa's predecessor | 1312 trans-Atlantic expedition disappeared — Mali's only attempt at maritime expansion |
 | **Mansa Sulayman** | Mansa Musa's nephew, 1341-60 | Received Ibn Battuta — mid-late Mali emperor |
 | **Abu Ishaq al-Sahili** | Andalusian architect | Brought back by Mansa Musa in 1325 — designed Djinguereber + Sankoré Grand Mosque |
-| **Ibn Battuta** | Moroccan Maliki scholar 1304-1369 | Greatest 14th-century traveler — 117,000 km — 1352-53 in Mali for 8 months — wrote Rihla |
+| **Ibn Battuta** | Moroccan Maliki scholar 1304-1369 | One of the greatest 14th-century travelers — scholarly estimate 75,000-117,000 km (3-5x Marco Polo) — 1352-53 in Mali for 8 months — wrote *Rihla* |
 | **Abd al-Rahman al-Sa'di** | Timbuktu marabout 1594-1655 | Wrote *Tarikh al-Sudan* — eyewitness to 1591 Moroccan occupation + Sankoré scholar diaspora |
 | **Ahmad Baba** | Greatest Sankoré scholar 1556-1627 | 1591 abducted to Marrakech — imprisoned 12 years — 1603 released — African Aristotle |
 | **Sonni Ali** | Songhai emperor 1464-1492 | 1468 captured Timbuktu — Mali lost the north |
