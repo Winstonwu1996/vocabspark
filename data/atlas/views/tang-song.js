@@ -100,12 +100,12 @@ export const VIEW = {
       name: { cn: '小桃（虚构同龄人）', en: 'Little Tao (fictional peer)' },
       role: { cn: '13 岁，太学生女儿', en: '13-year-old, daughter of an Imperial Academy student' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是太学生，将来要参加科举。你识字（宋代女性识字率比唐高），读《论语》《诗经》。家里有印刷的书 — 北宋活字印刷 1040 由毕昇发明，比古登堡早 400 年。你的世界比 Willow 的曾祖辈还文明。',
-        en: 'Same age as Willow. Your father is an Academy student preparing for the imperial exams. You can read (Song-era female literacy is higher than Tang), studying the Analects and Book of Songs. Your home has printed books — Bi Sheng invented movable type in 1040, 400 years before Gutenberg. Your world is more literate than Willow\'s great-great-grandparents\'.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是太学生，将来要参加科举。你识字（宋代女性识字率比唐高），读《论语》《诗经》。家里有印刷的书 — 北宋活字印刷 1040 由毕昇发明，比古登堡早 400 年。你的世界比 {{userChildName|你这一代}} 的曾祖辈还文明。',
+        en: 'Same age as {{userChildName|your generation}}. Your father is an Academy student preparing for the imperial exams. You can read (Song-era female literacy is higher than Tang), studying the Analects and Book of Songs. Your home has printed books — Bi Sheng invented movable type in 1040, 400 years before Gutenberg. Your world is more literate than {{userChildName|your generation}}\'s great-great-grandparents\'.',
       },
       hook: {
-        cn: 'Willow 在 2026 年加州手机上看英文电子书。1000 年前你已经在读印刷的《论语》。"科技带来普及"的故事，是从你这里开始的。她跟你之间隔着印刷术 → 互联网 → 手机 — 都是同一回事吗？',
-        en: 'In 2026, Willow reads English ebooks on her phone. 1000 years ago you already read printed Analects. "Tech enabling literacy" begins with you. Print → internet → phone — same story across 1000 years?',
+        cn: '{{userChildName|你这一代}} 在 2026 年加州手机上看英文电子书。1000 年前你已经在读印刷的《论语》。"科技带来普及"的故事，是从你这里开始的。她跟你之间隔着印刷术 → 互联网 → 手机 — 都是同一回事吗？',
+        en: 'In 2026, {{userChildName|your generation}} reads English ebooks on her phone. 1000 years ago you already read printed Analects. "Tech enabling literacy" begins with you. Print → internet → phone — same story across 1000 years?',
       },
     },
   ],

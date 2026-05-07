@@ -58,6 +58,12 @@
   - **不要** hardcode `keyFigures: [...]` ——5-5 起 deepLearn Topic 的 keyFigures 自动从 lens 派生
   - 用注释代替 keyFigures：`// 关键人物自动派生自 lib/history-storyboards/<topic-id>.js 的 lenses object`
   - 这是机制护城河 — 防 atlas 5 角色 vs lens 3 lens 不通信事故（5-5 founder 抓到）
+  - **🔒 Atlas content 铁律(5-5 加,founder 实测发现)** — 所有 user-facing 文本严禁 hardcode 用户专属字段:
+    - **禁止**: `Willow` / `Cupertino` / `Jeffery Trail` / `Irvine USD` 等 founder 自家女儿专属字段直接进 content
+    - **必须**: 用 `{{userChildName|你这一代}}` / `{{userCity|加州}}` / `{{userSchool|你的学校}}` 占位符
+    - CN 字段用中文 fallback,EN 字段用英文 fallback (见 [`lib/atlas-templating.js`](../lib/atlas-templating.js) STANDARD_FALLBACKS)
+    - **CI 检查**: `node scripts/atlas-lint.mjs` — exit 0 才算 pass,这一步不过整个 Topic 不许 commit
+    - 渲染机制: `KeyFiguresRow.js` mount 时调 `getAtlasUserContext()` + `renderAtlasContent()` 替换
 - [ ] **`lib/history-topics.js`**：
   - 加 `<TOPIC>` 完整元数据 export（参考 `lib/history-topics/_template.js` 模板）
   - 加到 `HISTORY_TOPICS` object

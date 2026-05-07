@@ -7,7 +7,8 @@
 // 当前实现：点击 chip → 弹 modal 显示该角色的 perspective hook
 // 未来整合：当 history conversation mode 上线后，点击 chip → 直接进入 cosplay 对话流
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { renderAtlasContent, getAtlasUserContext } from '../lib/atlas-templating';
 
 const HC = {
   parchmentHi: '#fbf5e0',
@@ -24,6 +25,12 @@ const HC = {
 //                                        AtlasLabPage 据此把 figure 存 localStorage + 打开 iframe
 export default function KeyFiguresRow({ figures, lang = 'cn', onLaunchAsRole, deepLearnEnabled }) {
   const [selected, setSelected] = useState(null);
+  // 5-5: 从 localStorage 读 user profile 得 atlas user context
+  // SSR 时 null → fallback;client mount 后 inject 真名(如已填 profile)
+  const [userContext, setUserContext] = useState(null);
+  useEffect(function () {
+    setUserContext(getAtlasUserContext());
+  }, []);
 
   if (!figures || !Array.isArray(figures) || figures.length === 0) return null;
 
@@ -43,10 +50,15 @@ export default function KeyFiguresRow({ figures, lang = 'cn', onLaunchAsRole, de
     launchHint: 'AI starts in 1st-person · analogies built around this role',
   };
 
+  // 5-5: pickLabel 升级 — 拿到字符串后过 atlas-templating 引擎,
+  //       把 {{userChildName|fallback}} 等占位符替换成 user profile 真名/fallback
   const pickLabel = (obj, fallback = '') => {
     if (!obj) return fallback;
-    if (typeof obj === 'string') return obj;
-    return obj[lang] || obj.cn || obj.en || fallback;
+    let text = obj;
+    if (typeof obj !== 'string') {
+      text = obj[lang] || obj.cn || obj.en || fallback;
+    }
+    return renderAtlasContent(text, userContext);
   };
 
   return (

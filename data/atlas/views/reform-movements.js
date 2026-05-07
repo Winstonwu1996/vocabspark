@@ -97,12 +97,12 @@ export const VIEW = {
       name: { cn: 'Lucy（虚构同龄人）', en: 'Lucy (fictional peer)' },
       role: { cn: '13 岁，Quaker 改革家女儿', en: '13-year-old, Quaker reformer\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄，住宾州费城。爸爸妈妈是 Quaker — 帮 Underground Railroad 藏逃奴。你 8 岁起就在地窖里给逃奴送饭。1848 你妈妈带你去 Seneca Falls — 你看到女人公开演讲（你之前以为只有男人能讲）— 你这一代女孩是"看着 Stanton 长大"。50 年后你可能加入女权选举权运动。',
-        en: 'Same age as Willow. You live in Quaker Philadelphia. Your parents shelter escaped slaves through the Underground Railroad. From age 8 you bring food to fugitives in the cellar. In 1848 your mother took you to Seneca Falls — you saw women publicly speaking (you thought only men could). Your generation grew up "watching Stanton." 50 years later you might join the suffrage movement.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄，住宾州费城。爸爸妈妈是 Quaker — 帮 Underground Railroad 藏逃奴。你 8 岁起就在地窖里给逃奴送饭。1848 你妈妈带你去 Seneca Falls — 你看到女人公开演讲（你之前以为只有男人能讲）— 你这一代女孩是"看着 Stanton 长大"。50 年后你可能加入女权选举权运动。',
+        en: 'Same age as {{userChildName|your generation}}. You live in Quaker Philadelphia. Your parents shelter escaped slaves through the Underground Railroad. From age 8 you bring food to fugitives in the cellar. In 1848 your mother took you to Seneca Falls — you saw women publicly speaking (you thought only men could). Your generation grew up "watching Stanton." 50 years later you might join the suffrage movement.',
       },
       hook: {
-        cn: '178 年后 Willow 在加州 — 跟黑人朋友、亚裔朋友、LGBTQ 朋友一起上学。这一切是从你 13 岁那年妈妈带你听 Stanton 演讲开始的。一个孩子参加一场会议能改变历史吗？',
-        en: '178 years later, Willow attends school with Black, Asian, LGBTQ friends. All of this began the year your mother took you, age 13, to hear Stanton speak. Can one child at one meeting change history?',
+        cn: '178 年后 {{userChildName|你这一代}} 在加州 — 跟黑人朋友、亚裔朋友、LGBTQ 朋友一起上学。这一切是从你 13 岁那年妈妈带你听 Stanton 演讲开始的。一个孩子参加一场会议能改变历史吗？',
+        en: '178 years later, {{userChildName|your generation}} attends school with Black, Asian, LGBTQ friends. All of this began the year your mother took you, age 13, to hear Stanton speak. Can one child at one meeting change history?',
       },
     },
   ],

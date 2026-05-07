@@ -62,6 +62,48 @@ LLM 经过中文文学语料训练——"皇帝盖印"自动联想"玉玺"——
 
 ---
 
+## ⛔ 第 10 条：Atlas content 严禁 hardcode 用户专属字段（5-5 加,systemic,founder 实测发现）
+
+**事故**（founder 5-5 互联网 beta 测试前抓到）：
+- 37 个 atlas view 文件里 `Willow` 这个名字 hardcode 了 167 处
+- 还有 `Cupertino` (founder 自家城市) hardcode 2 处
+- 老内容是 founder 给自己女儿 Willow 写的,直接被复制到所有 atlas view 当样本
+- 实测:任何非 Willow 的真实用户(beta 测试者 / 互联网访客)看到 atlas 任意 Topic 都看见 "Willow 现在 13 岁..." 这种 founder-specific 内容,完全 broken UX
+
+**根因**：atlas content 创作时没有 placeholder 机制约束,founder 写的 reference content 被原样复制 → user-specific 字段污染了所有 Topic.
+
+**规则**：
+1. Atlas user-facing content 严禁 hardcode 用户专属字段:
+   - 姓名 (`Willow` 等具体名字)
+   - 城市 (`Cupertino` / `Irvine` / 具体地名)
+   - 学校 (`Jeffery Trail` / `Irvine USD`)
+   - 邮箱 (`chompcloud` 等)
+2. **必须**用占位符语法 `{{key|fallback}}`:
+   - `{{userChildName|你这一代}}` (CN content) / `{{userChildName|your generation}}` (EN content)
+   - `{{userCity|加州}}` / `{{userCity|California}}`
+   - `{{userSchool|你的学校}}` / `{{userSchool|your school}}`
+   - `{{userParentWord|爸妈}}` / `{{userParentWord|your parents}}`
+3. **CN 字段用中文 fallback,EN 字段用英文 fallback** (同 lens.role / lens.description bilingual schema)
+4. CI 必跑 `node scripts/atlas-lint.mjs`,exit 0 才能 commit (违规列表 + 自动建议替换 placeholder)
+
+**实现位置**：
+- `lib/atlas-templating.js` — `renderAtlasContent(text, ctx)` + `getAtlasUserContext()` 引擎
+- `components/KeyFiguresRow.js` — useEffect 拿 ctx + pickLabel 调 renderAtlasContent 替换
+- `scripts/atlas-lint.mjs` — CI 扫违规
+- 渲染机制:SSR 用 fallback,client mount 后 inject 真名(如 user 已填 profile);placeholder profile 用户用 fallback
+
+**自检**：
+```bash
+# 跑 atlas-lint, 应输出 "✓ atlas-lint clean — 0 hardcoded user fields"
+node scripts/atlas-lint.mjs
+
+# 加新 atlas content 时,把 user-facing 字段(姓名/城市/学校)替换成占位符
+# Bad:  cn: '你跟 Willow 同龄'
+# Good: cn: '你跟 {{userChildName|你这一代}} 同龄'
+```
+
+---
+
 ## ⛔ 第 9 条：Atlas keyFigures 必须从 lens 派生（5-5 加，systemic）
 
 **事故**（founder 5-5 测试时抓到）：

@@ -97,12 +97,12 @@ export const VIEW = {
       name: { cn: 'Carolyn（虚构同龄人）', en: 'Carolyn (fictional peer)' },
       role: { cn: '13 岁，伯明翰黑人女孩', en: '13-year-old, Birmingham Black girl' },
       bio: {
-        cn: '你跟 Willow 同龄。1963 5 月你 13 岁，参加 Birmingham Children\'s Crusade — 你和 800 个孩子游行。Bull Connor 用警犬咬你妹妹。你被关 5 天监狱。9 月你教堂 16th Street Baptist 被 KKK 炸 — 4 个跟你同龄的女孩死。你这一代叫"运动孩子"— 你的恐惧 + 勇气定义了下一代美国人对种族的态度。',
-        en: 'Same age as Willow. In May 1963 (age 13) you joined the Birmingham Children\'s Crusade — marched with 800 kids. Bull Connor\'s dogs bit your sister. You spent 5 days in jail. In September your church (16th Street Baptist) was bombed by the KKK — 4 girls your age killed. Your generation, "movement children," your fear + courage shaped the next generation\'s racial attitudes.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。1963 5 月你 13 岁，参加 Birmingham Children\'s Crusade — 你和 800 个孩子游行。Bull Connor 用警犬咬你妹妹。你被关 5 天监狱。9 月你教堂 16th Street Baptist 被 KKK 炸 — 4 个跟你同龄的女孩死。你这一代叫"运动孩子"— 你的恐惧 + 勇气定义了下一代美国人对种族的态度。',
+        en: 'Same age as {{userChildName|your generation}}. In May 1963 (age 13) you joined the Birmingham Children\'s Crusade — marched with 800 kids. Bull Connor\'s dogs bit your sister. You spent 5 days in jail. In September your church (16th Street Baptist) was bombed by the KKK — 4 girls your age killed. Your generation, "movement children," your fear + courage shaped the next generation\'s racial attitudes.',
       },
       hook: {
-        cn: '60 年后 Willow 在加州学校跟黑人朋友自由聊天。她拥有的"日常自由"是你 13 岁那年用监狱 + 教堂炸弹换的。她欠你一句感谢吗？还是你只想她"知道你存在"？',
-        en: '60 years later, Willow chats freely with Black friends in California. The "daily freedom" she has was bought by your 13-year-old year of jail + church bombings. Does she owe you thanks? Or do you just want her to "know you existed"?',
+        cn: '60 年后 {{userChildName|你这一代}} 在加州学校跟黑人朋友自由聊天。她拥有的"日常自由"是你 13 岁那年用监狱 + 教堂炸弹换的。她欠你一句感谢吗？还是你只想她"知道你存在"？',
+        en: '60 years later, {{userChildName|your generation}} chats freely with Black friends in California. The "daily freedom" she has was bought by your 13-year-old year of jail + church bombings. Does she owe you thanks? Or do you just want her to "know you existed"?',
       },
     },
   ],

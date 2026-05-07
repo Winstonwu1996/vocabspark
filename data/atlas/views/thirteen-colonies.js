@@ -98,12 +98,12 @@ export const VIEW = {
       name: { cn: 'Sarah（虚构同龄人）', en: 'Sarah (fictional peer)' },
       role: { cn: '13 岁，波士顿商人女儿', en: '13-year-old, Boston merchant\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是波士顿三角贸易商人 — 进口加勒比朗姆酒、出口新英格兰木材。家里 50 人做事，3 个仆人是女佣（不是奴隶）。你识字（清教传统女孩也学读《圣经》）。1750 年你 13 岁，10 年后波士顿茶党你 23 岁 — 你可能跟 Sons of Liberty 站在一起。',
-        en: 'Same age as Willow. Your father is a Boston triangle-trade merchant — importing Caribbean rum, exporting New England timber. Household of 50, with 3 indentured maids (not slaves). You can read (Puritan tradition lets girls read the Bible). At 13 in 1750, you\'ll be 23 by the Boston Tea Party — you might stand with the Sons of Liberty.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是波士顿三角贸易商人 — 进口加勒比朗姆酒、出口新英格兰木材。家里 50 人做事，3 个仆人是女佣（不是奴隶）。你识字（清教传统女孩也学读《圣经》）。1750 年你 13 岁，10 年后波士顿茶党你 23 岁 — 你可能跟 Sons of Liberty 站在一起。',
+        en: 'Same age as {{userChildName|your generation}}. Your father is a Boston triangle-trade merchant — importing Caribbean rum, exporting New England timber. Household of 50, with 3 indentured maids (not slaves). You can read (Puritan tradition lets girls read the Bible). At 13 in 1750, you\'ll be 23 by the Boston Tea Party — you might stand with the Sons of Liberty.',
       },
       hook: {
-        cn: '275 年后 Willow 在加州学"美国独立战争前夜"— 课本写的是男人开枪。但你的妈妈、你、你妹妹组织抵制英货 ("Daughters of Liberty")。革命的"无名一半"为什么被忘？',
-        en: '275 years later in California, Willow studies "the eve of revolution" — textbooks center men with guns. But your mother, you, your sister organized boycotts of British goods ("Daughters of Liberty"). Why is revolution\'s "nameless half" forgotten?',
+        cn: '275 年后 {{userChildName|你这一代}} 在加州学"美国独立战争前夜"— 课本写的是男人开枪。但你的妈妈、你、你妹妹组织抵制英货 ("Daughters of Liberty")。革命的"无名一半"为什么被忘？',
+        en: '275 years later in California, {{userChildName|your generation}} studies "the eve of revolution" — textbooks center men with guns. But your mother, you, your sister organized boycotts of British goods ("Daughters of Liberty"). Why is revolution\'s "nameless half" forgotten?',
       },
     },
   ],

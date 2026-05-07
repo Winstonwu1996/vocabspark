@@ -100,12 +100,12 @@ export const VIEW = {
       name: { cn: 'Antoine（虚构同龄人）', en: 'Antoine (fictional peer)' },
       role: { cn: '13 岁，里昂印刷工人之子', en: '13-year-old, Lyon printer\'s son' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸印 Diderot 的《百科全书》— 一套 28 卷，禁书但富人偷买。你识字早，13 岁能跟爸爸讨论"Locke 说的天赋人权"。法国大革命你 33 岁 — 你会成革命派 + 看 Robespierre 上断头台。你这一代是"启蒙的孩子"— 也是"革命的炮灰"。',
-        en: 'Same age as Willow. Your father prints Diderot\'s Encyclopédie — 28 volumes, banned but secretly bought by the rich. Literate early, at 13 you debate Locke\'s natural rights with your father. When the French Revolution comes you\'ll be 33 — joining the revolutionaries, watching Robespierre go to the guillotine. Your generation is "child of the Enlightenment" — also "cannon fodder of revolution."',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸印 Diderot 的《百科全书》— 一套 28 卷，禁书但富人偷买。你识字早，13 岁能跟爸爸讨论"Locke 说的天赋人权"。法国大革命你 33 岁 — 你会成革命派 + 看 Robespierre 上断头台。你这一代是"启蒙的孩子"— 也是"革命的炮灰"。',
+        en: 'Same age as {{userChildName|your generation}}. Your father prints Diderot\'s Encyclopédie — 28 volumes, banned but secretly bought by the rich. Literate early, at 13 you debate Locke\'s natural rights with your father. When the French Revolution comes you\'ll be 33 — joining the revolutionaries, watching Robespierre go to the guillotine. Your generation is "child of the Enlightenment" — also "cannon fodder of revolution."',
       },
       hook: {
-        cn: '270 年后 Willow 在 ChatGPT 上读"启蒙运动"— 但她不会经历革命。"思想运动 → 革命"在你这代是必然 — 在她这代是不是被互联网消解了？',
-        en: '270 years later, Willow reads "the Enlightenment" on ChatGPT — but she won\'t live through revolution. "Idea movement → revolution" was inevitable for you. Did the internet dissolve that link for her?',
+        cn: '270 年后 {{userChildName|你这一代}} 在 ChatGPT 上读"启蒙运动"— 但她不会经历革命。"思想运动 → 革命"在你这代是必然 — 在她这代是不是被互联网消解了？',
+        en: '270 years later, {{userChildName|your generation}} reads "the Enlightenment" on ChatGPT — but she won\'t live through revolution. "Idea movement → revolution" was inevitable for you. Did the internet dissolve that link for her?',
       },
     },
   ],

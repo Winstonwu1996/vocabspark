@@ -97,12 +97,12 @@ export const VIEW = {
       name: { cn: 'Miriam（虚构同龄人）', en: 'Miriam (fictional peer)' },
       role: { cn: '13 岁，先知家女儿', en: '13-year-old, prophet\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是宫廷先知 Nathan 的助手。你识字，能背摩西五经的开头几章。你看圣殿落成那天，全城十几万人聚在山上唱诗 — 第一次觉得"我们这个民族"是真的存在。',
-        en: 'Same age as Willow. Your father assists prophet Nathan. You can read, recite parts of the Torah. On the temple\'s dedication day, 100k+ people gather on the hill singing — the first time you feel "our people" truly exists.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是宫廷先知 Nathan 的助手。你识字，能背摩西五经的开头几章。你看圣殿落成那天，全城十几万人聚在山上唱诗 — 第一次觉得"我们这个民族"是真的存在。',
+        en: 'Same age as {{userChildName|your generation}}. Your father assists prophet Nathan. You can read, recite parts of the Torah. On the temple\'s dedication day, 100k+ people gather on the hill singing — the first time you feel "our people" truly exists.',
       },
       hook: {
-        cn: '3000 年后，Willow 的同学有信犹太教的、基督教的、伊斯兰教的 — 全都源于你这一刻。你跟 Willow 隔着 3000 年，"一个神"这个想法怎么走到今天的？',
-        en: '3000 years later, Willow\'s classmates include Jews, Christians, Muslims — all trace back to your moment. Across 3000 years, how did "one God" travel from your hilltop to her classroom?',
+        cn: '3000 年后，{{userChildName|你这一代}} 的同学有信犹太教的、基督教的、伊斯兰教的 — 全都源于你这一刻。你跟 {{userChildName|你这一代}} 隔着 3000 年，"一个神"这个想法怎么走到今天的？',
+        en: '3000 years later, {{userChildName|your generation}}\'s classmates include Jews, Christians, Muslims — all trace back to your moment. Across 3000 years, how did "one God" travel from your hilltop to her classroom?',
       },
     },
   ],

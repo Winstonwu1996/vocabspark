@@ -98,12 +98,12 @@ export const VIEW = {
       name: { cn: 'James（虚构同龄人）', en: 'James (fictional peer)' },
       role: { cn: '13 岁，肯塔基开拓者之子', en: '13-year-old, Kentucky pioneer\'s son' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸 1810 年从弗吉尼亚翻越阿巴拉契亚山到肯塔基 — 路易斯安那购地刚 7 年，西部"机会无穷"。你 13 岁就能用步枪打松鼠，帮爸爸开荒种玉米。你的邻居一年增 2 倍 — 你看着印第安人 Shawnee 部落往西退。你不觉得错 — 这是"美国人的命运"。',
-        en: 'Same age as Willow. Your father moved from Virginia over the Appalachians to Kentucky in 1810 — Louisiana Purchase was 7 years old, "endless opportunity." At 13 you can shoot a squirrel and clear corn fields. Your neighbors double yearly — you watch the Shawnee retreat westward. You don\'t feel guilty — it\'s "Americans\' destiny."',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸 1810 年从弗吉尼亚翻越阿巴拉契亚山到肯塔基 — 路易斯安那购地刚 7 年，西部"机会无穷"。你 13 岁就能用步枪打松鼠，帮爸爸开荒种玉米。你的邻居一年增 2 倍 — 你看着印第安人 Shawnee 部落往西退。你不觉得错 — 这是"美国人的命运"。',
+        en: 'Same age as {{userChildName|your generation}}. Your father moved from Virginia over the Appalachians to Kentucky in 1810 — Louisiana Purchase was 7 years old, "endless opportunity." At 13 you can shoot a squirrel and clear corn fields. Your neighbors double yearly — you watch the Shawnee retreat westward. You don\'t feel guilty — it\'s "Americans\' destiny."',
       },
       hook: {
-        cn: '220 年后 Willow 在加州 — 西扩的尽头。她爷爷的爷爷可能就是你这种少年。你"开拓边疆"的浪漫，到她那代变成"内卷"和"住房危机"。同一个梦的两端 — 怎么读？',
-        en: '220 years later, Willow lives in California — the end of westward expansion. Her great-great-grandfather might have been a boy like you. Your "frontier romance" becomes her generation\'s "burnout and housing crisis." Two ends of the same dream — how to read it?',
+        cn: '220 年后 {{userChildName|你这一代}} 在加州 — 西扩的尽头。她爷爷的爷爷可能就是你这种少年。你"开拓边疆"的浪漫，到她那代变成"内卷"和"住房危机"。同一个梦的两端 — 怎么读？',
+        en: '220 years later, {{userChildName|your generation}} lives in California — the end of westward expansion. Her great-great-grandfather might have been a boy like you. Your "frontier romance" becomes her generation\'s "burnout and housing crisis." Two ends of the same dream — how to read it?',
       },
     },
   ],

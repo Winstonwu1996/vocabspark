@@ -96,12 +96,12 @@ export const VIEW = {
       name: { cn: 'Hippias（虚构同龄人）', en: 'Hippias (fictional peer)' },
       role: { cn: '13 岁，hoplite 的儿子', en: '13-year-old, hoplite\'s son' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是 hoplite，BC 480 出征 Salamis。你在雅典学校学几何、修辞、音乐。你妹妹不上学（女孩 ~14 岁就嫁人）。你想当哲学家但爸爸说"先去当公民兵证明你是真男人"。',
-        en: 'Same age as Willow. Your father is a hoplite, off to Salamis BC 480. You learn geometry, rhetoric, music at school. Your sister doesn\'t go (girls marry at ~14). You want to be a philosopher but father says "first prove yourself as a citizen-soldier."',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是 hoplite，BC 480 出征 Salamis。你在雅典学校学几何、修辞、音乐。你妹妹不上学（女孩 ~14 岁就嫁人）。你想当哲学家但爸爸说"先去当公民兵证明你是真男人"。',
+        en: 'Same age as {{userChildName|your generation}}. Your father is a hoplite, off to Salamis BC 480. You learn geometry, rhetoric, music at school. Your sister doesn\'t go (girls marry at ~14). You want to be a philosopher but father says "first prove yourself as a citizen-soldier."',
       },
       hook: {
-        cn: '2500 年后 Willow 在加州学雅典民主 — 但她在班上跟男生平等发言。你妹妹在 BC 480 不能投票、不能上学。"民主"这个礼物为什么花了 2500 年才到她妹妹手里？',
-        en: '2500 years later, Willow studies Athenian democracy in California, debating boys as equals. Your sister in BC 480 can\'t vote or attend school. Why did democracy\'s gift take 2500 years to reach her?',
+        cn: '2500 年后 {{userChildName|你这一代}} 在加州学雅典民主 — 但她在班上跟男生平等发言。你妹妹在 BC 480 不能投票、不能上学。"民主"这个礼物为什么花了 2500 年才到她妹妹手里？',
+        en: '2500 years later, {{userChildName|your generation}} studies Athenian democracy in California, debating boys as equals. Your sister in BC 480 can\'t vote or attend school. Why did democracy\'s gift take 2500 years to reach her?',
       },
     },
   ],

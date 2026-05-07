@@ -97,12 +97,12 @@ export const VIEW = {
       name: { cn: 'Khaemwaset（虚构同龄人）', en: 'Khaemwaset (fictional peer)' },
       role: { cn: '13 岁，抄写员学徒', en: '13-year-old, scribe apprentice' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸送你到神庙学校学圣书体（hieroglyphs）— 学 12 年。同班 30 个男孩，没有女孩。老师说"会写字 = 不用搬石头"。你每天练 200 个字，手指起茧。',
-        en: 'Same age as Willow. Your father sent you to temple school to learn hieroglyphs — 12-year program. 30 boys in your class, no girls. Teachers say "writing = no stone-hauling." Daily 200 characters; your fingers callous.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸送你到神庙学校学圣书体（hieroglyphs）— 学 12 年。同班 30 个男孩，没有女孩。老师说"会写字 = 不用搬石头"。你每天练 200 个字，手指起茧。',
+        en: 'Same age as {{userChildName|your generation}}. Your father sent you to temple school to learn hieroglyphs — 12-year program. 30 boys in your class, no girls. Teachers say "writing = no stone-hauling." Daily 200 characters; your fingers callous.',
       },
       hook: {
-        cn: 'Willow 在 2026 年敲键盘学英语 — 你在 BC 2500 蘸墨学圣书体。两件事都是用文字"逃出体力劳动"。文字真能改变命运吗？',
-        en: 'Willow types English in 2026 — you ink hieroglyphs in BC 2500. Both use literacy to escape manual labor. Does writing really change one\'s fate?',
+        cn: '{{userChildName|你这一代}} 在 2026 年敲键盘学英语 — 你在 BC 2500 蘸墨学圣书体。两件事都是用文字"逃出体力劳动"。文字真能改变命运吗？',
+        en: '{{userChildName|your generation}} types English in 2026 — you ink hieroglyphs in BC 2500. Both use literacy to escape manual labor. Does writing really change one\'s fate?',
       },
     },
   ],

@@ -100,12 +100,12 @@ export const VIEW = {
       name: { cn: 'Babur（虚构同龄人）', en: 'Babur (fictional peer)' },
       role: { cn: '13 岁，伊斯法罕织毯工人之子', en: '13-year-old, Isfahan carpet-weaver\'s son' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是织毯工人 — Safavid 时期波斯地毯出口到欧洲，王室给了你父亲 patron。你帮爸爸打结 — 一块地毯 200 万个结、要织 18 个月。你跟 Hindu 商人、Armenian 翻译、Ottoman 间谍同时打交道 — 伊斯法罕是 1600 年的全球化中心。',
-        en: 'Same age as Willow. Your father is a carpet weaver — under the Safavids, Persian rugs were exported to Europe; the royal family is your father\'s patron. You help him knot — one carpet has 2 million knots, takes 18 months. You interact daily with Hindu traders, Armenian translators, Ottoman spies — Isfahan is the globalization hub of 1600.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是织毯工人 — Safavid 时期波斯地毯出口到欧洲，王室给了你父亲 patron。你帮爸爸打结 — 一块地毯 200 万个结、要织 18 个月。你跟 Hindu 商人、Armenian 翻译、Ottoman 间谍同时打交道 — 伊斯法罕是 1600 年的全球化中心。',
+        en: 'Same age as {{userChildName|your generation}}. Your father is a carpet weaver — under the Safavids, Persian rugs were exported to Europe; the royal family is your father\'s patron. You help him knot — one carpet has 2 million knots, takes 18 months. You interact daily with Hindu traders, Armenian translators, Ottoman spies — Isfahan is the globalization hub of 1600.',
       },
       hook: {
-        cn: '400 年后 Willow 在加州可能买一块"波斯地毯"装饰 — 你的工艺还活着。但你的世界已被欧洲取代。"产品赢了，制造者输了"— 这套全球化逻辑是怎么形成的？',
-        en: '400 years later, Willow might buy a "Persian rug" for decor in California — your craft survives. But your world was overtaken by Europe. "The product wins, the maker loses" — how did this globalization logic form?',
+        cn: '400 年后 {{userChildName|你这一代}} 在加州可能买一块"波斯地毯"装饰 — 你的工艺还活着。但你的世界已被欧洲取代。"产品赢了，制造者输了"— 这套全球化逻辑是怎么形成的？',
+        en: '400 years later, {{userChildName|your generation}} might buy a "Persian rug" for decor in California — your craft survives. But your world was overtaken by Europe. "The product wins, the maker loses" — how did this globalization logic form?',
       },
     },
   ],

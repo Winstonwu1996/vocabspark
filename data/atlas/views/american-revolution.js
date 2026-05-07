@@ -99,12 +99,12 @@ export const VIEW = {
       name: { cn: 'Joseph（虚构同龄人）', en: 'Joseph (fictional peer)' },
       role: { cn: '13 岁，波士顿茶商儿子', en: '13-year-old, Boston tea merchant\'s son' },
       bio: {
-        cn: '你跟 Willow 同龄。1773 年 12 月 16 日你 10 岁 — 看你哥哥扮印第安人去港口砸 342 箱英国茶。你 1775 年 13 岁，列星顿打响第一枪你激动得睡不着觉。1781 你 19 岁，可能在 Yorktown 看 Cornwallis 投降。你这一代是"革命的孩子"— 长大后成立联邦政府的就是你们。',
-        en: 'Same age as Willow. On Dec 16, 1773, you were 10 — you watched your brother dress as a Mohawk and dump 342 chests of British tea in the harbor. At 13 in 1775, the shot at Lexington kept you awake with excitement. At 19 in 1781 you might have stood at Yorktown watching Cornwallis surrender. Your generation is "revolution\'s children" — building the federal government when you grow up.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。1773 年 12 月 16 日你 10 岁 — 看你哥哥扮印第安人去港口砸 342 箱英国茶。你 1775 年 13 岁，列星顿打响第一枪你激动得睡不着觉。1781 你 19 岁，可能在 Yorktown 看 Cornwallis 投降。你这一代是"革命的孩子"— 长大后成立联邦政府的就是你们。',
+        en: 'Same age as {{userChildName|your generation}}. On Dec 16, 1773, you were 10 — you watched your brother dress as a Mohawk and dump 342 chests of British tea in the harbor. At 13 in 1775, the shot at Lexington kept you awake with excitement. At 19 in 1781 you might have stood at Yorktown watching Cornwallis surrender. Your generation is "revolution\'s children" — building the federal government when you grow up.',
       },
       hook: {
-        cn: '250 年后 Willow 在加州学"美国独立战争"— 但她不会经历"为新国家诞生"那种激动。你这代人有"塑造历史"的机会，她那代呢？是不是反而更难找到方向？',
-        en: '250 years later, Willow studies the Revolution in California — but she\'ll never feel the thrill of "birthing a new nation." Your generation got to shape history. Hers — does the abundance of paths actually make finding direction harder?',
+        cn: '250 年后 {{userChildName|你这一代}} 在加州学"美国独立战争"— 但她不会经历"为新国家诞生"那种激动。你这代人有"塑造历史"的机会，她那代呢？是不是反而更难找到方向？',
+        en: '250 years later, {{userChildName|your generation}} studies the Revolution in California — but she\'ll never feel the thrill of "birthing a new nation." Your generation got to shape history. Hers — does the abundance of paths actually make finding direction harder?',
       },
     },
   ],

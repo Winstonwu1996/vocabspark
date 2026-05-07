@@ -102,12 +102,12 @@ export const VIEW = {
       name: { cn: 'Galina（虚构同龄人）', en: 'Galina (fictional peer)' },
       role: { cn: '13 岁，莫斯科共青团女孩', en: '13-year-old, Moscow Komsomol girl' },
       bio: {
-        cn: '你跟 Willow 同龄。1962 你 13 岁，加入共青团 (Pioneer)。爸爸是工程师，妈妈是医生 — 苏联中产。你以为美国是"敌人"，但你也偷偷听披头士磁带 + 看 Levi\'s 牛仔裤。1962 古巴危机你以为要核战 — 你跟妈妈在地铁防空洞躲。1991 你 42 岁苏联解体 — 你的世界整个变了，要重新开始。',
-        en: 'Same age as Willow. In 1962 you were 13, in the Komsomol Pioneers. Your father is an engineer, mother a doctor — Soviet middle class. You believed America was "the enemy" but secretly listened to Beatles tapes + admired Levi\'s. During the 1962 Cuban crisis you hid with mother in subway shelters expecting nuclear war. In 1991 (age 42) the USSR dissolved — your whole world overturned, restart from zero.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。1962 你 13 岁，加入共青团 (Pioneer)。爸爸是工程师，妈妈是医生 — 苏联中产。你以为美国是"敌人"，但你也偷偷听披头士磁带 + 看 Levi\'s 牛仔裤。1962 古巴危机你以为要核战 — 你跟妈妈在地铁防空洞躲。1991 你 42 岁苏联解体 — 你的世界整个变了，要重新开始。',
+        en: 'Same age as {{userChildName|your generation}}. In 1962 you were 13, in the Komsomol Pioneers. Your father is an engineer, mother a doctor — Soviet middle class. You believed America was "the enemy" but secretly listened to Beatles tapes + admired Levi\'s. During the 1962 Cuban crisis you hid with mother in subway shelters expecting nuclear war. In 1991 (age 42) the USSR dissolved — your whole world overturned, restart from zero.',
       },
       hook: {
-        cn: '64 年后 Willow 在加州 — 跟俄罗斯裔同学一起上学。"敌国孩子"和"美国孩子"在同一间教室。冷战的"敌我"是真的吗？还是只是大人编的故事？',
-        en: '64 years later, Willow goes to school with Russian-American classmates in California. "Enemy children" and "our children" in the same classroom. Was the Cold War\'s "us vs them" real, or a story adults made up?',
+        cn: '64 年后 {{userChildName|你这一代}} 在加州 — 跟俄罗斯裔同学一起上学。"敌国孩子"和"美国孩子"在同一间教室。冷战的"敌我"是真的吗？还是只是大人编的故事？',
+        en: '64 years later, {{userChildName|your generation}} goes to school with Russian-American classmates in California. "Enemy children" and "our children" in the same classroom. Was the Cold War\'s "us vs them" real, or a story adults made up?',
       },
     },
   ],

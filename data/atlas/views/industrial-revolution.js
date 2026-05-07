@@ -76,8 +76,8 @@ export const VIEW = {
         en: 'In 1865 you sailed from Guangdong to California. Central Pacific hired 12,000 Chinese workers to cut through the Sierra Nevada — high altitude + blizzards + dynamite tunnels, an estimated 1,000 died. You earned 2/3 the white wage; ate your own tea and rice. May 1869 the railroad was complete — but the 1882 Chinese Exclusion Act banned Chinese immigration for 60 years. You built America; America barred you.',
       },
       hook: {
-        cn: '如果你是中国铁路工人 — 你贡献最大却被遗忘。1869 完工照片里没有中国人。今天加州大量华人 — 包括 Willow 的同学 — 都是你的后代或同胞。这道伤口怎么治？',
-        en: 'If you were the Chinese railroad worker — your contribution was greatest, your face erased. The 1869 completion photo has no Chinese workers. Today\'s California has many Chinese — including Willow\'s classmates — your descendants or peers. How is this wound healed?',
+        cn: '如果你是中国铁路工人 — 你贡献最大却被遗忘。1869 完工照片里没有中国人。今天加州大量华人 — 包括 {{userChildName|你这一代}} 的同学 — 都是你的后代或同胞。这道伤口怎么治？',
+        en: 'If you were the Chinese railroad worker — your contribution was greatest, your face erased. The 1869 completion photo has no Chinese workers. Today\'s California has many Chinese — including {{userChildName|your generation}}\'s classmates — your descendants or peers. How is this wound healed?',
       },
     },
     {
@@ -98,12 +98,12 @@ export const VIEW = {
       name: { cn: 'Davy（虚构同龄人）', en: 'Davy (fictional peer)' },
       role: { cn: '13 岁，曼彻斯特童工', en: '13-year-old, Manchester child laborer' },
       bio: {
-        cn: '你跟 Willow 同龄。1850 你已经在曼彻斯特纺织厂干了 4 年（9 岁开始）。每天工厂监工抽你 + 你站到脚肿。但你识字 — 因为你妈妈坚持送你周日学校（1830s 才有，全免费）。30 年后你可能进工会 + 投票 + 你儿子可能当律师。"工业革命"对你这代是地狱，对你儿孙是阶梯。',
-        en: 'Same age as Willow. By 1850 you\'ve worked 4 years at a Manchester mill (started at 9). Daily, the foreman whips you; your feet swell from standing. But you can read — your mother insisted on Sunday school (started in 1830s, free). In 30 years you might join the union + vote; your son might become a lawyer. "Industrial Revolution" is hell for your generation, ladder for your grandchildren.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。1850 你已经在曼彻斯特纺织厂干了 4 年（9 岁开始）。每天工厂监工抽你 + 你站到脚肿。但你识字 — 因为你妈妈坚持送你周日学校（1830s 才有，全免费）。30 年后你可能进工会 + 投票 + 你儿子可能当律师。"工业革命"对你这代是地狱，对你儿孙是阶梯。',
+        en: 'Same age as {{userChildName|your generation}}. By 1850 you\'ve worked 4 years at a Manchester mill (started at 9). Daily, the foreman whips you; your feet swell from standing. But you can read — your mother insisted on Sunday school (started in 1830s, free). In 30 years you might join the union + vote; your son might become a lawyer. "Industrial Revolution" is hell for your generation, ladder for your grandchildren.',
       },
       hook: {
-        cn: '175 年后 Willow 在加州 — 12 岁不能合法工作，必须上学。她的"舒适"是你这代用命换的。她欠你什么？什么都不欠 — 但她应该知道你是怎么活的。',
-        en: '175 years later, Willow in California — at 12 she can\'t legally work, must attend school. Her comfort was bought with your generation\'s blood. Does she owe you? Nothing — but she should know how you lived.',
+        cn: '175 年后 {{userChildName|你这一代}} 在加州 — 12 岁不能合法工作，必须上学。她的"舒适"是你这代用命换的。她欠你什么？什么都不欠 — 但她应该知道你是怎么活的。',
+        en: '175 years later, {{userChildName|your generation}} in California — at 12 she can\'t legally work, must attend school. Her comfort was bought with your generation\'s blood. Does she owe you? Nothing — but she should know how you lived.',
       },
     },
   ],

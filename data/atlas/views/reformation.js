@@ -97,12 +97,12 @@ export const VIEW = {
       name: { cn: 'Katharina（虚构同龄人）', en: 'Katharina (fictional peer)' },
       role: { cn: '13 岁，纽伦堡印刷工人女儿', en: '13-year-old, Nuremberg printer\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是印刷工 — 印刷路德 95 条 + 他翻译的德语圣经。你识字（妈妈坚持女孩也要学读）。你看着 Luther 的小册子被一捆一捆运到全德国 — "这就是改变世界"。50 年后你的孙女可能能去新教学校（Luther 推广全民教育）。',
-        en: 'Same age as Willow. Your father is a printer — printing Luther\'s 95 Theses and his German Bible translation. You can read (your mother insisted girls study). You watch Luther\'s pamphlets shipped by the bundle across Germany — "this is changing the world." 50 years later your granddaughter might attend a Lutheran school (Luther championed universal education).',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是印刷工 — 印刷路德 95 条 + 他翻译的德语圣经。你识字（妈妈坚持女孩也要学读）。你看着 Luther 的小册子被一捆一捆运到全德国 — "这就是改变世界"。50 年后你的孙女可能能去新教学校（Luther 推广全民教育）。',
+        en: 'Same age as {{userChildName|your generation}}. Your father is a printer — printing Luther\'s 95 Theses and his German Bible translation. You can read (your mother insisted girls study). You watch Luther\'s pamphlets shipped by the bundle across Germany — "this is changing the world." 50 years later your granddaughter might attend a Lutheran school (Luther championed universal education).',
       },
       hook: {
-        cn: '500 年后 Willow 在加州学校所有人都识字 + 学习宗教自由 — 都源于你这一代。"印刷术 + 翻译 + 全民识字"组合在你的童年开始。她在数字时代经历同样的颠覆吗？',
-        en: '500 years later in California, everyone is literate and learns religious freedom — all rooted in your generation. "Printing + translation + universal literacy" began in your childhood. Is Willow living through the same disruption in the digital age?',
+        cn: '500 年后 {{userChildName|你这一代}} 在加州学校所有人都识字 + 学习宗教自由 — 都源于你这一代。"印刷术 + 翻译 + 全民识字"组合在你的童年开始。她在数字时代经历同样的颠覆吗？',
+        en: '500 years later in California, everyone is literate and learns religious freedom — all rooted in your generation. "Printing + translation + universal literacy" began in your childhood. Is {{userChildName|your generation}} living through the same disruption in the digital age?',
       },
     },
   ],

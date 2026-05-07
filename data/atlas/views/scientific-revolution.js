@@ -97,12 +97,12 @@ export const VIEW = {
       name: { cn: 'Émilie（虚构同龄人）', en: 'Émilie (fictional peer)' },
       role: { cn: '13 岁，巴黎书商女儿', en: '13-year-old, Paris bookseller\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是巴黎书商，进口 Newton《Principia》（拉丁语，~50 个客户 — 物理学家 + 神职人员 + 贵族）。你识拉丁语和法语，偷读 Newton。你想以后当科学家 — 但你这一代法国女性不能进入科学院。50 年后启蒙时代你的后辈才能 — Émilie du Châtelet 就翻译了 Newton。',
-        en: 'Same age as Willow. Your father is a Paris bookseller importing Newton\'s Principia (Latin, ~50 clients — physicists, clergy, aristocrats). You read Latin + French, secretly studying Newton. You want to be a scientist — but no French academy will admit you. 50 years later, in the Enlightenment, women like Émilie du Châtelet would translate Newton.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是巴黎书商，进口 Newton《Principia》（拉丁语，~50 个客户 — 物理学家 + 神职人员 + 贵族）。你识拉丁语和法语，偷读 Newton。你想以后当科学家 — 但你这一代法国女性不能进入科学院。50 年后启蒙时代你的后辈才能 — Émilie du Châtelet 就翻译了 Newton。',
+        en: 'Same age as {{userChildName|your generation}}. Your father is a Paris bookseller importing Newton\'s Principia (Latin, ~50 clients — physicists, clergy, aristocrats). You read Latin + French, secretly studying Newton. You want to be a scientist — but no French academy will admit you. 50 years later, in the Enlightenment, women like Émilie du Châtelet would translate Newton.',
       },
       hook: {
-        cn: '350 年后 Willow 在加州学校学物理，男女都学。你跟她隔了 350 年。"女性进入科学"花了多少代人努力？她现在能查到的女科学家名字 — 80% 都是 1900 年后的。',
-        en: '350 years later, Willow studies physics in California — boys and girls equally. 350 years separate you. How many generations did "women entering science" take? 80% of women scientists she can name come from after 1900.',
+        cn: '350 年后 {{userChildName|你这一代}} 在加州学校学物理，男女都学。你跟她隔了 350 年。"女性进入科学"花了多少代人努力？她现在能查到的女科学家名字 — 80% 都是 1900 年后的。',
+        en: '350 years later, {{userChildName|your generation}} studies physics in California — boys and girls equally. 350 years separate you. How many generations did "women entering science" take? 80% of women scientists she can name come from after 1900.',
       },
     },
   ],

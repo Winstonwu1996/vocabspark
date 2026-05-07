@@ -99,12 +99,12 @@ export const VIEW = {
       name: { cn: 'Livia（虚构同龄人）', en: 'Livia (fictional peer)' },
       role: { cn: '13 岁，元老院议员之女', en: '13-year-old, senator\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄，住罗马山顶别墅。家里 30 个奴隶（厨子、家教、管家）。你学希腊语、修辞、几何 — 但你的命运是 16 岁嫁给爸爸选的元老院儿子。你哥哥可以做任何事，你只能管家。',
-        en: 'Same age as Willow. You live in a Palatine villa with 30 slaves (cooks, tutors, stewards). You study Greek, rhetoric, geometry — but at 16 you\'ll marry whomever your father chooses from the Senate. Your brother can do anything; you manage household.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄，住罗马山顶别墅。家里 30 个奴隶（厨子、家教、管家）。你学希腊语、修辞、几何 — 但你的命运是 16 岁嫁给爸爸选的元老院儿子。你哥哥可以做任何事，你只能管家。',
+        en: 'Same age as {{userChildName|your generation}}. You live in a Palatine villa with 30 slaves (cooks, tutors, stewards). You study Greek, rhetoric, geometry — but at 16 you\'ll marry whomever your father chooses from the Senate. Your brother can do anything; you manage household.',
       },
       hook: {
-        cn: 'Willow 在 2026 年加州可以选自己的伴侣、自己的工作、自己的人生。你跟她隔了 1900 年。"罗马法保护权利"对女人意味着什么？',
-        en: 'In 2026 California, Willow chooses her partner, her career, her life. 1900 years separate you. "Roman law protects rights" — what did that mean for women?',
+        cn: '{{userChildName|你这一代}} 在 2026 年加州可以选自己的伴侣、自己的工作、自己的人生。你跟她隔了 1900 年。"罗马法保护权利"对女人意味着什么？',
+        en: 'In 2026 California, {{userChildName|your generation}} chooses her partner, her career, her life. 1900 years separate you. "Roman law protects rights" — what did that mean for women?',
       },
     },
   ],

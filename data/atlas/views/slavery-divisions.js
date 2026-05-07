@@ -98,12 +98,12 @@ export const VIEW = {
       name: { cn: 'Tom（虚构同龄人）', en: 'Tom (fictional peer)' },
       role: { cn: '13 岁，弗吉尼亚黑奴男孩', en: '13-year-old, Virginia enslaved boy' },
       bio: {
-        cn: '你跟 Willow 同龄。你妈妈被卖到南卡罗来纳，你 5 岁就再没见到。你不识字（弗吉尼亚法律禁奴隶识字），但你听其他奴隶讲 1859 John Brown 的事 — 你心里燃起希望。1865 你 28 岁，林肯解放奴隶。你余生不停打官司想找回妈妈 — 多数人找不到，家庭分散是奴隶制最深的伤。',
-        en: 'Same age as Willow. Your mother was sold to South Carolina; you haven\'t seen her since age 5. You can\'t read (Virginia law forbids slave literacy), but other slaves whisper of John Brown 1859 — hope flickers. By 28 in 1865, Lincoln has freed you. The rest of your life you\'ll petition courts to find your mother — most freed people couldn\'t. Family separation was slavery\'s deepest wound.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。你妈妈被卖到南卡罗来纳，你 5 岁就再没见到。你不识字（弗吉尼亚法律禁奴隶识字），但你听其他奴隶讲 1859 John Brown 的事 — 你心里燃起希望。1865 你 28 岁，林肯解放奴隶。你余生不停打官司想找回妈妈 — 多数人找不到，家庭分散是奴隶制最深的伤。',
+        en: 'Same age as {{userChildName|your generation}}. Your mother was sold to South Carolina; you haven\'t seen her since age 5. You can\'t read (Virginia law forbids slave literacy), but other slaves whisper of John Brown 1859 — hope flickers. By 28 in 1865, Lincoln has freed you. The rest of your life you\'ll petition courts to find your mother — most freed people couldn\'t. Family separation was slavery\'s deepest wound.',
       },
       hook: {
-        cn: '160 年后 Willow 在加州学校跟黑人朋友一起午饭。她朋友的祖先可能就是你的兄弟姐妹的后代。"重逢"在 165 年后还在被讨论 — DNA 测试、血缘寻亲。这道伤口愈合了吗？',
-        en: '160 years later, Willow eats lunch with Black classmates in California. Their ancestors might descend from your siblings. "Reunion" is still discussed 165 years later — DNA tests, family searches. Has this wound healed?',
+        cn: '160 年后 {{userChildName|你这一代}} 在加州学校跟黑人朋友一起午饭。她朋友的祖先可能就是你的兄弟姐妹的后代。"重逢"在 165 年后还在被讨论 — DNA 测试、血缘寻亲。这道伤口愈合了吗？',
+        en: '160 years later, {{userChildName|your generation}} eats lunch with Black classmates in California. Their ancestors might descend from your siblings. "Reunion" is still discussed 165 years later — DNA tests, family searches. Has this wound healed?',
       },
     },
   ],

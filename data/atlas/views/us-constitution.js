@@ -97,12 +97,12 @@ export const VIEW = {
       name: { cn: 'Benjamin（虚构同龄人）', en: 'Benjamin (fictional peer)' },
       role: { cn: '13 岁，费城制宪会议警卫之子', en: '13-year-old, Philadelphia State House guard\'s son' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是费城州议会大厦警卫 — 1787 年夏天 55 个代表在里面闭门 4 个月。你白天送水送面包给守门兵 — 你看到这些"伟人"汗流浃背、互相吵架。你不知道，但你目击了人类史上最大的政治实验。',
-        en: 'Same age as Willow. Your father guards the Philadelphia State House — in summer 1787, 55 delegates met inside for 4 months behind closed doors. You bring water and bread to the sentries daily — you see these "founding fathers" sweating and bickering. You don\'t know it, but you\'re witnessing the greatest political experiment in human history.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是费城州议会大厦警卫 — 1787 年夏天 55 个代表在里面闭门 4 个月。你白天送水送面包给守门兵 — 你看到这些"伟人"汗流浃背、互相吵架。你不知道，但你目击了人类史上最大的政治实验。',
+        en: 'Same age as {{userChildName|your generation}}. Your father guards the Philadelphia State House — in summer 1787, 55 delegates met inside for 4 months behind closed doors. You bring water and bread to the sentries daily — you see these "founding fathers" sweating and bickering. You don\'t know it, but you\'re witnessing the greatest political experiment in human history.',
       },
       hook: {
-        cn: '240 年后 Willow 在加州学校学美国宪法 — 课本写得像"完美设计"。但你站门口听到的真相是 — 大家妥协吵架，最后写了一份谁都不完全满意的文件。这是民主的"光"还是"影"？',
-        en: '240 years later, Willow studies the Constitution as "perfect design." But you, at the door, heard the truth — compromise, fights, a document nobody fully liked. Is this democracy\'s light, or its shadow?',
+        cn: '240 年后 {{userChildName|你这一代}} 在加州学校学美国宪法 — 课本写得像"完美设计"。但你站门口听到的真相是 — 大家妥协吵架，最后写了一份谁都不完全满意的文件。这是民主的"光"还是"影"？',
+        en: '240 years later, {{userChildName|your generation}} studies the Constitution as "perfect design." But you, at the door, heard the truth — compromise, fights, a document nobody fully liked. Is this democracy\'s light, or its shadow?',
       },
     },
   ],

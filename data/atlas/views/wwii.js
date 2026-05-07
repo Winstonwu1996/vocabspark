@@ -100,12 +100,12 @@ export const VIEW = {
       name: { cn: 'Anne（虚构同龄人）', en: 'Anne (fictional peer)' },
       role: { cn: '13 岁，阿姆斯特丹犹太女孩', en: '13-year-old, Amsterdam Jewish girl' },
       bio: {
-        cn: '你跟 Willow 同龄，跟 Anne Frank 同名。1942 你 13 岁，跟家人躲进阿姆斯特丹密室 2 年。你写日记记录恐惧 + 希望 + 13 岁女孩的烦恼（喜欢谁、跟妹妹吵架）。1944 8 月被告发，全家送奥斯威辛。1945 3 月你 15 岁死于 Bergen-Belsen — 解放前 3 周。你的日记被爸爸 Otto 出版 — 成全世界孩子的反法西斯教材。',
-        en: 'Same age as Willow, sharing Anne Frank\'s name. In 1942 at 13 you hid with family in an Amsterdam annex for 2 years. You wrote a diary of fear + hope + a 13-year-old\'s troubles (crushes, fighting with sister). Aug 1944 betrayed; family sent to Auschwitz. March 1945 (age 15) you died at Bergen-Belsen — 3 weeks before liberation. Your father Otto published your diary — every child\'s anti-fascism text worldwide.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄，跟 Anne Frank 同名。1942 你 13 岁，跟家人躲进阿姆斯特丹密室 2 年。你写日记记录恐惧 + 希望 + 13 岁女孩的烦恼（喜欢谁、跟妹妹吵架）。1944 8 月被告发，全家送奥斯威辛。1945 3 月你 15 岁死于 Bergen-Belsen — 解放前 3 周。你的日记被爸爸 Otto 出版 — 成全世界孩子的反法西斯教材。',
+        en: 'Same age as {{userChildName|your generation}}, sharing Anne Frank\'s name. In 1942 at 13 you hid with family in an Amsterdam annex for 2 years. You wrote a diary of fear + hope + a 13-year-old\'s troubles (crushes, fighting with sister). Aug 1944 betrayed; family sent to Auschwitz. March 1945 (age 15) you died at Bergen-Belsen — 3 weeks before liberation. Your father Otto published your diary — every child\'s anti-fascism text worldwide.',
       },
       hook: {
-        cn: '80 年后 Willow 在加州中学读你的日记 — 哭。她跟你同龄。"一个孩子的日记 vs 6 百万人的统计数据"— 哪个让人更"看见"历史？',
-        en: '80 years later, Willow reads your diary in California middle school — crying. She\'s your age. "One child\'s diary vs 6 million statistics" — which makes history more "visible"?',
+        cn: '80 年后 {{userChildName|你这一代}} 在加州中学读你的日记 — 哭。她跟你同龄。"一个孩子的日记 vs 6 百万人的统计数据"— 哪个让人更"看见"历史？',
+        en: '80 years later, {{userChildName|your generation}} reads your diary in California middle school — crying. She\'s your age. "One child\'s diary vs 6 million statistics" — which makes history more "visible"?',
       },
     },
   ],
