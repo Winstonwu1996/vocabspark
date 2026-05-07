@@ -96,12 +96,12 @@ export const VIEW = {
       name: { cn: 'Yusuf（虚构同龄人）', en: 'Yusuf (fictional peer)' },
       role: { cn: '13 岁，叙利亚商人之子', en: '13-year-old, Syrian merchant\'s son' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸经营大马士革到中国的丝绸贸易。你能背 1/3 古兰经，说阿拉伯语 + 希腊语 + 一点点中文。750 阿拔斯起义那年你看着倭马亚王族被屠杀，全家逃到西班牙 — 你将在科尔多瓦长大，那将是 100 年后欧洲最大学术中心。',
-        en: 'Same age as Willow. Your father trades silk from Damascus to China. You\'ve memorized 1/3 of the Quran, speak Arabic + Greek + a little Chinese. In 750 you watch Umayyad princes massacred and your family flees to Spain — you\'ll grow up in Cordoba, soon to be Europe\'s greatest scholarly center.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸经营大马士革到中国的丝绸贸易。你能背 1/3 古兰经，说阿拉伯语 + 希腊语 + 一点点中文。750 阿拔斯起义那年你看着倭马亚王族被屠杀，全家逃到西班牙 — 你将在科尔多瓦长大，那将是 100 年后欧洲最大学术中心。',
+        en: 'Same age as {{userChildName|your generation}}. Your father trades silk from Damascus to China. You\'ve memorized 1/3 of the Quran, speak Arabic + Greek + a little Chinese. In 750 you watch Umayyad princes massacred and your family flees to Spain — you\'ll grow up in Cordoba, soon to be Europe\'s greatest scholarly center.',
       },
       hook: {
-        cn: '1300 年后 Willow 在加州学校跟穆斯林朋友吃饭。你跟她隔着 1300 年和 12000 公里。"伊斯兰世界" — 在你眼里是新生的 vs 在她眼里是历史 + 现实。是同一个东西吗？',
-        en: '1300 years later, Willow eats lunch with Muslim friends in California. 1300 years and 12,000km separate you. "The Islamic world" — newborn to you, history-plus-present to her. Are they the same thing?',
+        cn: '1300 年后 {{userChildName|你这一代}} 在加州学校跟穆斯林朋友吃饭。你跟她隔着 1300 年和 12000 公里。"伊斯兰世界" — 在你眼里是新生的 vs 在她眼里是历史 + 现实。是同一个东西吗？',
+        en: '1300 years later, {{userChildName|your generation}} eats lunch with Muslim friends in California. 1300 years and 12,000km separate you. "The Islamic world" — newborn to you, history-plus-present to her. Are they the same thing?',
       },
     },
   ],

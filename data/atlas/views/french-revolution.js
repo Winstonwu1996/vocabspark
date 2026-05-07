@@ -100,12 +100,12 @@ export const VIEW = {
       name: { cn: 'Marie（虚构同龄人）', en: 'Marie (fictional peer)' },
       role: { cn: '13 岁，巴黎面包师女儿', en: '13-year-old, Paris baker\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄。1789 7 月 14 日你 13 岁站在面包店窗口看 — 几千人冲向巴士底狱。爸爸是面包师 — 你家里粮食涨价 3 倍，妈妈每天 4 点起来排队。10 月你跟 7000 妇女走 12 公里到 Versailles — 把国王押回巴黎。你做了革命，但 1793 你哥哥被征兵打外战死了 — 革命的代价你也付了。',
-        en: 'Same age as Willow. On July 14, 1789 (age 13) you watched from the bakery window as thousands stormed the Bastille. Your father is a baker — bread prices tripled, your mother queued from 4am. In October you walked 12km to Versailles with 7,000 women — escorting the king back to Paris. You made the revolution. But in 1793 your brother was drafted and died in foreign wars — you paid the revolution\'s cost too.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。1789 7 月 14 日你 13 岁站在面包店窗口看 — 几千人冲向巴士底狱。爸爸是面包师 — 你家里粮食涨价 3 倍，妈妈每天 4 点起来排队。10 月你跟 7000 妇女走 12 公里到 Versailles — 把国王押回巴黎。你做了革命，但 1793 你哥哥被征兵打外战死了 — 革命的代价你也付了。',
+        en: 'Same age as {{userChildName|your generation}}. On July 14, 1789 (age 13) you watched from the bakery window as thousands stormed the Bastille. Your father is a baker — bread prices tripled, your mother queued from 4am. In October you walked 12km to Versailles with 7,000 women — escorting the king back to Paris. You made the revolution. But in 1793 your brother was drafted and died in foreign wars — you paid the revolution\'s cost too.',
       },
       hook: {
-        cn: '235 年后 Willow 在加州学法国大革命 — 课本主要写 Robespierre + Louis XVI 这些大人物。你这种 13 岁女孩参加了 Versailles 大游行 — 但课本不写。"做历史的孩子"为什么被忘？',
-        en: '235 years later, Willow studies the French Revolution — textbooks center Robespierre, Louis XVI. You, a 13-year-old who marched on Versailles, are forgotten. Why are "the children who made history" erased?',
+        cn: '235 年后 {{userChildName|你这一代}} 在加州学法国大革命 — 课本主要写 Robespierre + Louis XVI 这些大人物。你这种 13 岁女孩参加了 Versailles 大游行 — 但课本不写。"做历史的孩子"为什么被忘？',
+        en: '235 years later, {{userChildName|your generation}} studies the French Revolution — textbooks center Robespierre, Louis XVI. You, a 13-year-old who marched on Versailles, are forgotten. Why are "the children who made history" erased?',
       },
     },
   ],

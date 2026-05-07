@@ -87,8 +87,8 @@ export const VIEW = {
         en: 'You live at Mesa Verde — multi-story cliff dwellings (peak ~1200s). You farm corn + beans + squash (Three Sisters). The 1276-1299 mega-drought drove your ancestors to abandon Mesa Verde — migrating to today\'s Hopi and Zuni lands. Your descendants still live in Arizona and New Mexico.',
       },
       hook: {
-        cn: '如果你是 Pueblo — 你的文明因气候变化大迁徙。500 年后气候变化又来了 — 你的子孙跟今天加州的 Willow 一起面对。你这代如何活下来？她那代能从你这里学到什么？',
-        en: 'If you were Pueblo — climate change drove your great migration. 500 years later, climate change returns — your descendants share the crisis with Willow in California. How did you survive? What can she learn from you?',
+        cn: '如果你是 Pueblo — 你的文明因气候变化大迁徙。500 年后气候变化又来了 — 你的子孙跟今天加州的 {{userChildName|你这一代}} 一起面对。你这代如何活下来？她那代能从你这里学到什么？',
+        en: 'If you were Pueblo — climate change drove your great migration. 500 years later, climate change returns — your descendants share the crisis with {{userChildName|your generation}} in California. How did you survive? What can she learn from you?',
       },
     },
     {
@@ -96,12 +96,12 @@ export const VIEW = {
       name: { cn: 'Wenona（虚构同龄人）', en: 'Wenona (fictional peer)' },
       role: { cn: '13 岁，Iroquois 部落女孩', en: '13-year-old, Iroquois girl' },
       bio: {
-        cn: '你跟 Willow 同龄。你属 Mohawk 部落，妈妈是 clan mother（氏族母亲 — 选举议会代表的人）。你住长屋，全家族 30 人合住。你 13 岁开始学治理 — 你将来可能做 clan mother。妈妈说"我们的传统比白人 mendelian 早 300 年"— 你不知道 mendelian 是啥但听着自豪。',
-        en: 'Same age as Willow. Mohawk tribe; your mother is a clan mother (the women who elect the council). You live in a longhouse with 30 relatives. At 13 you begin learning governance — you might become a clan mother. Your mother says "our tradition predates the white man\'s by 300 years." You don\'t know what "mendelian" means but you feel proud.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。你属 Mohawk 部落，妈妈是 clan mother（氏族母亲 — 选举议会代表的人）。你住长屋，全家族 30 人合住。你 13 岁开始学治理 — 你将来可能做 clan mother。妈妈说"我们的传统比白人 mendelian 早 300 年"— 你不知道 mendelian 是啥但听着自豪。',
+        en: 'Same age as {{userChildName|your generation}}. Mohawk tribe; your mother is a clan mother (the women who elect the council). You live in a longhouse with 30 relatives. At 13 you begin learning governance — you might become a clan mother. Your mother says "our tradition predates the white man\'s by 300 years." You don\'t know what "mendelian" means but you feel proud.',
       },
       hook: {
-        cn: '500 年后 Willow 在加州学校学美国宪法 — 但课本只用 1 段提你的政治制度。她如果去 Mohawk 保留地见到现代的你的后代 — 她会发现你们 500 年前的智慧今天还活着。',
-        en: '500 years later, Willow studies the US Constitution — textbooks give your political system one paragraph. If she visited a Mohawk reservation, she\'d find your wisdom from 500 years ago still alive.',
+        cn: '500 年后 {{userChildName|你这一代}} 在加州学校学美国宪法 — 但课本只用 1 段提你的政治制度。她如果去 Mohawk 保留地见到现代的你的后代 — 她会发现你们 500 年前的智慧今天还活着。',
+        en: '500 years later, {{userChildName|your generation}} studies the US Constitution — textbooks give your political system one paragraph. If she visited a Mohawk reservation, she\'d find your wisdom from 500 years ago still alive.',
       },
     },
   ],

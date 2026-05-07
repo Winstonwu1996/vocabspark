@@ -101,12 +101,12 @@ export const VIEW = {
       name: { cn: 'Hans（虚构同龄人）', en: 'Hans (fictional peer)' },
       role: { cn: '13 岁，柏林学生', en: '13-year-old, Berlin student' },
       bio: {
-        cn: '你跟 Willow 同龄。1914 8 月 1 日德国宣战，你 13 岁站在柏林街头跟人群欢呼 — "我们要赢" — 你哥 19 岁参军。1916 你哥死在 Verdun — 之后你妈妈不再说话。1918 战败 + Versailles 条约 + 通货膨胀让你家破产。1933 你 32 岁可能投希特勒 — 因为他承诺"恢复德国尊严"。一代人的"屈辱"成下一代的"复仇"动机。',
-        en: 'Same age as Willow. On Aug 1, 1914 Germany declared war; at 13 you cheered in Berlin streets — "we\'ll win" — your 19-year-old brother enlisted. He died at Verdun in 1916 — your mother stopped speaking after. The 1918 defeat + Versailles + hyperinflation ruined your family. In 1933 (age 32) you might have voted for Hitler — promising "restored German dignity." One generation\'s "humiliation" became the next\'s revenge motive.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。1914 8 月 1 日德国宣战，你 13 岁站在柏林街头跟人群欢呼 — "我们要赢" — 你哥 19 岁参军。1916 你哥死在 Verdun — 之后你妈妈不再说话。1918 战败 + Versailles 条约 + 通货膨胀让你家破产。1933 你 32 岁可能投希特勒 — 因为他承诺"恢复德国尊严"。一代人的"屈辱"成下一代的"复仇"动机。',
+        en: 'Same age as {{userChildName|your generation}}. On Aug 1, 1914 Germany declared war; at 13 you cheered in Berlin streets — "we\'ll win" — your 19-year-old brother enlisted. He died at Verdun in 1916 — your mother stopped speaking after. The 1918 defeat + Versailles + hyperinflation ruined your family. In 1933 (age 32) you might have voted for Hitler — promising "restored German dignity." One generation\'s "humiliation" became the next\'s revenge motive.',
       },
       hook: {
-        cn: '110 年后 Willow 在加州学校学一战 — 几页纸。但你这代经历的羞辱直接造就了二战。"代际创伤的传递"在哪里被打破？',
-        en: '110 years later, Willow studies WWI in California — a few pages. Your generation\'s humiliation directly birthed WWII. Where does "generational trauma\'s transmission" get broken?',
+        cn: '110 年后 {{userChildName|你这一代}} 在加州学校学一战 — 几页纸。但你这代经历的羞辱直接造就了二战。"代际创伤的传递"在哪里被打破？',
+        en: '110 years later, {{userChildName|your generation}} studies WWI in California — a few pages. Your generation\'s humiliation directly birthed WWII. Where does "generational trauma\'s transmission" get broken?',
       },
     },
   ],

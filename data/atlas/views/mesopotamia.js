@@ -96,12 +96,12 @@ export const VIEW = {
       name: { cn: 'Nin（虚构同龄人）', en: 'Nin (fictional peer)' },
       role: { cn: '13 岁，抄写员的女儿', en: '13-year-old, scribe\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是神庙抄写员，破例教你认楔形字（女孩通常不学）。你看着工人把石碑立到城门 — 上面 282 条字你能读 80 条。你想长大后开自己的"泥板屋"教别的女孩。',
-        en: 'Same age as Willow. Your father, a scribe, secretly taught you cuneiform (rare for girls). You watch workmen erect the stele at the city gate — you can read 80 of its 282 laws. You dream of opening your own tablet-house for girls.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是神庙抄写员，破例教你认楔形字（女孩通常不学）。你看着工人把石碑立到城门 — 上面 282 条字你能读 80 条。你想长大后开自己的"泥板屋"教别的女孩。',
+        en: 'Same age as {{userChildName|your generation}}. Your father, a scribe, secretly taught you cuneiform (rare for girls). You watch workmen erect the stele at the city gate — you can read 80 of its 282 laws. You dream of opening your own tablet-house for girls.',
       },
       hook: {
-        cn: '法典第 195 条：「儿子打父亲，砍手」。可没有一条说「丈夫打妻子要受罚」。你跟 Willow 隔了 3700 年 — "法律保护谁"这个问题在你们之间一直没解决，对吗？',
-        en: 'Law 195: "If a son strikes his father, his hand is cut off." But no law punishes a husband who beats his wife. Across 3700 years between you and Willow — "whom does law protect?" remains unanswered, doesn\'t it?',
+        cn: '法典第 195 条：「儿子打父亲，砍手」。可没有一条说「丈夫打妻子要受罚」。你跟 {{userChildName|你这一代}} 隔了 3700 年 — "法律保护谁"这个问题在你们之间一直没解决，对吗？',
+        en: 'Law 195: "If a son strikes his father, his hand is cut off." But no law punishes a husband who beats his wife. Across 3700 years between you and {{userChildName|your generation}} — "whom does law protect?" remains unanswered, doesn\'t it?',
       },
     },
   ],

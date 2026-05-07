@@ -98,12 +98,12 @@ export const VIEW = {
       name: { cn: 'Temujin（虚构同龄人）', en: 'Temujin (fictional peer)' },
       role: { cn: '13 岁，蒙古百户长之子', en: '13-year-old, son of a Mongol "centurion"' },
       bio: {
-        cn: '你跟 Willow 同龄，跟成吉思汗本名同名（Temujin = 铁匠）。爸爸是百户长 jaghun（统 100 户）。你 5 岁能骑马，10 岁能射马上箭。你父亲在 Subutai 麾下打 1241 西征 — 半年没回家。你日复一日跟妈妈赶羊群。',
-        en: 'Same age as Willow. Named after Genghis (Temujin = "blacksmith"). Your father is a jaghun (100-household commander) under Subutai. You ride at 5, shoot from horseback at 10. Your father is in the 1241 western campaign under Subutai — gone six months. Daily you herd sheep with your mother.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄，跟成吉思汗本名同名（Temujin = 铁匠）。爸爸是百户长 jaghun（统 100 户）。你 5 岁能骑马，10 岁能射马上箭。你父亲在 Subutai 麾下打 1241 西征 — 半年没回家。你日复一日跟妈妈赶羊群。',
+        en: 'Same age as {{userChildName|your generation}}. Named after Genghis (Temujin = "blacksmith"). Your father is a jaghun (100-household commander) under Subutai. You ride at 5, shoot from horseback at 10. Your father is in the 1241 western campaign under Subutai — gone six months. Daily you herd sheep with your mother.',
       },
       hook: {
-        cn: '780 年后 Willow 在加州学骑马是娱乐。你 13 岁骑马是生存 + 战争。同样的"骑马"技能，意义完全不同 — 这告诉你"技能 vs 时代"是什么关系？',
-        en: '780 years later, Willow learns horseback riding for fun in California. For you at 13, riding meant survival and war. Same skill, totally different meaning — what does this tell you about skill vs era?',
+        cn: '780 年后 {{userChildName|你这一代}} 在加州学骑马是娱乐。你 13 岁骑马是生存 + 战争。同样的"骑马"技能，意义完全不同 — 这告诉你"技能 vs 时代"是什么关系？',
+        en: '780 years later, {{userChildName|your generation}} learns horseback riding for fun in California. For you at 13, riding meant survival and war. Same skill, totally different meaning — what does this tell you about skill vs era?',
       },
     },
   ],

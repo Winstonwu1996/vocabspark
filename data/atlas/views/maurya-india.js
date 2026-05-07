@@ -96,12 +96,12 @@ export const VIEW = {
       name: { cn: 'Sangamitra（虚构同龄人）', en: 'Sangamitra (fictional peer)' },
       role: { cn: '13 岁，僧人女儿', en: '13-year-old, monk\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是受阿育王派遣的传教僧。你妈妈是 Vaishya 种姓（商人），但因为爸爸现在是僧人，按佛教规矩你"不在种姓里"— 是自由人。你跟着爸爸要去斯里兰卡。',
-        en: 'Same age as Willow. Your father is one of Ashoka\'s missionary monks. Your mother is Vaishya caste (merchants), but because your father is now a monk, by Buddhist rules you\'re "outside caste" — a free person. You\'re traveling with him to Sri Lanka.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是受阿育王派遣的传教僧。你妈妈是 Vaishya 种姓（商人），但因为爸爸现在是僧人，按佛教规矩你"不在种姓里"— 是自由人。你跟着爸爸要去斯里兰卡。',
+        en: 'Same age as {{userChildName|your generation}}. Your father is one of Ashoka\'s missionary monks. Your mother is Vaishya caste (merchants), but because your father is now a monk, by Buddhist rules you\'re "outside caste" — a free person. You\'re traveling with him to Sri Lanka.',
       },
       hook: {
-        cn: 'Willow 在 2026 年的加州学校里同学有印度教徒、佛教徒。"宗教是不是平等的工具"这个问题 2300 年前你正经历，今天她也在问。',
-        en: 'In 2026 California, Willow\'s classmates include Hindus and Buddhists. "Is religion a tool for equality?" — you lived this question 2300 years ago; she\'s asking it today.',
+        cn: '{{userChildName|你这一代}} 在 2026 年的加州学校里同学有印度教徒、佛教徒。"宗教是不是平等的工具"这个问题 2300 年前你正经历，今天她也在问。',
+        en: 'In 2026 California, {{userChildName|your generation}}\'s classmates include Hindus and Buddhists. "Is religion a tool for equality?" — you lived this question 2300 years ago; she\'s asking it today.',
       },
     },
   ],

@@ -76,8 +76,8 @@ export const VIEW = {
         en: 'Born illegitimate — apprenticed at 14. You\'re not only a painter — you designed flying machines, submarines, machine guns. You dissected 30 corpses to study anatomy (banned by the Church). Your notebooks are in mirror writing — fearing theft. But 80% of your projects unfinished — procrastination + perfectionism.',
       },
       hook: {
-        cn: '如果你是 Leonardo — 你比同时代人聪明 100 倍，但项目永远不完成。你的"通才"是天赋还是诅咒？现代孩子（包括 Willow）也面对同样的问题：会很多东西但都不精。',
-        en: 'If you were Leonardo — 100× smarter than your peers, but projects never finished. Was your "polymathy" gift or curse? Today\'s kids (Willow included) face the same: knowing many things, mastering none.',
+        cn: '如果你是 Leonardo — 你比同时代人聪明 100 倍，但项目永远不完成。你的"通才"是天赋还是诅咒？现代孩子（包括 {{userChildName|你这一代}}）也面对同样的问题：会很多东西但都不精。',
+        en: 'If you were Leonardo — 100× smarter than your peers, but projects never finished. Was your "polymathy" gift or curse? Today\'s kids ({{userChildName|your generation}} included) face the same: knowing many things, mastering none.',
       },
     },
     {
@@ -98,12 +98,12 @@ export const VIEW = {
       name: { cn: 'Niccolo（虚构同龄人）', en: 'Niccolo (fictional peer)' },
       role: { cn: '13 岁，画家学徒', en: '13-year-old, artist\'s apprentice' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸把你送到 Verrocchio 画室当学徒（年轻 Leonardo 也是这里出来的）。你 7 年磨颜料、画底色、临摹大师作品。13 岁第一次拿笔画背景。如果你天赋好可能成大师 — 但 99% 的学徒成普通画工。',
-        en: 'Same age as Willow. Your father apprenticed you at Verrocchio\'s workshop (where young Leonardo trained). 7 years of grinding pigments, painting underlayers, copying masters. At 13 you first paint a background. If gifted you could become a master — 99% of apprentices remain ordinary painters.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸把你送到 Verrocchio 画室当学徒（年轻 Leonardo 也是这里出来的）。你 7 年磨颜料、画底色、临摹大师作品。13 岁第一次拿笔画背景。如果你天赋好可能成大师 — 但 99% 的学徒成普通画工。',
+        en: 'Same age as {{userChildName|your generation}}. Your father apprenticed you at Verrocchio\'s workshop (where young Leonardo trained). 7 years of grinding pigments, painting underlayers, copying masters. At 13 you first paint a background. If gifted you could become a master — 99% of apprentices remain ordinary painters.',
       },
       hook: {
-        cn: '500 年后 Willow 在加州可以"线上学画"— 但天赋仍然是硬通货。你的世界 99% 走不出来。她的世界更平等了吗？还是只换了个赛道？',
-        en: '500 years later, Willow can take online art classes in California — but talent remains the hard currency. 99% of your world can\'t escape its station. Is hers more equal, or just a different track?',
+        cn: '500 年后 {{userChildName|你这一代}} 在加州可以"线上学画"— 但天赋仍然是硬通货。你的世界 99% 走不出来。她的世界更平等了吗？还是只换了个赛道？',
+        en: '500 years later, {{userChildName|your generation}} can take online art classes in California — but talent remains the hard currency. 99% of your world can\'t escape its station. Is hers more equal, or just a different track?',
       },
     },
   ],

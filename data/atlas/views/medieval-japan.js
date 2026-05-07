@@ -97,12 +97,12 @@ export const VIEW = {
       name: { cn: 'Tomoe（虚构同龄人）', en: 'Tomoe (fictional peer)' },
       role: { cn: '13 岁，下级武士的女儿', en: '13-year-old, low-ranking samurai\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是镰仓底层武士，给将军当 御家人 gokenin。你跟妈妈学长刀（女性 onna-bugeisha 也是武士）。1281 蒙古来袭那年你 13 岁，爸爸出征九州。你练剑想：如果他不回来，你能保护妈妈和弟弟吗？',
-        en: 'Same age as Willow. Your father is a low-rank samurai, a "gokenin" vassal of the shogun. Your mother teaches you the naginata (women warriors, onna-bugeisha, exist). When Mongols invade in 1281 you\'re 13; father heads to Kyushu. You train, thinking — if he doesn\'t come back, can you protect mother and little brother?',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是镰仓底层武士，给将军当 御家人 gokenin。你跟妈妈学长刀（女性 onna-bugeisha 也是武士）。1281 蒙古来袭那年你 13 岁，爸爸出征九州。你练剑想：如果他不回来，你能保护妈妈和弟弟吗？',
+        en: 'Same age as {{userChildName|your generation}}. Your father is a low-rank samurai, a "gokenin" vassal of the shogun. Your mother teaches you the naginata (women warriors, onna-bugeisha, exist). When Mongols invade in 1281 you\'re 13; father heads to Kyushu. You train, thinking — if he doesn\'t come back, can you protect mother and little brother?',
       },
       hook: {
-        cn: '750 年后 Willow 在加州学武术（很多女孩学）。你跟她隔着 750 年和 9000 公里。"女性也能拿剑"这件事，你这一代是日常，她那一代是赋权 — 同一回事吗？',
-        en: '750 years later, Willow learns martial arts in California (many girls do). 750 years and 9,000 km separate you. "Women carrying swords" — daily life for you, "empowerment" for her. Same thing?',
+        cn: '750 年后 {{userChildName|你这一代}} 在加州学武术（很多女孩学）。你跟她隔着 750 年和 9000 公里。"女性也能拿剑"这件事，你这一代是日常，她那一代是赋权 — 同一回事吗？',
+        en: '750 years later, {{userChildName|your generation}} learns martial arts in California (many girls do). 750 years and 9,000 km separate you. "Women carrying swords" — daily life for you, "empowerment" for her. Same thing?',
       },
     },
   ],

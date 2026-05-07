@@ -99,12 +99,12 @@ export const VIEW = {
       name: { cn: 'Diego（虚构同龄人）', en: 'Diego (fictional peer)' },
       role: { cn: '13 岁，西班牙 Palos 港小水手', en: '13-year-old, ship\'s boy from Palos, Spain' },
       bio: {
-        cn: '你跟 Willow 同龄。1492 年 8 月 3 日你在哥伦布的 Santa María 上当 grumete（小水手）。88 天没看到陆地，水手要造反，哥伦布拿假航海日志糊弄。10 月 12 日清晨你看到陆地 — 史书说"哥伦布发现新大陆"，但喊"陆地！"的可能就是你这种 13 岁的小水手。',
-        en: 'Same age as Willow. On Aug 3, 1492, you sailed on Columbus\'s Santa María as a grumete (ship\'s boy). 88 days without land, mutiny brewing, Columbus faking the log. At dawn on Oct 12 you saw land — history says "Columbus discovered the New World," but the one who shouted "Tierra!" might have been a 13-year-old like you.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。1492 年 8 月 3 日你在哥伦布的 Santa María 上当 grumete（小水手）。88 天没看到陆地，水手要造反，哥伦布拿假航海日志糊弄。10 月 12 日清晨你看到陆地 — 史书说"哥伦布发现新大陆"，但喊"陆地！"的可能就是你这种 13 岁的小水手。',
+        en: 'Same age as {{userChildName|your generation}}. On Aug 3, 1492, you sailed on Columbus\'s Santa María as a grumete (ship\'s boy). 88 days without land, mutiny brewing, Columbus faking the log. At dawn on Oct 12 you saw land — history says "Columbus discovered the New World," but the one who shouted "Tierra!" might have been a 13-year-old like you.',
       },
       hook: {
-        cn: '500 年后 Willow 在加州学校读"哥伦布日"— 但课本不会提你这个 13 岁孩子。她可能跟你同龄出海冒险吗？为什么有些孩子的故事被记得，有些被遗忘？',
-        en: '500 years later, Willow reads "Columbus Day" in California textbooks — which never mention you, age 13. Could she go on such an adventure today? Why are some children\'s stories remembered, others forgotten?',
+        cn: '500 年后 {{userChildName|你这一代}} 在加州学校读"哥伦布日"— 但课本不会提你这个 13 岁孩子。她可能跟你同龄出海冒险吗？为什么有些孩子的故事被记得，有些被遗忘？',
+        en: '500 years later, {{userChildName|your generation}} reads "Columbus Day" in California textbooks — which never mention you, age 13. Could she go on such an adventure today? Why are some children\'s stories remembered, others forgotten?',
       },
     },
   ],

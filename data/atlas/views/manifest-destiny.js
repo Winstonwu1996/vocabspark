@@ -50,8 +50,8 @@ export const VIEW = {
         en: 'A "small president" from Tennessee — Jackson\'s protégé. You campaigned on 4 promises: annex Texas + take Oregon + cut tariffs + create a Treasury system. All done in 4 years — US territory grew 50%. But each expansion came by war or threat — you threatened Britain for Oregon, fought Mexico for California. You retired after 4 years (as promised); died 3 months later.',
       },
       hook: {
-        cn: '如果你是 Polk — 你扩张领土用的是"我有理"逻辑。但墨西哥说"你侵略"。如果加州 1846 没被美国夺走 — 加州今天可能是西班牙语国家。你创造了 Willow 的世界 — 这算"伟大"还是"种族中心主义胜利"？',
-        en: 'If you were Polk — you expanded territory with "we\'re right" logic. Mexico says "you invaded." If California hadn\'t been seized in 1846, today\'s California might be Spanish-speaking. You created Willow\'s world — is that "greatness" or "ethnocentric victory"?',
+        cn: '如果你是 Polk — 你扩张领土用的是"我有理"逻辑。但墨西哥说"你侵略"。如果加州 1846 没被美国夺走 — 加州今天可能是西班牙语国家。你创造了 {{userChildName|你这一代}} 的世界 — 这算"伟大"还是"种族中心主义胜利"？',
+        en: 'If you were Polk — you expanded territory with "we\'re right" logic. Mexico says "you invaded." If California hadn\'t been seized in 1846, today\'s California might be Spanish-speaking. You created {{userChildName|your generation}}\'s world — is that "greatness" or "ethnocentric victory"?',
       },
     },
     {
@@ -98,12 +98,12 @@ export const VIEW = {
       name: { cn: 'Tomás（虚构同龄人）', en: 'Tomás (fictional peer)' },
       role: { cn: '13 岁，洛杉矶 Californio 男孩', en: '13-year-old, Los Angeles Californio boy' },
       bio: {
-        cn: '你跟 Willow 同龄，住 1848 年的洛杉矶 — 当时只有 1500 人。爸爸是西班牙裔牧场主。条约刚签，美国人开始大量涌入。你识字（西班牙语 + 拉丁文），不会英语。你看着新邻居用枪威胁你爸爸"卖地"。10 年后你 23 岁 — 可能成英语、可能流落街头。',
-        en: 'Same age as Willow, in 1848 Los Angeles — population 1,500. Your father is a Spanish-speaking ranch owner. The treaty just signed, Americans flood in. You can read (Spanish + Latin), no English. You watch new neighbors threaten your father at gunpoint to "sell the land." In 10 years (age 23) — you might learn English, or end up homeless.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄，住 1848 年的洛杉矶 — 当时只有 1500 人。爸爸是西班牙裔牧场主。条约刚签，美国人开始大量涌入。你识字（西班牙语 + 拉丁文），不会英语。你看着新邻居用枪威胁你爸爸"卖地"。10 年后你 23 岁 — 可能成英语、可能流落街头。',
+        en: 'Same age as {{userChildName|your generation}}, in 1848 Los Angeles — population 1,500. Your father is a Spanish-speaking ranch owner. The treaty just signed, Americans flood in. You can read (Spanish + Latin), no English. You watch new neighbors threaten your father at gunpoint to "sell the land." In 10 years (age 23) — you might learn English, or end up homeless.',
       },
       hook: {
-        cn: '178 年后 Willow 住在你的洛杉矶 — 但说英语，不知道你存在。你的语言、宗教、土地都被覆盖。她跟你之间隔了 178 年但只在 LA 街道名字里能看到你（Sepulveda, Pico, Olvera）。',
-        en: '178 years later, Willow lives in your Los Angeles — speaking English, not knowing you existed. Your language, religion, land — overwritten. She finds you only in LA street names (Sepulveda, Pico, Olvera).',
+        cn: '178 年后 {{userChildName|你这一代}} 住在你的洛杉矶 — 但说英语，不知道你存在。你的语言、宗教、土地都被覆盖。她跟你之间隔了 178 年但只在 LA 街道名字里能看到你（Sepulveda, Pico, Olvera）。',
+        en: '178 years later, {{userChildName|your generation}} lives in your Los Angeles — speaking English, not knowing you existed. Your language, religion, land — overwritten. She finds you only in LA street names (Sepulveda, Pico, Olvera).',
       },
     },
   ],

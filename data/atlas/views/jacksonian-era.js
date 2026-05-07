@@ -89,8 +89,8 @@ export const VIEW = {
         en: 'You lived in the Cherokee Nation in Georgia. By the 1820s your people had farms, schools, newspaper, constitution — fully "American." In 1838 federal troops dragged you from home, marched you 1,200 miles to Oklahoma — 4,000 Cherokee died en route (winter + no food + no blankets). You lost ancestral graves, your house, your farm.',
       },
       hook: {
-        cn: '如果你是切罗基受驱逐者 — 你"做了一切美国式生活"还是被强拆。"做对的事就有好结果"这条道德 — 在你身上失效。Willow 怎么看你？',
-        en: 'If you were the Cherokee migrant — you "did everything the American way" and were still expelled. The moral "do right and you\'ll be fine" failed for you. How does Willow see you today?',
+        cn: '如果你是切罗基受驱逐者 — 你"做了一切美国式生活"还是被强拆。"做对的事就有好结果"这条道德 — 在你身上失效。{{userChildName|你这一代}} 怎么看你？',
+        en: 'If you were the Cherokee migrant — you "did everything the American way" and were still expelled. The moral "do right and you\'ll be fine" failed for you. How does {{userChildName|your generation}} see you today?',
       },
     },
     {
@@ -98,12 +98,12 @@ export const VIEW = {
       name: { cn: 'Sarah（虚构同龄人）', en: 'Sarah (fictional peer)' },
       role: { cn: '13 岁，Whig 党律师女儿', en: '13-year-old, Whig lawyer\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄，住俄亥俄辛辛那提。爸爸是 Whig 党律师，反对 Jackson。1832 你 13 岁，看 Bank War 在报纸上吵得热火朝天。你妹妹 9 岁。你识字（中产女孩可以受教育），将来可能去 Oberlin 学院（1833 第一所招收女性 + 黑人的大学）。',
-        en: 'Same age as Willow. You live in Cincinnati, Ohio. Your father is a Whig lawyer opposing Jackson. In 1832 (age 13) you read papers boiling over the Bank War. Your sister is 9. You can read (middle-class girls get schooling), and might attend Oberlin (1833, first US college admitting women AND Black students).',
+        cn: '你跟 {{userChildName|你这一代}} 同龄，住俄亥俄辛辛那提。爸爸是 Whig 党律师，反对 Jackson。1832 你 13 岁，看 Bank War 在报纸上吵得热火朝天。你妹妹 9 岁。你识字（中产女孩可以受教育），将来可能去 Oberlin 学院（1833 第一所招收女性 + 黑人的大学）。',
+        en: 'Same age as {{userChildName|your generation}}. You live in Cincinnati, Ohio. Your father is a Whig lawyer opposing Jackson. In 1832 (age 13) you read papers boiling over the Bank War. Your sister is 9. You can read (middle-class girls get schooling), and might attend Oberlin (1833, first US college admitting women AND Black students).',
       },
       hook: {
-        cn: '195 年后 Willow 在加州 — 跟你一样关心政治新闻。但你的 1832 是报纸 + 街头辩论；她的 2026 是 TikTok + Twitter。"民主"靠媒体形式 — 媒体变了，民主还能是同一个吗？',
-        en: '195 years later, Willow follows political news in California. Your 1832 was newspapers + street debate; her 2026 is TikTok + Twitter. Democracy depends on media. As media change — is it still the same democracy?',
+        cn: '195 年后 {{userChildName|你这一代}} 在加州 — 跟你一样关心政治新闻。但你的 1832 是报纸 + 街头辩论；她的 2026 是 TikTok + Twitter。"民主"靠媒体形式 — 媒体变了，民主还能是同一个吗？',
+        en: '195 years later, {{userChildName|your generation}} follows political news in California. Your 1832 was newspapers + street debate; her 2026 is TikTok + Twitter. Democracy depends on media. As media change — is it still the same democracy?',
       },
     },
   ],

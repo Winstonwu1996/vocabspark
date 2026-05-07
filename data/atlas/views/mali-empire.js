@@ -97,12 +97,12 @@ export const VIEW = {
       name: { cn: 'Aminata（虚构同龄人）', en: 'Aminata (fictional peer)' },
       role: { cn: '13 岁，廷巴克图学者女儿', en: '13-year-old, Timbuktu scholar\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是 Sankore 学院教授，妈妈是商人独立做生意（西非女性比中东女性更自由）。你认阿拉伯字 + 索宁克语 + 听过几句西班牙语。你听爸爸讲 Mansa Musa 朝觐的故事 — 你想以后能去开罗、麦加、甚至更远。',
-        en: 'Same age as Willow. Your father teaches at Sankore; your mother runs her own trade business (West African women have more autonomy than Middle Eastern). You read Arabic + Soninke + have heard some Spanish. Your father tells you of Mansa Musa\'s hajj — you dream of seeing Cairo, Mecca, even farther.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是 Sankore 学院教授，妈妈是商人独立做生意（西非女性比中东女性更自由）。你认阿拉伯字 + 索宁克语 + 听过几句西班牙语。你听爸爸讲 Mansa Musa 朝觐的故事 — 你想以后能去开罗、麦加、甚至更远。',
+        en: 'Same age as {{userChildName|your generation}}. Your father teaches at Sankore; your mother runs her own trade business (West African women have more autonomy than Middle Eastern). You read Arabic + Soninke + have heard some Spanish. Your father tells you of Mansa Musa\'s hajj — you dream of seeing Cairo, Mecca, even farther.',
       },
       hook: {
-        cn: '700 年后 Willow 在加州学非洲史 — 但课本只用 1-2 页讲马里。你的世界曾经辉煌过，为什么现代历史课让它消失？谁决定哪段历史值得被讲？',
-        en: '700 years later, Willow studies African history in California — but textbooks give Mali 1-2 pages. Your world was glorious; why has modern history erased it? Who decides which past gets told?',
+        cn: '700 年后 {{userChildName|你这一代}} 在加州学非洲史 — 但课本只用 1-2 页讲马里。你的世界曾经辉煌过，为什么现代历史课让它消失？谁决定哪段历史值得被讲？',
+        en: '700 years later, {{userChildName|your generation}} studies African history in California — but textbooks give Mali 1-2 pages. Your world was glorious; why has modern history erased it? Who decides which past gets told?',
       },
     },
   ],

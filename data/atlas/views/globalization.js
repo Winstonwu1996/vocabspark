@@ -87,21 +87,21 @@ export const VIEW = {
         en: 'In 2010 you came to California from India / China / Mexico — educated parents + STEM jobs. Your 13-year-old daughter goes to a California school — with white, Black, Latino classmates. She\'s "globalization\'s middle class" — parents sacrificed homeland culture for her "American chance." She may thank you — or ask "why don\'t I have 4 generations of California roots like others?"',
       },
       hook: {
-        cn: '如果你是移民家长 — 你给孩子机会，但孩子失去你的语言 + 文化。这是"成功"还是"代价"？Willow 的同学一半是这种家庭 — 她怎么读他们？',
-        en: 'If you were the immigrant parent — you gave your child opportunity but they lost your language and culture. Success, or cost? Half Willow\'s classmates are from such families — how does she read them?',
+        cn: '如果你是移民家长 — 你给孩子机会，但孩子失去你的语言 + 文化。这是"成功"还是"代价"？{{userChildName|你这一代}} 的同学一半是这种家庭 — 她怎么读他们？',
+        en: 'If you were the immigrant parent — you gave your child opportunity but they lost your language and culture. Success, or cost? Half {{userChildName|your generation}}\'s classmates are from such families — how does she read them?',
       },
     },
     {
       emoji: '👧',
-      name: { cn: 'Willow（你自己 — 同龄人）', en: 'Willow (you yourself — peer)' },
+      name: { cn: '{{userChildName|你这一代}}（你自己 — 同龄人）', en: '{{userChildName|你这一代}} (you yourself — peer)' },
       role: { cn: '13 岁，加州 7 年级女生', en: '13-year-old, California 7th grader' },
       bio: {
-        cn: '你 — 是的就是 Willow，本人。你住加州 Cupertino，爸爸是软件工程师。你的同学有华裔、印度裔、墨西哥裔、白人、黑人。你用 ChatGPT 做作业，看 TikTok 学习国际新闻。你的"日常生活"包含全球化所有产物：iPhone（深圳装）+ Tesla（中国电池）+ Uniqlo（日本设计）+ Shein（中国电商）。',
-        en: 'You — yes, Willow herself. You live in Cupertino, California; your father is a software engineer. Your classmates are Chinese, Indian, Mexican, white, Black. You use ChatGPT for homework, watch TikTok for global news. Your daily life contains every product of globalization: iPhone (assembled Shenzhen) + Tesla (Chinese batteries) + Uniqlo (Japanese design) + Shein (Chinese e-comm).',
+        cn: '你 — 是的就是 {{userChildName|你这一代}}，本人。你住加州 {{userCity|加州}}，爸爸是软件工程师。你的同学有华裔、印度裔、墨西哥裔、白人、黑人。你用 ChatGPT 做作业，看 TikTok 学习国际新闻。你的"日常生活"包含全球化所有产物：iPhone（深圳装）+ Tesla（中国电池）+ Uniqlo（日本设计）+ Shein（中国电商）。',
+        en: 'You — yes, {{userChildName|your generation}} herself. You live in {{userCity|California}}, California; your father is a software engineer. Your classmates are Chinese, Indian, Mexican, white, Black. You use ChatGPT for homework, watch TikTok for global news. Your daily life contains every product of globalization: iPhone (assembled Shenzhen) + Tesla (Chinese batteries) + Uniqlo (Japanese design) + Shein (Chinese e-comm).',
       },
       hook: {
-        cn: '你（Willow）现在 13 岁。你 30 岁时全球化可能已经"逆转"— 美中脱钩 + 关税 + AI 让生产回美国。你这一代是"全球化最高峰的孩子"— 你怎么记忆它？',
-        en: 'You (Willow) are 13 today. By 30, globalization may have "reversed" — US-China decoupling + tariffs + AI bringing production home. Your generation is "the children of peak globalization." How will you remember it?',
+        cn: '你（{{userChildName|你这一代}}）现在 13 岁。你 30 岁时全球化可能已经"逆转"— 美中脱钩 + 关税 + AI 让生产回美国。你这一代是"全球化最高峰的孩子"— 你怎么记忆它？',
+        en: 'You ({{userChildName|your generation}}) are 13 today. By 30, globalization may have "reversed" — US-China decoupling + tariffs + AI bringing production home. Your generation is "the children of peak globalization." How will you remember it?',
       },
     },
   ],

@@ -98,12 +98,12 @@ export const VIEW = {
       name: { cn: '司马（虚构同龄人）', en: 'Sima (fictional peer)' },
       role: { cn: '13 岁，太学生学者之子', en: '13-year-old, son of an Imperial Academy scholar' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是太学博士。你 8 岁开始背《论语》《孟子》，13 岁背完五经。你将来会通过察举制做官 — 不靠门第靠学问。当然，前提是你出生在长安附近的小康家庭，不是边疆农户。',
-        en: 'Same age as Willow. Your father teaches at the Imperial Academy. You started memorizing the Analects and Mencius at 8; finished the Five Classics by 13. You\'ll enter government via "recommendation" — by learning, not lineage. Provided, of course, you were born middle-class near Chang\'an, not in a frontier village.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是太学博士。你 8 岁开始背《论语》《孟子》，13 岁背完五经。你将来会通过察举制做官 — 不靠门第靠学问。当然，前提是你出生在长安附近的小康家庭，不是边疆农户。',
+        en: 'Same age as {{userChildName|your generation}}. Your father teaches at the Imperial Academy. You started memorizing the Analects and Mencius at 8; finished the Five Classics by 13. You\'ll enter government via "recommendation" — by learning, not lineage. Provided, of course, you were born middle-class near Chang\'an, not in a frontier village.',
       },
       hook: {
-        cn: 'Willow 在 2026 年也在背书考 SAT — 也是用学问换前途。她跟你隔了 2000 年和 9000 公里。中国 SAT（科举）走到今天的 SAT（美国 SAT），你怎么看这趟旅程？',
-        en: 'In 2026 Willow also memorizes for the SAT — also trading study for opportunity. 2000 years and 9000 km separate you. The Chinese SAT (imperial exam) → today\'s American SAT — how does that journey look to you?',
+        cn: '{{userChildName|你这一代}} 在 2026 年也在背书考 SAT — 也是用学问换前途。她跟你隔了 2000 年和 9000 公里。中国 SAT（科举）走到今天的 SAT（美国 SAT），你怎么看这趟旅程？',
+        en: 'In 2026 {{userChildName|your generation}} also memorizes for the SAT — also trading study for opportunity. 2000 years and 9000 km separate you. The Chinese SAT (imperial exam) → today\'s American SAT — how does that journey look to you?',
       },
     },
   ],

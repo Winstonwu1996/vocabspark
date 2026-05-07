@@ -25,6 +25,8 @@ import { VoiceInputButton } from '../components/VoiceInputButton';
 import { C, FONT, FONT_DISPLAY, S, NUM, globalCSS } from '../lib/theme';
 import { callAPIStream, callAPIFast, tryJSON } from '../lib/api';
 import { supabase } from '../lib/supabase';
+import { useSimplifiedMode } from '../lib/hooks/use-simplified-mode';
+import { shouldShowHistoryWalkthrough } from '../lib/onboarding-state';
 
 import {
   HISTORY_TOPICS,
@@ -490,15 +492,17 @@ export default function HistoryPage() {
     setSidekickLog(loadSidekickLog(topicId));
 
     // U4: 第一次进 history → 显示 walkthrough
-    // 5-5 R1: atlas/embedded/role 流程下不弹 — 用户已在 atlas-lab onboarding 看过,
-    //         iframe 内 modal 重叠让人窒息;且 Walkthrough 文案 topic-agnostic,
-    //         直接 URL (path C) 才需要这个引导.
-    // URL flag 同步读(避免 state race condition):
+    // 5-5 R1+R4 systemic: 走 lib/onboarding-state.js shouldShowHistoryWalkthrough
+    //   - R1 守卫: URL atlas/embedded/role 流程下不弹
+    //   - R4 协调: 已看过 atlas-tour 也降级不弹 (信息重叠 80%)
+    //   - 直接 URL 首次访问才弹 (唯一引导场景)
     var __searchParamsForWalkthrough = (typeof window !== "undefined") ? new URLSearchParams(window.location.search) : null;
-    var __isEmbeddedFlag = !!(__searchParamsForWalkthrough && __searchParamsForWalkthrough.get("embedded") === "1");
-    var __isFromAtlasFlag = !!(__searchParamsForWalkthrough && __searchParamsForWalkthrough.get("from") === "atlas");
-    var __isRoleFlag = !!(__searchParamsForWalkthrough && __searchParamsForWalkthrough.get("role") === "1");
-    if (!hasSeenWalkthrough() && !__isEmbeddedFlag && !__isFromAtlasFlag && !__isRoleFlag) {
+    var __urlFlagsActive = !!(__searchParamsForWalkthrough && (
+      __searchParamsForWalkthrough.get("embedded") === "1" ||
+      __searchParamsForWalkthrough.get("from") === "atlas" ||
+      __searchParamsForWalkthrough.get("role") === "1"
+    ));
+    if (shouldShowHistoryWalkthrough({ skipFromUrlFlags: __urlFlagsActive })) {
       setShowWalkthrough(true);
     }
 
@@ -2789,16 +2793,17 @@ function IntroScreen(props) {
   if (!topic) return null;
   var curriculum = props.curriculum;
   var hp = props.historyProfile;
-  // 5-5: 多层守卫 — pendingRole 异步读 localStorage 可能首次 render null,
-  //       所以同时用 embedded(URL 同步读)+ fromAtlas(URL 同步读)+ hasLensesForTopic(配置同步)
-  var hasPendingRole = !!(props.pendingRole && props.pendingRole.figure);
-  var isEmbedded = !!props.embedded;
-  var isFromAtlas = !!props.fromAtlas;
-  var hasLenses = !!props.hasLensesForTopic;
-  // 用 OR 组合:任一条件触发就 simplify(覆盖 SSR 首次 render 时 pendingRole 还没 set 的情况)
-  var simplifiedMode = hasPendingRole || isEmbedded || isFromAtlas;
-  // englishLevel toggle: lens 模式 prewritten,这个滑动条永远无效 → hasLenses 也隐藏
-  var hideEnglishLevel = simplifiedMode || hasLenses;
+  // 5-5 R5: simplifiedMode 计算抽到 useSimplifiedMode hook (lib/hooks/use-simplified-mode.js)
+  //         — single source of truth, 避免散在多处 drift
+  var modeFlags = useSimplifiedMode({
+    pendingRole: props.pendingRole,
+    embedded: props.embedded,
+    fromAtlas: props.fromAtlas,
+    hasLensesForTopic: props.hasLensesForTopic,
+  });
+  var hasPendingRole = modeFlags.hasPendingRole;
+  var simplifiedMode = modeFlags.simplifiedMode;
+  var hideEnglishLevel = modeFlags.hideEnglishLevelToggle;
   // - lens 节点数: 优先用 effectiveTurns,fallback 12
   var lensTurnCount = (props.effectiveTurns && props.effectiveTurns.length) || 12;
   // 5-5 R2: placeholder profile 表示用户跳过了 setup → 显示 "还没填画像" hint
@@ -2897,8 +2902,30 @@ function IntroScreen(props) {
 
       <div style={{
         background: HC.card, padding: 20, borderRadius: 16, border: "1px solid " + HC.border,
-        marginBottom: 14
+        marginBottom: 14, position: "relative"
       }}>
+        {/* 5-5 R11: 重看引导入口改成卡右上角 chip — 不再藏在小字 underline */}
+        {props.onShowWalkthrough && (
+          <button
+            onClick={props.onShowWalkthrough}
+            title="重看 30 秒操作引导"
+            style={{
+              position: "absolute", top: 12, right: 12,
+              background: "transparent",
+              border: "1px solid " + HC.border,
+              borderRadius: 999,
+              padding: "3px 10px",
+              fontSize: 10.5,
+              fontWeight: 600,
+              color: HC.textSec,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              opacity: 0.85,
+            }}
+            onMouseEnter={function(e) { e.currentTarget.style.opacity = 1; e.currentTarget.style.borderColor = HC.accent; }}
+            onMouseLeave={function(e) { e.currentTarget.style.opacity = 0.85; e.currentTarget.style.borderColor = HC.border; }}
+          >↻ 怎么操作?</button>
+        )}
         <h3 style={{margin: "0 0 10px", fontFamily: FONT_DISPLAY, fontSize: 17, color: HC.ink}}>这一章你会经历什么</h3>
         <div style={{
           padding: "8px 12px", marginBottom: 12,
@@ -2913,13 +2940,6 @@ function IntroScreen(props) {
             <>📍 <strong>页面顶部的「Where this happened」</strong>就是地图区 — 任何时候都可以点开看,再翻过来看今天。<br/></>
           )}
           ⭐ AI 说话里**金色的词**点一下能看 IPA + 听发音;<span style={{color: HC.teal, fontWeight: 600}}>蓝色虚线下划线的人名地名</span>点一下看解释。
-          {/* B3: 重看 walkthrough 入口 */}
-          {props.onShowWalkthrough && (
-            <span style={{
-              marginLeft: 8, fontSize: 11, color: HC.teal,
-              cursor: "pointer", textDecoration: "underline",
-            }} onClick={props.onShowWalkthrough}>↻ 重看引导</span>
-          )}
         </div>
         <ol style={{margin: 0, paddingLeft: 20, fontSize: 14, color: HC.text, lineHeight: 1.7}}>
           {topic.id === "tang-song-china" ? (

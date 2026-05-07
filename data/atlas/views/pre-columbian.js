@@ -96,12 +96,12 @@ export const VIEW = {
       name: { cn: 'Cuauhtli（虚构同龄人）', en: 'Cuauhtli (fictional peer)' },
       role: { cn: '13 岁，Tenochtitlan 战士学校学生', en: '13-year-old, Tenochtitlán warrior-school student' },
       bio: {
-        cn: '你跟 Willow 同龄。你在 telpochcalli 战士学校 — 学战斗、礼仪、历法。你梦想以后当 Eagle 鹰士或 Jaguar 美洲豹士（最高军衔）。你住在 Tenochtitlan 浮岛上 — 25 万人的城市，比 1492 年的塞维利亚大 5 倍。你不知道 28 年后 Cortés 会来，你的世界会消失。',
-        en: 'Same age as Willow. You attend telpochcalli warrior school — combat, ritual, calendar. You dream of becoming an Eagle Knight or Jaguar Knight (highest ranks). You live on Tenochtitlán\'s floating island — a 250,000-person city, 5× bigger than Seville in 1492. You don\'t know that in 28 years Cortés will come and your world will end.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。你在 telpochcalli 战士学校 — 学战斗、礼仪、历法。你梦想以后当 Eagle 鹰士或 Jaguar 美洲豹士（最高军衔）。你住在 Tenochtitlan 浮岛上 — 25 万人的城市，比 1492 年的塞维利亚大 5 倍。你不知道 28 年后 Cortés 会来，你的世界会消失。',
+        en: 'Same age as {{userChildName|your generation}}. You attend telpochcalli warrior school — combat, ritual, calendar. You dream of becoming an Eagle Knight or Jaguar Knight (highest ranks). You live on Tenochtitlán\'s floating island — a 250,000-person city, 5× bigger than Seville in 1492. You don\'t know that in 28 years Cortés will come and your world will end.',
       },
       hook: {
-        cn: '500 年后 Willow 在加州学校学"哥伦布发现新大陆"— 但你的城市比哥伦布的家乡还大。"发现"这个词是谁的视角？她跟你之间隔了 500 年和 4500 公里 — 她能怎么补上你？',
-        en: '500 years later, Willow learns "Columbus discovered the New World" — but your city was bigger than Columbus\'s hometown. Whose perspective does "discovered" come from? 500 years and 4,500 km separate you — how can she include your story?',
+        cn: '500 年后 {{userChildName|你这一代}} 在加州学校学"哥伦布发现新大陆"— 但你的城市比哥伦布的家乡还大。"发现"这个词是谁的视角？她跟你之间隔了 500 年和 4500 公里 — 她能怎么补上你？',
+        en: '500 years later, {{userChildName|your generation}} learns "Columbus discovered the New World" — but your city was bigger than Columbus\'s hometown. Whose perspective does "discovered" come from? 500 years and 4,500 km separate you — how can she include your story?',
       },
     },
   ],

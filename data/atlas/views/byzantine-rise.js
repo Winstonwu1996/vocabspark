@@ -96,12 +96,12 @@ export const VIEW = {
       name: { cn: 'Sophia（虚构同龄人）', en: 'Sophia (fictional peer)' },
       role: { cn: '13 岁，圣索菲亚教堂工匠的女儿', en: '13-year-old, Hagia Sophia mason\'s daughter' },
       bio: {
-        cn: '你跟 Willow 同龄。爸爸是希腊工匠，参与建圣索菲亚 — 537 落成时你 13 岁。Justinian 走进教堂说"所罗门，我超越了你"。你站在工匠席上看天顶，56 米高，像天空塌下来 — 你这辈子最震撼的一幕。',
-        en: 'Same age as Willow. Your father is a Greek mason on the Hagia Sophia project — 13 when it\'s completed in 537. Justinian walks in and says "Solomon, I have surpassed you." You watch from the workers\' gallery — the 56m dome looks like the sky has descended. The most moving moment of your life.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。爸爸是希腊工匠，参与建圣索菲亚 — 537 落成时你 13 岁。Justinian 走进教堂说"所罗门，我超越了你"。你站在工匠席上看天顶，56 米高，像天空塌下来 — 你这辈子最震撼的一幕。',
+        en: 'Same age as {{userChildName|your generation}}. Your father is a Greek mason on the Hagia Sophia project — 13 when it\'s completed in 537. Justinian walks in and says "Solomon, I have surpassed you." You watch from the workers\' gallery — the 56m dome looks like the sky has descended. The most moving moment of your life.',
       },
       hook: {
-        cn: '1500 年后 Willow 看着希腊神庙 / 君士坦丁堡的圣索菲亚 / 哥特大教堂的图片 — 都是"用石头表达灵魂"。你站在那一刻，能想到 1500 年后还会有人为这个建筑流泪吗？',
-        en: '1500 years later Willow sees photos of Greek temples / Hagia Sophia / Gothic cathedrals — all "stone expressing soul." Standing there, did you imagine someone would still weep at this building 1500 years later?',
+        cn: '1500 年后 {{userChildName|你这一代}} 看着希腊神庙 / 君士坦丁堡的圣索菲亚 / 哥特大教堂的图片 — 都是"用石头表达灵魂"。你站在那一刻，能想到 1500 年后还会有人为这个建筑流泪吗？',
+        en: '1500 years later {{userChildName|your generation}} sees photos of Greek temples / Hagia Sophia / Gothic cathedrals — all "stone expressing soul." Standing there, did you imagine someone would still weep at this building 1500 years later?',
       },
     },
   ],

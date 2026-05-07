@@ -101,12 +101,12 @@ export const VIEW = {
       name: { cn: 'Mary（虚构同龄人）', en: 'Mary (fictional peer)' },
       role: { cn: '13 岁，弗吉尼亚被解放的黑人女孩', en: '13-year-old, Virginia newly freed Black girl' },
       bio: {
-        cn: '你跟 Willow 同龄。1865 4 月你妈妈带你站在 Richmond 街头看联邦军入城 — 你第一次看到法律意义上你"自由"了。爸爸 1862 年逃奴参军，活着回来。你爷爷 1860 被卖到密西西比 — 找不回来。你能进 Freedmen\'s Bureau 学校 — 第一次学读写。13 岁开始读写 — 你跟 Willow 隔了 160 年的"识字鸿沟"。',
-        en: 'Same age as Willow. In April 1865 your mother led you to Richmond\'s street to watch Union troops enter — the first time you were "legally free." Your father escaped slavery in 1862 and returned alive. Your grandfather sold to Mississippi in 1860 — never found. You\'ll attend a Freedmen\'s Bureau school — first time reading and writing. Beginning literacy at 13 — 160 years of "literacy gap" separates you from Willow.',
+        cn: '你跟 {{userChildName|你这一代}} 同龄。1865 4 月你妈妈带你站在 Richmond 街头看联邦军入城 — 你第一次看到法律意义上你"自由"了。爸爸 1862 年逃奴参军，活着回来。你爷爷 1860 被卖到密西西比 — 找不回来。你能进 Freedmen\'s Bureau 学校 — 第一次学读写。13 岁开始读写 — 你跟 {{userChildName|你这一代}} 隔了 160 年的"识字鸿沟"。',
+        en: 'Same age as {{userChildName|your generation}}. In April 1865 your mother led you to Richmond\'s street to watch Union troops enter — the first time you were "legally free." Your father escaped slavery in 1862 and returned alive. Your grandfather sold to Mississippi in 1860 — never found. You\'ll attend a Freedmen\'s Bureau school — first time reading and writing. Beginning literacy at 13 — 160 years of "literacy gap" separates you from {{userChildName|your generation}}.',
       },
       hook: {
-        cn: '160 年后 Willow 在加州学校跟黑人同学（你的曾曾曾孙女？）一起读哈佛准备的论文。她写"我祖辈自由"很容易 — 你写"我自由"用了你的童年。"代际进步"是怎么累积的？',
-        en: '160 years later, Willow co-writes Harvard-prep essays with Black classmates (your great-great-great-granddaughters?). She writes "my ancestors freed" easily; you spent your childhood becoming "free." How does "generational progress" compound?',
+        cn: '160 年后 {{userChildName|你这一代}} 在加州学校跟黑人同学（你的曾曾曾孙女？）一起读哈佛准备的论文。她写"我祖辈自由"很容易 — 你写"我自由"用了你的童年。"代际进步"是怎么累积的？',
+        en: '160 years later, {{userChildName|your generation}} co-writes Harvard-prep essays with Black classmates (your great-great-great-granddaughters?). She writes "my ancestors freed" easily; you spent your childhood becoming "free." How does "generational progress" compound?',
       },
     },
   ],
