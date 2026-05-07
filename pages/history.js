@@ -25,6 +25,7 @@ import { VoiceInputButton } from '../components/VoiceInputButton';
 import { C, FONT, FONT_DISPLAY, S, NUM, globalCSS } from '../lib/theme';
 import { callAPIStream, callAPIFast, tryJSON } from '../lib/api';
 import { supabase } from '../lib/supabase';
+import { useSimplifiedMode } from '../lib/hooks/use-simplified-mode';
 
 import {
   HISTORY_TOPICS,
@@ -2789,16 +2790,17 @@ function IntroScreen(props) {
   if (!topic) return null;
   var curriculum = props.curriculum;
   var hp = props.historyProfile;
-  // 5-5: 多层守卫 — pendingRole 异步读 localStorage 可能首次 render null,
-  //       所以同时用 embedded(URL 同步读)+ fromAtlas(URL 同步读)+ hasLensesForTopic(配置同步)
-  var hasPendingRole = !!(props.pendingRole && props.pendingRole.figure);
-  var isEmbedded = !!props.embedded;
-  var isFromAtlas = !!props.fromAtlas;
-  var hasLenses = !!props.hasLensesForTopic;
-  // 用 OR 组合:任一条件触发就 simplify(覆盖 SSR 首次 render 时 pendingRole 还没 set 的情况)
-  var simplifiedMode = hasPendingRole || isEmbedded || isFromAtlas;
-  // englishLevel toggle: lens 模式 prewritten,这个滑动条永远无效 → hasLenses 也隐藏
-  var hideEnglishLevel = simplifiedMode || hasLenses;
+  // 5-5 R5: simplifiedMode 计算抽到 useSimplifiedMode hook (lib/hooks/use-simplified-mode.js)
+  //         — single source of truth, 避免散在多处 drift
+  var modeFlags = useSimplifiedMode({
+    pendingRole: props.pendingRole,
+    embedded: props.embedded,
+    fromAtlas: props.fromAtlas,
+    hasLensesForTopic: props.hasLensesForTopic,
+  });
+  var hasPendingRole = modeFlags.hasPendingRole;
+  var simplifiedMode = modeFlags.simplifiedMode;
+  var hideEnglishLevel = modeFlags.hideEnglishLevelToggle;
   // - lens 节点数: 优先用 effectiveTurns,fallback 12
   var lensTurnCount = (props.effectiveTurns && props.effectiveTurns.length) || 12;
   // 5-5 R2: placeholder profile 表示用户跳过了 setup → 显示 "还没填画像" hint
