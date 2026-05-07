@@ -3123,6 +3123,9 @@ function LensSelector(props) {
     'agnolo-siena': '🪶',
     'konrad-strasbourg': '🪓',
     'devorah-strasbourg': '🕯️',
+    'lorenzo-medici': '👑',
+    'savonarola': '🔥',
+    'lucia-widow': '🪞',
   };
 
   // 第一次建议哪个 lens（每 Topic 不同——按戏剧强度 / 入门难度）
@@ -3130,6 +3133,7 @@ function LensSelector(props) {
     'magna-carta-1215': { id: 'king-john',     reason: '戏剧性最强' },
     'crusades-1099':    { id: 'roger-toulouse', reason: '4 年 + 4 个动机最容易代入' },
     'black-death-1347': { id: 'agnolo-siena',   reason: '5 月 8 日第一笔字最容易切入' },
+    'renaissance-1500': { id: 'lucia-widow',    reason: '同龄锚点 + 镜子 micro-detail 情感冲击最深' },
   };
   var firstHint = firstChoiceHint[props.topicId];
   var firstLens = firstHint && lenses.find(function(l) { return l.id === firstHint.id; });
