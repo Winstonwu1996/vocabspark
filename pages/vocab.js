@@ -445,26 +445,34 @@ var normalizeGuessData = (raw, targetWord) => {
     raw.acceptableAnswers = ans ? [ans] : [];
   }
 
-  // 兜底校验：选项不能包含目标词本身或同根词形（retraction → retract/retracted/...）
+  // 兜底校验：选项不能包含目标词本身或同根词形
+  // 例：retraction → retract/retracted/retracting；sew → sews/sewing/sewed/sewn
   // LLM 偶尔违反 prompt 硬约束，客户端再过一道
   if (targetWord && raw.options && typeof raw.options === "object") {
     var w = String(targetWord).toLowerCase().trim();
-    if (w.length >= 4) {
-      // 取词干（粗略：去掉常见后缀）作为同根词检测的 prefix
-      var stem = w
-        .replace(/(?:tion|sion|ment|ness|able|ible|ance|ence|ous|ive|ize|ise|ify)$/i, "")
-        .replace(/(?:ing|ies|ied|ed|er|est|ly|ful|less|al|ic|ist|ism|s)$/i, "")
-        .replace(/e$/i, "");
-      var checkStem = stem.length >= 3 ? stem : w.slice(0, Math.min(5, w.length - 1));
+    if (w.length >= 1) {
+      // 词干提取：长词去后缀，短词（< 4）直接用原词作 prefix
+      // 任何长度都要 catch "选项 === 原词"
+      var stem;
+      if (w.length >= 4) {
+        stem = w
+          .replace(/(?:tion|sion|ment|ness|able|ible|ance|ence|ous|ive|ize|ise|ify)$/i, "")
+          .replace(/(?:ing|ies|ied|ed|er|est|ly|ful|less|al|ic|ist|ism|s)$/i, "")
+          .replace(/e$/i, "");
+      } else {
+        stem = w; // 短词（如 sew/run/cut）原词作词干
+      }
+      var checkStem = stem.length >= 2 ? stem : w;
       var optionViolations = [];
       Object.entries(raw.options).forEach(function(entry) {
         var k = entry[0];
         var v = String(entry[1] || "").toLowerCase().trim();
         if (!v) return;
-        // 完全等于目标词
+        // 1) 完全等于目标词
         if (v === w) { optionViolations.push(k + ":exact"); return; }
-        // 选项是单个词（不含空格）且以词干开头 → 大概率同根词形
-        if (!v.includes(" ") && v.length >= 4 && v.startsWith(checkStem) && Math.abs(v.length - w.length) <= 5) {
+        // 2) 单词选项（不含空格）+ 以词干开头 + 长度差 ≤ 5 → 同根词形
+        //    短词如 sew，stem='sew'，会 catch sews/sewing/sewed/sewn/sewer
+        if (!v.includes(" ") && v.length >= 2 && v.startsWith(checkStem) && Math.abs(v.length - w.length) <= 5) {
           optionViolations.push(k + ":cognate(" + v + ")");
         }
       });
