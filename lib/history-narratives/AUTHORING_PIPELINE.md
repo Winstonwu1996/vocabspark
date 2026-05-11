@@ -437,6 +437,63 @@ node --input-type=module -e "import('lib/atlas-views.js').then(async m => { var 
 
 1 个括号短句，character voice 不断，meta 透明性也保住。
 
+### L. 人名地名分级写法（5-11 加，学生模拟阅读实测）
+
+**事故**：12岁学生模拟阅读启蒙运动 Voltaire lens，反馈：
+- "Newton, Jonathan Swift, Alexander Pope 同时出现——被名字炸了——放弃全部认识，只抓了一个"
+- "John Robertson 在《The Case for the Enlightenment》里说过……这些在我眼里是括号里的装饰，跳过了"
+- "Émilie du Châtelet——不知道怎么在脑子里读这个名字——直接放弃"
+
+**根因**：人名分两种疲劳来源 1) 考点人名密集出现没有角色锚 2) 非考点学者引注混入正文——两种来源解法不同。
+
+#### L.1 — 人名地名按考点级别分级
+
+| 级别 | 定义 | 处理方式 |
+|---|---|---|
+| **必考（core）** | AP World CED + CA HSS 考纲明确要求的人名/地名 | 首次出场：**全名 + 角色锚（≤10字）**；后续可用角色称谓；Notebook keyFigures 加 IPA + 音频 |
+| **非考点（context）** | 故事背景人物、叙述支撑用的地名，不进AP/州考 | 首次出场用**角色称谓**替代全名，或括号一笔带过；不重复出现全名 |
+| **学者引注（scholar）** | 历史学家姓名 + 著作年份，用于学术归因 | **从 bodyCn/bodyEn 完全移除**，只保留 sourcingNote 字段 |
+
+**必考 vs 非考点判断基准**（按 Topic 常规分布）：
+- 必考：lens 三主角 + AP CED "Key Concepts/Examples" 明列的人名 + 标准教材（Strayer / Bulliet）高频出现人名
+- 非考点：配角人物、学术学者、地名（城镇/庄园级别，非国家/大城市）
+
+#### L.2 — 每段名字集群上限
+
+- **单段（约200字）最多引入 2 个新名字**；超过 → 合并或用泛称（"英国知识界的朋友们"）
+- **禁止**：`A，见了 B，见了 C，进入了...` 三连名字串
+- 已知名字（同一 lens 前面出现过的）不算新名字
+
+#### L.3 — 非考点人名替换示例
+
+❌ 现有写法：
+> 读了 Newton，见了 Jonathan Swift，见了 Alexander Pope，进入了英国知识界的核心圈子
+
+✅ 修订写法：
+> 读了 Newton（他的引力定律在法国大学里还是禁书），进入了英国知识界的核心圈子——讽刺作家们、诗人们、议员们
+
+❌ 现有写法（学者引注在正文）：
+> John Robertson 在 2005 年的《The Case for the Enlightenment》里说过：philosophes 的「英国」是示范模型
+
+✅ 修订写法（结论保留，归因移入 sourcingNote）：
+> philosophes 的「英国」是示范模型，不是田野调查报告。
+
+`sourcingNote: "Robertson 2005 p.78"`
+
+#### L.4 — 新内容写作自检命令
+
+```bash
+# 检查学者引注是否还在正文里（应输出空）
+grep -n "在.*年的《\|in.*'s \*\|（[A-Z][a-z]* [0-9]\{4\}" lib/history-storyboards/<topic>.js
+
+# 检查单段三连名字串（需人工判断）
+grep -n "[A-Z][a-z]\+，[A-Z][a-z]\+，[A-Z][a-z]\+" lib/history-storyboards/<topic>.js
+```
+
+**适用范围**：所有新写的 lens bodyCn/bodyEn；已发布内容（enlightenment/medieval-japan/pre-columbian）的学者引注清理单独排期，不阻塞新内容生产。
+
+---
+
 ### K. 用户 facing 文本不用"lens"工程词——改"视角"/"这一遍"（5-4 第三轮加）
 
 **事故**：用户反馈"lens 这个词太工程化了，不是用户语言"。
@@ -745,6 +802,56 @@ npm run validate:narratives
 任何 SHIP-WITH-FIXES → 第 7 步。
 REWRITE → 回第 4 步重写 narrative。
 
+### 第 6.5 步：课纲覆盖率审计（5-11 加）
+
+**触发条件**：每个新 Topic narrative 完成 Sarah Chen 首审后，必须跑课纲对标审计。
+
+**审计标准**（双轨）：
+1. **AP World History CED 2024**（AP考生主力）— 检查 Key Concepts + Required Examples 是否覆盖
+2. **CA HSS Framework（Grade 6-8）**（加州公立主力）— 检查对应年级标准是否覆盖
+
+**审计方式**：参考 `lib/history-narratives/curriculum-alignment-audit.md`，对照下表评分：
+
+| 等级 | 定义 | 处理 |
+|---|---|---|
+| A（≥85%） | 核心考点基本覆盖 | 正常进第7步 |
+| B（70-84%） | 大部分覆盖，有缺口 | 缺口写入 Companion Notebook standaloneText，进第7步 |
+| C（55-69%） | 覆盖不足，重要考点遗漏 | P0：narrative 补写缺失考点 → Sarah 二审 |
+| D（<55%） | 严重缺口 | 阻塞：必须补写后重跑第6步 |
+
+**缺口处理原则**（来自启蒙运动 Locke/Montesquieu 覆盖不足事故）：
+- 故事已覆盖的考点 → storyAnchor，Notebook 引用故事，加 xiaoweiNote
+- 故事未覆盖的考点 → Companion Notebook standaloneText（200字独立小课），不改故事
+- 只有故事覆盖 <50% 的 Topic 才需要在 narrative 层补写
+
+**必审检查项**（AP World 常见必考点，lens 里经常漏掉）：
+
+| Topic | 常见漏考点 |
+|---|---|
+| Enlightenment | Locke 自然权利、Montesquieu 三权分立、Rousseau 社会契约 |
+| Islamic Rise | 穆罕默德生平、五功、早期扩张路线 |
+| Age of Exploration | 葡萄牙/达伽马、经纬仪/星盘、哥伦布大交换物种清单 |
+| Scientific Revolution | 科学方法步骤、Galileo 宗教冲突、Kepler 行星运动 |
+| Renaissance | 人文主义定义、美第奇家族赞助制度、印刷机影响 |
+
+**审计输出格式**（写入 `lib/history-narratives/<topicId>-audit.md`）：
+```
+# <Topic> 课纲覆盖审计
+日期: YYYY-MM-DD
+评级: B (78%)
+
+## AP CED 覆盖
+- ✅ <已覆盖考点>
+- ⚠️ <部分覆盖>
+- ❌ <未覆盖考点> → Notebook standaloneText
+
+## CA HSS 覆盖
+...
+
+## 处理方案
+<missing items 如何在 Companion Notebook 补>
+```
+
 ### 第 7 步：应用 Sarah 修订建议
 
 按她列出的"必修"逐条改 narrative。**不要 cherry-pick** —— 必修就是必修。
@@ -869,6 +976,7 @@ git push
 | 2026-04-27 | **流程锁定 v1**：本文档发布。从 Crusades 翻车 + 二层架构升级总结而来 |
 | 2026-04-28 | **流程升级 v2**：3 层架构（Atlas/对话/Mastery 各司其职）+ 明朝那些事儿密度 + Synthesis turn 桥接 |
 | 2026-04-29 | **流程升级 v3**：VIVID always 不上 AI 自动状态机（DeepSeek 搞不定 nuance）；改用 3 用户主动按钮（累/没懂/跳过）+ 家长报告兜底真分心；"我没懂"重讲规则锁定（更具象更全面，不是更短） |
+| 2026-05-11 | **流程升级 v4**：① 第 6.5 步课纲覆盖率审计（AP CED 2024 + CA HSS 双轨）加入必走流程，A/B/C/D 四级处理 ② 第 8 条加 L 条——人名地名分级写法：必考 core（全名+角色锚+IPA）/ 非考点 context（角色称谓替代）/ 学者引注 scholar（从正文移入 sourcingNote）；单段最多 2 个新名字；三连名字串禁止 |
 
 ---
 

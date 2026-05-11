@@ -53,6 +53,37 @@ Story-First v2 已经 ship 了 15 个 Topic，每个 Topic 是 3 lens × 12 node
 - `standardRef`: 对齐的 AP / CA HSS 标准编号
 - `examFrequency`: `highest` / `high` / `mid` / `low`——告诉学生哪些必考
 
+### keyFigures 分级 schema（v2，5-11 加）
+
+`preview.keyFigures` 从字符串数组升级为对象数组，区分必考 vs 背景人物：
+
+```js
+keyFigures: [
+  {
+    nameCn: '伏尔泰',          // 中文名
+    nameEn: 'Voltaire',       // 英文名
+    ipa: '/vɒlˈtɛər/',        // 国际音标（帮助朗读记忆）
+    roleCn: '法国哲学家·讽刺作家，宗教宽容倡导者',
+    roleEn: 'French philosophe, advocate of religious tolerance',
+    mustKnow: true,           // AP/州考必考 → 渲染 IPA + 音频 + 完整角色卡
+    audioKey: 'voltaire',     // 音频文件 key（供 TTS/预录音频使用）
+  },
+  {
+    nameCn: '爱米莉·夏特莱侯爵夫人',
+    nameEn: 'Émilie du Châtelet',
+    ipa: '/emili dy ʃɑtlɛ/',
+    roleCn: '伏尔泰的科学合作者，牛顿著作翻译者',
+    roleEn: 'Voltaire\'s scientific collaborator, Newton translator',
+    mustKnow: false,          // 背景人物 → 只在故事里用角色称谓，不进考点卡，不加音频
+    audioKey: null,
+  },
+]
+```
+
+**渲染规则**（供 reader UI 实现参考）：
+- `mustKnow: true` → 显示完整角色卡（IPA + 音频按钮 + 角色说明）
+- `mustKnow: false` → 只在 preview 清单里轻量显示（姓名 + 一句话角色），不加音频
+
 ### 3. `thinkingQuestions` — 出口批判性思考
 
 3 道 DBQ 入门题。每题：
