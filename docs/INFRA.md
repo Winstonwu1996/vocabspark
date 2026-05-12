@@ -166,48 +166,78 @@ vercel env pull .env.production.local --environment=production  # production
 - `noreply@knowulearning.com` 收发 → Resend SMTP（DKIM/SPF TXT 已配 + 验证）
 - `hello@knowulearning.com` → 收信地址
 
-### 给新项目配 stock.knowulearning.com 的步骤（Namecheap 操作）
+### stock.knowulearning.com（实际部署 — Cloudflare Tunnel + Access）
 
-**Step 1：Namecheap 加 CNAME 记录**
+**注**：原计划是 Namecheap CNAME → Vercel，但 Streamlit 不兼容 Vercel（长连接 WebSocket）。实际方案是 NS 切到 Cloudflare + Tunnel 把本地 Streamlit 暴露出去，**Namecheap NS 记录已迁移到 Cloudflare**（`walk.ns.cloudflare.com` / `wilson.ns.cloudflare.com`）。
 
-1. 登录 Namecheap → Domain List → `knowulearning.com` → **Manage**
-2. **Advanced DNS** tab → 滚到 "HOST RECORDS" 区
-3. 点 **ADD NEW RECORD**
-4. 填：
-   ```
-   Type:        CNAME Record
-   Host:        stock
-   Value:       cname.vercel-dns.com.       ← 末尾的点很关键，Namecheap 自动补
-   TTL:         Automatic
-   ```
-5. 点绿色对勾 ✓ 保存
-6. 等 ~5-30 分钟 DNS 全球传播（Namecheap 一般 5 分钟内）
+**架构**
 
-**Step 2：Vercel 新项目 Add Domain**
+```
+浏览器 → stock.knowulearning.com
+       → Cloudflare Edge（HTTPS 终止）
+       → Cloudflare Access（Email OTP 认证 chompcloud@gmail.com）
+       → Cloudflare Tunnel（cloudflared on Mac）
+       → http://localhost:8501（Streamlit）
+```
 
-1. Vercel Dashboard → 新项目 → Settings → Domains → **Add Domain**
-2. 输入 `stock.knowulearning.com`
-3. Vercel 自动验证 DNS + 签 SSL（Let's Encrypt）
-4. 等到看到 ✅ Valid Configuration
+**关键配置**
 
-**Namecheap 不需要关 proxy**（不像 Cloudflare）—— Namecheap 没有 proxy 功能，CNAME 直接生效。
+- Tunnel ID：`d8f758a4-0a1c-457d-b90e-190f93e39e62`（name `stock-quant-slowbull`）
+- Tunnel 守护：`~/Library/LaunchAgents/com.cloudflare.cloudflared.plist`
+- Streamlit 守护：`~/Library/LaunchAgents/com.quantslowbull.streamlit.plist`（绑 `127.0.0.1:8501`，外部不可直连）
+- ingress 配置：`~/.cloudflared/config.yml`（多 hostname 路由）
+- DNS：Cloudflare 控制台自动管 CNAME `stock` → `<tunnel-uuid>.cfargotunnel.com`
+- Access 应用：Zero Trust → Access → Applications → `stock-quant-slowbull` policy include `chompcloud@gmail.com`
+
+**重启命令**
+
+```bash
+launchctl kickstart -k gui/$(id -u)/com.cloudflare.cloudflared
+launchctl kickstart -k gui/$(id -u)/com.quantslowbull.streamlit
+```
+
+### pools.knowulearning.com（v3.8 真自动 · 看板 → 聚宽 同步）
+
+**用途**：聚宽云端 strategy_v3_8_auto.py 启动时通过 urllib 拉公开 JSON URL 自动同步赛道/股票/Conviction 调权。**完全自动** —— 看板更新 `reports/live_pools.json` → 聚宽下次跑时拉到最新版,无需粘贴。
+
+**架构**
+
+```
+聚宽 cloud → urllib.request.urlopen("https://pools.knowulearning.com/live_pools.json")
+           → Cloudflare Edge（公开,无 Access 保护）
+           → Cloudflare Tunnel（同一个 stock-quant-slowbull tunnel）
+           → http://localhost:8502（Python http.server）
+           → /Users/williamai/projects/quant-slowbull/reports/live_pools.json
+```
+
+**为什么不挂 Access**：聚宽是云端无登录态访问,如果加 Access 它会被拦在 OTP 登录页。pools.knowulearning.com 的内容是赛道+股票代码+权重,本身非敏感,公开 OK。
+
+**关键配置**
+
+- 静态文件 server 守护：`~/Library/LaunchAgents/com.quantslowbull.pools.plist`(`python -m http.server 8502 --bind 127.0.0.1` 在 reports/ 目录)
+- 复用同一个 tunnel,在 `~/.cloudflared/config.yml` 加一条 ingress 规则即可
+- DNS：`cloudflared tunnel route dns stock-quant-slowbull pools.knowulearning.com` 自动建 CNAME
+
+**复用步骤(给新子域)**
+
+```bash
+# 1. 写新 plist 拉本地 server(参考 com.quantslowbull.pools.plist)
+# 2. launchctl load ~/Library/LaunchAgents/com.<service>.plist
+# 3. 编辑 ~/.cloudflared/config.yml 在 ingress 顶部加:
+#    - hostname: <new>.knowulearning.com
+#      service: http://localhost:<port>
+# 4. cloudflared tunnel route dns stock-quant-slowbull <new>.knowulearning.com
+# 5. launchctl kickstart -k gui/$UID/com.cloudflare.cloudflared
+# 6. curl -sI https://<new>.knowulearning.com/  # 验证 200
+```
 
 ### 验证 DNS 是否传播
 
 ```bash
 dig stock.knowulearning.com CNAME +short
-# 应返回：cname.vercel-dns.com.
-```
-
-或用 https://dnschecker.org 输入 `stock.knowulearning.com` 选 CNAME 看全球节点。
-
-### 如果 CNAME 不工作（罕见），改用 A 记录
-
-```
-Type:   A Record
-Host:   stock
-Value:  76.76.21.21
-TTL:    Automatic
+# 返回：<tunnel-uuid>.cfargotunnel.com
+dig pools.knowulearning.com CNAME +short
+# 返回：<tunnel-uuid>.cfargotunnel.com (同一个 tunnel)
 ```
 
 ---
