@@ -16,6 +16,7 @@ import { HC } from './theme';
 import { renderBilingualText } from './bilingual';
 import { FONT_DISPLAY } from '../../lib/theme';
 import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/notebooks/index.js';
+import { loadStoryboard } from '../../lib/history-storyboards/index.js';
 
 export function CompletionScreen(props) {
   var topic = props.topic;
@@ -318,6 +319,46 @@ export function CompletionScreen(props) {
                     ? (isEnglish ? card.storyAnchor.xiaoweiNote.en : card.storyAnchor.xiaoweiNote.cn)
                     : (isEnglish ? card.standaloneText.en : card.standaloneText.cn)}
                 </div>
+                {isStory && card.storyAnchor && card.storyAnchor.nodeIds && card.storyAnchor.nodeIds.length > 0 && (
+                  <details style={{marginTop: 10}}>
+                    <summary style={{cursor: 'pointer', color: HC.teal, fontSize: 12.5, fontWeight: 600, userSelect: 'none', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 4}}>
+                      <span style={{fontSize: 10, opacity: 0.7}}>▶</span>
+                      {isEnglish ? '📖 Read the story passage' : '📖 看小薇读到的原文节选'}
+                    </summary>
+                    <div style={{marginTop: 8, borderTop: '1px dashed #e0e0d8', paddingTop: 10}}>
+                      {(function() {
+                        try {
+                          var nodes = loadStoryboard(props.topicId, card.storyAnchor.lens);
+                          var matched = (nodes || []).filter(function(n) { return card.storyAnchor.nodeIds.indexOf(n.nodeId) !== -1; });
+                          if (!matched.length) return React.createElement('div', {style: {fontSize: 12, color: HC.textSec, fontStyle: 'italic'}}, isEnglish ? 'Passage not found.' : '暂无对应节选。');
+                          return matched.map(function(node, ni) {
+                            var body = isEnglish ? (node.bodyEn || '') : (node.bodyCn || '');
+                            var preview = body.slice(0, 300);
+                            var truncated = body.length > 300;
+                            return (
+                              <div key={ni} style={{marginBottom: ni < matched.length - 1 ? 14 : 0}}>
+                                <div style={{fontSize: 11.5, fontWeight: 700, color: HC.teal, marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6}}>
+                                  <span>{isEnglish ? node.titleEn : node.titleCn}</span>
+                                  <span style={{opacity: 0.45, fontWeight: 400, fontSize: 10.5, fontFamily: 'monospace'}}>{node.nodeId}</span>
+                                </div>
+                                <div style={{
+                                  fontSize: 12.5, color: HC.text, lineHeight: 1.7,
+                                  whiteSpace: 'pre-wrap',
+                                  background: '#f8f6f0',
+                                  borderRadius: 8,
+                                  padding: '10px 12px',
+                                  borderLeft: '3px solid ' + HC.teal,
+                                }}>
+                                  {preview}{truncated && <span style={{opacity: 0.5}}>…</span>}
+                                </div>
+                              </div>
+                            );
+                          });
+                        } catch(e) { return null; }
+                      })()}
+                    </div>
+                  </details>
+                )}
                 {!isStory && card.xiaoweiNote && (
                   <div style={{
                     background: '#fffbe8', borderLeft: '3px solid #f0c040',
