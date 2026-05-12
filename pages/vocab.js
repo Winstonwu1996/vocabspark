@@ -470,9 +470,10 @@ var normalizeGuessData = (raw, targetWord) => {
         if (!v) return;
         // 1) 完全等于目标词
         if (v === w) { optionViolations.push(k + ":exact"); return; }
-        // 2) 单词选项（不含空格）+ 以词干开头 + 长度差 ≤ 5 → 同根词形
-        //    短词如 sew，stem='sew'，会 catch sews/sewing/sewed/sewn/sewer
-        if (!v.includes(" ") && v.length >= 2 && v.startsWith(checkStem) && Math.abs(v.length - w.length) <= 5) {
+        // 2) 同根词形：只对 4+ 字符词做前缀匹配。
+        //    短词（< 4 char）前缀仅 3 字母，误伤太多不相关英文单词（如 age→agent, mar→market, wan→wane）
+        //    短词已由精确匹配兜底，cognate 误判会让所有含该前缀的选项都失败 → 无限重试。
+        if (w.length >= 4 && !v.includes(" ") && v.length >= 2 && v.startsWith(checkStem) && Math.abs(v.length - w.length) <= 5) {
           optionViolations.push(k + ":cognate(" + v + ")");
         }
       });
