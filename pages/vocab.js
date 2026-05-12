@@ -4439,21 +4439,35 @@ export default function App() {
 
         // === Guess task（立即入队，不依赖 classify）===
         tasks.push(function() {
-          return callWithClientRetry(function() {
-            return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred });
-          }).then(function(raw) {
-            dataCache.current[word].guess = raw ? normalizeGuessData(tryJSON(raw), word) : null;
-            // 兜底：选项含目标词本身/同根词 → 视作失败让 UI 给重试按钮
-            if (dataCache.current[word].guess && dataCache.current[word].guess._invalidOptions) {
-              dataCache.current[word].guessFailed = true;
-              dataCache.current[word].guess = null;
-            }
-            dataCache.current[word].guessRaw = raw;
-            if ((dataCache.current[word].teach || dataCache.current[word].teachJSON) && (dataCache.current[word].guess || dataCache.current[word].guessRaw)) {
-              readyWordSet.add(word);
-              tryResolveEarlyStart();
-            }
-          }).catch(function(err) {
+          // _invalidOptions 重试：LLM 偶尔违反 prompt 约束把目标词放进选项，
+          // 此时不算网络错误（promise resolved），callWithClientRetry 不会重试。
+          // 这里额外给最多 2 次静默重试机会（3 次共计），用户不感知。
+          var doGuessAttempt = function(attemptsLeft) {
+            return callWithClientRetry(function() {
+              return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred });
+            }).then(function(raw) {
+              var parsed = raw ? normalizeGuessData(tryJSON(raw), word) : null;
+              if (parsed && parsed._invalidOptions && attemptsLeft > 0) {
+                console.warn("[loadBatch] guess _invalidOptions for '" + word + "', retrying (" + attemptsLeft + " left)");
+                return new Promise(function(r) { setTimeout(r, 800); }).then(function() {
+                  return doGuessAttempt(attemptsLeft - 1);
+                });
+              }
+              // 最终结果（有效 or 重试耗尽）
+              if (parsed && parsed._invalidOptions) {
+                console.warn("[loadBatch] guess _invalidOptions exhausted for '" + word + "'");
+                dataCache.current[word].guessFailed = true;
+                parsed = null;
+              }
+              dataCache.current[word].guess = parsed;
+              dataCache.current[word].guessRaw = raw;
+              if ((dataCache.current[word].teach || dataCache.current[word].teachJSON) && (dataCache.current[word].guess || dataCache.current[word].guessRaw)) {
+                readyWordSet.add(word);
+                tryResolveEarlyStart();
+              }
+            });
+          };
+          return doGuessAttempt(2).catch(function(err) {
             console.warn("[loadBatch] guess failed for " + word + ":", err.message);
             dataCache.current[word].guessFailed = true;
             if (dataCache.current[word].teach || dataCache.current[word].teachJSON) {
