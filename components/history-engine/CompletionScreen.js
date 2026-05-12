@@ -15,12 +15,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { HC } from './theme';
 import { renderBilingualText } from './bilingual';
 import { FONT_DISPLAY } from '../../lib/theme';
+import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/notebooks/index.js';
 
 export function CompletionScreen(props) {
   var topic = props.topic;
   var reviewPool = props.reviewPool || { words: [], concepts: [] };
   var hasReview = (reviewPool.words && reviewPool.words.length > 0) || (reviewPool.concepts && reviewPool.concepts.length > 0);
   var [showFreeChat, setShowFreeChat] = useState(false);
+  // Companion Notebook exit section
+  var notebookData = (props.topicId && hasNotebook(props.topicId)) ? loadNotebook(props.topicId) : null;
+  var isEnglish = !!(props.englishLevel === 'high');
+  var [nbSection, setNbSection] = useState('concepts'); // 'concepts' | 'questions'
   var freeChatEndRef = useRef(null);
 
   useEffect(function() {
@@ -229,6 +234,141 @@ export function CompletionScreen(props) {
         </div>
       </div>
       </div>{/* /.completion-flipbook-wrap */}
+
+      {/* ── 📒 同伴笔记本出口：复习考点 + DBQ 思考题 ── */}
+      {notebookData && (
+        <div style={{marginTop: 24}}>
+          {/* 标题栏 + tab 切换 */}
+          <div style={{display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12}}>
+            <span style={{fontSize: 20}}>📒</span>
+            <span style={{fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 700, color: HC.ink, flex: 1}}>
+              {isEnglish ? "Xiaowei's Study Notes" : "小薇的复习笔记"}
+            </span>
+            <div style={{display: 'flex', background: HC.parchmentHi, borderRadius: 8, padding: 2, gap: 2}}>
+              {[
+                {k: 'concepts', cn: '考点卡', en: 'Concepts'},
+                {k: 'questions', cn: 'DBQ 思考', en: 'Think'},
+              ].map(function(tab) {
+                var active = nbSection === tab.k;
+                return (
+                  <button key={tab.k} onClick={function(){ setNbSection(tab.k); }} style={{
+                    border: 'none', padding: '4px 12px', borderRadius: 6, fontSize: 12,
+                    fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                    background: active ? 'white' : 'transparent',
+                    color: active ? HC.ink : HC.textSec,
+                    boxShadow: active ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  }}>{isEnglish ? tab.en : tab.cn}</button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 考点卡 */}
+          {nbSection === 'concepts' && notebookData.mainConcepts && notebookData.mainConcepts.map(function(card, i) {
+            var isStory = card.storyAnchor && card.storyAnchor.covered;
+            var freqColors = {
+              highest: {bg: '#ffe0e0', color: '#c00'},
+              high:    {bg: '#fff3d6', color: '#a06800'},
+              mid:     {bg: '#e0ecff', color: '#2050a0'},
+              low:     {bg: '#f0f0f0', color: '#666'},
+            };
+            var fc = freqColors[card.examFrequency] || freqColors.mid;
+            return (
+              <div key={i} style={{
+                background: 'white', border: '1px solid ' + HC.border,
+                borderRadius: 12, padding: '16px 18px', marginBottom: 10,
+                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              }}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid ' + HC.border}}>
+                  <div>
+                    <div style={{fontSize: 16, fontWeight: 700, color: HC.ink}}>
+                      {isEnglish ? card.termEn : card.termCn}
+                    </div>
+                    <div style={{fontSize: 11.5, color: HC.textSec, marginTop: 2}}>
+                      {isEnglish ? card.termCn : card.termEn}
+                    </div>
+                    {card.standardRef && card.standardRef.length > 0 && (
+                      <div style={{fontSize: 10.5, color: HC.textSec, opacity: 0.75, marginTop: 2}}>
+                        {card.standardRef.join(' · ')}
+                      </div>
+                    )}
+                  </div>
+                  <span style={{
+                    fontSize: 10, padding: '3px 8px', borderRadius: 999,
+                    fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5,
+                    background: fc.bg, color: fc.color, whiteSpace: 'nowrap',
+                  }}>{card.examFrequency}</span>
+                </div>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  fontSize: 11, padding: '3px 8px', borderRadius: 5, marginBottom: 8,
+                  background: isStory ? '#e8f5e8' : '#fef4e6',
+                  color: isStory ? '#2a7d2a' : '#a05a00',
+                  fontWeight: 600,
+                }}>
+                  {isStory
+                    ? (isEnglish ? '📖 Covered in story' : '📖 故事已覆盖')
+                    : (isEnglish ? '📚 Mini-lesson' : '📚 独立讲解')}
+                  {isStory && card.storyAnchor.lens && (
+                    <span style={{opacity: 0.8, fontWeight: 400}}>· {card.storyAnchor.lens}</span>
+                  )}
+                </div>
+                <div style={{fontSize: 13.5, color: HC.text, lineHeight: 1.65, whiteSpace: 'pre-wrap'}}>
+                  {isStory
+                    ? (isEnglish ? card.storyAnchor.xiaoweiNote.en : card.storyAnchor.xiaoweiNote.cn)
+                    : (isEnglish ? card.standaloneText.en : card.standaloneText.cn)}
+                </div>
+                {!isStory && card.xiaoweiNote && (
+                  <div style={{
+                    background: '#fffbe8', borderLeft: '3px solid #f0c040',
+                    padding: '10px 14px', marginTop: 10, borderRadius: '0 8px 8px 0',
+                    fontSize: 13, color: '#5c4a10',
+                  }}>
+                    <div style={{fontSize: 10.5, fontWeight: 700, opacity: 0.7, marginBottom: 4}}>
+                      {isEnglish ? '📝 Xiaowei\'s note:' : '📝 小薇的批注：'}
+                    </div>
+                    {isEnglish ? card.xiaoweiNote.en : card.xiaoweiNote.cn}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* DBQ 思考题 */}
+          {nbSection === 'questions' && notebookData.thinkingQuestions && notebookData.thinkingQuestions.map(function(q, i) {
+            return (
+              <div key={i} style={{
+                background: 'linear-gradient(135deg, #fff5f0 0%, #ffe8e0 100%)',
+                border: '1px solid #f0c8b8', borderRadius: 12,
+                padding: '18px 20px', marginBottom: 10,
+              }}>
+                <div style={{fontSize: 10.5, fontWeight: 700, letterSpacing: 1.2, color: '#c0501a', textTransform: 'uppercase', marginBottom: 8}}>
+                  Q{i+1} · {isEnglish ? 'Critical Thinking' : '批判性思考'}
+                  {q.conceptsActivated && q.conceptsActivated.length > 0 && (
+                    <span style={{fontWeight: 400, opacity: 0.8, marginLeft: 6}}>
+                      · {q.conceptsActivated.join(' / ')}
+                    </span>
+                  )}
+                </div>
+                <div style={{fontSize: 14.5, color: '#4a2a18', lineHeight: 1.7, whiteSpace: 'pre-wrap'}}>
+                  {isEnglish ? q.en : q.cn}
+                </div>
+                <details style={{marginTop: 10}}>
+                  <summary style={{cursor: 'pointer', color: '#c0501a', fontWeight: 600, fontSize: 12}}>
+                    {isEnglish ? '👀 See hint' : '👀 看提示'}
+                  </summary>
+                  <div style={{
+                    background: 'rgba(255,255,255,0.6)', padding: '10px 14px',
+                    borderRadius: 8, marginTop: 8, fontSize: 12.5, color: '#6a4a30', lineHeight: 1.65,
+                  }}>
+                    {isEnglish ? q.hintEn : q.hintCn}
+                  </div>
+                </details>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* —— Free Chat Section（Winston review #4） —— */}
       {showFreeChat && (

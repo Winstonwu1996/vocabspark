@@ -89,6 +89,7 @@ import { MustMemorizePopup, TermPopup } from '../components/history-engine/popup
 import { ConversationStream } from '../components/history-engine/ConversationStream';
 import { MasteryGateOverlay } from '../components/history-engine/MasteryGate';
 import { CompletionScreen } from '../components/history-engine/CompletionScreen';
+import { hasNotebook, loadNotebook } from '../lib/history-storyboards/notebooks/index.js';
 
 // ─── 主组件 ────────────────────────────────────────────────────────
 export default function HistoryPage() {
@@ -1653,6 +1654,8 @@ export default function HistoryPage() {
           {phase === "complete" && (
             <CompletionScreen
               topic={topic}
+              topicId={topicId}
+              englishLevel={englishLevel}
               xpEarned={topicXpEarned}
               reviewPool={topicReviewPool}
               freeChatLog={freeChatLog}
@@ -2808,6 +2811,10 @@ function IntroScreen(props) {
   var lensTurnCount = (props.effectiveTurns && props.effectiveTurns.length) || 12;
   // 5-5 R2: placeholder profile 表示用户跳过了 setup → 显示 "还没填画像" hint
   var isPlaceholderProfile = !!(hp && hp.placeholder);
+  // Companion Notebook — preview section
+  var notebookData = (props.topicId && hasNotebook(props.topicId)) ? loadNotebook(props.topicId) : null;
+  var [nbOpen, setNbOpen] = useState(false);
+  var isEnglish = props.englishLevel === 'high';
   return (
     <div style={{padding: "20px 0"}}>
       {/* ── 已识别的画像 + 课程 banner ── */}
@@ -2897,6 +2904,99 @@ function IntroScreen(props) {
               }} title={opt.d}>{opt.l}</button>
             );
           })}
+        </div>
+      )}
+
+      {/* ── 📒 同伴笔记本预习卡（Companion Notebook preview）── */}
+      {notebookData && notebookData.preview && (
+        <div style={{
+          background: '#fffef9',
+          backgroundImage: 'linear-gradient(90deg, transparent 39px, #d4c5a0 39px, #d4c5a0 40px, transparent 40px), repeating-linear-gradient(transparent, transparent 23px, #e8e2d0 23px, #e8e2d0 24px)',
+          backgroundSize: '100% 24px',
+          border: '1px solid #e0d9bf',
+          borderRadius: 8,
+          padding: '12px 14px 12px 52px',
+          marginBottom: 12,
+          position: 'relative',
+          boxShadow: '1px 3px 8px rgba(60,50,20,0.06)',
+        }}>
+          <div style={{
+            position: 'absolute', top: 0, left: 0, bottom: 0, width: 40,
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 10,
+            fontSize: 18, userSelect: 'none',
+          }}>📒</div>
+          <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6}}>
+            <span style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: 0.5, color: '#8b6914',
+              textTransform: 'uppercase',
+            }}>{isEnglish ? "Xiaowei's Preview Notes" : "小薇的预习笔记"}</span>
+            <button onClick={function(){ setNbOpen(!nbOpen); }} style={{
+              background: 'transparent', border: '1px solid #d4c5a0', borderRadius: 999,
+              padding: '2px 10px', fontSize: 11, color: '#8b6914', cursor: 'pointer',
+              fontFamily: 'inherit', fontWeight: 600,
+            }}>{nbOpen ? (isEnglish ? '▲ Close' : '▲ 收起') : (isEnglish ? '▼ Open' : '▼ 打开预习')}</button>
+          </div>
+          {!nbOpen && (
+            <div style={{fontSize: 12, color: '#6b5a2a', opacity: 0.8, fontStyle: 'italic'}}>
+              {isEnglish
+                ? 'Study goals, key figures, and big question — open before reading'
+                : '学习目标、必认人物、大问题 — 读故事前打开看看'}
+            </div>
+          )}
+          {nbOpen && (
+            <div>
+              {/* 大问题 */}
+              {notebookData.preview.bigQuestion && (
+                <div style={{
+                  background: 'rgba(200,146,46,0.10)', borderRadius: 6,
+                  padding: '7px 10px', marginBottom: 8, fontSize: 13,
+                  color: '#5c3d0a', lineHeight: 1.55,
+                }}>
+                  <strong style={{fontSize: 11, display: 'block', opacity: 0.7, marginBottom: 3}}>
+                    {isEnglish ? '🧭 Big Question' : '🧭 大问题'}
+                  </strong>
+                  {isEnglish ? notebookData.preview.bigQuestion.en : notebookData.preview.bigQuestion.cn}
+                </div>
+              )}
+              {/* 必考人物 */}
+              {notebookData.preview.keyFigures && notebookData.preview.keyFigures.length > 0 && (
+                <div style={{marginBottom: 8}}>
+                  <div style={{fontSize: 11, fontWeight: 700, color: '#8b6914', marginBottom: 4, opacity: 0.8}}>
+                    {isEnglish ? '👤 Key Figures' : '👤 必认人物'}
+                  </div>
+                  <div style={{display: 'flex', flexWrap: 'wrap', gap: 4}}>
+                    {notebookData.preview.keyFigures.map(function(fig, i) {
+                      return (
+                        <div key={i} style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          background: fig.mustKnow ? 'rgba(196,107,48,0.12)' : 'rgba(0,0,0,0.04)',
+                          border: '1px solid ' + (fig.mustKnow ? 'rgba(196,107,48,0.3)' : 'rgba(0,0,0,0.08)'),
+                          borderRadius: 999, padding: '2px 8px', fontSize: 11.5,
+                          color: fig.mustKnow ? '#7a3a0a' : '#555',
+                        }}>
+                          {fig.mustKnow && <span style={{fontSize: 9, color: '#c46b30', fontWeight: 700}}>★</span>}
+                          <span>{isEnglish ? fig.nameEn : fig.nameCn}</span>
+                          {fig.mustKnow && fig.ipa && (
+                            <span style={{fontSize: 10, opacity: 0.6, fontFamily: 'monospace'}}>{fig.ipa}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{fontSize: 10, color: '#8b6914', opacity: 0.6, marginTop: 4}}>
+                    {isEnglish ? '★ = must know for exam' : '★ = 考试必考'}
+                  </div>
+                </div>
+              )}
+              {/* 预习笔记正文 */}
+              <div style={{
+                fontSize: 12.5, color: '#3d2e10', lineHeight: 1.75,
+                whiteSpace: 'pre-wrap', borderTop: '1px dashed #d4c5a0', paddingTop: 8, marginTop: 4,
+              }}>
+                {isEnglish ? notebookData.preview.en : notebookData.preview.cn}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
