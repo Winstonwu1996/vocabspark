@@ -1,7 +1,7 @@
 # Know U. Learning — 运维交接文档
 
 > 本文档面向运维/新接手人员。技术架构细节见 `INFRA.md`。
-> 最后更新：2026-05-10
+> 最后更新：2026-05-13
 
 ---
 
@@ -19,7 +19,7 @@
 | **Google AI** | AI 备用 fallback（Gemini 2.5 Flash）| *(确认账号)* | https://aistudio.google.com/apikey | 按 token 计费 |
 | **Sentry** | 错误监控 | *(确认账号，项目名 vocabspark)* | https://sentry.io | Free tier |
 | **Resend** | 事务邮件（OTP + 家长周报）| *(确认账号)* | https://resend.com/emails | Free 3,000封/月 |
-| **Stripe** | 支付（当前 Test mode）| *(确认账号)* | https://dashboard.stripe.com | 按交易收费（Test mode 免费）|
+| **Stripe** | 支付（Test + Live 双 mode，price IDs 已配）| *(确认账号)* | https://dashboard.stripe.com | 按交易收费（2.9% + $0.30/笔）|
 | **Cloudflare Tunnel** | 把 Mac 本地 Streamlit 暴露为 stock/pools 子域 | 同 Cloudflare 账号 | Zero Trust → Networks → Tunnels | 免费 |
 
 ---
@@ -53,7 +53,8 @@
 ```
 git push origin main  →  Vercel 自动触发 build + deploy（约 90s）
 ```
-- CI/CD：Vercel auto-deploy，无 GitHub Actions
+- CI/CD：Vercel auto-deploy on `main` push
+- GitHub Actions（`.github/workflows/atlas-ci.yml`）：Atlas 内容 CI 校验（不部署，纯验证）
 - 可在 https://vercel.com/winstonwu1996s-projects/vocabspark 查看部署状态
 
 ### 手动触发部署（无代码变更时）
@@ -81,34 +82,49 @@ npm run dev                  # http://localhost:3000
 
 ```
 # 数据库
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY          ← 高权限，加密存储
+NEXT_PUBLIC_SUPABASE_URL           = https://pzadkflzktvppwkezwxu.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY      ← public，可见
+SUPABASE_SERVICE_ROLE_KEY          ← 高权限，加密存储，不得泄漏
 
 # AI
 DEEPSEEK_API_KEY                   ← 主 key
-DEEPSEEK_API_KEY_2/_3/_4...        ← 轮询备用（加 key 即扩容）
-GOOGLE_AI_API_KEY
+DEEPSEEK_API_KEY_2                 ← 备用（加 _3/_4 继续轮询扩容）
+GOOGLE_AI_API_KEY                  ← Gemini 2.5 Flash fallback
 
 # 缓存/限流
-UPSTASH_REDIS_REST_URL
-UPSTASH_REDIS_REST_TOKEN
+UPSTASH_REDIS_REST_URL             = https://logical-anteater-107597.upstash.io
+UPSTASH_REDIS_REST_TOKEN           ← 加密
 
 # 邮件
-RESEND_API_KEY
-RESEND_FROM                        ← noreply@knowulearning.com
+RESEND_API_KEY                     ← re_ 开头
+RESEND_FROM                        = Know U. Learning <noreply@knowulearning.com>
 
 # 支付
-STRIPE_SECRET_KEY
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-STRIPE_WEBHOOK_SECRET
+STRIPE_SECRET_KEY                  ← 本地 sk_test_*  生产 sk_live_*
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ← 本地 pk_test_*  生产 pk_live_*
+STRIPE_WEBHOOK_SECRET              ← whsec_* 加密，Webhook 必须
 
 # 监控
-NEXT_PUBLIC_SENTRY_DSN
+NEXT_PUBLIC_SENTRY_DSN             ← https://cfa850fa...ingest.us.sentry.io/...
 
-# 内部
+# Feature flags / 内部
+NEXT_PUBLIC_ENABLE_STREAMING       = "true"（生产）
 CRON_SECRET                        ← 保护 /api/cron/* 定时任务
+PARENT_EMAIL_TEST_TOKEN            ← 触发 /api/parent-email/test 的临时 token
 ```
+
+**Stripe Live Price IDs**（`lib/stripe-prices.js`）：
+
+| 档位 | 周期 | Price ID | 金额 |
+|------|------|----------|------|
+| basic | monthly | `price_1TGPWlPfpKaWPg8IuipOYjOH` | $20/mo |
+| basic | yearly | `price_1TGPWmPfpKaWPg8Ivt2bqIJq` | $192/yr |
+| basic | monthly BYO | `price_1TGPWmPfpKaWPg8IOiwttXs3` | $10/mo |
+| basic | yearly BYO | `price_1TGPWmPfpKaWPg8IKywe2zww` | $96/yr |
+| pro | monthly | `price_1TGPWmPfpKaWPg8IQPHcv2yY` | $50/mo |
+| pro | yearly | `price_1TGPWmPfpKaWPg8IbhWAq6B1` | $480/yr |
+| pro | monthly BYO | `price_1TGPWmPfpKaWPg8Izc867VdH` | $25/mo |
+| pro | yearly BYO | `price_1TGPWnPfpKaWPg8IntINYiKR` | $240/yr |
 
 **修改变量后需 redeploy 才生效**（Vercel → Deployments → Redeploy）
 
@@ -242,7 +258,7 @@ tail -f /tmp/cloudflared.log     # tunnel 日志（路径视 plist 配置而定�
 | Vercel | 当前 Free/Pro | 超出 Free 配额（100GB bandwidth/月）自动升级 |
 | Supabase | Free（500MB DB）| 超出自动暂停项目，需升 Pro $25/月 |
 | Upstash Redis | Free（256MB）| 超出按量计费 |
-| Stripe | Test mode 免费 | 上线时切换 Live mode |
+| Stripe | **Live mode 已配**，按交易 2.9%+$0.30 | Stripe Dashboard → Billing |
 
 ---
 

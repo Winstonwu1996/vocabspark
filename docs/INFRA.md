@@ -2,8 +2,8 @@
 
 vocabspark（vocab 模块）+ history 模块的所有基础设施 / 集成 / 复用模式。新项目（`stock.knowulearning.com` 等）直接基于此文件搭建，避免重复踩坑。
 
-最后更新：2026-05-05
-当前部署 branch：`feat/sync-reliability-v5`（注意：不是 `main`）
+最后更新：2026-05-13
+当前部署 branch：`main`
 
 ---
 
@@ -16,8 +16,8 @@ vocabspark（vocab 模块）+ history 模块的所有基础设施 / 集成 / 复
 | 生产域名 | `www.knowulearning.com`（Vercel 托管 SSL）|
 | 框架 | Next.js 14.2 **Pages Router**（不是 App Router）|
 | Runtime | Node + Edge 混合，按 API 路由各自 `export const config` 决定 |
-| CI/CD | Vercel auto-deploy on push（无 GitHub Actions）|
-| Cron | `vercel.json` 定义；密钥保护用 `CRON_SECRET` |
+| CI/CD | Vercel auto-deploy on `main` push + GitHub Actions Atlas CI（`.github/workflows/atlas-ci.yml`）|
+| Cron | `vercel.json` 定义；密钥保护用 `CRON_SECRET`；当前 job：`/api/cron/weekly-parent-benchmark`（每周一 16:00 UTC）|
 
 **为什么是 Pages Router 不是 App Router**：Sentry @sentry/nextjs v8 与 App Router + SSG 有兼容性问题；Pages Router 更稳。新项目如果不需要 streaming SSR 也可以选 Pages Router。
 
@@ -101,9 +101,11 @@ Plan：Free tier 256MB（够前期）。
 
 | 项 | 值 |
 |----|-----|
-| 当前模式 | Test mode（pk_test_*, sk_test_*）|
-| Webhook | 已配，密钥 `STRIPE_WEBHOOK_SECRET` |
+| 本地模式 | Test mode（pk_test_*, sk_test_*）|
+| 生产模式 | **Live mode 已配**（pk_live_*, sk_live_* 存 Vercel env）|
+| Webhook | 已配，密钥 `STRIPE_WEBHOOK_SECRET`；handler：`pages/api/stripe/webhook.js` |
 | SDK | `stripe` v21 server + `@stripe/stripe-js` v9 client |
+| Price IDs | 见 `lib/stripe-prices.js`（8 个 Price ID，basic/pro × monthly/yearly × standard/BYO）|
 
 ---
 
