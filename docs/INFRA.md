@@ -157,12 +157,13 @@ vercel env pull .env.production.local --environment=production  # production
 ## 9. 域名 / DNS
 
 主域名 `knowulearning.com`：
-- **注册商 + DNS Provider**：Namecheap（https://www.namecheap.com/）
-- 管理面板：登录 Namecheap → Account → Domain List → 找 `knowulearning.com` → 点 **Manage**
-- DNS 编辑：在 Manage 页内点 **Advanced DNS** tab
+- **注册商**：Namecheap（https://www.namecheap.com/）— 仅持有域名注册，**DNS 已迁出**
+- **DNS Provider**：Cloudflare（NS：`walk.ns.cloudflare.com` / `wilson.ns.cloudflare.com`）
+- DNS 编辑：https://dash.cloudflare.com → 选 `knowulearning.com` → DNS Records
 
 当前 DNS 记录：
-- `www.knowulearning.com` → Vercel `vocabspark` 项目（CNAME 到 `cname.vercel-dns.com`）
+- `knowulearning.com` (apex) → A `76.76.21.21`（Vercel，DNS only）
+- `www` → CNAME `cname.vercel-dns.com`（Vercel）
 - `noreply@knowulearning.com` 收发 → Resend SMTP（DKIM/SPF TXT 已配 + 验证）
 - `hello@knowulearning.com` → 收信地址
 
