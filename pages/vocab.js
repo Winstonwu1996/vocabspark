@@ -5892,6 +5892,7 @@ export default function App() {
     var quiz = parseDeepQuiz(lines, qIdx);
     var teachLines = qIdx >= 0 ? lines.slice(0, qIdx) : lines;
     teachLines = teachLines.filter(function(l){ return !/^[A-D][\).、:：\s]/i.test(l) && !/答案|answer/i.test(l); });
+    var quizBlocked = false;
 
     // 校验：题干不能出现目标词（送分题检测）
     // 目标词 + 简单词形变化（去 e, 加 s/ed/ing/ly）都要检查
@@ -5910,10 +5911,30 @@ export default function App() {
       if (leaked) {
         console.warn('[review quiz] blocked: question contains target word "' + w + '". Q: ' + quiz.question);
         quiz = null; // 抛弃这道送分题
+        quizBlocked = true;
       }
     }
 
-    return { teach: teachLines.join("\n\n"), quiz: quiz };
+    // 校验：选项文本不能出现目标词（"prodigal" 出现在选项里即送分题）
+    if (quiz && targetWord) {
+      var tw = String(targetWord).toLowerCase().trim();
+      var twStem = tw.replace(/e$/, "");
+      var twVariants = [tw, tw + "s", tw + "es", tw + "ed", tw + "ing", tw + "ly", tw + "ion", twStem + "ed", twStem + "ing"];
+      var optLeaked = (quiz.options || []).some(function(op) {
+        var cleanOp = (op.text || "").toLowerCase().replace(/[\*_`]/g, "").trim();
+        return twVariants.some(function(v) {
+          var re = new RegExp("\\b" + v.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&") + "\\b", "i");
+          return re.test(cleanOp);
+        });
+      });
+      if (optLeaked) {
+        console.warn('[review quiz] blocked: option contains target word "' + tw + '"');
+        quiz = null;
+        quizBlocked = true;
+      }
+    }
+
+    return { teach: teachLines.join("\n\n"), quiz: quiz, quizBlocked: quizBlocked };
   };
 
   var fetchDeepReviewPayload = async function(word) {
@@ -5925,10 +5946,18 @@ export default function App() {
       try {
         var d = reviewWordData[word] || {};
         var reviewCount = (d.reviewHistory || []).length + 1;
-        var raw = await callAPIFast(sysP, buildReviewTeachPrompt(word, learned, reviewCount));
-        var text = raw || "生成失败，请重试";
-        var parts = splitDeepReviewParts(text, word);
-        var payload = { teach: parts.teach || text, quiz: parts.quiz || null };
+        var doFetchAttempt = async function(attemptsLeft) {
+          var raw = await callAPIFast(sysP, buildReviewTeachPrompt(word, learned, reviewCount));
+          var text = raw || "生成失败，请重试";
+          var parts = splitDeepReviewParts(text, word);
+          if (parts.quizBlocked && attemptsLeft > 0) {
+            console.warn('[fetchDeepReview] quiz blocked for "' + word + '", retrying (' + attemptsLeft + ' left)');
+            await new Promise(function(r){ setTimeout(r, 800); });
+            return doFetchAttempt(attemptsLeft - 1);
+          }
+          return { teach: parts.teach || text, quiz: parts.quiz || null };
+        };
+        var payload = await doFetchAttempt(2);
         deepReviewCacheRef.current[word] = payload;
         return payload;
       } catch (e) {
