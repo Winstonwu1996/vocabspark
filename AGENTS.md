@@ -1,5 +1,11 @@
 # VocabSpark — AGENTS.md
 
+> ⚠️ **这份文件属于 VocabSpark 项目本身** (你给女儿做的英语学习产品), 不属于任何 meta-system.
+> 它的存在是因为业界 spec ([agents.md](https://agents.md/)) 规定: 任何 repo 都该有一份"对 AI 编程工具的说明".
+> 删了它 = AI 工具进 VocabSpark 没背景, 干活质量打折. 不删它 = AI 一进来就知道项目背景 + 边界.
+>
+> **跟"AI OS 系统"的关系**: AI OS 系统的**代码** (`~/.ai-tools/` + `~/.openclaw/`) 跟**文档** (`~/ObsidianVault/` + `~/.claude/plans/`) 全在别处, 不住在 VocabSpark repo 里.
+
 > 项目级 canonical 启动手册. 任何 AI 编程工具 (Claude Code / Codex CLI / Cursor) 进入这个 repo 时第一个该读的文件.
 
 ## Project Overview
