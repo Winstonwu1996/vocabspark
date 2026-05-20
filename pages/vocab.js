@@ -4657,8 +4657,9 @@ export default function App() {
     } else if (d?.guessFailed && !d?.guess) {
       setGuessData({ context: "题目暂时没准备好", options: null, _failed: true });
     } else if (d?.guessRaw) {
-      // 响应到达但 JSON parse 失败 — 显示原始文本
-      setGuessData({ context: d.guessRaw.substring(0,300) || "AI 这次没说清楚 — 再试一次？", options: null });
+      // 响应到达但 JSON parse 失败 — 不展示原始代码，直接显示重试 UI
+      dataCache.current[word] = Object.assign({}, d, { guessFailed: true, guess: null });
+      setGuessData({ context: "题目暂时没准备好", options: null, _failed: true });
     } else {
       // guess 还在加载中 — 保持 guessData=null（UI 自动显示骨架屏），启动轮询
       var guessPollWord = word;
@@ -4674,7 +4675,9 @@ export default function App() {
           clearInterval(guessPollRef.current);
           clearTimeout(guessTimeoutRef.current);
         } else if (cached?.guessRaw) {
-          setGuessData({ context: cached.guessRaw.substring(0,300) || "AI 这次没说清楚 — 再试一次？", options: null });
+          // 响应到达但解析失败 — 不展示原始代码，直接显示重试 UI
+          dataCache.current[guessPollWord] = Object.assign({}, cached, { guessFailed: true, guess: null });
+          setGuessData({ context: "题目暂时没准备好", options: null, _failed: true });
           clearInterval(guessPollRef.current);
           clearTimeout(guessTimeoutRef.current);
         }
