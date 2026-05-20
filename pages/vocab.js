@@ -4447,21 +4447,26 @@ export default function App() {
               return callAPIFast(sysP, buildGuessPrompt(word, learned), { preferredProviders: preferred });
             }).then(function(raw) {
               var parsed = raw ? normalizeGuessData(tryJSON(raw), word) : null;
-              if (parsed && parsed._invalidOptions && attemptsLeft > 0) {
-                console.warn("[loadBatch] guess _invalidOptions for '" + word + "', retrying (" + attemptsLeft + " left)");
+              var isInvalidOpts = !!(parsed && parsed._invalidOptions);
+              var isBadParse = !parsed && !!raw; // raw 到达但 JSON 解析失败
+              var isMissingFields = !!(parsed && !isInvalidOpts && (!parsed.context || !parsed.options)); // 结构不完整
+              if ((isInvalidOpts || isBadParse || isMissingFields) && attemptsLeft > 0) {
+                var reason = isInvalidOpts ? "_invalidOptions" : isBadParse ? "bad_parse" : "missing_fields";
+                console.warn("[loadBatch] guess " + reason + " for '" + word + "', retrying (" + attemptsLeft + " left)");
                 return new Promise(function(r) { setTimeout(r, 800); }).then(function() {
                   return doGuessAttempt(attemptsLeft - 1);
                 });
               }
-              // 最终结果（有效 or 重试耗尽）
-              if (parsed && parsed._invalidOptions) {
-                console.warn("[loadBatch] guess _invalidOptions exhausted for '" + word + "'");
+              // 最终结果（有效 or 重试全部耗尽）
+              if (isInvalidOpts || isBadParse || isMissingFields) {
+                var exhaustReason = isInvalidOpts ? "_invalidOptions" : isBadParse ? "bad_parse" : "missing_fields";
+                console.warn("[loadBatch] guess " + exhaustReason + " exhausted for '" + word + "'");
                 dataCache.current[word].guessFailed = true;
                 parsed = null;
               }
               dataCache.current[word].guess = parsed;
               dataCache.current[word].guessRaw = raw;
-              if ((dataCache.current[word].teach || dataCache.current[word].teachJSON) && (dataCache.current[word].guess || dataCache.current[word].guessRaw)) {
+              if ((dataCache.current[word].teach || dataCache.current[word].teachJSON) && (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed)) {
                 readyWordSet.add(word);
                 tryResolveEarlyStart();
               }
