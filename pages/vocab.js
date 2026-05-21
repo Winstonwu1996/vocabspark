@@ -4500,9 +4500,10 @@ export default function App() {
                 var parsed = parsePartialJSON(partial);
                 if (parsed && parsed.opening) {
                   dataCache.current[word].teachJSON = parsed;
-                } else {
-                  dataCache.current[word].teach = partial;
                 }
+                // 注意：不在 else 里把半截 JSON 存入 teach。
+                // 早期 chunk 未积累到 opening 时，teach 保持 null，UI 显示骨架屏，
+                // 避免用户看到花括号/斜杠等原始 JSON 代码一闪而过。
                 dataCache.current[word].teachStreaming = true;
                 if (!dataCache.current[word]._streamReadyTriggered) {
                   dataCache.current[word]._streamReadyTriggered = true;
