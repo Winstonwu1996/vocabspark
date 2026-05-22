@@ -3056,7 +3056,7 @@ export default function App() {
           return;
         }
         // 用户主动确认删词 → 设 intent，让服务端 L1 守卫放行 wordInput 缩水
-        _intentRef.current = 'user_edit_wordInput';
+        _markIntent('user_edit_wordInput');
       }
 
       d.wordInput = wordInput;
@@ -3396,6 +3396,14 @@ export default function App() {
   // L3：用户主动操作 wordInput 时设此 intent，sync 时一起发给服务端解锁 wordInput 缩水保护
   // 'user_edit_wordInput' / 'user_upload' / 'user_clear'，发出后立即清空
   var _intentRef = useRef(null);
+  var _intentSeqRef = useRef(0);
+  // intent payload-binding (Codex 第二批 P1)：intent 设为带唯一 id 的对象。
+  // _doSync 捕获整个对象，成功后只在 _intentRef.current 仍 === 捕获对象时才清 —
+  // 防止 in-flight sync A 成功后误清 sync A 发出之后用户新设的 intent (sync B)。
+  var _markIntent = function(type) {
+    _intentRef.current = { type: type, id: ++_intentSeqRef.current };
+    return _intentRef.current;
+  };
   var _bcRef = useRef(null); // BroadcastChannel 多 tab 同步
   var MAX_SYNC_RETRIES = 3;
   var SYNC_DEBOUNCE_MS = 500;
@@ -3462,10 +3470,11 @@ export default function App() {
       }
       _broadcastSync(syncVersionRef.current);
       setSyncStatus("error");
+      return false; // 有拒绝 → 非干净成功（intent 不清，下次重带）
     } else {
       _broadcastSync(syncVersionRef.current);
       setSyncSynced();
-      _intentRef.current = null; // 第二批：成功且无拒绝才清 intent（重试/reject/error 保留）
+      return true; // 干净成功 → 调用方据此清对应 intent（身份匹配）
     }
   };
 
@@ -3475,11 +3484,14 @@ export default function App() {
   var _pushSnapshot = async function(dataToPush, intent) {
     var u = userRef.current;
     if (!u) return;
+    var intentType = intent && intent.type; // intent 现在是 {type,id} 对象；发给服务端只要 type 字符串
+    // 干净成功后只清"本次捕获的 intent"，避免误清 in-flight 期间用户新设的 intent (P1)
+    var _clearIntentIfMine = function() { if (_intentRef.current === intent) _intentRef.current = null; };
     dataToPush.updatedAt = new Date().toISOString();
     var r = await fetch('/api/sync', {
       method: 'POST',
       headers: await getAuthHeaders(true),
-      body: JSON.stringify({ userId: u.id, data: dataToPush, clientVersion: syncVersionRef.current, intent: intent }),
+      body: JSON.stringify({ userId: u.id, data: dataToPush, clientVersion: syncVersionRef.current, intent: intentType }),
     });
     if (r.status === 409) {
       var conflict = await r.json();
@@ -3499,10 +3511,11 @@ export default function App() {
         var r2 = await fetch('/api/sync', {
           method: 'POST',
           headers: await getAuthHeaders(true),
-          body: JSON.stringify({ userId: u.id, data: merged, clientVersion: syncVersionRef.current, intent: intent }),
+          body: JSON.stringify({ userId: u.id, data: merged, clientVersion: syncVersionRef.current, intent: intentType }),
         });
         if (r2.ok) {
-          await _applySyncSuccess(await r2.json());
+          var clean2 = await _applySyncSuccess(await r2.json());
+          if (clean2) _clearIntentIfMine();
         } else if (r2.status === 409) {
           var conflict2 = await r2.json();
           console.warn('[sync] re-merge still 409, accepting server (max contention)');
@@ -3512,14 +3525,15 @@ export default function App() {
             _applyCloudData(conflict2.serverData);
           }
           setSyncSynced();
-          _intentRef.current = null;
+          _clearIntentIfMine();
         } else {
           throw new Error('re-push failed: ' + r2.status);
         }
       }
       _syncRetryCountRef.current = 0;
     } else if (r.ok) {
-      await _applySyncSuccess(await r.json());
+      var clean = await _applySyncSuccess(await r.json());
+      if (clean) _clearIntentIfMine();
     } else {
       throw new Error('sync failed: ' + r.status);
     }
@@ -3539,10 +3553,10 @@ export default function App() {
       if (!u) return;
       var cloudRes = await loadFromCloud(u.id);
       if (!cloudRes.ok) {
-        // 拉云失败 → 保持 blocked，不强推（避免覆盖云端）
-        console.warn('[sync] recover: cloud load failed, staying blocked');
-        setSyncStatus("error");
-        return;
+        // 拉云失败 → 不强推（避免覆盖云端），但抛错交给 _doSync 的重试逻辑
+        // （指数退避 + MAX 上限），让 /api/load 短暂失败能自动恢复，无需等用户操作 (Codex P2)
+        console.warn('[sync] recover: cloud load failed, will retry:', cloudRes.error);
+        throw new Error('recover_cloud_load_failed:' + cloudRes.error);
       }
       if (!cloudRes.data) {
         // 云端无数据 → 没有可保护的数据，闸门是误判，直接推本地建立初始数据
@@ -5014,7 +5028,7 @@ export default function App() {
       d.wordInput = finalWordInput;
       await doSave(d);
       // L3 intent：上传是用户主动行为，授权服务端守卫放行 wordInput 长度变化
-      _intentRef.current = 'user_upload';
+      _markIntent('user_upload');
       if (userRef.current) syncToCloud();
     } catch (err) { setError("文件解析失败: " + err.message); setFileLabel(file.name); }
     if (fileRef.current) fileRef.current.value = "";
@@ -7283,7 +7297,7 @@ export default function App() {
                 }
                 var newInput = deduped.join("\n");
                 // 词库缩水是用户主动操作 → 设 intent 让服务端 L1 守卫放行
-                _intentRef.current = 'user_edit_wordInput';
+                _markIntent('user_edit_wordInput');
                 setWordInput(newInput);
                 doSave({ wordInput: newInput });
                 if (userRef.current) syncToCloud();
