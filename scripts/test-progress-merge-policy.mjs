@@ -39,7 +39,8 @@ ok("跨日比较正确 (ISO5-22 > 纯5-21)", toTime("2026-05-22T07:00:00.000Z") 
 console.log("\n── entryRecency fallback 链 (srsUpdatedAt 优先, 不看 updatedAt) ──");
 ok("srsUpdatedAt 优先", entryRecency({ srsUpdatedAt: "2026-05-21T10:00:00Z", nextReviewDate: "2026-05-01" }) === toTime("2026-05-21T10:00:00Z"));
 ok("无 srsUpdatedAt → max(history.date)", entryRecency({ reviewHistory: [{ date: "2026-05-10T00:00:00Z" }, { date: "2026-05-20T00:00:00Z" }], nextReviewDate: "2026-05-01" }) === toTime("2026-05-20T00:00:00Z"));
-ok("无 srs/history → nextReviewDate", entryRecency({ nextReviewDate: "2026-05-15" }) === toTime("2026-05-15"));
+ok("无 srs/history → fallbackTime (不用 nextReviewDate, 它是未来计划非活动时间)", entryRecency({ nextReviewDate: "2026-05-15" }, 999) === 999);
+ok("nextReviewDate 完全不参与 recency (未来日期不胜出)", entryRecency({ nextReviewDate: "2099-01-01" }, 5) === 5);
 ok("全空 → fallbackTime", entryRecency({}, 12345) === 12345);
 // Codex P1 核心：通用 updatedAt 不参与 SRS recency
 ok("通用 updatedAt 被忽略 (只补 meaning 刷的 updatedAt 不抢 recency)",
@@ -76,10 +77,10 @@ eq("5 无 srsUpdatedAt → 用 history date 比 recency (local hist 更新 → l
     { reviewLevel: 1, nextReviewDate: "2026-05-25", reviewHistory: [{ date: "2026-05-20T00:00:00Z", mode: "quick", result: "good" }] },
     { reviewLevel: 3, nextReviewDate: "2026-06-10", reviewHistory: [{ date: "2026-05-10T00:00:00Z", mode: "deep", result: "good" }] }
   ).reviewLevel, 1);
-eq("6 混合格式 (local 纯日期更晚) → local 赢",
+eq("6 混合格式 srsUpdatedAt (local 纯日期更晚) → local 赢",
   mergeReviewEntry(
-    { reviewLevel: 1, nextReviewDate: "2026-05-25" },
-    { reviewLevel: 2, nextReviewDate: "2026-05-20T07:00:00.000Z" }
+    { reviewLevel: 1, srsUpdatedAt: "2026-05-25" },
+    { reviewLevel: 2, srsUpdatedAt: "2026-05-20T07:00:00.000Z" }
   ).reviewLevel, 1);
 eq("7 local 日期非法 → server 赢",
   mergeReviewEntry(

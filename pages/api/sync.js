@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { requireUser } from '../../lib/auth-server';
-import { applyProgressGuards } from '../../lib/progressMergePolicy';
+import { planSyncOutcome } from '../../lib/progressMergePolicy';
 
 var supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -10,17 +10,12 @@ var supabase = createClient(
 export const config = { api: { bodyParser: { sizeLimit: '4mb' } } };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// L1：字段级硬守卫（零容忍只增不减）
+// L1 字段守卫 + 版本冲突 + fail-closed 读 → 统一到 lib/progressMergePolicy.js 的
+// planSyncOutcome（纯函数，可单测）。handler 只做 DB 读写 IO。
+// 原则（chompcloud 4-30 事件后定型）：除用户主动操作 wordInput
+// (intent='user_edit_wordInput'/'user_upload'/'user_clear') 外，关键字段 push
+// 比云端少 → 保留云端，防 race/mount/游客污染导致进度丢失。
 // ─────────────────────────────────────────────────────────────────────────────
-// 原则（chompcloud 4-30 事件后定型）：
-//   除"用户主动操作 wordInput"（intent='user_edit_wordInput' / 'user_upload' /
-//   'user_clear'）外，任何关键字段 push 时比云端少 → 该字段保留云端 + 写审计 log。
-//   客户端永远不会因为 race condition / mount bug / 游客污染让用户进度丢失。
-// ─────────────────────────────────────────────────────────────────────────────
-
-// 字段守卫统一到 lib/progressMergePolicy.js 的 applyProgressGuards，
-// 客户端 / 服务端 / 测试共用同一套逻辑（保持原"只增不减"语义不变）。
-var applyFieldGuards = applyProgressGuards;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // L2：历史快照写入 + 自动清理
@@ -116,45 +111,45 @@ export default async function handler(req, res) {
       .from('user_progress').select('version, progress_data')
       .eq('user_id', userId).single();
 
-    // fail closed (Codex P1)：读云端失败绝不能当成 cloud=null，否则 applyFieldGuards
-    // 会全放行 → 防覆盖守卫失效。PGRST116 = 该用户尚无记录（首次用户），属正常。
-    if (readErr && readErr.code !== 'PGRST116') {
-      console.warn('[sync] cloud read failed for user ' + userId + ':', readErr.message);
+    // 决策（纯函数 planSyncOutcome）：fail-closed 读 / 版本冲突 409 / 守卫 + 写入计划。
+    // handler 只负责按决策做 DB IO。
+    var plan = planSyncOutcome({
+      current: current,
+      readErr: readErr,
+      incoming: data,
+      clientVersion: clientVersion,
+      intent: intent,
+    });
+
+    if (plan.action === 'read_error') {
+      console.warn('[sync] cloud read failed for user ' + userId + ':', readErr && readErr.message);
       return res.status(500).json({ error: 'cloud_read_failed' });
     }
 
-    var serverVersion = current ? (current.version || 0) : 0;
-    var cloudData = current ? current.progress_data : null;
-
-    // ── 版本冲突仍然返回 409，让客户端 mergeStates 后重推 ──
-    if (cv !== null && cv < serverVersion) {
+    if (plan.action === 'conflict') {
+      // 版本冲突 → 409，客户端 mergeStates 后重推
       return res.status(409).json({
         error: 'version_conflict',
-        serverVersion: serverVersion,
-        serverData: cloudData,
+        serverVersion: plan.serverVersion,
+        serverData: plan.serverData,
       });
     }
 
-    // ── L1：字段级守卫 ──
-    var guard = applyFieldGuards(data, cloudData, intent);
-    var safe = guard.safe;
-
-    if (guard.rejected.length > 0) {
+    // plan.action === 'write'
+    if (plan.rejected.length > 0) {
       console.warn('[sync][guard] rejected fields for user ' + userId + ':', JSON.stringify({
-        rejected: guard.rejected,
+        rejected: plan.rejected,
         intent: intent || null,
-        cloudVersion: serverVersion,
         clientVersion: cv,
       }));
     }
 
-    // 版本匹配或新记录 — 接受写入（用 safe 而不是原 data）
-    var newVersion = serverVersion + 1;
+    // 接受写入（用 plan.safe，已过字段守卫）
     var { error } = await supabase.from('user_progress').upsert(
       {
         user_id: userId,
-        progress_data: safe,
-        version: newVersion,
+        progress_data: plan.safe,
+        version: plan.newVersion,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'user_id' }
@@ -162,14 +157,14 @@ export default async function handler(req, res) {
     if (error) return res.status(500).json({ error: error.message });
 
     // ── L2：历史快照（异步，不阻塞响应）──
-    writeHistorySnapshot(userId, newVersion, safe, 'sync').catch(function () {});
+    writeHistorySnapshot(userId, plan.newVersion, plan.safe, 'sync').catch(function () {});
 
     res.status(200).json({
       ok: true,
-      version: newVersion,
-      // 告诉客户端哪些字段被守卫拒绝了（客户端可显示 toast）
-      rejectedFields: guard.rejected.length > 0 ? guard.rejected : undefined,
-      serverData: guard.rejected.length > 0 ? safe : undefined, // 被拒时返回服务端权威版本
+      version: plan.newVersion,
+      // 告诉客户端哪些字段被守卫拒绝了（客户端据此应用 serverData + 不显示 synced）
+      rejectedFields: plan.rejected.length > 0 ? plan.rejected : undefined,
+      serverData: plan.rejected.length > 0 ? plan.safe : undefined,
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
