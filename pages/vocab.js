@@ -2578,6 +2578,7 @@ export default function App() {
   var streakToastTimerRef = useRef(null);
   var guessAdvanceRef = useRef(null);
   var [loginToast, setLoginToast] = useState(null);
+  var loginToastTimerRef = useRef(null);
   var [screeningWords, setScreeningWords] = useState([]);
   var [screeningIdx, setScreeningIdx] = useState(0);
   var [screeningStats, setScreeningStats] = useState({ known: 0, unknown: 0 });
@@ -2858,6 +2859,7 @@ export default function App() {
       if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
       if (streakToastTimerRef.current) clearTimeout(streakToastTimerRef.current);
       if (guessAdvanceRef.current) clearTimeout(guessAdvanceRef.current);
+      if (loginToastTimerRef.current) clearTimeout(loginToastTimerRef.current);
     };
   }, []);
   var speedWaitAbortRef = useRef(false);
@@ -3874,7 +3876,8 @@ export default function App() {
 
       if (event === 'SIGNED_IN') {
         setLoginToast("✅ 登录成功！" + (u.email || ""));
-        setTimeout(function() { setLoginToast(null); }, 4000);
+        if (loginToastTimerRef.current) clearTimeout(loginToastTimerRef.current);
+        loginToastTimerRef.current = setTimeout(function() { loginToastTimerRef.current = null; setLoginToast(null); }, 4000);
       }
       setShowLogin(false); setLoginSent(false); setLoginEmail(''); setOtpCode('');
 
