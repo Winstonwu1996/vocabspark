@@ -3441,6 +3441,33 @@ export default function App() {
     }
   };
 
+  // 统一的"sync 成功响应"处理 — 正常 push 与 409 重推共用同一套逻辑。
+  // Codex 复审 P1：409 重推路径 (r2.ok) 原先直接 setSyncSynced()，没消费
+  // rejectedFields/serverData → 服务端拒字段时谎报 synced、本地继续 diverge。
+  var _applySyncSuccess = async function(result) {
+    syncVersionRef.current = result.version;
+    _syncRetryCountRef.current = 0;
+    _lastSyncAtRef.current = Date.now();
+    if (result.rejectedFields && result.rejectedFields.length > 0) {
+      // 服务端守卫拒绝了部分字段：serverData 是权威版本，应用回本地避免继续推
+      // diverged 数据；不显示 synced —— 用 error 态让用户感知"同步未完整"。
+      console.warn('[sync] guard rejected fields:', result.rejectedFields.join(', '));
+      if (result.serverData) {
+        try {
+          await doSave(result.serverData);
+          _applyCloudData(result.serverData);
+        } catch (applyErr) {
+          console.warn('[sync] apply serverData after rejection failed:', applyErr.message);
+        }
+      }
+      _broadcastSync(syncVersionRef.current);
+      setSyncStatus("error");
+    } else {
+      _broadcastSync(syncVersionRef.current);
+      setSyncSynced();
+    }
+  };
+
   // 真正推送的内部函数
   var _doSync = async function() {
     if (_syncInFlightRef.current) { _syncPendingRef.current = true; return; }
@@ -3522,10 +3549,7 @@ export default function App() {
             });
             if (r2.ok) {
               var result2 = await r2.json();
-              syncVersionRef.current = result2.version;
-              _broadcastSync(syncVersionRef.current); // 通知其他 tab
-              _lastSyncAtRef.current = Date.now();
-              setSyncSynced();
+              await _applySyncSuccess(result2); // 复用统一逻辑，消费 rejectedFields
             } else if (r2.status === 409) {
               // 第二次冲突 — 第三方 tab 又写了。接受服务端避免无限循环
               var conflict2 = await r2.json();
@@ -3547,28 +3571,7 @@ export default function App() {
         _syncRetryCountRef.current = 0;
       } else if (r.ok) {
         var result = await r.json();
-        syncVersionRef.current = result.version;
-        _syncRetryCountRef.current = 0;
-        _lastSyncAtRef.current = Date.now();
-        if (result.rejectedFields && result.rejectedFields.length > 0) {
-          // 服务端守卫拒绝了部分字段（本地 push 比云端少）。serverData 是权威版本：
-          // 必须应用回本地，否则下次会继续推同一份 diverged 数据（事故核心之一）。
-          // 不显示 synced —— 用 error 态让用户感知"同步未完整"（精确 reason UI 留第三批）。
-          console.warn('[sync] guard rejected fields:', result.rejectedFields.join(', '));
-          if (result.serverData) {
-            try {
-              await doSave(result.serverData);
-              _applyCloudData(result.serverData);
-            } catch (applyErr) {
-              console.warn('[sync] apply serverData after rejection failed:', applyErr.message);
-            }
-          }
-          _broadcastSync(syncVersionRef.current);
-          setSyncStatus("error");
-        } else {
-          _broadcastSync(syncVersionRef.current);
-          setSyncSynced();
-        }
+        await _applySyncSuccess(result);
       } else {
         throw new Error('sync failed: ' + r.status);
       }

@@ -44,6 +44,11 @@ ok("全空 → fallbackTime", entryRecency({}, 12345) === 12345);
 // Codex P1 核心：通用 updatedAt 不参与 SRS recency
 ok("通用 updatedAt 被忽略 (只补 meaning 刷的 updatedAt 不抢 recency)",
   entryRecency({ updatedAt: "2026-12-31T00:00:00Z", reviewHistory: [{ date: "2026-05-10T00:00:00Z" }] }) === toTime("2026-05-10T00:00:00Z"));
+// Codex P2: max(srsUpdatedAt, history) — 旧 srs + 更新 history → 用 history
+ok("P2 旧 srs 5-10 + 新 history 5-20 → 取 5-20",
+  entryRecency({ srsUpdatedAt: "2026-05-10T00:00:00Z", reviewHistory: [{ date: "2026-05-20T00:00:00Z" }] }) === toTime("2026-05-20T00:00:00Z"));
+ok("P2 新 srs 5-25 + 旧 history 5-20 → 取 5-25",
+  entryRecency({ srsUpdatedAt: "2026-05-25T00:00:00Z", reviewHistory: [{ date: "2026-05-20T00:00:00Z" }] }) === toTime("2026-05-25T00:00:00Z"));
 
 console.log("\n── mergeReviewEntry recency-wins (用 srsUpdatedAt) ──");
 eq("1 local newer 同级 → nextReviewDate 取 local",
