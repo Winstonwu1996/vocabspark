@@ -2848,6 +2848,7 @@ export default function App() {
       if (guessTimeoutRef.current) clearTimeout(guessTimeoutRef.current);
       if (petCelebrateTimerRef.current) clearTimeout(petCelebrateTimerRef.current);
       if (rewardTimerRef.current) clearTimeout(rewardTimerRef.current);
+      if (_syncStatusTimerRef.current) clearTimeout(_syncStatusTimerRef.current);
     };
   }, []);
   var speedWaitAbortRef = useRef(false);
@@ -3344,6 +3345,16 @@ export default function App() {
   var _syncInFlightRef = useRef(false);
   var _syncPendingRef = useRef(false);
   var _syncRetryCountRef = useRef(0);
+  var _syncStatusTimerRef = useRef(null);
+  // setSyncSynced：统一的"synced → idle"切换，避免 3 处重复 + 卸载后 setState
+  var setSyncSynced = function() {
+    setSyncStatus("synced");
+    if (_syncStatusTimerRef.current) clearTimeout(_syncStatusTimerRef.current);
+    _syncStatusTimerRef.current = setTimeout(function() {
+      _syncStatusTimerRef.current = null;
+      setSyncStatus("idle");
+    }, 2500);
+  };
   var _lastSyncAtRef = useRef(0); // 上次成功 sync 的时间戳（leading edge 用）
   // chompcloud 2026-04-30 修复：登录用户的首次 sync 必须等 _applyCloudData 完成。
   // 否则 mount 创建的 default pet 会在云端 pet 拉到之前被 push 上云端覆盖真实进度。
@@ -3480,8 +3491,7 @@ export default function App() {
               syncVersionRef.current = result2.version;
               _broadcastSync(syncVersionRef.current); // 通知其他 tab
               _lastSyncAtRef.current = Date.now();
-              setSyncStatus("synced");
-              setTimeout(function(){ setSyncStatus("idle"); }, 2500);
+              setSyncSynced();
             } else if (r2.status === 409) {
               // 第二次冲突 — 第三方 tab 又写了。接受服务端避免无限循环
               var conflict2 = await r2.json();
@@ -3491,8 +3501,7 @@ export default function App() {
                 await doSave(conflict2.serverData);
                 _applyCloudData(conflict2.serverData);
               }
-              setSyncStatus("synced");
-              setTimeout(function(){ setSyncStatus("idle"); }, 2500);
+              setSyncSynced();
             } else {
               throw new Error('re-push failed: ' + r2.status);
             }
@@ -3508,8 +3517,7 @@ export default function App() {
         _syncRetryCountRef.current = 0;
         _broadcastSync(syncVersionRef.current);
         _lastSyncAtRef.current = Date.now();
-        setSyncStatus("synced");
-        setTimeout(function(){ setSyncStatus("idle"); }, 2500);
+        setSyncSynced();
       } else {
         throw new Error('sync failed: ' + r.status);
       }
