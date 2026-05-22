@@ -2846,6 +2846,8 @@ export default function App() {
       if (spectrumPollRef.current) clearInterval(spectrumPollRef.current);
       if (guessPollRef.current) clearInterval(guessPollRef.current);
       if (guessTimeoutRef.current) clearTimeout(guessTimeoutRef.current);
+      if (petCelebrateTimerRef.current) clearTimeout(petCelebrateTimerRef.current);
+      if (rewardTimerRef.current) clearTimeout(rewardTimerRef.current);
     };
   }, []);
   var speedWaitAbortRef = useRef(false);
