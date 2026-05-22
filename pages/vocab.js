@@ -2360,7 +2360,22 @@ var SpeedMatchGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
   var [done, setDone] = useState(false);
   var [score, setScore] = useState(0);
   var startedRef = useRef(false);
-  var pairs = data?.pairs || [];
+  // 规范化 + 去重 pairs：去掉空值、重复 word、重复 meaning。
+  // 修复"左 5 右 6"——LLM 偶尔生成重复 word/meaning，导致左右列数量不一致、出现无法连线的孤儿项。
+  var pairsRef = useRef(null);
+  if (pairsRef.current === null && data && Array.isArray(data.pairs) && data.pairs.length) {
+    var seenWord = {}, seenMeaning = {};
+    var clean = [];
+    data.pairs.forEach(function(p){
+      if (!p || !p.word || !p.meaning) return;
+      var w = String(p.word).trim(); var m = String(p.meaning).trim();
+      if (!w || !m || seenWord[w] || seenMeaning[m]) return;
+      seenWord[w] = true; seenMeaning[m] = true;
+      clean.push({ word: w, meaning: m });
+    });
+    pairsRef.current = clean;
+  }
+  var pairs = pairsRef.current || [];
   var total = pairs.length;
   // 打乱 meaning 顺序（不打乱 word 顺序，让用户专注配对而非搜索）
   var meaningOrderRef = useRef(null);
@@ -8948,6 +8963,7 @@ export default function App() {
       {phase === "review" && reviewData?.type === "speed_match" && (
         <div style={{...S.card, animation:"phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)"}}>
           <SpeedMatchGame
+            key={"sm-" + ((reviewData.pairs || []).map(function(p){ return p && p.word; }).join("|"))}
             data={reviewData}
             sfx={sfx}
             loading={loading}
