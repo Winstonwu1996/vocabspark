@@ -7114,6 +7114,7 @@ export default function App() {
             </div>
             <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:6}}>
               {user && <button onClick={function(){setHelpTip(helpTip==="cloud-restore"?null:"cloud-restore");}} style={{padding:"4px 10px",background:"transparent",color:C.teal,border:"none",fontFamily:FONT,fontSize:12,cursor:"pointer",textDecoration:"underline dashed",textUnderlineOffset:3,whiteSpace:"nowrap"}}>☁️ 云端恢复</button>}
+              <button onClick={function(){setHelpTip(helpTip==="dedup-words"?null:"dedup-words");}} style={{padding:"4px 10px",background:"transparent",color:C.purple,border:"none",fontFamily:FONT,fontSize:12,cursor:"pointer",textDecoration:"underline dashed",textUnderlineOffset:3,whiteSpace:"nowrap"}}>🧹 去重词库</button>
               {/* 重置进度改为低调文字链接，避免误点；点击后才展开说明 */}
               <button onClick={function(){setHelpTip(helpTip==="reset"?null:"reset");}} style={{padding:"4px 10px",background:"transparent",color:C.textSec,border:"none",fontFamily:FONT,fontSize:12,cursor:"pointer",textDecoration:"underline dashed",textUnderlineOffset:3,whiteSpace:"nowrap"}}>重置进度</button>
             </div>
@@ -7160,6 +7161,43 @@ export default function App() {
                 if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
                 feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 3500);
               }} style={{padding:"6px 14px",background:C.teal,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:700,cursor:"pointer"}}>确认刷新</button>
+            </div>}
+          </div>}
+          {(helpTip === "dedup-words" || helpTip === "dedup-words-loading") && <div style={{background:"rgba(124,92,196,0.08)",border:"1px solid "+C.purple+"44",borderRadius:10,padding:"12px 14px",fontSize:12,color:C.text,lineHeight:1.7,marginBottom:10}}>
+            <div style={{fontWeight:700,color:C.purple,marginBottom:4}}>🧹 清理重复词条</div>
+            {helpTip === "dedup-words-loading"
+              ? <span style={{color:C.textSec}}>正在清理，请稍候…</span>
+              : <span style={{color:C.textSec}}>如果同一个词在词库里出现多次（历史数据问题），会导致复习和词表重复。<br/>此操作保留每个词<strong>首次出现</strong>的位置，去掉后面的重复。<br/>不影响学习状态、复习记录或等级进度。</span>
+            }
+            {helpTip === "dedup-words" && <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
+              <button onClick={function(){setHelpTip(null);}} style={{background:"transparent",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",padding:0,fontFamily:FONT}}>取消</button>
+              <button onClick={async function(){
+                setHelpTip("dedup-words-loading");
+                // 先拉云端刷新 syncVersionRef，避免推送时 409 让 mergeStates 取较长（重复版）覆盖去重结果
+                if (user) { try { await loadFromCloud(user.id); } catch(e) {} }
+                var raw = parseWordsFromInput(wordInput);
+                var seen = Object.create(null);
+                var deduped = [];
+                raw.forEach(function(w){ if (!seen[w]) { seen[w] = true; deduped.push(w); } });
+                var removed = raw.length - deduped.length;
+                if (removed === 0) {
+                  setHelpTip(null);
+                  setFeedbackToast("没有发现重复词条 👍");
+                  if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
+                  feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 3000);
+                  return;
+                }
+                var newInput = deduped.join("\n");
+                // 词库缩水是用户主动操作 → 设 intent 让服务端 L1 守卫放行
+                _intentRef.current = 'user_edit_wordInput';
+                setWordInput(newInput);
+                doSave({ wordInput: newInput });
+                if (userRef.current) syncToCloud();
+                setHelpTip(null);
+                setFeedbackToast("✅ 已清理 " + removed + " 个重复词条，保留 " + deduped.length + " 个");
+                if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
+                feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 4000);
+              }} style={{padding:"6px 14px",background:C.purple,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:700,cursor:"pointer"}}>确认清理</button>
             </div>}
           </div>}
           {helpTip === "reset" && <div style={{background:C.redLight,border:"1px solid "+C.red+"33",borderRadius:10,padding:"12px 14px",fontSize:12,color:C.text,lineHeight:1.7,marginBottom:10}}>
