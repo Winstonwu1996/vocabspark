@@ -561,6 +561,20 @@ export function ConversationStream(props) {
       {/* ── 输入栏 / 继续按钮 / mastery gate 入口 ── */}
       {awaitingUserInput && (
         <div className="input-bar">
+          {/* 5-22 Package 2: N6 检索门 — 跟 synthesis/meta 真问题视觉区分 */}
+          {currentTurn._retrievalGate && (
+            <div style={{
+              marginBottom: 8, padding: "8px 12px",
+              background: "rgba(122,92,168,0.10)",
+              border: "1px solid rgba(122,92,168,0.30)",
+              borderRadius: 10, display: "flex", alignItems: "center", gap: 8,
+            }}>
+              <span style={{ fontSize: 17 }}>🧠</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#6b53a8" }}>
+                快速回想 —— 不评分，就是帮你记住
+              </span>
+            </div>
+          )}
           <div className="prompt">{currentTurn.inputPrompt || "你的回答"}</div>
 
           {/* PEEL 引导（Winston review #4：训练 US 学校的回答框架） */}
