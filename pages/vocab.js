@@ -3949,21 +3949,28 @@ export default function App() {
 
   // ── Auth state listener ──
   // ── Auth handler: 服务端权威，云端数据覆盖本地 ──
-  var _authHandled = useRef(false);
-  var handleAuthUser = async function(u, event) {
+  var _authInFlightRef = useRef(false);
+  var _authTimersRef = useRef([]); // onAuthStateChange 推迟执行的 setTimeout id，unmount 时清
+  var handleAuthUser = async function(u, event, session) {
     setUser(u); userRef.current = u;
-    if (u && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) {
-      // 防止 getSession + onAuthStateChange 双重触发
-      if (_authHandled.current) return;
-      _authHandled.current = true;
-      setTimeout(function() { _authHandled.current = false; }, 3000);
+    if (!u) return;
 
-      // 提前缓存 access token 给 beforeunload 同步路径用
-      try {
-        var { data: sess } = await supabase.auth.getSession();
-        if (sess?.session?.access_token) accessTokenRef.current = sess.session.access_token;
-      } catch(e) { console.warn('[handleAuthUser] cache token failed:', e.message); }
+    // 缓存最新 access token：优先用 event session 直接取 (Supabase 官方推荐),
+    // 避免在 auth 回调链里额外 getSession。供 beforeunload 同步路径用。
+    if (session && session.access_token) accessTokenRef.current = session.access_token;
 
+    // TOKEN_REFRESHED：仅刷 token，不重复拉云/merge (Codex P2 + Supabase 最佳实践)。
+    // 否则多 tab / focus / token 自动刷新会反复 loadFromCloud + merge。
+    if (event === 'TOKEN_REFRESHED') return;
+
+    // 仅首次会话 / 登录才完整拉云
+    if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') return;
+
+    // in-flight 锁 (Codex P2)：防并发拉云。loadFromCloud 实测可达 3.6s，旧的 3 秒
+    // 时间锁不可靠 (第二个 auth 事件 3 秒后进来会重复拉云 + 交错 merge)。
+    if (_authInFlightRef.current) return;
+    _authInFlightRef.current = true;
+    try {
       if (event === 'SIGNED_IN') {
         setLoginToast("✅ 登录成功！" + (u.email || ""));
         if (loginToastTimerRef.current) clearTimeout(loginToastTimerRef.current);
@@ -3972,24 +3979,20 @@ export default function App() {
       setShowLogin(false); setLoginSent(false); setLoginEmail(''); setOtpCode('');
 
       // 服务端权威：拉取云端数据
-      // 重置场景无需特殊分支 —— resetLearningProgress 已经 await /api/reset
-      // 完成后云端就是清零数据，这里 loadFromCloud 读到的也是清零，自然正确
       var cloudRes = await loadFromCloud(u.id);
       if (!cloudRes.ok) {
-        // 读云失败 (第二批)：绝不能当"无数据"推本地，否则会覆盖云端真实数据。
+        // 读云失败：绝不能当"无数据"推本地，否则会覆盖云端真实数据。
         // 不解锁 _cloudReadyRef，保持 sync 锁定；用户刷新/重登会重试 loadFromCloud。
         console.warn('[auth] cloud load failed, NOT unlocking sync (避免覆盖云端):', cloudRes.error);
         setSyncStatus("error");
       } else {
         var cloudData = cloudRes.data;
-        // newer-wins 保护：如果 local 比 cloud 更新（说明云端是旧的，可能因闪退没同步成功），
-        // 智能合并 local + cloud 而非简单覆盖，避免任何一方进度丢失
-        // 阈值 5 分钟：容忍系统时钟漂移（移动设备时区/NTP 可能差几分钟）
+        // newer-wins 保护：local 比 cloud 新 (闪退没同步成功) → 智能合并而非覆盖。
+        // 阈值 5 分钟：容忍系统时钟漂移。
         var localData = await loadSave();
         var localTime = localData?.updatedAt ? new Date(localData.updatedAt).getTime() : 0;
         var cloudTime = cloudData?.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
         if (localData && cloudData && localTime > cloudTime + 300000) {
-          // local 比 cloud 至少新 5 分钟 — 但仍然 merge 而非粗暴覆盖
           console.warn('[auth] local newer than cloud, merging both');
           var loginMerged;
           try {
@@ -4005,12 +4008,14 @@ export default function App() {
           _applyCloudData(cloudData);
           setShowWelcome(false);
         } else {
-          // 云端确认无数据（首次注册用户，cloudRes.ok && !hasData）→ 解锁 + 首次 push
+          // 云端确认无数据（首次注册用户）→ 解锁 + 首次 push
           _cloudReadyRef.current = true;
           syncToCloud();
         }
       }
       _loadTier(u.id);
+    } finally {
+      _authInFlightRef.current = false;
     }
   };
 
@@ -4183,8 +4188,8 @@ export default function App() {
     supabase.auth.getSession().then(function(result) {
       var u = result?.data?.session?.user || null;
       if (u) {
-        handleAuthUser(u, 'INITIAL_SESSION');
-        // 独立加载 tier（不依赖 handleAuthUser 的 _authHandled 锁）
+        handleAuthUser(u, 'INITIAL_SESSION', result?.data?.session);
+        // 独立加载 tier（不依赖 handleAuthUser 的 in-flight 锁）
         _loadTier(u.id);
       }
     });
@@ -4193,13 +4198,23 @@ export default function App() {
       var u = session?.user || null;
       // Supabase v2 已知死锁陷阱：onAuthStateChange 回调持有 auth 内部锁，回调里 await
       // 其他 supabase.auth 方法会等同一把锁 → 永久死锁、promise 永不 resolve。
-      // handleAuthUser 内部会 await supabase.auth.getSession()（cache token + loadFromCloud
-      // 的 getAuthHeaders），从回调里直接 await 它会卡死 → _applyCloudData 跑不到 →
-      // _cloudReadyRef 永不解锁 → 之后所有 sync 被闸门挡住、永不上云（version 冻结真凶）。
+      // handleAuthUser 内部会 await supabase.auth.getSession()（loadFromCloud 的
+      // getAuthHeaders），从回调里直接 await 会卡死 → _cloudReadyRef 永不解锁 →
+      // 所有 sync 被闸门挡住、永不上云（version 冻结真凶）。
       // 修复：用 setTimeout(0) 把 handleAuthUser 推到回调外执行，让 auth 锁先释放。
-      setTimeout(function() { handleAuthUser(u, event); }, 0);
+      var tid = setTimeout(function() {
+        // fire 后从待清列表移除
+        _authTimersRef.current = _authTimersRef.current.filter(function(x){ return x !== tid; });
+        handleAuthUser(u, event, session);
+      }, 0);
+      _authTimersRef.current.push(tid);
     });
-    return function() { subscription.unsubscribe(); };
+    return function() {
+      subscription.unsubscribe();
+      // 清掉未 fire 的 auth timer，防止 unmount 后在已卸载组件上 setState (Codex P2)
+      _authTimersRef.current.forEach(function(t){ clearTimeout(t); });
+      _authTimersRef.current = [];
+    };
   }, []);
 
   var sysP = buildSys(profile, studyGoal, studyGoalCustom);

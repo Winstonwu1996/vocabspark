@@ -499,7 +499,9 @@ export default function WritingApp() {
       if (u) { setUser(u); userRef.current = u; }
     });
 
-    var { data: { subscription } } = supabase.auth.onAuthStateChange(async function(event, session) {
+    // 不标 async：Supabase onAuthStateChange 回调内不应 await 其他 auth 方法 (死锁风险);
+    // 当前回调无 await，去掉 async 防止以后有人顺手加 await supabase.auth.* (Codex P3)。
+    var { data: { subscription } } = supabase.auth.onAuthStateChange(function(event, session) {
       var u = session?.user || null;
       setUser(u); userRef.current = u;
       if (u && event === 'SIGNED_IN') {
