@@ -2719,6 +2719,7 @@ export default function App() {
   var [recallChoice, setRecallChoice] = useState(null); // active recall 自测：null / "easy" / "fuzzy" / "hard"
   // B: teach 页面深度奖励 — 「能」按钮 10 秒倒计时禁用（强制读完才有资格说"会"）
   var [teachReadSec, setTeachReadSec] = useState(10);
+  var teachReadIntervalRef = useRef(null);
   // D: 中文释义折叠 state（默认收起，让用户先用英文 gloss 思考）
   var [showDefZh, setShowDefZh] = useState(false);
   var [showMyDict, setShowMyDict] = useState(false); // "我的词典"模态
@@ -2860,6 +2861,7 @@ export default function App() {
       if (streakToastTimerRef.current) clearTimeout(streakToastTimerRef.current);
       if (guessAdvanceRef.current) clearTimeout(guessAdvanceRef.current);
       if (loginToastTimerRef.current) clearTimeout(loginToastTimerRef.current);
+      if (teachReadIntervalRef.current) clearInterval(teachReadIntervalRef.current);
     };
   }, []);
   var speedWaitAbortRef = useRef(false);
@@ -2951,16 +2953,21 @@ export default function App() {
 
   // B: 进入 teach phase 且内容就绪时启动 10 秒倒计时（强制阅读时长）
   useEffect(function() {
-    if (phase !== "teach" || !teachData || teachStreaming) { setTeachReadSec(0); return; }
+    if (phase !== "teach" || !teachData || teachStreaming) {
+      setTeachReadSec(0);
+      if (teachReadIntervalRef.current) { clearInterval(teachReadIntervalRef.current); teachReadIntervalRef.current = null; }
+      return;
+    }
     if (recallChoice) { setTeachReadSec(0); return; } // 已自评过不再计时
     setTeachReadSec(10);
-    var t = setInterval(function() {
+    if (teachReadIntervalRef.current) clearInterval(teachReadIntervalRef.current);
+    teachReadIntervalRef.current = setInterval(function() {
       setTeachReadSec(function(s) {
-        if (s <= 1) { clearInterval(t); return 0; }
+        if (s <= 1) { clearInterval(teachReadIntervalRef.current); teachReadIntervalRef.current = null; return 0; }
         return s - 1;
       });
     }, 1000);
-    return function() { clearInterval(t); };
+    return function() { if (teachReadIntervalRef.current) { clearInterval(teachReadIntervalRef.current); teachReadIntervalRef.current = null; } };
   }, [phase, currentWord, teachStreaming, recallChoice, !!teachData]);
   useEffect(function() { if (guessSubmitted || reviewSubmitted || clozeSubmitted) setTimeout(function() { if (contentEndRef.current) contentEndRef.current.scrollIntoView({ behavior:"smooth", block:"end" }); }, 200); }, [guessSubmitted, reviewSubmitted, clozeSubmitted]);
 
