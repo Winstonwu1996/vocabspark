@@ -9,6 +9,7 @@ import UserCenter from '../components/UserCenter';
 import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../components/PetAvatar';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
+import { mergeReviewEntry, toTime } from '../lib/progressMergePolicy';
 import { US_LIFE_1000 } from '../lib/preset-us-life-1000';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 import * as XLSX from 'xlsx';
@@ -3548,9 +3549,26 @@ export default function App() {
         var result = await r.json();
         syncVersionRef.current = result.version;
         _syncRetryCountRef.current = 0;
-        _broadcastSync(syncVersionRef.current);
         _lastSyncAtRef.current = Date.now();
-        setSyncSynced();
+        if (result.rejectedFields && result.rejectedFields.length > 0) {
+          // 服务端守卫拒绝了部分字段（本地 push 比云端少）。serverData 是权威版本：
+          // 必须应用回本地，否则下次会继续推同一份 diverged 数据（事故核心之一）。
+          // 不显示 synced —— 用 error 态让用户感知"同步未完整"（精确 reason UI 留第三批）。
+          console.warn('[sync] guard rejected fields:', result.rejectedFields.join(', '));
+          if (result.serverData) {
+            try {
+              await doSave(result.serverData);
+              _applyCloudData(result.serverData);
+            } catch (applyErr) {
+              console.warn('[sync] apply serverData after rejection failed:', applyErr.message);
+            }
+          }
+          _broadcastSync(syncVersionRef.current);
+          setSyncStatus("error");
+        } else {
+          _broadcastSync(syncVersionRef.current);
+          setSyncSynced();
+        }
       } else {
         throw new Error('sync failed: ' + r.status);
       }
@@ -3633,17 +3651,13 @@ export default function App() {
       setReviewWordData(function(local) {
         if (!local || Object.keys(local).length === 0) return normalized;
         var merged = Object.assign({}, normalized);
+        // 统一 recency 合并 (Sync Stabilization v1)：recency 更新的一方赢，允许 forgot
+        // 合法降级。旧逻辑只按 reviewLevel max → 旧云端日期会盖回本地、due 反复弹回。
+        var ctx = { localFallback: 0, serverFallback: toTime(d.updatedAt) };
         Object.keys(local).forEach(function(w) {
           var localEntry = local[w];
           if (!localEntry) return;
-          var cloudEntry = merged[w];
-          if (!cloudEntry) {
-            merged[w] = localEntry;
-          } else {
-            var lLvl = Number(localEntry.reviewLevel) || 0;
-            var cLvl = Number(cloudEntry.reviewLevel) || 0;
-            if (lLvl > cLvl) merged[w] = localEntry;
-          }
+          merged[w] = mergeReviewEntry(localEntry, merged[w], ctx);
         });
         return merged;
       });
@@ -4331,7 +4345,8 @@ export default function App() {
     if (!word) return;
     setReviewWordData(function(prev) {
       var base = prev[word] || { word: word, reviewHistory: [] };
-      var merged = { ...base, ...patch };
+      // updatedAt: recency 合并的权威依据 (Sync Stabilization v1)，每次写词条都刷新
+      var merged = { ...base, ...patch, updatedAt: new Date().toISOString() };
       // 自动补全 meaning：如果合并后 meaning 仍空，从 dataCache 拉 fallback（teach/guess）
       if (!merged.meaning || !merged.meaning.trim()) {
         var fb = _extractMeaningFallback(word);
