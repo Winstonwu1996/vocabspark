@@ -4345,8 +4345,15 @@ export default function App() {
     if (!word) return;
     setReviewWordData(function(prev) {
       var base = prev[word] || { word: word, reviewHistory: [] };
-      // updatedAt: recency 合并的权威依据 (Sync Stabilization v1)，每次写词条都刷新
-      var merged = { ...base, ...patch, updatedAt: new Date().toISOString() };
+      var nowIso = new Date().toISOString();
+      var merged = { ...base, ...patch, updatedAt: nowIso };
+      // srsUpdatedAt: SRS recency 的权威依据 (Codex P1)。仅复习事件 (reviewLevel/
+      // nextReviewDate/reviewHistory) 才刷新；meaning/phonetic 懒加载只刷通用 updatedAt，
+      // 不得抢占真实复习的 recency，否则会把已复习的词错误回退。
+      var _srsKeys = ['reviewLevel', 'nextReviewDate', 'reviewHistory'];
+      if (patch && _srsKeys.some(function(k){ return Object.prototype.hasOwnProperty.call(patch, k); })) {
+        merged.srsUpdatedAt = nowIso;
+      }
       // 自动补全 meaning：如果合并后 meaning 仍空，从 dataCache 拉 fallback（teach/guess）
       if (!merged.meaning || !merged.meaning.trim()) {
         var fb = _extractMeaningFallback(word);
@@ -7180,11 +7187,17 @@ export default function App() {
                 var cloudRwd = cloudData.reviewWordData;
                 var updated = Object.assign({}, localRwd);
                 var fixed = 0;
+                var _restoreNow = new Date().toISOString();
                 Object.keys(cloudRwd).forEach(function(w) {
                   var ce = cloudRwd[w]; var le = updated[w];
                   if (!ce || !le) return;
-                  var cd = String(ce.nextReviewDate || ''); var ld = String(le.nextReviewDate || '');
-                  if (cd && ld && cd > ld) { updated[w] = Object.assign({}, le, { nextReviewDate: ce.nextReviewDate }); fixed++; }
+                  // 用 toTime 规范化比较 (约束6)：nextReviewDate 历史数据混合纯日期与完整 ISO，
+                  // 字符串比较会误判。仅当云端日期确实更晚才推后本地。
+                  if (ce.nextReviewDate && le.nextReviewDate && toTime(ce.nextReviewDate) > toTime(le.nextReviewDate)) {
+                    // 这是用户主动的 SRS 修正 → 写 srsUpdatedAt，让 recency 合并认它为最新
+                    updated[w] = Object.assign({}, le, { nextReviewDate: ce.nextReviewDate, srsUpdatedAt: _restoreNow });
+                    fixed++;
+                  }
                 });
                 setReviewWordData(updated);
                 doSave({ reviewWordData: updated });

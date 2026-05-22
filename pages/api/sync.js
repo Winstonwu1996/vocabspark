@@ -116,6 +116,13 @@ export default async function handler(req, res) {
       .from('user_progress').select('version, progress_data')
       .eq('user_id', userId).single();
 
+    // fail closed (Codex P1)：读云端失败绝不能当成 cloud=null，否则 applyFieldGuards
+    // 会全放行 → 防覆盖守卫失效。PGRST116 = 该用户尚无记录（首次用户），属正常。
+    if (readErr && readErr.code !== 'PGRST116') {
+      console.warn('[sync] cloud read failed for user ' + userId + ':', readErr.message);
+      return res.status(500).json({ error: 'cloud_read_failed' });
+    }
+
     var serverVersion = current ? (current.version || 0) : 0;
     var cloudData = current ? current.progress_data : null;
 
