@@ -1,7 +1,55 @@
 /* ─── Know U. Learning — 共享导航栏组件 ─── */
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { C, S, FONT, FONT_DISPLAY } from '../lib/theme';
 import { UserAvatar } from './UserCenter';
+
+/* ─── 同步状态徽章：醒目 + 显示"最近同步时间" = 用户安全感 ─── */
+var formatSyncAgo = function (ts) {
+  if (!ts) return "";
+  var s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return "刚刚";
+  var m = Math.floor(s / 60);
+  if (m < 60) return m + " 分钟前";
+  var h = Math.floor(m / 60);
+  if (h < 24) return h + " 小时前";
+  return Math.floor(h / 24) + " 天前";
+};
+
+export var SyncStatusBadge = ({ status, lastSyncAt, onRetry }) => {
+  // 每 30s 触发一次 re-render，让"X 分钟前"自动走时
+  var [, setTick] = useState(0);
+  useEffect(function () {
+    var t = setInterval(function () { setTick(function (x) { return x + 1; }); }, 30000);
+    return function () { clearInterval(t); };
+  }, []);
+
+  var isError = status === "error";
+  var isSyncing = status === "syncing";
+  var icon = isSyncing ? "↻" : isError ? "⚠" : "✓";
+  var color = isError ? "#e53e3e" : isSyncing ? "#3d6baf" : "#22a06b";
+  var bg = isError ? "rgba(229,62,62,0.10)" : isSyncing ? "rgba(90,130,200,0.10)" : "rgba(34,160,107,0.10)";
+  var label = isSyncing ? "同步中…" : isError ? "未同步" : "已同步";
+  var ago = (!isSyncing && !isError && lastSyncAt) ? formatSyncAgo(lastSyncAt) : (isError ? "点击重试" : "");
+
+  return (
+    <button
+      onClick={isError && onRetry ? onRetry : undefined}
+      title={isError ? "同步未完成，点击重试" : isSyncing ? "正在把进度同步到云端" : (lastSyncAt ? "进度已云端备份，最近同步 " + formatSyncAgo(lastSyncAt) : "进度会自动云端备份")}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 5,
+        background: bg, color: color, border: "none", borderRadius: 14,
+        padding: "5px 10px", fontSize: 12, fontWeight: 600, fontFamily: FONT,
+        cursor: isError ? "pointer" : "default", whiteSpace: "nowrap",
+        transition: "background 0.3s, color 0.3s",
+      }}
+    >
+      <span style={{ fontSize: 13, fontWeight: 700, lineHeight: 1, animation: isSyncing ? "spin 1s linear infinite" : "none" }}>{icon}</span>
+      <span className="sync-badge-label">{label}</span>
+      {ago && <span className="sync-badge-ago" style={{ opacity: 0.7 }}>· {ago}</span>}
+    </button>
+  );
+};
 
 export var BrandUIcon = ({ size }) => {
   var s = size || 36;
@@ -20,7 +68,7 @@ export var BrandSparkIcon = ({ size, marginBottom }) => {
   );
 };
 
-export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterClick, syncStatus, compact }) => {
+export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterClick, syncStatus, lastSyncAt, onSyncRetry, compact }) => {
   activeTab = activeTab || "vocab";
   var pct = stats && stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
   // compact 模式下不显示底部 pills（避免跟 vocab 页的"我的小本本"卡信息重复）
@@ -59,6 +107,12 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
       .brand-navbar .brand-wordmark { white-space: nowrap; }
       @media (min-width: 640px) {
         .brand-navbar .brand-tagline { display: block; }
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      /* 手机空间紧：隐藏"· X 分钟前"，只留"✓ 已同步"（安全感仍在，不挤）*/
+      .brand-navbar .sync-badge-ago { display: none; }
+      @media (min-width: 480px) {
+        .brand-navbar .sync-badge-ago { display: inline; }
       }
       .brand-navbar .nav-tabs-row {
         display: flex;
@@ -100,21 +154,7 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
           <span style={{ ...tabStyle("reading"), opacity:0.5, cursor:"default" }}>Reading<sup style={{fontSize:8,color:C.teal,fontWeight:700,marginLeft:1}}>Soon</sup></span>
         </div>
         {user && syncStatus && (
-          <span
-            title={syncStatus === "syncing" ? "正在同步..." : syncStatus === "synced" ? "已同步" : syncStatus === "error" ? "同步失败" : "已同步"}
-            style={{
-              display:"inline-flex", alignItems:"center", justifyContent:"center",
-              width:20, height:20, borderRadius:"50%",
-              background: syncStatus === "error" ? "rgba(229,62,62,0.12)" : syncStatus === "syncing" ? "rgba(90,130,200,0.12)" : "transparent",
-              color: syncStatus === "error" ? "#e53e3e" : syncStatus === "syncing" ? "#3d6baf" : "#22a06b",
-              fontSize:12, fontWeight:700,
-              opacity: syncStatus === "idle" || syncStatus === "synced" ? 0.45 : 1,
-              transition:"opacity 0.4s, color 0.3s",
-              cursor:"default",
-            }}
-          >
-            {syncStatus === "syncing" ? "↻" : syncStatus === "error" ? "⚠" : "✓"}
-          </span>
+          <SyncStatusBadge status={syncStatus} lastSyncAt={lastSyncAt} onRetry={onSyncRetry} />
         )}
         <button onClick={onUserCenterClick} style={{ marginLeft:2, cursor:"pointer", background:"transparent", border:"none", padding:0, lineHeight:0 }} aria-label="用户中心">
           <UserAvatar user={user} size={32} />
@@ -147,6 +187,6 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
   );
 };
 
-export var AppHeroHeader = ({ stats, studyStreak, user, onUserCenterClick, syncStatus }) => (
-  <BrandNavBar activeTab="vocab" stats={stats} studyStreak={studyStreak} user={user} onUserCenterClick={onUserCenterClick} syncStatus={syncStatus} compact />
+export var AppHeroHeader = ({ stats, studyStreak, user, onUserCenterClick, syncStatus, lastSyncAt, onSyncRetry }) => (
+  <BrandNavBar activeTab="vocab" stats={stats} studyStreak={studyStreak} user={user} onUserCenterClick={onUserCenterClick} syncStatus={syncStatus} lastSyncAt={lastSyncAt} onSyncRetry={onSyncRetry} compact />
 );

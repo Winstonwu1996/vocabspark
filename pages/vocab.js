@@ -2576,6 +2576,7 @@ export default function App() {
   var [reviewWordData, setReviewWordData] = useState({});
   var [wordStatusFilter, setWordStatusFilter] = useState("all");
   var [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
+  var [lastSyncAt, setLastSyncAt] = useState(0); // 最近成功同步时间戳（导航栏徽章展示）
   var syncVersionRef = useRef(0); // 服务端版本号
   var [wordSearch, setWordSearch] = useState("");
   var [showDueOnly, setShowDueOnly] = useState(false);
@@ -3383,6 +3384,7 @@ export default function App() {
   // setSyncSynced：统一的"synced → idle"切换，避免 3 处重复 + 卸载后 setState
   var setSyncSynced = function() {
     setSyncStatus("synced");
+    setLastSyncAt(Date.now()); // 记录"最近成功同步时间"，导航栏徽章展示给用户（安全感）
     if (_syncStatusTimerRef.current) clearTimeout(_syncStatusTimerRef.current);
     _syncStatusTimerRef.current = setTimeout(function() {
       _syncStatusTimerRef.current = null;
@@ -6580,7 +6582,7 @@ export default function App() {
         </div>
       )}
 
-      <AppHeroHeader stats={stats} studyStreak={getStudyStreak()} user={user} onUserCenterClick={function(){ setShowUserCenter(true); }} syncStatus={syncStatus} />
+      <AppHeroHeader stats={stats} studyStreak={getStudyStreak()} user={user} onUserCenterClick={function(){ setShowUserCenter(true); }} syncStatus={syncStatus} lastSyncAt={lastSyncAt} onSyncRetry={function(){ if (userRef.current) syncToCloud(); }} />
 
       {/* 我的小本本卡：整合 宠物 + streak + XP + 词数，用叙事化文案替代散落的数据条
           替代旧的"连续学习激励条"，把分散的成长信号收成一个"温暖的我的世界" */}
