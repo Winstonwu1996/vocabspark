@@ -7056,16 +7056,23 @@ export default function App() {
               <button onClick={function(){setHelpTip(helpTip==="reset"?null:"reset");}} style={{padding:"4px 10px",background:"transparent",color:C.textSec,border:"none",fontFamily:FONT,fontSize:12,cursor:"pointer",textDecoration:"underline dashed",textUnderlineOffset:3,whiteSpace:"nowrap"}}>重置进度</button>
             </div>
           </div>
-          {helpTip === "cloud-restore" && <div style={{background:"rgba(34,160,107,0.08)",border:"1px solid "+C.teal+"44",borderRadius:10,padding:"12px 14px",fontSize:12,color:C.text,lineHeight:1.7,marginBottom:10}}>
+          {(helpTip === "cloud-restore" || helpTip === "cloud-restore-loading") && <div style={{background:"rgba(34,160,107,0.08)",border:"1px solid "+C.teal+"44",borderRadius:10,padding:"12px 14px",fontSize:12,color:C.text,lineHeight:1.7,marginBottom:10}}>
             <div style={{fontWeight:700,color:C.teal,marginBottom:4}}>☁️ 从云端刷新复习日期</div>
-            <span style={{color:C.textSec}}>如果"今日到期"数量异常偏多，可用此功能从云端拉取正确的复习日期。<br/>不会清除复习记录或等级进度，只修正到期时间。</span>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
+            {helpTip === "cloud-restore-loading"
+              ? <span style={{color:C.textSec}}>正在从云端获取数据，请稍候…</span>
+              : <span style={{color:C.textSec}}>如果"今日到期"数量异常偏多，可用此功能从云端拉取正确的复习日期。<br/>不会清除复习记录或等级进度，只修正到期时间。</span>
+            }
+            {helpTip === "cloud-restore" && <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
               <button onClick={function(){setHelpTip(null);}} style={{background:"transparent",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",padding:0,fontFamily:FONT}}>取消</button>
               <button onClick={async function(){
-                setHelpTip(null);
-                if (!user) { alert('请先登录'); return; }
+                setHelpTip("cloud-restore-loading");
+                if (!user) { alert('请先登录'); setHelpTip("cloud-restore"); return; }
                 var cloudData = await loadFromCloud(user.id);
-                if (!cloudData || !cloudData.reviewWordData) { alert('获取云端数据失败，请稍后再试'); return; }
+                if (!cloudData || !cloudData.reviewWordData) {
+                  alert('获取云端数据失败，请稍后再试');
+                  setHelpTip("cloud-restore");
+                  return;
+                }
                 var localRwd = reviewWordData || {};
                 var cloudRwd = cloudData.reviewWordData;
                 var updated = Object.assign({}, localRwd);
@@ -7078,9 +7085,10 @@ export default function App() {
                 });
                 setReviewWordData(updated);
                 doSave({ reviewWordData: updated });
+                setHelpTip(null);
                 alert('已从云端修正 ' + fixed + ' 个词的复习日期，请刷新页面查看。');
               }} style={{padding:"6px 14px",background:C.teal,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:700,cursor:"pointer"}}>确认刷新</button>
-            </div>
+            </div>}
           </div>}
           {helpTip === "reset" && <div style={{background:C.redLight,border:"1px solid "+C.red+"33",borderRadius:10,padding:"12px 14px",fontSize:12,color:C.text,lineHeight:1.7,marginBottom:10}}>
             <div style={{fontWeight:700,color:C.red,marginBottom:4}}>⚠️ 重置进度（谨慎操作）</div>
