@@ -258,6 +258,90 @@ function PhaseDivider(props) {
   );
 }
 
+// ─── Progress Rail — 节点进度条（5-22 teach 重设计 / Package 1）──────
+// 解决"无限滚动感"+ 缺方向感。按当前 lens 的节点数分段，phase 配色。
+// 数据来自 effectiveTurns + turnIndex（纯派生，不存档）。每个 lens 独立计数
+// （不显示 1/36，配合 inter-lens 断点）。
+function phaseLabelCn(phase) {
+  if (phase === "hook") return "开场";
+  if (phase === "story") return "故事";
+  if (phase === "synthesis") return "思考";
+  if (phase === "meta") return "收尾";
+  return "";
+}
+function ProgressRail(props) {
+  var turns = props.turns || [];
+  var total = turns.length;
+  if (!total) return null;
+  var current = Math.min(props.turnIndex, total - 1);
+  var phaseColor = function(phase, reached) {
+    if (!reached) return "rgba(60,44,26,0.10)";
+    if (phase === "synthesis") return "#5fa8a0";  // teal — 理性
+    if (phase === "meta") return "#c46b30";       // 橙 — 收尾
+    return HC.accent;                              // hook/story — 暖色
+  };
+  var label = phaseLabelCn((turns[current] || {}).move);
+  return (
+    <div style={{ margin: "0 0 14px", padding: "0 2px" }}>
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        fontSize: 11, color: HC.textSec, marginBottom: 5, fontWeight: 600,
+      }}>
+        <span>第 {current + 1} / {total} 节{label ? " · " + label : ""}</span>
+        <span style={{ opacity: 0.6 }}>{Math.round(((current + 1) / total) * 100)}%</span>
+      </div>
+      <div style={{ display: "flex", gap: 3 }}>
+        {turns.map(function(t, i) {
+          return (
+            <span key={i} style={{
+              flex: 1, height: 4, borderRadius: 2,
+              background: phaseColor(t.move, i <= current),
+              transition: "background 0.35s",
+            }} />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Takeaway Card — 每节"带走一句"（5-22 teach 重设计 / Package 1）──
+// 把埋在数据里的 themeCn/themeEn（Schema B）或 engagementHook（Schema A）
+// surfacing 成节点结束的落点 beat。只在当前节点 AI 说完、等点"继续"时显示
+// （input 节点的 hook 已经是 inputPrompt，不重复）。纯读 currentTurn，不存档。
+function TakeawayCard(props) {
+  var turn = props.turn;
+  if (!turn) return null;
+  var isEn = props.englishLevel === "high";
+  var theme = isEn ? (turn._themeEn || turn._themeCn) : (turn._themeCn || turn._themeEn);
+  var text = theme || turn._hook;
+  if (!text) return null;
+  var isTheme = !!theme;
+  return (
+    <div style={{
+      margin: "14px 0 2px",
+      padding: "11px 14px",
+      background: isTheme ? "rgba(196,107,48,0.07)" : "rgba(95,168,160,0.09)",
+      border: "1px solid " + (isTheme ? "rgba(196,107,48,0.22)" : "rgba(95,168,160,0.28)"),
+      borderRadius: 12,
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 9,
+    }}>
+      <span style={{ fontSize: 16, lineHeight: 1.3 }}>{isTheme ? "💡" : "🤔"}</span>
+      <div>
+        <div style={{
+          fontSize: 10.5, fontWeight: 700, letterSpacing: 0.3,
+          color: isTheme ? "#a85525" : "#4a8a82", marginBottom: 3, textTransform: "uppercase",
+        }}>
+          {isTheme ? (isEn ? "One line to keep" : "这一节带走一句") : (isEn ? "Think about it" : "想一想")}
+        </div>
+        <div style={{ fontSize: 13, color: HC.text, lineHeight: 1.55 }}>{text}</div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Source Card（史料卡） ─────────────────────────────────────────
 export function SourceCard(props) {
   var src = props.source;
@@ -350,6 +434,8 @@ export function ConversationStream(props) {
           <span><strong>听模式</strong>—— 节点会自动推进，不用点继续。点 [😌 听模式 ✓] 关闭。</span>
         </div>
       )}
+      {/* 5-22 Package 1: 节点进度条 — 方向感 + 消除无限滚动感 */}
+      {!allDone && <ProgressRail turns={turns} turnIndex={turnIndex} />}
       <div className="conv-stream" id="conv-anchor">
         {log.map(function(entry, i) {
           // 史料卡（C7：source / source-tang-code 都触发）
@@ -574,6 +660,11 @@ export function ConversationStream(props) {
             </span>
           </div>
         </div>
+      )}
+
+      {/* 5-22 Package 1: "带走一句"卡片 — 节点落点 beat（仅非 input 节点）*/}
+      {currentAIDone && currentTurn && !currentTurn.expectsInput && (
+        <TakeawayCard turn={currentTurn} englishLevel={props.englishLevel} />
       )}
 
       {currentAIDone && currentTurn && !currentTurn.expectsInput && !currentTurn.autoAdvance && (
