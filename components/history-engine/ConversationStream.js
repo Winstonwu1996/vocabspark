@@ -342,6 +342,77 @@ function TakeawayCard(props) {
   );
 }
 
+// ─── Source Bridge Card — 双 lens 一手史料对读（5-22 / Package 3）──────
+// AP HIPP sourcing 练习：把同一事件的两个 lens 原文摘录并排，让学生做
+// who / purpose / point-of-view / limitation 判断。直接命中 DBQ Point 4。
+function ExcerptCol(props) {
+  var ex = props.excerpt;
+  var isEn = props.isEn;
+  return (
+    <div style={{
+      flex: "1 1 240px", minWidth: 0,
+      padding: "12px 14px",
+      background: "#fffdf8",
+      border: "1px solid rgba(196,107,48,0.22)",
+      borderRadius: 12,
+    }}>
+      <div style={{ fontSize: 11.5, fontWeight: 700, color: "#a85525", marginBottom: 2 }}>
+        {props.label}
+      </div>
+      <div style={{ fontSize: 11, color: HC.textSec, marginBottom: 8, lineHeight: 1.45 }}>
+        {isEn ? ex.whoEn : ex.whoCn}
+      </div>
+      <div style={{
+        fontSize: 13.5, color: HC.text, lineHeight: 1.6,
+        fontStyle: "italic", borderLeft: "3px solid rgba(196,107,48,0.35)", paddingLeft: 10,
+      }}>
+        “{isEn ? ex.quoteEn : ex.quoteCn}”
+      </div>
+      <div style={{ fontSize: 10.5, color: HC.textSec, marginTop: 7, opacity: 0.8 }}>
+        — {isEn ? ex.sourceEn : ex.sourceCn}
+      </div>
+    </div>
+  );
+}
+function SourceBridgeCard(props) {
+  var b = props.bridge;
+  if (!b) return null;
+  var isEn = props.englishLevel === "high";
+  return (
+    <div style={{
+      margin: "10px 0 14px",
+      padding: "14px 16px",
+      background: "rgba(196,107,48,0.06)",
+      border: "1px solid rgba(196,107,48,0.30)",
+      borderRadius: 14,
+    }}>
+      <div style={{
+        fontSize: 11, fontWeight: 700, letterSpacing: 0.3, color: "#a85525",
+        textTransform: "uppercase", marginBottom: 3,
+      }}>
+        📜 {isEn ? "Read the sources — same event, two voices" : "一手史料对读 —— 同一件事，两个人"}
+      </div>
+      <div style={{ fontSize: 12, color: HC.textSec, marginBottom: 12, lineHeight: 1.5 }}>
+        {isEn ? b.eventEn : b.eventCn}
+      </div>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+        <ExcerptCol excerpt={b.excerptA} isEn={isEn} label={isEn ? "Source A" : "史料 A"} />
+        <ExcerptCol excerpt={b.excerptB} isEn={isEn} label={isEn ? "Source B" : "史料 B"} />
+      </div>
+      <div style={{
+        padding: "10px 12px", background: "rgba(95,168,160,0.10)",
+        border: "1px solid rgba(95,168,160,0.28)", borderRadius: 10,
+        fontSize: 12.5, color: HC.text, lineHeight: 1.6,
+      }}>
+        <span style={{ fontWeight: 700, color: "#4a8a82", marginRight: 4 }}>
+          {isEn ? "Your turn —" : "轮到你 ——"}
+        </span>
+        {isEn ? b.promptEn : b.promptCn}
+      </div>
+    </div>
+  );
+}
+
 // ─── Source Card（史料卡） ─────────────────────────────────────────
 export function SourceCard(props) {
   var src = props.source;
@@ -561,6 +632,10 @@ export function ConversationStream(props) {
       {/* ── 输入栏 / 继续按钮 / mastery gate 入口 ── */}
       {awaitingUserInput && (
         <div className="input-bar">
+          {/* 5-22 Package 3: N10 双 lens sourcing bridge — AP HIPP 练习 */}
+          {currentTurn._sourcingBridge && (
+            <SourceBridgeCard bridge={currentTurn._sourcingBridge} englishLevel={props.englishLevel} />
+          )}
           {/* 5-22 Package 2: N6 检索门 — 跟 synthesis/meta 真问题视觉区分 */}
           {currentTurn._retrievalGate && (
             <div style={{
@@ -575,7 +650,9 @@ export function ConversationStream(props) {
               </span>
             </div>
           )}
-          <div className="prompt">{currentTurn.inputPrompt || "你的回答"}</div>
+          {!currentTurn._sourcingBridge && (
+            <div className="prompt">{currentTurn.inputPrompt || "你的回答"}</div>
+          )}
 
           {/* PEEL 引导（Winston review #4：训练 US 学校的回答框架） */}
           <details className="peel-hint" style={{marginBottom: 6}}>
