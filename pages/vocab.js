@@ -5761,10 +5761,23 @@ export default function App() {
     };
   };
 
+  // 复习队列去重：wordInput 历史数据可能有重复词条（合并/上传时重复追加），
+  // 不去重会导致同一个词在复习里连续出现多次。按词保留首次出现，不动 parseWordsFromInput
+  // 全局行为（其 index 被学习进度 idx 依赖，全局去重会错位）。
+  var dedupeByWord = function(arr, keyFn) {
+    var seen = Object.create(null);
+    return arr.filter(function(item) {
+      var k = keyFn ? keyFn(item) : item;
+      if (seen[k]) return false;
+      seen[k] = true;
+      return true;
+    });
+  };
+
   var startQuickReview = function(mode) {
     mode = mode || "all"; // all | due | focus
     var words = parseWordsFromInput(wordInput);
-    var queue = words
+    var queue = dedupeByWord(words
       .filter(function(w, i) {
         var s = getWordStatus(w, i, words);
         if (s === "unlearned" || s === "skipped") return false;
@@ -5784,7 +5797,8 @@ export default function App() {
           _priority: rankPriority(status, d),
         };
       })
-      .sort(function(a, b) { return b._priority - a._priority || a.word.localeCompare(b.word); });
+      .sort(function(a, b) { return b._priority - a._priority || a.word.localeCompare(b.word); }),
+      function(item) { return item.word; });
 
     if (!queue.length) {
       setError(mode === "due" ? "今天没有到期复习词" : mode === "focus" ? "目前没有🟡/🔴重点词" : "暂无可复习单词，请先学习几个词");
@@ -5892,7 +5906,7 @@ export default function App() {
     }
 
     var words = parseWordsFromInput(wordInput);
-    var queue = words
+    var queue = dedupeByWord(words
       .filter(function(w, i) {
         var s = getWordStatus(w, i, words);
         return s === "uncertain" || s === "error";
@@ -5903,7 +5917,7 @@ export default function App() {
         return { word: w, _priority: rankPriority(s, d) };
       })
       .sort(function(a, b) { return b._priority - a._priority || a.word.localeCompare(b.word); })
-      .map(function(x) { return x.word; });
+      .map(function(x) { return x.word; }));
 
     var leftCap = Math.max(0, (deepReviewDailyCap || 8) - todayDeep);
     queue = queue.slice(0, leftCap);
