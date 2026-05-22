@@ -26,16 +26,18 @@ export var SyncStatusBadge = ({ status, lastSyncAt, onRetry }) => {
 
   var isError = status === "error";
   var isSyncing = status === "syncing";
-  var icon = isSyncing ? "↻" : isError ? "⚠" : "✓";
-  var color = isError ? "#e53e3e" : isSyncing ? "#3d6baf" : "#22a06b";
-  var bg = isError ? "rgba(229,62,62,0.10)" : isSyncing ? "rgba(90,130,200,0.10)" : "rgba(34,160,107,0.10)";
-  var label = isSyncing ? "同步中…" : isError ? "未同步" : "已同步";
-  var ago = (!isSyncing && !isError && lastSyncAt) ? formatSyncAgo(lastSyncAt) : (isError ? "点击重试" : "");
+  var hasSynced = !!lastSyncAt;                             // 本轮已有成功同步记录
+  var isPending = !isSyncing && !isError && !hasSynced;     // 已登录但还没同步过 — 不能假装"已同步"(Codex)
+  var icon = isSyncing ? "↻" : isError ? "⚠" : isPending ? "○" : "✓";
+  var color = isError ? "#e53e3e" : isSyncing ? "#3d6baf" : isPending ? "#9ca3af" : "#22a06b";
+  var bg = isError ? "rgba(229,62,62,0.10)" : isSyncing ? "rgba(90,130,200,0.10)" : isPending ? "rgba(156,163,175,0.10)" : "rgba(34,160,107,0.10)";
+  var label = isSyncing ? "同步中…" : isError ? "未同步" : isPending ? "云同步已开启" : "已同步";
+  var ago = isError ? "点击重试" : (hasSynced ? formatSyncAgo(lastSyncAt) : "");
 
   return (
     <button
       onClick={isError && onRetry ? onRetry : undefined}
-      title={isError ? "同步未完成，点击重试" : isSyncing ? "正在把进度同步到云端" : (lastSyncAt ? "进度已云端备份，最近同步 " + formatSyncAgo(lastSyncAt) : "进度会自动云端备份")}
+      title={isError ? "同步未完成，点击重试" : isSyncing ? "正在把进度同步到云端" : hasSynced ? "进度已云端备份，最近同步 " + formatSyncAgo(lastSyncAt) : "已登录，进度会自动云端备份"}
       style={{
         display: "inline-flex", alignItems: "center", gap: 5,
         background: bg, color: color, border: "none", borderRadius: 14,
