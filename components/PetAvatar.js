@@ -22,6 +22,15 @@ export var moodFromLabel = function(label) {
   return "neutral";
 };
 
+/* ─── aria label 生成 ─── */
+var SPECIES_NAMES = { kitten: "小奶猫", cat: "成年猫", tiger: "小老虎", lion: "雄狮" };
+var MOOD_NAMES    = { neutral: "平静", happy: "开心", hungry: "饿了", sad: "难过", celebrate: "庆祝", sleeping: "睡觉" };
+var getPetAriaLabel = function(species, mood) {
+  var s = SPECIES_NAMES[species] || "宠物";
+  var m = MOOD_NAMES[mood] || "平静";
+  return s + "·" + m;
+};
+
 /* ─── 配饰商店目录 ─── 男女均衡 + 中性 */
 export var ACCESSORY_CATALOG = [
   // 头饰（hat 槽位）
@@ -161,7 +170,8 @@ export var PetAvatar = function(props) {
 
   return (
     <div style={{ width: size, height: size, display: "inline-block", position: "relative", animation: anim }}>
-      <svg viewBox="0 0 100 100" width={size} height={size} style={{ display: "block", overflow: "visible" }}>
+      <svg viewBox="0 0 100 100" width={size} height={size} style={{ display: "block", overflow: "visible" }}
+        role="img" aria-label={getPetAriaLabel(species, mood)}>
         {/* ─── 翅膀（最底层背景） ─── */}
         {accessories.wings && renderAccessory(accessories.wings, t.line)}
 
