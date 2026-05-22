@@ -9,7 +9,7 @@ import UserCenter from '../components/UserCenter';
 import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../components/PetAvatar';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
-import { mergeReviewEntry, toTime } from '../lib/progressMergePolicy';
+import { mergeReviewEntry, toTime, detectSyncGate } from '../lib/progressMergePolicy';
 import { US_LIFE_1000 } from '../lib/preset-us-life-1000';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 import * as XLSX from 'xlsx';
@@ -3465,6 +3465,110 @@ export default function App() {
     } else {
       _broadcastSync(syncVersionRef.current);
       setSyncSynced();
+      _intentRef.current = null; // 第二批：成功且无拒绝才清 intent（重试/reject/error 保留）
+    }
+  };
+
+  // 推送一份完整快照到云端：含 409 冲突合并 + 重推 + 成功响应处理。
+  // 正常 _doSync 与 recoverBlockedSync 共用。intent 跟随本次 payload，409 重推继续
+  // 携带（Codex round2：避免重推丢 intent 导致合法缩减被守卫拦截）。
+  var _pushSnapshot = async function(dataToPush, intent) {
+    var u = userRef.current;
+    if (!u) return;
+    dataToPush.updatedAt = new Date().toISOString();
+    var r = await fetch('/api/sync', {
+      method: 'POST',
+      headers: await getAuthHeaders(true),
+      body: JSON.stringify({ userId: u.id, data: dataToPush, clientVersion: syncVersionRef.current, intent: intent }),
+    });
+    if (r.status === 409) {
+      var conflict = await r.json();
+      console.warn('[sync] version conflict: client=' + syncVersionRef.current + ' server=' + conflict.serverVersion + ' — merging');
+      if (conflict.serverData) {
+        var merged;
+        try {
+          merged = mergeStates(dataToPush, conflict.serverData);
+          if (!validateMerged(merged, conflict.serverData)) merged = conflict.serverData;
+        } catch(mergeErr) {
+          console.warn('[sync] merge threw, fallback to server:', mergeErr.message);
+          merged = conflict.serverData;
+        }
+        syncVersionRef.current = conflict.serverVersion;
+        await doSave(merged);
+        _applyCloudData(merged);
+        var r2 = await fetch('/api/sync', {
+          method: 'POST',
+          headers: await getAuthHeaders(true),
+          body: JSON.stringify({ userId: u.id, data: merged, clientVersion: syncVersionRef.current, intent: intent }),
+        });
+        if (r2.ok) {
+          await _applySyncSuccess(await r2.json());
+        } else if (r2.status === 409) {
+          var conflict2 = await r2.json();
+          console.warn('[sync] re-merge still 409, accepting server (max contention)');
+          if (conflict2.serverData) {
+            syncVersionRef.current = conflict2.serverVersion;
+            await doSave(conflict2.serverData);
+            _applyCloudData(conflict2.serverData);
+          }
+          setSyncSynced();
+          _intentRef.current = null;
+        } else {
+          throw new Error('re-push failed: ' + r2.status);
+        }
+      }
+      _syncRetryCountRef.current = 0;
+    } else if (r.ok) {
+      await _applySyncSuccess(await r.json());
+    } else {
+      throw new Error('sync failed: ' + r.status);
+    }
+  };
+
+  // 闸门触发后的恢复流程（第二批：打破活锁）。
+  // detectSyncGate 触发说明本地快照看似危险（race/mount bug 让本地比云端少）。
+  // 旧逻辑直接 setSyncStatus("error") + return → 永久不同步（version 冻结元凶）。
+  // 新逻辑：拉云端 → 合并 → 推 merged。merged 含云端数据，不会再触发闸门 → 解冻。
+  var _recoveringRef = useRef(false);
+  var recoverBlockedSync = async function(reason, localData, intent) {
+    if (_recoveringRef.current) return;
+    _recoveringRef.current = true;
+    try {
+      console.warn('[sync] gate triggered (' + reason + '), pull-merge-repush 尝试解冻');
+      var u = userRef.current;
+      if (!u) return;
+      var cloudRes = await loadFromCloud(u.id);
+      if (!cloudRes.ok) {
+        // 拉云失败 → 保持 blocked，不强推（避免覆盖云端）
+        console.warn('[sync] recover: cloud load failed, staying blocked');
+        setSyncStatus("error");
+        return;
+      }
+      if (!cloudRes.data) {
+        // 云端无数据 → 没有可保护的数据，闸门是误判，直接推本地建立初始数据
+        await _pushSnapshot(localData, intent);
+        return;
+      }
+      var merged;
+      try {
+        merged = mergeStates(localData, cloudRes.data);
+        if (!validateMerged(merged, cloudRes.data)) merged = cloudRes.data;
+      } catch(e) { merged = cloudRes.data; }
+      // merged 仍触发闸门？说明云端本身也异常 → 真 block（但把云端数据合进本地，至少本地不丢）
+      var reGate = detectSyncGate(merged);
+      if (reGate.blocked) {
+        console.warn('[sync] recover: merged 仍触发闸门 (' + reGate.reason + ')，真 block');
+        await doSave(merged);
+        _applyCloudData(merged);
+        setSyncStatus("error");
+        return;
+      }
+      syncVersionRef.current = cloudRes.version;
+      await doSave(merged);
+      _applyCloudData(merged);
+      await _pushSnapshot(merged, intent);
+    } finally {
+      _recoveringRef.current = false;
     }
   };
 
@@ -3486,95 +3590,17 @@ export default function App() {
     try {
       var fullData = await loadSave();
       if (!fullData) { _syncInFlightRef.current = false; setSyncStatus("idle"); return; }
-      // 反数据丢失保护 1：reviewWordData 比 wordStatusMap 少太多
-      var wsmCount = Object.keys(fullData.wordStatusMap || {}).length;
-      var rwdCount = Object.keys(fullData.reviewWordData || {}).length;
-      if (wsmCount > 20 && rwdCount < wsmCount * 0.3) {
-        console.warn('[sync] blocked: reviewWordData (' + rwdCount + ') much smaller than wordStatusMap (' + wsmCount + '). Skip sync to protect cloud data.');
-        _syncInFlightRef.current = false; setSyncStatus("error");
-        return;
-      }
-      // 反数据丢失保护 2：pet 看似 default 或完全缺失，但 stats 显示已学过 50+ 词
-      // chompcloud 2026-04-30 兜底：万一闸门失效，也防止 default/缺失 pet 覆盖云端真实进度。
-      // 触发条件：
-      //   (a) pet 字段缺失（fullData.pet 为 falsy）— 例如新浏览器登录前 doSave 未带 pet
-      //   (b) pet.totalFed=0 且 unlocked=[] — mount 创建的 default pet
-      var _pet = fullData.pet;
-      var _statsTotal = (fullData.stats || {}).total || 0;
-      var _petLooksDefault = !_pet ||
-        ((Number(_pet.totalFed) || 0) === 0 && (!_pet.unlocked || _pet.unlocked.length === 0));
-      if (_petLooksDefault && _statsTotal > 50) {
-        console.warn('[sync] blocked: pet looks default/missing but stats.total=' + _statsTotal + '. Likely race; skip sync.');
-        _syncInFlightRef.current = false; setSyncStatus("error");
-        return;
-      }
-      fullData.updatedAt = new Date().toISOString();
-      // L3 intent：sync 后立即清空，避免下次普通 sync 误带
-      var _currentIntent = _intentRef.current;
-      _intentRef.current = null;
-      var r = await fetch('/api/sync', {
-        method: 'POST',
-        headers: await getAuthHeaders(true),
-        body: JSON.stringify({ userId: u.id, data: fullData, clientVersion: syncVersionRef.current, intent: _currentIntent }),
-      });
+      var intent = _intentRef.current; // 不在此清空；成功后才清（第二批）
 
-      if (r.status === 409) {
-        // P0-1 修复：版本冲突时智能合并（不是无脑覆盖），保住两边的进度
-        var conflict = await r.json();
-        console.warn('[sync] version conflict: client=' + syncVersionRef.current + ' server=' + conflict.serverVersion + ' — merging');
-        if (conflict.serverData) {
-          // 深度合并 local + server（按字段类型策略：累加取 max / 字典 merge / 数组 union）
-          var merged;
-          try {
-            merged = mergeStates(fullData, conflict.serverData);
-            // 验证 merge 没把字段搞少（防止 merge bug）
-            if (!validateMerged(merged, conflict.serverData)) {
-              console.warn('[sync] merge validation failed, falling back to server data');
-              merged = conflict.serverData;
-            }
-          } catch(mergeErr) {
-            console.warn('[sync] merge threw, falling back to server data:', mergeErr.message);
-            merged = conflict.serverData;
-          }
-          syncVersionRef.current = conflict.serverVersion;
-          await doSave(merged);
-          _applyCloudData(merged);
-          // 重推合并后的数据（带新 version）
-          try {
-            // 重推时不带 intent（merged 是双方合并结果，wordInput 取并集不会缩水）
-            var r2 = await fetch('/api/sync', {
-              method: 'POST',
-              headers: await getAuthHeaders(true),
-              body: JSON.stringify({ userId: u.id, data: merged, clientVersion: syncVersionRef.current }),
-            });
-            if (r2.ok) {
-              var result2 = await r2.json();
-              await _applySyncSuccess(result2); // 复用统一逻辑，消费 rejectedFields
-            } else if (r2.status === 409) {
-              // 第二次冲突 — 第三方 tab 又写了。接受服务端避免无限循环
-              var conflict2 = await r2.json();
-              console.warn('[sync] re-merge still 409, accepting server (max contention reached)');
-              if (conflict2.serverData) {
-                syncVersionRef.current = conflict2.serverVersion;
-                await doSave(conflict2.serverData);
-                _applyCloudData(conflict2.serverData);
-              }
-              setSyncSynced();
-            } else {
-              throw new Error('re-push failed: ' + r2.status);
-            }
-          } catch(repushErr) {
-            console.warn('[sync] re-push error:', repushErr.message);
-            setSyncStatus("error");
-          }
-        }
-        _syncRetryCountRef.current = 0;
-      } else if (r.ok) {
-        var result = await r.json();
-        await _applySyncSuccess(result);
-      } else {
-        throw new Error('sync failed: ' + r.status);
+      // 反数据丢失闸门（第二批）：触发不再静默 return（活锁 → version 冻结），
+      // 改为 pull-merge-repush 解冻。detectSyncGate 是纯函数，逻辑可单测。
+      var gate = detectSyncGate(fullData);
+      if (gate.blocked) {
+        await recoverBlockedSync(gate.reason, fullData, intent);
+        return;
       }
+
+      await _pushSnapshot(fullData, intent);
     } catch(e) {
       console.warn('[sync] error:', e.message);
       _syncRetryCountRef.current++;
@@ -3599,15 +3625,26 @@ export default function App() {
     } catch(e) {}
   };
 
+  // 结构化返回 (第二批)：区分"云端无数据(首次用户)"与"读取失败"。
+  //   { ok:true, data, version, hasData }  ← 成功 (data 可能为 null = 首次用户)
+  //   { ok:false, error }                  ← 读取失败 (网络/HTTP/解析)
+  // 调用方据 ok 判断：读失败时绝不能当 cloud=null 推本地 (会覆盖云端真实数据)。
   var loadFromCloud = async function(userId) {
     try {
       var r = await fetch('/api/load?userId=' + userId, {
         headers: await getAuthHeaders(false),
       });
+      if (!r.ok) {
+        console.warn('[loadFromCloud] http ' + r.status);
+        return { ok: false, error: 'http_' + r.status };
+      }
       var json = await r.json();
       syncVersionRef.current = json.version || 0;
-      return json.data || null;
-    } catch(e) { console.warn('[loadFromCloud] failed:', e.message); return null; }
+      return { ok: true, data: json.data || null, version: json.version || 0, hasData: !!json.data };
+    } catch(e) {
+      console.warn('[loadFromCloud] failed:', e.message);
+      return { ok: false, error: e.message || 'network' };
+    }
   };
 
   // 将云端数据应用到 React state
@@ -3923,33 +3960,41 @@ export default function App() {
       // 服务端权威：拉取云端数据
       // 重置场景无需特殊分支 —— resetLearningProgress 已经 await /api/reset
       // 完成后云端就是清零数据，这里 loadFromCloud 读到的也是清零，自然正确
-      var cloudData = await loadFromCloud(u.id);
-      // newer-wins 保护：如果 local 比 cloud 更新（说明云端是旧的，可能因闪退没同步成功），
-      // 智能合并 local + cloud 而非简单覆盖，避免任何一方进度丢失
-      // 阈值 5 分钟：容忍系统时钟漂移（移动设备时区/NTP 可能差几分钟）
-      var localData = await loadSave();
-      var localTime = localData?.updatedAt ? new Date(localData.updatedAt).getTime() : 0;
-      var cloudTime = cloudData?.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
-      if (localData && cloudData && localTime > cloudTime + 300000) {
-        // local 比 cloud 至少新 5 分钟 — 但仍然 merge 而非粗暴覆盖
-        console.warn('[auth] local newer than cloud, merging both');
-        var loginMerged;
-        try {
-          loginMerged = mergeStates(localData, cloudData);
-          if (!validateMerged(loginMerged, cloudData)) loginMerged = cloudData;
-        } catch(e) { loginMerged = cloudData; }
-        await doSave(loginMerged);
-        _applyCloudData(loginMerged);
-        setShowWelcome(false);
-        syncToCloud(); // 推送合并后的数据
-      } else if (cloudData) {
-        await doSave(cloudData);
-        _applyCloudData(cloudData);
-        setShowWelcome(false);
+      var cloudRes = await loadFromCloud(u.id);
+      if (!cloudRes.ok) {
+        // 读云失败 (第二批)：绝不能当"无数据"推本地，否则会覆盖云端真实数据。
+        // 不解锁 _cloudReadyRef，保持 sync 锁定；用户刷新/重登会重试 loadFromCloud。
+        console.warn('[auth] cloud load failed, NOT unlocking sync (避免覆盖云端):', cloudRes.error);
+        setSyncStatus("error");
       } else {
-        // 云端无数据（首次注册用户）→ 标记 cloud-ready 后允许首次 push
-        _cloudReadyRef.current = true;
-        syncToCloud();
+        var cloudData = cloudRes.data;
+        // newer-wins 保护：如果 local 比 cloud 更新（说明云端是旧的，可能因闪退没同步成功），
+        // 智能合并 local + cloud 而非简单覆盖，避免任何一方进度丢失
+        // 阈值 5 分钟：容忍系统时钟漂移（移动设备时区/NTP 可能差几分钟）
+        var localData = await loadSave();
+        var localTime = localData?.updatedAt ? new Date(localData.updatedAt).getTime() : 0;
+        var cloudTime = cloudData?.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
+        if (localData && cloudData && localTime > cloudTime + 300000) {
+          // local 比 cloud 至少新 5 分钟 — 但仍然 merge 而非粗暴覆盖
+          console.warn('[auth] local newer than cloud, merging both');
+          var loginMerged;
+          try {
+            loginMerged = mergeStates(localData, cloudData);
+            if (!validateMerged(loginMerged, cloudData)) loginMerged = cloudData;
+          } catch(e) { loginMerged = cloudData; }
+          await doSave(loginMerged);
+          _applyCloudData(loginMerged);
+          setShowWelcome(false);
+          syncToCloud(); // 推送合并后的数据
+        } else if (cloudData) {
+          await doSave(cloudData);
+          _applyCloudData(cloudData);
+          setShowWelcome(false);
+        } else {
+          // 云端确认无数据（首次注册用户，cloudRes.ok && !hasData）→ 解锁 + 首次 push
+          _cloudReadyRef.current = true;
+          syncToCloud();
+        }
       }
       _loadTier(u.id);
     }
@@ -4097,8 +4142,9 @@ export default function App() {
     if (!userRef.current) return;
     if (_syncInFlightRef.current) return; // 正在同步则跳过（避免与 push 冲突）
     try {
-      var cloudData = await loadFromCloud(userRef.current.id);
-      if (!cloudData) return;
+      var cloudRes = await loadFromCloud(userRef.current.id);
+      if (!cloudRes.ok || !cloudRes.data) return; // 读失败或云端无数据 → 不动本地
+      var cloudData = cloudRes.data;
       var localData = await loadSave();
       if (!localData) {
         await doSave(cloudData);
@@ -7178,8 +7224,8 @@ export default function App() {
                   feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 3000);
                   return;
                 }
-                var cloudData = await loadFromCloud(user.id);
-                if (!cloudData || !cloudData.reviewWordData) {
+                var cloudRes = await loadFromCloud(user.id);
+                if (!cloudRes.ok || !cloudRes.data || !cloudRes.data.reviewWordData) {
                   setHelpTip("cloud-restore");
                   setFeedbackToast("获取云端数据失败，请稍后再试");
                   if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
@@ -7187,7 +7233,7 @@ export default function App() {
                   return;
                 }
                 var localRwd = reviewWordData || {};
-                var cloudRwd = cloudData.reviewWordData;
+                var cloudRwd = cloudRes.data.reviewWordData;
                 var updated = Object.assign({}, localRwd);
                 var fixed = 0;
                 var _restoreNow = new Date().toISOString();

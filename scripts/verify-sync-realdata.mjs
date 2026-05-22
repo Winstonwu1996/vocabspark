@@ -5,7 +5,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { mergeProgress, entryRecency } from "../lib/progressMergePolicy.js";
+import { mergeProgress, entryRecency, detectSyncGate } from "../lib/progressMergePolicy.js";
 
 var CHOMP = "d3906a86-3167-4219-be9b-93365afff7c7";
 
@@ -118,6 +118,22 @@ ok("复习词 merged recency = 今天 (本地最新)", recencyOk);
 // 6. 顶层字段未丢
 ok("wordInput 保留", typeof merged.wordInput === "string" && merged.wordInput.length > 0);
 ok("wordStatusMap 保留 (>= 云端)", Object.keys(merged.wordStatusMap || {}).length >= Object.keys(cloud.wordStatusMap || {}).length);
+
+// ── 第二批：闸门 recover 核心 (真实数据) ──
+console.log("\n── 第二批：闸门 recover (pull-merge-repush 解冻) ──");
+// 模拟 race/mount bug：本地 reviewWordData 几乎清空，但 wordStatusMap 完整 → 触发闸门
+var blockedLocal = JSON.parse(JSON.stringify(cloud));
+blockedLocal.reviewWordData = {}; blockedLocal.reviewWordData[words[0]] = cloudRwd[words[0]];
+blockedLocal.updatedAt = today;
+var gateLocal = detectSyncGate(blockedLocal);
+ok("模拟 race: 本地 rwd 几乎空(1) + wsm 完整 → 触发闸门", gateLocal.blocked && gateLocal.reason === "reviewWordData_too_small");
+// recover: 拉云端合并
+var recovered = mergeProgress(blockedLocal, cloud);
+var gateRecovered = detectSyncGate(recovered);
+ok("recover 合并云端后 → 不再触发闸门 (解冻) ★第二批核心", !gateRecovered.blocked,
+  "merged reason=" + (gateRecovered.reason || "none"));
+ok("recover 后 reviewWordData 恢复到云端规模", Object.keys(recovered.reviewWordData).length >= words.length,
+  "recovered=" + Object.keys(recovered.reviewWordData).length + " cloud=" + words.length);
 
 // 统计对比
 function dueCount(rwd) {
