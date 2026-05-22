@@ -99,9 +99,21 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
           <Link href="/atlas-lab" style={tabStyle("history")}>History<sup style={{fontSize:8,color:C.purple,fontWeight:700,marginLeft:1}}>Beta</sup></Link>
           <span style={{ ...tabStyle("reading"), opacity:0.5, cursor:"default" }}>Reading<sup style={{fontSize:8,color:C.teal,fontWeight:700,marginLeft:1}}>Soon</sup></span>
         </div>
-        {syncStatus && syncStatus !== "idle" && user && (
-          <span style={{ fontSize:10, color: syncStatus === "error" ? "#e53e3e" : syncStatus === "synced" ? "#22a06b" : C.textSec, fontWeight:600, opacity: syncStatus === "synced" ? 0.6 : 1 }}>
-            {syncStatus === "syncing" ? "⟳" : syncStatus === "synced" ? "✓" : syncStatus === "error" ? "⚠" : ""}
+        {user && syncStatus && (
+          <span
+            title={syncStatus === "syncing" ? "正在同步..." : syncStatus === "synced" ? "已同步" : syncStatus === "error" ? "同步失败" : "已同步"}
+            style={{
+              display:"inline-flex", alignItems:"center", justifyContent:"center",
+              width:20, height:20, borderRadius:"50%",
+              background: syncStatus === "error" ? "rgba(229,62,62,0.12)" : syncStatus === "syncing" ? "rgba(90,130,200,0.12)" : "transparent",
+              color: syncStatus === "error" ? "#e53e3e" : syncStatus === "syncing" ? "#3d6baf" : "#22a06b",
+              fontSize:12, fontWeight:700,
+              opacity: syncStatus === "idle" || syncStatus === "synced" ? 0.45 : 1,
+              transition:"opacity 0.4s, color 0.3s",
+              cursor:"default",
+            }}
+          >
+            {syncStatus === "syncing" ? "↻" : syncStatus === "error" ? "⚠" : "✓"}
           </span>
         )}
         <button onClick={onUserCenterClick} style={{ marginLeft:2, cursor:"pointer", background:"transparent", border:"none", padding:0, lineHeight:0 }} aria-label="用户中心">
