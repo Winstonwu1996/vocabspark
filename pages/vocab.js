@@ -2575,6 +2575,8 @@ export default function App() {
   var [resetInProgress, setResetInProgress] = useState(false);
   var [reviewFeedback, setReviewFeedback] = useState(null);
   var [streakToast, setStreakToast] = useState(null);
+  var streakToastTimerRef = useRef(null);
+  var guessAdvanceRef = useRef(null);
   var [loginToast, setLoginToast] = useState(null);
   var [screeningWords, setScreeningWords] = useState([]);
   var [screeningIdx, setScreeningIdx] = useState(0);
@@ -2854,6 +2856,8 @@ export default function App() {
       if (_syncStatusTimerRef.current) clearTimeout(_syncStatusTimerRef.current);
       if (speedToastTimerRef.current) clearTimeout(speedToastTimerRef.current);
       if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
+      if (streakToastTimerRef.current) clearTimeout(streakToastTimerRef.current);
+      if (guessAdvanceRef.current) clearTimeout(guessAdvanceRef.current);
     };
   }, []);
   var speedWaitAbortRef = useRef(false);
@@ -4670,6 +4674,7 @@ export default function App() {
     if (spectrumPollRef.current) clearInterval(spectrumPollRef.current);
     if (guessPollRef.current) clearInterval(guessPollRef.current);
     if (guessTimeoutRef.current) clearTimeout(guessTimeoutRef.current);
+    if (guessAdvanceRef.current) { clearTimeout(guessAdvanceRef.current); guessAdvanceRef.current = null; }
     setGuessData(null); setGuessOptionOrder(null); setSelectedOption(""); setGuessSubmitted(false);
     setShowHint(false); setTeachContent(""); setTeachData(null); setSpectrumData(null);
     setSpecSlots([null,null,null]); setSpecPool([]); setSpecStatus("idle");
@@ -4849,10 +4854,12 @@ export default function App() {
     if (correct && (newStreak === 3 || newStreak === 5 || newStreak === 10 || newStreak === 15 || newStreak === 20)) {
       var msgs = { 3:"三连对！不错！", 5:"五连对！厉害了！", 10:"十连对！太强了！", 15:"十五连！学霸无疑！", 20:"二十连！无人能挡！" };
       setStreakToast(msgs[newStreak] || ("连对 "+newStreak+"！"));
-      setTimeout(function(){ setStreakToast(null); }, 2000);
+      if (streakToastTimerRef.current) clearTimeout(streakToastTimerRef.current);
+      streakToastTimerRef.current = setTimeout(function(){ streakToastTimerRef.current = null; setStreakToast(null); }, 2000);
     }
 
-    setTimeout(function() { setPhaseDir(1); setPhase("teach"); }, 800);
+    if (guessAdvanceRef.current) clearTimeout(guessAdvanceRef.current);
+    guessAdvanceRef.current = setTimeout(function() { guessAdvanceRef.current = null; setPhaseDir(1); setPhase("teach"); }, 800);
   };
 
   var skipGuess = function() {
