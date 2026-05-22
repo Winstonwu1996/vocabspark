@@ -5551,22 +5551,36 @@ export default function App() {
     return 0 + dueBoost;
   };
 
+  // 按词去重，返回每个 distinct 词 + 其首次出现的原始 index（status 判断用原始 index 避免错位）。
+  // 根治 wordInput 重复词条导致的计数/显示虚高（同一个词被数多次 → 词库总数/待学习/今日到期全部偏高）。
+  var getDistinctWordEntries = function(words) {
+    var seen = Object.create(null);
+    var out = [];
+    for (var i = 0; i < words.length; i++) {
+      if (seen[words[i]]) continue;
+      seen[words[i]] = true;
+      out.push({ word: words[i], index: i });
+    }
+    return out;
+  };
+
   var getStudyPlanPrediction = function() {
     var words = parseWordsFromInput(wordInput);
-    var totalWords = words.length;
+    var entries = getDistinctWordEntries(words);
+    var totalWords = entries.length;
     var skippedCount = 0;
     var learnedCount = 0; // actually learned via AI (not skipped)
     var unlearnedCount = 0;
-    words.forEach(function(w, i) {
-      var s = getWordStatus(w, i, words);
+    entries.forEach(function(e) {
+      var s = getWordStatus(e.word, e.index, words);
       if (s === "skipped") skippedCount++;
       else if (s === "unlearned") unlearnedCount++;
       else learnedCount++;
     });
-    var dueCount = words.filter(function(w, i) {
-      var s = getWordStatus(w, i, words);
+    var dueCount = entries.filter(function(e) {
+      var s = getWordStatus(e.word, e.index, words);
       if (s === "unlearned" || s === "skipped") return false;
-      var d = reviewWordData[w] || {};
+      var d = reviewWordData[e.word] || {};
       return d.nextReviewDate && isDueDate(d.nextReviewDate);
     }).length;
 
@@ -5576,8 +5590,8 @@ export default function App() {
     // Prediction: use screening pass rate to estimate how many unscreened words need learning
     var screenedTotal = skippedCount + learnedCount; // words that have been through some process
     // Use screening stats if available (from current session), otherwise use wordStatusMap ratio
-    var allSkipped = words.filter(function(w) { return wordStatusMap[w] === "skipped"; }).length;
-    var allProcessed = words.filter(function(w) { return wordStatusMap[w] && wordStatusMap[w] !== "unlearned"; }).length;
+    var allSkipped = entries.filter(function(e) { return wordStatusMap[e.word] === "skipped"; }).length;
+    var allProcessed = entries.filter(function(e) { return wordStatusMap[e.word] && wordStatusMap[e.word] !== "unlearned"; }).length;
     var unknownRate = allProcessed > 0 ? Math.max(0, 1 - (allSkipped / allProcessed)) : 1;
     var predictedNeedLearn = unlearnedCount > 0 && allSkipped > 0
       ? Math.round(unlearnedCount * unknownRate)
@@ -5625,7 +5639,9 @@ export default function App() {
 
   var getWordRows = function() {
     var words = parseWordsFromInput(wordInput);
-    var rows = words.map(function(w, i) {
+    // 按词去重显示：wordInput 重复词条会让同一个词在词表里出现多行。用首次出现的 index 算状态。
+    var rows = getDistinctWordEntries(words).map(function(e) {
+      var w = e.word, i = e.index;
       var status = getWordStatus(w, i, words);
       var d = reviewWordData[w] || {};
       var due = !!(d.nextReviewDate && isDueDate(d.nextReviewDate) && status !== "unlearned");
@@ -5733,21 +5749,22 @@ export default function App() {
     var total = Number(stats.total || 0);
     var accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
 
+    var entries = getDistinctWordEntries(words);
     var statuses = { unlearned: 0, learning: 0, mastered: 0, uncertain: 0, error: 0 };
-    words.forEach(function(w, i) {
-      var s = getWordStatus(w, i, words);
+    entries.forEach(function(e) {
+      var s = getWordStatus(e.word, e.index, words);
       statuses[s] = (statuses[s] || 0) + 1;
     });
 
-    var dueCount = words.filter(function(w, i) {
-      var s = getWordStatus(w, i, words);
+    var dueCount = entries.filter(function(e) {
+      var s = getWordStatus(e.word, e.index, words);
       if (s === "unlearned" || s === "skipped") return false;
-      var d = reviewWordData[w] || {};
+      var d = reviewWordData[e.word] || {};
       return d.nextReviewDate && isDueDate(d.nextReviewDate);
     }).length;
 
     return {
-      totalWords: words.length,
+      totalWords: entries.length,
       statuses: statuses,
       dueCount: dueCount,
       xp: Number(stats.xp || 0),
