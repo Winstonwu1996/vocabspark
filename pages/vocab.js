@@ -2693,6 +2693,7 @@ export default function App() {
   var [learned, setLearned] = useState([]);
 
   var [guessData, setGuessData] = useState(null);
+  var [guessOptionOrder, setGuessOptionOrder] = useState(null); // 打乱后的选项展示顺序
   var [selectedOption, setSelectedOption] = useState("");
   var [guessSubmitted, setGuessSubmitted] = useState(false);
   // A: 答题速度软约束 — 记录 guess phase 开始时间，提交时如果 < 15s 弹软提示
@@ -4665,7 +4666,7 @@ export default function App() {
     if (spectrumPollRef.current) clearInterval(spectrumPollRef.current);
     if (guessPollRef.current) clearInterval(guessPollRef.current);
     if (guessTimeoutRef.current) clearTimeout(guessTimeoutRef.current);
-    setGuessData(null); setSelectedOption(""); setGuessSubmitted(false);
+    setGuessData(null); setGuessOptionOrder(null); setSelectedOption(""); setGuessSubmitted(false);
     setShowHint(false); setTeachContent(""); setTeachData(null); setSpectrumData(null);
     setSpecSlots([null,null,null]); setSpecPool([]); setSpecStatus("idle");
     setReviewData(null); setReviewAnswers({}); setReviewSubmitted(false); setPhonetic("");
@@ -4677,6 +4678,7 @@ export default function App() {
 
     if (d?.guess?.context && d?.guess?.options) {
       setGuessData(d.guess);
+      setGuessOptionOrder(shuffle(Object.keys(d.guess.options)));
       if (d.guess.phonetic) setPhonetic(d.guess.phonetic);
     } else if (d?.guessFailed && !d?.guess) {
       setGuessData({ context: "题目暂时没准备好", options: null, _failed: true });
@@ -4691,6 +4693,7 @@ export default function App() {
         var cached = dataCache.current[guessPollWord];
         if (cached?.guess?.context && cached?.guess?.options) {
           setGuessData(cached.guess);
+          setGuessOptionOrder(shuffle(Object.keys(cached.guess.options)));
           if (cached.guess.phonetic) setPhonetic(cached.guess.phonetic);
           clearInterval(guessPollRef.current);
           clearTimeout(guessTimeoutRef.current);
@@ -8628,7 +8631,7 @@ export default function App() {
               </span>
               <SpeakBtn text={guessData.context.replace(/_+/g, currentWord)} size={26} />
             </div>
-            {guessData.options ? <div style={S.optionGrid}>{Object.entries(guessData.options).map(([k,v]) => {
+            {guessData.options ? <div style={S.optionGrid}>{(guessOptionOrder || Object.keys(guessData.options)).map(k => { var v = guessData.options[k];
               var acceptable = (Array.isArray(guessData.acceptableAnswers) && guessData.acceptableAnswers.length > 0)
                 ? guessData.acceptableAnswers
                 : (guessData.answer ? [guessData.answer] : []);
@@ -8645,7 +8648,7 @@ export default function App() {
               var revealAnim = isAnswer || isAcceptable ? "correctReveal 0.6s ease-out forwards" : isWrongPicked ? "wrongReveal 0.4s ease-out forwards" : "none";
               var marker = isAnswer ? " ★" : isAcceptable ? " ✓" : isWrongPicked ? " ✗" : "";
               return <button key={k} data-option-btn="true" data-selected={sel ? "true" : "false"} disabled={guessSubmitted} style={{...S.optionBtn,background:bg,borderColor:bdr,color:clr,boxShadow:shadow,animation:revealAnim}} onClick={()=>setSelectedOption(k)}><span data-option-key="true" style={S.optionKey}>{k}</span>{v}{marker}</button>;
-            })}</div> : guessData._failed ? <div style={{textAlign:"center",padding:"12px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>猜词题暂时加载不出来</div><button style={S.primaryBtn} onClick={function(){setGuessData(null);callWithClientRetry(function(){return callAPIFast(sysP,buildGuessPrompt(currentWord,learned));}).then(function(raw){var parsed=normalizeGuessData(tryJSON(raw),currentWord);if(parsed?.context&&parsed?.options&&!parsed._invalidOptions){dataCache.current[currentWord].guess=parsed;dataCache.current[currentWord].guessFailed=false;setGuessData(parsed);}else{setGuessData({context:parsed?._invalidOptions?"AI 这次给了无效选项 — 再试一次？":"AI 这次没说清楚",options:null,_failed:!!parsed?._invalidOptions});}}).catch(function(){setGuessData({context:"题目暂时没准备好",options:null,_failed:true});});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={skipGuess}>直接学习 →</button></div> : <div style={{fontSize:14,color:C.textSec,marginBottom:14}}>选项暂时没准备好，可以直接跳过看讲解</div>}
+            })}</div> : guessData._failed ? <div style={{textAlign:"center",padding:"12px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>猜词题暂时加载不出来</div><button style={S.primaryBtn} onClick={function(){setGuessData(null);callWithClientRetry(function(){return callAPIFast(sysP,buildGuessPrompt(currentWord,learned));}).then(function(raw){var parsed=normalizeGuessData(tryJSON(raw),currentWord);if(parsed?.context&&parsed?.options&&!parsed._invalidOptions){dataCache.current[currentWord].guess=parsed;dataCache.current[currentWord].guessFailed=false;setGuessData(parsed);setGuessOptionOrder(shuffle(Object.keys(parsed.options)));}else{setGuessData({context:parsed?._invalidOptions?"AI 这次给了无效选项 — 再试一次？":"AI 这次没说清楚",options:null,_failed:!!parsed?._invalidOptions});}}).catch(function(){setGuessData({context:"题目暂时没准备好",options:null,_failed:true});});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={skipGuess}>直接学习 →</button></div> : <div style={{fontSize:14,color:C.textSec,marginBottom:14}}>选项暂时没准备好，可以直接跳过看讲解</div>}
             {!guessSubmitted && guessData.hint && <button style={S.hintBtn} onClick={()=>setShowHint(true)}>{showHint?"💡 "+guessData.hint:"💡 提示"}</button>}
             {guessSubmitted && (() => {
               var acceptable = (Array.isArray(guessData.acceptableAnswers) && guessData.acceptableAnswers.length > 0)
