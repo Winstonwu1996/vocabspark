@@ -4189,9 +4189,15 @@ export default function App() {
       }
     });
 
-    var {data: {subscription}} = supabase.auth.onAuthStateChange(async function(event, session) {
+    var {data: {subscription}} = supabase.auth.onAuthStateChange(function(event, session) {
       var u = session?.user || null;
-      await handleAuthUser(u, event);
+      // Supabase v2 已知死锁陷阱：onAuthStateChange 回调持有 auth 内部锁，回调里 await
+      // 其他 supabase.auth 方法会等同一把锁 → 永久死锁、promise 永不 resolve。
+      // handleAuthUser 内部会 await supabase.auth.getSession()（cache token + loadFromCloud
+      // 的 getAuthHeaders），从回调里直接 await 它会卡死 → _applyCloudData 跑不到 →
+      // _cloudReadyRef 永不解锁 → 之后所有 sync 被闸门挡住、永不上云（version 冻结真凶）。
+      // 修复：用 setTimeout(0) 把 handleAuthUser 推到回调外执行，让 auth 锁先释放。
+      setTimeout(function() { handleAuthUser(u, event); }, 0);
     });
     return function() { subscription.unsubscribe(); };
   }, []);
