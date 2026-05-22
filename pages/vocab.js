@@ -9,7 +9,14 @@ import UserCenter from '../components/UserCenter';
 import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../components/PetAvatar';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
-import { mergeReviewEntry, toTime, detectSyncGate } from '../lib/progressMergePolicy';
+import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress } from '../lib/progressMergePolicy';
+
+// wordInput 自动去重 (保留首次出现顺序 + 原始大小写)。在数据加载/导入时调用，
+// 让词库始终无重复 — 用户不用再手动点"去重词库"。守卫已改按 distinct 词数放行纯去重。
+var _dedupeWordInputStr = function(s) {
+  if (!s || typeof s !== 'string') return s;
+  return canonicalizeProgress({ wordInput: s }, { dedupeWordInput: true }).wordInput;
+};
 import { US_LIFE_1000 } from '../lib/preset-us-life-1000';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 import * as XLSX from 'xlsx';
@@ -2693,7 +2700,7 @@ export default function App() {
             ? (existingInput.replace(/\s+$/, "") + "\n" + newWords.join("\n"))
             : newWords.join("\n");
           // 同步到 React state（让 textarea 立刻刷新）
-          setWordInput(d.wordInput);
+          setWordInput(_dedupeWordInputStr(d.wordInput));
         }
       }
       // 移除该 topic 的队列（accept 和 dismiss 都移除）
@@ -3002,7 +3009,7 @@ export default function App() {
         if (d?.tipDismissed) setTipDismissed(true);
         // 恢复词表：严格仅从 wordInput 字段恢复
         // 绝不使用 session.wordList 回填 wordInput —— session 只是学习中的子集，不是全量词表
-        if (d?.wordInput) setWordInput(d.wordInput);
+        if (d?.wordInput) setWordInput(_dedupeWordInputStr(d.wordInput));
         if (d?.session?.wordList?.length > 0 && d?.session?.idx < d.session.wordList.length) {
           setWordList(d.session.wordList);
           setIdx(d.session.idx);
@@ -3666,7 +3673,7 @@ export default function App() {
   // 将云端数据应用到 React state
   var _applyCloudData = function(d) {
     if (!d) return;
-    if (d.wordInput) setWordInput(d.wordInput);
+    if (d.wordInput) setWordInput(_dedupeWordInputStr(d.wordInput));
     if (d.profile) { setProfile(d.profile); setProfileLocked(true); }
     if (d.stats) setStats(function(s) { return {...s, ...d.stats}; });
     if (d.wordStatusMap) {
@@ -4393,11 +4400,11 @@ export default function App() {
   };
 
   var getAutoWordStatus = function(word, index, sourceWords) {
-    var inLearned = learned.includes(word);
-    if (!inLearned) {
-      return index <= idx ? "learning" : "unlearned";
-    }
-    return "learning";
+    // 不再用 index <= idx：wordInput 与 wordList 是两个不同数组、index 混用本就不准，
+    // 且 wordInput 去重会让位置错位 → 把没学过的词误显示成 learning。
+    // 改为：无 manual 状态时，在当前学习列表 learned 里算 learning，否则 unlearned。
+    // 学完的词都会写 wordStatusMap（走 getWordStatus 的 manual 分支），不依赖此函数。
+    return learned.includes(word) ? "learning" : "unlearned";
   };
 
   var getWordStatus = function(word, index, sourceWords) {
@@ -5050,7 +5057,7 @@ export default function App() {
       } else {
         setFileLabel("✅ " + file.name + "（" + words.length + " 个词）");
       }
-      setWordInput(finalWordInput); setError(""); setSetupTab("words");
+      setWordInput(_dedupeWordInputStr(finalWordInput)); setError(""); setSetupTab("words");
       // 立即保存词库到本地和云端
       var d = await loadSave() || {};
       d.wordInput = finalWordInput;
@@ -7243,99 +7250,11 @@ export default function App() {
               <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" style={{display:"none"}} onChange={handleFile} />
             </div>
             <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:6}}>
-              {user && <button onClick={function(){setHelpTip(helpTip==="cloud-restore"?null:"cloud-restore");}} style={{padding:"4px 10px",background:"transparent",color:C.teal,border:"none",fontFamily:FONT,fontSize:12,cursor:"pointer",textDecoration:"underline dashed",textUnderlineOffset:3,whiteSpace:"nowrap"}}>☁️ 云端恢复</button>}
-              <button onClick={function(){setHelpTip(helpTip==="dedup-words"?null:"dedup-words");}} style={{padding:"4px 10px",background:"transparent",color:C.purple,border:"none",fontFamily:FONT,fontSize:12,cursor:"pointer",textDecoration:"underline dashed",textUnderlineOffset:3,whiteSpace:"nowrap"}}>🧹 去重词库</button>
+              {/* "云端恢复"/"去重词库"已退役：同步合并 + 自动去重已自动处理，用户无需操作 */}
               {/* 重置进度改为低调文字链接，避免误点；点击后才展开说明 */}
               <button onClick={function(){setHelpTip(helpTip==="reset"?null:"reset");}} style={{padding:"4px 10px",background:"transparent",color:C.textSec,border:"none",fontFamily:FONT,fontSize:12,cursor:"pointer",textDecoration:"underline dashed",textUnderlineOffset:3,whiteSpace:"nowrap"}}>重置进度</button>
             </div>
           </div>
-          {(helpTip === "cloud-restore" || helpTip === "cloud-restore-loading") && <div style={{background:"rgba(34,160,107,0.08)",border:"1px solid "+C.teal+"44",borderRadius:10,padding:"12px 14px",fontSize:12,color:C.text,lineHeight:1.7,marginBottom:10}}>
-            <div style={{fontWeight:700,color:C.teal,marginBottom:4}}>☁️ 从云端刷新复习日期</div>
-            {helpTip === "cloud-restore-loading"
-              ? <span style={{color:C.textSec}}>正在从云端获取数据，请稍候…</span>
-              : <span style={{color:C.textSec}}>如果"今日到期"数量异常偏多，可用此功能从云端拉取正确的复习日期。<br/>不会清除复习记录或等级进度，只修正到期时间。</span>
-            }
-            {helpTip === "cloud-restore" && <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
-              <button onClick={function(){setHelpTip(null);}} style={{background:"transparent",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",padding:0,fontFamily:FONT}}>取消</button>
-              <button onClick={async function(){
-                setHelpTip("cloud-restore-loading");
-                if (!user) {
-                  setHelpTip("cloud-restore");
-                  setFeedbackToast("请先登录");
-                  if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
-                  feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 3000);
-                  return;
-                }
-                var cloudRes = await loadFromCloud(user.id);
-                if (!cloudRes.ok || !cloudRes.data || !cloudRes.data.reviewWordData) {
-                  setHelpTip("cloud-restore");
-                  setFeedbackToast("获取云端数据失败，请稍后再试");
-                  if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
-                  feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 3500);
-                  return;
-                }
-                var localRwd = reviewWordData || {};
-                var cloudRwd = cloudRes.data.reviewWordData;
-                var updated = Object.assign({}, localRwd);
-                var fixed = 0;
-                var _restoreNow = new Date().toISOString();
-                Object.keys(cloudRwd).forEach(function(w) {
-                  var ce = cloudRwd[w]; var le = updated[w];
-                  if (!ce || !le) return;
-                  // 用 toTime 规范化比较 (约束6)：nextReviewDate 历史数据混合纯日期与完整 ISO，
-                  // 字符串比较会误判。仅当云端日期确实更晚才推后本地。
-                  if (ce.nextReviewDate && le.nextReviewDate && toTime(ce.nextReviewDate) > toTime(le.nextReviewDate)) {
-                    // 这是用户主动的 SRS 修正 → 写 srsUpdatedAt，让 recency 合并认它为最新
-                    updated[w] = Object.assign({}, le, { nextReviewDate: ce.nextReviewDate, srsUpdatedAt: _restoreNow });
-                    fixed++;
-                  }
-                });
-                setReviewWordData(updated);
-                doSave({ reviewWordData: updated });
-                setHelpTip(null);
-                setFeedbackToast("✅ 已修正 " + fixed + " 个词的复习日期");
-                if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
-                feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 3500);
-              }} style={{padding:"6px 14px",background:C.teal,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:700,cursor:"pointer"}}>确认刷新</button>
-            </div>}
-          </div>}
-          {(helpTip === "dedup-words" || helpTip === "dedup-words-loading") && <div style={{background:"rgba(124,92,196,0.08)",border:"1px solid "+C.purple+"44",borderRadius:10,padding:"12px 14px",fontSize:12,color:C.text,lineHeight:1.7,marginBottom:10}}>
-            <div style={{fontWeight:700,color:C.purple,marginBottom:4}}>🧹 清理重复词条</div>
-            {helpTip === "dedup-words-loading"
-              ? <span style={{color:C.textSec}}>正在清理，请稍候…</span>
-              : <span style={{color:C.textSec}}>如果同一个词在词库里出现多次（历史数据问题），会导致复习和词表重复。<br/>此操作保留每个词<strong>首次出现</strong>的位置，去掉后面的重复。<br/>不影响学习状态、复习记录或等级进度。</span>
-            }
-            {helpTip === "dedup-words" && <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
-              <button onClick={function(){setHelpTip(null);}} style={{background:"transparent",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",padding:0,fontFamily:FONT}}>取消</button>
-              <button onClick={async function(){
-                setHelpTip("dedup-words-loading");
-                // 先拉云端刷新 syncVersionRef，避免推送时 409 让 mergeStates 取较长（重复版）覆盖去重结果
-                if (user) { try { await loadFromCloud(user.id); } catch(e) {} }
-                var raw = parseWordsFromInput(wordInput);
-                var seen = Object.create(null);
-                var deduped = [];
-                raw.forEach(function(w){ if (!seen[w]) { seen[w] = true; deduped.push(w); } });
-                var removed = raw.length - deduped.length;
-                if (removed === 0) {
-                  setHelpTip(null);
-                  setFeedbackToast("没有发现重复词条 👍");
-                  if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
-                  feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 3000);
-                  return;
-                }
-                var newInput = deduped.join("\n");
-                // 词库缩水是用户主动操作 → 设 intent 让服务端 L1 守卫放行
-                _markIntent('user_edit_wordInput');
-                setWordInput(newInput);
-                doSave({ wordInput: newInput });
-                if (userRef.current) syncToCloud();
-                setHelpTip(null);
-                setFeedbackToast("✅ 已清理 " + removed + " 个重复词条，保留 " + deduped.length + " 个");
-                if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
-                feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 4000);
-              }} style={{padding:"6px 14px",background:C.purple,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:700,cursor:"pointer"}}>确认清理</button>
-            </div>}
-          </div>}
           {helpTip === "reset" && <div style={{background:C.redLight,border:"1px solid "+C.red+"33",borderRadius:10,padding:"12px 14px",fontSize:12,color:C.text,lineHeight:1.7,marginBottom:10}}>
             <div style={{fontWeight:700,color:C.red,marginBottom:4}}>⚠️ 重置进度（谨慎操作）</div>
             <span style={{color:C.textSec}}>换词表后建议重置。<br/>会清除：单词状态、复习记录、XP 和正确率、今日配额<br/>不会清除：词表内容、学习画像、每日目标、连续学习天数</span>
@@ -7380,6 +7299,7 @@ export default function App() {
                     });
                     finalInput = merged.join('\n');
                   }
+                  finalInput = _dedupeWordInputStr(finalInput);
                   setWordInput(finalInput);
                   loadSave().then(function(d) { d = d || {}; d.wordInput = finalInput; doSave(d); if (userRef.current) syncToCloud(); });
                 }}>{n}</button>;
@@ -7482,7 +7402,7 @@ export default function App() {
                   var w = row.word;
                   var s = row.status;
                   var m = WORD_STATUS_META[s] || WORD_STATUS_META.unlearned;
-                  var learnedWord = learned.includes(w) || row.index <= idx;
+                  var learnedWord = s !== "unlearned"; // 学过 = 有任何非 unlearned 状态 (不再用 index<=idx)
                   var d = row.reviewData || {};
                   var overdue = row.due;
                   var checked = !!selectedWords[w];

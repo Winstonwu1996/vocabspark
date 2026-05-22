@@ -163,6 +163,19 @@ ok("incoming 字段更多 → 全放行", (function () {
   var g = applyProgressGuards({ reviewWordData: { a: {}, b: {} }, wordStatusMap: { a: 1, b: 1 } }, { reviewWordData: { a: {} }, wordStatusMap: { a: 1 } });
   return g.rejected.length === 0;
 })());
+// wordInput 守卫按 distinct 词数 (自动去重)：纯去重放行, 真删词拦
+ok("wordInput 纯去重 (distinct 不变, length 短) → 放行 + 取去重版", (function () {
+  var g = applyProgressGuards({ wordInput: "a\nb" }, { wordInput: "a\na\nb\nb" });
+  return g.rejected.indexOf("wordInput") < 0 && g.safe.wordInput === "a\nb";
+})());
+ok("wordInput 真删词 (distinct 减少) + 无 intent → 被拒", (function () {
+  var g = applyProgressGuards({ wordInput: "a" }, { wordInput: "a\nb\nc" });
+  return g.rejected.indexOf("wordInput") >= 0 && g.safe.wordInput === "a\nb\nc";
+})());
+ok("wordInput 真删词 + 合法 intent → 放行", (function () {
+  var g = applyProgressGuards({ wordInput: "a" }, { wordInput: "a\nb\nc" }, "user_edit_wordInput");
+  return g.rejected.indexOf("wordInput") < 0 && g.safe.wordInput === "a";
+})());
 
 console.log("\n── canonicalize / dedupe (约束4) ──");
 eq("12 stable dedupe 保留首次出现顺序", dedupeWordsStable(["banana", "apple", "banana", "cherry"]), ["banana", "apple", "cherry"]);
