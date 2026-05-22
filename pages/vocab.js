@@ -9,6 +9,7 @@ import UserCenter from '../components/UserCenter';
 import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../components/PetAvatar';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
+import { mergeReviewEntry, toTime } from '../lib/progressMergePolicy';
 import { US_LIFE_1000 } from '../lib/preset-us-life-1000';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 import * as XLSX from 'xlsx';
@@ -3440,6 +3441,33 @@ export default function App() {
     }
   };
 
+  // 统一的"sync 成功响应"处理 — 正常 push 与 409 重推共用同一套逻辑。
+  // Codex 复审 P1：409 重推路径 (r2.ok) 原先直接 setSyncSynced()，没消费
+  // rejectedFields/serverData → 服务端拒字段时谎报 synced、本地继续 diverge。
+  var _applySyncSuccess = async function(result) {
+    syncVersionRef.current = result.version;
+    _syncRetryCountRef.current = 0;
+    _lastSyncAtRef.current = Date.now();
+    if (result.rejectedFields && result.rejectedFields.length > 0) {
+      // 服务端守卫拒绝了部分字段：serverData 是权威版本，应用回本地避免继续推
+      // diverged 数据；不显示 synced —— 用 error 态让用户感知"同步未完整"。
+      console.warn('[sync] guard rejected fields:', result.rejectedFields.join(', '));
+      if (result.serverData) {
+        try {
+          await doSave(result.serverData);
+          _applyCloudData(result.serverData);
+        } catch (applyErr) {
+          console.warn('[sync] apply serverData after rejection failed:', applyErr.message);
+        }
+      }
+      _broadcastSync(syncVersionRef.current);
+      setSyncStatus("error");
+    } else {
+      _broadcastSync(syncVersionRef.current);
+      setSyncSynced();
+    }
+  };
+
   // 真正推送的内部函数
   var _doSync = async function() {
     if (_syncInFlightRef.current) { _syncPendingRef.current = true; return; }
@@ -3521,10 +3549,7 @@ export default function App() {
             });
             if (r2.ok) {
               var result2 = await r2.json();
-              syncVersionRef.current = result2.version;
-              _broadcastSync(syncVersionRef.current); // 通知其他 tab
-              _lastSyncAtRef.current = Date.now();
-              setSyncSynced();
+              await _applySyncSuccess(result2); // 复用统一逻辑，消费 rejectedFields
             } else if (r2.status === 409) {
               // 第二次冲突 — 第三方 tab 又写了。接受服务端避免无限循环
               var conflict2 = await r2.json();
@@ -3546,11 +3571,7 @@ export default function App() {
         _syncRetryCountRef.current = 0;
       } else if (r.ok) {
         var result = await r.json();
-        syncVersionRef.current = result.version;
-        _syncRetryCountRef.current = 0;
-        _broadcastSync(syncVersionRef.current);
-        _lastSyncAtRef.current = Date.now();
-        setSyncSynced();
+        await _applySyncSuccess(result);
       } else {
         throw new Error('sync failed: ' + r.status);
       }
@@ -3633,17 +3654,13 @@ export default function App() {
       setReviewWordData(function(local) {
         if (!local || Object.keys(local).length === 0) return normalized;
         var merged = Object.assign({}, normalized);
+        // 统一 recency 合并 (Sync Stabilization v1)：recency 更新的一方赢，允许 forgot
+        // 合法降级。旧逻辑只按 reviewLevel max → 旧云端日期会盖回本地、due 反复弹回。
+        var ctx = { localFallback: 0, serverFallback: toTime(d.updatedAt) };
         Object.keys(local).forEach(function(w) {
           var localEntry = local[w];
           if (!localEntry) return;
-          var cloudEntry = merged[w];
-          if (!cloudEntry) {
-            merged[w] = localEntry;
-          } else {
-            var lLvl = Number(localEntry.reviewLevel) || 0;
-            var cLvl = Number(cloudEntry.reviewLevel) || 0;
-            if (lLvl > cLvl) merged[w] = localEntry;
-          }
+          merged[w] = mergeReviewEntry(localEntry, merged[w], ctx);
         });
         return merged;
       });
@@ -4331,7 +4348,15 @@ export default function App() {
     if (!word) return;
     setReviewWordData(function(prev) {
       var base = prev[word] || { word: word, reviewHistory: [] };
-      var merged = { ...base, ...patch };
+      var nowIso = new Date().toISOString();
+      var merged = { ...base, ...patch, updatedAt: nowIso };
+      // srsUpdatedAt: SRS recency 的权威依据 (Codex P1)。仅复习事件 (reviewLevel/
+      // nextReviewDate/reviewHistory) 才刷新；meaning/phonetic 懒加载只刷通用 updatedAt，
+      // 不得抢占真实复习的 recency，否则会把已复习的词错误回退。
+      var _srsKeys = ['reviewLevel', 'nextReviewDate', 'reviewHistory'];
+      if (patch && _srsKeys.some(function(k){ return Object.prototype.hasOwnProperty.call(patch, k); })) {
+        merged.srsUpdatedAt = nowIso;
+      }
       // 自动补全 meaning：如果合并后 meaning 仍空，从 dataCache 拉 fallback（teach/guess）
       if (!merged.meaning || !merged.meaning.trim()) {
         var fb = _extractMeaningFallback(word);
@@ -7165,11 +7190,17 @@ export default function App() {
                 var cloudRwd = cloudData.reviewWordData;
                 var updated = Object.assign({}, localRwd);
                 var fixed = 0;
+                var _restoreNow = new Date().toISOString();
                 Object.keys(cloudRwd).forEach(function(w) {
                   var ce = cloudRwd[w]; var le = updated[w];
                   if (!ce || !le) return;
-                  var cd = String(ce.nextReviewDate || ''); var ld = String(le.nextReviewDate || '');
-                  if (cd && ld && cd > ld) { updated[w] = Object.assign({}, le, { nextReviewDate: ce.nextReviewDate }); fixed++; }
+                  // 用 toTime 规范化比较 (约束6)：nextReviewDate 历史数据混合纯日期与完整 ISO，
+                  // 字符串比较会误判。仅当云端日期确实更晚才推后本地。
+                  if (ce.nextReviewDate && le.nextReviewDate && toTime(ce.nextReviewDate) > toTime(le.nextReviewDate)) {
+                    // 这是用户主动的 SRS 修正 → 写 srsUpdatedAt，让 recency 合并认它为最新
+                    updated[w] = Object.assign({}, le, { nextReviewDate: ce.nextReviewDate, srsUpdatedAt: _restoreNow });
+                    fixed++;
+                  }
                 });
                 setReviewWordData(updated);
                 doSave({ reviewWordData: updated });

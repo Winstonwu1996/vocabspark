@@ -12,3 +12,6 @@ node_modules/
 
 # Claude worktrees
 .claude/worktrees/
+
+# 用户进度数据备份(隐私, 勿提交)
+backups/

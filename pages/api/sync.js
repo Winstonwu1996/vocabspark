@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { requireUser } from '../../lib/auth-server';
+import { applyProgressGuards } from '../../lib/progressMergePolicy';
 
 var supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -17,89 +18,9 @@ export const config = { api: { bodyParser: { sizeLimit: '4mb' } } };
 //   客户端永远不会因为 race condition / mount bug / 游客污染让用户进度丢失。
 // ─────────────────────────────────────────────────────────────────────────────
 
-function objKeyCount(o) {
-  if (!o || typeof o !== 'object') return 0;
-  return Object.keys(o).length;
-}
-
-function arrLen(a) {
-  return Array.isArray(a) ? a.length : 0;
-}
-
-function num(v) {
-  var n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-}
-
-// 返回 { safe: 经过守卫的 progress_data, rejected: 被拒字段列表 }
-function applyFieldGuards(incoming, cloud, intent) {
-  if (!cloud) return { safe: incoming || {}, rejected: [] };
-  if (!incoming || typeof incoming !== 'object') {
-    return { safe: cloud, rejected: ['_entire_payload_invalid'] };
-  }
-
-  var safe = Object.assign({}, incoming);
-  var rejected = [];
-
-  // wordStatusMap: 只增不减（用户主动清不清空也不允许 — 删词只删 wordInput，wsm 状态保留）
-  if (objKeyCount(incoming.wordStatusMap) < objKeyCount(cloud.wordStatusMap)) {
-    safe.wordStatusMap = cloud.wordStatusMap;
-    rejected.push('wordStatusMap');
-  }
-
-  // reviewWordData: 只增不减
-  if (objKeyCount(incoming.reviewWordData) < objKeyCount(cloud.reviewWordData)) {
-    safe.reviewWordData = cloud.reviewWordData;
-    rejected.push('reviewWordData');
-  }
-
-  // pet: totalFed 单调，unlocked 数组只增（解锁配饰不允许撤回）
-  var ip = incoming.pet || {};
-  var cp = cloud.pet || {};
-  if (cp && (cp.totalFed || cp.unlocked || cp.species)) {
-    var petBad = false;
-    if (num(ip.totalFed) < num(cp.totalFed)) petBad = true;
-    if (arrLen(ip.unlocked) < arrLen(cp.unlocked)) petBad = true;
-    if (petBad) {
-      // pet 整体保留云端（unlocked 数组取 union 太复杂，整体回退最安全）
-      safe.pet = cloud.pet;
-      rejected.push('pet');
-    }
-  }
-
-  // stats: xp / total / correct / bestStreak 单调 max（streak 当前可重置故不守）
-  var is = incoming.stats || {};
-  var cs = cloud.stats || {};
-  if (cs && Object.keys(cs).length > 0) {
-    var safeStats = Object.assign({}, is);
-    var statsAdjusted = false;
-    ['xp', 'total', 'correct', 'bestStreak'].forEach(function (k) {
-      var iv = num(is[k]);
-      var cv = num(cs[k]);
-      if (iv < cv) {
-        safeStats[k] = cv;
-        statsAdjusted = true;
-      }
-    });
-    if (statsAdjusted) {
-      safe.stats = safeStats;
-      rejected.push('stats(adjusted)');
-    }
-  }
-
-  // wordInput：用户主动操作才允许变小
-  var iWi = (incoming.wordInput || '');
-  var cWi = (cloud.wordInput || '');
-  if (iWi.length < cWi.length) {
-    var allowedIntents = ['user_edit_wordInput', 'user_upload', 'user_clear'];
-    if (!intent || allowedIntents.indexOf(intent) === -1) {
-      safe.wordInput = cWi;
-      rejected.push('wordInput');
-    }
-  }
-
-  return { safe: safe, rejected: rejected };
-}
+// 字段守卫统一到 lib/progressMergePolicy.js 的 applyProgressGuards，
+// 客户端 / 服务端 / 测试共用同一套逻辑（保持原"只增不减"语义不变）。
+var applyFieldGuards = applyProgressGuards;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // L2：历史快照写入 + 自动清理
@@ -194,6 +115,13 @@ export default async function handler(req, res) {
     var { data: current, error: readErr } = await supabase
       .from('user_progress').select('version, progress_data')
       .eq('user_id', userId).single();
+
+    // fail closed (Codex P1)：读云端失败绝不能当成 cloud=null，否则 applyFieldGuards
+    // 会全放行 → 防覆盖守卫失效。PGRST116 = 该用户尚无记录（首次用户），属正常。
+    if (readErr && readErr.code !== 'PGRST116') {
+      console.warn('[sync] cloud read failed for user ' + userId + ':', readErr.message);
+      return res.status(500).json({ error: 'cloud_read_failed' });
+    }
 
     var serverVersion = current ? (current.version || 0) : 0;
     var cloudData = current ? current.progress_data : null;
