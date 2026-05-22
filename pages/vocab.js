@@ -2699,6 +2699,7 @@ export default function App() {
   // A: 答题速度软约束 — 记录 guess phase 开始时间，提交时如果 < 15s 弹软提示
   var guessStartRef = useRef(null);
   var [speedToast, setSpeedToast] = useState(null); // { msg, kind } | null
+  var speedToastTimerRef = useRef(null);
   var SPEED_WARN_THRESHOLD_MS = 15000; // 15 秒
   var [showHint, setShowHint] = useState(false);
   var [phonetic, setPhonetic] = useState("");
@@ -2711,6 +2712,7 @@ export default function App() {
   var [teachStreaming, setTeachStreaming] = useState(false); // 是否在流式生成中（用于显示光标+禁用按钮）
   var [feedbackModal, setFeedbackModal] = useState(null); // E1: { word, contentType, snapshot } 弹反馈 modal
   var [feedbackToast, setFeedbackToast] = useState(null); // 反馈提交后的 toast 文字
+  var feedbackToastTimerRef = useRef(null);
   var [recallChoice, setRecallChoice] = useState(null); // active recall 自测：null / "easy" / "fuzzy" / "hard"
   // B: teach 页面深度奖励 — 「能」按钮 10 秒倒计时禁用（强制读完才有资格说"会"）
   var [teachReadSec, setTeachReadSec] = useState(10);
@@ -2850,6 +2852,8 @@ export default function App() {
       if (petCelebrateTimerRef.current) clearTimeout(petCelebrateTimerRef.current);
       if (rewardTimerRef.current) clearTimeout(rewardTimerRef.current);
       if (_syncStatusTimerRef.current) clearTimeout(_syncStatusTimerRef.current);
+      if (speedToastTimerRef.current) clearTimeout(speedToastTimerRef.current);
+      if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
     };
   }, []);
   var speedWaitAbortRef = useRef(false);
@@ -4828,7 +4832,8 @@ export default function App() {
           msg: "这次只用了 " + sec + " 秒哦 — 下次试试慢一点，真正读懂",
           kind: "soft",
         });
-        setTimeout(function(){ setSpeedToast(null); }, 4000);
+        if (speedToastTimerRef.current) clearTimeout(speedToastTimerRef.current);
+        speedToastTimerRef.current = setTimeout(function(){ speedToastTimerRef.current = null; setSpeedToast(null); }, 4000);
       }
       guessStartRef.current = null;
     }
@@ -7080,14 +7085,16 @@ export default function App() {
                 if (!user) {
                   setHelpTip("cloud-restore");
                   setFeedbackToast("请先登录");
-                  setTimeout(function(){ setFeedbackToast(null); }, 3000);
+                  if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
+                  feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 3000);
                   return;
                 }
                 var cloudData = await loadFromCloud(user.id);
                 if (!cloudData || !cloudData.reviewWordData) {
                   setHelpTip("cloud-restore");
                   setFeedbackToast("获取云端数据失败，请稍后再试");
-                  setTimeout(function(){ setFeedbackToast(null); }, 3500);
+                  if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
+                  feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 3500);
                   return;
                 }
                 var localRwd = reviewWordData || {};
@@ -7104,7 +7111,8 @@ export default function App() {
                 doSave({ reviewWordData: updated });
                 setHelpTip(null);
                 setFeedbackToast("✅ 已修正 " + fixed + " 个词的复习日期");
-                setTimeout(function(){ setFeedbackToast(null); }, 3500);
+                if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
+                feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 3500);
               }} style={{padding:"6px 14px",background:C.teal,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:700,cursor:"pointer"}}>确认刷新</button>
             </div>}
           </div>}
@@ -9188,7 +9196,8 @@ export default function App() {
                   } catch (e) {
                     setFeedbackToast("提交失败，请稍后再试");
                   }
-                  setTimeout(function(){ setFeedbackToast(null); }, 3500);
+                  if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
+                  feedbackToastTimerRef.current = setTimeout(function(){ feedbackToastTimerRef.current = null; setFeedbackToast(null); }, 3500);
                 }}
                 disabled={!feedbackModal.reason}
                 style={{...S.primaryBtn, flex:1, padding:"10px", justifyContent:"center", opacity: feedbackModal.reason ? 1 : 0.5, cursor: feedbackModal.reason ? "pointer" : "not-allowed"}}
