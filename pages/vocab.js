@@ -7074,11 +7074,17 @@ export default function App() {
               <button onClick={function(){setHelpTip(null);}} style={{background:"transparent",border:"none",color:C.textSec,fontSize:12,cursor:"pointer",padding:0,fontFamily:FONT}}>取消</button>
               <button onClick={async function(){
                 setHelpTip("cloud-restore-loading");
-                if (!user) { alert('请先登录'); setHelpTip("cloud-restore"); return; }
+                if (!user) {
+                  setHelpTip("cloud-restore");
+                  setFeedbackToast("请先登录");
+                  setTimeout(function(){ setFeedbackToast(null); }, 3000);
+                  return;
+                }
                 var cloudData = await loadFromCloud(user.id);
                 if (!cloudData || !cloudData.reviewWordData) {
-                  alert('获取云端数据失败，请稍后再试');
                   setHelpTip("cloud-restore");
+                  setFeedbackToast("获取云端数据失败，请稍后再试");
+                  setTimeout(function(){ setFeedbackToast(null); }, 3500);
                   return;
                 }
                 var localRwd = reviewWordData || {};
@@ -7094,7 +7100,8 @@ export default function App() {
                 setReviewWordData(updated);
                 doSave({ reviewWordData: updated });
                 setHelpTip(null);
-                alert('已从云端修正 ' + fixed + ' 个词的复习日期，请刷新页面查看。');
+                setFeedbackToast("✅ 已修正 " + fixed + " 个词的复习日期");
+                setTimeout(function(){ setFeedbackToast(null); }, 3500);
               }} style={{padding:"6px 14px",background:C.teal,color:"#fff",border:"none",borderRadius:8,fontFamily:FONT,fontSize:12,fontWeight:700,cursor:"pointer"}}>确认刷新</button>
             </div>}
           </div>}
