@@ -1,10 +1,9 @@
-/* sync API 决策层集成测试：lib/progressMergePolicy.js 的 planSyncOutcome
+/* sync 决策层测试：lib/progressMergePolicy.js 的 planSyncOutcome（纯函数）
    运行：node scripts/test-sync-api.mjs
-   覆盖 SYNC_STABILIZATION_v1.md 回归清单的 "sync API" 部分（HTTP 层决策，
-   纯函数单测 test-progress-merge-policy.mjs 未覆盖）。
 
-   planSyncOutcome 是 /api/sync handler 抽出的纯决策函数：
-   读取结果 → { read_error 500 | conflict 409 | write }。 */
+   注意：这测的是 /api/sync handler 抽出的**决策纯函数**，不是真实 HTTP + Supabase
+   mock 的端到端集成。由于 handler 现在很薄（只剩 DB IO），决策层覆盖对当前风险足够。
+   planSyncOutcome: 读取结果 → { read_error 500 | conflict 409 | write }。 */
 
 import { planSyncOutcome } from "../lib/progressMergePolicy.js";
 

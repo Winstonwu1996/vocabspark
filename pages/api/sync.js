@@ -140,6 +140,7 @@ export default async function handler(req, res) {
       console.warn('[sync][guard] rejected fields for user ' + userId + ':', JSON.stringify({
         rejected: plan.rejected,
         intent: intent || null,
+        cloudVersion: plan.serverVersion,
         clientVersion: cv,
       }));
     }
