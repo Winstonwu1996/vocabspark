@@ -3376,6 +3376,11 @@ export default function App() {
   //   这样"用户答完一题立刻 sync"，连续操作时不会一直被推迟
   var syncToCloud = function() {
     if (_syncTimerRef.current) clearTimeout(_syncTimerRef.current);
+    // 用户主动触发（非自动重试）时复位重试计数，让本次有机会推送
+    // 原问题：重试计数超过 MAX_SYNC_RETRIES 后，用户操作也无法触发新的推送
+    if (_syncRetryCountRef.current > MAX_SYNC_RETRIES) {
+      _syncRetryCountRef.current = 0;
+    }
     var sinceLast = Date.now() - _lastSyncAtRef.current;
     if (sinceLast >= SYNC_LEADING_GAP_MS) {
       // 距上次成功 sync 已经 ≥ 2s，立即推（leading edge）
@@ -3889,15 +3894,23 @@ export default function App() {
     }
   };
 
-  var _loadTier = async function(userId) {
+  var _loadTier = async function(userId, _attempt) {
+    var attempt = _attempt || 0;
     try {
       var r = await fetch('/api/stripe/check-subscription?userId=' + userId);
       var j = await r.json();
       if (j && typeof j.tier === "string") {
+        // isActive:false 有两种含义：(a) 确实没有有效订阅；(b) 服务端暂时异常。
+        // 用最多 2 次重试区分：连续 3 次都是 false → 才写 "free" 到缓存并标记 loaded。
+        // 只要有一次 isActive:true → 立刻确认付费 tier，不等。
+        if (!j.isActive && attempt < 2) {
+          console.warn('[tier] isActive=false (attempt ' + attempt + '), retrying in 1.5s');
+          await new Promise(function(res) { setTimeout(res, 1500); });
+          return _loadTier(userId, attempt + 1);
+        }
         var t = j.isActive ? j.tier : "free";
         setUserTier(t);
-        // 写入缓存：确认是 free 时也写入 "free"（覆盖之前错误的 "pro" 缓存）
-        // 但只在 API 明确返回时才写（isActive 是个明确信号）
+        // 写入缓存：确认 free 时才覆盖（3 次全部 false 才算真 free）
         try { localStorage.setItem("vocabspark_tier", t); } catch(e) {}
       }
       setTierLoaded(true);
