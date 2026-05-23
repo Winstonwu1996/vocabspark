@@ -2699,8 +2699,9 @@ export default function App() {
           d.wordInput = existingInput
             ? (existingInput.replace(/\s+$/, "") + "\n" + newWords.join("\n"))
             : newWords.join("\n");
+          d.wordInput = _dedupeWordInputStr(d.wordInput); // 去重一次：state + 下方 localStorage 写同一份 (Codex P1)
           // 同步到 React state（让 textarea 立刻刷新）
-          setWordInput(_dedupeWordInputStr(d.wordInput));
+          setWordInput(d.wordInput);
         }
       }
       // 移除该 topic 的队列（accept 和 dismiss 都移除）
@@ -5057,7 +5058,10 @@ export default function App() {
       } else {
         setFileLabel("✅ " + file.name + "（" + words.length + " 个词）");
       }
-      setWordInput(_dedupeWordInputStr(finalWordInput)); setError(""); setSetupTab("words");
+      // 先去重一次，state / 本地 / 云端三者写入同一份去重版（Codex Step2 P1：
+      // 之前只 setWordInput 去重，d.wordInput 仍是重复版 → 第一笔保存/同步会留重复）
+      finalWordInput = _dedupeWordInputStr(finalWordInput);
+      setWordInput(finalWordInput); setError(""); setSetupTab("words");
       // 立即保存词库到本地和云端
       var d = await loadSave() || {};
       d.wordInput = finalWordInput;
@@ -5671,8 +5675,9 @@ export default function App() {
     return 0 + dueBoost;
   };
 
-  // 按词去重，返回每个 distinct 词 + 其首次出现的原始 index（status 判断用原始 index 避免错位）。
+  // 按词去重，返回每个 distinct 词 + 其首次出现的 index。
   // 根治 wordInput 重复词条导致的计数/显示虚高（同一个词被数多次 → 词库总数/待学习/今日到期全部偏高）。
+  // 注：wordInput 现已在加载/上传时自动去重，此函数主要作为显示层兜底（幂等）。
   var getDistinctWordEntries = function(words) {
     var seen = Object.create(null);
     var out = [];
@@ -5898,9 +5903,9 @@ export default function App() {
     };
   };
 
-  // 复习队列去重：wordInput 历史数据可能有重复词条（合并/上传时重复追加），
-  // 不去重会导致同一个词在复习里连续出现多次。按词保留首次出现，不动 parseWordsFromInput
-  // 全局行为（其 index 被学习进度 idx 依赖，全局去重会错位）。
+  // 复习队列去重：按词保留首次出现的兜底（幂等）。
+  // wordInput 现已在加载/上传时自动去重；getAutoWordStatus 已不再用 index<=idx，
+  // 故此处去重不会影响状态判定。
   var dedupeByWord = function(arr, keyFn) {
     var seen = Object.create(null);
     return arr.filter(function(item) {
