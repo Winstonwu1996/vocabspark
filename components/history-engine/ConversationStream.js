@@ -395,6 +395,15 @@ function SourceBridgeCard(props) {
       border: "1px solid rgba(196,107,48,0.30)",
       borderRadius: 14,
     }}>
+      {/* 5-22 修复：cosplay→分析的相位提示 — 缓解"你就是角色"到"把角色当史料读"的鞭打感 */}
+      <div style={{
+        fontSize: 11.5, color: "#6b53a8", fontWeight: 600, lineHeight: 1.5,
+        marginBottom: 10, paddingBottom: 9, borderBottom: "1px dashed rgba(122,92,168,0.30)",
+      }}>
+        🔍 {isEn
+          ? "Step out of the story now. Read the voice you were just living as — and another — as historical sources."
+          : "现在跳出角色。把你刚才扮演的那个人——还有另一个人——当成两份史料来读。"}
+      </div>
       <div style={{
         fontSize: 11, fontWeight: 700, letterSpacing: 0.3, color: "#a85525",
         textTransform: "uppercase", marginBottom: 3,
