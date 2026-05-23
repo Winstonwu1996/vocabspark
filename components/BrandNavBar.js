@@ -111,7 +111,7 @@ export var BrandNavBar = ({ activeTab, stats, studyStreak, user, onUserCenterCli
         .brand-navbar .brand-tagline { display: block; }
       }
       @keyframes spin { to { transform: rotate(360deg); } }
-      /* 手机空间紧：隐藏"· X 分钟前"，只留"✓ 已同步"（安全感仍在，不挤）*/
+      /* 手机空间紧：隐藏「· X 分钟前」，只留「✓ 已同步」（安全感仍在，不挤）。本 style 块注释请勿用英文引号或尖括号等特殊字符，否则 SSR 与客户端会 hydration 不一致 */
       .brand-navbar .sync-badge-ago { display: none; }
       @media (min-width: 480px) {
         .brand-navbar .sync-badge-ago { display: inline; }
