@@ -166,7 +166,7 @@ authorNotes: |
 1346  Mongol 围 Caffa（克里米亚）— 把 plague 死尸用投石机扔进城（化生战争史第一例）
 1347  10 月 Genoese 船从 Caffa 逃，在 Sicily 卸货
 1348  春天传到法国 Avignon（教皇所在地）；夏天到英格兰
-1349  1 月 24 日 Strasbourg 屠杀犹太人——欧洲反犹最黑一年
+1349  2 月 14 日 Strasbourg 屠杀犹太人——欧洲反犹最黑一年
 1349  4-9 月 Black Death 在英格兰高峰（伦敦 60% 死）
 1350  Decameron 完稿（薄伽丘 Florence 写"plague 期间 10 个青年逃乡间讲故事"）
 1352  欧洲第一波结束（但反复爆发到 1665 年伦敦大瘟疫）
@@ -1887,7 +1887,7 @@ Boccaccio **观察出 plague 期间 Florence 人的 4 种反应**：
 1348 秋     Boccaccio 在 Florence 开始写 Decameron
 1348 同年   Ibn al-Wardi 在 Aleppo 写 Risala al-naba
 1348 9.26   Pope Clement VI 第一次发敕令保护犹太人
-1349 1.24   Strasbourg 屠杀 2000 个犹太人（欧洲反犹史最黑的一天）
+1349 2.14   Strasbourg 屠杀 2000 个犹太人（欧洲反犹史最黑的一天）
 1349 4-9 月 英格兰 plague 高峰——伦敦 60% 死
 1349 4 月   Ibn al-Wardi 自己死于 plague
 1349 8.24   Mainz 屠杀 6000 个犹太人
@@ -1937,7 +1937,7 @@ Boccaccio **观察出 plague 期间 Florence 人的 4 种反应**：
 | **Guy de Chauliac** | Avignon 外科医生（约 1300-1368）| 救了 Pope Clement VI——写《Chirurgia Magna》——14 世纪最伟大医生 |
 | **Empress Eirene-Eulogia** | 拜占庭 7 岁公主（虚构教学角色）| 死时整个 1000 年罗马帝国后裔缩成一个哭泣的孩子 |
 | **Tom 14 岁英格兰农奴** | Lincolnshire 庄园（虚构教学角色）| plague 杀了全家——他选择"要 wage" — feudal 经济解构者 |
-| **Rachel 34 岁犹太银匠妻** | Strasbourg 1349.1.24（虚构教学角色）| 跟 2000 同胞一起被烧死——欧洲反犹模板的第一次大规模演练 |
+| **Rachel 34 岁犹太银匠妻** | Strasbourg 1349.2.14（虚构教学角色）| 跟 2000 同胞一起被烧死——欧洲反犹模板的第一次大规模演练 |
 | **Yusuf 库菲尔商人** | Cairo 1349.3（虚构教学角色）| 19 天内一家 5 口全死——大数字下"具体小故事"的力量 |
 | **朱元璋** | 中国安徽贫农 1328-1398 | plague + 饥荒杀全家 → 出家 → 红巾军 → 1368 建明朝 |
 | **Janibeg** | 蒙古黄金汗国可汗 | 1346 Caffa 围城——投石机扔死尸——化生战争史第一例 |

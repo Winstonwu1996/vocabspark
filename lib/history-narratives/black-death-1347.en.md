@@ -1412,7 +1412,7 @@ Summer 1348 Plague reaches Paris + London
 Autumn 1348 Boccaccio begins the *Decameron* in Florence
 1348        Ibn al-Wardi writes *Risala al-naba* in Aleppo
 Sep 26 1348 Pope Clement VI issues first bull defending Jews
-Jan 24 1349 Strasbourg massacres 2,000 Jews (Europe's darkest antisemitic day)
+Feb 14 1349 Strasbourg massacres 2,000 Jews (Europe's darkest antisemitic day)
 Apr-Sep 1349 Plague peak in England — London loses 60%
 Apr 1349    Ibn al-Wardi himself dies of plague
 Aug 24 1349 Mainz massacres 6,000 Jews
@@ -1462,7 +1462,7 @@ Aug 24 1349 Mainz massacres 6,000 Jews
 | **Guy de Chauliac** | Avignon surgeon (c. 1300-1368) | Saved Pope Clement VI — wrote *Chirurgia Magna* — greatest 14th-century physician |
 | **Empress Eirene-Eulogia** | Byzantine 7-year-old princess (fictional teaching character) | Her death = a thousand-year Roman heritage shrunk to one crying child |
 | **Tom — 14-year-old English serf** | Lincolnshire manor (fictional teaching character) | Plague killed his family — chose "I want a wage" — feudalism's dismantler |
-| **Rachel — 34-year-old Jewish silversmith's wife** | Strasbourg, Jan 24, 1349 (fictional teaching character) | Burned alive with 2,000 fellow Jews — first major rehearsal of the antisemitic template |
+| **Rachel — 34-year-old Jewish silversmith's wife** | Strasbourg, Feb 14, 1349 (fictional teaching character) | Burned alive with 2,000 fellow Jews — first major rehearsal of the antisemitic template |
 | **Yusuf — Cairo merchant** | Cairo, March 1349 (fictional teaching character) | His family of 5 dead in 19 days — power of "specific small story" inside huge numbers |
 | **Zhu Yuanzhang** | Anhui peasant 1328-1398 | Plague + famine killed his family → monk → Red Turbans → 1368 founds Ming |
 | **Janibeg** | Mongol Golden Horde khan | 1346 Caffa siege — catapulted corpses — first biological warfare |

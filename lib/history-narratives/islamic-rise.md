@@ -87,7 +87,7 @@ Yathrib（Medina 旧名，Mecca 北 320 公里的绿洲城）派代表来邀请 
 
 > **日期 footnote**: 伊斯兰历法以 622 年 7 月 16 日（公历）= AH 1 Muharram 1 为元年起算日，这是后世天文-历法回推确定的「元年锚点」。Muhammad 本人离开 Mecca 的实际日子是 AH 1 Rabi' I 9（约公历 622 年 9 月 9-13 日），抵达 Medina 是 9 月 24 日。7 月 16 日和 9 月初不是同一夜——前者是历法元年的起算约定，后者是 Hijra 旅程的实际起点。
 
-8 天 8 夜骑骆驼穿 Hijaz 沙漠。中途在 Thawr 山洞躲 3 天（《Quran》第 9 章 40 节记载："洞口蜘蛛织网，鸽子筑巢"——后世 *Sirah* 文学的关键意象）。622 年 9 月 24 日抵达 Yathrib——从此改名 *Madinat al-Nabi*（先知之城），简称 Medina。
+8 天 8 夜骑骆驼穿 Hijaz 沙漠。中途在 Thawr 山洞躲 3 天（《Quran》第 9 章 40 节只说 Muhammad 安慰同伴 Abu Bakr："不要忧愁，真主与我们同在。"至于"洞口蜘蛛织网、鸽子筑巢挡住追兵"这个广为流传的画面，是后世 *Sirah*（先知传记）文学里的传说，并不见于《Quran》经文，且多位伊斯兰学者判定其缺乏可靠 hadith 依据——它是后人添的关键意象，不是经文记载）。622 年 9 月 24 日抵达 Yathrib——从此改名 *Madinat al-Nabi*（先知之城），简称 Medina。
 
 ### Medina 的第一个 *Ummah*
 
@@ -237,7 +237,7 @@ On 16 July 622 (the calendrical anchor for AH 1 Muharram 1; Muhammad actually le
 
 > **Date footnote**: The Islamic calendar treats 16 July 622 CE = 1 Muharram AH 1 as Year One Day One — a calendrical anchor fixed by later astronomical back-calculation. Muhammad himself left Mecca on AH 1 Rabi' I 9 (roughly 9-13 September 622) and arrived in Medina on 24 September. 16 July and early September are not the same night — the first is the calendar's chosen origin, the second is when the Hijra journey actually started.
 
-Eight days and nights on camel through the Hijaz desert. They hide for three days in the cave at Thawr (the *Quran*, chapter 9, verse 40, mentions: "a spider wove its web at the entrance, and a dove built a nest" — the iconic moment in later *Sirah* literature). On 24 September 622 they reach Yathrib — which is renamed *Madinat al-Nabi*, "City of the Prophet," shortened to Medina.
+Eight days and nights on camel through the Hijaz desert. They hide for three days in the cave at Thawr. (The *Quran*, chapter 9, verse 40, says only that Muhammad reassured his companion Abu Bakr: "Do not grieve; God is with us." The widely told image of "a spider weaving its web across the entrance and a dove nesting to fool the pursuers" is *not* in the Quran — it is a story from later *Sirah* (prophetic-biography) literature, and several Muslim scholars have judged it to lack a sound hadith basis. It is a vivid image added by later tradition, not a Quranic record.) On 24 September 622 they reach Yathrib — which is renamed *Madinat al-Nabi*, "City of the Prophet," shortened to Medina.
 
 ### The First *Ummah* in Medina
 
@@ -446,8 +446,8 @@ Baghdad 的建立把 Caliphate 政治重心从大马士革（Umayyad）东移约
 - 811-813 年兄弟内战：al-Mamun 自 Khurasan 起兵东向 Baghdad。813 年 9 月 25 日 Baghdad 陷，al-Amin 被杀，al-Mamun 即位，时年 27 岁。
 - 813-833 年在位 20 年，定都 Baghdad（先在 Merv 数年后回迁）。
 - 扩建 Bait al-Hikma（智慧馆）：前身是 Sassanid 王室图书馆传统加 Harun al-Rashid 时期初建的翻译机构，al-Mamun 时期大规模扩张。组织系统性翻译运动，把希腊、波斯、印度、叙利亚文献译成阿拉伯文。重点译作包括 Aristotle、Plato、Ptolemy、Euclid、Galen、Hippocrates、Brahmagupta（印度数学家）、Pahlavi 天文学手册。
-- 资助天文台、地理测绘（830 年代组织队测量地球周长，得出值与今值误差 5% 以内）。
-- 推行 Mu'tazilite（穆尔太齐勒派）理性主义：主张 Quran 是被造的（不是永恒的）、可由理性解释，由 caliph 仲裁信仰争议。这一立场后来被反对派（包括 Ahmad ibn Hanbal）激烈反对，839 年后被废止。
+- 资助天文台、地理测绘（830 年代组织队测量地球周长，得出值与今值误差约 0.4%）。
+- 推行 Mu'tazilite（穆尔太齐勒派）理性主义：主张 Quran 是被造的（不是永恒的）、可由理性解释，由 caliph 仲裁信仰争议。这一立场后来被反对派（包括 Ahmad ibn Hanbal）激烈反对，在 847-851 年间被 al-Mutawakkil 反转废止。
 - 833 年 8 月在与拜占庭边境战役途中卒，47 岁。
 
 **对 Islamic Rise 影响**
@@ -488,7 +488,7 @@ al-Khwarizmi 一人贡献了两个改变世界的语言基础：「algebra」和
 - 859 年 Fatima 在 Fez 出资建 al-Qarawiyyin 清真寺（命名取自家族故乡 Kairouan），随即附设教育功能区，提供经学、法学、文法、医学、数学、天文教学。
 - 同年妹妹 Mariam 出资建 al-Andalusiyyin 清真寺。
 - al-Qarawiyyin 在 9-10 世纪逐步发展成一所有持续招生、考试、毕业认证的高等教育机构，是世界上现存最古老的、连续运营的大学。Guinness 世界纪录、UNESCO 都以 859 年为其建校年。
-- 11-14 世纪 al-Qarawiyyin 成为北非最重要学术中心，培养了 Ibn Khaldun（《Muqaddimah》作者）、Maimonides（犹太哲学家，曾在此停留）、Pope Sylvester II（10 世纪法国神学家 Gerbert of Aurillac，曾在此学阿拉伯数学）等人。
+- 11-14 世纪 al-Qarawiyyin 成为北非最重要学术中心，与之有关联的人物包括 Ibn Khaldun（《Muqaddimah》作者，据信曾在此求学）、Maimonides（犹太哲学家，逃避 Almohad 迫害时曾在 Fez 停留、出入此地）。另有晚出二手记载称 Pope Sylvester II（10 世纪法国学者 Gerbert of Aurillac）曾在此学阿拉伯数学——但缺乏同代证据，他确知的阿拉伯数学训练是在安达卢西亚（Cordoba 一带），al-Qarawiyyin 一说存疑。
 - 880 年代左右卒。
 
 **对 Islamic Rise 影响**
@@ -848,8 +848,8 @@ Full name Abu al-Abbas Abdallah al-Mamun, seventh Abbasid caliph, son of Harun a
 - 811-813 brothers' civil war: al-Mamun marched east from Khurasan toward Baghdad. September 25, 813 Baghdad fell, al-Amin was killed, al-Mamun became caliph at age 27.
 - 813-833 reigned 20 years, with capital at Baghdad (after a few years initially based at Merv).
 - Expanded the Bait al-Hikma (House of Wisdom): building on the Sassanid royal-library tradition and Harun al-Rashid's translation initiatives, al-Mamun greatly expanded the institution. He organized a systematic translation movement rendering Greek, Persian, Indian, and Syriac texts into Arabic. Major translations included Aristotle, Plato, Ptolemy, Euclid, Galen, Hippocrates, Brahmagupta (Indian mathematician), and Pahlavi astronomical handbooks.
-- Sponsored astronomical observatories and geographic surveys (in the 830s commissioned a measurement of Earth's circumference, with results within about 5% of the modern value).
-- Promoted Mu'tazilite rationalism: holding that the Quran was created (not eternal) and could be interpreted by reason, with the caliph arbitrating doctrinal disputes. This stance was fiercely opposed (notably by Ahmad ibn Hanbal) and was abolished after 839.
+- Sponsored astronomical observatories and geographic surveys (in the 830s commissioned a measurement of Earth's circumference, with a result within about 0.4% of the modern value).
+- Promoted Mu'tazilite rationalism: holding that the Quran was created (not eternal) and could be interpreted by reason, with the caliph arbitrating doctrinal disputes. This stance was fiercely opposed (notably by Ahmad ibn Hanbal) and was reversed and abolished by al-Mutawakkil between 847 and 851.
 - August 833 died on campaign at the Byzantine border at age 47.
 
 **Impact on Islamic Rise**
@@ -890,7 +890,7 @@ Born in Kairouan (today's Tunisia), her father Muhammad al-Fihri was a wealthy m
 - 859 Fatima funded the construction of the al-Qarawiyyin Mosque in Fez (named for the family's home of Kairouan), and the complex soon added an educational function offering teaching in Quran, jurisprudence, grammar, medicine, mathematics, and astronomy.
 - The same year her sister Mariam funded the al-Andalusiyyin Mosque.
 - al-Qarawiyyin gradually developed in the 9th-10th centuries into a higher-education institution with continuous enrollment, examinations, and graduation certification — the world's oldest continuously operating university. Both Guinness World Records and UNESCO recognize 859 as its founding year.
-- In the 11th-14th centuries al-Qarawiyyin was North Africa's most important academic center, training Ibn Khaldun (author of the *Muqaddimah*), hosting Maimonides (the Jewish philosopher) for a period, and instructing Pope Sylvester II (the 10th-century French theologian Gerbert of Aurillac, who studied Arabic mathematics there).
+- In the 11th-14th centuries al-Qarawiyyin was North Africa's most important academic center. Figures associated with it include Ibn Khaldun (author of the *Muqaddimah*, who is believed to have studied there) and Maimonides (the Jewish philosopher, who stayed in Fez and frequented it while fleeing Almohad persecution). A later, secondhand tradition also claims that Pope Sylvester II (the 10th-century French scholar Gerbert of Aurillac) studied Arabic mathematics there — but there is no contemporary evidence for this; his documented Arabic-mathematics training was in Andalusia (around Cordoba), and the al-Qarawiyyin claim is doubtful.
 - Died around the 880s.
 
 **Impact on Islamic Rise**
