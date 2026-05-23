@@ -309,12 +309,20 @@ function ProgressRail(props) {
 // 把埋在数据里的 themeCn/themeEn（Schema B）或 engagementHook（Schema A）
 // surfacing 成节点结束的落点 beat。只在当前节点 AI 说完、等点"继续"时显示
 // （input 节点的 hook 已经是 inputPrompt，不重复）。纯读 currentTurn，不存档。
+// engagementHook 有两种形态：字符串，或 {cn,en} 对象。统一取出当前语言的字符串，
+// 避免把对象直接塞进 JSX（React 会崩"Objects are not valid as a React child"）。
+function pickHookText(val, isEn) {
+  if (!val) return null;
+  if (typeof val === "string") return val;
+  if (typeof val === "object") return isEn ? (val.en || val.cn) : (val.cn || val.en);
+  return null;
+}
 function TakeawayCard(props) {
   var turn = props.turn;
   if (!turn) return null;
   var isEn = props.englishLevel === "high";
   var theme = isEn ? (turn._themeEn || turn._themeCn) : (turn._themeCn || turn._themeEn);
-  var text = theme || turn._hook;
+  var text = theme || pickHookText(turn._hook, isEn);
   if (!text) return null;
   var isTheme = !!theme;
   return (
@@ -669,7 +677,7 @@ export function ConversationStream(props) {
             </div>
           )}
           {!currentTurn._sourcingBridge && (
-            <div className="prompt">{currentTurn.inputPrompt || "你的回答"}</div>
+            <div className="prompt">{pickHookText(currentTurn.inputPrompt, props.englishLevel === "high") || "你的回答"}</div>
           )}
 
           {/* PEEL 引导（Winston review #4：训练 US 学校的回答框架） */}
