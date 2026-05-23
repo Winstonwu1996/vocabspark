@@ -771,6 +771,13 @@ export default function HistoryPage() {
     advanceTurn();
   };
 
+  // ⚠️ tiredMode / hintByTurn 的 useState 必须声明在下面这个 effect 之前。
+  //   (5-22 修复 / Codex P1: 旧代码把这两个 useState 放在 effect 之后, var hoist 导致
+  //    effect 的依赖数组在 render 时读到的 tiredMode 恒为 undefined → 点"累了听就好"
+  //    不会可靠重跑 auto-advance effect。提前声明后依赖数组拿到真实值。)
+  var [tiredMode, setTiredMode] = useState(false);
+  var [hintByTurn, setHintByTurn] = useState({});  // { turnIdx: deliverGoal_string }
+
   // ─── tiredMode auto-advance：听模式开启时,每节点渲染后 N 秒自动 advance ───
   useEffect(function () {
     if (!tiredMode) return;
@@ -803,8 +810,7 @@ export default function HistoryPage() {
   //   tired      → toggle "听模式" (audio auto-play + auto-advance) — 状态保持到 toggle off
   //   dont-understand → inline 显示 deliverGoal hint (一句话核心) — 不调 AI
   //   skip       → advance to next turn — 不变
-  var [tiredMode, setTiredMode] = useState(false);
-  var [hintByTurn, setHintByTurn] = useState({});  // { turnIdx: deliverGoal_string }
+  // (tiredMode / hintByTurn 的 useState 已上移到 tiredMode effect 之前 — 见上方注释)
 
   var handleEscapeAction = function(action) {
     var turn = effectiveTurns[turnIndex];
