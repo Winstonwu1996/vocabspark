@@ -3539,10 +3539,10 @@ export default function App() {
           if (clean2) _clearIntentIfMine();
         } else if (r2.status === 409) {
           var conflict2 = await r2.json();
-          console.warn('[sync] re-merge still 409, final merge + accept server (max contention)');
+          console.warn('[sync] re-merge still 409 — union-merge 保本地，交给重试机制（不谎报 synced）');
+          trackFunnel('sync_conflict_409', { client_version: syncVersionRef.current, server_version: conflict2.serverVersion, attempt: 2 });
           if (conflict2.serverData) {
-            // 第三批：不再"裸接受 server"丢掉用户本轮 merged 的改动；先跟最新 server
-            // union-merge 一次保住用户的词，再落地收敛（避免 double-409 极端竞态下静默丢数据）。
+            // 第三批：union-merge 保住用户本轮 merged 的改动到本地（不丢词）。
             var merged2;
             try {
               merged2 = mergeStates(merged, conflict2.serverData);
@@ -3555,8 +3555,11 @@ export default function App() {
             await doSave(merged2);
             _applyCloudData(merged2);
           }
-          setSyncSynced();
-          _clearIntentIfMine();
+          // Codex P1：merged2 还没推上云 → 绝不 setSyncSynced / clearIntent（否则假"已同步"、
+          // intent 丢、autosave 因本地已一致不再触发 → 云端永远缺这次 union）。
+          // 抛错进入 _doSync 指数退避：下轮 loadSave 读到 merged2 + 仍带 intent 重推，
+          // 竞态是瞬态通常下一轮即成功；耗尽 MAX_SYNC_RETRIES 才 error（徽章可手动重试）。
+          throw new Error('re-merge still 409 (max contention) — retry scheduled');
         } else {
           throw new Error('re-push failed: ' + r2.status);
         }
