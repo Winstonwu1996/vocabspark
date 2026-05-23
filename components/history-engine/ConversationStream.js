@@ -893,8 +893,9 @@ export function ConversationStream(props) {
               setReceiptSubmitted(true);
             }}
           />
-        ) : props.previewMode ? (
-          // Gate 3 hidden preview：base-content topic 尚无题库，跳过 mastery，直接 preview 完成。
+        ) : (props.previewMode && !(topic && topic.masteryChecks && topic.masteryChecks.required && topic.masteryChecks.required.length)) ? (
+          // Gate 3 hidden preview 且无题库（notebook 缺失 fallback）：跳过 mastery，直接 preview 完成。
+          // 有 notebook 派生题库的 preview topic 走下面正常 mastery 关。
           <div className="continue-bar" style={{flexDirection: "column", gap: 10, padding: "20px 0"}}>
             <div style={{fontSize: 14, color: HC.accent, fontWeight: 700, textAlign: "center"}}>
               ✓ 这一遍完成（Gate 3 预览）
