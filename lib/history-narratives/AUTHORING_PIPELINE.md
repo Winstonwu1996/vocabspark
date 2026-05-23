@@ -15,6 +15,7 @@
 5. **明朝那些事儿密度**（2026-04-28 钉死）— 累不累跟字数无关跟抽象度有关；§3-§5 写作硬约束
 6. **VIVID always 不上状态机**（2026-04-29 钉死）— AI 自动诊断学生状态不可靠（DeepSeek 搞不定 nuance）；改用用户主动按钮 + 家长报告
 7. **⛔ 文化对应硬禁**（2026-05-02 加，根因）— 描述非中国历史时绝对不可用中国概念词类比翻译——这是 LLM 经典 culturalization bug——会篡改历史事实
+8. **default lens 必须单独成立**（2026-05-23 加，Gate 3 directive）— 真实用户大概率只跑一遍。**default lens 必须自洽**；第二、第三 lens 是**加深，不是补救**。每个 default lens 收尾**必须**含跨视角指针：① 明示"你现在只听到了一边" ② "另一个视角会挑战/补充你的判断"；且 Learning Receipt ③ 必问"你还没听到谁的声音？"。否则 receiving-end default lens 在只跑一遍时会把结论提前锁死（违反 Rule 0 中立性）。详见 `docs/HISTORY_GATE3_FRAMEWORK.md` §6。
 
 ---
 
