@@ -892,6 +892,17 @@ export function ConversationStream(props) {
               setReceiptSubmitted(true);
             }}
           />
+        ) : props.previewMode ? (
+          // Gate 3 hidden preview：base-content topic 尚无题库，跳过 mastery，直接 preview 完成。
+          <div className="continue-bar" style={{flexDirection: "column", gap: 10, padding: "20px 0"}}>
+            <div style={{fontSize: 14, color: HC.accent, fontWeight: 700, textAlign: "center"}}>
+              ✓ 这一遍完成（Gate 3 预览）
+            </div>
+            <div style={{fontSize: 12.5, color: HC.textSec, textAlign: "center", lineHeight: 1.6, maxWidth: 460}}>
+              这是上线前的内容试跑：对话 + 学习收据已走完，收据已记录。<br/>
+              （记忆考核题库还没做，正式上线版才有。）
+            </div>
+          </div>
         ) : (
           <div className="continue-bar" style={{flexDirection: "column", gap: 12, padding: "20px 0"}}>
             <div style={{fontSize: 13, color: HC.textSec, textAlign: "center"}}>

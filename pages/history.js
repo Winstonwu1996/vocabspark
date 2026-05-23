@@ -1588,6 +1588,7 @@ export default function HistoryPage() {
                 onStartMastery={startMasteryGate}
                 onSubmitReceipt={submitLearningReceipt}
                 existingReceipt={existingReceipt}
+                previewMode={topic && topic.isPreview}
                 onTermClick={setActiveTerm}
                 onMustClick={setActiveMust}
                 onJumpToMap={jumpToMap}
