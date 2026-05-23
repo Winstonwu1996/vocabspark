@@ -1,7 +1,7 @@
 // 学习状态判定回归测试（Codex 第三批审计 P2 要求）
 // 覆盖：新词猜错/跳过→learning；新词猜对→mastered；复习 forgot→error；
 //       新词池排除 error/mastered/skipped/learning/uncertain；全学过时返回空（不回退全词表）。
-import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS } from '../lib/learnStatus.js';
+import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS } from '../lib/learnStatus.js';
 
 var pass = 0, fail = 0;
 var eq = function (name, got, want) {
@@ -28,6 +28,13 @@ console.log("\n── REVIEW_RESULT_STATUS：复习结果映射 ──");
 eq("复习 remembered → mastered", REVIEW_RESULT_STATUS["remembered"], "mastered");
 eq("复习 fuzzy → uncertain", REVIEW_RESULT_STATUS["fuzzy"], "uncertain");
 eq("复习 forgot → error（error 的唯一合法来源）", REVIEW_RESULT_STATUS["forgot"], "error");
+
+console.log("\n── ACTIVE_RECALL_STATUS：新词 teach 阶段自测（Codex Round3 P1）──");
+eq("Active Recall easy → mastered", ACTIVE_RECALL_STATUS["easy"], "mastered");
+eq("Active Recall fuzzy → uncertain", ACTIVE_RECALL_STATUS["fuzzy"], "uncertain");
+eq("Active Recall hard(想不起) → uncertain，绝不 error", ACTIVE_RECALL_STATUS["hard"], "uncertain");
+eq("★ 不变式：Active Recall 任何选项都不产出 error（新词阶段 error 口子封死）",
+  Object.values(ACTIVE_RECALL_STATUS).some(function (s) { return s === "error"; }), false);
 
 console.log("\n── selectUnlearnedWords：新词池只挑没学过的 ──");
 eq("只留 unlearned + 未记录，排除 error/mastered/skipped/learning/uncertain",

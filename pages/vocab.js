@@ -10,7 +10,7 @@ import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../co
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
-import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS } from '../lib/learnStatus';
+import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS } from '../lib/learnStatus';
 
 // wordInput 自动去重 (保留首次出现顺序 + 原始大小写)。在数据加载/导入时调用，
 // 让词库始终无重复 — 用户不用再手动点"去重词库"。守卫已改按 distinct 词数放行纯去重。
@@ -8918,7 +8918,7 @@ export default function App() {
                       clr: C.green,
                       lockedByTimer: teachReadSec > 0,
                       cb: function(){
-                        if (currentWord && (!wordStatusMap[currentWord] || wordStatusMap[currentWord]==="unlearned" || wordStatusMap[currentWord]==="learning")) updateManualWordStatus(currentWord, "mastered");
+                        if (currentWord && (!wordStatusMap[currentWord] || wordStatusMap[currentWord]==="unlearned" || wordStatusMap[currentWord]==="learning")) updateManualWordStatus(currentWord, ACTIVE_RECALL_STATUS.easy);
                         save({ ...stats, xp: (stats.xp || 0) + 3 });
                       }
                     },
@@ -8929,7 +8929,7 @@ export default function App() {
                       clr: C.gold,
                       lockedByTimer: false,
                       cb: function(){
-                        updateManualWordStatus(currentWord, "uncertain");
+                        updateManualWordStatus(currentWord, ACTIVE_RECALL_STATUS.fuzzy);
                         save({ ...stats, xp: (stats.xp || 0) + 8 });
                       }
                     },
@@ -8940,7 +8940,9 @@ export default function App() {
                       clr: C.red,
                       lockedByTimer: false,
                       cb: function(){
-                        updateManualWordStatus(currentWord, "error");
+                        // ★ 新词阶段"想不起"→ uncertain（聚焦复习），绝不写 error。
+                        // error 只来自复习 forgot；写 error 会让新词被回收重学（Codex P1）。
+                        updateManualWordStatus(currentWord, ACTIVE_RECALL_STATUS.hard);
                         save({ ...stats, xp: (stats.xp || 0) + 8 });
                       }
                     },
