@@ -777,8 +777,11 @@ export default function HistoryPage() {
     if (phase !== "conversation") return;
     var turn = effectiveTurns[turnIndex];
     if (!turn) return;
-    // 不自动跳过 synthesis (真问题节点) — 这些需要用户主动思考答
-    if (turn.expectsRealAnswer) return;
+    // 不自动跳过任何需要用户输入的节点 — synthesis/meta 真问题 + N6 检索门 + N10 史料桥
+    // (5-22 修复: 旧代码查 turn.expectsRealAnswer, 但 storyboard turn 上只有 expectsInput,
+    //  该字段恒 undefined → 听模式会静默跳过全部输入节点, 含新增的检索/sourcing gate。
+    //  改查 expectsInput 一并覆盖 N6/N10/N11/N12, 实现原作者"不跳过真问题"的本意)
+    if (turn.expectsInput) return;
     // 已是最后一节就不再 advance (走 mastery)
     if (turnIndex >= effectiveTurns.length - 1) return;
     // 等当前节点 AI entry 出现在 log 里再开始计时 (避免 turn 切换时立刻 advance)

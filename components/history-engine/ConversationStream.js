@@ -348,6 +348,11 @@ function TakeawayCard(props) {
 function ExcerptCol(props) {
   var ex = props.excerpt;
   var isEn = props.isEn;
+  // 史料类型徽章——区分一手史料 vs 演绎，本身就是 sourcing 技能的一部分
+  var kind = ex.kind || 'primary';
+  var badge = kind === 'dramatization'
+    ? { text: isEn ? '✎ Dramatization' : '✎ 演绎', bg: 'rgba(122,92,168,0.12)', fg: '#6b53a8' }
+    : { text: isEn ? '📜 Primary source' : '📜 一手史料', bg: 'rgba(74,138,130,0.14)', fg: '#3d7a72' };
   return (
     <div style={{
       flex: "1 1 240px", minWidth: 0,
@@ -356,8 +361,12 @@ function ExcerptCol(props) {
       border: "1px solid rgba(196,107,48,0.22)",
       borderRadius: 12,
     }}>
-      <div style={{ fontSize: 11.5, fontWeight: 700, color: "#a85525", marginBottom: 2 }}>
-        {props.label}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 11.5, fontWeight: 700, color: "#a85525" }}>{props.label}</span>
+        <span style={{
+          fontSize: 9.5, fontWeight: 700, padding: "1px 6px", borderRadius: 999,
+          background: badge.bg, color: badge.fg,
+        }}>{badge.text}</span>
       </div>
       <div style={{ fontSize: 11, color: HC.textSec, marginBottom: 8, lineHeight: 1.45 }}>
         {isEn ? ex.whoEn : ex.whoCn}
