@@ -8,6 +8,7 @@ import {
   mergeHistoryData,
   mergeBridgeQueue,
   validateProgressMerge,
+  applyProgressGuards,
 } from "../lib/progressMergePolicy.js";
 
 var pass = 0, fail = 0;
@@ -54,7 +55,8 @@ console.log("\n[1] mergeProgress 保留 historyData（核心回归）");
     m.historyData.inProgress["crusades-1099"] && m.historyData.inProgress["renaissance-1500"]);
   ok("transcripts union 两个 topic 都在",
     m.historyData.transcripts["magna-carta-1215"] && m.historyData.transcripts["black-death-1347"]);
-  ok("history stats 累加取 max（totalXp=30）", m.historyData.stats.totalXp === 30);
+  ok("history stats 重算: topicsCompleted=2 (union 完成数)", m.historyData.stats.topicsCompleted === 2);
+  ok("history stats 重算: totalXp=55 (union xpEarned 求和, Codex P2)", m.historyData.stats.totalXp === 55);
   ok("userWorldview newer 赢（local 较新）", m.historyData.userWorldview.stance === "local-newer");
   ok("bridgeQueue.history union 两个都在",
     m.bridgeQueue.history["magna-carta-1215"] && m.bridgeQueue.history["black-death-1347"]);
@@ -82,6 +84,15 @@ console.log("\n[3] validateProgressMerge 抓 historyData 缩水");
   ok("completedTopics 缩水 → invalid（触发回退 serverData）", validateProgressMerge(badMerge, server) === false);
 }
 
+console.log("\n[3b] validateProgressMerge 抓 inProgress / transcripts 缩水 (Codex P3)");
+{
+  var server = { historyData: { completedTopics: { a: {} }, inProgress: { x: {}, y: {} }, transcripts: { a: {}, b: {} } } };
+  var dropIn = { historyData: { completedTopics: { a: {} }, inProgress: { x: {} }, transcripts: { a: {}, b: {} } } };
+  var dropTr = { historyData: { completedTopics: { a: {} }, inProgress: { x: {}, y: {} }, transcripts: { a: {} } } };
+  ok("inProgress 缩水 → invalid", validateProgressMerge(dropIn, server) === false);
+  ok("transcripts 缩水 → invalid", validateProgressMerge(dropTr, server) === false);
+}
+
 console.log("\n[4] vocab 字段行为不回归（historyData 修复不影响主业）");
 {
   var local = { updatedAt: "2026-05-22T10:00:00Z", stats: { xp: 50 }, wordStatusMap: { a: 1, b: 1 }, reviewWordData: {} };
@@ -90,6 +101,40 @@ console.log("\n[4] vocab 字段行为不回归（historyData 修复不影响主�
   ok("stats.xp 仍取 max（70）", m.stats.xp === 70);
   ok("wordStatusMap 仍 union（a+b）", keys(m.wordStatusMap).length === 2);
   ok("无 historyData 时不引入该键", !("historyData" in m));
+}
+
+console.log("\n[5] applyProgressGuards 服务端守 historyData 缩水 (Codex P1)");
+{
+  // Codex 验证的边界：cloud {a,b}, incoming {a} → 旧守卫 rejected:[], safe 只剩 a
+  var cloud = { historyData: { completedTopics: { a: { xpEarned: 30 }, b: { xpEarned: 25 } }, transcripts: { a: {} } } };
+  var incoming = { historyData: { completedTopics: { a: { xpEarned: 30 } }, transcripts: { a: {} } } };
+  var r = applyProgressGuards(incoming, cloud, undefined);
+  ok("completedTopics 缩水被拦 → rejected 含 historyData", r.rejected.indexOf("historyData") !== -1);
+  ok("保守 union → safe 保留 a+b（不丢 b）", keys(r.safe.historyData.completedTopics).length === 2);
+
+  // 正常完成：completedTopics 增长 + inProgress 合法缩水 → 不应误伤
+  var cloud2 = { historyData: { completedTopics: { a: {} }, inProgress: { topicX: {} }, transcripts: {} } };
+  var incoming2 = { historyData: { completedTopics: { a: {}, topicX: {} }, inProgress: {}, transcripts: {} } };
+  var r2 = applyProgressGuards(incoming2, cloud2, undefined);
+  ok("正常完成 (inProgress 合法清空) → 不 reject historyData", r2.rejected.indexOf("historyData") === -1);
+  ok("正常完成 → safe 保留 incoming 的 completedTopics(a+topicX)", keys(r2.safe.historyData.completedTopics).length === 2);
+
+  // cloud 无 historyData → 守卫不触发
+  var r3 = applyProgressGuards({ historyData: { completedTopics: {} } }, { stats: { xp: 1 } }, undefined);
+  ok("cloud 无 historyData → 不 reject", r3.rejected.indexOf("historyData") === -1);
+}
+
+console.log("\n[6] mergeHistoryData stats 一致性 + passthrough 安全 (Codex P2)");
+{
+  var local = { updatedAt: "2026-05-22T10:00:00Z", historyData: {
+    completedTopics: { A: { xpEarned: 30 } }, stats: { totalXp: 30, topicsCompleted: 1, customField: "keep-me" } } };
+  var server = { updatedAt: "2026-05-22T09:00:00Z", historyData: {
+    completedTopics: { B: { xpEarned: 25 } }, stats: { totalXp: 25, topicsCompleted: 1 } } };
+  var m = mergeProgress(local, server);
+  var hs = m.historyData.stats;
+  ok("topicsCompleted = union 完成数 (2, 不再是 max(1,1)=1)", hs.topicsCompleted === 2);
+  ok("totalXp ≥ union xpEarned 之和 (≥55)", hs.totalXp >= 55);
+  ok("stats 其它子字段 passthrough 不丢 (customField)", hs.customField === "keep-me");
 }
 
 console.log("\n──────────────────────────");

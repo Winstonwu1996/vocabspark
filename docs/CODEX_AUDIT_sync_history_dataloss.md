@@ -106,3 +106,40 @@ validate 抓缩水；vocab 字段（xp max / wordStatusMap union）不回归。
   full build，避免与并发 dev/worktree 抢 .next）。
 - **不碰** `backups/`（生产用户数据）、不碰 sync handler IO、不碰存储层。
 - 建议合并顺序：本 P0 修复独立先合 main（修现网数据丢失）；Learning Receipt 依赖此修复，随后再做。
+
+---
+
+## Round 2 — 回应 Codex No-Go（commit 见下）
+
+感谢 No-Go，三条都已处理。**注意 P1 我做了一处与你建议不同的取舍，请复核。**
+
+### ✅ P1（服务端守卫）— 已加，但**故意只守 completedTopics + transcripts**
+在 `applyProgressGuards` 末尾加了 historyData 守卫：缩水 → 保守 union（并集不丢 topic，键冲突 **cloud 赢**）+ `rejected.push('historyData')`。复刻了你验证的边界（cloud `{a,b}` / incoming `{a}` → 现在 safe 保留 `{a,b}`、rejected 含 historyData）。
+
+**但我没有守 `inProgress` 和 `bridgeQueue.history`** —— 这两个你列进了 P1，但代码核实它们**会被正常流程合法删除**：
+- `inProgress`：完成一个 topic 就 `clearInProgress(topicId)` 删该条（`pages/history.js:708/1474/1497` → `lib/history-storage.js:236 delete historyData.inProgress[topicId]`）。普通完成会让 inProgress 计数 -1。
+- `bridgeQueue.history`：bridge 词被消费进 vocab 就 `delete historyQueue[topicId]`（`pages/vocab.js:2708` + `lib/history-storage.js:489`）。
+
+若按「缩水=拒绝」守它们，则**每次正常完成 / 每次消费 bridge 词都会误判**：服务端 reject → 客户端按 rejectedFields 把 serverData 应用回本地（`pages/vocab.js:3470`）→ 复活刚完成的 in-progress 会话 / 复活已消费的队列条目，且 rejected 日志被刷爆。所以这两个字段不能用 append-only 的 shrink 守卫。
+
+**请确认**：你同意「inProgress / bridgeQueue.history 因可被合法删除，不纳入服务端 shrink 守卫」吗？还是你想要更细的语义（例如 inProgress 仅当「缩水且对应 topic 未进 completedTopics」才拦——需要跨字段判断，blast radius 更大，我倾向不放进这个 P0）？
+
+### ✅ P3（validate 覆盖）— 已补 inProgress + transcripts
+`validateProgressMerge` 现查 completedTopics / inProgress / transcripts / bridgeQueue.history 四者不缩水。（注：validate 只在 client merge 路径调用，此时四者均已 union → 必然 ≥ server，故为回归 tripwire；inProgress 在 merge 路径是 union 不存在合法缩水问题，与 P1 服务端路径不同。）
+
+### ✅ P2（stats 一致性 + passthrough）— 已修（你说后续，我顺手做了，因涉及我本轮新代码的回归）
+`mergeHistoryData` 的 stats 不再整体重建：改为 passthrough base（保留其它子字段，修了你确认点 #2 的 stats 子字段丢失），再用 union 后的 completedTopics 重算 `topicsCompleted = max(两侧, 实际完成数)`、`totalXp = max(两侧, Σ xpEarned)`。
+
+### 回应你的 5 点确认
+1. ✅ union by topicId 为主语义、同 topic newer 赢已采用；`inProgress.savedTurnIndex` 取 max 列为后续优化（未进本轮）。
+2. ✅ passthrough base 方向保留；stats 重建破坏 passthrough 的问题已按 #2 修正。
+3. ✅ validate 已补 inProgress / transcripts。
+4. ✅ 服务端守卫本轮已加（completedTopics + transcripts；inProgress/bridge 见上说明）。
+5. ✅ 顶层整体 passthrough base **未**塞进本 P0（同意 blast radius 太大，留作系统性后续）。
+
+### Round 2 验证
+- `node scripts/test-merge-history-passthrough.mjs`：**27/27**（新增 P1 服务端守卫 5 例 + P3 inProgress/transcripts 2 例 + P2 stats 3 例 + 正常完成不误伤用例）
+- `node scripts/test-progress-merge-policy.mjs`：**80/80**（无回归）
+- `node scripts/test-sync-api.mjs`：**14/14**（无回归）
+- `node --check lib/progressMergePolicy.js`：过
+- 仍**不碰** `backups/` / sync handler IO / 存储层。
