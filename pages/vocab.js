@@ -10,6 +10,7 @@ import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../co
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
+import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS } from '../lib/learnStatus';
 
 // wordInput 自动去重 (保留首次出现顺序 + 原始大小写)。在数据加载/导入时调用，
 // 让词库始终无重复 — 用户不用再手动点"去重词库"。守卫已改按 distinct 词数放行纯去重。
@@ -5120,12 +5121,34 @@ export default function App() {
     var startIdx = typeof resumeIdx === "number" ? resumeIdx : 0;
     var words = rawWords;
     if (startIdx === 0) {
-      // "error" 状态的词允许重学（之前因 LLM 失败被标记，新代码修复后应能成功）
-      var unlearned = rawWords.filter(w => {
-        var s = wordStatusMap[w];
-        return !s || s === "unlearned" || s === "error";
-      });
-      if (unlearned.length === 0) unlearned = rawWords;
+      // 新词学习只挑"从没学过"的词。error（复习忘记）/mastered/learning/uncertain/skipped
+      // 全排除，各有归宿（复习 / 深度复习），不再混进新词学习重教（用户实测痛点）。
+      var unlearned = selectUnlearnedWords(rawWords, wordStatusMap);
+      // ★ 没有未学新词时绝不回退到 rawWords（那会把 error/已掌握的词当新词重学 —— 正是 bug 本身）。
+      //   改为引导用户去复习 / 重点攻克。
+      if (unlearned.length === 0) {
+        var _plan = getDailyPlan();
+        if (_plan.toReview && _plan.toReview.length > 0) {
+          var _goRev = await confirmAsync({
+            title: "没有新词要学了 🎉",
+            body: "词表里的词都学过了。有 " + _plan.toReview.length + " 个词到了复习时间，去快速复习巩固一下？",
+            confirmText: "去复习", cancelText: "暂不",
+          });
+          if (_goRev) startQuickReview("due");
+          return;
+        }
+        if (_plan.deepToday && _plan.deepToday.length > 0) {
+          var _goDeep = await confirmAsync({
+            title: "没有新词要学了 🎉",
+            body: "词表里的词都学过了。有 " + _plan.deepToday.length + " 个词建议重点攻克，现在去？",
+            confirmText: "去攻克", cancelText: "暂不",
+          });
+          if (_goDeep) startDeepReview();
+          return;
+        }
+        setError("没有新词要学了 —— 词表里的词都已学过。可以去复习，或更换/添加词表。");
+        return;
+      }
       var remainingQuota = getRemainingNewWordQuota();
       // P1 硬限额：付费用户允许超额，free/guest 必须等明天或升级
       var _isPaidNow = userTier === "basic" || userTier === "pro";
@@ -5385,16 +5408,12 @@ export default function App() {
       if (isFirstLearnToday) {
         consumeNewWordQuota(1);
       }
-      // 关键修复：无论猜词结果如何，只要用户完成了这个词的学习流程，
-      // 都要更新 wordStatusMap，否则这个词明天还会被当"未学"重新安排
-      // 同时，如果词原本是 unlearned 或 skipped（快筛跳过），现在完成了深度学习，也要升级
-      var currentStatus = wordStatusMap[currentWord];
-      var shouldUpdateStatus = !currentStatus || currentStatus === "unlearned" || currentStatus === "skipped";
-      if (shouldUpdateStatus) {
-        if (guessCorrect === true) updateManualWordStatus(currentWord, "mastered");
-        else if (guessCorrect === false) updateManualWordStatus(currentWord, "error");
-        else updateManualWordStatus(currentWord, "learning"); // 跳过猜词 → learning（学习中）
-      }
+      // 完成学习流程就更新 wordStatusMap，否则该词明天还会被当"未学"重新安排。
+      // 新词猜对=mastered；猜错/跳过猜词=learning（进复习循环）。★ 不再把猜错的新词标 error
+      // （新词第一次本就不该会）—— error 只保留给复习时忘记的词。详见 lib/learnStatus.js。
+      // 已 mastered/learning/uncertain/error 的词返回 null → 不降级。
+      var nextStatus = decideNewWordStatus(wordStatusMap[currentWord], guessCorrect);
+      if (nextStatus) updateManualWordStatus(currentWord, nextStatus);
     } catch(e) {}
     // Persist completed word permanently (survives session resets)
     loadSave().then(function(d) {
@@ -6035,8 +6054,8 @@ export default function App() {
   var markQuickReview = function(result) {
     var item = quickReviewQueue[quickReviewIdx];
     if (!item) return;
-    var map = { remembered: "mastered", fuzzy: "uncertain", forgot: "error" };
-    var nextStatus = map[result] || "uncertain";
+    // 复习结果 → 状态（forgot→error 是 error 的唯一合法来源，见 lib/learnStatus.js）
+    var nextStatus = REVIEW_RESULT_STATUS[result] || "uncertain";
 
     updateManualWordStatus(item.word, nextStatus);
 
@@ -6502,14 +6521,13 @@ export default function App() {
       var nextLevel = prevLevel;
       if (result === "remembered") nextLevel = Math.min(REVIEW_INTERVAL_DAYS.length - 1, prevLevel + 1);
       if (result === "forgot") nextLevel = 0;
-      var statusMap = { remembered: "mastered", fuzzy: "uncertain", forgot: "error" };
       var hist = [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "deep", result: result }];
       upsertReviewWordData(dw, { reviewHistory: hist, reviewLevel: nextLevel, nextReviewDate: addDaysISO(REVIEW_INTERVAL_DAYS[nextLevel]) });
       var _dIntervalDays = REVIEW_INTERVAL_DAYS[nextLevel];
       var _dFbText = result === "remembered" ? "✅ 下次复习在 " + _dIntervalDays + " 天后" : result === "forgot" ? "🔄 明天再复习" : "📝 " + _dIntervalDays + " 天后复习";
       setReviewFeedback({ text: _dFbText, color: result === "remembered" ? C.green : result === "forgot" ? C.red : C.gold });
       setTimeout(function(){ setReviewFeedback(null); }, 1500);
-      updateManualWordStatus(dw, statusMap[result] || "uncertain");
+      updateManualWordStatus(dw, REVIEW_RESULT_STATUS[result] || "uncertain");
       incrementDeepReviewDailyCount();
       setDeepSessionStats(function(prev){ return { ...prev, [result]: (prev[result] || 0) + 1 }; });
       var n = deepReviewIdx + 1;
