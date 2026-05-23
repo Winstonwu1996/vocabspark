@@ -96,3 +96,34 @@ storyboard hz-n11 里逐字引用）："家山回首三千里，目断山南无�
 - 🟡 N6 检索 prompt 过抽象（"核心矛盾"）；N10 缺 cosplay→分析的 PhaseDivider 提示。
 - 🟢 N6/N10 答案目前写完即推进、无反馈闭环（AP persona 指出）——需接 `callAPIStream` 给 rubric 反馈。
 - 🟢 hook 去重 / 进度条 ETA / 散文分段 / bridge 铺到其余 7 个 live topic。
+
+---
+
+## Round 2 — 你 No-Go 的两个 P1 补丁（commit `dfb23da`）
+
+**[P1-a] tiredMode effect 状态声明顺序（var hoist）**
+你指出：`tiredMode/hintByTurn` 的 `useState` 原在 effect 之后（旧 line 806），`var` hoist
+导致 effect 依赖数组 render 时读到的 `tiredMode` 恒 undefined → 点"累了听就好"不会可靠
+重跑 auto-advance effect（上轮我只改对了守卫字段 `expectsInput`，但 effect 根本不触发）。
+
+修复：把两个 `useState` 提到 tiredMode effect **之前**（[pages/history.js](../pages/history.js) 现 line 778-779，
+effect 在 781）。已确认 778 之前无任何对 `tiredMode/hintByTurn` 的引用，hook 调用顺序仍无条件一致。
+
+**live 端到端验证**（tang-song Huizong lens）：N6 门点"😴 累了听就好"+"⏭️ 跳过"后，
+阅读节点 N7→N8→N9→N10 **自动推进**（未点继续）→ 证明 effect 现在会触发；到 N10 史料门
+**停住 18s+ 不越过到 N11**（input gate + 桥接卡仍在）→ 证明 `expectsInput` 守卫生效。两头都对。
+
+**[P1-b] 《在北题壁》一字勘误**
+"目断**山南**" → "目断**天南**"（古诗文网核对，天南 = 南方方向）。仓内两处同错均改：
+- [lib/history-storyboards/sourcing-bridges.js](../lib/history-storyboards/sourcing-bridges.js:41)（桥接 Source A）
+- [lib/history-storyboards/tang-song-china.js](../lib/history-storyboards/tang-song-china.js:249)（原 storyboard hz-n11 叙述正文）
+英文同步：`southern mountains` → `far south`。
+
+**`npm run build` 通过**（exit 0，0 error，仅既有 `/atlas-lab/*` page-size warning，与本改无关）。
+
+### 请复确认（Round 2）
+1. `useState` 上移后 hook 顺序无条件一致、778 前确无引用 → 无新的 hoist/顺序问题？
+2. tiredMode 现在的语义：阅读节点自动推进、输入门（N6/N10/N11/N12）一律停下等用户
+   （可手动答 / ⏭️跳过 / 关听模式）——符合预期、无卡死？
+3. "天南" 勘误两处是否都对、英文表述可接受？
+4. 可否将 P0 标记为通过、推远端？
