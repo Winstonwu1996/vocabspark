@@ -9,7 +9,7 @@ import UserCenter from '../components/UserCenter';
 import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../components/PetAvatar';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
-import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress } from '../lib/progressMergePolicy';
+import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
 
 // wordInput 自动去重 (保留首次出现顺序 + 原始大小写)。在数据加载/导入时调用，
 // 让词库始终无重复 — 用户不用再手动点"去重词库"。守卫已改按 distinct 词数放行纯去重。
@@ -3470,6 +3470,7 @@ export default function App() {
       // 服务端守卫拒绝了部分字段：serverData 是权威版本，应用回本地避免继续推
       // diverged 数据；不显示 synced —— 用 error 态让用户感知"同步未完整"。
       console.warn('[sync] guard rejected fields:', result.rejectedFields.join(', '));
+      trackFunnel('sync_guard_rejected', { fields: result.rejectedFields.join(','), version: result.version });
       if (result.serverData) {
         try {
           await doSave(result.serverData);
@@ -3498,6 +3499,15 @@ export default function App() {
     // 干净成功后只清"本次捕获的 intent"，避免误清 in-flight 期间用户新设的 intent (P1)
     var _clearIntentIfMine = function() { if (_intentRef.current === intent) _intentRef.current = null; };
     dataToPush.updatedAt = new Date().toISOString();
+    // 第三批可观测性：push 前留一条 breadcrumb（词库/复习/状态规模 + intent + version），
+    // 只在后续真错误事件触发时附带上报，平时静默；便于回看"推了多少数据"。
+    trackFunnel('sync_push', {
+      version: syncVersionRef.current,
+      intent: intentType || 'none',
+      wsm: Object.keys(dataToPush.wordStatusMap || {}).length,
+      rwd: Object.keys(dataToPush.reviewWordData || {}).length,
+      word_input_len: (dataToPush.wordInput || '').length,
+    });
     var r = await fetch('/api/sync', {
       method: 'POST',
       headers: await getAuthHeaders(true),
@@ -3506,6 +3516,7 @@ export default function App() {
     if (r.status === 409) {
       var conflict = await r.json();
       console.warn('[sync] version conflict: client=' + syncVersionRef.current + ' server=' + conflict.serverVersion + ' — merging');
+      trackFunnel('sync_conflict_409', { client_version: syncVersionRef.current, server_version: conflict.serverVersion });
       if (conflict.serverData) {
         var merged;
         try {
@@ -3528,11 +3539,21 @@ export default function App() {
           if (clean2) _clearIntentIfMine();
         } else if (r2.status === 409) {
           var conflict2 = await r2.json();
-          console.warn('[sync] re-merge still 409, accepting server (max contention)');
+          console.warn('[sync] re-merge still 409, final merge + accept server (max contention)');
           if (conflict2.serverData) {
+            // 第三批：不再"裸接受 server"丢掉用户本轮 merged 的改动；先跟最新 server
+            // union-merge 一次保住用户的词，再落地收敛（避免 double-409 极端竞态下静默丢数据）。
+            var merged2;
+            try {
+              merged2 = mergeStates(merged, conflict2.serverData);
+              if (!validateMerged(merged2, conflict2.serverData)) merged2 = conflict2.serverData;
+            } catch (e2) {
+              console.warn('[sync] final merge threw, fallback to server:', e2.message);
+              merged2 = conflict2.serverData;
+            }
             syncVersionRef.current = conflict2.serverVersion;
-            await doSave(conflict2.serverData);
-            _applyCloudData(conflict2.serverData);
+            await doSave(merged2);
+            _applyCloudData(merged2);
           }
           setSyncSynced();
           _clearIntentIfMine();
@@ -3559,6 +3580,7 @@ export default function App() {
     _recoveringRef.current = true;
     try {
       console.warn('[sync] gate triggered (' + reason + '), pull-merge-repush 尝试解冻');
+      trackFunnel('sync_gate_blocked', { reason: reason });
       var u = userRef.current;
       if (!u) return;
       var cloudRes = await loadFromCloud(u.id);
@@ -4394,10 +4416,13 @@ export default function App() {
   };
 
   var parseWordsFromInput = function(input) {
-    return (input || "")
+    var parts = (input || "")
       .split(/[\n,，、]+/)
       .map(function(w) { return w.trim(); })
       .filter(function(w) { return !!w; });
+    // 第三批：下游统一 distinct。大小写不敏感去重 + 保留首次原形，跟存储层
+    // (load/upload/merge) 同一套 normalize。index<=idx 已废 → 无位置依赖，安全。
+    return dedupeWordsStable(parts);
   };
 
   var getAutoWordStatus = function(word, index, sourceWords) {

@@ -222,6 +222,17 @@ eq("wordInput 长度差≥50 → 取较长",
     { wordInput: Array.from({ length: 30 }, function (_, i) { return "word" + i; }).join("\n"), updatedAt: "2026-05-19T00:00:00Z" },
     { wordInput: "a\nb", updatedAt: "2026-05-21T00:00:00Z" }
   ).wordInput.split("\n").length, 30);
+// 第三批：合并层对胜出方 stable dedupe
+eq("wordInput 合并胜出方有重复 → 去重 (distinct 不变)",
+  mergeProgress(
+    { wordInput: "apple\nApple\nbanana\napple", updatedAt: "2026-05-21T00:00:00Z" },
+    { wordInput: "apple\nbanana", updatedAt: "2026-05-20T00:00:00Z" }
+  ).wordInput, "apple\nbanana");
+eq("wordInput 合并胜出方无重复 → 原样返回 (不动)",
+  mergeProgress(
+    { wordInput: "a\nb\nc", updatedAt: "2026-05-21T00:00:00Z" },
+    { wordInput: "a\nb", updatedAt: "2026-05-20T00:00:00Z" }
+  ).wordInput, "a\nb\nc");
 eq("session 同清单取 idx 较大",
   mergeProgress(
     { session: { wordList: ["a", "b", "c"], idx: 2 }, updatedAt: "2026-05-19T00:00:00Z" },
