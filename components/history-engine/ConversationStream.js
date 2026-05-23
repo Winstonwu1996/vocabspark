@@ -479,19 +479,20 @@ function LearningReceiptCard(props) {
   var filledCount = [fact, cause, persp, eng].filter(function (s) { return s && s.trim(); }).length;
   var canSubmit = filledCount >= 1;
 
+  // 占位例保持 topic-neutral（不绑定具体 topic，避免在非 Magna Carta 的 topic 里出戏）
   var fields = [
     { key: "fact", val: fact, set: setFact,
       q: isEn ? "One concrete fact you'll remember from this pass? One line." : "这一遍里，哪个具体的事实你记住了？一句话。",
-      ph: isEn ? "e.g. In 1215 the barons forced King John to sign at Runnymede." : "例：1215 年贵族在 Runnymede 逼 King John 签了字" },
+      ph: isEn ? "e.g. a specific year, a name, or what happened" : "例：一个具体的年份、人名、或发生了什么" },
     { key: "cause", val: cause, set: setCause,
       q: isEn ? "Why did it turn out this way? Say it with “because… so…”." : "为什么会变成这样？用「因为…所以…」说一句。",
-      ph: isEn ? "e.g. Because the king overtaxed them, so the barons united." : "例：因为国王乱收税，所以贵族联合起来反抗" },
+      ph: isEn ? "e.g. Because ___, so ___." : "例：因为……，所以……" },
     { key: "persp", val: persp, set: setPersp,
       q: isEn ? "Whose side did you mostly hear? Whose voice did you not hear?" : "你刚才主要听的是谁的一边？还有谁的声音你没听到？",
-      ph: isEn ? "e.g. I heard the barons' side, not how the peasants felt." : "例：我听的是贵族的角度，没听到农民怎么想" },
+      ph: isEn ? "e.g. I mostly heard ___'s side, I didn't hear ___." : "例：我主要听了 ___ 的角度，没听到 ___" },
     { key: "eng", val: eng, set: setEng,
       q: isEn ? "Say your thought in one line of English — short is fine, mistakes are fine." : "用一句英文说出你的想法 —— 短句也行，写错没关系。",
-      ph: "e.g. The barons forced the king to follow the law." },
+      ph: isEn ? "e.g. one sentence in English about what you learned" : "例：用一句英文说说你的想法" },
   ];
 
   var submit = function () {

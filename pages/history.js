@@ -52,6 +52,7 @@ import {
   getPrewrittenContent,
   hasTopicLenses,
   getTopicLenses,
+  getTopicLensMeta,
 } from '../lib/history-runtime';
 import {
   loadProfile,
@@ -268,7 +269,7 @@ export default function HistoryPage() {
   var [curriculum, setCurriculum] = useState(null);
 
   // —— N3: 英文比例（low/balanced/high）——
-  var [englishLevel, setEnglishLevelState] = useState("high");  // 5-4: 默认 EN; lens 内容 high=EN, 其他=CN
+  var [englishLevel, setEnglishLevelState] = useState("balanced");  // 默认 balanced(CN 主+key terms 英文); 降低 Willow 画像首入英文墙。返回用户由 loadEnglishLevel 覆盖。high=EN, 其他=CN
 
   // —— U4: 首次 walkthrough ——
   var [showWalkthrough, setShowWalkthrough] = useState(false);
@@ -284,8 +285,12 @@ export default function HistoryPage() {
   var [selectedLensId, setSelectedLensId] = useState(null);
   var topicLenses = topic ? getTopicLenses(topicId) : [];
   var hasLensesForTopic = hasTopicLenses(topicId);
-  // 没选时默认第一个 lens（通常 king-john）；老 Topic 无 lens 时 selectedLensId 无效
-  var effectiveLensId = selectedLensId || (hasLensesForTopic && topicLenses[0] ? topicLenses[0].id : null);
+  // 没选时用 storyboard 声明的 defaultLens（受影响者优先 pattern，见各 storyboard），
+  // fallback 到第一个 lens。修复前误取 topicLenses[0]（=第一个 lens，通常是 perpetrator），
+  // 导致 33/37 个 topic 默认开在加害者视角而非作者声明的 receiving-end 视角。
+  var topicDefaultLensMeta = (topic && hasLensesForTopic) ? getTopicLensMeta(topicId) : null;
+  var effectiveLensId = selectedLensId
+    || (topicDefaultLensMeta ? topicDefaultLensMeta.id : (hasLensesForTopic && topicLenses[0] ? topicLenses[0].id : null));
   var effectiveTurns = topic ? getEffectiveTurns(topicId, topic, effectiveLensId) : [];
   // Learning Receipt：该 (topic,lens) 是否已交过收据（memo 避免每次渲染 parse 整个 blob）。
   // 仅判定「往期已交」；本会话刚交由 ConversationStream 内部 receiptSubmitted 处理。
