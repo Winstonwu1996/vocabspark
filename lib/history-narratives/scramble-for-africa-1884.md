@@ -275,7 +275,7 @@ Williams 1891 年病死，没看到结果。但他点的火没灭——他用的
 
 > **原文（英译）**："Your Majesty\'s Government has sequestered their land...
 > stolen their canoes... and committed acts of cruelty against the natives."
-> （Williams 还首次使用了 "crimes against humanity"——危害人类罪——这一表述。）
+> （Williams 是最早系统使用 "crimes against humanity"——危害人类罪——这个说法的人之一，让它广为人知。）
 >
 > **7 年级简化版**："陛下的政府霸占了他们的土地，抢走了他们的独木舟，
 > 对当地人犯下了种种残暴的罪行。"
@@ -443,7 +443,7 @@ Williams 1891 年病死，没看到结果。但他点的火没灭——他用的
 | 1884-85 | **Berlin Conference 柏林会议**——14 国瓜分非洲，桌上无非洲人 |
 | 1885 | Congo Free State（刚果自由邦）成立，为 Leopold 私人产业 |
 | 1890s | 橡胶热（汽车/自行车轮胎需求）→ 配额制 + 砍手暴政 |
-| 1890 | **Williams 写下揭发刚果的公开信**（首用 "crimes against humanity"） |
+| 1890 | **Williams 写下揭发刚果的公开信**（最早系统使用 "crimes against humanity" 之一） |
 | 1891 | Williams 病死英国，年 42，未见改变 |
 | 1904 | Alice Seeley Harris 拍砍手照片；Casement Report 官方调查报告 |
 | 1908 | Leopold 被迫将刚果自由邦交比利时政府 → 比属刚果 |
@@ -463,7 +463,7 @@ Williams 1891 年病死，没看到结果。但他点的火没灭——他用的
 | Congo Free State（刚果自由邦） | 1885-1908 Leopold II 个人私有的刚果，非比利时国家殖民地 |
 | civilizing mission（文明使命） | 殖民者把侵略包装成"给落后地区带去文明"的修辞 |
 | Force Publique | 刚果自由邦的殖民军队，执行配额 + 砍手暴行 |
-| crimes against humanity（危害人类罪） | Williams 1890 首用，后成国际法核心概念 |
+| crimes against humanity（危害人类罪） | Williams 1890 最早系统使用之一，后成国际法核心概念 |
 | social Darwinism（社会达尔文主义） | 把"适者生存"误用于人类种族，为殖民等级论提供伪科学包装 |
 
 ---

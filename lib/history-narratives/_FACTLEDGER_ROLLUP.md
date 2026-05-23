@@ -31,7 +31,11 @@
 
 ---
 
-## 🅱 建议修：强措辞 / framing / 中立性（上线前最好处理，非硬错）
+## 🅱 建议修：强措辞 / framing / 中立性（上线前最好处理，非硬错）— ✅ 已全部处理（2026-05-23）
+
+> 14 个 topic 的强措辞/中立性红旗已批量 content-pass（CN+EN+deliverGoal+kernel 一致，
+> node --check + 37 storyboard 加载 + 各 lens 输入门结构全过；wording-only，未动任何 flag）。
+> 下表保留为审计记录。
 
 - **chinese-exclusion-1882**：`ls-n4`「每凿一米死一个华工」强修辞数字降级；Stanford「劣等种族」是**致立法机关咨文**非「就职演说」；「一天铺 10 英里」补爱尔兰铺轨工。
 - **jackson-indian-removal-1830**：Jackson「被刀砍**脸**」→ 主流记载砍**头部**，软化为「砍伤留疤」。
