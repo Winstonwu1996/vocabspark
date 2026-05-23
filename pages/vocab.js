@@ -3745,6 +3745,11 @@ export default function App() {
     }
     // chompcloud 2026-04-30 修复：标记云端数据已应用，解锁后续 syncToCloud。
     _cloudReadyRef.current = true;
+    // 安全感：应用云端数据 = 数据处于已同步状态。用云端这份数据的 updatedAt 初始化
+    // lastSyncAt，让老用户刚打开就看到"✓ 已同步 · 上次时间"，而不是"○ 云同步已开启"。
+    // (本轮 push 成功后 setSyncSynced 会再刷新为"刚刚"。)
+    var _cloudTs = toTime(d.updatedAt);
+    if (_cloudTs) setLastSyncAt(function(prev) { return _cloudTs > prev ? _cloudTs : prev; });
   };
 
   // ── Auth actions ──
