@@ -269,7 +269,7 @@ export default function HistoryPage() {
   var [curriculum, setCurriculum] = useState(null);
 
   // —— N3: 英文比例（low/balanced/high）——
-  var [englishLevel, setEnglishLevelState] = useState("balanced");  // 默认 balanced(CN 主+key terms 英文); 降低 Willow 画像首入英文墙。返回用户由 loadEnglishLevel 覆盖。high=EN, 其他=CN
+  var [englishLevel, setEnglishLevelState] = useState("high");  // 默认 EN(用户随时可用 EN/中 按钮切换); high=EN, 其他=CN
 
   // —— U4: 首次 walkthrough ——
   var [showWalkthrough, setShowWalkthrough] = useState(false);
