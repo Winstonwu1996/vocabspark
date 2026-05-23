@@ -464,11 +464,99 @@ export function SourceCard(props) {
 }
 
 // ─── Conversation Stream ───────────────────────────────────────────
+// ─── Learning Receipt 卡（学习证据）─────────────────────────────────
+// docs/HISTORY_LEARNING_RECEIPT_DESIGN.md：lens 走完最后一节、进 mastery 前留 4 件证据。
+// 软门：填 ≥1 项即可提交；「先跳过」也放行（记 skipped:true，不挡 mastery）。
+// 不鸡汤、人话、P8.1：引导问句全大白话，无 fact-anchor 等术语。
+function LearningReceiptCard(props) {
+  var isEn = props.englishLevel === "high";
+  var ex = props.existingReceipt || {};
+  var [fact, setFact] = useState((ex.factAnchor && ex.factAnchor.text) || "");
+  var [cause, setCause] = useState((ex.causalClaim && ex.causalClaim.text) || "");
+  var [persp, setPersp] = useState((ex.perspectiveLimit && ex.perspectiveLimit.text) || "");
+  var [eng, setEng] = useState((ex.englishExpr && ex.englishExpr.en) || "");
+
+  var filledCount = [fact, cause, persp, eng].filter(function (s) { return s && s.trim(); }).length;
+  var canSubmit = filledCount >= 1;
+
+  var fields = [
+    { key: "fact", val: fact, set: setFact,
+      q: isEn ? "One concrete fact you'll remember from this pass? One line." : "这一遍里，哪个具体的事实你记住了？一句话。",
+      ph: isEn ? "e.g. In 1215 the barons forced King John to sign at Runnymede." : "例：1215 年贵族在 Runnymede 逼 King John 签了字" },
+    { key: "cause", val: cause, set: setCause,
+      q: isEn ? "Why did it turn out this way? Say it with “because… so…”." : "为什么会变成这样？用「因为…所以…」说一句。",
+      ph: isEn ? "e.g. Because the king overtaxed them, so the barons united." : "例：因为国王乱收税，所以贵族联合起来反抗" },
+    { key: "persp", val: persp, set: setPersp,
+      q: isEn ? "Whose side did you mostly hear? Whose voice did you not hear?" : "你刚才主要听的是谁的一边？还有谁的声音你没听到？",
+      ph: isEn ? "e.g. I heard the barons' side, not how the peasants felt." : "例：我听的是贵族的角度，没听到农民怎么想" },
+    { key: "eng", val: eng, set: setEng,
+      q: isEn ? "Say your thought in one line of English — short is fine, mistakes are fine." : "用一句英文说出你的想法 —— 短句也行，写错没关系。",
+      ph: "e.g. The barons forced the king to follow the law." },
+  ];
+
+  var submit = function () {
+    props.onSubmit({
+      skipped: false,
+      lensTitle: props.lensTitle || null,
+      completedTurnCount: props.completedTurnCount || 0,
+      factAnchor: { text: fact.trim() },
+      causalClaim: { text: cause.trim() },
+      perspectiveLimit: { text: persp.trim() },
+      englishExpr: { en: eng.trim(), pushedToVocab: false },
+    });
+  };
+  var skip = function () {
+    props.onSubmit({ skipped: true, lensTitle: props.lensTitle || null, completedTurnCount: props.completedTurnCount || 0 });
+  };
+
+  return (
+    <div className="continue-bar" style={{ flexDirection: "column", gap: 14, padding: "20px 0" }}>
+      <div style={{ width: "100%", maxWidth: 560, margin: "0 auto", background: HC.card, border: "1px solid " + HC.border, borderRadius: 14, padding: "18px 18px 16px", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: HC.accent, marginBottom: 4 }}>
+          {isEn ? "Before the quiz — leave your take" : "考核前，留下你的收获"}
+        </div>
+        <div style={{ fontSize: 12.5, color: HC.textSec, marginBottom: 14, lineHeight: 1.5 }}>
+          {isEn ? "Four quick lines. Short answers, Chinese or English mixed — all fine." : "四句话就好。短答、中英混写都行，写错也没关系。"}
+        </div>
+        {fields.map(function (f) {
+          return (
+            <div key={f.key} style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 13, color: HC.text, marginBottom: 5, lineHeight: 1.45 }}>{f.q}</div>
+              <textarea
+                value={f.val}
+                onChange={function (e) { f.set(e.target.value); }}
+                placeholder={f.ph}
+                rows={2}
+                style={{ width: "100%", boxSizing: "border-box", fontSize: 14, lineHeight: 1.5, padding: "8px 10px", border: "1px solid " + HC.border, borderRadius: 9, resize: "vertical", fontFamily: "inherit", background: "#fff" }}
+              />
+            </div>
+          );
+        })}
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
+          <button className="continue-btn" disabled={!canSubmit}
+            style={{ background: canSubmit ? HC.accent : "rgba(0,0,0,0.18)", fontSize: 14, padding: "11px 28px", cursor: canSubmit ? "pointer" : "default" }}
+            onClick={submit}>
+            {isEn ? "Submit & start quiz ✏️" : "提交，进入考核 ✏️"}
+          </button>
+          <button onClick={skip}
+            style={{ background: "transparent", border: "none", color: HC.textSec, fontSize: 12.5, textDecoration: "underline", cursor: "pointer" }}>
+            {isEn ? "Skip for now" : "先跳过"}
+          </button>
+          {!canSubmit && (
+            <span style={{ fontSize: 11.5, color: HC.textSec }}>{isEn ? "Leave at least one line." : "至少留一条。"}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ConversationStream(props) {
   var topic = props.topic;
   var turnIndex = props.turnIndex;
   var log = props.conversationLog;
   var endRef = useRef(null);
+  var [receiptSubmitted, setReceiptSubmitted] = useState(false);
 
   // 强制 auto-scroll — 双保险：scrollIntoView + window.scrollTo 兜底
   useEffect(function() {
@@ -791,15 +879,30 @@ export function ConversationStream(props) {
       )}
 
       {allDone && (
-        <div className="continue-bar" style={{flexDirection: "column", gap: 12, padding: "20px 0"}}>
-          <div style={{fontSize: 13, color: HC.textSec, textAlign: "center"}}>
-            全部对话完成 — 现在进入记忆考核。<br/>
-            ✏️ 拼写测试 + 概念定义 + 应用题,必过才算完成。
+        // Receipt gate：lens 完成、mastery 之前先收 4 件学习证据。
+        // 已交过 / 本次已交 / host 未接 onSubmitReceipt（如 atlas embed）→ 直接进 mastery。
+        (props.onSubmitReceipt && !props.existingReceipt && !receiptSubmitted) ? (
+          <LearningReceiptCard
+            englishLevel={props.englishLevel}
+            existingReceipt={props.existingReceipt}
+            lensTitle={props.lensTitle}
+            completedTurnCount={turns.length}
+            onSubmit={function (payload) {
+              try { props.onSubmitReceipt(payload); } catch (e) {}
+              setReceiptSubmitted(true);
+            }}
+          />
+        ) : (
+          <div className="continue-bar" style={{flexDirection: "column", gap: 12, padding: "20px 0"}}>
+            <div style={{fontSize: 13, color: HC.textSec, textAlign: "center"}}>
+              全部对话完成 — 现在进入记忆考核。<br/>
+              ✏️ 拼写测试 + 概念定义 + 应用题,必过才算完成。
+            </div>
+            <button className="continue-btn" style={{background: HC.accent, fontSize: 15, padding: "14px 36px"}} onClick={props.onStartMastery}>
+              开始记忆考核 ✏️
+            </button>
           </div>
-          <button className="continue-btn" style={{background: HC.accent, fontSize: 15, padding: "14px 36px"}} onClick={props.onStartMastery}>
-            开始记忆考核 ✏️
-          </button>
-        </div>
+        )
       )}
     </div>
   );

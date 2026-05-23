@@ -19,7 +19,7 @@
  */
 
 import Head from 'next/head';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { BrandNavBar } from '../components/BrandNavBar';
 import { VoiceInputButton } from '../components/VoiceInputButton';
 import { C, FONT, FONT_DISPLAY, S, NUM, globalCSS } from '../lib/theme';
@@ -79,6 +79,8 @@ import {
   hasSeenWalkthrough,
   markWalkthroughSeen,
   bridgeReviewToVocab,
+  saveLearningReceipt,
+  loadLearningReceipt,
 } from '../lib/history-storage';
 import { inferCurriculum } from '../lib/curriculum-data';
 
@@ -285,6 +287,11 @@ export default function HistoryPage() {
   // 没选时默认第一个 lens（通常 king-john）；老 Topic 无 lens 时 selectedLensId 无效
   var effectiveLensId = selectedLensId || (hasLensesForTopic && topicLenses[0] ? topicLenses[0].id : null);
   var effectiveTurns = topic ? getEffectiveTurns(topicId, topic, effectiveLensId) : [];
+  // Learning Receipt：该 (topic,lens) 是否已交过收据（memo 避免每次渲染 parse 整个 blob）。
+  // 仅判定「往期已交」；本会话刚交由 ConversationStream 内部 receiptSubmitted 处理。
+  var existingReceipt = useMemo(function() {
+    return topicId ? loadLearningReceipt(topicId, effectiveLensId) : null;
+  }, [topicId, effectiveLensId]);
   var isStoryboard = isStoryboardTopic(topicId);
 
   // ── narrative-driven 架构：当前 topic 的 canonical narrative（mount 时拉一次）──
@@ -853,6 +860,28 @@ export default function HistoryPage() {
   var startMasteryGate = function() {
     setPhase("mastery");
     setGateStep(0);
+  };
+
+  // ─── Learning Receipt：lens 完成、进 mastery 前收 4 件学习证据 ──────
+  // 纯附加存 historyData.learningReceipts[topicId][lensId]；不动 turnIndex/completedTopics。
+  // MVP：英文表达只存进 receipt，不自动推桥词队列（pushedToVocab:false，二期再开「加入复习」）。
+  var submitLearningReceipt = function(payload) {
+    if (!topicId) return;
+    try {
+      var lensTitle = null;
+      if (effectiveLensId && topicLenses && topicLenses.length) {
+        var lm = topicLenses.find(function(l) { return l.id === effectiveLensId; });
+        if (lm) {
+          var nm = lm.nameCn || lm.name; // 兼容扁平 nameCn 字符串 + name:{cn,en} 对象
+          if (nm && typeof nm === "object") nm = nm.cn || nm.en;
+          lensTitle = (typeof nm === "string" && nm) ? nm : null;
+        }
+      }
+      // 顺序：handler 计算的 lensTitle 必须覆盖 card payload 里的占位 null（card 不知道 lensTitle）
+      saveLearningReceipt(topicId, effectiveLensId, Object.assign({}, payload || {}, { lensTitle: lensTitle }));
+    } catch (e) {
+      console.warn('[history] saveLearningReceipt failed:', e && e.message);
+    }
   };
 
   // ─── 完成 Topic ─────────────────────────────────────────────────
@@ -1557,6 +1586,8 @@ export default function HistoryPage() {
                 onSubmit={submitUserResponse}
                 onAdvance={advanceTurn}
                 onStartMastery={startMasteryGate}
+                onSubmitReceipt={submitLearningReceipt}
+                existingReceipt={existingReceipt}
                 onTermClick={setActiveTerm}
                 onMustClick={setActiveMust}
                 onJumpToMap={jumpToMap}
