@@ -122,6 +122,20 @@ console.log("\n[5] applyProgressGuards 服务端守 historyData 缩水 (Codex P1
   // cloud 无 historyData → 守卫不触发
   var r3 = applyProgressGuards({ historyData: { completedTopics: {} } }, { stats: { xp: 1 } }, undefined);
   ok("cloud 无 historyData → 不 reject", r3.rejected.indexOf("historyData") === -1);
+
+  // Codex Round 3 P1：guard 触发时不能丢 cloud 独有子字段 (base 必须是 cloud)
+  var cloud4 = { historyData: {
+    completedTopics: { a: {}, b: {} }, transcripts: { a: {} },
+    userWorldview: { stance: "x" }, profile: "cloud-profile", curriculum: { grade: 8 },
+    stats: { totalXp: 99 }, englishLevel: "B2", reviewPool: { p: 1 }, sidekickLogs: { s: 1 } } };
+  var incoming4 = { historyData: { completedTopics: { a: {} }, profile: "new-profile" } }; // 缩水 + 缺一堆字段
+  var r4 = applyProgressGuards(incoming4, cloud4, undefined);
+  ok("guard 触发", r4.rejected.indexOf("historyData") !== -1);
+  ok("completedTopics 仍 union (a+b)", keys(r4.safe.historyData.completedTopics).length === 2);
+  ok("incoming 较新字段仍赢 (profile=new-profile)", r4.safe.historyData.profile === "new-profile");
+  ["userWorldview", "curriculum", "stats", "englishLevel", "reviewPool", "sidekickLogs"].forEach(function (f) {
+    ok("cloud 独有子字段保留: " + f, r4.safe.historyData[f] !== undefined);
+  });
 }
 
 console.log("\n[6] mergeHistoryData stats 一致性 + passthrough 安全 (Codex P2)");

@@ -143,3 +143,24 @@ validate 抓缩水；vocab 字段（xp max / wordStatusMap union）不回归。
 - `node scripts/test-sync-api.mjs`：**14/14**（无回归）
 - `node --check lib/progressMergePolicy.js`：过
 - 仍**不碰** `backups/` / sync handler IO / 存储层。
+
+---
+
+## Round 3 — safeHist base fix（commit 见下）
+
+你 Round 2 给了取舍 Go（inProgress/bridgeQueue 不进服务端 shrink 守卫），但发现新 P1：guard 触发时 `safeHist` 以 incoming 为 base，会丢 cloud 独有子字段。**已修，正是你给的一行。**
+
+**修复**（`applyProgressGuards` historyData 守卫）：
+```js
+// before: var safeHist = Object.assign({}, ih);
+var safeHist = Object.assign({}, ch, ih);   // cloud base → 叠 incoming → 再 cloud-wins union 覆盖 completedTopics/transcripts
+```
+效果：incoming 的新值（如 profile/worldview）仍赢；incoming 缺的字段（userWorldview/profile/curriculum/stats/englishLevel/reviewPool/sidekickLogs…）保留 cloud、不清空；append-only 的 completedTopics/transcripts 仍 cloud-wins union 不缩水。
+
+**新增测试**：guard 触发时，cloud 独有 6 子字段（userWorldview/curriculum/stats/englishLevel/reviewPool/sidekickLogs）全部保留 + incoming 较新 profile 仍赢 + completedTopics 仍 union(a+b)。
+
+### Round 3 验证
+- `node scripts/test-merge-history-passthrough.mjs`：**36/36**（+9 断言锁定 safeHist base fix）
+- `node scripts/test-progress-merge-policy.mjs`：**80/80**（无回归）
+- `node scripts/test-sync-api.mjs`：**14/14**（无回归）
+- `node --check`：过；仍不碰 `backups/` / sync handler IO / 存储层。
