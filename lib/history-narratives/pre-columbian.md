@@ -1268,14 +1268,14 @@ Across her 29 years:
 - 1521-1600 Mesoamerica + Andes 持续 demographic collapse (天花继续, 强迫劳动 encomienda, mining)
 - 1530s-1540s Yucatán Maya 持续抵抗 — 不像 Aztec 一城就完, Maya 是碎片化, 每个 cuchcabal 都要单独打 (Montejo 父子 1527-1546 19 年才平 Yucatán 北)
 - 16-17 世纪 Maya 文献仍有 Chilam Balam 写, 但是用拉丁字母 — 旧体系部分保存
-- Ix Mutal 这种平民女, 1500s 余生在天花 + encomienda 中过完, 没有名留史册, 但她孙女、曾孙女今天 Yucatán 1.5 million Maya speaker 的祖先
+- Ix Mutal 这种平民女, 后半生(1518 起的天花疫情 + encomienda)中度过, 没有名留史册, 但她孙女、曾孙女今天 Yucatán 1.5 million Maya speaker 的祖先
 
 **1521.8.13** Tenochtitlán fell, but the story didn't end:
 - 1521-1572 the Inca empire (Pizarro destroys 1532, next Topic or this Topic Part 4)
 - 1521-1600 ongoing demographic collapse in Mesoamerica + Andes (smallpox continues, forced labor encomienda, mining)
 - 1530s-1540s continuing Yucatán Maya resistance — unlike the Aztec who fell with one city, the Maya were fragmented, each cuchcabal had to be conquered separately (the Montejo father-son took 1527-1546, 19 years to subdue northern Yucatán)
 - 16-17 century Maya texts continue in Chilam Balam, but written in Latin script — partial preservation of the old system
-- A common woman like Ix Mutal lived out her 1500s in smallpox + encomienda, leaving no name in the records, but her granddaughters and great-granddaughters are the ancestors of today's 1.5 million Yucatec Maya speakers
+- A common woman like Ix Mutal lived out her later life amid smallpox (from 1518 onward) and encomienda, leaving no name in the records, but her granddaughters and great-granddaughters are the ancestors of today's 1.5 million Yucatec Maya speakers
 
 **3 lens 在 Part 3 的 voice 收束.**
 - Pachacuti (Lens 1 institution-builder): 死 50 年, 他建的 Inca 帝国 1532 也将被 Pizarro 灭。institution 建得快也死得快。
