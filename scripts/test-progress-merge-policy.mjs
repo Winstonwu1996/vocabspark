@@ -207,10 +207,13 @@ ok("合法改名无 rejected:pet (未触发守卫)", gPetRename.rejected.indexOf
 // incoming 整体不带 pet, 云端有 pet (totalFed=0 边界) → 用 cloud 非空标量回填, 不丢云端 name。
 var gPetMissing = applyProgressGuards(
   { stats: { xp: 1 } },
-  { pet: { name: "云宠", species: "kitten", happiness: 60, totalFed: 0, unlocked: ["bow"] } }
+  { pet: { name: "云宠", species: "kitten", happiness: 60, totalFed: 0, unlocked: ["bow"], lastFeedAt: "2026-05-20T08:00:00Z", evolvedAt: "2026-05-19T08:00:00Z" } }
 );
 ok("incoming 缺 pet → 回填云端 name", gPetMissing.safe.pet && gPetMissing.safe.pet.name === "云宠");
 ok("incoming 缺 pet → 保留云端 unlocked", gPetMissing.safe.pet.unlocked.indexOf("bow") >= 0 && gPetMissing.rejected.indexOf("pet") >= 0);
+// Codex P2 (audit)：lastFeedAt 影响 calcDecayedHunger 的饥饿衰减；evolvedAt 是进化时间戳，二者也不该丢。
+ok("incoming 缺 pet → 保留云端 lastFeedAt", gPetMissing.safe.pet.lastFeedAt === "2026-05-20T08:00:00Z");
+ok("incoming 缺 pet → 保留云端 evolvedAt", gPetMissing.safe.pet.evolvedAt === "2026-05-19T08:00:00Z");
 ok("incoming 非对象 → 整体取云端", (function () {
   var g = applyProgressGuards("not-an-object", { wordInput: "a" });
   return g.rejected.indexOf("_entire_payload_invalid") >= 0 && g.safe.wordInput === "a";
