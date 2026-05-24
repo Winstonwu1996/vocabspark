@@ -11,6 +11,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
+import { sanitizeGuessOptions } from '../lib/guessSanitize';
 
 // wordInput 自动去重 (保留首次出现顺序 + 原始大小写)。在数据加载/导入时调用，
 // 让词库始终无重复 — 用户不用再手动点"去重词库"。守卫已改按 distinct 词数放行纯去重。
@@ -452,6 +453,16 @@ var normalizeGuessData = (raw, targetWord) => {
   }
   if (!Array.isArray(raw.acceptableAnswers) || raw.acceptableAnswers.length === 0) {
     raw.acceptableAnswers = ans ? [ans] : [];
+  }
+
+  // 兜底清洗（必须在"选项==目标词"校验之前）：LLM 偶尔把答案泄漏标记/括号注释写进选项文本，
+  // 如 "abandon (this is correct)"。既泄题，又让下面的精确校验失效（带括号后 !== 目标词），
+  // 导致"选项就是目标词本身"的送分题漏过校验直达用户（线上实测）。
+  // 先剥掉括号注释让显示干净 + 让下面校验拿到纯净选项；命中泄漏标记直接判整题作废 → 重试。
+  if (raw.options && typeof raw.options === "object") {
+    var _gs = sanitizeGuessOptions(raw.options);
+    raw.options = _gs.options;
+    if (_gs.leaked) raw._invalidOptions = true;
   }
 
   // 兜底校验：选项不能包含目标词本身或同根词形
