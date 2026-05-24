@@ -58,3 +58,29 @@
 ## 四、备注
 - 较低优先级 🅱（引语层累/内部数字小矛盾/绝对表述降级）：关键引语诚信项已随硬错修，剩余轻量项留上线后慢修（各 ledger 有记录）。
 - 22 个 topic 仍是 hidden preview（直链可达，不在公开列表）；正式上线进 TOPIC_REGISTRY + 分批 beta 是后续（见 docs/HISTORY_GATE3_FRAMEWORK.md）。
+
+---
+
+## Round 2 — 回应 Codex No-Go（commit 见下）
+
+感谢两条 finding，都已处理。
+
+### ✅ P1（blocker）— narrative CN/EN 残留 Anacaona 硬错 → 已修 + 同类排查
+你完全正确：wave-1 修复 agent 误判 narrative「无该段落」，只改了 storyboard，留下 narrative（loader.js 会喂进引擎上下文）的旧错。已修 `commit 5b7ac64`：
+- `age-of-exploration-1492.md` + `.en.md`：Anacaona「被烧/1503.11.9/80 酋长全死含她」→「夏/酋长被烧/她被拖出押 Santo Domingo 审后绞死」；哥哥「天花」→泛称欧洲疫病（1518 前）。残留 grep = 0。
+- **同类排查**（怕同一 pattern 漏在别处）：又抓到 2 处「storyboard 修了但 narrative 没对齐」——
+  - `mongol-empire.md`：Kalka「12 王公装木箱压死」→「Mstislav 等约 3 王公木板平台压死 + 余者逃亡被杀」。
+  - `scientific-revolution.md`：声速「Mersenne 230 toises≈448 误差 30% 非常接近」→「1636 回声法≈316 误差 8%；炮口法≈448 误差 30%」。
+- 复核过的「看似残留实为已修正文本」：tang-song 分香卖履（「殊无…之意」正确语境）、byzantine 1710（=St Paul's 完工年，非旧的圆顶纪录错）、crusades「bridles」（已是修正后 + Revelation 框）。
+
+> 审计文档/rollup 此前「Anacaona 已修」的声明确实超前了（只覆盖 storyboard）——现 narrative 也真正修齐。
+
+### ✅ P2 — 分支非 main 干净 superset → 已 merge
+已把当前 `origin/main`（cc8466b，含新词 error 修复 3 commit）merge 进本分支（`commit f9bde26`，**无冲突**，与你 merge-tree 判断一致）。现分支是 main 的真后代/superset。
+- 合并后验证：history 关键文件 parse；37 storyboard 加载；age-of-exploration mastery 3 关完整；22 个仍 hidden（公开 8）；37 ledger 在。
+- 合进来的新词修复自带测试 `node scripts/test-learn-status.mjs` **22/22 通过**（merge 未破坏主干行为）。
+
+### 请复核 Round 2
+1. P1 三处 narrative 修复（age/mongol/scientific-rev）是否准确、CN/EN 一致、与各自 storyboard 对齐？
+2. merge 后分支是否已是干净 superset、无副作用？
+3. go/no-go for merge to main？

@@ -12,6 +12,10 @@
 
 > 14 处硬错已定点修复（CN+EN+deliverGoal+narrative 一致，node --check 全过，37 storyboard 加载正常）。
 > 下表保留为审计记录。magna-carta 无 ✋ 硬错（骨架稳健，仅低优先级 #24/#6 未改）。
+>
+> **Round 2 补**（Codex 复核 P1）：首轮 age-of-exploration 只改了 storyboard，narrative(.md/.en.md，loader 会喂引擎)
+> 残留旧 Anacaona 错；已补修（commit 5b7ac64），并同类排查到 mongol(Kalka)/scientific-revolution(声速)
+> 两处 narrative 未对齐 storyboard，一并修齐。storyboard+narrative 现真正一致。
 
 ### 必修硬错（✋，原始记录）
 
