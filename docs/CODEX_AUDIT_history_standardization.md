@@ -104,3 +104,19 @@ P2（superset）：Round 2 已 merge origin/main，`git merge-base --is-ancestor
 ### 请复核 Round 3
 1. smallpox 时代错置是否已全清（含 prompt 路径的 narrativeRef）？
 2. go/no-go for merge to main？
+
+---
+
+## Round 4 — 回应 Codex Round 3 No-Go（commit 76356d4）
+
+两处同源副本（我上轮搜 `1492` 漏了 `1495-1500` 表述）+ 宽 sweep 顺手清 2 处，全清：
+- **age `narrativeRef`（1682，会进 prompt）**：`§3 1495-1500 妈妈被强奸 + 天花` → 加 `(天花要到 1518 才到 Hispaniola)`。
+- **black-death notebook `hintEn`（CompletionScreen 英文 UI）**：`brought smallpox` → `brought Old World diseases (including smallpox from about 1518 onward)`，对齐已修的 hintCn。
+- 顺手：age `// N7 1499 天花` 代码注释；pre-columbian.md `Ix Mutal 1500s 余生在天花`（"1500s"=16 世纪本无错，但歧义）→ `后半生(1518 起的天花)`。
+
+**按你建议改用宽 sweep**：`(1490s-1502) + (天花|smallpox)` 跨 storyboard + notebook + narrative + 所有字段（hintEn/hintCn/narrativeRef/正文/注释）= **0 pre-1518 残留**；剩余 narrativeRef 2 处均带 1518 caveat。node --check 全过。
+
+> 教训：同一个史实错有 ≥4 个独立副本（正文 / narrative / narrativeRef-prompt / notebook hintCn / hintEn / 代码注释）。这次用「宽年份 + 全字段」sweep 才算扫干净。
+
+### 请复核 Round 4
+go/no-go for merge to main？
