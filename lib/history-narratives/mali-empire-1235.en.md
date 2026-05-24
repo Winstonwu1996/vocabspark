@@ -62,13 +62,12 @@ authorNotes: |
 > **What your textbook will NOT tell you** (this is why we need this lesson):
 > - **Mali Empire in the 14th century was one of the largest empires in the world** —
 >   **territory: 1,800,000 km²** — five times the size of England + France combined —
->   **population: 40-50 million** — about a third of Europe's total population at the time
+>   **population: about 5-15 million** (Levtzion 1973 / Niane 1984 scholarly estimate range) — a single administratively unified empire
 > - **Mansa Musa's 1324 pilgrimage wasn't just "lavish"** — it **changed global economics**:
->   **In one month of gold-dispensing in Cairo, Cairo gold prices fell about 25%** (al-'Umari first-hand record, accepted by scholars) —
->   **For roughly the next 5-10 years Cairo's economy suffered** (scholarly debate over the magnitude — some research argues the Black Death 1347-1349 was the real Mamluk economic collapse; al-'Umari claims the impact lasted ~12 years up to when he was writing — but his account is qualitative, not economic data) —
->   This is **the first recorded "single-injection-of-foreign-wealth-causing-inflation" event in human history** —
+>   **In one month of gold-dispensing in Cairo, Cairo gold prices fell about 12%** (the mithqal coin fell from no less than 25 dirham to about 22 dirham or lower, al-'Umari first-hand record) —
+>   **For roughly the next 5-10 years Cairo's economy suffered** (scholarly debate over the magnitude — modern economic history considers a swing of around 12% to fall within the normal range of Mamluk currency fluctuation; some research argues the Black Death 1347-1349 was the real Mamluk economic collapse; al-'Umari claims the impact lasted ~12 years up to when he was writing — but his account is qualitative, not economic data) —
 >   **NOT "humanity's first inflation"** (3rd-century Roman Diocletian inflation + Han-dynasty Wu-di's *wuzhu* coin debasement + 14th-century Yuan-dynasty *jiaochao* paper hyperinflation all precede Mansa Musa) —
->   It is rather **the first recorded "one batch of gold breaking a country's economy" event** — one person **wrecking an entire city's economy**
+>   It is rather **one of the most famous early recorded cases of a single injection of foreign wealth shaking a foreign economy**
 > - **Timbuktu had *Sankoré* University in the 14th-16th centuries** — three numbers must be kept separate across three time periods (this is a common confusion):
 >   ① **14th century, Mansa Musa era**: about **5,000-10,000 scholars** (scholarly estimate range) —
 >   ② **16th century, Askia Muhammad / Songhai peak**: Timbuktu's three-mosque scholarly community peaked at about **25,000** (NOT 14th century) —
@@ -115,13 +114,11 @@ authorNotes: |
 **This is a separate system from the 16th-19th-century trans-Atlantic slave trade** (1500-1888: about 12 million) — but **the fact that Mali was an African empire does NOT exempt it from this scrutiny** — **Mali was both a great West African civilization AND a major trans-Saharan slave-trade participant — both are true**.
 
 **He stopped in Cairo for 3 months** — **handing out gold to ordinary Cairenes** —
-**Result**: **Cairo's gold price fell about 25%** (al-'Umari first-hand qualitative record — no precise economic data) —
-**Cairo's economy suffered for roughly the next 5-10 years** (al-'Umari claims a ~12-year impact up to when he was writing — but that's a personal observation; modern economic historians like Goldberg 2012 / Borsch 2005 estimate 5-10 years, with debate over magnitude — some argue the Black Death 1347-1349 was the real Mamluk economic collapse) —
+**Result**: **Cairo's gold price fell about 12%** (the mithqal coin fell from no less than 25 dirham to about 22 dirham or lower — al-'Umari first-hand qualitative record — no precise economic data) —
+**Cairo's economy suffered for roughly the next 5-10 years** (al-'Umari claims a ~12-year impact up to when he was writing — but that's a personal observation; modern economic historians like Goldberg 2012 / Borsch 2005 estimate 5-10 years and consider a swing of around 12% to fall within the normal range of Mamluk currency fluctuation, with debate over magnitude — some argue the Black Death 1347-1349 was the real Mamluk economic collapse) —
 
-**This is the **first recorded "single foreign-wealth-injection causing inflation" event in human history**** —
 **NOT "humanity's first inflation"** (3rd-century Roman Diocletian + Han Wu-di's *wuzhu* + 14th-century Yuan *jiaochao* hyperinflation all precede 1324) —
-But rather **the first recorded "one batch of gold breaking a country's economy" event** —
-**one person wrecking one city's economy** —
+But rather **one of the most famous early recorded cases of a single injection of foreign wealth shaking a foreign economy** —
 **Also the first time** in the 14th century **Europe and the Middle East realized**:
 **Africa is not "tribal + backwards" — Africa has **giant empires + giant wealth + universities**** —
 **Mansa Musa's 1324 pilgrimage** unintentionally shaped 100 years of European motivation **to find West Africa** —
@@ -172,7 +169,7 @@ But rather **the first recorded "one batch of gold breaking a country's economy"
 
 **The 13th-14th centuries fell within the Medieval Warm Period** — **rainfall was higher than today** —
 **Niger River had abundant water** — **agriculture stable + large cities sustainable** —
-**1300s Mali population: tens of millions — six times that of contemporary England** —
+**1300s Mali population: about 5-15 million** (Levtzion 1973 / Niane 1984 scholarly estimate range) —
 
 **1500s onward: Little Ice Age** — rainfall declined + Sahara expanded south —
 **Mali Empire collapsed in 1610** — **partly directly because of climate change** —
@@ -336,7 +333,7 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 **He proclaimed the **Kurukan Fuga charter**** —
 **This is **one of the earliest human rights charters in human history**:**
 
-**Kurukan Fuga's 7 core articles** (**note**: the 1998 UNESCO-recognized version has **44 articles** — compiled by Mande scholars — what follows is the **simplified popular 7-article core**; scholars debate which are 1235 originals vs. 13th-14th-century accretions — but the **core human-rights + gender + children + war-captive** articles are all in the 1235 oral tradition):
+**Kurukan Fuga's 7 core articles** (**note**: the 2009 UNESCO-inscribed version has **44 articles** — compiled by Mande scholars — what follows is the **simplified popular 7-article core**; scholars debate which are 1235 originals vs. 13th-14th-century accretions — but the **core human-rights + gender + children + war-captive** articles are all in the 1235 oral tradition):
 
 1. **Protect human dignity** — no person can be **enslaved or humiliated**
 2. **Gender equality** — women have voice
@@ -353,7 +350,7 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 - **Kurukan Fuga concerned **all of society**** — much **more universal**
 
 **This is the **most overlooked human rights charter in African history**** —
-**In 1998 UNESCO formally recognized Kurukan Fuga as **"intangible cultural heritage of humanity"**** —
+**In 2009 UNESCO inscribed Kurukan Fuga (the Manden Charter) on the **Representative List of the Intangible Cultural Heritage of Humanity**** —
 **This is **a formal correction to Eurocentric history narratives**** —
 **The earliest human rights charters were not only in Europe — they were also in Africa**.
 
@@ -417,8 +414,8 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 - **East to Gao** — later the core of the Songhai Empire
 - **South to the Gold Forests** (Bambuk + Bure)
 
-**Mali Empire in 1325** — **1,800,000 km² + 40-50 million people** —
-**One of the world's largest empires** — bigger than **England + France + Holy Roman Empire combined** at the time.
+**Mali Empire in 1325** — **1,800,000 km² + about 5-15 million people** (Levtzion 1973 / Niane 1984 scholarly estimate range) —
+**One of the world's largest empires** — bigger in area than **England + France + Holy Roman Empire combined** at the time.
 
 **2. Building administrative system:**
 - **12 provinces** — each managed by a **governor appointed by the Mansa**
@@ -470,13 +467,12 @@ late 1330s    Mansa Musa dies — successor Mansa Maghan
 - **Bought massive quantities of Cairo goods** — paid in **gold**
 - **Funded **Cairo scholars + mosques**
 
-**Result**: **Cairo's gold price fell about 25%** (al-'Umari, 1300-1349 contemporary Egyptian scholar — this is **his personal qualitative observation**, **not economic data**) —
-**For roughly the next 5-10 years Cairo's economy suffered** (al-'Umari himself wrote "the gold value remained depressed up to when I was writing this book, about 12 years" — but al-'Umari was writing literarily, not economically; modern economic historians Goldberg 2012 / Borsch 2005 estimate 5-10 years — magnitude debated — some argue the Black Death 1347-1349 was the real Mamluk economic collapse) —
+**Result**: **Cairo's gold price fell about 12%** (the mithqal coin fell from no less than 25 dirham to about 22 dirham or lower — al-'Umari, 1300-1349 contemporary Egyptian scholar — this is **his personal qualitative observation**, **not economic data**) —
+**For roughly the next 5-10 years Cairo's economy suffered** (al-'Umari himself wrote "the gold value remained depressed up to when I was writing this book, about 12 years" — but al-'Umari was writing literarily, not economically; modern economic historians Goldberg 2012 / Borsch 2005 estimate 5-10 years and consider a swing of around 12% to fall within the normal range of Mamluk currency fluctuation — magnitude debated — some argue the Black Death 1347-1349 was the real Mamluk economic collapse) —
 **By around 1336 (close to when Mansa Musa died), Cairo prices slowly recovered** —
 
-— **This is **the first recorded "single foreign-wealth-injection causing inflation" event in human history**** —
-**NOT "humanity's first inflation"** — 3rd-century Roman Diocletian silver debasement + Han Wu-di's *wuzhu* coin inflation + 13th-14th-century Yuan *jiaochao* paper hyperinflation **all precede Mansa Musa 1324** —
-But rather **the first recorded "one batch of gold breaking a country's economy" event** — **a scale of single-event wealth deployment** —
+— **NOT "humanity's first inflation"** — 3rd-century Roman Diocletian silver debasement + Han Wu-di's *wuzhu* coin inflation + 13th-14th-century Yuan *jiaochao* paper hyperinflation **all precede Mansa Musa 1324** —
+But rather **one of the most famous early recorded cases of a single injection of foreign wealth shaking a foreign economy** — **a scale of single-event wealth deployment** —
 **That neither 14th-century Europe nor China had seen** — **Europe's understanding of the Mali Empire** **changed permanently** from this moment.
 
 ##### Cairo's Etiquette Crisis — Mansa Musa's Dignity
@@ -548,7 +544,7 @@ But rather **the first recorded "one batch of gold breaking a country's economy"
 > **"Richer than Bezos" is a Black History Month media artifact** — **not a scholarly estimate**.
 > Scholarly consensus: **Mansa Musa was one of the wealthiest contemporaries of his era — but "the richest person in history" is an oversimplification**.
 >
-> **What IS historically defensible**: in 1324 his month of gold-dispensing in Cairo caused Cairo gold prices to drop about 25% (al-'Umari first-hand record, accepted by scholars) —
+> **What IS historically defensible**: in 1324 his month of gold-dispensing in Cairo caused Cairo gold prices to drop about 12% (mithqal 25→22 dirham, al-'Umari first-hand record) —
 > This is a textbook monetary supply shock case — but **NOT a "X times richer than Bezos" headline figure**.
 >
 > **Textbooks barely write about him** — leaving kids with the impression "the wealthiest people in history were all European or American" — that bias is also wrong —
@@ -717,7 +713,7 @@ but **already in the 14th-century Mansa Musa era, Sankoré was a world-class cen
 **1591 — Moroccan Sa'di dynasty Sultan Ahmad al-Mansur **sent his army across the Sahara**** —
 **He wanted to **conquer Mali's gold** —
 **4,000 Moroccan troops with firearms + cannon vs. **40,000 Songhai troops with **spears + bows**** —
-**Battle of Tondibi April 13, 1591** —
+**Battle of Tondibi March 13, 1591** —
 **Songhai army was **routed** — **Timbuktu was occupied** —
 
 **What the Moroccans did after occupation:**
@@ -885,9 +881,9 @@ but **already in the 14th-century Mansa Musa era, Sankoré was a world-class cen
 
 ### 1324-1325 — Mecca Pilgrimage + Cairo Inflation (see §3)
 
-> 18 tons of gold — Cairo gold price fell ~25% (al-'Umari first-hand record) —
-> Impact 5-10 years (debated, entangled with Black Death 1347) —
-> First recorded "one batch of gold breaks a country's economy" event (NOT first inflation — Roman + Yuan *jiaochao* both precede) —
+> 18 tons of gold — Cairo gold price fell ~12% (mithqal 25→22 dirham, al-'Umari first-hand record) —
+> Impact 5-10 years (debated, a ~12% swing within normal Mamluk currency fluctuation, entangled with Black Death 1347) —
+> One of the most famous early recorded cases of a single injection of foreign wealth shaking a foreign economy (NOT first inflation — Roman + Yuan *jiaochao* both precede) —
 > Europe + Middle East first realized Mali Empire's scale —
 > Indirectly stimulated 1430s Portugal sailing south for gold — root cause of the Age of Exploration.
 
@@ -937,7 +933,7 @@ but **already in the 14th-century Mansa Musa era, Sankoré was a world-class cen
 **Songhai controlled **the north + center** —
 **Mali was nominally an empire** — **but actually only a regional **chieftaincy**.
 
-### April 13, 1591 — Battle of Tondibi
+### March 13, 1591 — Battle of Tondibi
 
 **Moroccan Sultan Ahmad al-Mansur sent 4,000 troops with firearms** across the Sahara** —
 **Songhai 40,000 troops with spears + bows** — **outnumbered Morocco 10x** —
@@ -977,9 +973,9 @@ but **already in the 14th-century Mansa Musa era, Sankoré was a world-class cen
 **Today Mali's national identity is directly based on Mali Empire** —
 **This is **one of the longest national-memory continuities** in human history.
 
-### 1998 — UNESCO Recognizes Kurukan Fuga
+### 2009 — UNESCO Recognizes Kurukan Fuga
 
-**1998 UNESCO formally recognized **Sundiata's 1235 Kurukan Fuga charter** as **"intangible cultural heritage of humanity"** —
+**2009 UNESCO inscribed **Sundiata's 1235 Kurukan Fuga charter (the Manden Charter)** on the **Representative List of the Intangible Cultural Heritage of Humanity** —
 **This is **a formal correction to Eurocentric narratives** —
 **The earliest human rights charters were not only in Europe** — **they were also in Africa**.
 
@@ -1352,7 +1348,7 @@ but **already in the 14th-century Mansa Musa era, Sankoré was a world-class cen
 
 #### Tarikh al-Sudan excerpt (edited)
 
-> "**In April 1591** — **the Moroccan army arrived at Tondibi** —
+> "**In March 1591** — **the Moroccan army arrived at Tondibi** —
 > **Songhai's grand army of 40,000 vs. Morocco's 4,000** —
 >
 > **Everyone **thought Songhai would win** —
@@ -1465,7 +1461,7 @@ but **already in the 14th-century Mansa Musa era, Sankoré was a world-class cen
 
 | Document | Standpoint | Subject | Core information | Modern impact |
 |---|---|---|---|---|
-| **Sundiata Epic** | Mali internal oral | Generations of jeli | "Mali Empire founding + Kurukan Fuga charter" | Mali national identity + 1998 UNESCO + 21st-century elementary textbook |
+| **Sundiata Epic** | Mali internal oral | Generations of jeli | "Mali Empire founding + Kurukan Fuga charter" | Mali national identity + 2009 UNESCO + 21st-century elementary textbook |
 | **Ibn Battuta's Rihla, Mali section** | Arab external observation | Moroccan scholar | "Mali in 14th century is a true Islamic state + safer than Arab lands" | The only external first-hand account of 14th-century Mali |
 | **al-Sa'di's Tarikh al-Sudan** | Mali internal scholar | Timbuktu marabout | "1591 Moroccan occupation + Sankoré scholar diaspora" | First-hand source on Mali Empire's collapse + preservation of scholars like Ahmad Baba |
 
@@ -1541,9 +1537,9 @@ but **already in the 14th-century Mansa Musa era, Sankoré was a world-class cen
   **government funded**: Sundiata statues + Sankoré University restoration + Timbuktu manuscript excavation
 - **Flag + national emblem** — directly drew on **Mali Empire elements**
 
-#### 1998 UNESCO Kurukan Fuga + cultural heritage protection
+#### 2009 UNESCO Kurukan Fuga + cultural heritage protection
 
-- **1998 UNESCO formally recognized Kurukan Fuga as intangible cultural heritage of humanity**
+- **2009 UNESCO inscribed Kurukan Fuga (the Manden Charter) on the Representative List of the Intangible Cultural Heritage of Humanity**
 - **2002 UNESCO recognized the Sundiata Epic as the same**
 - **2009 UNESCO recognized Timbuktu's old city**
 - **These recognitions**: **correcting 19th-century Eurocentric narratives** — **Africa also has great civilizations**
@@ -1904,7 +1900,7 @@ the "**$400 billion**" figure is a **Black History Month media artifact** — no
 **Scholarly consensus**: **Mansa Musa was one of the wealthiest rulers of the 14th century** — comparable to Mamluk Sultans / Yuan emperors / French kings —
 **but "richest person in history" is an oversimplification**.
 
-**What IS documentable as monetary impact**: in 1324, the month of gold-dispensing in Cairo caused Cairo gold prices to drop about 25% (al-'Umari first-hand record) —
+**What IS documentable as monetary impact**: in 1324, the month of gold-dispensing in Cairo caused Cairo gold prices to drop about 12% (mithqal 25→22 dirham, al-'Umari first-hand record) —
 **This is a textbook monetary supply shock case** — not a "X times richer than Bezos" figure.
 
 **21st-century comparison** (reference only — non-rigorous):
@@ -1919,7 +1915,7 @@ the "**$400 billion**" figure is a **Black History Month media artifact** — no
 - Is it because **Mali Empire's later decline** made him **"unimportant"**?
 
 **Follow-up**: When **correcting Eurocentric bias** — is using a popular myth ("$400 billion") as the counter-argument the right approach?
-**Or** — is using a scholarly-rigorous estimate ("one of the wealthiest contemporaries") + Cairo 25% gold-price drop (hard data) more defensible?
+**Or** — is using a scholarly-rigorous estimate ("one of the wealthiest contemporaries") + Cairo ~12% gold-price drop (hard data) more defensible?
 Which anti-Eurocentric framing **holds up** in an AP World DBQ where graders check sourcing?
 
 ### Q3. Joseph Needham Question — Mali Version
@@ -1994,15 +1990,14 @@ late 1330s    Mansa Musa dies
 1430s         Songhai Empire splits off
 1468          Sonni Ali captures Timbuktu
 1492-1591     Mali shrinks to core
-April 13, 1591 Battle of Tondibi — Moroccan firearms vs. Songhai spears
+March 13, 1591 Battle of Tondibi — Moroccan firearms vs. Songhai spears
 1591-1610     Timbuktu scholar diaspora — Mali Empire fully disappears
 1655          al-Sa'di completes *Tarikh al-Sudan*
 1700-1800     Bambara Kingdom + trans-Atlantic slave trade
 1893          France colonizes Bamako
 September 22, 1960   Mali independence — using the name "Mali"
-1998          UNESCO recognizes Kurukan Fuga as cultural heritage of humanity
 2002          UNESCO recognizes the Sundiata Epic as the same
-2009          UNESCO recognizes Timbuktu's old city
+2009          UNESCO inscribes Kurukan Fuga (Manden Charter) + Timbuktu's old city
 2012          Timbuktu crisis — residents risk lives to rescue manuscripts
 2013          French troops retake Timbuktu
 2015-2024     Manuscript research + digitization in progress

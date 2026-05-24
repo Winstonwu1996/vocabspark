@@ -262,8 +262,8 @@ authorNotes: |
 ##### 1464 年 8 月 1 日 — 75 岁死
 
 **Cosimo 1464 年死时——Florence 政府正式封他**："**Pater Patriae**"（祖国之父）——
-**这是 1500 年来罗马帝国奥古斯都之后第一次有人获得这个头衔**——
-**Cosimo 是非帝王但获罗马式皇帝头衔的极少数人**。
+**这是一个古罗马的荣衔（共和时期曾授予过 Cicero）**——
+**Cosimo 是非帝王却获这一古罗马荣衔的极少数人之一**。
 
 **他临终前对孙子 Lorenzo（当时 15 岁）说**：
 > "**钱不是用来囤的**——
@@ -490,7 +490,7 @@ authorNotes: |
   **Lorenzo 时代的 Botticelli vs Savonarola 时代的 Botticelli 完全不同人**——
   **后期 Botticelli 画了《Mystical Nativity》（1500）**——画风变得**严肃 + 神秘 + 反 humanism**
 
-**几百米高的木堆烧**——
+**约 60 英尺（18 米）高的木堆烧**——
 **烧了 6 小时**——
 **几百年的 Florence 文化被一把火烧掉**——
 

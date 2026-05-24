@@ -91,9 +91,9 @@
 
 ### 2.4 史料 gap: 为什么 Lens 3 必须是虚构 composite
 
-**CN**: 这里有一个学术诚实的问题必须 careful framing。Postclassic Maya 平民妇女 — 特别是织女 — 几乎没有留下个人史料。原因有三: (1) 平民没有刻石头权力; (2) 16 世纪西班牙殖民后 大部分玛雅本土文本被烧毁 (1562 年 Diego de Landa 主教在 Maní 烧了几千份手稿), 留下来的几本主要记王室 + 祭司 + 男性贵族; (3) 即使是 Chilam Balam 这种保留口传的文本, 视角也是男性祭司视角。
+**CN**: 这里有一个学术诚实的问题必须 careful framing。Postclassic Maya 平民妇女 — 特别是织女 — 几乎没有留下个人史料。原因有三: (1) 平民没有刻石头权力; (2) 16 世纪西班牙殖民后 大部分玛雅本土文本被烧毁 (1562 年 Diego de Landa 主教在 Maní 烧了约 27 部 Maya 抄本——今天只剩 4 部存世——以及数千件圣物), 留下来的几本主要记王室 + 祭司 + 男性贵族; (3) 即使是 Chilam Balam 这种保留口传的文本, 视角也是男性祭司视角。
 
-**EN**: One academic-honesty issue must be carefully framed here. Postclassic Maya commoner women — especially weavers — left almost no individual records. Three reasons: (1) commoners had no right to carve stone monuments; (2) after Spanish conquest in the 16th century, most native Maya texts were burned. In 1562, Bishop Diego de Landa burned thousands of manuscripts at Maní. The few that survive mostly record kings, priests, and male nobles. (3) Even Chilam Balam, which preserves oral tradition, comes from a male priestly viewpoint.
+**EN**: One academic-honesty issue must be carefully framed here. Postclassic Maya commoner women — especially weavers — left almost no individual records. Three reasons: (1) commoners had no right to carve stone monuments; (2) after Spanish conquest in the 16th century, most native Maya texts were burned. In 1562, Bishop Diego de Landa burned around 27 Maya codices at Maní — only 4 survive today — along with thousands of sacred objects. The few that survive mostly record kings, priests, and male nobles. (3) Even Chilam Balam, which preserves oral tradition, comes from a male priestly viewpoint.
 
 **CN**: 所以 Lens 3 的 Ix Mutal Ahaw 是一个 composite 虚构角色 — 基于多份考古证据 (Yucatán 内陆村落墓葬、织机残片、骨骼营养分析、洗骨仪式记录) 和 Chilam Balam 文本里关于平民妇女的零散记述, 综合出来的一个「典型」生命轨迹。这跟 Lens 1 真实历史人物 Pachacuti 和 Lens 2 真实历史人物 Malintzin 性质不同 — 学生需要清楚知道这一点。
 
