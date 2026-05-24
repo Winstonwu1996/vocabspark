@@ -155,6 +155,62 @@ var g4 = applyProgressGuards({ pet: { totalFed: 1, unlocked: [] }, stats: { xp: 
 ok("10 pet 回退被拒", g4.rejected.indexOf("pet") >= 0 && g4.safe.pet.totalFed === 9);
 ok("10 stats 回退被调整", g4.rejected.indexOf("stats(adjusted)") >= 0 && g4.safe.stats.xp === 99);
 ok("10 无云端 → 全放行", applyProgressGuards({ wordInput: "a" }, null).rejected.length === 0);
+
+console.log("\n── Codex P2: pet 对象级合并守卫 (取代整字段回退) ──");
+// 核心修复：云端只改标量 (name/happiness/species…)，一个默认 pet 快照不该覆盖云端非空字段。
+// 默认快照 totalFed=0 → totalFed 倒退 → base 取 cloud → 标量全保留。
+var gPetDefault = applyProgressGuards(
+  { pet: { name: "小毛球", species: "kitten", happiness: 70, hunger: 80, totalFed: 0, unlocked: [], createdAt: "2026-05-24T00:00:00Z" } },
+  { pet: { name: "大老虎", species: "tiger", happiness: 95, hunger: 60, totalFed: 30, unlocked: ["hat"], createdAt: "2026-01-01T00:00:00Z" } }
+);
+ok("默认快照不覆盖云端 name", gPetDefault.safe.pet.name === "大老虎");
+ok("默认快照不覆盖云端 happiness", gPetDefault.safe.pet.happiness === 95);
+ok("默认快照不覆盖云端 species/hunger/createdAt",
+  gPetDefault.safe.pet.species === "tiger" && gPetDefault.safe.pet.hunger === 60 && gPetDefault.safe.pet.createdAt === "2026-01-01T00:00:00Z");
+ok("默认快照 totalFed 倒退被挡 (取 max=30)", gPetDefault.safe.pet.totalFed === 30);
+ok("默认快照 unlocked 缩水被挡 (并集含 hat)", gPetDefault.safe.pet.unlocked.indexOf("hat") >= 0);
+ok("默认快照触发 rejected:pet", gPetDefault.rejected.indexOf("pet") >= 0);
+
+// totalFed 倒退仍被挡 (即便 incoming 标量是真值)。
+var gPetFedBack = applyProgressGuards(
+  { pet: { name: "新名", totalFed: 5, unlocked: ["hat"] } },
+  { pet: { name: "旧名", totalFed: 20, unlocked: ["hat"] } }
+);
+ok("totalFed 倒退被挡 (取 max=20)", gPetFedBack.safe.pet.totalFed === 20 && gPetFedBack.rejected.indexOf("pet") >= 0);
+
+// unlocked 缩水仍被挡 (并集, 不丢云端已解锁)。
+var gPetUnlock = applyProgressGuards(
+  { pet: { name: "x", totalFed: 30, unlocked: ["hat"] } },
+  { pet: { name: "x", totalFed: 30, unlocked: ["hat", "scarf", "crown"] } }
+);
+ok("unlocked 缩水被挡 (并集 3 件)", gPetUnlock.safe.pet.unlocked.length === 3 && gPetUnlock.rejected.indexOf("pet") >= 0);
+
+// 改进点 (旧整字段回退会误伤)：incoming 合法喂食 totalFed 更高、但 unlocked 偶发缩水 →
+// 旧实现整字段回退会把更高的 totalFed/新 name 也退回 cloud (真数据丢失)；新实现取 max+并集，二者都保留。
+var gPetFedMore = applyProgressGuards(
+  { pet: { name: "霸王龙", totalFed: 50, unlocked: ["hat"], happiness: 88 } },
+  { pet: { name: "老虎", totalFed: 30, unlocked: ["hat", "scarf"], happiness: 60 } }
+);
+ok("合法喂食 totalFed 不被回退 (=50, 非旧值 30)", gPetFedMore.safe.pet.totalFed === 50);
+ok("合法喂食 name 保留 incoming (霸王龙)", gPetFedMore.safe.pet.name === "霸王龙");
+ok("合法喂食 happiness 保留 incoming (88)", gPetFedMore.safe.pet.happiness === 88);
+ok("合法喂食 unlocked 并集保留云端 scarf", gPetFedMore.safe.pet.unlocked.indexOf("scarf") >= 0);
+
+// 合法改名 (renamePet)：totalFed/unlocked 不变, 只改 name → 不该被守卫拦, name 必须落地。
+var gPetRename = applyProgressGuards(
+  { pet: { name: "新名字", totalFed: 30, unlocked: ["hat"], happiness: 80 } },
+  { pet: { name: "旧名字", totalFed: 30, unlocked: ["hat"], happiness: 80 } }
+);
+ok("合法改名落地 (name=新名字)", gPetRename.safe.pet.name === "新名字");
+ok("合法改名无 rejected:pet (未触发守卫)", gPetRename.rejected.indexOf("pet") < 0);
+
+// incoming 整体不带 pet, 云端有 pet (totalFed=0 边界) → 用 cloud 非空标量回填, 不丢云端 name。
+var gPetMissing = applyProgressGuards(
+  { stats: { xp: 1 } },
+  { pet: { name: "云宠", species: "kitten", happiness: 60, totalFed: 0, unlocked: ["bow"] } }
+);
+ok("incoming 缺 pet → 回填云端 name", gPetMissing.safe.pet && gPetMissing.safe.pet.name === "云宠");
+ok("incoming 缺 pet → 保留云端 unlocked", gPetMissing.safe.pet.unlocked.indexOf("bow") >= 0 && gPetMissing.rejected.indexOf("pet") >= 0);
 ok("incoming 非对象 → 整体取云端", (function () {
   var g = applyProgressGuards("not-an-object", { wordInput: "a" });
   return g.rejected.indexOf("_entire_payload_invalid") >= 0 && g.safe.wordInput === "a";
