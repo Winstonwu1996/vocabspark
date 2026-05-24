@@ -84,3 +84,23 @@
 1. P1 三处 narrative 修复（age/mongol/scientific-rev）是否准确、CN/EN 一致、与各自 storyboard 对齐？
 2. merge 后分支是否已是干净 superset、无副作用？
 3. go/no-go for merge to main？
+
+---
+
+## Round 3 — 回应 Codex Round 2 No-Go（commit 219be33）
+
+P1 根因（smallpox-pre-1518 时代错置）已从所有 live 路径根除：
+- **age `col-n9` CN+EN**（528/542）：「1492 起带去天花、麻疹、流感」→「带去欧洲疫病(最早流感这类)；天花要到 1518 才到 Hispaniola、随后横扫 Aztec/Inca」。保留 Columbian Exchange 长期叙事。
+- **age Anacaona lens `narrativeRef`**（你点的、会被 history-prompts 塞进 prompt）：「§3 天花 1499」→「§3 欧洲疫病 1499（天花要到 1518 才到 Hispaniola）」。
+- **notebooks/black-death-1347.js**（你 P2 顺手项）：「哥伦布 1492 带去天花」→「带去旧大陆疫病（天花等，约 1518 起），约两百年减少原住民约 90%」。
+
+**全量 sweep**（防同类漏网）：`grep '1492' 全 storyboard+notebook | 天花/smallpox | 排除 1518` = **0 命中**。
+- pre-columbian 经查**已正确**（smallpox 1518 / 1524-27 + Cook 1998 framing；旧 review 的「1492 不准」flag 早已被现版修掉）。
+- 其余 smallpox 命中均在 `*-audit.md` / `*-factledger.md`（审计记录，文档本就描述该错）/ `*.staging.md`（gitignore，非 live、且内容本就正确）——loader 只喂 `.md/.en.md`，不碰这些。
+- node --check 全过。
+
+P2（superset）：Round 2 已 merge origin/main，`git merge-base --is-ancestor origin/main feat = YES`。
+
+### 请复核 Round 3
+1. smallpox 时代错置是否已全清（含 prompt 路径的 narrativeRef）？
+2. go/no-go for merge to main？
