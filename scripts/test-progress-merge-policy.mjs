@@ -262,19 +262,19 @@ eq("history 按 date 升序",
   ).map(function (h) { return h.date; }),
   ["2026-05-10T00:00:00Z", "2026-05-20T00:00:00Z"]);
 
-console.log("\n── detectSyncGate 闸门判定 (第二批) ──");
+console.log("\n── detectSyncGate 闸门判定 (绝对启发式已移除，恒放行) ──");
 ok("正常数据 → 不拦", !detectSyncGate({ wordStatusMap: { a: 1, b: 1 }, reviewWordData: { a: {}, b: {} }, pet: { totalFed: 5 }, stats: { total: 10 } }).blocked);
-ok("rwd << wsm (wsm>20) → 拦 reviewWordData_too_small", (function () {
+// ★ 回归：旧逻辑会误伤这些合法用户、把同步永久卡死。现在一律放行，反丢失交给服务端守卫 + _cloudReadyRef。
+ok("rwd << wsm (wsm>20) → 不再误拦 (chompcloudusa 实测 wsm45/rwd7)", (function () {
+  var wsm = {}; for (var i = 0; i < 45; i++) wsm["w" + i] = 1;
+  var rwd = {}; for (var j = 0; j < 7; j++) rwd["w" + j] = {};
+  return !detectSyncGate({ wordStatusMap: wsm, reviewWordData: rwd, pet: { totalFed: 5 } }).blocked;
+})());
+ok("rwd 几乎空 + wsm 大 → 不再误拦 (只点'能'/快筛跳过的用户)", (function () {
   var wsm = {}; for (var i = 0; i < 30; i++) wsm["w" + i] = 1;
-  var g = detectSyncGate({ wordStatusMap: wsm, reviewWordData: { a: {} }, pet: { totalFed: 5 } });
-  return g.blocked && g.reason === "reviewWordData_too_small";
+  return !detectSyncGate({ wordStatusMap: wsm, reviewWordData: { a: {} } }).blocked;
 })());
-ok("wsm<=20 → 不拦 (新用户不误伤)", !detectSyncGate({ wordStatusMap: { a: 1 }, reviewWordData: {} }).blocked);
-ok("pet default + stats.total>50 → 拦 pet_looks_default", (function () {
-  var g = detectSyncGate({ pet: { totalFed: 0, unlocked: [] }, stats: { total: 100 } });
-  return g.blocked && g.reason === "pet_looks_default";
-})());
-ok("pet default + stats.total<=50 → 不拦", !detectSyncGate({ pet: { totalFed: 0, unlocked: [] }, stats: { total: 10 } }).blocked);
+ok("pet default + stats.total>50 → 不再误拦 (不玩宠物的用户)", !detectSyncGate({ pet: { totalFed: 0, unlocked: [] }, stats: { total: 100 } }).blocked);
 ok("pet 正常 → 不拦", !detectSyncGate({ pet: { totalFed: 9, unlocked: ["x"] }, stats: { total: 100 } }).blocked);
 ok("null → 不拦", !detectSyncGate(null).blocked);
 

@@ -119,20 +119,18 @@ ok("复习词 merged recency = 今天 (本地最新)", recencyOk);
 ok("wordInput 保留", typeof merged.wordInput === "string" && merged.wordInput.length > 0);
 ok("wordStatusMap 保留 (>= 云端)", Object.keys(merged.wordStatusMap || {}).length >= Object.keys(cloud.wordStatusMap || {}).length);
 
-// ── 第二批：闸门 recover 核心 (真实数据) ──
-console.log("\n── 第二批：闸门 recover (pull-merge-repush 解冻) ──");
-// 模拟 race/mount bug：本地 reviewWordData 几乎清空，但 wordStatusMap 完整 → 触发闸门
+// ── detectSyncGate 绝对启发式已移除：恒放行，反丢失交给服务端守卫 + 合并 ──
+console.log("\n── detectSyncGate 不再误拦 + mergeProgress 仍恢复数据 ──");
+// 模拟 race/mount bug：本地 reviewWordData 几乎清空，但 wordStatusMap 完整。
+// 旧逻辑会拦死（reviewWordData_too_small）→ 误伤合法低 rwd 用户；现在恒放行。
 var blockedLocal = JSON.parse(JSON.stringify(cloud));
 blockedLocal.reviewWordData = {}; blockedLocal.reviewWordData[words[0]] = cloudRwd[words[0]];
 blockedLocal.updatedAt = today;
-var gateLocal = detectSyncGate(blockedLocal);
-ok("模拟 race: 本地 rwd 几乎空(1) + wsm 完整 → 触发闸门", gateLocal.blocked && gateLocal.reason === "reviewWordData_too_small");
-// recover: 拉云端合并
+ok("本地 rwd 几乎空 + wsm 完整 → 闸门不再拦 (合法低 rwd 用户不被卡死)", !detectSyncGate(blockedLocal).blocked);
+// 真·反丢失：mergeProgress（409 合并）+ 服务端守卫会把 reviewWordData 恢复到云端规模
 var recovered = mergeProgress(blockedLocal, cloud);
-var gateRecovered = detectSyncGate(recovered);
-ok("recover 合并云端后 → 不再触发闸门 (解冻) ★第二批核心", !gateRecovered.blocked,
-  "merged reason=" + (gateRecovered.reason || "none"));
-ok("recover 后 reviewWordData 恢复到云端规模", Object.keys(recovered.reviewWordData).length >= words.length,
+ok("mergeProgress 合并云端后 reviewWordData 恢复到云端规模 (真·反丢失)",
+  Object.keys(recovered.reviewWordData).length >= words.length,
   "recovered=" + Object.keys(recovered.reviewWordData).length + " cloud=" + words.length);
 
 // 统计对比
