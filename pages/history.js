@@ -186,6 +186,22 @@ export default function HistoryPage() {
       });
       if (!fullText && raw) fullText = typeof raw === "string" ? raw : String(raw);
 
+      // Gate3 §8 part-2: fire-and-forget 追问日志（失败静默，绝不阻塞对话）
+      try {
+        fetch("/api/history-branch-log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: (profileFields && profileFields.userId) || null,
+            topicId: topicId,
+            lensId: effectiveLensId || null,
+            turnIndex: turnIndex,
+            question: content,
+            answer: fullText,
+          }),
+        }).catch(function () {});
+      } catch (e) {}
+
       setSidekickLog(function(prev) {
         var updated = prev.concat([{ role: "ai", content: fullText, timestamp: new Date().toISOString() }]);
         // U8: 持久化
