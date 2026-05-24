@@ -22,13 +22,10 @@
 - **建议改法（若将来要做）**：给服务端 / 合并层的 session 也加"取更有进度一方"语义——同词表取较大 idx（已有）；不同词表按 idx/learned 多者优先，updatedAt 仅做平局 tiebreak。注意"已完成 batch → 新 batch idx0"的边界（别让旧高-idx batch 盖掉新 batch）；优先复用客户端 active guard 的判断而非纯服务端重构。
 - **测试**：补 `mergeProgress` session 合并的跨词表用例 + sync-api 决策用例。
 
-## BACKLOG-2：服务端 pet 守卫改对象级合并（P2）
+## ~~BACKLOG-2：服务端 pet 守卫改对象级合并（P2）~~ ✅ 已完成（2026-05-24）
 - **来源**：`fix-sync-gate-falsepositive` 的 Codex 审计 P2（移除客户端 pet 启发式后留下）。
-- **现状**：`applyProgressGuards` 的 pet 守卫（[lib/progressMergePolicy.js](../lib/progressMergePolicy.js) ~line 375-385）只比较 `totalFed` 和 `unlocked.length`，触发时**整字段回退**到 `cloud.pet`。
-- **残余风险**：云端只更新 `name/happiness/hunger/equipped/species/createdAt` 而 `totalFed/unlocked` 没变时，一个默认/陈旧 pet 快照理论上仍可能覆盖这些非空字段。
-- **为何当前不阻断**：不影响词库/复习/状态数据；喂养次数和解锁配饰仍被挡住。非同步卡死主路径。
-- **建议改法**：pet 守卫从"整字段回退"改为**对象级合并**——保留 cloud 的非空 `name/happiness/hunger/equipped/species/createdAt`，同时仍挡 `totalFed` 倒退 + `unlocked` 缩水（复用 `mergeProgress` 里 pet 的 max/并集思路）。
-- **WIP 备注**：本项已有起草 WIP，临时存于 `git stash`（`pet-guard P2 WIP` / `pet-guard P2 WIP tests`）+ 一个后台任务 chip。重做时建议从最新 `origin/main` 起干净分支，别直接 pop 旧 stash（基线已变，会冲突）。补 `applyProgressGuards` pet 分支回归用例（云端只改 name/happiness 不被默认 pet 覆盖 / totalFed 倒退仍挡 / unlocked 缩水仍挡）。
+- **已解决**：`c047ee1` "pet 服务端守卫改对象级合并 — 默认/陈旧快照不再覆盖云端非空标量" + `260abb4` "pet 守卫保留字段补 lastFeedAt/evolvedAt"（均 Codex P2，已合 main 部署）。pet 守卫已从"整字段回退"改为对象级合并：保留 cloud 非空标量字段，同时仍挡 totalFed 倒退 + unlocked 缩水。
+- **遗留清理**：早期起草 WIP 还在 `git stash`（`pet-guard P2 WIP` / `...tests`），现已被上述提交取代，**可 `git stash drop` 删除**（基线已变，别 pop）。
 
 ---
 
