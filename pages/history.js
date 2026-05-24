@@ -2699,12 +2699,13 @@ function ThroughLineMap(props) {
 
   var byThroughLine = {};
   registry.forEach(function(reg) {
-    var t = HISTORY_TOPICS[reg.id];
-    if (!t) {
+    // getTopic 回退到 preview shim — base-content topic 也能作为可玩卡片显示
+    var t = getTopic(reg.id);
+    var line = (t && t.throughLine) || reg.throughLine || (t ? "future" : null);
+    if (!t || !line) {
       byThroughLine["future"] = byThroughLine["future"] || [];
       byThroughLine["future"].push(Object.assign({}, reg, { future: true }));
     } else {
-      var line = t.throughLine || "future";
       byThroughLine[line] = byThroughLine[line] || [];
       byThroughLine[line].push({ topic: t, registry: reg });
     }
