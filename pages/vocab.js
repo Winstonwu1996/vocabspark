@@ -10,7 +10,7 @@ import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../co
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
-import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS } from '../lib/learnStatus';
+import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
 
 // wordInput 自动去重 (保留首次出现顺序 + 原始大小写)。在数据加载/导入时调用，
 // 让词库始终无重复 — 用户不用再手动点"去重词库"。守卫已改按 distinct 词数放行纯去重。
@@ -2721,6 +2721,15 @@ export default function App() {
   var [error, setError] = useState("");
   var [learned, setLearned] = useState([]);
 
+  // 多设备/多tab 防回退：异步回调（sync 409 合并 / BroadcastChannel / 切回 tab 拉云）里读
+  // screen/idx/wordList 必须用 ref，否则拿到的是陈旧闭包值。useEffect 每次提交刷新。
+  var screenRef = useRef(screen);
+  var activeSessionRef = useRef({ wordList: [], idx: 0 });
+  useEffect(function () {
+    screenRef.current = screen;
+    activeSessionRef.current = { wordList: wordList, idx: idx };
+  }, [screen, wordList, idx]);
+
   var [guessData, setGuessData] = useState(null);
   var [guessOptionOrder, setGuessOptionOrder] = useState(null); // 打乱后的选项展示顺序
   var [selectedOption, setSelectedOption] = useState("");
@@ -3012,10 +3021,12 @@ export default function App() {
         // 恢复词表：严格仅从 wordInput 字段恢复
         // 绝不使用 session.wordList 回填 wordInput —— session 只是学习中的子集，不是全量词表
         if (d?.wordInput) setWordInput(_dedupeWordInputStr(d.wordInput));
-        if (d?.session?.wordList?.length > 0 && d?.session?.idx < d.session.wordList.length) {
-          setWordList(d.session.wordList);
-          setIdx(d.session.idx);
-          setLearned(d.session.learned || []);
+        // 恢复 session 前清洗：剔除已学会的词（陈旧/被多端覆盖的 session 不让用户重复学已掌握的词）。
+        var _saneMount = sanitizeResumeSession(d?.session, d?.wordStatusMap);
+        if (_saneMount && _saneMount.wordList && _saneMount.wordList.length > 0 && _saneMount.idx < _saneMount.wordList.length) {
+          setWordList(_saneMount.wordList);
+          setIdx(_saneMount.idx);
+          setLearned(_saneMount.learned || []);
         }
         // chompcloud 2026-04-30 修复：mount 阶段创建 default pet 时**不调 doSave**。
         // 原 bug：本地 pet 缺失（迁移/换浏览器）→ 创建 default + doSave 写本地
@@ -3771,11 +3782,21 @@ export default function App() {
         return Object.assign({}, d.pet, { unlocked: unionUnlocked });
       });
     }
-    // 恢复学习 session（关键：闪退/换设备登录后从 idx 继续，不要从头开始）
-    if (d.session?.wordList?.length > 0 && d.session.idx < d.session.wordList.length) {
-      setWordList(d.session.wordList);
-      setIdx(d.session.idx);
-      setLearned(d.session.learned || []);
+    // 恢复学习 session（闪退/换设备登录后从 idx 继续，不要从头开始）。
+    // ★ 多设备/多tab 防回退（chompcloud 实测事故）：用户正在学习时，云端拉取/合并（409 merge /
+    //   切回 tab / 另一个 tab 的 BroadcastChannel / 守卫拒绝返回的 serverData）绝不能把
+    //   正在进行的 session 拉回更早的 idx。只有"当前没在学习"（重开/换设备继续）才恢复云端 session。
+    var _localActive = screenRef.current === "learning"
+      && Array.isArray(activeSessionRef.current.wordList)
+      && activeSessionRef.current.wordList.length > 0;
+    if (!_localActive) {
+      // 恢复前清洗：剔除已学会的词，避免重复学已掌握的词。
+      var _saneCloud = sanitizeResumeSession(d.session, d.wordStatusMap);
+      if (_saneCloud && _saneCloud.wordList && _saneCloud.wordList.length > 0 && _saneCloud.idx < _saneCloud.wordList.length) {
+        setWordList(_saneCloud.wordList);
+        setIdx(_saneCloud.idx);
+        setLearned(_saneCloud.learned || []);
+      }
     }
     // chompcloud 2026-04-30 修复：标记云端数据已应用，解锁后续 syncToCloud。
     _cloudReadyRef.current = true;

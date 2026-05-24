@@ -1,7 +1,7 @@
 // 学习状态判定回归测试（Codex 第三批审计 P2 要求）
 // 覆盖：新词猜错/跳过→learning；新词猜对→mastered；复习 forgot→error；
 //       新词池排除 error/mastered/skipped/learning/uncertain；全学过时返回空（不回退全词表）。
-import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS } from '../lib/learnStatus.js';
+import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS, sanitizeResumeSession } from '../lib/learnStatus.js';
 
 var pass = 0, fail = 0;
 var eq = function (name, got, want) {
@@ -51,6 +51,32 @@ eq("只有 error 词 → 仍返回空（error 不进新词池，归深度复习�
   []);
 eq("空输入安全", selectUnlearnedWords(null, null), []);
 eq("wordStatusMap 缺失时全算未学", selectUnlearnedWords(["a", "b"], null), ["a", "b"]);
+
+console.log("\n── sanitizeResumeSession：恢复 session 时剔除已学会的词（多设备防重复学）──");
+eq("陈旧 session 含已学词（unify mastered…）→ 重建为剩余未学 + idx0",
+  sanitizeResumeSession(
+    { wordList: ["unify", "unintelligible", "vanity", "vase", "vex"], idx: 0, learned: [] },
+    { unify: "mastered", unintelligible: "learning", vanity: "mastered" }
+  ),
+  { wordList: ["vase", "vex"], idx: 0, learned: [] });
+eq("健康全新 batch（无词已学）→ 原样返回，不动 idx/learned",
+  sanitizeResumeSession(
+    { wordList: ["a", "b", "c"], idx: 1, learned: ["a"] },
+    {}
+  ),
+  { wordList: ["a", "b", "c"], idx: 1, learned: ["a"] });
+eq("全部已学完 → 返回 null（无需 resume）",
+  sanitizeResumeSession({ wordList: ["a", "b"], idx: 0, learned: [] }, { a: "mastered", b: "uncertain" }),
+  null);
+eq("空/无效 session → 原样返回", sanitizeResumeSession(null, {}), null);
+eq("空 wordList → 原样返回", sanitizeResumeSession({ wordList: [], idx: 0 }, {}), { wordList: [], idx: 0 });
+// ★ 回归（chompcloud 实测）：被多端覆盖回 idx0 但词已 mastered 的 session，resume 不再让用户重学
+eq("回归: idx0 但前几词已 mastered → 跳过已学，从首个未学继续",
+  sanitizeResumeSession(
+    { wordList: ["unify", "vanity", "various", "vase"], idx: 0, learned: [] },
+    { unify: "mastered", vanity: "mastered", various: "mastered" }
+  ),
+  { wordList: ["vase"], idx: 0, learned: [] });
 
 console.log("\n──────────────────────────────");
 console.log("通过 " + pass + " / " + (pass + fail));
