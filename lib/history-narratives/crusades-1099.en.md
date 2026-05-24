@@ -842,10 +842,10 @@ About **8,000-15,000 people could not pay** and were enslaved. But Saladin simul
 2. **Allowed charitable institutions to ransom thousands more** of the poor
 3. **Permitted the poor to leave together as organized groups** (rather than be scattered into slavery)
 
-**No massacre.** A pointed contrast with the "blood up to the horses' bellies" at 1099.
+**No massacre.** A pointed contrast with the Revelation-borrowed "blood up to the horses' bridles" at 1099.
 
 > ⚠️ **Historical detail**:
-> 1099 Crusader massacre: **2-3 days**. Christians, Muslims, and Jews all killed, no distinction by sect. Latin chroniclers wrote "blood reached the horses' bellies."
+> 1099 Crusader massacre: **2-3 days**. Christians, Muslims, and Jews all killed, no distinction by sect. A Latin monk, borrowing from Revelation, wrote "blood reached the horses' bridles."
 > 1187 Saladin's recapture: **no massacre** — but **also not free passage for everyone.** **Ransom + partial enslavement** is the historical fact.
 >
 > **Not "slaughter" and not "complete release"** — but a **middle category.**
@@ -1094,7 +1094,7 @@ You hear:
 - **Right side**: Vartan the Armenian killed (he shouted "I am a Christian!" — but **Armenian Christianity ≠ Latin Christianity** — the Franj **did not distinguish** — they killed him)
 - **Left side**: Yitzhak the Jew and his family — **not slaughtered in the street.** They fled to the synagogue. **The Franj set fire to the synagogue.** **They burned to death together.**
 
-For three days, the bodies pile up around Al-Aqsa. **Ibn al-Athir later wrote "blood reached the horses' bellies."** You will later realize that was not exaggeration.
+For three days, the bodies pile up around Al-Aqsa. **The Latin monk Raymond of Aguilers later reached for the apocalyptic image of Revelation 14:20 and wrote "blood reached the horses' bridles"** — a phrase of religious purification, not a literal measure of how deep the blood ran.
 
 #### July 18 — you climb out
 
@@ -1588,7 +1588,7 @@ Jerusalem was now under the **Fatimids (Egyptian Shi'a)**, not the Seljuks — t
 
 ##### July 15-17: three days of massacre
 
-For three days and three nights, **almost every Muslim inside the city was killed.** **About 10,000-30,000 residents dead** (the estimate range historians accept). Latin chroniclers wrote "**blood up to the horses' bellies**." Ibn al-Athir recorded **70,000** (now considered too high). Modern estimates: **3,000-10,000.**
+For three days and three nights, **almost every Muslim inside the city was killed.** **About 10,000-30,000 residents dead** (the estimate range historians accept). The Latin monk Raymond of Aguilers, borrowing the apocalyptic image of Revelation 14:20, wrote "**blood up to the horses' bridles**" (religious rhetoric, not a literal measure). Ibn al-Athir recorded **70,000** (now considered too high). Modern estimates: **3,000-10,000.**
 
 **Why the killing was so total**:
 - After eight months at Antioch and a year in the desert, the soldiers were **psychologically broken**
@@ -2124,8 +2124,8 @@ Anna says directly: "**They said it was for faith — but they behaved as robber
 
 **Value 3: Key witness to Bohemond's personal story**
 
-Anna **knew Bohemond.** **She met him when she was 13.** In the *Alexiad* she writes:
-> "Bohemond was the **handsomest man I ever saw in my life** — **over six feet tall, blond and blue-eyed** — but **his eyes were cold as a wolf's when he smiled.** **The moment my father saw him, he was on guard.**"
+Anna **knew Bohemond.** **She met him when she was 13.** In the *Alexiad* she writes (this is Anna's real wording, not something later writers imagined for her):
+> "He stood taller than the tallest by nearly a cubit — **his hair light and cropped short**, his beard clean-shaven — **a pair of blue eyes that conveyed his spirit and his dignity** — the sight of him **stirred admiration**, the name of him **stirred dread.**"
 
 — **This kind of personal observation + psychological judgment** — **only someone who met him at close range could write it.** **Fulcher and Ibn al-Athir never met Bohemond.** **Only Anna did.**
 

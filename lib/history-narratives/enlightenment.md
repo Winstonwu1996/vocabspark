@@ -260,9 +260,9 @@ Voltaire 1738 年出版《牛顿哲学原理》(Éléments de la philosophie de 
 
 > In 1747 a bookseller hired Denis Diderot to translate an English encyclopedia. Diderot accepted — then transformed the project into the largest organized knowledge effort Europe had seen. He brought in mathematician **Jean le Rond d'Alembert** as co-editor and began commissioning entries.
 
-1751 年第一卷出版。最终成品是 **28 卷正文加 11 卷图版**, 1772 年全部完成。光是图版卷里的铜版插图——制铜匠的锤法、织布机的齿轮、外科手术器械的剖面——就已经是对「手艺知识值得被知识界记录」这件事的一个政治声明。在《百科全书》之前, 大学课程里没有「工匠是知识的贡献者」这种位置。
+1751 年第一卷出版。最终成品是 **17 卷正文加 11 卷图版, 共 28 卷**, 1772 年全部完成。光是图版卷里的铜版插图——制铜匠的锤法、织布机的齿轮、外科手术器械的剖面——就已经是对「手艺知识值得被知识界记录」这件事的一个政治声明。在《百科全书》之前, 大学课程里没有「工匠是知识的贡献者」这种位置。
 
-> The first volume appeared in 1751. The final product: **28 text volumes plus 11 plate volumes**, completed 1772. The engraved plates alone — a coppersmith's hammer technique, a loom's gears, cross-sections of surgical instruments — made a political point before any word was read: craft knowledge deserved to be recorded alongside theology and philosophy. Universities had never assigned artisans that status.
+> The first volume appeared in 1751. The final product: **17 text volumes plus 11 plate volumes, 28 volumes in all**, completed 1772. The engraved plates alone — a coppersmith's hammer technique, a loom's gears, cross-sections of surgical instruments — made a political point before any word was read: craft knowledge deserved to be recorded alongside theology and philosophy. Universities had never assigned artisans that status.
 
 供稿者名单是启蒙欧洲的一份人名录。Voltaire 贡献了大约 40-45 条目 (Frank Kafker 1994《The Encyclopédists as a Group》考证, Kafker 逐条核对笔名、手稿、Voltaire 通信, 确认这个数字)。他的条目包括「品味」(Goût)、「历史」(Histoire)、「才智」(Esprit) 等——写得像他的其他一切东西: 尖刻, 有观点, 嘲讽的对象就在句子里。Rousseau (卢梭) 写了音乐相关条目, d'Alembert 写数学, Montesquieu (孟德斯鸠) 贡献了政治条目。
 
@@ -342,15 +342,19 @@ Compagnie des Indes 的业务范围包括: 与印度的纺织品贸易, 与中�
 
 历史学家的标准表述 (Laurent Dubois 2004《Avengers of the New World》):「Voltaire 的财富来自他投资的公司, 这些公司的利润来自殖民地贸易——他不是奴隶船的直接经营者, 但他是殖民地经济的受益者。」
 
+**〔补充更新研究〕** 这里要补一句：更新的研究 Giovannetti-Singh 2022（*Racial Capitalism in Voltaire's Enlightenment*, History Workshop Journal）给出了更硬的事实——Voltaire 曾在 **1752 年直接出资一次贩奴航程**（资助 San Jorge 号）。所以「他不是奴隶船的直接经营者」更准确的说法是「他不是奴隶船的**日常**经营者」——「从不直接沾手贩奴」这种绝对说法不能成立。
+
 这两者之间的区别不是开脱, 而是精确: **知情 (knowing) 与受益 (benefiting) 可以同时成立, 即使知情程度是不完整的。**
 
-**时间线精确 framing（Cronk 2009 p.20）**：Voltaire 的 Compagnie des Indes 持股高峰在 **1720s-1750s**，而《Candide》第 19 章里那段苏里南黑奴描写写于 **1759 年**——他的持股期已经基本清盘。这个时间顺序值得学生注意：他在持股期间没有任何公开文字直接批评奴贸；对奴隶制最直接的描写，出现在他大规模持股基本结束之后。历史学家无法确认这是偶然时间差还是有意回避，Cronk 2009 明确注明「证据不足以确认」。
+**时间线精确 framing（Cronk 2009 p.20）**：Voltaire 的 Compagnie des Indes 持股高峰在 **1720s-1750s**，而《Candide》第 19 章里那段苏里南黑奴描写写于 **1759 年**——他的持股高峰期当时已经过去。这个时间顺序值得学生注意：他在持股期间没有任何公开文字直接批评奴贸；对奴隶制最直接的描写，出现在他大规模持股的高峰之后。历史学家无法确认这是偶然时间差还是有意回避，Cronk 2009 明确注明「证据不足以确认」。（**careful framing**：更新的研究 Giovannetti-Singh 2022 认为 Voltaire 其实**终身持股**，因此「写《Candide》时持股已基本清盘」这一时间线不能下死结论——持股与批奴文字的时间关系，史学界有不同解读。）
 
 > The Compagnie des Indes operated across: Indian textile trade, Chinese tea trade, Caribbean plantation supply chains — and connections to the West African slave trade via **asiento** profit-sharing contracts with slave trade intermediaries. It was a colonial trade machine whose profits flowed from the entire imperial system, and that system's foundation was plantation labor, and plantation labor's foundation was the Atlantic slave trade.
 >
 > **A careful framing is needed here.** That Voltaire held Compagnie des Indes shares is documented fact. Whether he tracked exactly what percentage of his dividend profits flowed directly from slave-trade revenues — that Cronk hedges: Voltaire knew he was investing in a colonial trade company, but whether he traced each business line to its specific labor source is not documented.
 >
 > The historian's standard formulation (Laurent Dubois, *Avengers of the New World*, 2004): "Voltaire's wealth came from companies whose profits came from colonial trade — he was not a direct slave ship operator, but he was a beneficiary of the colonial economy." The distinction is not an acquittal. It is precision: **knowing (even partially) and benefiting can coexist**.
+>
+> **A note on more recent research:** Giovannetti-Singh 2022 (*Racial Capitalism in Voltaire's Enlightenment*, History Workshop Journal) establishes harder facts: Voltaire **directly financed a slave-trading voyage in 1752** (the *San Jorge*) and appears to have held his colonial shares for life. So "not a direct slave ship operator" is more accurately "not a *day-to-day* slave ship operator" — and the older claim that his shareholding "had essentially been liquidated by the time he wrote *Candide*" cannot be treated as settled. The timing relationship between his shareholding and his anti-slavery writing is read differently by different historians.
 
 ### 《各民族风俗论》1756: 种族 hierarchy
 
@@ -1200,7 +1204,7 @@ Raynal 的那句话——「那个伟大的人在哪里？」
 
 CN: 1798 年秋, 英军从 Saint-Domingue 撤出。
 
-这不是小事。英国 1793 年出兵 Saint-Domingue, 目的是趁法国大革命乱局, 吞并这块当时世界最富有的糖业殖民地。五年后, 英军损失估计 ~25,000 人——大部分不是战死, 而是死于黄热病 (*fièvre jaune*)。Toussaint Louverture 的战术: 不跟英军硬碰硬, 把他们困在沿海炎热港口, 等黄热病做工。
+这不是小事。英国 1793 年出兵 Saint-Domingue, 目的是趁法国大革命乱局, 吞并这块当时世界最富有的糖业殖民地。五年后, 英军损失估计超过 40,000 人——大部分不是战死, 而是死于黄热病 (*fièvre jaune*)。Toussaint Louverture 的战术: 不跟英军硬碰硬, 把他们困在沿海炎热港口, 等黄热病做工。
 
 **careful framing**: 英军撤出的交涉由 Toussaint 亲自跟英国将领 Thomas Maitland 谈判——双方签订了一份秘密协定 (Maitland-Toussaint Agreement, 1798.8)。协定内容: 英国撤军 + 美国 + 英国对 Saint-Domingue 开放贸易。Toussaint 当时已在行事上像一个主权国家的领导人, 而不是法国殖民地的军事长官。Laurent Dubois,《Avengers of the New World》(Harvard 2004), pp. 208-212: 这份协定让 Toussaint 获得经济命脉, 但它对法国是什么性质——Toussaint 从没公开说过。
 
@@ -1208,7 +1212,7 @@ CN: 1798 年秋, 英军从 Saint-Domingue 撤出。
 
 EN: In autumn 1798, British forces withdrew from Saint-Domingue.
 
-This was not a minor event. Britain had intervened in 1793, intending to seize what was then the world's wealthiest sugar colony during France's revolutionary chaos. Five years later, British losses stood at an estimated 25,000—mostly not from battle, but from *fièvre jaune* (yellow fever). Toussaint Louverture's strategy: avoid direct confrontation, pin British forces in the hot coastal ports, and let yellow fever do its work.
+This was not a minor event. Britain had intervened in 1793, intending to seize what was then the world's wealthiest sugar colony during France's revolutionary chaos. Five years later, British losses stood at an estimated 40,000 or more—mostly not from battle, but from *fièvre jaune* (yellow fever). Toussaint Louverture's strategy: avoid direct confrontation, pin British forces in the hot coastal ports, and let yellow fever do its work.
 
 **Careful framing**: The British withdrawal was negotiated by Toussaint himself with British General Thomas Maitland—they signed a secret agreement (Maitland-Toussaint Agreement, August 1798). Terms: British withdrawal plus opened trade for Saint-Domingue with Britain and the United States. Toussaint was already acting like the leader of a sovereign state, not a military commander of a French colony. Laurent Dubois, *Avengers of the New World* (Harvard, 2004), pp. 208-212: this deal gave Toussaint an economic lifeline, but its meaning toward France was something Toussaint never stated publicly.
 

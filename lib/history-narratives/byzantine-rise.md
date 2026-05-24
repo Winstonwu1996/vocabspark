@@ -112,18 +112,18 @@
 
 ### 查士丁尼那句话
 
-普罗柯比（Procopius，6 世纪宫廷史家）记载，查士丁尼走进去看完，说：
+相传查士丁尼走进去看完，说了一句（这句出自后世口传记载，并不见于普罗柯比 Procopius 等 6 世纪同代史官的原文）：
 
 > "Solomon, I have surpassed thee."
 > "所罗门——我超过了你。"
 
 所罗门是公元前 10 世纪犹太王，建第一耶路撒冷圣殿（First Temple）——犹太-基督教传统里最神圣的建筑。查士丁尼说我超过了——是非常罕见的、皇帝直接对宗教传统的"挑战"宣言。
 
-但这句话不只是炫耀。它有一个事实支撑：圣索菲亚 31 米圆顶在 6 世纪是世界最大圆顶——它接下来 1000 年保持世界最大圆顶纪录，直到 1710 年伦敦圣保罗大教堂（St Paul's Cathedral）超过。1000 年。
+但这句话不只是炫耀。它有一个事实支撑：圣索菲亚 31 米圆顶在 6 世纪是世界最大圆顶——它接下来 1000 年保持世界最大圆顶纪录，直到 1436 年 Brunelleschi 在 Florence 建主教座堂（Duomo，43 米）圆顶才超过。1000 年。
 
 ### 但 22 年后圆顶塌了
 
-查士丁尼死于 565 年。他死前 7 年（558 年 5 月 7 日），一场地震，圆顶东半部分塌了。当时查士丁尼 76 岁，拒绝原工程师的孙子 Isidore the Younger 重建——直到塌得更厉害才开始修。修过的圆顶比原来高 6.25 米，更陡——但也更稳。
+查士丁尼死于 565 年。他死前 7 年（558 年 5 月 7 日），一场地震，圆顶东半部分塌了。当时查士丁尼 76 岁，拒绝原工程师的孙侄 Isidore the Younger 重建——直到塌得更厉害才开始修。修过的圆顶比原来高 6.25 米，更陡——但也更稳。
 
 这个细节在 §3 查士丁尼 lens 会回来：他建的所有东西——重夺的意大利、重夺的北非、第一版圆顶——他活着的时候都没保住。542 年鼠疫死帝国人口 1/3，重夺的疆土慢慢丢回去。圣索菲亚是少数熬过 1500 年的查士丁尼遗产。
 
@@ -294,17 +294,17 @@ The technique is still in use 1500 years later — Renaissance domes, mosque dom
 
 ### Justinian's Line
 
-Procopius (6th-century court historian) records that Justinian, having walked through, said:
+Justinian, having walked through, is said to have declared (the line comes from later oral tradition and is not found in Procopius or other 6th-century contemporary historians):
 
 > "*Solomon, I have surpassed thee.*"
 
 Solomon, the 10th-century BCE Jewish king, built the First Temple in Jerusalem — the most sacred building in the Jewish-Christian tradition. To say *I have surpassed thee* is a remarkably direct imperial *challenge* to a religious tradition.
 
-But the line is not only boast. It rests on a fact: the 31-meter *Hagia Sophia* dome was the largest in the world in the 6th century — and it held that record for the next 1000 years, until 1710 when London's St. Paul's Cathedral surpassed it. A thousand years.
+But the line is not only boast. It rests on a fact: the 31-meter *Hagia Sophia* dome was the largest in the world in the 6th century — and it held that record for the next 1000 years, until 1436 when Brunelleschi completed the dome of the Florence Duomo (43 meters) and surpassed it. A thousand years.
 
 ### And 22 Years Later the Dome Collapsed
 
-Justinian died in 565. Seven years before his death (7 May 558), an earthquake collapsed the eastern half of the dome. He was 76; he refused the original engineer's grandson Isidore the Younger's first repair plan — only when further damage forced his hand was the rebuild begun. The repaired dome rose 6.25 meters higher than the original — steeper, but more stable.
+Justinian died in 565. Seven years before his death (7 May 558), an earthquake collapsed the eastern half of the dome. He was 76; he refused the original engineer's grandnephew Isidore the Younger's first repair plan — only when further damage forced his hand was the rebuild begun. The repaired dome rose 6.25 meters higher than the original — steeper, but more stable.
 
 This detail returns in §3, the Justinian lens: everything he built — the reconquered Italy, the reconquered North Africa, the first version of the dome — collapsed during his lifetime. The Plague of Justinian in 542 killed roughly one-third of the empire; the reconquered territory bled away. *Hagia Sophia* is among the very few Justinian legacies that lasted 1500 years.
 
@@ -794,9 +794,9 @@ Consequence: the *Alexiad* is one of the most important sources for 11th-12th ce
 
 **数字**:圆顶直径 31 米 + 离地 56 米 (相当于 18 层楼高) + 4 个 *pendentive* 支撑 + 圆顶基部 40 个小窗 (光从这里漫进来,圆顶看上去"悬浮")。这个"悬浮"效果在 *pendentive* 之前的建筑技术上是不可能的。
 
-Justinian 走进圣索菲亚那天,据 Procopius 记录,他说了一句:"*Solomon, I have surpassed thee.*" (所罗门,我超过你了。) ——所罗门是公元前 10 世纪建耶路撒冷第一圣殿的犹太王,在犹太-基督教传统里是最神圣建筑的代名词。Justinian 这话既是夸耀,也是事实陈述:31 米直径的圣索菲亚是 6 世纪世界最大圆顶,这个纪录保持 899 年,直到 1436 年 Brunelleschi 完工的 Florence Duomo (43 米直径) 才超越;1710 年伦敦圣保罗大教堂也达到大致规模。但 Brunelleschi 设计 Florence Duomo 时直接学的 *pendentive* 球面三角技术正是溯到圣索菲亚——超越者本身是被超越者的学生。
+Justinian 走进圣索菲亚那天,相传他说了一句:"*Solomon, I have surpassed thee.*" (所罗门,我超过你了。) ——这句出自后世口传记载,并不见于 Procopius 等 6 世纪同代史官的原文。所罗门是公元前 10 世纪建耶路撒冷第一圣殿的犹太王,在犹太-基督教传统里是最神圣建筑的代名词。Justinian 这话既是夸耀,也是事实陈述:31 米直径的圣索菲亚是 6 世纪世界最大圆顶,这个纪录保持 899 年,直到 1436 年 Brunelleschi 完工的 Florence Duomo (43 米直径) 才超越。但 Brunelleschi 设计 Florence Duomo 时直接学的 *pendentive* 球面三角技术正是溯到圣索菲亚——超越者本身是被超越者的学生。
 
-**558 年 5 月 7 日 (Justinian 76 岁),圆顶东半部分坍塌**。地震 + 设计太平、向外推力过大。Justinian 派 Isidore 的侄子 *Isidore the Younger* 重修。新圆顶比原来高 6.25 米——更陡,向下的力大,向外推力小,更稳定。这是今天看到的圆顶。
+**558 年 5 月 7 日 (Justinian 76 岁),圆顶东半部分坍塌**。地震 + 设计太平、向外推力过大。Justinian 派 Isidore 的孙侄 *Isidore the Younger* 重修。新圆顶比原来高 6.25 米——更陡,向下的力大,向外推力小,更稳定。这是今天看到的圆顶。
 
 **533-554 重夺地中海**。Justinian 派 Belisarius 出征:533-534 北非 (3 个月击溃汪达尔 Vandals 王国),535-554 意大利 (跟东哥特人 Ostrogoths 打了 19 年,意大利城市被毁严重),552 西班牙南部 (建立 Spania 行省到 624 年)。地中海一度重新成为 *Roman lake* (罗马湖)。
 
@@ -948,9 +948,9 @@ Generals Belisarius and Mundus, with Heruli + Gothic mercenaries, sealed the fou
 
 **Numbers**: dome diameter 31 m + height above floor 56 m (an 18-story building) + four *pendentive* supports + 40 small windows around the dome's base (light pours in from these, making the dome appear to *float*). That floating effect was impossible with pre-*pendentive* construction.
 
-The day Justinian walked in, Procopius records, he said: "*Solomon, I have surpassed thee.*" Solomon, the 10th-century-BCE Jewish king, built the First Temple in Jerusalem — the most sacred building in Jewish-Christian tradition. Justinian's line is at once a boast and a factual claim: the 31-meter *Hagia Sophia* dome was the largest in the 6th-century world. The diameter record stood for 899 years until 1436, when Brunelleschi completed the Florence Duomo at 43 meters; London's St. Paul's reached roughly the same scale in 1710. But Brunelleschi explicitly studied *Hagia Sophia*'s *pendentive* technique to solve the Florence dome — the building that surpassed the record was a direct student of the building it surpassed.
+The day Justinian walked in, he is said to have declared: "*Solomon, I have surpassed thee.*" — a line that comes from later oral tradition and is not found in Procopius or other 6th-century contemporary historians. Solomon, the 10th-century-BCE Jewish king, built the First Temple in Jerusalem — the most sacred building in Jewish-Christian tradition. Justinian's line is at once a boast and a factual claim: the 31-meter *Hagia Sophia* dome was the largest in the 6th-century world. The diameter record stood for 899 years until 1436, when Brunelleschi completed the Florence Duomo at 43 meters. But Brunelleschi explicitly studied *Hagia Sophia*'s *pendentive* technique to solve the Florence dome — the building that surpassed the record was a direct student of the building it surpassed.
 
-**7 May 558 (Justinian, age 76), the eastern half of the dome collapsed**. An earthquake plus a too-shallow design with too much outward thrust. Justinian tasked Isidore's nephew, *Isidore the Younger*, to rebuild it. The new dome rose 6.25 meters higher — steeper, with more downward force and less outward thrust — more stable. This is the dome we see today.
+**7 May 558 (Justinian, age 76), the eastern half of the dome collapsed**. An earthquake plus a too-shallow design with too much outward thrust. Justinian tasked Isidore's grandnephew, *Isidore the Younger*, to rebuild it. The new dome rose 6.25 meters higher — steeper, with more downward force and less outward thrust — more stable. This is the dome we see today.
 
 **533-554 — Reconquest of the Mediterranean**. Justinian sent Belisarius: 533-534 North Africa (the Vandal kingdom collapsed in three months); 535-554 Italy (a 19-year war with the Ostrogoths that devastated the peninsula); 552 southern Spain (the province of *Spania*, lasting until 624). The Mediterranean briefly became a *Roman lake* again.
 
