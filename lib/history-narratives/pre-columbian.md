@@ -797,7 +797,7 @@ Part 3 (1500-1532) picks up here: Malintzin's birth, Cortés's crossing, the Ata
 **3 lens 主角 in this part**:
 - Pachacuti — 死 28 年 (1471 死, Part 3 已是后人世界)
 - **Malintzin (Lens 2 lonely-mediator)** ⭐⭐⭐ Part 3 主角 — 19-21 岁
-- **Ix Mutal (Lens 3 receiving-end, defaultLens)** Part 3 进入 — 19-40 岁见证 1517 第一批船 + 天花
+- **Ix Mutal (Lens 3 receiving-end, defaultLens)** Part 3 进入 — 19-40 岁见证 1517 第一批船 + 1518 起的天花
 
 ---
 
