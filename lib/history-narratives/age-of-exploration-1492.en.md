@@ -1068,11 +1068,11 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 - **Her father** worked to death in the mines
 - **Her mother** was raped + died of disease
 - **Her uncle had a hand cut off** (the punishment for not paying gold)
-- **Her brother** died of smallpox
+- **Her brother** died of a European disease the Taíno had no immunity to (the first major smallpox epidemic on Hispaniola was 1518; earlier killers were likely influenza and the like)
 - **She** was **raped by one of Hojeda's friends + got pregnant** — at 15 she gave birth to **a mestizo daughter** — the daughter **died at age 1**
 
-**On November 9, 1503 — Spanish governor Nicolás de Ovando summoned 80 Taíno chiefs to a "peace conference" in Xaragua** —
-**When all the chiefs were gathered — Ovando ordered** the hall burned — **all 80 chiefs died** — **including Queen Anacaona** —
+**In the summer of 1503 — Spanish governor Nicolás de Ovando summoned 80 Taíno chiefs to a "peace conference" in Xaragua** —
+**When all the chiefs were gathered — Ovando ordered** the hall burned — **the chiefs inside were burned to death** — **but Queen Anacaona did not die in the hall: she was dragged out, taken to Santo Domingo, and after about three months' imprisonment and trial, hanged** —
 **Anacaona Jr. was 20 at the time** — **was not in the hall** — she **fled to the mountains** —
 **In 1504 she starved to death in the mountains** —
 

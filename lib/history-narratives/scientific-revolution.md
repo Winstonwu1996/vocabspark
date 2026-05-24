@@ -493,7 +493,7 @@ Mersenne 不只是 broker — 他自己也做研究:
 **1623《Quaestiones in Genesim》** (创世纪问题) — 一本对《圣经·创世纪》的 1900 页注疏, 里面顺带 attack 了 hermeticism / kabbalah / 占星术 / 文艺复兴 magic — 帮助欧洲学界从 magic 走向 mechanical philosophy (机械哲学)。
 
 **1636《Harmonie Universelle》** (普遍和声) — 1500 页的 musical theory + 实验科学先锋作品。包括:
-- 第一次精确测量 声音传播速度 (Mersenne 数据: 230 toises/秒 ≈ 448 m/s — 现代值 343 m/s, 误差 30%, 在 17c 已经非常接近)
+- 第一次测量 声音传播速度 (Mersenne 1636 年回声法 ≈ 316 m/s — 现代值 343 m/s, 误差仅约 8%, 17c 已相当接近; 另有炮口闪光法得 ≈ 448 m/s, 误差约 30%)
 - 弦的频率 = (1 / 2L) × √(T / μ) — Mersenne's laws of strings, 现代物理课本里的公式
 - 早期 钟摆周期 实验
 
