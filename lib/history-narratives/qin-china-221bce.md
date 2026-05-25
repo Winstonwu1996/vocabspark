@@ -10,7 +10,7 @@ textbookAnchor:
   pages: CA HSS 6.6.4-6.6.6 / 部编版七上 第 9-10 课 秦统一中国 · AP World 1.2 (states 1200 BCE-c.600 CE)
 gradeBand: "6 / 7-12"
 qaTemplate: multi-faction
-defaultLens: conscript-laborer-receiving-end
+defaultLens: qin-shi-huang
 schemaVersion: 2
 ---
 
