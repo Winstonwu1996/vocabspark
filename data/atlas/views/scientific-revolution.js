@@ -2,6 +2,8 @@
 // Grade 7 · HSS-7.10
 export const VIEW = {
   id: 'scientific-revolution',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=scientific-revolution&from=atlas&atlasId=scientific-revolution',
   grade: 7,
   topicTier: 'core',
   standardsAlignment: [

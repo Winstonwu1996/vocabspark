@@ -2,6 +2,8 @@
 // Grade 8 · supplementary (extended-ap) · AP USH 8.10 / CA HSS-11.10
 export const VIEW = {
   id: 'civil-rights',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=civil-rights-1965&from=atlas&atlasId=civil-rights',
   grade: 8,
   topicTier: 'supplementary',
   tierType: 'extended-ap',

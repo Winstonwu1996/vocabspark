@@ -2,6 +2,8 @@
 // Grade 8 · HSS-8.10 (Civil War & Reconstruction)
 export const VIEW = {
   id: 'civil-war',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=civil-war-1861&from=atlas&atlasId=civil-war',
   grade: 8,
   topicTier: 'core',
   standardsAlignment: [

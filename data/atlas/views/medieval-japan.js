@@ -2,6 +2,8 @@
 // Grade 7 · HSS-7.5 (Medieval Japan)
 export const VIEW = {
   id: 'medieval-japan',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=medieval-japan&from=atlas&atlasId=medieval-japan',
   grade: 7,
   topicTier: 'core',
   standardsAlignment: [

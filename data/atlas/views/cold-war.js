@@ -2,6 +2,8 @@
 // Grade 8 · supplementary (extended-ap) · AP World Unit 8 / AP USH 8 / CA HSS-11
 export const VIEW = {
   id: 'cold-war',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=cold-war-1962&from=atlas&atlasId=cold-war',
   grade: 8,
   topicTier: 'supplementary',
   tierType: 'extended-ap',

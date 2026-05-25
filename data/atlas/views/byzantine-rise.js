@@ -2,6 +2,8 @@
 // Grade 7 · HSS-7.1 (Roman Empire fall + Byzantine emergence)
 export const VIEW = {
   id: 'byzantine-rise',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=byzantine-rise&from=atlas&atlasId=byzantine-rise',
   grade: 7,
   topicTier: 'core',
   standardsAlignment: [

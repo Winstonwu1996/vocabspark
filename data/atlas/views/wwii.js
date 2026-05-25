@@ -3,6 +3,8 @@
 // 注：HSS-8 严格到 1914，但二战是中学必学，按 G8 收尾用
 export const VIEW = {
   id: 'wwii',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=world-war-two-1942&from=atlas&atlasId=wwii',
   grade: 8,
   topicTier: 'supplementary',
   tierType: 'extended-ap',  // AP 进阶 — AP 考试重点主题

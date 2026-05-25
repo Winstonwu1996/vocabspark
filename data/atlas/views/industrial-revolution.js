@@ -2,6 +2,8 @@
 // Grade 8 · HSS-8.6 (Industrial Revolution + immigration)
 export const VIEW = {
   id: 'industrial-revolution',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=industrial-revolution-1800&from=atlas&atlasId=industrial-revolution',
   grade: 8,
   topicTier: 'core',
   standardsAlignment: [

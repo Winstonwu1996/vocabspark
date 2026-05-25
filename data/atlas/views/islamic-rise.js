@@ -2,6 +2,8 @@
 // Grade 7 · HSS-7.2 (Islamic civilizations)
 export const VIEW = {
   id: 'islamic-rise',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=islamic-rise&from=atlas&atlasId=islamic-rise',
   grade: 7,
   topicTier: 'core',
   standardsAlignment: [

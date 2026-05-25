@@ -2,6 +2,8 @@
 // Grade 6 · HSS-6.2 (Egypt)
 export const VIEW = {
   id: 'ancient-egypt',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=ancient-egypt-2550bce&from=atlas&atlasId=ancient-egypt',
   grade: 6,
   topicTier: 'core',
   standardsAlignment: [

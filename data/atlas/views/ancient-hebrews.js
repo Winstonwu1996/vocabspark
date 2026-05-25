@@ -2,6 +2,8 @@
 // Grade 6 supplementary · HSS-6.3
 export const VIEW = {
   id: 'ancient-hebrews',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=babylonian-exile-586bce&from=atlas&atlasId=ancient-hebrews',
   grade: 6,
   topicTier: 'supplementary',
   tierType: 'extended',  // 进阶 — 教材延伸（AP World 实际从 1200 CE 起，1.2 标签仅挂名）

@@ -2,6 +2,8 @@
 // Grade 7 · HSS-7.7
 export const VIEW = {
   id: 'pre-columbian',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=pre-columbian&from=atlas&atlasId=pre-columbian',
   grade: 7,
   topicTier: 'core',
   standardsAlignment: [

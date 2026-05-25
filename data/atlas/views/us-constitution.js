@@ -2,6 +2,8 @@
 // Grade 5 · HSS-5.7 (Constitution)
 export const VIEW = {
   id: 'us-constitution',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=constitutional-convention-1787&from=atlas&atlasId=us-constitution',
   grade: 5,
   topicTier: 'core',
   standardsAlignment: [

@@ -2,6 +2,8 @@
 // Grade 8 · HSS-8.4
 export const VIEW = {
   id: 'slavery-divisions',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=slavery-abolition-1850&from=atlas&atlasId=slavery-divisions',
   grade: 8,
   topicTier: 'core',
   standardsAlignment: [

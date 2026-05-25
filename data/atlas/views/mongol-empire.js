@@ -2,6 +2,8 @@
 // Grade 7 · HSS-7.6.5 (Mongol invasions)
 export const VIEW = {
   id: 'mongol-empire',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=mongol-empire&from=atlas&atlasId=mongol-empire',
   grade: 7,
   topicTier: 'core',
   standardsAlignment: [

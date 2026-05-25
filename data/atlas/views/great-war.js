@@ -3,6 +3,8 @@
 // 注：HSS-8 主要到 1914，所以适合作为该学段终点 Topic
 export const VIEW = {
   id: 'great-war',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=world-war-one-1914&from=atlas&atlasId=great-war',
   grade: 8,
   topicTier: 'supplementary',
   tierType: 'extended-ap',  // AP 进阶 — AP 考试重点主题

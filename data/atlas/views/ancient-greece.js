@@ -2,6 +2,8 @@
 // Grade 6 · HSS-6.4 (Ancient Greece)
 export const VIEW = {
   id: 'ancient-greece',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=ancient-greece-480bce&from=atlas&atlasId=ancient-greece',
   grade: 6,
   topicTier: 'core',
   standardsAlignment: [

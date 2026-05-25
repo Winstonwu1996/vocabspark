@@ -2,6 +2,8 @@
 // Grade 8 · HSS-8.3 (Jacksonian democracy)
 export const VIEW = {
   id: 'jacksonian-era',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=jackson-indian-removal-1830&from=atlas&atlasId=jacksonian-era',
   grade: 8,
   topicTier: 'core',
   standardsAlignment: [
