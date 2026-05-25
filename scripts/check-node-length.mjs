@@ -60,3 +60,21 @@ if (fail) {
   process.exit(1);
 }
 console.log('\n✓ node-length lint PASS — 所有应达标 topic 均 ≤550 CN/节点 (豁免名单为待返工 backlog)。');
+
+// ─── 第8G.3: lens 卡片 description 字段禁止 em-dash (用户第一眼看到, 全站已清零) ──────────
+let descFail = 0;
+for (const id of listStoryboards().filter(hasLenses)) {
+  const lenses = STORYBOARDS[id].lenses;
+  for (const k of Object.keys(lenses)) {
+    const d = lenses[k].description || {};
+    if ((d.cn || '').includes('—') || (d.en || '').includes('—')) {
+      console.error('❌ ' + id + ' / ' + k + ' card description 含 em-dash (第8G.3 禁, 用句号/逗号)');
+      descFail++;
+    }
+  }
+}
+if (descFail) {
+  console.error('\nFAIL: ' + descFail + ' 个 lens 卡片 description 含 em-dash (第8G.3)。');
+  process.exit(1);
+}
+console.log('✓ card-description lint PASS — 全部 lens 卡片 description 无 em-dash (第8G.3)。');
