@@ -102,6 +102,29 @@ done
 
 ---
 
+## ⛔ 第 13 条:逐节点 CN 字数 ≤550 简化长度标准 (5-25 加,创始人定标 + lint 固化)
+
+**背景**：创始人对 `constitutional-convention-1787`「corrected shorter format」的长度满意，定为标准——
+每节点 CN **220-380 字理想**；≤2 个 anchor 节点/lens (N6 跨视角 + N10/N11 synthesis) 可达 **550**；
+**硬上限 550 CN 字/节点**。核心仍是「明朝那些事儿密度」(累不累跟字数无关跟抽象度有关)，550 是防失控的护栏。
+
+**事故**：5-25 全量上线后跑首次逐节点字数审计，发现 15 门最早的老课 (原 8 公开 + 7 老隐藏) 还是
+**旧长格式** (avg 450-1091, max 至 1904 CN/节点 ≈ 范例 3.5 倍)——简化标准定在它们之后, 从没回切。
+新内容 (G6-G12 + 全覆盖 18 门) 全部 ≤550。审核 SOP 之前**没有逐节点字数 lint**, 所以没抓到。
+
+**规则**：
+1. **新 topic 每节点 CN ≤550** (硬上限)；理想 220-380, anchor 最多 550。
+2. **commit / ship 前必跑** `node scripts/check-node-length.mjs` —— 非豁免 topic 有节点 >550 = exit 1, 不许 merge。
+3. **豁免名单 = 待返工 backlog** (15 门旧长格式老课, 写在脚本里)；它们不阻断, 但列为上线后返工项, 返工后从名单移除。
+4. 长不等于差 (密度优先)；但若要符合简化范例, 超 550 的节点需重写更短、保住具象密度。
+
+**自检**：
+```bash
+node scripts/check-node-length.mjs   # ✓ PASS = 所有应达标 topic ≤550；⚠ backlog = 15 门待返工老课
+```
+
+---
+
 ## ⛔ 第 11 条:Topic data 字段嵌套引号 + commit 前强制 node --check (5-6 加,systemic,build error 抓到)
 
 **事故** (founder 5-6 Renaissance ship 时抓到):
