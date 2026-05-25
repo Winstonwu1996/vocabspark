@@ -2,6 +2,8 @@
 // Grade 8 · supplementary (extended-ap) · AP World Unit 9 / CA HSS-11
 export const VIEW = {
   id: 'globalization',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=globalization-1995&from=atlas&atlasId=globalization',
   grade: 8,
   topicTier: 'supplementary',
   tierType: 'extended-ap',

@@ -2,6 +2,8 @@
 // Grade 5 · HSS-5.1
 export const VIEW = {
   id: 'native-americans',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=native-americans-pre1500&from=atlas&atlasId=native-americans',
   grade: 5,
   topicTier: 'core',
   standardsAlignment: [
