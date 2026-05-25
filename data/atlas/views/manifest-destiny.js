@@ -2,6 +2,8 @@
 // Grade 8 · HSS-8.5 / 8.8 (Westward expansion)
 export const VIEW = {
   id: 'manifest-destiny',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=manifest-destiny-1845&from=atlas&atlasId=manifest-destiny',
   grade: 8,
   topicTier: 'core',
   standardsAlignment: [

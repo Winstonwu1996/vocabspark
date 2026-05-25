@@ -2,6 +2,8 @@
 // Grade 8 · HSS-8.6 (Reform movements)
 export const VIEW = {
   id: 'reform-movements',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=reform-movements-1840&from=atlas&atlasId=reform-movements',
   grade: 8,
   topicTier: 'core',
   standardsAlignment: [

@@ -2,6 +2,8 @@
 // Grade 7 · AP-WHAP-3 (Land-based empires)
 export const VIEW = {
   id: 'gunpowder-empires',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=gunpowder-empires-1600&from=atlas&atlasId=gunpowder-empires',
   grade: 7,
   topicTier: 'supplementary',
   tierType: 'extended-ap',  // AP 进阶 — AP 考试重点主题
