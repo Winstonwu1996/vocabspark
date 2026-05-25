@@ -2,6 +2,8 @@
 // Grade 5 · HSS-5.3
 export const VIEW = {
   id: 'thirteen-colonies',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=thirteen-colonies-1700&from=atlas&atlasId=thirteen-colonies',
   grade: 5,
   topicTier: 'core',
   standardsAlignment: [

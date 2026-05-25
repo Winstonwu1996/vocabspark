@@ -3,6 +3,8 @@
 // 配对 Roman 117 AD — Pax Romana ↔ Pax Sinica 双极对照
 export const VIEW = {
   id: 'han-china',
+  deepLearnEnabled: true,
+  deepLearnUrl: '/history?topicId=han-china-130bce&from=atlas&atlasId=han-china',
   grade: 6,
   topicTier: 'core',
   standardsAlignment: [
