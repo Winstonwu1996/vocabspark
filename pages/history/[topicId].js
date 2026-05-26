@@ -92,6 +92,7 @@ import { MustMemorizePopup, TermPopup } from '../../components/history-engine/po
 import { ConversationStream } from '../../components/history-engine/ConversationStream';
 import { MasteryGateOverlay } from '../../components/history-engine/MasteryGate';
 import { CompletionScreen } from '../../components/history-engine/CompletionScreen';
+import { ConceptReview } from '../../components/history-engine/ConceptReview';
 import { ProfileSetup } from '../../components/history-engine/ProfileSetup';
 // ThroughLineMap 不再在单课页用 (首页是 51 门主选课入口, 课内"换一课"重复入口已移除)
 import { findViewIdByTopicId } from '../../lib/atlas-views';
@@ -904,7 +905,15 @@ export default function HistoryPage() {
     setGateStep(0);
   };
 
-  // ─── Learning Receipt：lens 完成、进 mastery 前收 4 件学习证据 ──────
+  // ─── 5-26 (Codex P0-4): 进入考前复习笔记屏 ──────────────────────────
+  // Receipt 提交后 / 已交 receipt 用户从 conversation allDone 推进 / 都先进笔记屏。
+  // 笔记屏点 "我看过了, 开始考核" → startMasteryGate。
+  var proceedToNotebook = function() {
+    setPhase("notebook");
+  };
+
+  // ─── Learning Receipt：lens 完成、进 mastery 前收 2 件学习证据 ──────
+  // 5-26 (用户反馈): 4 题精简到 2 题口语化, 减少元认知负担。
   // 纯附加存 historyData.learningReceipts[topicId][lensId]；不动 turnIndex/completedTopics。
   // MVP：英文表达只存进 receipt，不自动推桥词队列（pushedToVocab:false，二期再开「加入复习」）。
   var submitLearningReceipt = function(payload) {
@@ -924,6 +933,8 @@ export default function HistoryPage() {
     } catch (e) {
       console.warn('[history] saveLearningReceipt failed:', e && e.message);
     }
+    // 5-26 (Codex P0-6): 收据保存后自动进笔记屏(消除二次点击), 不再停在 conversation 等用户再点。
+    proceedToNotebook();
   };
 
   // ─── 完成 Topic ─────────────────────────────────────────────────
@@ -1655,7 +1666,7 @@ export default function HistoryPage() {
                 onInputChange={setUserInput}
                 onSubmit={submitUserResponse}
                 onAdvance={advanceTurn}
-                onStartMastery={startMasteryGate}
+                onStartMastery={proceedToNotebook}
                 onSubmitReceipt={submitLearningReceipt}
                 existingReceipt={existingReceipt}
                 previewMode={topic && topic.isPreview}
@@ -1702,6 +1713,16 @@ export default function HistoryPage() {
               onTermClick={setActiveTerm}
               onMustClick={setActiveMust}
               topic={topic}
+            />
+          )}
+
+          {/* ── 5-26 新增 Phase: notebook ── */}
+          {/* 收据提交后 / 已交 receipt 用户从 conversation allDone 进 → 在 mastery 之前先看 8 张考点卡 */}
+          {phase === "notebook" && topic && (
+            <ConceptReview
+              topicId={topicId}
+              isEnglish={englishLevel === "high"}
+              onContinue={startMasteryGate}
             />
           )}
 

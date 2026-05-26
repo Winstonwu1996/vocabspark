@@ -35,41 +35,45 @@ export function SpellingTest(props) {
   // Winston review #9/#10：软化 gate — 一次走完不强制重测
   var [errorWords, setErrorWords] = useState([]);
 
+  // 5-26 (Codex 修): 末题 stale-closure bug — next() 在 setTimeout 内被调用时,
+  // closure 捕获的 correctCount/errorWords 是 submit 那一刻的旧值,导致末题答错/跳过
+  // 漏进复习池(或答对漏算分)。修法:submit/skip 自己算好 next 值再传给 next()。
+  var next = function(latestCorrect, latestErrors) {
+    if (latestCorrect === undefined) latestCorrect = correctCount;
+    if (latestErrors === undefined) latestErrors = errorWords;
+    var newIdx = idx + 1;
+    if (newIdx >= items.length) {
+      props.onDone(latestCorrect, { errorWords: latestErrors, totalItems: items.length });
+    } else {
+      setIdx(newIdx);
+    }
+  };
+
   var submit = function() {
     if (!input.trim()) return;
     var correct = input.trim().toLowerCase() === item.answer.toLowerCase();
+    var newCorrect = correctCount + (correct ? 1 : 0);
+    var newErrors = correct ? errorWords : errorWords.concat([{ word: item.answer, hint: item.hint, attempted: input.trim() }]);
     if (correct) {
       setFeedback({pass: true, msg: "对！" + item.answer});
-      setCorrectCount(correctCount + 1);
+      setCorrectCount(newCorrect);
     } else {
       setFeedback({pass: false, msg: "不对 — 正确答案是 " + item.answer + "（已加进复习单，下次再考）"});
-      setErrorWords(errorWords.concat([{ word: item.answer, hint: item.hint, attempted: input.trim() }]));
+      setErrorWords(newErrors);
     }
     setTimeout(function() {
       setFeedback(null);
       setInput("");
-      next();
+      next(newCorrect, newErrors);
     }, correct ? 1000 : 2000);
   };
 
   var skip = function() {
-    setErrorWords(errorWords.concat([{ word: item.answer, hint: item.hint, attempted: "(跳过)" }]));
+    var newErrors = errorWords.concat([{ word: item.answer, hint: item.hint, attempted: "(跳过)" }]);
+    setErrorWords(newErrors);
     setFeedback(null);
     setInput("");
-    next();
-  };
-
-  var next = function() {
-    var newIdx = idx + 1;
-    if (newIdx >= items.length) {
-      var finalScore = correctCount + (feedback && feedback.pass ? 1 : 0);
-      props.onDone(finalScore, {
-        errorWords: errorWords.concat(feedback && !feedback.pass ? [{ word: item.answer, hint: item.hint, attempted: input.trim() }] : []),
-        totalItems: items.length
-      });
-    } else {
-      setIdx(newIdx);
-    }
+    next(correctCount, newErrors);
   };
 
   if (!item) return <div>加载中...</div>;
@@ -94,7 +98,7 @@ export function SpellingTest(props) {
         <div className={"feedback " + (feedback.pass ? "pass" : "fail")}>{feedback.msg}</div>
       )}
       <div className="actions" style={{justifyContent: "space-between"}}>
-        <button className="btn-ghost" onClick={skip} disabled={!!feedback} style={{fontSize: 11, opacity: 0.55, padding: "8px 14px"}}>不会，跳过（−5 XP / 进复习）</button>
+        <button className="btn-ghost" onClick={skip} disabled={!!feedback} style={{fontSize: 11, opacity: 0.55, padding: "8px 14px"}}>我现在不会 → 下次复习</button>
         <button className="btn-primary" disabled={!input.trim() || feedback} onClick={submit}>提交</button>
       </div>
     </div>
@@ -118,6 +122,22 @@ export function DefinitionTest(props) {
   var item = items[idx];
   var concept = item ? concepts.find(function(c) { return c.id === item.conceptId; }) : null;
 
+  var [errorConcepts, setErrorConcepts] = useState([]);
+
+  // 5-26 (Codex 修): 末题 stale-closure bug — score + errorConcepts 在 setTimeout 内被读时是旧值;
+  // 且 L171 原代码 `score + (passed ? 0 : 0)` 是显式 off-by-one (末题答对不算分)。
+  // 修法:submit/skip 算好 newScore/newErrors 传给 next。
+  var next = function(passed, latestScore, latestErrors) {
+    if (latestScore === undefined) latestScore = score;
+    if (latestErrors === undefined) latestErrors = errorConcepts;
+    var newIdx = idx + 1;
+    if (newIdx >= items.length) {
+      props.onDone(latestScore, { errorConcepts: latestErrors, totalItems: items.length });
+    } else {
+      setIdx(newIdx);
+    }
+  };
+
   var submit = async function() {
     if (!input.trim() || pending) return;
     setPending(true);
@@ -127,50 +147,40 @@ export function DefinitionTest(props) {
       var raw = await callAPIFast(sysPrompt, userPrompt);
       var parsed = tryJSON(raw) || { pass: true, feedback: "答得不错！" };
       setFeedback(parsed);
-      if (parsed.pass) setScore(score + 1);
+      var newScore = parsed.pass ? score + 1 : score;
+      var newErrors = (!parsed.pass && concept && input.trim())
+        ? errorConcepts.concat([{ conceptId: concept.id, en: concept.en, cn: concept.cn, attempted: input.trim() }])
+        : errorConcepts;
+      if (parsed.pass) setScore(newScore);
+      else if (newErrors !== errorConcepts) setErrorConcepts(newErrors);
       setTimeout(function() {
         setFeedback(null);
         setInput("");
         setPending(false);
-        next(parsed.pass);
+        next(parsed.pass, newScore, newErrors);
       }, 2200);
     } catch (e) {
       setFeedback({pass: true, feedback: "（评估失败，先按通过算）"});
-      setScore(score + 1);
+      var newScoreOnFail = score + 1;
+      setScore(newScoreOnFail);
       setTimeout(function() {
         setFeedback(null);
         setInput("");
         setPending(false);
-        next(true);
+        next(true, newScoreOnFail, errorConcepts);
       }, 1500);
     }
   };
 
-  var [errorConcepts, setErrorConcepts] = useState([]);
-
   var skip = function() {
-    if (concept) setErrorConcepts(errorConcepts.concat([{ conceptId: concept.id, en: concept.en, cn: concept.cn, attempted: "(跳过)" }]));
+    var newErrors = concept
+      ? errorConcepts.concat([{ conceptId: concept.id, en: concept.en, cn: concept.cn, attempted: "(跳过)" }])
+      : errorConcepts;
+    if (concept) setErrorConcepts(newErrors);
     setFeedback(null);
     setInput("");
     setPending(false);
-    next(false);
-  };
-
-  var next = function(passed) {
-    if (!passed && concept && input.trim()) {
-      setErrorConcepts(function(prev) {
-        return prev.concat([{ conceptId: concept.id, en: concept.en, cn: concept.cn, attempted: input.trim() }]);
-      });
-    }
-    var newIdx = idx + 1;
-    if (newIdx >= items.length) {
-      props.onDone(score + (passed ? 0 : 0), {
-        errorConcepts: errorConcepts.concat(!passed && concept && input.trim() ? [{ conceptId: concept.id, en: concept.en, cn: concept.cn, attempted: input.trim() }] : []),
-        totalItems: items.length
-      });
-    } else {
-      setIdx(newIdx);
-    }
+    next(false, score, newErrors);
   };
 
   if (!item || !concept) return <div>加载中...</div>;
@@ -200,7 +210,7 @@ export function DefinitionTest(props) {
         <div className={"feedback " + (feedback.pass ? "pass" : "fail")}>{feedback.feedback}</div>
       )}
       <div className="actions" style={{justifyContent: "space-between"}}>
-        <button className="btn-ghost" onClick={skip} disabled={!!feedback || pending} style={{fontSize: 11, opacity: 0.55, padding: "8px 14px"}}>说不出来，跳过（−10 XP / 进复习）</button>
+        <button className="btn-ghost" onClick={skip} disabled={!!feedback || pending} style={{fontSize: 11, opacity: 0.55, padding: "8px 14px"}}>说不出来 → 下次复习</button>
         <button className="btn-primary" disabled={!input.trim() || feedback || pending} onClick={submit}>提交</button>
       </div>
     </div>
@@ -265,7 +275,7 @@ export function ApplicationTest(props) {
         <div className={"feedback " + (feedback.pass ? "pass" : "fail")}>{feedback.feedback}</div>
       )}
       <div className="actions" style={{justifyContent: "space-between"}}>
-        <button className="btn-ghost" onClick={skip} disabled={!!feedback || pending} style={{fontSize: 11, opacity: 0.55, padding: "8px 14px"}}>这题太难，跳过（−15 XP / 进复习）</button>
+        <button className="btn-ghost" onClick={skip} disabled={!!feedback || pending} style={{fontSize: 11, opacity: 0.55, padding: "8px 14px"}}>这题太难 → 下次复习</button>
         <button className="btn-primary" disabled={!input.trim() || feedback || pending} onClick={submit}>提交</button>
       </div>
     </div>
@@ -317,7 +327,7 @@ export function MasteryGateOverlay(props) {
         {gateStep === 2 && <ApplicationTest check={currentCheck} onDone={handleStepDone} />}
 
         <div style={{marginTop: 14, fontSize: 11.5, color: HC.textSec, textAlign: "center", opacity: 0.7}}>
-          答错的会进复习单，下次再考；可以跳过但会影响 XP
+          答错和跳过的会进复习单，下次再考 — 不强求一遍过。
         </div>
       </div>
     </div>

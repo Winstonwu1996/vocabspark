@@ -472,37 +472,31 @@ function LearningReceiptCard(props) {
   var isEn = props.englishLevel === "high";
   var ex = props.existingReceipt || {};
   var [fact, setFact] = useState((ex.factAnchor && ex.factAnchor.text) || "");
-  var [cause, setCause] = useState((ex.causalClaim && ex.causalClaim.text) || "");
-  var [persp, setPersp] = useState((ex.perspectiveLimit && ex.perspectiveLimit.text) || "");
   var [eng, setEng] = useState((ex.englishExpr && ex.englishExpr.en) || "");
 
-  var filledCount = [fact, cause, persp, eng].filter(function (s) { return s && s.trim(); }).length;
+  var filledCount = [fact, eng].filter(function (s) { return s && s.trim(); }).length;
   var canSubmit = filledCount >= 1;
 
-  // 占位例保持 topic-neutral（不绑定具体 topic，避免在非 Magna Carta 的 topic 里出戏）
+  // 5-26 (Codex 复核 + 用户反馈): 4 题 → 2 题口语化, 删 cause/persp (元认知术语孩子看不懂);
+  // 占位例保持 topic-neutral, 不绑定具体 topic。
   var fields = [
     { key: "fact", val: fact, set: setFact,
-      q: isEn ? "One concrete fact you'll remember from this pass? One line." : "这一遍里，哪个具体的事实你记住了？一句话。",
-      ph: isEn ? "e.g. a specific year, a name, or what happened" : "例：一个具体的年份、人名、或发生了什么" },
-    { key: "cause", val: cause, set: setCause,
-      q: isEn ? "Why did it turn out this way? Say it with “because… so…”." : "为什么会变成这样？用「因为…所以…」说一句。",
-      ph: isEn ? "e.g. Because ___, so ___." : "例：因为……，所以……" },
-    { key: "persp", val: persp, set: setPersp,
-      q: isEn ? "Whose side did you mostly hear? Whose voice did you not hear?" : "你刚才主要听的是谁的一边？还有谁的声音你没听到？",
-      ph: isEn ? "e.g. I mostly heard ___'s side, I didn't hear ___." : "例：我主要听了 ___ 的角度，没听到 ___" },
+      q: isEn ? "One detail you'll still remember tomorrow?" : "刚才这一段，你记到现在的一个细节是 ___",
+      ph: isEn ? "a year, a name, or one sentence" : "一个年份 / 一个名字 / 一句话都行" },
     { key: "eng", val: eng, set: setEng,
-      q: isEn ? "Say your thought in one line of English — short is fine, mistakes are fine." : "用一句英文说出你的想法 —— 短句也行，写错没关系。",
-      ph: isEn ? "e.g. one sentence in English about what you learned" : "例：用一句英文说说你的想法" },
+      q: isEn ? "Say your thought in one line of English — short, mistakes are fine." : "用一句英文说说你的想法 —— 短句也行，写错没关系。",
+      ph: isEn ? "e.g. I think Su Shi was actually free in exile." : "例：I think Su Shi was actually free in exile." },
   ];
 
   var submit = function () {
+    // 旧 schema 兼容: causalClaim/perspectiveLimit 仍以空字符串占位发出, 避免下游 reader 崩
     props.onSubmit({
       skipped: false,
       lensTitle: props.lensTitle || null,
       completedTurnCount: props.completedTurnCount || 0,
       factAnchor: { text: fact.trim() },
-      causalClaim: { text: cause.trim() },
-      perspectiveLimit: { text: persp.trim() },
+      causalClaim: { text: "" },
+      perspectiveLimit: { text: "" },
       englishExpr: { en: eng.trim(), pushedToVocab: false },
     });
   };
@@ -514,10 +508,10 @@ function LearningReceiptCard(props) {
     <div className="continue-bar" style={{ flexDirection: "column", gap: 14, padding: "20px 0" }}>
       <div style={{ width: "100%", maxWidth: 560, margin: "0 auto", background: HC.card, border: "1px solid " + HC.border, borderRadius: 14, padding: "18px 18px 16px", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: HC.accent, marginBottom: 4 }}>
-          {isEn ? "Before the quiz — leave your take" : "考核前，留下你的收获"}
+          {isEn ? "This pass is done — leave a hook" : "这一遍看完了 — 留个钩子"}
         </div>
         <div style={{ fontSize: 12.5, color: HC.textSec, marginBottom: 14, lineHeight: 1.5 }}>
-          {isEn ? "Four quick lines. Short answers, Chinese or English mixed — all fine." : "四句话就好。短答、中英混写都行，写错也没关系。"}
+          {isEn ? "Two quick lines. Short answers, Chinese or English mixed — all fine." : "两句话就好。短答、中英混写都行，写错也没关系。"}
         </div>
         {fields.map(function (f) {
           return (
@@ -537,7 +531,7 @@ function LearningReceiptCard(props) {
           <button className="continue-btn" disabled={!canSubmit}
             style={{ background: canSubmit ? HC.accent : "rgba(0,0,0,0.18)", fontSize: 14, padding: "11px 28px", cursor: canSubmit ? "pointer" : "default" }}
             onClick={submit}>
-            {isEn ? "Submit & start quiz ✏️" : "提交，进入考核 ✏️"}
+            {isEn ? "Submit — see review notes →" : "提交，看考点笔记 →"}
           </button>
           <button onClick={skip}
             style={{ background: "transparent", border: "none", color: HC.textSec, fontSize: 12.5, textDecoration: "underline", cursor: "pointer" }}>
@@ -602,24 +596,7 @@ export function ConversationStream(props) {
 
   return (
     <div>
-      {/* 5-5: tired mode banner — 听就好模式开启时显示 */}
-      {props.tiredMode && (
-        <div style={{
-          marginBottom: 8,
-          padding: '6px 12px',
-          background: 'rgba(196, 107, 48, 0.12)',
-          border: '1px solid rgba(196, 107, 48, 0.30)',
-          borderRadius: 8,
-          fontSize: 11.5,
-          color: '#a85525',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-        }}>
-          <span>😌</span>
-          <span><strong>听模式</strong>—— 节点会自动推进，不用点继续。点 [😌 听模式 ✓] 关闭。</span>
-        </div>
-      )}
+      {/* 5-26 (用户反馈): 删除「累了听就好」按钮 + tired banner — 体验冗余 */}
       {/* 5-22 Package 1: 节点进度条 — 方向感 + 消除无限滚动感 */}
       {!allDone && <ProgressRail turns={turns} turnIndex={turnIndex} />}
       <div className="conv-stream" id="conv-anchor">
@@ -675,23 +652,8 @@ export function ConversationStream(props) {
                   )}
                 </div>
               </div>
-              {/* 5-5: "我没懂" hint — 用户点了"我没懂"后,在该 AI 节点下方显示 deliverGoal 一句话核心 */}
-              {props.hintByTurn && props.hintByTurn[entry.turn - 1] && (
-                <div style={{
-                  marginLeft: 40, marginTop: 6, marginBottom: 8,
-                  padding: '8px 12px',
-                  background: 'rgba(95, 168, 160, 0.12)',
-                  border: '1px solid rgba(95, 168, 160, 0.35)',
-                  borderRadius: 8,
-                  fontSize: 12.5,
-                  color: '#3d2c1a',
-                  lineHeight: 1.55,
-                }}>
-                  <span style={{fontSize: 13, marginRight: 6}}>💡</span>
-                  <span style={{fontWeight: 600, color: '#4a8a82', marginRight: 4}}>核心一句话:</span>
-                  {props.hintByTurn[entry.turn - 1]}
-                </div>
-              )}
+              {/* 5-26 (Codex 复核): 删除「我没懂」hint — entry.turn 在 storyboard 里是字符串, */}
+              {/* 减 1 = NaN, hintByTurn[NaN] 永远 undefined → 实际从未显示过 (dead code 已删) */}
               {/* 地图轮 — 加快速跳到地图区域的链接（Winston review #2） */}
               {isGeoTurn && (
                 <div className="bubble-row ai" style={{marginTop: 4, marginLeft: 40}}>
@@ -787,49 +749,9 @@ export function ConversationStream(props) {
             </div>
           </details>
 
-          {/* ── 3 个用户主动按钮 — 5-5 重设计契合 Story-First v2 prewritten 模式 ── */}
-          {/* 旧设计依赖 AI 调用，但 prewritten 短路 AI → 旧"累了/没懂"是 dead code */}
-          {/* 新设计:                                                            */}
-          {/*   累了 → toggle "听就好" 模式 (audio auto-play + auto-advance)       */}
-          {/*   没懂 → 显示当前节点的 deliverGoal hint (一句话核心，不调 AI)         */}
-          {/*   跳过 → advance 不变                                                */}
-          {props.onEscapeAction && (
-            <div style={{
-              display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap",
-              fontSize: 11.5
-            }}>
-              <button
-                onClick={function() { props.onEscapeAction("tired"); }}
-                title="开启自动模式 - 音频自动播 + 节点自动推进，不用点继续"
-                style={{
-                  padding: "5px 10px",
-                  border: "1px solid " + (props.tiredMode ? HC.accent : HC.parchmentLo),
-                  borderRadius: 999,
-                  background: props.tiredMode ? HC.accent : "transparent",
-                  color: props.tiredMode ? "#fff8e8" : HC.textSec,
-                  cursor: "pointer", fontFamily: "inherit"
-                }}
-              >{props.tiredMode ? "😌 听模式 ✓" : "😴 累了，听就好"}</button>
-              <button
-                onClick={function() { props.onEscapeAction("dont-understand"); }}
-                title="显示这一段的核心一句话提示"
-                style={{
-                  padding: "5px 10px", border: "1px solid " + HC.parchmentLo,
-                  borderRadius: 999, background: "transparent",
-                  color: HC.textSec, cursor: "pointer", fontFamily: "inherit"
-                }}
-              >🤔 我没懂</button>
-              <button
-                onClick={function() { props.onEscapeAction("skip"); }}
-                title="跳过这一节，进下一节"
-                style={{
-                  padding: "5px 10px", border: "1px solid " + HC.parchmentLo,
-                  borderRadius: 999, background: "transparent",
-                  color: HC.textSec, cursor: "pointer", fontFamily: "inherit"
-                }}
-              >⏭️ 跳过</button>
-            </div>
-          )}
+          {/* 5-26 (用户反馈): 删除「累了听就好 / 我没懂 / 跳过」三个按钮 — 实测意义不大且 */}
+          {/*   增加视觉密度 (创始人原话「似乎没有意义」)。tiredMode/hintByTurn/onEscapeAction */}
+          {/*   props 暂时保留 pass-through, 后续 [topicId].js 清 state 时一并去除。 */}
 
           <div className="row" style={{alignItems: "flex-end"}}>
             <textarea
@@ -908,11 +830,11 @@ export function ConversationStream(props) {
         ) : (
           <div className="continue-bar" style={{flexDirection: "column", gap: 12, padding: "20px 0"}}>
             <div style={{fontSize: 13, color: HC.textSec, textAlign: "center"}}>
-              全部对话完成 — 现在进入记忆考核。<br/>
-              ✏️ 拼写测试 + 概念定义 + 应用题,必过才算完成。
+              全部走完 — 先翻一下复习笔记，再进考核。<br/>
+              📒 8 张考点卡 + ★ 频率 — 心里有数再考。
             </div>
             <button className="continue-btn" style={{background: HC.accent, fontSize: 15, padding: "14px 36px"}} onClick={props.onStartMastery}>
-              开始记忆考核 ✏️
+              看考点笔记 →
             </button>
           </div>
         )
