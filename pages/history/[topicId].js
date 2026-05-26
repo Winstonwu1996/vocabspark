@@ -94,6 +94,7 @@ import { MasteryGateOverlay } from '../../components/history-engine/MasteryGate'
 import { CompletionScreen } from '../../components/history-engine/CompletionScreen';
 import { ProfileSetup } from '../../components/history-engine/ProfileSetup';
 import { ThroughLineMap } from '../../components/history-engine/CourseBrowser';
+import { findViewIdByTopicId } from '../../lib/atlas-views';
 import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/notebooks/index.js';
 
 // ─── 主组件 ────────────────────────────────────────────────────────
@@ -294,8 +295,11 @@ export default function HistoryPage() {
 
   // —— Topic 数据（支持 ?topicId=xxx URL 参数切换）——
   // S9 难度梯度：默认 Magna Carta（已成熟），但 fresh user 第一次推 Tang/Song（home advantage 难度低）
-  var [topicId, setTopicId] = useState("magna-carta-1215");
-  var topic = getTopic(topicId);
+  // 初始 null：URL 解析完成前不渲染任何 topic（否则非 Magna 直链/iframe 首帧会闪 Magna
+  // 并多发一次 /api/narrative?topicId=magna-carta-1215）。urlResolved 决定首屏是 shell 还是内容。
+  var [topicId, setTopicId] = useState(null);
+  var [urlResolved, setUrlResolved] = useState(false);
+  var topic = topicId ? getTopic(topicId) : null;
   // ─── Story-First Pedagogy v3 桥接（见 docs/STORY_FIRST_PEDAGOGY.md）───
   // 如 Topic 有 storyboard（lib/history-storyboards/{topicId}.js）走新模型，
   // 否则 fallback 到旧 conversationTurns。
@@ -352,7 +356,18 @@ export default function HistoryPage() {
       var p = new URLSearchParams(window.location.search);
       // 路由优先：/history/<topicId> 路径参数 > ?topicId= query（atlas embedded 仍用 query）
       var pathMatch = window.location.pathname.match(/\/history\/([^/?#]+)/);
-      var t = (pathMatch && decodeURIComponent(pathMatch[1])) || p.get("topicId");
+      var t = null;
+      if (pathMatch) {
+        try {
+          t = decodeURIComponent(pathMatch[1]);
+        } catch (decErr) {
+          // malformed % 路径（/history/%E0 等）→ decodeURIComponent 抛错 → 回目录，
+          // 不要停在默认课内容但 URL 仍非法。
+          window.location.replace("/history");
+          return;
+        }
+      }
+      if (!t) t = p.get("topicId");
       // 检测 atlas-lab 跳转
       if (p.get("from") === "atlas") {
         setFromAtlas({ atlasId: p.get("atlasId") || null });
@@ -392,6 +407,7 @@ export default function HistoryPage() {
       }
       if (t && getTopic(t)) {
         setTopicId(t);
+        setUrlResolved(true);
         return;
       }
       // 路径里有 id 但不是有效课程（/history/not-a-real-topic）→ 回首页(目录)，
@@ -1013,6 +1029,28 @@ export default function HistoryPage() {
     }, 1000);
     return function() { clearInterval(iv); };
   }, [phase, fromAtlas, topicId, embedded, topicXpEarned]);
+
+  // URL 解析完成前只渲染 shell（server + client 首屏一致 → 无水合分裂；
+  // 且不闪 Magna / 不发错误的 narrative 请求）。解析后 topicId 必为有效课程。
+  if (!urlResolved || !topic) {
+    return (
+      <>
+        <Head>
+          <title>历史 — Know U. Learning</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        </Head>
+        <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
+        <style dangerouslySetInnerHTML={{ __html: "body{background:" + HC.bg + ";}" }} />
+        <div style={{
+          minHeight: "100vh", background: HC.bg, fontFamily: FONT,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: HC.textSec, fontSize: 14,
+        }}>
+          加载中…
+        </div>
+      </>
+    );
+  }
 
   // ─── Render ──────────────────────────────────────────────────────
   return (
@@ -2438,6 +2476,10 @@ function IntroScreen(props) {
   var hideEnglishLevel = modeFlags.hideEnglishLevelToggle;
   // - lens 节点数: 优先用 effectiveTurns,fallback 12
   var lensTurnCount = (props.effectiveTurns && props.effectiveTurns.length) || 12;
+  // 这门课对应的 atlas 地图视图 id：来源(atlasId) > topic.geography > 反向映射(覆盖 32 个无 geography 的 preview topic)
+  var atlasViewIdForTopic = (props.fromAtlas && props.fromAtlas.atlasId)
+    || (topic.geography && topic.geography.atlasViewId)
+    || findViewIdByTopicId(topic.id);
   // 5-5 R2: placeholder profile 表示用户跳过了 setup → 显示 "还没填画像" hint
   var isPlaceholderProfile = !!(hp && hp.placeholder);
   // Companion Notebook — preview section
@@ -2665,10 +2707,12 @@ function IntroScreen(props) {
         }}>
           {/* 5-5: simplifiedMode 时 Geography 已隐藏(用户已在 atlas 看过),提示改成 atlas 入口 */}
           {simplifiedMode ? (
-            <>📍 <strong>完整地图</strong>已经在 Atlas Lab 那边看过了 — 等下需要随时回去翻 <a href={"/atlas-lab/" + (topic.geography && topic.geography.atlasViewId ? topic.geography.atlasViewId : "")} target="_blank" rel="noopener noreferrer" style={{color: HC.accent, fontWeight: 600}}>Atlas Lab →</a><br/></>
-          ) : (
+            <>📍 <strong>完整地图</strong>已经在 Atlas Lab 那边看过了 — 等下需要随时回去翻 <a href={atlasViewIdForTopic ? "/atlas-lab/" + atlasViewIdForTopic : "/atlas-lab"} target="_blank" rel="noopener noreferrer" style={{color: HC.accent, fontWeight: 600}}>Atlas Lab →</a><br/></>
+          ) : (topic.geography ? (
             <>📍 <strong>页面顶部的「Where this happened」</strong>就是地图区 — 任何时候都可以点开看,再翻过来看今天。<br/></>
-          )}
+          ) : atlasViewIdForTopic ? (
+            <>📍 想看这段历史的地图? 去 <a href={"/atlas-lab/" + atlasViewIdForTopic} target="_blank" rel="noopener noreferrer" style={{color: HC.accent, fontWeight: 600}}>Atlas Lab →</a> 看完整的因果地图。<br/></>
+          ) : null)}
           ⭐ AI 说话里**金色的词**点一下能看 IPA + 听发音;<span style={{color: HC.teal, fontWeight: 600}}>蓝色虚线下划线的人名地名</span>点一下看解释。
         </div>
         <ol style={{margin: 0, paddingLeft: 20, fontSize: 14, color: HC.text, lineHeight: 1.7}}>
