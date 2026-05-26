@@ -5,7 +5,7 @@ export const VIEW = {
   topicTier: 'core',
   // 整合原 /history 模块的深度学版（14 轮苏格拉底 + Mastery Gate）
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=tang-song-china&from=atlas&atlasId=tang-song',
+  deepLearnUrl: '/history/tang-song-china?from=atlas&atlasId=tang-song',
   standardsAlignment: [
     { code: 'CA-HSS-7.3',   label: { cn: 'CA HSS-7.3 唐宋中国 — 文化、技术、政治成就', en: 'CA HSS-7.3 Tang/Song China — culture, technology, governance' } },
     { code: 'AP-WHAP-1.2',  label: { cn: 'AP World Unit 1.2 东亚发展 (Song Dynasty)', en: 'AP World Unit 1.2 Developments in East Asia (Song Dynasty)' } },

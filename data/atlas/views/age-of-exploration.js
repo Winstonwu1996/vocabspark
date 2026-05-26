@@ -7,7 +7,7 @@ export const VIEW = {
   grade: 7,
   topicTier: 'core',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=age-of-exploration-1492&from=atlas&atlasId=age-of-exploration',
+  deepLearnUrl: '/history/age-of-exploration-1492?from=atlas&atlasId=age-of-exploration',
   standardsAlignment: [
     { code: 'CA-HSS-7.11',  label: { cn: 'CA HSS-7.11 探索时代（哥伦布/达伽马/麦哲伦）', en: 'CA HSS-7.11 Age of Exploration' } },
     { code: 'CA-HSS-5.2',   label: { cn: 'CA HSS-5.2 美洲早期探索 + 欧洲遭遇', en: 'CA HSS-5.2 Early Americas + European contact' } },

@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'civil-rights',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=civil-rights-1965&from=atlas&atlasId=civil-rights',
+  deepLearnUrl: '/history/civil-rights-1965?from=atlas&atlasId=civil-rights',
   grade: 8,
   topicTier: 'supplementary',
   tierType: 'extended-ap',

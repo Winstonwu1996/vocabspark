@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'manifest-destiny',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=manifest-destiny-1845&from=atlas&atlasId=manifest-destiny',
+  deepLearnUrl: '/history/manifest-destiny-1845?from=atlas&atlasId=manifest-destiny',
   grade: 8,
   topicTier: 'core',
   standardsAlignment: [

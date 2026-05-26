@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'maurya-india',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=mauryan-india-261bce&from=atlas&atlasId=maurya-india',
+  deepLearnUrl: '/history/mauryan-india-261bce?from=atlas&atlasId=maurya-india',
   grade: 6,
   topicTier: 'core',
   standardsAlignment: [

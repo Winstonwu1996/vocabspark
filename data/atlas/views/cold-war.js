@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'cold-war',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=cold-war-1962&from=atlas&atlasId=cold-war',
+  deepLearnUrl: '/history/cold-war-1962?from=atlas&atlasId=cold-war',
   grade: 8,
   topicTier: 'supplementary',
   tierType: 'extended-ap',

@@ -4,7 +4,7 @@
 export const VIEW = {
   id: 'roman-peak',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=roman-empire-peak-117&from=atlas&atlasId=roman-peak',
+  deepLearnUrl: '/history/roman-empire-peak-117?from=atlas&atlasId=roman-peak',
   grade: 6,
   topicTier: 'core',
   standardsAlignment: [

@@ -4,7 +4,7 @@
 export const VIEW = {
   id: 'wwii',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=world-war-two-1942&from=atlas&atlasId=wwii',
+  deepLearnUrl: '/history/world-war-two-1942?from=atlas&atlasId=wwii',
   grade: 8,
   topicTier: 'supplementary',
   tierType: 'extended-ap',  // AP 进阶 — AP 考试重点主题

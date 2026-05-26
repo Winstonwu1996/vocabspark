@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'islamic-rise',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=islamic-rise&from=atlas&atlasId=islamic-rise',
+  deepLearnUrl: '/history/islamic-rise?from=atlas&atlasId=islamic-rise',
   grade: 7,
   topicTier: 'core',
   standardsAlignment: [

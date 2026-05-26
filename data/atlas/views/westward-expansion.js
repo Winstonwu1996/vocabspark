@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'westward-expansion',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=westward-expansion-1869&from=atlas&atlasId=westward-expansion',
+  deepLearnUrl: '/history/westward-expansion-1869?from=atlas&atlasId=westward-expansion',
   grade: 5,
   topicTier: 'core',
   standardsAlignment: [

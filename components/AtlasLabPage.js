@@ -42,7 +42,8 @@ function formatYear(y) {
 // atlas view id → /history 模块的 topicId（用 deepLearnUrl 提取）
 function extractHistoryTopicId(deepLearnUrl) {
   if (!deepLearnUrl) return null;
-  const m = deepLearnUrl.match(/topicId=([^&]+)/);
+  // 路径形式 /history/<id> 优先；兼容旧 query 形式 ?topicId=<id>
+  const m = deepLearnUrl.match(/\/history\/([^/?&]+)/) || deepLearnUrl.match(/topicId=([^&]+)/);
   return m ? m[1] : null;
 }
 

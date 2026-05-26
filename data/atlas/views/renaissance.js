@@ -7,7 +7,7 @@ export const VIEW = {
   grade: 7,
   topicTier: 'core',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=renaissance-1500&from=atlas&atlasId=renaissance',
+  deepLearnUrl: '/history/renaissance-1500?from=atlas&atlasId=renaissance',
   standardsAlignment: [
     { code: 'CA-HSS-7.8',   label: { cn: 'CA HSS-7.8 文艺复兴 — 起源与影响', en: 'CA HSS-7.8 Renaissance — origins and impact' } },
     { code: 'CA-HSS-7.9',   label: { cn: 'CA HSS-7.9 宗教改革（直接后果）', en: 'CA HSS-7.9 Reformation (direct consequence)' } },

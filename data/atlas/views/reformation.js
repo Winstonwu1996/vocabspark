@@ -7,7 +7,7 @@ export const VIEW = {
   grade: 7,
   topicTier: 'core',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=reformation-1517&from=atlas&atlasId=reformation',
+  deepLearnUrl: '/history/reformation-1517?from=atlas&atlasId=reformation',
   standardsAlignment: [
     { code: 'CA-HSS-7.9',   label: { cn: 'CA HSS-7.9 宗教改革（路德 / 加尔文 / 英国国教）', en: 'CA HSS-7.9 Reformation (Luther/Calvin/Anglican)' } },
     { code: 'AP-EURO-2.2',  label: { cn: 'AP European Unit 2.2 路德与新教改革', en: 'AP European Unit 2.2 Luther and the Reformation' } },

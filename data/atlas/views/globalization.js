@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'globalization',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=globalization-1995&from=atlas&atlasId=globalization',
+  deepLearnUrl: '/history/globalization-1995?from=atlas&atlasId=globalization',
   grade: 8,
   topicTier: 'supplementary',
   tierType: 'extended-ap',

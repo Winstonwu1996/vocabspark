@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'civil-war',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=civil-war-1861&from=atlas&atlasId=civil-war',
+  deepLearnUrl: '/history/civil-war-1861?from=atlas&atlasId=civil-war',
   grade: 8,
   topicTier: 'core',
   standardsAlignment: [

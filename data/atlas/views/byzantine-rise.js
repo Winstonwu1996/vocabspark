@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'byzantine-rise',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=byzantine-rise&from=atlas&atlasId=byzantine-rise',
+  deepLearnUrl: '/history/byzantine-rise?from=atlas&atlasId=byzantine-rise',
   grade: 7,
   topicTier: 'core',
   standardsAlignment: [

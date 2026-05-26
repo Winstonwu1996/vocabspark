@@ -8,7 +8,7 @@ export const VIEW = {
   // 5-5: Story-First Pedagogy v2 lens 已 ship (3 lens: Agnolo / Konrad / Devorah)
   // 启用 deepLearn 入口 + atlas keyFigures 自动从 lens 派生 (per lib/atlas-views.js)
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=black-death-1347&from=atlas&atlasId=black-death',
+  deepLearnUrl: '/history/black-death-1347?from=atlas&atlasId=black-death',
   standardsAlignment: [
     { code: 'CA-HSS-7.6.7', label: { cn: 'CA HSS-7.6.7 黑死病社会经济影响', en: 'CA HSS-7.6.7 Plague social and economic impact' } },
     { code: 'AP-WHAP-2.6',  label: { cn: 'AP World Unit 2.6 交流网络的环境后果（含瘟疫）', en: 'AP World Unit 2.6 Environmental Consequences of Connectivity (incl. plague)' } },

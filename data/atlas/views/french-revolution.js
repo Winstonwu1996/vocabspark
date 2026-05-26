@@ -4,7 +4,7 @@
 export const VIEW = {
   id: 'french-revolution',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=french-revolution-1789&from=atlas&atlasId=french-revolution',
+  deepLearnUrl: '/history/french-revolution-1789?from=atlas&atlasId=french-revolution',
   grade: 7,
   topicTier: 'supplementary',     // HSS-7 不是核心单元；HSS-10 / AP 必修
   tierType: 'extended-ap',         // AP 进阶 — AP-EURO-2.7 / AP-WHAP-3.1 重点

@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'american-revolution',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=american-revolution-1776&from=atlas&atlasId=american-revolution',
+  deepLearnUrl: '/history/american-revolution-1776?from=atlas&atlasId=american-revolution',
   grade: 5,
   topicTier: 'core',
   standardsAlignment: [

@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'mesopotamia',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=hammurabi-code-1754bce&from=atlas&atlasId=mesopotamia',
+  deepLearnUrl: '/history/hammurabi-code-1754bce?from=atlas&atlasId=mesopotamia',
   grade: 6,
   topicTier: 'core',
   standardsAlignment: [

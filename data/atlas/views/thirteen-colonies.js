@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'thirteen-colonies',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=thirteen-colonies-1700&from=atlas&atlasId=thirteen-colonies',
+  deepLearnUrl: '/history/thirteen-colonies-1700?from=atlas&atlasId=thirteen-colonies',
   grade: 5,
   topicTier: 'core',
   standardsAlignment: [

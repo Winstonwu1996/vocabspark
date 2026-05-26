@@ -7,7 +7,7 @@ export const VIEW = {
   // 当前 Phase 0：Magna Carta 是首个接入 deep-learn 的 Topic，跳转 /history
   // Phase 1+ 计划：所有 40 Topic 都有 conversation engine（参考 HISTORY_MERGE_STRATEGY.md）
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=magna-carta-1215&from=atlas&atlasId=magna-carta',  // 带 from/atlasId 触发返回按钮 + 完成回跳
+  deepLearnUrl: '/history/magna-carta-1215?from=atlas&atlasId=magna-carta',  // 带 from/atlasId 触发返回按钮 + 完成回跳
   standardsAlignment: [
     { code: 'CA-HSS-7.6.5',  label: { cn: 'CA HSS-7.6.5 中世纪欧洲法律传统（包括大宪章）', en: 'CA HSS-7.6.5 Medieval European legal traditions (including Magna Carta)' } },
   ],

@@ -4,7 +4,7 @@
 export const VIEW = {
   id: 'han-china',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=han-china-130bce&from=atlas&atlasId=han-china',
+  deepLearnUrl: '/history/han-china-130bce?from=atlas&atlasId=han-china',
   grade: 6,
   topicTier: 'core',
   standardsAlignment: [

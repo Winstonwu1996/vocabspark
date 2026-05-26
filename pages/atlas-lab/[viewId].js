@@ -34,7 +34,7 @@ export async function getStaticProps({ params }) {
   // (避免 atlas keyFigures 跟 history lens 不一致的事故)
   let storyboardModule = null;
   if (view.deepLearnEnabled && view.deepLearnUrl) {
-    const m = view.deepLearnUrl.match(/topicId=([^&]+)/);
+    const m = view.deepLearnUrl.match(/\/history\/([^/?&]+)/) || view.deepLearnUrl.match(/topicId=([^&]+)/);
     const histId = m ? m[1] : null;
     storyboardModule = histId ? STORYBOARDS[histId] : null;
   }

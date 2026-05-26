@@ -6,7 +6,7 @@ export const VIEW = {
   topicTier: 'core',
   // 整合原 /history 模块的深度学版（13 轮苏格拉底 + 三方视角 + Mastery Gate）
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=crusades-1099&from=atlas&atlasId=crusades',
+  deepLearnUrl: '/history/crusades-1099?from=atlas&atlasId=crusades',
   standardsAlignment: [
     { code: 'CA-HSS-7.6.4', label: { cn: 'CA HSS-7.6.4 十字军东征 — 起源 / 进程 / 后果', en: 'CA HSS-7.6.4 Crusades — origins / events / outcomes' } },
     { code: 'AP-WHAP-1.6',  label: { cn: 'AP World Unit 1.6 中世纪宗教冲突', en: 'AP World Unit 1.6 Religious Conflict in Medieval Era' } },

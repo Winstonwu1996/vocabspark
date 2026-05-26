@@ -7,7 +7,7 @@ export const VIEW = {
   grade: 7,
   topicTier: 'core',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=mali-empire-1235&from=atlas&atlasId=mali-empire',
+  deepLearnUrl: '/history/mali-empire-1235?from=atlas&atlasId=mali-empire',
   standardsAlignment: [
     { code: 'CA-HSS-7.4', label: { cn: 'CA HSS-7.4 西非帝国（加纳 / 马里 / 桑海）', en: 'CA HSS-7.4 West African empires (Ghana / Mali / Songhai)' } },
     { code: 'AP-WHAP-2.4', label: { cn: 'AP World Unit 2.4 跨撒哈拉商路', en: 'AP World Unit 2.4 Trans-Saharan trade routes' } },

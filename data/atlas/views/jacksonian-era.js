@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'jacksonian-era',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=jackson-indian-removal-1830&from=atlas&atlasId=jacksonian-era',
+  deepLearnUrl: '/history/jackson-indian-removal-1830?from=atlas&atlasId=jacksonian-era',
   grade: 8,
   topicTier: 'core',
   standardsAlignment: [

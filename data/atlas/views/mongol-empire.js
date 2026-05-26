@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'mongol-empire',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=mongol-empire&from=atlas&atlasId=mongol-empire',
+  deepLearnUrl: '/history/mongol-empire?from=atlas&atlasId=mongol-empire',
   grade: 7,
   topicTier: 'core',
   standardsAlignment: [

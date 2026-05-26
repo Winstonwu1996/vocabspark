@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'enlightenment',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=enlightenment&from=atlas&atlasId=enlightenment',
+  deepLearnUrl: '/history/enlightenment?from=atlas&atlasId=enlightenment',
   grade: 7,
   topicTier: 'supplementary',
   tierType: 'extended-ap',  // AP 进阶 — AP 考试重点主题

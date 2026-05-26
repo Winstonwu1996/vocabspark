@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'slavery-divisions',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=slavery-abolition-1850&from=atlas&atlasId=slavery-divisions',
+  deepLearnUrl: '/history/slavery-abolition-1850?from=atlas&atlasId=slavery-divisions',
   grade: 8,
   topicTier: 'core',
   standardsAlignment: [

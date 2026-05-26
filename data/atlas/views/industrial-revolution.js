@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'industrial-revolution',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=industrial-revolution-1800&from=atlas&atlasId=industrial-revolution',
+  deepLearnUrl: '/history/industrial-revolution-1800?from=atlas&atlasId=industrial-revolution',
   grade: 8,
   topicTier: 'core',
   standardsAlignment: [

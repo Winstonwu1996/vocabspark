@@ -20,20 +20,20 @@
 
 import Head from 'next/head';
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { BrandNavBar } from '../components/BrandNavBar';
-import { VoiceInputButton } from '../components/VoiceInputButton';
-import { C, FONT, FONT_DISPLAY, S, NUM, globalCSS } from '../lib/theme';
-import { callAPIStream, callAPIFast, tryJSON } from '../lib/api';
-import { supabase } from '../lib/supabase';
-import { useSimplifiedMode } from '../lib/hooks/use-simplified-mode';
-import { shouldShowHistoryWalkthrough } from '../lib/onboarding-state';
+import { BrandNavBar } from '../../components/BrandNavBar';
+import { VoiceInputButton } from '../../components/VoiceInputButton';
+import { C, FONT, FONT_DISPLAY, S, NUM, globalCSS } from '../../lib/theme';
+import { callAPIStream, callAPIFast, tryJSON } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
+import { useSimplifiedMode } from '../../lib/hooks/use-simplified-mode';
+import { shouldShowHistoryWalkthrough } from '../../lib/onboarding-state';
 
 import {
   HISTORY_TOPICS,
   THROUGH_LINES,
   TOPIC_REGISTRY,
   getTopic,
-} from '../lib/history-topics';
+} from '../../lib/history-topics';
 import {
   buildHistorySystemPrompt,
   buildTurnPrompt,
@@ -45,7 +45,7 @@ import {
   buildDefinitionEvalPrompt,
   buildApplicationEvalPrompt,
   buildFreeChatSystemPrompt,
-} from '../lib/history-prompts';
+} from '../../lib/history-prompts';
 import {
   getEffectiveTurns,
   isStoryboardTopic,
@@ -53,7 +53,7 @@ import {
   hasTopicLenses,
   getTopicLenses,
   getTopicLensMeta,
-} from '../lib/history-runtime';
+} from '../../lib/history-runtime';
 import {
   loadProfile,
   parseProfileFields,
@@ -82,19 +82,19 @@ import {
   bridgeReviewToVocab,
   saveLearningReceipt,
   loadLearningReceipt,
-} from '../lib/history-storage';
-import { inferCurriculum } from '../lib/curriculum-data';
+} from '../../lib/history-storage';
+import { inferCurriculum } from '../../lib/curriculum-data';
 
 // ─── history-engine 抽离组件（pages/history.js 和未来的 AtlasLabPage embed mode 共用）
-import { HC } from '../components/history-engine/theme';
-import { renderBilingualText } from '../components/history-engine/bilingual';
-import { MustMemorizePopup, TermPopup } from '../components/history-engine/popups';
-import { ConversationStream } from '../components/history-engine/ConversationStream';
-import { MasteryGateOverlay } from '../components/history-engine/MasteryGate';
-import { CompletionScreen } from '../components/history-engine/CompletionScreen';
-import { ProfileSetup } from '../components/history-engine/ProfileSetup';
-import { ThroughLineMap } from '../components/history-engine/CourseBrowser';
-import { hasNotebook, loadNotebook } from '../lib/history-storyboards/notebooks/index.js';
+import { HC } from '../../components/history-engine/theme';
+import { renderBilingualText } from '../../components/history-engine/bilingual';
+import { MustMemorizePopup, TermPopup } from '../../components/history-engine/popups';
+import { ConversationStream } from '../../components/history-engine/ConversationStream';
+import { MasteryGateOverlay } from '../../components/history-engine/MasteryGate';
+import { CompletionScreen } from '../../components/history-engine/CompletionScreen';
+import { ProfileSetup } from '../../components/history-engine/ProfileSetup';
+import { ThroughLineMap } from '../../components/history-engine/CourseBrowser';
+import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/notebooks/index.js';
 
 // ─── 主组件 ────────────────────────────────────────────────────────
 export default function HistoryPage() {
@@ -350,7 +350,9 @@ export default function HistoryPage() {
     if (typeof window === "undefined") return;
     try {
       var p = new URLSearchParams(window.location.search);
-      var t = p.get("topicId");
+      // 路由优先：/history/<topicId> 路径参数 > ?topicId= query（atlas embedded 仍用 query）
+      var pathMatch = window.location.pathname.match(/\/history\/([^/?#]+)/);
+      var t = (pathMatch && decodeURIComponent(pathMatch[1])) || p.get("topicId");
       // 检测 atlas-lab 跳转
       if (p.get("from") === "atlas") {
         setFromAtlas({ atlasId: p.get("atlasId") || null });
@@ -1535,6 +1537,12 @@ export default function HistoryPage() {
                 setTurnIndex(0);
                 setSavedSession(null);
                 setSelectedLensId(null);  // 切 Topic 重置 lens 选择
+                // 同步 URL 到 /history/<newId>（不整页刷新，保持 SPA 速度）
+                try {
+                  if (typeof window !== "undefined" && window.history && window.history.replaceState) {
+                    window.history.replaceState(null, "", "/history/" + encodeURIComponent(newId));
+                  }
+                } catch (e) {}
                 // 不重置 phase — 让她在 intro 屏看新 Topic
               }}
               onShowWalkthrough={function() { setShowWalkthrough(true); }}

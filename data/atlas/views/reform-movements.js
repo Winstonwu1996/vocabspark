@@ -3,7 +3,7 @@
 export const VIEW = {
   id: 'reform-movements',
   deepLearnEnabled: true,
-  deepLearnUrl: '/history?topicId=reform-movements-1840&from=atlas&atlasId=reform-movements',
+  deepLearnUrl: '/history/reform-movements-1840?from=atlas&atlasId=reform-movements',
   grade: 8,
   topicTier: 'core',
   standardsAlignment: [
