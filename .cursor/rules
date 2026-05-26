@@ -1,0 +1,20 @@
+# VocabSpark — Cursor 启动指令 (薄 shim)
+
+Boot 时: **先读 `../AGENTS.md`** (canonical, 项目级 source of truth)
+本文件只放 Cursor 特有的额外指令.
+
+## Cursor 特有
+
+1. **Multi-model**: Cursor 可接 Claude / GPT-4 / DeepSeek 等. 主推 Sonnet 4.6+ 或 Opus 4.7 做复杂 reasoning, DeepSeek 做中文翻译类任务.
+
+2. **Composer/Agent 模式**: 修复 bug 用 Agent 模式 (自主多文件), 文案改动用 Composer (单文件).
+
+3. **Tab 智能补全**: Boundaries §Ask First 类改动 (改 schema / 加依赖) 即使补全建议出现, 不要直接接受 — 先停下问 William.
+
+4. **No deploy**: Boundaries §Never — 不要在 Cursor 里直接跑 `vercel deploy` 或 `vercel --prod`. 必须走 git push → Vercel 自动 deploy 路径, 且必须 PR review.
+
+5. **Cursor rules format note**: 本文件用 Markdown 写, 也是 Cursor 0.40+ 支持的格式. 如果 Cursor 升到新版要求 `.mdc` 或 `.cursorrules`, 同步更新但保持引用 `../AGENTS.md` 的原则.
+
+---
+
+*薄 shim · 真背景在 ../AGENTS.md*

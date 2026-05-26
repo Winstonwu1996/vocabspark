@@ -292,7 +292,7 @@ var buildSys = (profile, goal, goalCustom) => {
     var found2 = STUDY_GOAL_OPTIONS.find(function(o) { return o.key === goal; });
     if (found2) goalText = "\n\n【学习目标】" + found2.label + "（" + found2.desc + "）\n请贴合该目标。";
   }
-  return "你是幽默有耐心的中英双语词汇导师，风格轻松活泼——会用梗、偶尔吐槽抖机灵。\n\n【学习画像】\n" + p + goalText + "\n\n深度利用画像：例句、画面、比喻必须紧扣用户的爱好、常去地方、日常生活。让用户觉得\"说的就是我\"。" + SAFETY_GUARDRAILS;
+  return "你是幽默有耐心的中英双语词汇导师，风格轻松活泼——会用梗、偶尔吐槽抖机灵。\n\n【学习画像】\n" + p + goalText + "\n\n**画像的用法：用得轻、用得准。**\n- 用画像理解学生（年级、语言层级、文化背景、生活半径），让你知道他是谁\n- **姓名 / 朋友 / 家人名 / 学校 / 城市可以自然出现在例句里**——这些是温度感的来源，不要避讳\n- 但**具体兴趣**（如「王者荣耀」「Hannah Montana」「Jay Chou」「篮球」）每 5–7 个词最多用 1 次作锚点，**不要每句都套同一个兴趣**——那是「硬往上靠」的违和感来源\n- 教学讲解可以**穿插第二人称**（\"想象你走进...\" / \"你应该见过这种感觉...\"）做视角变化，避免每句都是第三人称\n- 例句的「主角」可以是学生本人，也可以是真实世界的现象/场景/瞬间——两种都有效，混合使用更自然" + SAFETY_GUARDRAILS;
 };
 
 // E3: AI 输出安全边界 — 所有 sys prompt 都附加。
@@ -341,7 +341,13 @@ var buildSysGenericTeach = (goal, goalCustom) => {
     if (found2) goalText = "\n\n【学习目标】" + found2.label + "（" + found2.desc + "）";
   }
   return "你是幽默有耐心的中英双语词汇导师，风格轻松活泼——会用梗、偶尔吐槽抖机灵。" + goalText +
-    "\n\n本次 teach 用通用学习场景的例句（学校、运动、阅读、旅行、日常对话），不要假设具体姓名/朋友/兴趣。例句鲜活有画面，让任何学习者都能产生共鸣。" + SAFETY_GUARDRAILS;
+    "\n\n本次 teach 用通用学习场景的例句（学校、运动、阅读、旅行、日常对话），不要假设具体姓名/朋友/兴趣（这是为了缓存共享）。\n\n" +
+    "**但通用 ≠ 抽象。** 通用的反面是抽象，不是「鲜活」。具体做法：\n" +
+    "- 教学讲解优先**第二人称**（\"想象你走进...\" / \"你应该见过这种感觉...\" / \"如果你正在...\"），让学生用自己的经验填空，而不是 AI 替他填\n" +
+    "- 例句必须有**具体的感官锚点**：一阵风、教室后排椅子腿摩擦地板的声音、咖啡冷掉的那一刻、走廊灯刚熄、运动鞋蹭过塑胶跑道——不要写「她感到悲伤」这种抽象描述\n" +
+    "- 不要写第三人称小故事（\"A girl walked into the room...\" / \"There was a boy who...\"）——那种距离感会让任何学习者都跳戏\n" +
+    "- 例句的「主角」是真实世界的现象/场景/瞬间，不是某个虚构人物\n\n" +
+    "效果：缓存通用 ✅，但每个学生看到都觉得「这就是在跟我说话」。" + SAFETY_GUARDRAILS;
 };
 
 var buildGuessPrompt = (word, learned) => {
@@ -732,6 +738,36 @@ var buildTeachCachePrompt = (word, classifyResult) => {
     "- use.scenarios 严格 2 个，use.collocations 严格 2 个\n" +
     "- 例句用通用学习场景，不要假设具体姓名/朋友/兴趣\n\n" +
 
+    "直接输出纯 JSON。";
+};
+
+// Stage 2: 个性化悄悄话 prompt（两阶段 teach 的第二阶段）
+// Stage 1 (buildTeachCachePrompt) 拿到通用 teach 含通用 closing，
+// Stage 2 用全画像（buildSys + sysP）生成个性化 closing 替换之。
+// 输出极小（一个字段 ~80 字），不入缓存。失败时静默保留通用版。
+var buildClosingPersonalPrompt = (word, classifyResult) => {
+  var cls = classifyResult || {};
+  var CLOSING_STYLES = [
+    { name: "金句对比", spec: "以「以前你可能会说 X，其实 W 更准 — 因为...」格式开头，X 是用户熟悉的简单词，W 是本词。重点突出本词独有的细微差别。" },
+    { name: "场景应用", spec: "用「下次在 [画像里的具体场景] 时，用 W 比 [常见替代词] 更有画面」开头。可以具体到画像里的兴趣/地点/朋友，但同一兴趣不要反复套。" },
+    { name: "联想触发", spec: "用「看到 [一个具体物/场景] 就想到 W」开头，给一个画面感强的钩子。结尾留白让人回味，不必带建议字眼。" },
+    { name: "直呼姓名", spec: "开头直接喊用户名字（从画像里取），像朋友说话。例如「Willow，你昨天提到 X 时其实就在描述 W 的状态」。要懂她的口吻。" },
+    { name: "反向提问", spec: "用一个具体可视化的问题结尾，让她想象。例如「想象你跟 [画像里的朋友] 说 [场景]，会用 W 吗？」不要给答案，留思考空间。" },
+  ];
+  var closingStyle = CLOSING_STYLES[Math.floor(Math.random() * CLOSING_STYLES.length)];
+  var comparedHint = cls.comparedWith ? "\n本词的对比词：" + cls.comparedWith + "（可用于「金句对比」风格）" : "";
+
+  return "# 任务\n" +
+    "为单词 \"" + word + "\" 生成「悄悄话」—— 给学生的最后一句温暖话。" + comparedHint + "\n\n" +
+    "# 风格（本次必须用此风格）\n" +
+    "【" + closingStyle.name + "】\n" + closingStyle.spec + "\n\n" +
+    "# 硬性要求\n" +
+    "- 50-80 字，口语化，像懂她的朋友说话，不是老师下结论\n" +
+    "- 自然结合学习画像（姓名/朋友/家人/学校/城市/兴趣都可出现）\n" +
+    "- 一句话只用 1 个画像锚点，不堆砌\n" +
+    "- 不要喊'同学'、不要用'记住'/'要注意'等说教词\n\n" +
+    "# 输出格式（严格 JSON，不要任何额外文字、不要 markdown 代码块）\n" +
+    '{"closing":"悄悄话内容"}\n\n' +
     "直接输出纯 JSON。";
 };
 
@@ -2865,6 +2901,8 @@ export default function App() {
   var [wordStart, setWordStart] = useState(null);
 
   var dataCache = useRef({});
+  // 用 ref 跟踪当前正在展示的词 — Stage 2 异步回调里判断是否触发 re-render
+  var currentWordRef = useRef("");
   // Round 1.5+：预取串行化 —— inflight 记录已入队的 batchStart，promise 是当前 chain 尾巴
   var preloadChainRef = useRef({ inflight: new Set(), promise: Promise.resolve() });
   var [batchProgress, setBatchProgress] = useState(0);
@@ -4424,6 +4462,8 @@ export default function App() {
   };
 
   var currentWord = wordList[idx] || "";
+  // 同步给 ref —— Stage 2 异步回调用 currentWordRef.current 拿最新值（避免 stale closure）
+  currentWordRef.current = currentWord;
 
   var getProfileKeywords = function() {
     if (!profile) return [];
@@ -4764,6 +4804,37 @@ export default function App() {
                 dataCache.current[word]._streamReadyTriggered = true;
                 readyWordSet.add(word);
                 tryResolveEarlyStart();
+              }
+
+              // ── Stage 2: 个性化悄悄话 ─────────────────────────────
+              // Stage 1 (缓存共享) 拿到通用 closing 后,起一个轻量 Stage 2 call,
+              // 用全画像 sysP 生成个性化 closing 替换之。
+              // 失败/超时/格式错误时静默保留 Stage 1 的通用 closing。
+              // 零持久化数据影响: 只动 in-memory dataCache 和 teachData state。
+              if (_useCache && dataCache.current[word] && dataCache.current[word].teachJSON &&
+                  dataCache.current[word].teachJSON.closing && !dataCache.current[word].teachJSON._closingPersonalized) {
+                (function fireStage2() {
+                  callWithClientRetry(function() {
+                    return callAPIFast(sysP, buildClosingPersonalPrompt(word, cls), { preferredProviders: preferred, jsonMode: true });
+                  }).then(function(rawClosing) {
+                    var parsed = rawClosing ? tryJSON(rawClosing) : null;
+                    var newClosing = (parsed && typeof parsed.closing === 'string' && parsed.closing.trim().length >= 20)
+                      ? parsed.closing.trim() : null;
+                    if (!newClosing) return;
+                    var cache = dataCache.current[word];
+                    if (!cache || !cache.teachJSON) return;
+                    cache.teachJSON.closing = newClosing;
+                    cache.teachJSON._closingPersonalized = true;
+                    // 如果用户此刻正在看这个词的 teach 页,触发 re-render 替换 closing
+                    if (currentWordRef.current === word) {
+                      setTeachData(function(prev) {
+                        return prev ? Object.assign({}, prev, { closing: newClosing, _closingPersonalized: true }) : prev;
+                      });
+                    }
+                  }).catch(function(err) {
+                    console.warn("[teach] stage 2 closing failed for " + word + ":", err && err.message);
+                  });
+                })();
               }
             }).catch(function(err) {
               console.warn("[loadBatch] teach failed for " + word + ":", err.message);
