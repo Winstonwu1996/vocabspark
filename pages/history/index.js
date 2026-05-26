@@ -9,12 +9,42 @@ import { FONT, FONT_DISPLAY, globalCSS } from '../../lib/theme';
 import { HC } from '../../components/history-engine/theme';
 import { CourseBrowser } from '../../components/history-engine/CourseBrowser';
 
+// 6 张卖点卡。顺序按「中国家长付费决策」排：① 学校对得上 ② 三视角 ③ 中国底子 ④ 地图 ⑤ 双语+发音 ⑥ 史料考证。
+// 措辞硬规则（升学规划专家 + 历史老师双 Agent 一致建议）：
+// · 不出现「应试焦虑」「完美适配中国孩子」「最难」这类引战/绝对化措辞
+// · 不上 HSS code 字符串（如 7.6.5）到 Hero —— 那是课详情页的信任凭证，不是首屏钩子
+// · 不打包票拿 A —— 诚实声明放 Hero 小字
 var SELLING_POINTS = [
-  { icon: '🎭', cn: '同一段历史，走 3 遍不同视角', sub: '读同一件事，先当掌权者，再当夹在中间的人，再当被碾过去的人 —— 三种活法，看完你自己有判断。' },
-  { icon: '💬', cn: 'AI 用你的世界陪你聊，不是讲课', sub: '从你熟的事起手，中英文都行，卡住了它换个说法。像比你大几岁的人陪你想，不是老师站讲台。' },
-  { icon: '🧠', cn: '练的是「把想法说清楚」这件真本事', sub: '不是答对就完事 —— 它会追问「为什么」，帮你把一个看法撑成一段论证。写 essay、考 AP 真用得上。' },
-  { icon: '📚', cn: '对着加州课纲 + AP 设计', sub: '51 门课，从古代文明一路到美国史和近现代世界。学校学到哪，这里能接上。' },
-  { icon: '🀄', cn: '中国孩子的历史底子是优势', sub: '你熟的唐宋、家国天下，这里当「主场知识」—— 用它当锚点去理解世界历史，两边对照着学。' },
+  {
+    icon: '📚',
+    cn: '学校学到哪，这里对得上',
+    sub: '51 节课对照加州 G5-G8 课纲 + AP World / APUSH，每节课自带课程笔记 + 课后掌握检测，下周单元测要考的那一章，这里能接上。',
+  },
+  {
+    icon: '🎭',
+    cn: '同一段历史，3 个真实视角讲一遍',
+    sub: '掌权者怎么想、夹在中间的人怎么活、被碾过去的人怎么说 —— 三种立场各自讲完，观点不是给的，是从对照里自己长出来的。写 essay、答 DBQ 直接能用。',
+  },
+  {
+    icon: '🀄',
+    cn: '中文底子是主场，不是包袱',
+    sub: '讲法国大革命对着戊戌变法看，讲冷战让你说说家里听过的版本 —— 两边视角同时在，反而比美国本地孩子学得透。',
+  },
+  {
+    icon: '🗺',
+    cn: '先看地图再听人讲',
+    sub: '配套 Atlas Lab 历史地图系统：从君士坦丁堡到伊斯坦布尔、汉朝同时代的罗马在哪里，因果关系画在地图上，看完一眼记得住。',
+  },
+  {
+    icon: '🔤',
+    cn: '中英文随时切，考点单词金色高亮',
+    sub: '想用中文听就中文，想练英文就切英文。AI 说话里的考点词点一下看 IPA + 真人发音，AP 阅读题里要认得的那些词，一边听一边记。',
+  },
+  {
+    icon: '📜',
+    cn: '每句话都查得到出处',
+    sub: '故事严格基于真实史料 + Fact Ledger 校验：「Et tu, Brute」「让他们吃蛋糕」这种以讹传讹的引文，我们会标明白「这是后人加的，不当真话讲」。',
+  },
 ];
 
 export default function HistoryHome() {
@@ -43,7 +73,7 @@ export default function HistoryHome() {
   return (
     <>
       <Head>
-        <title>历史 · 从不同人的眼睛看同一件事 | Know U. Learning</title>
+        <title>历史 · 三个视角看同一件事 | Know U. Learning</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       </Head>
       <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
@@ -63,30 +93,39 @@ export default function HistoryHome() {
         />
 
         <div className="h-container">
-          {/* ── 卖点 Hero ── */}
+          {/* ── 卖点 Hero (A+B 合并:成绩单痛点 + 新移民妈妈共情 + 解法) ── */}
           <div style={{
             marginTop: 16, marginBottom: 18,
-            padding: "22px 20px",
+            padding: "24px 22px",
             background: HC.parchmentHi,
             border: "1px solid " + HC.parchmentLo,
             borderRadius: 18,
           }}>
             <h1 style={{
-              margin: "0 0 8px", fontFamily: FONT_DISPLAY,
-              fontSize: 23, lineHeight: 1.3, color: HC.ink,
+              margin: "0 0 10px", fontFamily: FONT_DISPLAY,
+              fontSize: 24, lineHeight: 1.3, color: HC.ink,
             }}>
-              历史不是背年代<span style={{color: HC.accent}}> —— </span>是从不同人的眼睛，看同一件事
+              她在国内能把唐宋背得倒背如流，<br/>到这边历史课只能拿 B-。
             </h1>
-            <p style={{margin: "0 0 16px", fontSize: 13.5, color: HC.text, opacity: 0.85, lineHeight: 1.6}}>
-              History isn't memorizing dates — it's seeing one event through different people's eyes.
+            <p style={{
+              margin: "0 0 6px", fontSize: 14, color: HC.text, lineHeight: 1.65,
+            }}>
+              不是她不努力 —— 是 essay 要的「为什么」「谁吃亏」「你怎么看」，
+              <br/>国内的历史课里没人这样问过她。
+            </p>
+            <p style={{
+              margin: "0 0 18px", fontSize: 13.5, color: HC.text, opacity: 0.85, lineHeight: 1.6,
+            }}>
+              我们把每段历史拆成 3 个人的视角，从看懂到说得清，
+              <br/>直到她能写出一段经得起追问的论证。
             </p>
 
-            <div style={{display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))"}}>
+            <div style={{display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))"}}>
               {SELLING_POINTS.map(function(p, i) {
                 return (
                   <div key={i} style={{
                     display: "flex", gap: 10,
-                    padding: "11px 13px",
+                    padding: "12px 14px",
                     background: HC.card,
                     border: "1px solid " + HC.border,
                     borderRadius: 12,
@@ -102,11 +141,23 @@ export default function HistoryHome() {
               })}
             </div>
 
+            {/* 诚实声明（升学规划专家强烈建议）：不打包票拿 A，否则长期口碑反噬 */}
+            <div style={{
+              marginTop: 14,
+              padding: "8px 12px",
+              background: "rgba(0,0,0,0.03)",
+              borderRadius: 8,
+              fontSize: 11.5, color: HC.textSec, opacity: 0.9, lineHeight: 1.5,
+              fontStyle: "italic",
+            }}>
+              我们不打包票拿 A —— 我们让她从「背得出」变成「说得清」。分数是副产品，不是承诺。
+            </div>
+
             <div style={{
               marginTop: 14, fontSize: 12, color: HC.textSec, opacity: 0.85,
               display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8,
             }}>
-              <span>👇 选一段历史开始。点任意一门课，第一次进会先花 30 秒认识你（只存这台设备上）。</span>
+              <span>👇 选一段历史开始。第一次进会先花 30 秒认识你（只存这台设备上）。</span>
               <a href="/atlas-lab" style={{
                 flex: "0 0 auto",
                 padding: "6px 12px",
@@ -117,7 +168,7 @@ export default function HistoryHome() {
             </div>
           </div>
 
-          {/* ── 选课：51 门通史脉络 ── */}
+          {/* ── 选课：51 门，支持「按年级 / AP / 脉络」三种 Mode 切换 ── */}
           <CourseBrowser onSwitch={goTopic} />
         </div>
       </div>
