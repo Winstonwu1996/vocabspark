@@ -679,6 +679,17 @@ export function ConversationStream(props) {
                 </div>
               )}
               {sourceCard}
+              {/* 5-26 (Codex P0-2): sourcing bridge 从 input-bar 移到 AI bubble 下方作只读卡 — */}
+              {/* 输入门 ≤2 节流后 N10 bridge 的 expectsInput=false, 但 _sourcingBridge 仍生成。*/}
+              {/* 之前只在 awaitingUserInput=true 时渲染, 节流后永远不显示 → 史料对读教学锚丢失。*/}
+              {/* 现在 unconditional 渲染:学生仍能看到「同一件事两个视角」史料对读, 只是不强制输入。 */}
+              {(function() {
+                var matchTurn = turns.find(function(tn) { return tn.n === entry.turn; });
+                if (matchTurn && matchTurn._sourcingBridge) {
+                  return <SourceBridgeCard bridge={matchTurn._sourcingBridge} englishLevel={props.englishLevel} />;
+                }
+                return null;
+              })()}
             </div>
           );
         })}
@@ -709,10 +720,7 @@ export function ConversationStream(props) {
       {/* ── 输入栏 / 继续按钮 / mastery gate 入口 ── */}
       {awaitingUserInput && (
         <div className="input-bar">
-          {/* 5-22 Package 3: N10 双 lens sourcing bridge — AP HIPP 练习 */}
-          {currentTurn._sourcingBridge && (
-            <SourceBridgeCard bridge={currentTurn._sourcingBridge} englishLevel={props.englishLevel} />
-          )}
+          {/* 5-26 (Codex P0-2): sourcing bridge 已移到 AI bubble 下方作只读卡 — 见 L681+ */}
           {/* 5-22 Package 2: N6 检索门 — 跟 synthesis/meta 真问题视觉区分 */}
           {currentTurn._retrievalGate && (
             <div style={{
@@ -727,7 +735,8 @@ export function ConversationStream(props) {
               </span>
             </div>
           )}
-          {!currentTurn._sourcingBridge && (
+          {/* 5-26 (Codex P0-2): bridge 移到 AI bubble 下方后, input-bar 总是显示 prompt(原来在 bridge 内有 prompt 自带, 现在 input-bar 这个 prompt 不再冗余) */}
+          {true && (
             <div className="prompt">{pickHookText(currentTurn.inputPrompt, props.englishLevel === "high") || "你的回答"}</div>
           )}
 

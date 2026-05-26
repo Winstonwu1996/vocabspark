@@ -1621,44 +1621,9 @@ export default function HistoryPage() {
           {/* ── Phase: conversation ── */}
           {phase === "conversation" && topic && (
             <>
-              {/* CN/EN 语言切换（5-4 加，default EN）*/}
-              {/* 5-5: lens 模式下 _prewrittenContent 实际有 cn/en 双语,toggle 切换 */}
-              {/*       触发 line 728 useEffect 替换所有已渲染 AI 消息为新语言 → toggle 必须保留 */}
-              <div style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                marginBottom: 6,
-                gap: 4,
-              }}>
-                {[
-                  { v: "high",     l: "EN" },
-                  { v: "balanced", l: "中" },
-                ].map(function(opt) {
-                  var active = englishLevel === opt.v || (opt.v === "balanced" && englishLevel !== "high");
-                  return (
-                    <button
-                      key={opt.v}
-                      onClick={function() {
-                        setEnglishLevelState(opt.v);
-                        saveEnglishLevel(opt.v);
-                      }}
-                      style={{
-                        padding: "3px 10px",
-                        background: active ? HC.accent : "transparent",
-                        color: active ? "#fff8e8" : HC.textSec,
-                        border: "1px solid " + (active ? HC.accent : HC.border),
-                        borderRadius: 999,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        fontFamily: "inherit",
-                        opacity: active ? 1 : 0.7,
-                      }}
-                      title={opt.v === "high" ? "切换英文" : "切换中文"}
-                    >{opt.l}</button>
-                  );
-                })}
-              </div>
+              {/* 5-26 (Codex minor): conversation 内部 EN/中 toggle 删除 — TopicHero 已有 fixed 浮动 */}
+              {/*       右上 toggle 全 phase 可见,这里再放一个重复且位置不一致。L728 useEffect */}
+              {/*       仍依赖 englishLevel state,由 TopicHero toggle 设置,行为不变。 */}
               <ConversationStream
                 topic={topic}
                 topicId={topicId}

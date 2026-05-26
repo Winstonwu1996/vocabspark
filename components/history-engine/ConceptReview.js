@@ -54,6 +54,13 @@ function LensProgress(props) {
           var nameEn = lens.nameEn || (lens.name && lens.name.en) || lens.name || lens.id;
           if (typeof nameCn === "object") nameCn = nameCn.cn || nameCn.en;
           if (typeof nameEn === "object") nameEn = nameEn.en || nameEn.cn;
+          // 5-26 (Codex P0-1): lens.role 在很多 topic 是 {cn, en} 对象 (如 magna-carta L973),
+          // 直接渲染对象会触发 "Objects are not valid as a React child" → React 崩白屏。
+          var roleObj = lens.role;
+          var roleEn = typeof roleObj === "object" && roleObj ? (roleObj.en || roleObj.cn || "") : (roleObj || "");
+          var roleCn = typeof roleObj === "object" && roleObj ? (roleObj.cn || roleObj.en || "") : (roleObj || "");
+          var ptag = lens.perspectiveTag;
+          var ptagText = typeof ptag === "object" && ptag ? (isEn ? (ptag.en || ptag.cn || "") : (ptag.cn || ptag.en || "")) : (ptag || "");
           return (
             <div key={lens.id} style={{
               display: "flex", alignItems: "center", gap: 10,
@@ -77,7 +84,7 @@ function LensProgress(props) {
                   )}
                 </div>
                 <div style={{fontSize: 11, color: HC.textSec, opacity: 0.85, marginTop: 1}}>
-                  {isEn ? (lens.role || "") : ((lens.perspectiveTag || lens.role) || "")}
+                  {isEn ? roleEn : (ptagText || roleCn)}
                 </div>
               </div>
               {!done && !isCurrent && onSwitchLens && (
