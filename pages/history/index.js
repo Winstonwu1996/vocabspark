@@ -8,6 +8,7 @@ import { BrandNavBar } from '../../components/BrandNavBar';
 import { FONT, FONT_DISPLAY, globalCSS } from '../../lib/theme';
 import { HC } from '../../components/history-engine/theme';
 import { CourseBrowser } from '../../components/history-engine/CourseBrowser';
+import { findViewIdByTopicId } from '../../lib/atlas-views';
 
 // 6 张卖点卡。顺序按「中国家长付费决策」排：① 学校对得上 ② 三视角 ③ 中国底子 ④ 地图 ⑤ 双语+发音 ⑥ 史料考证。
 // 措辞硬规则（升学规划专家 + 历史老师双 Agent 一致建议）：
@@ -65,9 +66,17 @@ export default function HistoryHome() {
     } catch (e) {}
   }, []);
 
+  // 选课流程：首页 → 对应 Atlas (地图预热 + 人物 + 因果) → 「深度学」嵌入式进对话。
+  // 11 门暂无 Atlas 视图的课(秦统一/重建/排华/镀金/进步/妇女选举/大萧条/建国党争/瓜分非洲/去殖民化/contemporary-US)
+  // fallback 直接进 /history/<id> 学习,等 Atlas view 建好后自动走主路径。
   var goTopic = function(topicId) {
     if (!topicId) return;
-    router.push('/history/' + encodeURIComponent(topicId));
+    var viewId = findViewIdByTopicId(topicId);
+    if (viewId) {
+      router.push('/atlas-lab/' + viewId);
+    } else {
+      router.push('/history/' + encodeURIComponent(topicId));
+    }
   };
 
   return (
