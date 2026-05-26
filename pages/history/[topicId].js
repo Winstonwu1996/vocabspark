@@ -394,14 +394,14 @@ export default function HistoryPage() {
         setTopicId(t);
         return;
       }
-      // S9: 没有 URL 参数 — 检查是否 fresh user
-      var raw2 = localStorage.getItem("vocabspark_v1");
-      var d2 = raw2 ? JSON.parse(raw2) : null;
-      var completed = (d2 && d2.historyData && d2.historyData.completedTopics) || {};
-      if (Object.keys(completed).length === 0) {
-        // 全新用户 — 推 home advantage 的唐宋盛世
-        setTopicId("tang-song-china");
+      // 路径里有 id 但不是有效课程（/history/not-a-real-topic）→ 回首页(目录)，
+      // 不要"内容显示唐宋、URL 却是非法路径"那种分裂(分享出去更乱)。
+      if (t) {
+        if (typeof window !== "undefined") window.location.replace("/history");
+        return;
       }
+      // 防御：理论上 [topicId] 路由总有路径段；万一没有，按 fresh user 回首页
+      if (typeof window !== "undefined") window.location.replace("/history");
     } catch (e) {}
   }, []);
 
@@ -2443,6 +2443,7 @@ function IntroScreen(props) {
   // Companion Notebook — preview section
   var notebookData = (props.topicId && hasNotebook(props.topicId)) ? loadNotebook(props.topicId) : null;
   var [nbOpen, setNbOpen] = useState(false);
+  var [showAllCourses, setShowAllCourses] = useState(false);  // 单课页默认不展开完整课表，避免埋住"开始"
   var isEnglish = props.englishLevel === 'high';
   return (
     <div style={{padding: "20px 0"}}>
@@ -2721,11 +2722,28 @@ function IntroScreen(props) {
         </div>
       </div>
 
-      {/* N4: 通史脉络图 — 已学 + 待学 Topic 一览(点 Topic 卡可切换) */}
-      {/* 5-5: simplifiedMode (atlas→role / embedded / fromAtlas) 下隐藏 */}
-      {/*       (避免"重新选 Topic"破坏 immersion + iframe 内 page 切换会撑爆 parent) */}
+      {/* 换一课：单课页默认折叠（首页才是主选课入口），避免完整课表埋住"开始学习" */}
+      {/* 5-5: simplifiedMode (atlas→role / embedded / fromAtlas) 下完全隐藏(沉浸 + iframe 不切页) */}
       {!simplifiedMode && (
-        <ThroughLineMap topic={topic} onSwitch={props.onSwitchTopic} />
+        <div style={{marginBottom: 14}}>
+          <button
+            onClick={function() { setShowAllCourses(function(v) { return !v; }); }}
+            style={{
+              width: "100%", textAlign: "left",
+              padding: "10px 14px",
+              background: HC.card, border: "1px solid " + HC.border, borderRadius: 12,
+              fontSize: 13, color: HC.textSec, cursor: "pointer", fontFamily: "inherit",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+            }}>
+            <span>📚 换一课 / 看全部 51 门</span>
+            <span style={{fontSize: 11, opacity: 0.7}}>{showAllCourses ? "收起 ▲" : "展开 ▼"}</span>
+          </button>
+          {showAllCourses && (
+            <div style={{marginTop: 10}}>
+              <ThroughLineMap topic={topic} onSwitch={props.onSwitchTopic} />
+            </div>
+          )}
+        </div>
       )}
 
       {/* ── Phase 3: Lens 选择卡（如 Topic 有多个 lens 可选）── */}

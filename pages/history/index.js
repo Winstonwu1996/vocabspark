@@ -104,8 +104,16 @@ export default function HistoryHome() {
 
             <div style={{
               marginTop: 14, fontSize: 12, color: HC.textSec, opacity: 0.85,
+              display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8,
             }}>
-              👇 选一段历史开始。点任意一门课，第一次进会先花 30 秒认识你（用来让 AI 叫对你的名字，只存这台设备上）。
+              <span>👇 选一段历史开始。点任意一门课，第一次进会先花 30 秒认识你（只存这台设备上）。</span>
+              <a href="/atlas-lab" style={{
+                flex: "0 0 auto",
+                padding: "6px 12px",
+                background: HC.card, border: "1px solid " + HC.border, borderRadius: 999,
+                fontSize: 12, fontWeight: 600, color: HC.accent, textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}>🗺 想先看地图？进入 Atlas Lab →</a>
             </div>
           </div>
 
