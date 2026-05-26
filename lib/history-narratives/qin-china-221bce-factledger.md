@@ -9,7 +9,7 @@ topicId:    qin-china-221bce
 生成日期:    2026-05-24
 来源文件:    lib/history-storyboards/qin-china-221bce.js（3 lens：qin-shi-huang / li-si / conscript-laborer-receiving-end，各 11 节点）
             + lib/history-narratives/qin-china-221bce.md（narrative kernel，12 节 + 4 附录）
-            + lib/history-storyboards/notebooks/qin-china-221bce.js（小薇同伴笔记本：preview + 8 考点卡 + 3 DBQ）
+            + lib/history-storyboards/notebooks/qin-china-221bce.js（小 U同伴笔记本：preview + 8 考点卡 + 3 DBQ）
 claim 总数:  27
 🚩 红旗数:   4（需创始人审）— 全部为 ⚠️downgrade-wording / 措辞收紧，**无 needs-source、无 ✋flagged 事实硬伤**
 ```
@@ -92,18 +92,18 @@ claim 总数:  27
 | 角色 | lens | 合成成分 | 文中是否已标注 |
 |---|---|---|---|
 | **一个戍卒**（无名农民 + 妻 + 未成年子 + 内心独白 + 死在北边）| conscript-laborer（DEFAULT，11 节点）| **整个人物为虚构桥接**：姓名/家庭/心理为叙事补充；史料确证的仅"戍卒刑徒被大规模征发修长城/陵墓/驰道，死者甚众" | ✅**三处透明标注**：`cl-n8`"我这个『我』，是后人替千千万万真实存在过、却一个字都没留下的人，拼出来的一个声音" + kernel §3 主角卡"**这是一个虚构人物**……N8 显式向学生透明化" + meta.notes |
-| 小薇 Xiaowei（12 岁 ABC 同伴）| notebook | **教学脚手架角色**，非历史人物、不进史实正文，仅作"学习同伴"voice | N/A — 教学装置，非史实合成人物（与制宪 topic 的"你就是 TA"同类）|
+| 小 U Xiao U（12 岁 ABC 同伴）| notebook | **教学脚手架角色**，非历史人物、不进史实正文，仅作"学习同伴"voice | N/A — 教学装置，非史实合成人物（与制宪 topic 的"你就是 TA"同类）|
 | "你就是 TA"第二人称代入（各 lens N4 peak）| 全 3 lens | 把读者置入主角内心做选择，属**教学代入手法**，非伪造史实人物 | N/A — 教学手法，非合成角色 |
 | 宴会上"当面批郡县的读书人"（`qsh-n6` / `ls-n6`）| qin-shi-huang / li-si | 《史记》载前 213 廷议确有博士（淳于越）非难郡县、主复古；文中作泛指"有读书人"，未具名虚构 | ✅可接受（有《史记》廷议史实支撑，未捏造具名人物）|
 | 李斯临刑"牵黄狗出上蔡东门追兔子"（`ls-n9`，kernel §3）| li-si | **此为《史记·李斯列传》有载的真实记述**（"吾欲与若复牵黄犬俱出上蔡东门逐狡兔"），非演绎 | ✅非合成——一手史料原话之转述 |
 
-**结论**：本 topic 唯一的完全虚构人物是**戍卒**（受影响者 lens 主角），且已在 storyboard 节点内 + narrative kernel 主角卡 + meta.notes **三处**透明标注为"后人替无名者拼出的声音"，符合 `HISTORY_EVIDENCE_LAYER.md` composite 透明红线。小薇/第二人称代入为教学装置，李斯黄狗语为《史记》原话，均非违规合成。
+**结论**：本 topic 唯一的完全虚构人物是**戍卒**（受影响者 lens 主角），且已在 storyboard 节点内 + narrative kernel 主角卡 + meta.notes **三处**透明标注为"后人替无名者拼出的声音"，符合 `HISTORY_EVIDENCE_LAYER.md` composite 透明红线。小 U/第二人称代入为教学装置，李斯黄狗语为《史记》原话，均非违规合成。
 
 ---
 
 ## 备注
 
-- **抽取覆盖的 lens**：3 个全覆盖 —— qin-shi-huang（perpetrator-actor，11 节点）/ li-si（lonely-mediator，11 节点）/ conscript-laborer-receiving-end（receiving-end，DEFAULT，11 节点）+ notebook（小薇 8 考点卡 + 3 DBQ）。红旗分布：#26 在 `qsh-n1`；#15 在 `qsh-n7` + notebook 考点卡 7；#8/#17 跨 storyboard 与 kernel。
+- **抽取覆盖的 lens**：3 个全覆盖 —— qin-shi-huang（perpetrator-actor，11 节点）/ li-si（lonely-mediator，11 节点）/ conscript-laborer-receiving-end（receiving-end，DEFAULT，11 节点）+ notebook（小 U 8 考点卡 + 3 DBQ）。红旗分布：#26 在 `qsh-n1`；#15 在 `qsh-n7` + notebook 考点卡 7；#8/#17 跨 storyboard 与 kernel。
 - **题面重点核查项逐条结论**：
   - (a) 统一 221 BCE + 始皇帝称号 → ✅（claim #1/#2）
   - (b) 长城夯土非明砖石、晚约 1600 年 → ✅ **storyboard/kernel/notebook 三处都正确破除**（claim #8，仅"1600 多年"差值软收紧）

@@ -9,7 +9,7 @@ topicId:    ancient-greece-480bce
 生成日期:    2026-05-24
 来源文件:    lib/history-storyboards/ancient-greece-480bce.js（3 lens：themistocles / metic-resident / laurion-slave-receiving-end，各 11 节点）
             + lib/history-narratives/ancient-greece-480bce.md（narrative kernel）
-            + lib/history-storyboards/notebooks/ancient-greece-480bce.js（小薇同伴笔记本）
+            + lib/history-storyboards/notebooks/ancient-greece-480bce.js（小 U同伴笔记本）
 claim 总数:  28
 🚩 红旗数:   3（需创始人审）— 全部为 ⚠️downgrade-wording / 措辞收紧，无 needs-source、无 ✋flagged 事实硬伤
 ```

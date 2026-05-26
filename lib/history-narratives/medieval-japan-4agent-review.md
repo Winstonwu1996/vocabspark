@@ -3,7 +3,7 @@
 **Date**: 2026-05-09
 **File**: `lib/history-storyboards/medieval-japan.js` (2264 行 / 3 lens × 12 nodes = 36 nodes)
 **Reviewers**:
-- 小薇 (12 岁 7 年级 ABC) — **8.2/10**
+- 小 U (12 岁 7 年级 ABC) — **8.2/10**
 - Dr. Park (AP World History teacher) — **8.5/10**
 - Maria (ESL specialist) — **8.0/10**
 - 赵老师 (中国初中历史 18 年) — **7.5/10**
@@ -170,18 +170,18 @@ tokimune-N1 bodyCn 对「执权」有详细解释：「执权这个头衔要解�
 
 ---
 
-## P0 — Reader Experience（小薇）
+## P0 — Reader Experience（小 U）
 
-### P0-11 · masako-N1 开篇：12 岁读者能立刻被抓住，但「保元之乱」在第一段出现，没有给小薇任何解释
+### P0-11 · masako-N1 开篇：12 岁读者能立刻被抓住，但「保元之乱」在第一段出现，没有给小 U任何解释
 **lens**: masako-widow-nun · **node**: N1
 
 masako-N1 bodyCn 第一行：「1156 年，我出生在伊豆国（Izu Province）。那一年，京都正在发生保元之乱（Hōgen no Ran）」
 
-**小薇 assessment**: 「保元之乱」是一个专有名词，第一段就出现，前面没有任何提示。「Hōgen no Ran」的括注是给英文读者的，不是给小薇的中文说明。对 12 岁 ABC 来说，「保元」两个字没有意义，「之乱」是唯一的语义锚点。
+**小 U assessment**: 「保元之乱」是一个专有名词，第一段就出现，前面没有任何提示。「Hōgen no Ran」的括注是给英文读者的，不是给小 U的中文说明。对 12 岁 ABC 来说，「保元」两个字没有意义，「之乱」是唯一的语义锚点。
 
-**但**: 下一句「我不知道这件事」立刻化解了这个复杂性——读者被告知「伊豆那边不知道京都发生的事」，这个转折是小薇友好的。
+**但**: 下一句「我不知道这件事」立刻化解了这个复杂性——读者被告知「伊豆那边不知道京都发生的事」，这个转折是小 U友好的。
 
-**小薇实际体验**: 第一句有点硬（新词），但「我不知道这件事」+ 「隔着山，隔着海，隔着那种『远到发生了大事也很久才能听说』的距离」这两句非常好——地理感强，情绪建立快。**整体 N1 entry 合格。**
+**小 U实际体验**: 第一句有点硬（新词），但「我不知道这件事」+ 「隔着山，隔着海，隔着那种『远到发生了大事也很久才能听说』的距离」这两句非常好——地理感强，情绪建立快。**整体 N1 entry 合格。**
 
 **fix（最小改动）**: 「保元之乱（Hōgen no Ran）」加一个 inline gloss：「保元之乱（1156 年，京都皇室和贵族的内战）」，让 12 岁读者在 0.5 秒内掌握足够信息，不打断节奏。
 
@@ -189,15 +189,15 @@ masako-N1 bodyCn 第一行：「1156 年，我出生在伊豆国（Izu Province�
 
 ---
 
-### P0-12 · tokimune lens 蒙古入侵段（N5）：人名密度可接受，但「铁炮（tetsuhau）」术语切换让小薇暂时失去主线
+### P0-12 · tokimune lens 蒙古入侵段（N5）：人名密度可接受，但「铁炮（tetsuhau）」术语切换让小 U暂时失去主线
 **lens**: tokimune-defender · **node**: N5
 
 tokimune-N5 bodyCn 出现：蒙古-高丽联军 / 合浦 / 对马岛 / 壹岐岛 / 博多湾 / 铁炮（tetsuhau）/ 《蒙古袭来绘词》/ 竹崎季长。
 
-**小薇 assessment**:
+**小 U assessment**:
 - 地名连续出现 5 个（合浦→对马岛→壹岐岛→博多湾→大宰府），但这是行军路线，有方向感，可以跟随。
-- 「铁炮（tetsuhau）」出现时正文立刻给了一句解释「铁炮不是后来明朝的火绳枪，而是一种铁壳炸弹」——这个解释很好，小薇友好。
-- 《蒙古袭来绘词》+ 竹崎季长在同一段出现，后面有 careful framing 说明，但「竹崎季长是为了向幕府证明自己的战功以获封赏」这句话，小薇需要读两遍才能理解逻辑。
+- 「铁炮（tetsuhau）」出现时正文立刻给了一句解释「铁炮不是后来明朝的火绳枪，而是一种铁壳炸弹」——这个解释很好，小 U友好。
+- 《蒙古袭来绘词》+ 竹崎季长在同一段出现，后面有 careful framing 说明，但「竹崎季长是为了向幕府证明自己的战功以获封赏」这句话，小 U需要读两遍才能理解逻辑。
 
 **fix**: 竹崎季长的句子改得更简单：「这幅绘卷的主人竹崎季长，是一个武士——他画这幅画，是为了告诉幕府『我打了仗，请赏赐我土地』。所以这幅画首先是一份证明功劳的申请书，不是客观历史记录。」
 
@@ -212,7 +212,7 @@ sesshu-N3 bodyCn：「山是用斧劈皴（axe-cut brushstroke）画的——那
 
 sesshu-N3 bodyEn：「The mountains were painted with what we call fupeki-shun — the axe-cut brushstroke, where the dry brush hits the side and cuts the rock face into planes. That technique comes from the Guo Xi school of Northern Song painting.」
 
-**Maria + 小薇联合 assessment**:
+**Maria + 小 U联合 assessment**:
 - 「斧劈皴」的中文解释是「干笔侧锋、把岩石切割成块面」——这个解释对不知道「皴法」体系的 12 岁 ABC 来说不够直觉。
 - EN 版本的解释「dry brush hits the side and cuts the rock face into planes」更直觉（动词驱动），但中文版只说「干笔侧锋、把岩石切割成块面」，中文母语 7 年级学生也可能不理解「侧锋」。
 - sesshu-N8 bodyEn 重复引用时写「the side-stroke of the Ming axe-cut brushstroke」，继续用动词；N8 bodyCn 写「明朝「斧劈皴」（axe-cut brushstroke）的侧锋」——已经用括号给了英文，这是正确做法。
@@ -222,7 +222,7 @@ sesshu-N3 bodyEn：「The mountains were painted with what we call fupeki-shun �
 1. sesshu-N3 bodyCn「斧劈皴」改为：「斧劈皴（axe-cut stroke）——用笔侧倒、笔毛张开，像斧头切开岩石一样，把山石画出块状的切面感」（更感官化，12 岁可理解）
 2. sesshu-N11 bodyCn「真景山水」改为：「真景山水（写生实地的山水画，对比想象或临摹而来的符号化山水）」
 
-> **严重度**: P0（小薇 + Maria 联合；核心艺术术语是 sesshu lens 的教学重点，CN 解释质量低于 EN 版）
+> **严重度**: P0（小 U + Maria 联合；核心艺术术语是 sesshu lens 的教学重点，CN 解释质量低于 EN 版）
 
 ---
 
@@ -254,7 +254,7 @@ Conlan 2001 和 Sansom 1931 均确认 1271 年第三批使者被杀，事件有�
 sesshu-N7 bodyCn：「山口是大内氏（Ōuchi clan）的根据地——西日本最强的守护大名之一」。
 中国 7 年级课本不详细讲日本「守护」制度，「守护大名」对学生而言是生词。建议加一句：「守护大名，是在某地区代幕府管理武士、征税的地方强藩领主。」（一句即可，不需要展开）
 
-### P1-8 · 小薇：sesshu lens 整体有「孤独感」，但 N4 节点（出发前）的「不是逃跑」辩护段（CN 200 字）对 12 岁来说太哲学化，入戏较慢
+### P1-8 · 小 U：sesshu lens 整体有「孤独感」，但 N4 节点（出发前）的「不是逃跑」辩护段（CN 200 字）对 12 岁来说太哲学化，入戏较慢
 N4 是「去看原本」这条情感主线的转折点，应该是高度有张力的时刻，但 CN 版 200 字的「逃跑 vs 不逃跑」辩护打断了情感节奏。建议把这个辩护缩短为 50 字（一个段落），把叙事重量还给「博多港口，博多港慢慢消失在水平线后面」这个画面。
 
 ### P1-9 · Dr. Park：masako-N6 McCullough 1985 引用格式：sourcingNote 写「McCullough 1985《The Tale of the Heike》Stanford UP」
@@ -309,7 +309,7 @@ N4 是「去看原本」这条情感主线的转折点，应该是高度有张�
 
 ## 4 reviewer 各自备注
 
-### 小薇备注
+### 小 U备注
 整体比我想象的好读，tokimune 的「不是没有恐惧，而是恐惧来了你继续坐着」（N2）是我最喜欢的句子，12 岁能懂。masako 的「剃了头不是为了出家，是为了自由」（N5）一秒抓住我。雪舟 lens 最难，但 N3 的「三幅画，三种山，哪一幅更接近真实的中国山，我不知道」这种设问让我想继续看。唯一真的很晕的是 N5（tokimune）的 careful framing 段——竹崎季长那个逻辑我需要读两遍。
 
 ### Dr. Park 备注

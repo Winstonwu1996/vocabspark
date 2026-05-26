@@ -9,7 +9,7 @@ topicId:    ancient-egypt-2550bce
 生成日期:    2026-05-24
 来源文件:    lib/history-storyboards/ancient-egypt-2550bce.js（3 lens：khufu / hemiunu / pyramid-laborer-receiving-end，各 11 节点）
             + lib/history-narratives/ancient-egypt-2550bce.md（narrative kernel）
-            + lib/history-storyboards/notebooks/ancient-egypt-2550bce.js（companion notebook，小薇 8 考点卡 + 3 DBQ）
+            + lib/history-storyboards/notebooks/ancient-egypt-2550bce.js（companion notebook，小 U 8 考点卡 + 3 DBQ）
 claim 总数:  28
 🚩 红旗数:   4（需创始人审）— 全部为 ⚠️downgrade-wording / 措辞收紧，无 needs-source、无 ✋flagged 事实硬伤
 ```

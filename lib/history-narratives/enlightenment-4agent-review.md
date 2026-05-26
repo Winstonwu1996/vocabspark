@@ -4,7 +4,7 @@
 **File**: `lib/history-storyboards/enlightenment.js` (2087 行 / 3 lens × 12 nodes = 36 nodes)
 **Schema**: v2 · defaultLens: toussaint-receiving
 **Reviewers**:
-- 小薇 (12 岁 7 年级 ABC) — 8.5/10
+- 小 U (12 岁 7 年级 ABC) — 8.5/10
 - Dr. Park (AP World History teacher) — 8.0/10
 - Maria (ESL specialist) — 7.5/10
 - 赵老师 (中国初中历史 18 年) — 7.0/10
@@ -183,9 +183,9 @@ CN 版把 grands blancs + petits blancs 合并为「白人」一层，与 EN「f
 
 ---
 
-### P1-3 · 小薇视角 — Toussaint N1 开场能量不够
+### P1-3 · 小 U视角 — Toussaint N1 开场能量不够
 
-**小薇**：Toussaint 是 defaultLens，N1 是第一个接触点。N1 的开场「1743 年，Saint-Domingue 北部，Bréda 种植园。一个婴儿出生了。」是克制的、史学风格的——这对 AP World 学生很好，但对 12 岁第一次接触这段历史的学生，「婴儿出生了，没有档案记录生日」的开篇缺少情感钩子。
+**小 U**：Toussaint 是 defaultLens，N1 是第一个接触点。N1 的开场「1743 年，Saint-Domingue 北部，Bréda 种植园。一个婴儿出生了。」是克制的、史学风格的——这对 AP World 学生很好，但对 12 岁第一次接触这段历史的学生，「婴儿出生了，没有档案记录生日」的开篇缺少情感钩子。
 
 对比 Voltaire N1「我叫 François-Marie Arouet。1694 年 11 月 21 日，巴黎。」——Voltaire 的 N1 立刻建立了声音。Toussaint N1 的第一人称声音在「我不知道这些。我那时候什么都不知道」才出现，前面大段是全知叙述者视角。
 
@@ -193,9 +193,9 @@ CN 版把 grands blancs + petits blancs 合并为「白人」一层，与 EN「f
 
 ---
 
-### P1-4 · 小薇视角 — Voltaire N8 「conscience」段落对 12 岁读者的挑战
+### P1-4 · 小 U视角 — Voltaire N8 「conscience」段落对 12 岁读者的挑战
 
-**小薇**：N8 的「我没有追踪每一笔红利的来源。这件事让我的 conscience 可以保持安静。但钱在那里运转，不管我的 conscience 安不安静。」这个逻辑对成年读者清晰有力，但「conscience 可以保持安静」这个结构对 12 岁读者理解「知而不为」vs「不知而受益」的区分可能有难度。
+**小 U**：N8 的「我没有追踪每一笔红利的来源。这件事让我的 conscience 可以保持安静。但钱在那里运转，不管我的 conscience 安不安静。」这个逻辑对成年读者清晰有力，但「conscience 可以保持安静」这个结构对 12 岁读者理解「知而不为」vs「不知而受益」的区分可能有难度。
 
 N8 的知识密度峰值（彩票套利 + Compagnie des Indes 结构 + 奴贸利润链 + 知情程度 hedge）对 7 年级来说是信息过载风险点。
 
@@ -336,4 +336,4 @@ N5（EN）写「I was a literate free Black man in the second tier of Saint-Domi
 
 ---
 
-*审核人：小薇 · Dr. Park · Maria · 赵老师 — 综合报告 2026-05-09*
+*审核人：小 U · Dr. Park · Maria · 赵老师 — 综合报告 2026-05-09*

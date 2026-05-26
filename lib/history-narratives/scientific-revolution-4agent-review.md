@@ -3,7 +3,7 @@
 **Date**: 2026-05-09
 **File**: `lib/history-storyboards/scientific-revolution.js` (499 行 / 3 lens × 12 nodes = 36 nodes)
 **Reviewers**:
-- 小薇 (12 岁 7 年级 ABC) — 6.5/10
+- 小 U (12 岁 7 年级 ABC) — 6.5/10
 - Dr. Park (AP World teacher) — 6.5/7+
 - Maria (ESL specialist) — 6.0/10 composite (Newton 4.5 / Mersenne 6.5 / Maria 7.5)
 - 赵老师 (中国初中历史 18 年) — 6.0/7+
@@ -33,7 +33,7 @@
 15. **EN gloss 缺**: Sophienkirche / Tyburn / "egg Luther hatched" / Aquarius / "Hanseatic port" — 加 inline gloss。
 16. **Mersenne N3「rebar against Whig history」metaphor fail** — 改「structural anchor against Whig history」。
 
-## P0 — Reader experience (小薇)
+## P0 — Reader experience (小 U)
 
 17. **Newton N5 cognitive overload** — 拉丁名 + 阿拉伯名 + 神学派系密度过高 (Eirenaeus Philalethes + Starkey + Jabir + Athanasius + Arius + Sotheby's 38 lots)。建议：删 Eirenaeus Philalethes 化名 + 删 Indiana 项目 + Athanasius/Arius 简化「Trinity 是不是真的」。
 18. **Newton N10 一节 6 件大事** — Hooke + Whiston + Berlin Maria + Leibniz + 巨人肩上 + Galileo/Su Shi 一节内 cognitive overload。砍「巨人肩上 sarcasm」historiography 元层。

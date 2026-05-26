@@ -243,7 +243,7 @@ export function CompletionScreen(props) {
           <div style={{display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12}}>
             <span style={{fontSize: 20}}>📒</span>
             <span style={{fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 700, color: HC.ink, flex: 1}}>
-              {isEnglish ? "Xiaowei's Study Notes" : "小薇的复习笔记"}
+              {isEnglish ? "Xiao U's Study Notes" : "小 U 的复习笔记"}
             </span>
             <div style={{display: 'flex', background: HC.parchmentHi, borderRadius: 8, padding: 2, gap: 2}}>
               {[
@@ -323,7 +323,7 @@ export function CompletionScreen(props) {
                   <details style={{marginTop: 10}}>
                     <summary style={{cursor: 'pointer', color: HC.teal, fontSize: 12.5, fontWeight: 600, userSelect: 'none', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 4}}>
                       <span style={{fontSize: 10, opacity: 0.7}}>▶</span>
-                      {isEnglish ? '📖 Read the story passage' : '📖 看小薇读到的原文节选'}
+                      {isEnglish ? '📖 Read the story passage' : '📖 看小 U读到的原文节选'}
                     </summary>
                     <div style={{marginTop: 8, borderTop: '1px dashed #e0e0d8', paddingTop: 10}}>
                       {(function() {
@@ -366,7 +366,7 @@ export function CompletionScreen(props) {
                     fontSize: 13, color: '#5c4a10',
                   }}>
                     <div style={{fontSize: 10.5, fontWeight: 700, opacity: 0.7, marginBottom: 4}}>
-                      {isEnglish ? '📝 Xiaowei\'s note:' : '📝 小薇的批注：'}
+                      {isEnglish ? '📝 Xiao U\'s note:' : '📝 小 U 的批注：'}
                     </div>
                     {isEnglish ? card.xiaoweiNote.en : card.xiaoweiNote.cn}
                   </div>

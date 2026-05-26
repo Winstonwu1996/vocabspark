@@ -6,7 +6,7 @@
 // Phase 3 升级：
 //   - 去掉每行 ▼ 标识（简单用户不被打扰）
 //   - 行可点击但不暗示（hover 才高亮）
-//   - 底部统一入口按钮 "🐾 让 kuKitty 读懂这一页" — 一键展开所有 5 层
+//   - 底部统一入口按钮 "🐾 让 小 U 读懂这一页" — 一键展开所有 5 层
 //   - L4 事件层自动拆成可点击的事件 chips（按 → 分隔）— 时间链 AI 解读
 
 import { useState, useEffect } from 'react';
@@ -162,7 +162,7 @@ function TimelineEvent({ event, topicId, topicTitle, grade, lang, color, petName
             e.currentTarget.style.borderColor = 'transparent';
           }
         }}
-        title={lang === 'cn' ? '点击让 kuKitty 解读这个事件' : 'Tap for kuKitty explanation'}
+        title={lang === 'cn' ? '点击让 小 U 解读这个事件' : 'Tap for Xiao U explanation'}
       >{event}</span>
       {open && (
         <span
@@ -335,7 +335,7 @@ export default function CausalSummary({ text, lang = 'cn', topicId, topicTitle, 
   const [expandAll, setExpandAll] = useState(false);
 
   // 读 Vocab 全局宠物名（mount 时 + Vocab 改名同步刷新）
-  const [petName, setPetName] = useState('小毛球');
+  const [petName, setPetName] = useState('小 U');
   useEffect(() => {
     setPetName(getPetName());
     // 监听 storage 事件 — 用户在 Vocab 改名后这里也实时更新

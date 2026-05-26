@@ -1,6 +1,6 @@
 # Renaissance lens 草稿 — 7 年级承受度 review
 
-> By 小薇 (13 岁 / 中国转学 / 加州 7 年级 / 跑过 Magna Carta + Black Death)
+> By 小 U (13 岁 / 中国转学 / 加州 7 年级 / 跑过 Magna Carta + Black Death)
 
 ---
 
@@ -175,4 +175,4 @@ Lucia 让我哭/停的瞬间都是 micro (女儿拉裙子 / 镶金边闪 / "我�
 我会跑这一组 lens 的顺序: **Lucia → Savonarola → Lorenzo**。\
 我会反复回头读的瞬间: **Lucia N6 (女儿那一句) + Savonarola N4 (拒绝 Lorenzo 赦免的三个问题) + Lorenzo N4 (Pazzi 大教堂)**。
 
-— 小薇,13 岁
+— 小 U,13 岁

@@ -3,7 +3,7 @@
 **Date**: 2026-05-09
 **File**: `lib/history-storyboards/pre-columbian.js` (2133 行 / 3 lens × 12 nodes = 36 nodes)
 **Reviewers**:
-- 小薇 (12 岁 7 年级 ABC) — 8.5/10
+- 小 U (12 岁 7 年级 ABC) — 8.5/10
 - Dr. Park (AP World 20 年 + AP World 阅卷) — 8.0/10
 - Maria (ESL specialist, 双语教育) — 7.5/10
 - 赵老师 (中国初中历史 18 年) — 7.0/10
@@ -153,12 +153,12 @@
 
 ---
 
-## P0 — 读者体验（小薇）
+## P0 — 读者体验（小 U）
 
 ### P0-16｜ix-mutal-weaver · N1 · fictionalDisclaimer 段落密度
 **位置**: N1 开头 fictionalDisclaimer 块
 
-**问题（小薇）**: fictionalDisclaimer 放在 N1 正文最前面，中括号内 6 句话，全部是 meta 说明，12 岁读者读到这里可能直接跳过或觉得无聊。「这个故事是虚构 composite，不是真人传记」这句话放在第一句没问题，但后面 5 句（Cook 1998 / Roys 1957 引用 / 类比 Anna the Iconographer）太早出现，打断进入故事的节奏。
+**问题（小 U）**: fictionalDisclaimer 放在 N1 正文最前面，中括号内 6 句话，全部是 meta 说明，12 岁读者读到这里可能直接跳过或觉得无聊。「这个故事是虚构 composite，不是真人传记」这句话放在第一句没问题，但后面 5 句（Cook 1998 / Roys 1957 引用 / 类比 Anna the Iconographer）太早出现，打断进入故事的节奏。
 
 **修法（P0 UX）**: 把 fictionalDisclaimer 拆成两部分：
 1. N1 开头只保留前 2 句（「这个故事是虚构 composite，不是真人传记 / 但她代表的群体真实存在」）+ 单行「---」
@@ -171,7 +171,7 @@
 ### P0-17｜malintzin-mediator · N12 · 第一人称指代混乱
 **位置**: N12 EN `In that same year of 1517, when Malintzin was seventeen and still being passed through the slave network, Erasmus published his Greek New Testament`
 
-**问题（小薇 + Maria）**: 整个 malintzin lens 用第一人称「我」写，但 N12 这句 EN 突然用第三人称「Malintzin」，这是视角错乱——reader 刚适应了「我」的声音，突然看到「Malintzin」会 break immersion。CN 版 N12 用「我 17 岁还在奴隶网络里辗转」——第一人称，正确。EN 版出了这个 bug。
+**问题（小 U + Maria）**: 整个 malintzin lens 用第一人称「我」写，但 N12 这句 EN 突然用第三人称「Malintzin」，这是视角错乱——reader 刚适应了「我」的声音，突然看到「Malintzin」会 break immersion。CN 版 N12 用「我 17 岁还在奴隶网络里辗转」——第一人称，正确。EN 版出了这个 bug。
 
 **修法（P0）**: EN 改为 `In that same year of 1517, when I was seventeen and still being passed through the slave network, Erasmus published his Greek New Testament in Holland.`
 
@@ -211,8 +211,8 @@ N4 CN `石块重达 100 到 200 吨`——来源应注。Hemming 1970 / MacQuarr
 ### P1-10｜malintzin-mediator · N7 · la lengua 词源
 N7 EN `La Malinche, meaning "Malintzin's palace" or "the place associated with Malintzin"` — N12 提供的 La Malinche 词源解释。这个词源（「Malintzin 的宫殿」）来自 Frances Karttunen 的 Nahuatl 词典分析，Townsend 2006 也引用了这个说法。但也有语言学家认为 La Malinche 只是西班牙人对 Malintzin 发音的简化，词源并不确定。建议加 hedge `（一说词源存疑，参见 Townsend 2006）`。P1。
 
-### P1-11｜小薇视角：最难跟的节点
-小薇反馈（综合模拟）：
+### P1-11｜小 U视角：最难跟的节点
+小 U反馈（综合模拟）：
 - **最难跟**: pachacuti N10（panaca 制度，「死人财产永远锁定」制度逻辑，需要先懂继承权才能跟上）；malintzin N6（三角翻译链 Cortés→Aguilar→Malintzin→Nahuatl，标明方向的箭头格式 12 岁容易看晕）
 - **最好看**: ix-mutal N7（「不是会不会，是什么时候」那句话），malintzin N11（「我早该死在 Tenochtitlán」翻译临终之言）
 - **建议**: N10 panaca 节点加一句「就好像一个爷爷死了但他的存款账户永远归他自己，儿子想买房必须自己挣钱，不能动爷爷的账户」——现代类比，12 岁可以 follow。
@@ -267,7 +267,7 @@ N7 EN `La Malinche, meaning "Malintzin's palace" or "the place associated with M
 | P0-17 | malintzin | N12 EN | 第一人称视角错乱（EN 突用第三人称）| 低 |
 
 **P0 全修后预估评分**:
-- 小薇：9.0/10
+- 小 U：9.0/10
 - Dr. Park：8.5/10
 - Maria：8.5/10
 - 赵老师：7.5/10（待课本译名 P1 部分完成后可到 8.0）

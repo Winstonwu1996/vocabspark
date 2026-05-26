@@ -14,7 +14,7 @@ Story-First v2 已经 ship 了 15 个 Topic，每个 Topic 是 3 lens × 12 node
 
 **同伴笔记本**就是给故事 + 课纲之间架一座桥。
 
-## 角色：小薇 (Xiaowei)
+## 角色：小 U (Xiao U)
 
 12 岁，7 年级，ABC（亚裔美国华裔），与 storyboard reader 同龄。
 
@@ -45,7 +45,7 @@ Story-First v2 已经 ship 了 15 个 Topic，每个 Topic 是 3 lens × 12 node
 - 对照 preview 的清单，逐个确认能不能解释
 - 每个考点卡有两种形态：
   - **故事覆盖型** (`storyAnchor.covered = true`)：直接 reference storyboard 的 lens + nodeId，
-    小薇的笔记是"我在 Lens X 第 Y 节读到过"。**不重复故事内容**——故事已经讲过了。
+    小 U的笔记是"我在 Lens X 第 Y 节读到过"。**不重复故事内容**——故事已经讲过了。
   - **故事未覆盖型** (`storyAnchor.covered = false`)：用 `standaloneText` 提供 mini-lesson，
     300-500 字，加上一段 `xiaoweiNote` 标注考点关键句和记忆口诀。
 
@@ -101,7 +101,7 @@ keyFigures: [
 │                                                            │
 │  ┌──────────────┐    ┌──────────────────────────────┐    │
 │  │   preview    │ →  │  storyboard (3 lens × 12 N)  │    │
-│  │  (小薇预习)   │    │  Voltaire / Gouges / Toussaint│    │
+│  │  (小 U预习)   │    │  Voltaire / Gouges / Toussaint│    │
 │  └──────────────┘    └──────────────┬───────────────┘    │
 │                                      │                     │
 │                                      ↓                     │
@@ -136,14 +136,14 @@ keyFigures: [
    - 故事覆盖型的 xiaoweiNote 只做"回忆 + 考点提炼"，不重述情节
    - 独立 mini-lesson 才提供完整知识
 
-3. **小薇的语气保持一致**
+3. **小 U的语气保持一致**
    - 永远用第一人称（"我读过"、"我的记忆口诀"、"老师说"）
    - 永远有具体的考试相关细节（"选择题考过"、"DBQ 高频"）
    - 永远不掩饰 careful framing（启蒙哲人的言行不一）
 
 4. **课纲对齐永远标注**
    - `standardRef` 必填，至少一个 AP 或 CA HSS 编号
-   - `examFrequency` 必填——这是小薇 vs 通用 AI 助教的关键差异
+   - `examFrequency` 必填——这是小 U vs 通用 AI 助教的关键差异
 
 ## 如何扩展到其他 14 个 Topic
 

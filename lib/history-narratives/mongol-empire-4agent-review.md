@@ -3,7 +3,7 @@
 **Date**: 2026-05-09
 **File**: `lib/history-storyboards/mongol-empire.js` (495 行 / 3 lens × 12 nodes = 36 nodes)
 **Reviewers**:
-- 小薇 (12 岁 7 年级 ABC) — 6.5/10 (will be 7+ after P0 fix)
+- 小 U (12 岁 7 年级 ABC) — 6.5/10 (will be 7+ after P0 fix)
 - Dr. Park (AP World teacher) — 6.7/10
 - Maria (ESL specialist) — 5/7 (upper edge of ESL Grade 7-8)
 - 赵老师 (中国初中历史 18 年) — 6.5/10 (条件 P0 全修后达 8.0)
@@ -51,7 +51,7 @@
 ### 西征四城译名 (赵老师 P0)
 **P0.21** Bukhara/Samarkand/Urgench/Merv → 不花剌/撒马尔罕/玉龙杰赤/马鲁 双语注
 
-### 12 岁 reader 体验 (小薇 P0)
+### 12 岁 reader 体验 (小 U P0)
 **P0.22** Genghis N3-N4 / Yelü N9 / Sorg N7-N8 人名洪水 — 加 anchor 形容词
 **P0.23** Genghis N7 4 城屠剂量太重 — 拆 N7 + N7.5 两个气口
 

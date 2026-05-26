@@ -245,4 +245,4 @@ schemaVersion: 2
 > **作者**：Opus history-content author（Story-First Pedagogy v2）
 > **日期**：2026-05-22
 > **配套 storyboard**：`lib/history-storyboards/cold-war-1962.js`（3 lens / 12 nodes each）
-> **4-agent review pending**：7thgrader（小薇）/ AP teacher（Dr. Park）/ ESL（Maria）/ Chinese teacher（赵老师）
+> **4-agent review pending**：7thgrader（小 U）/ AP teacher（Dr. Park）/ ESL（Maria）/ Chinese teacher（赵老师）
