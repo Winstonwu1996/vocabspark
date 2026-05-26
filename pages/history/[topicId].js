@@ -1496,7 +1496,7 @@ export default function HistoryPage() {
           )}
 
           {/* ── Topic Hero ── */}
-          <TopicHero topic={topic} phase={phase} />
+          <TopicHero topic={topic} phase={phase} englishLevel={englishLevel} onSetEnglishLevel={function(v){ setEnglishLevelState(v); saveEnglishLevel(v); }} />
 
           {/* ── Geography Section ── */}
           {/* 5-5: simplifiedMode (embedded / fromAtlas / pendingRole) 时隐藏 */}
@@ -1806,8 +1806,35 @@ function TopicHero(props) {
   // #3 教材对照：让用户感觉"this is my actual schoolwork"
   // textbookRef 数据格式：{ publisher, grade, chapter, section, page, hint }
   var tb = topic.textbookRef;
+  // 单课页顶部恒显 EN/中 toggle (创始人反馈: 切换该有的地方都要有, 不该埋在 conversation 内部)
+  var englishLevel = props.englishLevel;
+  var onSetLang = props.onSetEnglishLevel;
   return (
-    <div className="topic-hero">
+    <div className="topic-hero" style={{position: 'relative'}}>
+      {onSetLang && (
+        <div style={{
+          position: 'absolute', top: 0, right: 0,
+          display: 'flex', gap: 4,
+        }}>
+          {[
+            { v: 'high',     l: 'EN', title: 'Switch to English' },
+            { v: 'balanced', l: '中',  title: '切换中文' },
+          ].map(function(opt) {
+            var active = englishLevel === opt.v || (opt.v === 'balanced' && englishLevel !== 'high');
+            return (
+              <button key={opt.v} onClick={function() { onSetLang(opt.v); }} title={opt.title} style={{
+                padding: '3px 10px',
+                background: active ? HC.accent : 'transparent',
+                color: active ? '#fff8e8' : HC.textSec,
+                border: '1px solid ' + (active ? HC.accent : HC.border),
+                borderRadius: 999, fontSize: 11, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+                opacity: active ? 1 : 0.7,
+              }}>{opt.l}</button>
+            );
+          })}
+        </div>
+      )}
       <div className="meta">
         {topic.hssStandard} · 难度 {topic.difficulty}/5 · 约 {topic.estimatedMinutes} 分钟 · {topic.curriculumUnit.includes("medieval-china") ? "中世纪中国" : topic.curriculumUnit.includes("medieval-europe") ? "中世纪欧洲" : topic.curriculumUnit}
       </div>
