@@ -95,6 +95,7 @@ import { CompletionScreen } from '../../components/history-engine/CompletionScre
 import { ProfileSetup } from '../../components/history-engine/ProfileSetup';
 import { ThroughLineMap } from '../../components/history-engine/CourseBrowser';
 import { findViewIdByTopicId } from '../../lib/atlas-views';
+import { parseTopicYear, getChinaDynastyForYear, isChinaTopic } from '../../lib/china-dynasty-map';
 import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/notebooks/index.js';
 
 // ─── 主组件 ────────────────────────────────────────────────────────
@@ -1811,6 +1812,23 @@ function TopicHero(props) {
         {topic.hssStandard} · 难度 {topic.difficulty}/5 · 约 {topic.estimatedMinutes} 分钟 · {topic.curriculumUnit.includes("medieval-china") ? "中世纪中国" : topic.curriculumUnit.includes("medieval-europe") ? "中世纪欧洲" : topic.curriculumUnit}
       </div>
       <h1>{topic.title.cn} <span style={{fontSize: 16, fontWeight: 400, color: HC.inkLight}}>· {topic.title.en} ({topic.year})</span></h1>
+      {/* 同时代中国朝代锚点 — 给中国孩子一个熟悉的参照（中国本土 topic 不显示，避免冗余）*/}
+      {(function() {
+        if (isChinaTopic(topic.id)) return null;
+        var dyn = getChinaDynastyForYear(parseTopicYear(topic.year));
+        if (!dyn) return null;
+        return (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            marginTop: 4, marginBottom: 6,
+            padding: '3px 10px',
+            background: 'rgba(196, 107, 48, 0.08)',
+            border: '1px solid rgba(196, 107, 48, 0.25)',
+            borderRadius: 999,
+            fontSize: 12, color: HC.accent, fontWeight: 600,
+          }}>📜 同时代中国：{dyn.cn}</div>
+        );
+      })()}
       <div className="hook">{topic.oneLineHook.cn}</div>
       {/* #3 教材对照 banner — 让 Willow 感觉"this is my actual schoolwork" */}
       {tb && (
