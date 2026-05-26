@@ -93,7 +93,7 @@ import { ConversationStream } from '../../components/history-engine/Conversation
 import { MasteryGateOverlay } from '../../components/history-engine/MasteryGate';
 import { CompletionScreen } from '../../components/history-engine/CompletionScreen';
 import { ProfileSetup } from '../../components/history-engine/ProfileSetup';
-import { ThroughLineMap } from '../../components/history-engine/CourseBrowser';
+// ThroughLineMap 不再在单课页用 (首页是 51 门主选课入口, 课内"换一课"重复入口已移除)
 import { findViewIdByTopicId } from '../../lib/atlas-views';
 import { parseTopicYear, getChinaDynastyForYear, isChinaTopic } from '../../lib/china-dynasty-map';
 import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/notebooks/index.js';
@@ -2503,7 +2503,6 @@ function IntroScreen(props) {
   // Companion Notebook — preview section
   var notebookData = (props.topicId && hasNotebook(props.topicId)) ? loadNotebook(props.topicId) : null;
   var [nbOpen, setNbOpen] = useState(false);
-  var [showAllCourses, setShowAllCourses] = useState(false);  // 单课页默认不展开完整课表，避免埋住"开始"
   var isEnglish = props.englishLevel === 'high';
   return (
     <div style={{padding: "20px 0"}}>
@@ -2784,29 +2783,8 @@ function IntroScreen(props) {
         </div>
       </div>
 
-      {/* 换一课：单课页默认折叠（首页才是主选课入口），避免完整课表埋住"开始学习" */}
-      {/* 5-5: simplifiedMode (atlas→role / embedded / fromAtlas) 下完全隐藏(沉浸 + iframe 不切页) */}
-      {!simplifiedMode && (
-        <div style={{marginBottom: 14}}>
-          <button
-            onClick={function() { setShowAllCourses(function(v) { return !v; }); }}
-            style={{
-              width: "100%", textAlign: "left",
-              padding: "10px 14px",
-              background: HC.card, border: "1px solid " + HC.border, borderRadius: 12,
-              fontSize: 13, color: HC.textSec, cursor: "pointer", fontFamily: "inherit",
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-            }}>
-            <span>📚 换一课 / 看全部 51 门</span>
-            <span style={{fontSize: 11, opacity: 0.7}}>{showAllCourses ? "收起 ▲" : "展开 ▼"}</span>
-          </button>
-          {showAllCourses && (
-            <div style={{marginTop: 10}}>
-              <ThroughLineMap topic={topic} onSwitch={props.onSwitchTopic} />
-            </div>
-          )}
-        </div>
-      )}
+      {/* 「换一课」已从单课页移除:首页 (/history) 已是 51 门主选课入口,
+           顶部 nav 的 History tab 可一键返首页。课内重复入口 = 干扰沉浸,故去掉。*/}
 
       {/* ── Phase 3: Lens 选择卡（如 Topic 有多个 lens 可选）── */}
       {/* 5-5 R3: atlas → role 进入流程 (hasPendingRole) 时,用户已在 atlas 选过 figure → */}
