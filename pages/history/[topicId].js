@@ -892,6 +892,13 @@ export default function HistoryPage() {
     }
   };
 
+  // ─── 5-26 (用户反馈 #1): phase 切换自动滚到页面顶部 ──────────────
+  // 否则从 conversation 末节进 notebook/mastery 时, 屏幕仍停在对话底部, 用户看不到新屏标题。
+  useEffect(function() {
+    if (typeof window === "undefined") return;
+    try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); }
+  }, [phase]);
+
   // ─── 启动 conversation ─────────────────────────────────────────
   var startConversation = function() {
     setPhase("conversation");
@@ -1718,11 +1725,34 @@ export default function HistoryPage() {
 
           {/* ── 5-26 新增 Phase: notebook ── */}
           {/* 收据提交后 / 已交 receipt 用户从 conversation allDone 进 → 在 mastery 之前先看 8 张考点卡 */}
+          {/* 5-26 (用户反馈 #4): 加 LensProgress widget,让学完 1 lens 的用户能切到其他视角学,
+              而不是一个 lens 完了就当整课完(考题 cross-lens 学生没全学到)。 */}
           {phase === "notebook" && topic && (
             <ConceptReview
               topicId={topicId}
               isEnglish={englishLevel === "high"}
               onContinue={startMasteryGate}
+              topicLenses={topicLenses}
+              effectiveLensId={effectiveLensId}
+              lensCompletion={(function() {
+                // 检查每个 lens 是否有 learning receipt = 该视角已学完
+                if (!topicLenses || !topicLenses.length) return {};
+                var map = {};
+                topicLenses.forEach(function(l) {
+                  try { map[l.id] = !!loadLearningReceipt(topicId, l.id); } catch (e) { map[l.id] = false; }
+                });
+                // 当前刚提交的 receipt 已存,所以 effectiveLensId 自然标 done
+                return map;
+              })()}
+              onSwitchLens={function(newLensId) {
+                // 切到另一个未学的视角:重置 turn/log/lens, 切回 conversation phase。
+                // saveLearningReceipt 已存当前 lens 的 receipt → 切回来时这个 lens 仍标已完成。
+                setSelectedLensId(newLensId);
+                setTurnIndex(0);
+                setConversationLog([]);
+                setSavedSession(null);
+                setPhase("conversation");
+              }}
             />
           )}
 
@@ -1832,10 +1862,16 @@ function TopicHero(props) {
   var onSetLang = props.onSetEnglishLevel;
   return (
     <div className="topic-hero" style={{position: 'relative'}}>
+      {/* 5-26 (用户反馈 #2): EN/中 toggle 改 fixed 浮动 — 翻页跟随屏幕, 不再 hero 滚出就消失 */}
       {onSetLang && (
         <div style={{
-          position: 'absolute', top: 0, right: 0,
+          position: 'fixed', top: 64, right: 12,
           display: 'flex', gap: 4,
+          background: 'rgba(255, 250, 240, 0.96)',
+          padding: '4px 6px',
+          borderRadius: 999,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          zIndex: 40,
         }}>
           {[
             { v: 'high',     l: 'EN', title: 'Switch to English' },

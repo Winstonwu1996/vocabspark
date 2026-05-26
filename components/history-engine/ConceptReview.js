@@ -11,8 +11,101 @@
 import React from 'react';
 import { FONT_DISPLAY } from '../../lib/theme';
 import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/notebooks';
-import { loadStoryboard } from '../../lib/history-storyboards';
+// loadStoryboard 暂时不需要 (用户反馈 #3: 折叠区暂移, 见下方注释)
+// import { loadStoryboard } from '../../lib/history-storyboards';
 import { HC } from './theme';
+
+// ─── LensProgress: 显示该 topic 全部 lens 的学习进度 + 引导继续学未学的视角 ─────
+// (用户反馈 #4: 学完 1 lens 不应直接当全课完, 考点 cross-lens 学生没全学到)
+function LensProgress(props) {
+  var topicLenses = props.topicLenses || [];
+  if (topicLenses.length <= 1) return null;
+  var effectiveLensId = props.effectiveLensId;
+  var lensCompletion = props.lensCompletion || {}; // { lensId: true/false (有 receipt?) }
+  var onSwitchLens = props.onSwitchLens;
+  var isEn = !!props.isEnglish;
+
+  var doneCount = topicLenses.filter(function(l) { return lensCompletion[l.id]; }).length;
+  var allDone = doneCount >= topicLenses.length;
+
+  return (
+    <div style={{
+      marginBottom: 16, padding: "16px 18px",
+      background: allDone ? "rgba(34,160,107,0.08)" : HC.parchmentHi,
+      border: "1px solid " + (allDone ? HC.green : HC.parchmentLo),
+      borderRadius: 14,
+    }}>
+      <div style={{display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap"}}>
+        <span style={{fontSize: 18}}>{allDone ? "✅" : "🎭"}</span>
+        <span style={{fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 700, color: HC.ink, flex: 1}}>
+          {isEn
+            ? (allDone ? "All 3 perspectives done. The full picture is yours now." : "Your progress through this topic's 3 perspectives")
+            : (allDone ? "你已经走完 3 个视角 — 现在这门课的全貌都在你手里了" : "这门课的 3 个视角进度")}
+        </span>
+        <span style={{fontSize: 12, color: HC.textSec, fontWeight: 600}}>
+          {doneCount} / {topicLenses.length}
+        </span>
+      </div>
+      <div style={{display: "flex", flexDirection: "column", gap: 6}}>
+        {topicLenses.map(function(lens) {
+          var done = !!lensCompletion[lens.id];
+          var isCurrent = lens.id === effectiveLensId;
+          var nameCn = lens.nameCn || (lens.name && lens.name.cn) || lens.name || lens.id;
+          var nameEn = lens.nameEn || (lens.name && lens.name.en) || lens.name || lens.id;
+          if (typeof nameCn === "object") nameCn = nameCn.cn || nameCn.en;
+          if (typeof nameEn === "object") nameEn = nameEn.en || nameEn.cn;
+          return (
+            <div key={lens.id} style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "10px 12px",
+              background: done ? "rgba(34,160,107,0.06)" : (isCurrent ? "rgba(196,107,48,0.06)" : "rgba(255,255,255,0.6)"),
+              border: "1px solid " + (done ? HC.green : (isCurrent ? HC.accent : HC.border)),
+              borderRadius: 10,
+            }}>
+              <span style={{fontSize: 16, width: 22, textAlign: "center"}}>
+                {done ? "✓" : (isCurrent ? "📖" : "🔒")}
+              </span>
+              <div style={{flex: 1, minWidth: 0}}>
+                <div style={{fontSize: 13, fontWeight: 600, color: HC.ink}}>
+                  {isEn ? nameEn : nameCn}
+                  {isCurrent && (
+                    <span style={{
+                      marginLeft: 6, fontSize: 9, padding: "1px 6px",
+                      background: HC.accent, color: "#fff", borderRadius: 999,
+                      fontWeight: 700, letterSpacing: 0.5,
+                    }}>{isEn ? "JUST DONE" : "刚学完"}</span>
+                  )}
+                </div>
+                <div style={{fontSize: 11, color: HC.textSec, opacity: 0.85, marginTop: 1}}>
+                  {isEn ? (lens.role || "") : ((lens.perspectiveTag || lens.role) || "")}
+                </div>
+              </div>
+              {!done && !isCurrent && onSwitchLens && (
+                <button onClick={function() { onSwitchLens(lens.id); }} style={{
+                  padding: "6px 12px",
+                  background: HC.card, border: "1px solid " + HC.accent, color: HC.accent,
+                  borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  fontFamily: "inherit", whiteSpace: "nowrap",
+                }}>{isEn ? "Switch & learn →" : "切到这个视角 →"}</button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {!allDone && (
+        <div style={{
+          marginTop: 10, padding: "8px 10px",
+          background: "rgba(0,0,0,0.04)", borderRadius: 8,
+          fontSize: 11.5, color: HC.textSec, lineHeight: 1.55, fontStyle: "italic",
+        }}>
+          {isEn
+            ? "Heads up: the quiz covers concepts from all 3 perspectives. If you haven't walked them all yet, some questions may need self-study from the notes below."
+            : "提示:考核题目覆盖全部 3 个视角的考点。还没学完的视角,有些题可能要靠下面的笔记自学。"}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function ConceptReview(props) {
   var topicId = props.topicId;
@@ -35,6 +128,15 @@ export function ConceptReview(props) {
 
   return (
     <div style={{maxWidth: 720, margin: "20px auto", padding: "0 4px"}}>
+      {/* Lens 进度引导 — 用户反馈 #4: 学完 1 lens 不该当全课完, 让用户能继续切到其他视角 */}
+      <LensProgress
+        topicLenses={props.topicLenses}
+        effectiveLensId={props.effectiveLensId}
+        lensCompletion={props.lensCompletion}
+        onSwitchLens={props.onSwitchLens}
+        isEnglish={isEnglish}
+      />
+
       {/* 标题区 */}
       <div style={{padding: "18px 18px 14px", background: HC.parchmentHi, border: "1px solid " + HC.parchmentLo, borderRadius: 14, marginBottom: 14}}>
         <div style={{display: "flex", alignItems: "center", gap: 10, marginBottom: 8}}>
@@ -45,8 +147,8 @@ export function ConceptReview(props) {
         </div>
         <div style={{fontSize: 12.5, color: HC.text, opacity: 0.85, lineHeight: 1.55}}>
           {isEnglish
-            ? "These are the concepts the quiz will touch. Skim what you remember; tap any card to expand the source passage. No rush."
-            : "下面是这一课的考点。看一遍你记得的部分；点卡片右下角可以展开故事原文。不急。"}
+            ? "These are the concepts the quiz will touch. Skim what you remember. No rush."
+            : "下面是这一课的考点。看一遍你记得的部分。不急。"}
         </div>
       </div>
 
@@ -105,46 +207,10 @@ export function ConceptReview(props) {
                 ? (isEnglish ? card.storyAnchor.xiaoweiNote.en : card.storyAnchor.xiaoweiNote.cn)
                 : (isEnglish ? card.standaloneText.en : card.standaloneText.cn)}
             </div>
-            {isStory && card.storyAnchor && card.storyAnchor.nodeIds && card.storyAnchor.nodeIds.length > 0 && (
-              <details style={{marginTop: 10}}>
-                <summary style={{cursor: 'pointer', color: HC.teal, fontSize: 12.5, fontWeight: 600, userSelect: 'none', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 4}}>
-                  <span style={{fontSize: 10, opacity: 0.7}}>▶</span>
-                  {isEnglish ? '📖 Read the story passage' : '📖 看小 U 读到的原文节选'}
-                </summary>
-                <div style={{marginTop: 8, borderTop: '1px dashed #e0e0d8', paddingTop: 10}}>
-                  {(function() {
-                    try {
-                      var nodes = loadStoryboard(topicId, card.storyAnchor.lens);
-                      var matched = (nodes || []).filter(function(n) { return card.storyAnchor.nodeIds.indexOf(n.nodeId) !== -1; });
-                      if (!matched.length) return React.createElement('div', {style: {fontSize: 12, color: HC.textSec, fontStyle: 'italic'}}, isEnglish ? 'Passage not found.' : '暂无对应节选。');
-                      return matched.map(function(node, ni) {
-                        var body = isEnglish ? (node.bodyEn || '') : (node.bodyCn || '');
-                        var preview = body.slice(0, 300);
-                        var truncated = body.length > 300;
-                        return (
-                          <div key={ni} style={{marginBottom: ni < matched.length - 1 ? 14 : 0}}>
-                            <div style={{fontSize: 11.5, fontWeight: 700, color: HC.teal, marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6}}>
-                              <span>{isEnglish ? node.titleEn : node.titleCn}</span>
-                              <span style={{opacity: 0.45, fontWeight: 400, fontSize: 10.5, fontFamily: 'monospace'}}>{node.nodeId}</span>
-                            </div>
-                            <div style={{
-                              fontSize: 12.5, color: HC.text, lineHeight: 1.7,
-                              whiteSpace: 'pre-wrap',
-                              background: '#f8f6f0',
-                              borderRadius: 8,
-                              padding: '10px 12px',
-                              borderLeft: '3px solid ' + HC.teal,
-                            }}>
-                              {preview}{truncated && <span style={{opacity: 0.5}}>…</span>}
-                            </div>
-                          </div>
-                        );
-                      });
-                    } catch(e) { return null; }
-                  })()}
-                </div>
-              </details>
-            )}
+            {/* 5-26 (用户反馈 #3): 暂移除「看小 U 读到的原文节选」折叠区 —— */}
+            {/* notebook storyAnchor.nodeIds 用「huizong-N4」全名格式, storyboard 节点 id 是 */}
+            {/* 「hz-n4」 缩写格式, 字段名也错 (n.nodeId vs n.id, node.bodyCn vs node.content.cn)。*/}
+            {/* 51 课 dead-since-day-one, 永远显示「暂无对应节选」。schema 统一是 P1 大改。 */}
             {!isStory && card.xiaoweiNote && (
               <div style={{
                 background: '#fffbe8', borderLeft: '3px solid #f0c040',
