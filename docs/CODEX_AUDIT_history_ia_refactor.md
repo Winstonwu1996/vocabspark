@@ -18,9 +18,11 @@
 ## 审核范围（commit 范围）
 
 ```
-git diff d3ed88d..HEAD     # 本次重构 = 2 个 commit:
+git diff d3ed88d..HEAD     # 本次重构 = 4 个 commit:
 8d570e1  抽 ProfileSetup + CourseBrowser 到 components/history-engine/
 7cebe4a  三段式 IA：新建首页 + 单课页路由拆分 + 路由/链接改造
+ce49ca5  user-smoke No-Go 三修 + Atlas 次级入口 (见文末「创始人 user-smoke 轮」)
+0e5164b  本审核 prompt 本身 (docs)
 ```
 
 具体改动清单：
@@ -63,6 +65,23 @@ git diff d3ed88d..HEAD     # 本次重构 = 2 个 commit:
 
 **安全/回归基线**
 14. 无 PII、无新外部网络调用、无新建账号；播放器全流程（profile setup → intro → lens 选择 → 14 轮对话 → mastery gate → completion）无功能回归。
+
+## 增补：创始人 user-smoke 轮（已修，请重点验证这 3 处修复的正确性 + 无回归）
+
+创始人模拟 Willow / 家长首次路径实测，给了 User-Smoke No-Go，发现 3 个真实问题，已在 commit `ce49ca5` 修复。请独立验证每个修复是否真正解决问题、是否引入新回归：
+
+**US-1（单课页埋住「开始」）** — 进单课后先看到完整 51 门课表，再才是视角选择，像还在选课页。
+- 修复：`pages/history/[topicId].js` IntroScreen 里把内联的整块 `ThroughLineMap` 改为默认折叠的「换一课 / 看全部 51 门」toggle（`showAllCourses` state），`simplifiedMode` 下仍完全隐藏。
+- 请验证：① 单课页首屏不再出现完整课表、视角选择/开始入口靠前；② 折叠 toggle 展开/收起正常；③ embedded/atlas 流程下仍完全不渲染（沉浸 + iframe 不切页）。
+
+**US-2（embedded 水合错误，上线风险）** — 打开 Atlas `us-constitution` 深度学，控制台 `Text content did not match`：server 文案「页面顶部的 Where this happened」，client 变「完整地图已经在 Atlas Lab 看过了」。
+- 根因：`lib/hooks/use-simplified-mode.js` 在 render 内**同步读 `window.location.search`**，server（无 window → simplifiedMode=false）与 client 首屏（读到 `?embedded=1` → true）分裂。
+- 修复：hook 内置 `hydrated` gate（`useState(false)` + `useEffect` 置 true），首屏（server + client 第一次 render）都不读 window → 一致；mount 后才开同步 URL fallback；`hydrated` 已加入 useMemo 依赖。
+- 请验证（这是 P0/P1 上线风险，重点）：① 该修复是否真的消除所有 `useSimplifiedMode` 消费者（IntroScreen / GeographySection / LensSelector / Walkthrough 触发 / EN-CN toggle 等）的水合分裂；② 是否还有**其它** render 路径里的同步 `window` 读取会造成首屏不一致（grep `window.location` / `URLSearchParams` 在 render 而非 effect/handler 内的用法）；③ mount 后从「非 simplified」翻到「simplified」的一帧闪烁是否可接受（尤其 iframe 内 nav 一帧闪现）；④ `embedded` / `fromAtlas` state（由页面自己的 mount effect 设置）与 hook 的 URL fallback 是否会产生时序竞态。
+
+**US-3（非法 topic URL/content 分裂）** — `/history/not-a-real-topic` 最终显示「唐宋盛世」，但地址栏仍是非法路径，分享出去更乱。
+- 修复：`pages/history/[topicId].js` mount effect 里，路径有 id 但 `getTopic` 无效 → `window.location.replace('/history')` 回目录。
+- 请验证：① 非法 id 不再出现「内容 ≠ URL」；② 不会重定向环（/history 首页对合法 id 的 legacy 重定向 vs 这里的非法回首页）；③ 合法的 embedded/atlas id、legacy `?topicId=` 流程不受影响；④ `window.location.replace` vs `router.replace` 的取舍是否有问题（整页刷新对非法 id 可接受？）。
 
 ## 输出格式
 
