@@ -6,12 +6,14 @@
 
 ---
 
-## 1. 抽离边界(关键决策)
+## 1. 抽离边界(关键决策 + 创始人审定修正)
 
 ### 进 lib(通用编排)
-- 14 个 refs 里的 **10 个**:`syncTimerRef` / `syncInFlightRef` / `syncPendingRef` / `syncRetryCountRef` / `syncStatusTimerRef` / `lastSyncAtRef` / `cloudReadyRef` / `intentRef` / `intentSeqRef` / `bcRef`
+- **12 个 refs**(创始人审加 2 个):`syncTimerRef` / `syncInFlightRef` / `syncPendingRef` / `syncRetryCountRef` / `syncStatusTimerRef` / `lastSyncAtRef` / `cloudReadyRef` / `intentRef` / `intentSeqRef` / `bcRef` / **`syncVersionRef`(新加)** / **`recoveringRef`(新加)**
+  - **`syncVersionRef` 必须进 lib**(创始人修正):409 重推 / load 响应 / broadcast / 成功响应都依赖它,不能分裂在 vocab 和 lib 两边持有
+  - **`recoveringRef` 必须进 lib**(创始人修正):gate recovery 是 sync orchestration 状态机的一部分,拆开会让闸门恢复时序漂移
 - 常量:`MAX_SYNC_RETRIES` / `SYNC_DEBOUNCE_MS` / `SYNC_LEADING_GAP_MS`
-- 函数:`_markIntent` / `syncToCloud`(debounce wrapper) / `_doSync`(核心状态机) / `_applySyncSuccess` / `_pushSnapshot`(含 409 重推) / `_broadcastSync` / `_initBroadcastChannel`
+- 函数:`_markIntent` / `syncToCloud`(debounce wrapper) / `_doSync`(核心状态机) / `_applySyncSuccess` / `_pushSnapshot`(含 409 重推) / `_broadcastSync` / `_initBroadcastChannel` / **`recoverBlockedSync`(新加,跟 `_doSync` 同 orchestration 状态机)**
 - 时序 invariant:**全部 9 个历史 bug 修复必须按原语义保留**
 
 ### 留 vocab(domain-specific)
@@ -20,13 +22,14 @@
 - `mergeStates` / `validateMerged`:已在 `lib/syncMerge.js`,lib 直接 import
 - `detectSyncGate`:留 vocab 内(域知识),作为 callback 注入
 - `loadFromCloud`:lib 提供通用版本(只读 `/api/load`),vocab 端调
-- 4 个 vocab-only refs 留 vocab:`accessTokenRef`(beforeunload 用) / `recoveringRef` / `authInFlightRef` / `authTimersRef`(auth 流程留 vocab)
+- **3 个** vocab-only refs 留 vocab(创始人审减 1):`accessTokenRef`(beforeunload 用) / `authInFlightRef` / `authTimersRef`(auth 流程留 vocab)。**`recoveringRef` 转移到 lib**
 - auth 流程(`handleAuthUser` / `onAuthStateChange` setTimeout 0 死锁修复)**整段留 vocab**:涉及 supabase v2 lock,domain 风险高,history 后续单独写 history-specific auth hook(共享底层 sync client)
 
 ### 边界原则
-- **lib 只懂 push/pull/conflict/retry/multi-tab,不懂业务字段语义**
-- **vocab 用 callback 注入业务策略**(merge / gate / data apply)
+- **lib 只懂 push/pull/conflict/retry/multi-tab + gate-recovery,不懂业务字段语义**
+- **vocab 用 callback 注入业务策略**(merge / gate detect / data apply)
 - **lib 不调 React hooks**(纯 factory,内部 refs 用 `{current}` 对象模拟),caller 在 React 里持久化实例
+- **version 单点持有**:`syncVersionRef` 在 lib 内,caller 通过 `getSyncStatus().version` 读、`onSyncStatus(status, meta)` 接收变化通知
 
 ---
 
@@ -58,8 +61,11 @@ export function createSyncClient(options) {
    *   onCloudData: (cloudData: object) => void,
    *     // 应用云端数据到 caller state,caller 包装 _applyCloudData()
    *
-   *   onSyncStatus: (status: 'idle'|'syncing'|'synced'|'error') => void,
-   *     // sync 状态变化时通知 caller,caller 包装 setSyncStatus()
+   *   onSyncStatus: (status, meta) => void,
+   *     // status: 'idle' | 'syncing' | 'synced' | 'error'
+   *     // meta: { version: number, lastSyncAt: number, rejectedFields?: string[] }
+   *     // 创始人审修正: 必须含 meta, 否则导航栏 lastSyncAt 不刷新
+   *     // sync 成功时也要通知 caller (status='synced' + 新 version + 新 lastSyncAt)
    *
    *   detectSyncGate: (data: object) => { blocked: boolean, reason?: string },
    *     // domain 闸门(如 wordInput 缩水保护),caller 提供
@@ -204,22 +210,55 @@ export function createSyncClient(options) {
 
 ---
 
-## 7. 决策点(创始人审)
+## 7. 创始人决策记录(已拍板)
 
-**问题 1**:抽离边界是否同意?
-- 进 lib:通用编排(debounce / retry / intent / BC / cloudReady gate)
-- 留 vocab:`_applyCloudData`(domain merge) / auth 流程 / loadSave / doSave
+**决策 1 抽离边界**:同意,但补 2 个修正
+- ✅ `syncVersionRef` 进 lib(409/load/broadcast/success 都依赖,不能分裂)
+- ✅ `recoverBlockedSync` + `recoveringRef` 进 lib(orchestration 状态机)
+- ✅ `_applyCloudData` / auth / `accessTokenRef` 留 vocab
+- 已 reflect 到 §1
 
-**问题 2**:API 签名是否同意?
-- factory pattern `createSyncClient(options)`
-- 8 个必传 callback + 5 个可选配置
+**决策 2 API 签名**:同意 factory,但补 status meta
+- ✅ `onSyncStatus(status, meta)` 其中 `meta: { version, lastSyncAt, rejectedFields? }`
+- 已 reflect 到 §2
 
-**问题 3**:风险 R5 抽离实施方式 — 选哪种?
-- (a) **「注释旧代码 → ship 一版 → 跑 24h → 再删旧代码 ship 二版」** ← 推荐,可两段 revert
-- (b) 一次性删旧代码 + 加新调用,一个 commit ship → 出错直接 revert 整 commit
-- (c) 用 feature flag(`USE_NEW_SYNC_CLIENT`),环境变量切换,有问题瞬间关掉
+**决策 3 实施方式**:选 (a),拆 3 步
+- 步 1:新增 `lib/sync-client.js` + 单测,**不接 vocab**(可独立 ship 验证 lib 本身工作)
+- 步 2:vocab 切到 lib,**旧代码临时注释保留**(不是删),ship 24h
+- 步 3:24h 无 sync 异常后**删旧注释代码**,再进入 0B-gate 3 天观察
+- ❌ 不选 feature flag(这是时序重构不是新功能开关,flag 引入第二套运行路径增加运维负担)
 
-**问题 4**:5 场景手测之外要不要加 production canary?
-- 抽离后先 deploy 到 preview branch 跑几小时,确认 build + 基本 sync 工作,再 merge main → production
+**决策 4 preview canary**:加
+- merge main 前先 preview deploy(`git push origin claude/step-0a-sync-client` 触发 preview build)
+- 用专用测试账号跑 5 场景
+- preview 只抓 build/runtime 明显问题,**不替代** main 上线后 24h + 0B-gate 3 天观察
 
-回答后我进 Task #2 写 `lib/sync-client.js`。
+---
+
+## 8. 第一版硬约束(创始人加)
+
+**Step 0A 的成功标准**:vocab 用户**完全感觉不到 sync 被换了,只是代码搬家了**。
+
+第一版 `lib/sync-client.js` **只做行为保持,不做顺手清理**。任何「顺便优化」想法都推后:
+
+❌ 不做:
+- 优化 retry 策略(指数退避参数 / max 次数)
+- 改 status 状态机(加新状态 / 改 idle 淡出时长)
+- 改 merge 逻辑(已在 `lib/syncMerge.js`,不动)
+- 改 auth 流程(留 vocab,且不优化)
+- 重命名 ref / 函数(`_doSync` → `doSync` 等,留原名)
+- 增加 typescript types(jsdoc 注释即可,跟项目惯例一致)
+- 移除 console.warn / 加 Sentry 上报(留旧行为)
+- 优化 BroadcastChannel 消息格式
+
+✅ 只做:
+- 把代码搬家到 lib
+- 参数化 8 个 callback + 5 配置
+- 保持每个函数的输入/输出/副作用/时序跟 vocab 原实现一对一对应
+- 单测覆盖 9 个 invariant + 5 场景核心(测的就是「行为没变」)
+
+**任何「这里我可以顺手...」的念头 → 写到 `docs/STEP_0A_TODO_LATER.md` 里,Step 0A 完成后再开 PR**。
+
+---
+
+进入 Task #2 写 `lib/sync-client.js` 时严格遵守 §1-§8。
