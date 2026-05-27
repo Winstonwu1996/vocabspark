@@ -9,6 +9,7 @@ import UserCenter from '../components/UserCenter';
 import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../components/PetAvatar';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
+import { createSyncClient } from '../lib/sync-client'; // Step 0A.3 抽离 sync 编排到通用 lib
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
@@ -2596,7 +2597,9 @@ export default function App() {
   var [wordStatusFilter, setWordStatusFilter] = useState("all");
   var [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
   var [lastSyncAt, setLastSyncAt] = useState(0); // 最近成功同步时间戳（导航栏徽章展示）
-  var syncVersionRef = useRef(0); // 服务端版本号
+  // Step 0A.3: syncVersionRef 已搬到 lib/sync-client.js (创始人审定: 不能分裂)
+  // 留 vocab 的所有 .current 读写改成 syncClientRef.current?.setSyncVersion / .getSyncStatus().version
+  // var syncVersionRef = useRef(0); /* OLD-SYNC-PRE-0A */
   var [wordSearch, setWordSearch] = useState("");
   var [showDueOnly, setShowDueOnly] = useState(false);
   var [wordSortMode, setWordSortMode] = useState("default");
@@ -2902,7 +2905,7 @@ export default function App() {
       if (guessTimeoutRef.current) clearTimeout(guessTimeoutRef.current);
       if (petCelebrateTimerRef.current) clearTimeout(petCelebrateTimerRef.current);
       if (rewardTimerRef.current) clearTimeout(rewardTimerRef.current);
-      if (_syncStatusTimerRef.current) clearTimeout(_syncStatusTimerRef.current);
+      // Step 0A.3: _syncStatusTimerRef 在 lib/sync-client.js 内部, 此处不再清
       if (speedToastTimerRef.current) clearTimeout(speedToastTimerRef.current);
       if (feedbackToastTimerRef.current) clearTimeout(feedbackToastTimerRef.current);
       if (streakToastTimerRef.current) clearTimeout(streakToastTimerRef.current);
@@ -3407,45 +3410,33 @@ export default function App() {
      5. visibilitychange/beforeunload → 强制刷新
      ═══════════════════════════════════════════════════════ */
 
-  // sync 内部状态 — 用 useRef 避免 module-level 跨用户/HMR 污染
-  var _syncTimerRef = useRef(null);
-  var _syncInFlightRef = useRef(false);
-  var _syncPendingRef = useRef(false);
-  var _syncRetryCountRef = useRef(0);
-  var _syncStatusTimerRef = useRef(null);
-  // setSyncSynced：统一的"synced → idle"切换，避免 3 处重复 + 卸载后 setState
-  var setSyncSynced = function() {
-    setSyncStatus("synced");
-    setLastSyncAt(Date.now()); // 记录"最近成功同步时间"，导航栏徽章展示给用户（安全感）
-    if (_syncStatusTimerRef.current) clearTimeout(_syncStatusTimerRef.current);
-    _syncStatusTimerRef.current = setTimeout(function() {
-      _syncStatusTimerRef.current = null;
-      setSyncStatus("idle");
-    }, 2500);
-  };
-  var _lastSyncAtRef = useRef(0); // 上次成功 sync 的时间戳（leading edge 用）
-  // chompcloud 2026-04-30 修复：登录用户的首次 sync 必须等 _applyCloudData 完成。
-  // 否则 mount 创建的 default pet 会在云端 pet 拉到之前被 push 上云端覆盖真实进度。
-  var _cloudReadyRef = useRef(false);
-  // L3：用户主动操作 wordInput 时设此 intent，sync 时一起发给服务端解锁 wordInput 缩水保护
-  // 'user_edit_wordInput' / 'user_upload' / 'user_clear'，发出后立即清空
-  var _intentRef = useRef(null);
-  var _intentSeqRef = useRef(0);
-  // intent payload-binding (Codex 第二批 P1)：intent 设为带唯一 id 的对象。
-  // _doSync 捕获整个对象，成功后只在 _intentRef.current 仍 === 捕获对象时才清 —
-  // 防止 in-flight sync A 成功后误清 sync A 发出之后用户新设的 intent (sync B)。
-  var _markIntent = function(type) {
-    _intentRef.current = { type: type, id: ++_intentSeqRef.current };
-    return _intentRef.current;
-  };
-  var _bcRef = useRef(null); // BroadcastChannel 多 tab 同步
-  var MAX_SYNC_RETRIES = 3;
-  var SYNC_DEBOUNCE_MS = 500;
-  var SYNC_LEADING_GAP_MS = 2000; // 距上次 sync 超 2s 时立即推（首次/久未推）
+  // ════════════════════════════════════════════════════════════════
+  // Step 0A.3 (2026-05-26): sync 编排逻辑已搬到 lib/sync-client.js
+  // 本地保留薄 wrapper, 让 call site (syncToCloud/_markIntent/loadFromCloud)
+  // 不动。旧实现整段注释保留 24h, 0B-gate 通过后删 (创始人 3 步走法步 3)。
+  // 设计 doc: docs/STEP_0A_SYNC_CLIENT_DESIGN.md
+  // 单测: scripts/test-sync-client.mjs 52/52 全过
+  // ════════════════════════════════════════════════════════════════
 
-  // 获取当前 access token 用于 API 身份验证
-  // 服务端用此 token 验证用户，防止越权改/读他人数据
-  var accessTokenRef = useRef(null); // 缓存供 beforeunload 同步路径用
+  // syncClientRef: lib/sync-client.js 实例。mount effect 内创建 (见下方 useEffect)。
+  var syncClientRef = useRef(null);
+
+  // 薄 wrapper: call site 不变, 实际转发给 lib。null 保护 mount 前的早期调用。
+  var _markIntent = function(type) {
+    return syncClientRef.current ? syncClientRef.current.markIntent(type) : null;
+  };
+  var syncToCloud = function() {
+    if (syncClientRef.current) syncClientRef.current.syncToCloud();
+  };
+  // loadFromCloud: lib 内已实现 (结构化返回 {ok, data, version, error})
+  var loadFromCloud = function(userId) {
+    return syncClientRef.current
+      ? syncClientRef.current.loadFromCloud(userId)
+      : Promise.resolve({ ok: false, error: 'sync_client_not_ready' });
+  };
+
+  // accessTokenRef + getAuthHeaders 留 vocab (留 vocab 自己用于 beforeunload 同步路径)
+  var accessTokenRef = useRef(null);
   var getAuthHeaders = async function(includeContentType) {
     var headers = {};
     if (includeContentType) headers['Content-Type'] = 'application/json';
@@ -3460,10 +3451,65 @@ export default function App() {
     return headers;
   };
 
-  // syncToCloud：leading edge debounce —
-  //   距上次成功 sync ≥ SYNC_LEADING_GAP_MS（2s）时立即推，否则 debounce 500ms
-  //   这样"用户答完一题立刻 sync"，连续操作时不会一直被推迟
-  var syncToCloud = function() {
+  // ── Step 0A.3: 创建 syncClient 实例 (mount 后, 一次性) ──
+  // 所有 callback 注入 lib, lib 调度 push/pull/retry/multi-tab。
+  // useRef 确保实例只创建一次; 各 callback 内闭包到本组件 state 始终新鲜。
+  useEffect(function() {
+    if (syncClientRef.current) return; // 防热重载/StrictMode 双跑
+    syncClientRef.current = createSyncClient({
+      getAuthHeaders: function(ct) { return getAuthHeaders(ct); },
+      getUser: function() { return userRef.current; },
+      loadLocalSnapshot: function() { return loadSave(); },
+      saveLocalSnapshot: function(d) { return doSave(d); },
+      onCloudData: function(d) { _applyCloudData(d); },
+      onSyncStatus: function(status, meta) {
+        // status 状态机交给 lib; 这里只把 React state 跟着刷
+        setSyncStatus(status);
+        if (meta && typeof meta.lastSyncAt === 'number' && meta.lastSyncAt > 0) {
+          setLastSyncAt(meta.lastSyncAt);
+        }
+      },
+      detectSyncGate: function(d) { return detectSyncGate(d); },
+      trackEvent: function(ev, props) { trackFunnel(ev, props); },
+    });
+  }, []);
+
+  /* OLD-SYNC-PRE-0A: ↓↓↓ 整段 sync 内部状态 + 函数已搬到 lib/sync-client.js ↓↓↓
+     Step 0A.3 临时注释保留 24h 备 revert; 0B-gate 通过后删除。
+     (refs / setSyncSynced / syncToCloud / _markIntent / _applySyncSuccess /
+      _pushSnapshot / recoverBlockedSync / _doSync / _broadcastSync /
+      loadFromCloud — 14 项)
+
+  var _syncTimerRef = useRef(null);
+  var _syncInFlightRef = useRef(false);
+  var _syncPendingRef = useRef(false);
+  var _syncRetryCountRef = useRef(0);
+  var _syncStatusTimerRef = useRef(null);
+  var setSyncSynced = function() {
+    setSyncStatus("synced");
+    setLastSyncAt(Date.now());
+    if (_syncStatusTimerRef.current) clearTimeout(_syncStatusTimerRef.current);
+    _syncStatusTimerRef.current = setTimeout(function() {
+      _syncStatusTimerRef.current = null;
+      setSyncStatus("idle");
+    }, 2500);
+  };
+  var _lastSyncAtRef = useRef(0);
+  var _cloudReadyRef = useRef(false);
+  var _intentRef = useRef(null);
+  var _intentSeqRef = useRef(0);
+  var _markIntent_OLD = function(type) {
+    _intentRef.current = { type: type, id: ++_intentSeqRef.current };
+    return _intentRef.current;
+  };
+  var _bcRef = useRef(null);
+  var MAX_SYNC_RETRIES = 3;
+  var SYNC_DEBOUNCE_MS = 500;
+  var SYNC_LEADING_GAP_MS = 2000;
+  */
+
+  /* OLD-SYNC-PRE-0A (整段搬到 lib/sync-client.js, 注释保留备 revert):
+  var syncToCloud_OLD = function() {
     if (_syncTimerRef.current) clearTimeout(_syncTimerRef.current);
     // 用户主动触发（非自动重试）时复位重试计数，让本次有机会推送
     // 原问题：重试计数超过 MAX_SYNC_RETRIES 后，用户操作也无法触发新的推送
@@ -3689,8 +3735,7 @@ export default function App() {
     }
   };
 
-  // P2-8: BroadcastChannel — sync 成功后通知其他 tab 拉新数据
-  var _broadcastSync = function(version) {
+  var _broadcastSync_OLD = function(version) {
     try {
       if (_bcRef.current) {
         _bcRef.current.postMessage({ type: 'sync', version: version, at: Date.now() });
@@ -3698,27 +3743,18 @@ export default function App() {
     } catch(e) {}
   };
 
-  // 结构化返回 (第二批)：区分"云端无数据(首次用户)"与"读取失败"。
-  //   { ok:true, data, version, hasData }  ← 成功 (data 可能为 null = 首次用户)
-  //   { ok:false, error }                  ← 读取失败 (网络/HTTP/解析)
-  // 调用方据 ok 判断：读失败时绝不能当 cloud=null 推本地 (会覆盖云端真实数据)。
-  var loadFromCloud = async function(userId) {
+  var loadFromCloud_OLD = async function(userId) {
     try {
       var r = await fetch('/api/load?userId=' + userId, {
         headers: await getAuthHeaders(false),
       });
-      if (!r.ok) {
-        console.warn('[loadFromCloud] http ' + r.status);
-        return { ok: false, error: 'http_' + r.status };
-      }
+      if (!r.ok) return { ok: false, error: 'http_' + r.status };
       var json = await r.json();
       syncVersionRef.current = json.version || 0;
       return { ok: true, data: json.data || null, version: json.version || 0, hasData: !!json.data };
-    } catch(e) {
-      console.warn('[loadFromCloud] failed:', e.message);
-      return { ok: false, error: e.message || 'network' };
-    }
+    } catch(e) { return { ok: false, error: e.message || 'network' }; }
   };
+  END OLD-SYNC-PRE-0A */
 
   // 将云端数据应用到 React state
   var _applyCloudData = function(d) {
@@ -3811,7 +3847,8 @@ export default function App() {
       }
     }
     // chompcloud 2026-04-30 修复：标记云端数据已应用，解锁后续 syncToCloud。
-    _cloudReadyRef.current = true;
+    // Step 0A.3: _cloudReadyRef 已搬到 lib/sync-client.js
+    if (syncClientRef.current) syncClientRef.current.setCloudReady(true);
     // 安全感：应用云端数据 = 数据处于已同步状态。用云端这份数据的 updatedAt 初始化
     // lastSyncAt，让老用户刚打开就看到"✓ 已同步 · 上次时间"，而不是"○ 云同步已开启"。
     // (本轮 push 成功后 setSyncSynced 会再刷新为"刚刚"。)
@@ -3897,7 +3934,8 @@ export default function App() {
       localStorage.removeItem("vocabspark_tier");
     } catch(e) {}
     setUser(null); userRef.current = null;
-    _cloudReadyRef.current = false; // 登出后下次登录前 sync 闸门重置
+    // Step 0A.3: setCloudReady(false) 登出后闸门重置, lib 持有
+    if (syncClientRef.current) syncClientRef.current.setCloudReady(false);
     setUserTier("free");
     // 重置 React 状态
     setWordInput(""); setProfile(""); setProfileLocked(false);
@@ -3951,7 +3989,7 @@ export default function App() {
         });
         if (rr.ok) {
           var rj = await rr.json();
-          if (rj.version) syncVersionRef.current = rj.version;
+          if (rj.version && syncClientRef.current) syncClientRef.current.setSyncVersion(rj.version);
         }
       } catch(e) { console.warn('[reset] /api/reset failed:', e.message); }
     }
@@ -4083,7 +4121,7 @@ export default function App() {
           setShowWelcome(false);
         } else {
           // 云端确认无数据（首次注册用户）→ 解锁 + 首次 push
-          _cloudReadyRef.current = true;
+          if (syncClientRef.current) syncClientRef.current.setCloudReady(true);
           syncToCloud();
         }
       }
@@ -4163,8 +4201,8 @@ export default function App() {
   useEffect(function() {
     var flushSync = function() {
       if (!userRef.current) return;
-      // 清除 debounce 定时器，立即同步
-      if (_syncTimerRef.current) { clearTimeout(_syncTimerRef.current); _syncTimerRef.current = null; }
+      // Step 0A.3: debounce timer 在 lib 内部, flushSync 路径不再需要清外部 timer
+      // (lib 的 syncToCloud 不会被这条同步路径调用; 直接走 keepalive/sendBeacon 兜底)
       var fullData = null;
       try {
         var raw = localStorage.getItem(SKEY);
@@ -4175,7 +4213,8 @@ export default function App() {
       // beforeunload 是同步路径，无法 await getSession()
       // 用缓存的 accessTokenRef（最近一次 sync 时更新），并在 body 里也带上 _authToken 兜底（sendBeacon 不能带 header）
       var token = accessTokenRef.current || '';
-      var payload = { userId: userRef.current.id, data: fullData, clientVersion: syncVersionRef.current, _authToken: token };
+      var _currentVersion = syncClientRef.current ? syncClientRef.current.getSyncStatus().version : 0;
+      var payload = { userId: userRef.current.id, data: fullData, clientVersion: _currentVersion, _authToken: token };
       var body;
       try { body = JSON.stringify(payload); } catch(e) { return; }
       // P1-3 修复：双发保险 — keepalive fetch + sendBeacon 双投递（收到任一即成功，
@@ -4209,24 +4248,17 @@ export default function App() {
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisChange);
-    // P2-8: BroadcastChannel — 监听其他 tab sync 完成事件，自动拉新数据
-    if (typeof BroadcastChannel !== "undefined") {
-      try {
-        _bcRef.current = new BroadcastChannel('knowu_sync');
-        _bcRef.current.onmessage = function(ev) {
-          var msg = ev?.data;
-          if (msg?.type === 'sync' && typeof msg.version === 'number' && msg.version > syncVersionRef.current) {
-            // 其他 tab 推送了更新，本 tab 拉一下
-            console.log('[bc] other tab synced version=' + msg.version + ', pulling');
-            _maybePullCloud();
-          }
-        };
-      } catch(e) { console.warn('[bc] init failed:', e.message); }
+    // Step 0A.3: BroadcastChannel 由 lib/sync-client.js 管, 这里只注册 onRemoteVersion 回调
+    if (syncClientRef.current) {
+      syncClientRef.current.initBroadcastChannel(function(/* remoteVersion */) {
+        // 其他 tab 推过新版本 → 本 tab 拉一下
+        _maybePullCloud();
+      });
     }
     return function() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisChange);
-      if (_bcRef.current) { try { _bcRef.current.close(); } catch(e) {} _bcRef.current = null; }
+      if (syncClientRef.current) syncClientRef.current.destroyBroadcastChannel();
     };
   }, []);
 
@@ -4254,7 +4286,8 @@ export default function App() {
   // 拉云端最新数据并合并到本地（用于 tab 切换/BroadcastChannel 通知后）
   var _maybePullCloud = async function() {
     if (!userRef.current) return;
-    if (_syncInFlightRef.current) return; // 正在同步则跳过（避免与 push 冲突）
+    // Step 0A.3: in-flight 状态 lib 持有
+    if (syncClientRef.current && syncClientRef.current.getSyncStatus().inFlight) return;
     try {
       var cloudRes = await loadFromCloud(userRef.current.id);
       if (!cloudRes.ok || !cloudRes.data) return; // 读失败或云端无数据 → 不动本地
@@ -4425,7 +4458,7 @@ export default function App() {
     }
     // 本地与云端对齐 —— 服务端已经是权威清零，本地只需镜像
     try { localStorage.setItem(SKEY, JSON.stringify(cleared)); } catch(e) {}
-    syncVersionRef.current = newVersion;
+    if (syncClientRef.current) syncClientRef.current.setSyncVersion(newVersion);
     // 清辅助 key
     try { localStorage.removeItem(WORD_STATUS_KEY); } catch(e) {}
     try { localStorage.removeItem(REVIEW_WORD_DATA_KEY); } catch(e) {}
