@@ -129,7 +129,36 @@
 
 ---
 
-## 七、一句话总结
+## 八、部署期踩过的运维坑（ops runbook 雏形）
+
+P0 上线那次实战的教训，下次部署前先扫一遍：
+
+### 坑 1：Vercel Hobby cron 限制是 silent block
+- **症状**：`git push` 后没有任何 Vercel deployment 出现在 list，alias 还指旧 commit。看似 webhook 挂了。
+- **真相**：Hobby plan 限制 cron **每天最多 1 次** + **同时最多 2 个 cron**。我们 `vercel.json` 里写了 `*/30 * * * *`（每 30 分钟）就直接 `deploy_failed`，而**失败的 deployment 既不进 list 也不报警**（双重 silent）。
+- **诊断手段**：`vercel deploy --prod --yes`（CLI 走真实 build，立刻看到 error message）。
+- **预防**：cron schedule 改动后必须本地 `vercel deploy --prod` 跑一次验证；docs/PRE_LAUNCH_UX_HARDENING 里的"推广前 P0"清单加一项"cron 频率核对 plan 上限"。
+
+### 坑 2：JSDoc 块注释里写 `*/N` 序列会提前闭合
+- 例：`/* 升级后改 */30 * * * * */` → `*/` 把注释闭合，后面变裸代码 → webpack syntax error。
+- **预防**：注释里要描述 cron 表达式时，用中文叙述（"星号 / 30 星号 …"）或反引号包裹 / 用 `&#42;/30` 之类转义。**lint 规则可补**：扫描 `/* ... */` 块内的 `*/` 但不是结尾闭合的情况。
+
+### 坑 3：deploy_to_vercel 工具不真的 deploy
+- Vercel MCP 的 `deploy_to_vercel` 只返回提示文本"请用 CLI"，**不真的触发 deployment**。
+- **真要 CLI deploy**：`vercel deploy --prod --yes`（在项目根目录，需 `.vercel/project.json` 已 link）。
+- **WIP 隔离**：deploy 前 `git stash push -u` 把同 checkout 里其他 agent 的 WIP 暂存，deploy 后 `git stash pop` 恢复。
+
+### 坑 4：探针频率受 plan 限制 → 监控覆盖度妥协
+- Hobby 下我们的 health-probe 现在 daily 跑一次，潜伏窗口 24h，**真上量后远远不够**。
+- **三选一**：
+  1. **升 Pro plan**（$20/月），cron 改回 `*/30 * * * *`。值不值看推广量。
+  2. **UptimeRobot 免费层**配 5 分钟 ping `https://knowulearning.com/api/cron/health-probe`，带 `Authorization: Bearer <CRON_SECRET>` 头。完全免费，更频。
+  3. 接 Sentry Crons 或第三方 cron 触发器（外部触发我们的 endpoint）。
+- **推广前必须决一个**，否则 P0-4 形同虚设。
+
+---
+
+## 九、一句话总结
 
 **推广不是部署，是把用户体验暴露在 100 倍流量下。**
 silent degradation 在小规模下是创始人能盯到的"偶发反馈"；上 100 倍后是用户**直接流失，不会反馈**。
