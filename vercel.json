@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/weekly-parent-benchmark",
       "schedule": "0 16 * * 1"
+    },
+    {
+      "path": "/api/cron/health-probe",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

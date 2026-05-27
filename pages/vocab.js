@@ -2761,6 +2761,7 @@ export default function App() {
   var [teachStreaming, setTeachStreaming] = useState(false); // 是否在流式生成中（用于显示光标+禁用按钮）
   var [feedbackModal, setFeedbackModal] = useState(null); // E1: { word, contentType, snapshot } 弹反馈 modal
   var [feedbackToast, setFeedbackToast] = useState(null); // 反馈提交后的 toast 文字
+  var [rateLimitToast, setRateLimitToast] = useState(null); // 服务繁忙（429）提示，自动消失
   var feedbackToastTimerRef = useRef(null);
   var [recallChoice, setRecallChoice] = useState(null); // active recall 自测：null / "easy" / "fuzzy" / "hard"
   // B: teach 页面深度奖励 — 「能」按钮 10 秒倒计时禁用（强制读完才有资格说"会"）
@@ -4226,6 +4227,27 @@ export default function App() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisChange);
       if (_bcRef.current) { try { _bcRef.current.close(); } catch(e) {} _bcRef.current = null; }
+    };
+  }, []);
+
+  // P0-1：429 服务繁忙提示。lib/api.js 收到 429 时 window.dispatchEvent('knowu:rate-limited')。
+  // 节流 5 秒（避免 batch 内多个并发请求都 429 时连发多次 toast），8 秒自动消失。
+  useEffect(function() {
+    if (typeof window === "undefined") return;
+    var lastShownAt = 0;
+    var hideTimer = null;
+    var onLimited = function() {
+      var now = Date.now();
+      if (now - lastShownAt < 5000) return; // 5s 节流
+      lastShownAt = now;
+      setRateLimitToast("⏳ 服务繁忙，正在排队…大约 30 秒后自动恢复（或在设置里用自己的 API key 立刻继续）");
+      if (hideTimer) clearTimeout(hideTimer);
+      hideTimer = setTimeout(function() { setRateLimitToast(null); }, 8000);
+    };
+    window.addEventListener("knowu:rate-limited", onLimited);
+    return function() {
+      window.removeEventListener("knowu:rate-limited", onLimited);
+      if (hideTimer) clearTimeout(hideTimer);
     };
   }, []);
 
@@ -9437,6 +9459,13 @@ export default function App() {
       {feedbackToast && (
         <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:C.text,color:"#fff",padding:"12px 20px",borderRadius:24,fontSize:13,fontWeight:600,fontFamily:FONT,boxShadow:"0 8px 24px rgba(0,0,0,0.25)",zIndex:1003,animation:"fadeUp 0.25s ease-out"}}>
           {feedbackToast}
+        </div>
+      )}
+
+      {/* ── P0-1: 服务繁忙 (429) toast — silent degradation → 显式提示 ── */}
+      {rateLimitToast && (
+        <div style={{position:"fixed",top:24,left:"50%",transform:"translateX(-50%)",background:C.gold,color:C.text,padding:"12px 20px",borderRadius:24,fontSize:13,fontWeight:600,fontFamily:FONT,boxShadow:"0 8px 24px rgba(0,0,0,0.25)",zIndex:1004,animation:"fadeUp 0.25s ease-out",maxWidth:"92vw",textAlign:"center",lineHeight:1.45}}>
+          {rateLimitToast}
         </div>
       )}
 
