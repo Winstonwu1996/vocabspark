@@ -1,9 +1,13 @@
 /* P0-4: Synthetic 健康探针 — 推广前 silent degradation 防御。
  *
- * 跑啥：每 30 分钟一次调 callLLM 一个最小 prompt，量化"AI 链路当前是否健康"。
+ * 跑啥：每天一次（Hobby plan cron 限制）调 callLLM 一个最小 prompt，量化"AI 链路当前是否健康"。
  *   - 通：日志记录 ok + 哪个 provider + 延迟。
  *   - 慢：> 8 秒 → Sentry warning（用户感知阈值，超过用户已经开始觉得卡）。
  *   - 挂：抛错 → Sentry error（必报警）。
+ *   - ⚠️ 升 Pro plan 后把 schedule 改成每 30 分钟（"星号 / 30 星号 星号 星号 星号"）：
+ *     daily 探针潜伏窗口太长，
+ *     真上量后该频率应该提高。也可在 Sentry / 第三方 uptime 服务（UptimeRobot 免费层）
+ *     里另配一个 5 分钟 ping 这个 endpoint，无 plan 限制。
  *
  * 严格只读 / 不碰用户数据：
  *   - 不读 user_progress / user_progress_history 任何表。

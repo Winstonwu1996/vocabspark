@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/health-probe",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }
