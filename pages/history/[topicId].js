@@ -3227,29 +3227,44 @@ function SidekickFAB(props) {
 
   return (
     <>
-      {/* 浮动按钮（始终在右下） */}
+      {/* 5-26 (用户反馈): 浮动按钮改胶囊形 + 文字暗示「问小 U」 — 之前圆形 🤔 emoji 不知是 AI 提问入口 */}
       <button
         onClick={props.onToggle}
         style={{
           position: "fixed",
           bottom: "max(110px, calc(env(safe-area-inset-bottom) + 110px))",  // B7: 输入栏上方，避开 iOS 安全区
           right: 16,
-          width: 54, height: 54,
-          borderRadius: "50%",
+          height: 48,
+          minWidth: 48,
+          padding: isOpen ? "0" : "0 18px 0 14px",
+          width: isOpen ? 48 : "auto",
+          borderRadius: 999,
           background: isOpen ? HC.pinFill : HC.accent,
           color: "#fff8e8",
           border: "none",
-          fontSize: 22,
+          fontSize: 15,
+          fontWeight: 700,
           cursor: "pointer",
-          boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
+          boxShadow: "0 4px 18px rgba(196,107,48,0.45)",
           zIndex: 100,
           fontFamily: "inherit",
           transition: "all 0.2s",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
         }}
-        title={isOpen ? "关闭追问助手" : "有问题？问我"}
-        aria-label="Sidekick"
+        title={isOpen ? "关闭" : "有问题？问小 U(不影响主对话)"}
+        aria-label={isOpen ? "Close Xiao U" : "Ask Xiao U"}
       >
-        {isOpen ? "✕" : "🤔"}
+        {isOpen ? (
+          <span style={{fontSize: 18}}>✕</span>
+        ) : (
+          <>
+            <span style={{fontSize: 19, lineHeight: 1}}>🤔</span>
+            <span style={{whiteSpace: "nowrap"}}>问小 U</span>
+          </>
+        )}
       </button>
 
       {/* 抽屉（打开时显示） */}
