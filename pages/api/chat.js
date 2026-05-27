@@ -1,4 +1,4 @@
-import { checkPerIpLimit, checkPerUserLimit, isAdminUser } from "../../lib/ratelimit";
+import { checkPerIpLimit, checkPerUserLimit } from "../../lib/ratelimit";
 import * as Sentry from "@sentry/nextjs";
 
 export const config = {
@@ -169,46 +169,44 @@ export default async function handler(req, res) {
   }
 
   // ─── Rate Limit ───
-  // 优先级：BYO 跳过 → ADMIN 白名单跳过 → 登录用户 user-level（300/分）→ 游客 IP-level（300/小时）
+  // 优先级：BYO 跳过 → 登录用户 user-level（300/分）→ 游客 IP-level（300/小时）
+  // admin bypass 已移除（Codex 复审：X-User-Id 软认证下白名单不安全）；高频需求走 BYO key。
   const isBYO = userApiKeys && (userApiKeys.deepseek || userApiKeys.gemini);
   if (!isBYO) {
     const userId = req.headers["x-user-id"];
-    const isAdmin = userId && isAdminUser(userId);
-    if (!isAdmin) {
-      const ip =
-        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
-        req.headers["x-real-ip"] ||
-        "unknown";
-      let rl;
-      if (userId && typeof userId === "string" && userId.length > 0) {
-        rl = await checkPerUserLimit(userId);
-      } else {
-        rl = await checkPerIpLimit(ip);
-      }
-      if (!rl.allowed) {
-        // 诊断 + Sentry 告警（P0-2）：429 必须 loud, 不能再静默淹没在 console.warn
-        const meta = {
-          ip,
-          ua: (req.headers["user-agent"] || "").slice(0, 120),
-          ref: (req.headers["referer"] || "").slice(0, 80),
-          origin: req.headers["origin"] || "",
-          hasUid: !!userId,
-          ts: new Date().toISOString(),
-        };
-        console.warn("[chat][429]", JSON.stringify(meta));
-        try {
-          Sentry.captureMessage("rate_limited:/api/chat", {
-            level: "warning",
-            tags: {
-              route: "/api/chat",
-              limitType: userId ? "user" : "ip",
-              hasUid: !!userId,
-            },
-            extra: meta,
-          });
-        } catch (e) { /* Sentry 挂了不影响响应 */ }
-        return res.status(429).json({ error: "请求过于频繁，请稍后再试" });
-      }
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      req.headers["x-real-ip"] ||
+      "unknown";
+    let rl;
+    if (userId && typeof userId === "string" && userId.length > 0) {
+      rl = await checkPerUserLimit(userId);
+    } else {
+      rl = await checkPerIpLimit(ip);
+    }
+    if (!rl.allowed) {
+      // 诊断 + Sentry 告警（P0-2）：429 必须 loud, 不能再静默淹没在 console.warn
+      const meta = {
+        ip,
+        ua: (req.headers["user-agent"] || "").slice(0, 120),
+        ref: (req.headers["referer"] || "").slice(0, 80),
+        origin: req.headers["origin"] || "",
+        hasUid: !!userId,
+        ts: new Date().toISOString(),
+      };
+      console.warn("[chat][429]", JSON.stringify(meta));
+      try {
+        Sentry.captureMessage("rate_limited:/api/chat", {
+          level: "warning",
+          tags: {
+            route: "/api/chat",
+            limitType: userId ? "user" : "ip",
+            hasUid: !!userId,
+          },
+          extra: meta,
+        });
+      } catch (e) { /* Sentry 挂了不影响响应 */ }
+      return res.status(429).json({ error: "请求过于频繁，请稍后再试" });
     }
   }
 

@@ -28,8 +28,15 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // 鉴权：CRON_SECRET 配了就强校验，没配（本地/preview）放行
+  // 鉴权：生产环境必须配 CRON_SECRET（Codex 复审：探针绕过 rate limit 直调 LLM,
+  //   prod 公开放行 = 公开烧 token 端点）。
+  // 非 prod（开发/preview/local）：可选——便于本地冒烟。
   const expected = process.env.CRON_SECRET;
+  const isProd = process.env.VERCEL_ENV === "production";
+  if (isProd && !expected) {
+    console.error("[health-probe] FATAL: CRON_SECRET not configured in production — probe disabled");
+    return res.status(503).json({ error: "probe disabled: CRON_SECRET not configured" });
+  }
   if (expected) {
     const auth = req.headers["authorization"] || req.headers["Authorization"];
     if (auth !== `Bearer ${expected}`) {

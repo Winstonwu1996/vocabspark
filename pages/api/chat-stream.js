@@ -1,7 +1,7 @@
 // Edge Runtime SSE 流式端点 — 只用于 teach 等纯文本任务
 // 与 /api/chat 并存：/api/chat 走 Node Runtime（非流式），本端点走 Edge Runtime（流式透传）。
 // 客户端任何失败都会 fallback 到 /api/chat，不会影响生产稳定性。
-import { checkPerIpLimit, checkPerUserLimit, isAdminUser } from "../../lib/ratelimit";
+import { checkPerIpLimit, checkPerUserLimit } from "../../lib/ratelimit";
 import { getCached, setCached, cachedTextToSSEStream } from "../../lib/teachCache";
 import * as Sentry from "@sentry/nextjs";
 
@@ -147,48 +147,46 @@ export default async function handler(req) {
   }
 
   // ─── Rate Limit ───
-  // BYO → ADMIN 白名单 → 登录用户 user-level → 游客 IP-level
+  // BYO → 登录用户 user-level → 游客 IP-level
+  // admin bypass 已移除（Codex 复审：X-User-Id 软认证下白名单不安全）
   if (!isBYO) {
     const userId = req.headers.get("x-user-id");
-    const isAdmin = userId && isAdminUser(userId);
-    if (!isAdmin) {
-      const ip =
-        req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-        req.headers.get("x-real-ip") ||
-        "unknown";
-      let rl;
-      if (userId && userId.length > 0) {
-        rl = await checkPerUserLimit(userId);
-      } else {
-        rl = await checkPerIpLimit(ip);
-      }
-      if (!rl.allowed) {
-        // 诊断 + Sentry 告警（P0-2）
-        const meta = {
-          ip,
-          ua: (req.headers.get("user-agent") || "").slice(0, 120),
-          ref: (req.headers.get("referer") || "").slice(0, 80),
-          origin: req.headers.get("origin") || "",
-          hasUid: !!userId,
-          ts: new Date().toISOString(),
-        };
-        console.warn("[chat-stream][429]", JSON.stringify(meta));
-        try {
-          Sentry.captureMessage("rate_limited:/api/chat-stream", {
-            level: "warning",
-            tags: {
-              route: "/api/chat-stream",
-              limitType: userId ? "user" : "ip",
-              hasUid: !!userId,
-            },
-            extra: meta,
-          });
-        } catch (e) { /* Sentry 挂了不影响响应 */ }
-        return new Response(JSON.stringify({ error: "请求过于频繁，请稍后再试" }), {
-          status: 429,
-          headers: { "Content-Type": "application/json" },
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+    let rl;
+    if (userId && userId.length > 0) {
+      rl = await checkPerUserLimit(userId);
+    } else {
+      rl = await checkPerIpLimit(ip);
+    }
+    if (!rl.allowed) {
+      // 诊断 + Sentry 告警（P0-2）
+      const meta = {
+        ip,
+        ua: (req.headers.get("user-agent") || "").slice(0, 120),
+        ref: (req.headers.get("referer") || "").slice(0, 80),
+        origin: req.headers.get("origin") || "",
+        hasUid: !!userId,
+        ts: new Date().toISOString(),
+      };
+      console.warn("[chat-stream][429]", JSON.stringify(meta));
+      try {
+        Sentry.captureMessage("rate_limited:/api/chat-stream", {
+          level: "warning",
+          tags: {
+            route: "/api/chat-stream",
+            limitType: userId ? "user" : "ip",
+            hasUid: !!userId,
+          },
+          extra: meta,
         });
-      }
+      } catch (e) { /* Sentry 挂了不影响响应 */ }
+      return new Response(JSON.stringify({ error: "请求过于频繁，请稍后再试" }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      });
     }
   }
 
