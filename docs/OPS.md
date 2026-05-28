@@ -282,4 +282,61 @@ tail -f /tmp/cloudflared.log     # tunnel 日志（路径视 plist 配置而定�
 
 ---
 
+## 十一、Preview canary env 必备清单
+
+> 来源：Step 0A sync-client 抽离做 feature-branch preview canary 时踩的坑。
+> Vercel preview deploy 成功 + build 绿，但浏览器登录后同步徽章一直"未同步"。
+> 根因：`SUPABASE_SERVICE_ROLE_KEY` 在 Vercel project 只 scope 到 Production，
+> Preview deploy 拿不到 → `/api/load` 返回 `{data:null, version:0}` → 客户端误判
+> "fresh user / 云端无数据" → 同步徽章卡在未同步态。**失败模式是 silent
+> degradation**：build 绿、UI 不崩、只是数据空 + 徽章红，最容易误判成"代码挂"。
+
+### 11.1 env scope 清单（feature-branch canary 之前必须确认）
+
+下表所有 env 都应 scope 到 **All Environments** 或至少包含 **Preview**。
+检查位置：Vercel Dashboard → Project → Settings → Environment Variables → 看
+每个 var 的 "Environments" 列；或命令行 `vercel env ls` 看 Production / Preview /
+Development 三栏的勾选。
+
+| Env 变量 | 用途 | Preview 缺它的后果 |
+|---------|------|--------------------|
+| `SUPABASE_SERVICE_ROLE_KEY` | `/api/load`、`/api/sync` 服务端写库 | **整个云同步链路废**（本次踩坑根因） |
+| `NEXT_PUBLIC_SUPABASE_URL` | 客户端 auth + RLS 读 | 登录直接挂 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 客户端 auth + RLS 读 | 登录直接挂 |
+| `UPSTASH_REDIS_REST_URL` | rate limit | fail-open，不阻塞但 silent 失去限流保护 |
+| `UPSTASH_REDIS_REST_TOKEN` | rate limit | 同上 |
+| `DEEPSEEK_API_KEY_*` | AI 主路径（chat / sidekick / teach） | 测 AI 必须；只测 sync 可略 |
+| `GEMINI_API_KEY_*` | AI 回退路径 | 同上 |
+| `RESEND_API_KEY` | email OTP 登录 | preview 测登录链路必须 |
+| `STRIPE_SECRET_KEY` | 支付 | preview **不应用 production live key**，理想是 Stripe Test mode key 单独 scope 到 Preview |
+| `STRIPE_WEBHOOK_SECRET` | webhook 验签 | 同上 |
+
+### 11.2 前置自检（推荐 30s curl，确认是 env 问题不是代码）
+
+```bash
+# 1. preview 域名 curl /api/load，看是否返回空数据
+curl -s "https://<preview-deployment>.vercel.app/api/load?userId=<test-uid>" \
+  -H "Authorization: Bearer <anon-token>"
+# 期望：{data: {...}, version: N}
+# 异常：{data: null, version: 0}  → 99% 是 service role key 没 scope 到 preview
+
+# 2. 对照 production 同 token
+curl -s "https://knowulearning.com/api/load?userId=<test-uid>" \
+  -H "Authorization: Bearer <anon-token>"
+# 若 production 返回数据、preview 返回 null → 锁定 env 问题
+```
+
+可选加固：写一个 `scripts/preview-env-check.mjs`，在 canary 启动前跑前置自检
+（罗列必备 env 名 + ping 关键 endpoint），看运维时间安排。
+
+### 11.3 红线
+
+- **不要**把 `SUPABASE_SERVICE_ROLE_KEY` 在 client-side env 暴露（`NEXT_PUBLIC_*`
+  前缀会被打包进 bundle），它是服务端密钥。
+- **不要**为 preview 用 production 的 Stripe live key——测试人员可能误触发真实
+  扣款。preview 必须用 Stripe **Test mode** key 单独 scope 到 Preview。
+- **不要**在本文档或任何 commit 里贴真实 key/token，只能列 key 名称。
+
+---
+
 *技术架构详情见 `docs/INFRA.md`。*
