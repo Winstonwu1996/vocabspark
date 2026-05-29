@@ -24,7 +24,9 @@ import {
   getRemainingSidekick,
   canUseSidekick,
   recordSidekickEvent,
-  mergeDailyQuota,
+  isValidQuotaDate,
+  mergeLensUsage,
+  mergeSidekickUsage,
 } from "../lib/daily-quota.js";
 
 var pass = 0, fail = 0;
@@ -131,39 +133,76 @@ ok("同样 5 个对 free 仍 canUse (剩 15)", canUseSidekick(skFull, "free", T)
 ok("basic 永远 canUseSidekick", canUseSidekick(skFull, "basic", T) === true);
 
 // ════════════════════════════════════════════════════════════
-console.log("\n── mergeDailyQuota · 同日 union (借鉴 vocab unionReviewHistory) ──");
+console.log("\n── isValidQuotaDate (P1-1 Codex 实施审计) ──");
+// ════════════════════════════════════════════════════════════
+ok("合法 YYYY-MM-DD → true", isValidQuotaDate("2026-05-27") === true);
+ok("undefined → false", isValidQuotaDate(undefined) === false);
+ok("null → false", isValidQuotaDate(null) === false);
+ok("空串 → false", isValidQuotaDate("") === false);
+ok("非日期串 → false", isValidQuotaDate("bad") === false);
+ok("数字 → false", isValidQuotaDate(20260527) === false);
+ok("格式不符 (2026/05/27) → false", isValidQuotaDate("2026/05/27") === false);
+
+// ════════════════════════════════════════════════════════════
+console.log("\n── mergeLensUsage · 同日 union (借鉴 vocab unionReviewHistory) ──");
 // ════════════════════════════════════════════════════════════
 // 两设备同日各学不同 lens → union 不丢
 var devA = { date: T, usedLensIds: ["t1:lensA", "t2:lensB"] };
 var devB = { date: T, usedLensIds: ["t2:lensB", "t3:lensC"] };
 eq("同日 union 去重",
-   mergeDailyQuota(devA, devB),
+   mergeLensUsage(devA, devB),
    { date: T, usedLensIds: ["t1:lensA", "t2:lensB", "t3:lensC"] });
 
 // Sidekick eventIds 同日 union — 这是防 sync 双 +1 丢扣的核心
 var skA = { date: T, eventIds: ["e1", "e2"] };
 var skB = { date: T, eventIds: ["e2", "e3"] };
 eq("Sidekick eventIds 同日 union (防丢扣)",
-   mergeDailyQuota(skA, skB),
+   mergeSidekickUsage(skA, skB),
    { date: T, eventIds: ["e1", "e2", "e3"] });
 
+// P1-2: mergeLensUsage 只动 usedLensIds, 不会把 eventIds 混进来 (脏数据防御)
+eq("mergeLensUsage 不混入 eventIds (P1-2 字段隔离)",
+   mergeLensUsage({ date: T, usedLensIds: ["a:b"], eventIds: ["dirty"] }, { date: T, usedLensIds: ["c:d"] }),
+   { date: T, usedLensIds: ["a:b", "c:d"] });
+
 // ════════════════════════════════════════════════════════════
-console.log("\n── mergeDailyQuota · 跨日取新 ──");
+console.log("\n── merge · 跨日取新 ──");
 // ════════════════════════════════════════════════════════════
 var older = { date: YESTERDAY, usedLensIds: ["x:y", "z:w"] };
 var newer = { date: T, usedLensIds: ["a:b"] };
-eq("跨日: 取较新 date 全量 (local 旧)", mergeDailyQuota(older, newer), newer);
-eq("跨日: 取较新 date 全量 (local 新)", mergeDailyQuota(newer, older), newer);
+eq("跨日: 取较新 date 全量 (local 旧)", mergeLensUsage(older, newer), newer);
+eq("跨日: 取较新 date 全量 (local 新)", mergeLensUsage(newer, older), newer);
 
 // ════════════════════════════════════════════════════════════
-console.log("\n── mergeDailyQuota · 边界 (null / 一端空) ──");
+console.log("\n── merge · P1-1 非法/缺失 date 防御 (核心修复) ──");
 // ════════════════════════════════════════════════════════════
-eq("local null → remote", mergeDailyQuota(null, devA), devA);
-eq("remote null → local", mergeDailyQuota(devA, null), devA);
-eq("两端 null → null", mergeDailyQuota(null, null), null);
+var validUsage = { date: T, usedLensIds: ["valid:lens"] };
+// local 合法, remote 缺 date → 必须取 local (不能因对端坏 date 丢自己的扣减)
+eq("local 合法 + remote 缺 date → 取 local (不丢扣减)",
+   mergeLensUsage(validUsage, { usedLensIds: ["ghost:lens"] }),
+   validUsage);
+// remote 合法, local 缺 date → 取 remote
+eq("remote 合法 + local 缺 date → 取 remote",
+   mergeLensUsage({ usedLensIds: ["ghost:lens"] }, validUsage),
+   validUsage);
+// 两端都非法 → 保守 union 不丢 (date 取 local 的, 即便它非法)
+var bothBad = mergeLensUsage({ date: "bad", usedLensIds: ["a:b"] }, { date: undefined, usedLensIds: ["c:d"] });
+ok("两端 date 非法 → union 不丢 (保守)",
+   bothBad.usedLensIds.indexOf("a:b") >= 0 && bothBad.usedLensIds.indexOf("c:d") >= 0);
+// local 合法 date + remote date 是较新但非法格式 → 取 local 合法端
+eq("remote date 非法格式 (2026/05/28) → 不让它赢, 取 local 合法",
+   mergeLensUsage({ date: T, usedLensIds: ["keep:me"] }, { date: "2026/05/28", usedLensIds: ["drop:me"] }),
+   { date: T, usedLensIds: ["keep:me"] });
+
+// ════════════════════════════════════════════════════════════
+console.log("\n── merge · 边界 (null / 一端空) ──");
+// ════════════════════════════════════════════════════════════
+eq("local null → remote", mergeLensUsage(null, devA), devA);
+eq("remote null → local", mergeLensUsage(devA, null), devA);
+eq("两端 null → null", mergeLensUsage(null, null), null);
 // 同日但一端无该字段数组
 eq("同日一端无 usedLensIds → union 仍正确",
-   mergeDailyQuota({ date: T, usedLensIds: ["a:b"] }, { date: T }),
+   mergeLensUsage({ date: T, usedLensIds: ["a:b"] }, { date: T }),
    { date: T, usedLensIds: ["a:b"] });
 
 // ════════════════════════════════════════════════════════════
@@ -173,7 +212,7 @@ console.log("\n── 端到端: 多 tab 同日并发扣减后 merge 不丢 (P0-
 var base = { date: T, usedLensIds: ["shared:lens0"] };
 var tabA = recordLensUsage(base, "topicA", "lensA", T);
 var tabB = recordLensUsage(base, "topicB", "lensB", T);
-var mergedTabs = mergeDailyQuota(tabA, tabB);
+var mergedTabs = mergeLensUsage(tabA, tabB);
 eq("多 tab 同日并发 merge: 3 个 lens 全保留 (base + A + B)",
    mergedTabs.usedLensIds.sort(),
    ["shared:lens0", "topicA:lensA", "topicB:lensB"]);
@@ -185,7 +224,7 @@ console.log("\n── 端到端: 游客→注册当天 quota union 继承 (v1.2 
 // 游客今天用了 1 视角 → 注册后 merge 云端(空)→ 已用的 1 个保留, free 剩 2
 var guestUsage = recordLensUsage(null, "magna-carta-1215", "king-john", T);
 var cloudEmpty = null; // 新注册云端无 history quota
-var afterRegister = mergeDailyQuota(guestUsage, cloudEmpty);
+var afterRegister = mergeLensUsage(guestUsage, cloudEmpty);
 eq("游客已用的 1 视角注册后保留", afterRegister.usedLensIds, ["magna-carta-1215:king-john"]);
 ok("注册后 free 剩余 2 (3 - 已用 1)", getRemainingLenses(afterRegister, "free", T) === 2);
 
