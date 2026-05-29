@@ -8,7 +8,7 @@
 //
 // props: topic（当前课，可空）, onSwitch(topicId), defaultMode?（缺省 'grade'）
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import dynamic from 'next/dynamic';
 import { FONT_DISPLAY } from '../../lib/theme';
 import { THROUGH_LINES, TOPIC_REGISTRY, getTopic } from '../../lib/history-topics';
 import {
@@ -16,11 +16,19 @@ import {
   getGradeTags,
 } from '../../lib/history-grade-map';
 import { HC } from './theme';
-// Step 4a: paywall 锁标 (flag off 时下面这些完全不参与渲染)
+// Step 4a: paywall flag。⚠️ P0-1 (Codex): 这里**绝不** import membership / supabase /
+// UpgradeModal — 否则 flag off 时 supabase GoTrue auth client 会被初始化进 /history 首页
+// (BroadcastChannel + storage 读 + auth listener), 违反「flag off 零 runtime」。
+// canAccessTopic / getTopicAccessTier 来自 history-tiers (纯模块, 无 supabase, 安全)。
+// paywall wrapper (含 useUserTier) 走 next/dynamic 懒加载, flag off 时 import() 永不触发。
 import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
-import { useUserTier } from '../../lib/membership';
-import { canAccessTopic, getTopicAccessTier, getAccessibleTopicCounts } from '../../lib/history-tiers';
-import { UpgradeModal } from './UpgradeModal';
+import { canAccessTopic, getTopicAccessTier } from '../../lib/history-tiers';
+
+// flag on 才会真正 import('./CourseBrowserPaywall') — 连带的 membership/supabase 也只在那时加载
+var CourseBrowserPaywallLazy = dynamic(
+  function () { return import('./CourseBrowserPaywall').then(function (m) { return m.CourseBrowserPaywall; }); },
+  { ssr: false }
+);
 
 var MODE_STORAGE_KEY = 'history-course-browser-mode';
 
@@ -346,45 +354,13 @@ function ThroughLineView(props) {
 // flag 是 env 常量, session 内不变 → 分支稳定, 不违反 hooks 规则。
 export function CourseBrowser(props) {
   if (!ENABLE_HISTORY_PAYWALL) return <CourseBrowserBase {...props} />;
-  return <CourseBrowserPaywall {...props} />;
-}
-
-// Step 4a: flag on 时的 paywall 包装 — 算 tier + 锁课点击弹 UpgradeModal。
-function CourseBrowserPaywall(props) {
-  var tierInfo = useUserTier();
-  var router = useRouter();
-  var [lockedTopicId, setLockedTopicId] = useState(null);
-
-  // tier loading/error → userTier=null → CourseBrowserBase 不锁任何课 (浏览乐观, 真 gate 在进课时)
-  var userTier = tierInfo.isActive ? tierInfo.tier
-    : (tierInfo.state === 'free' ? 'free'
-    : (tierInfo.state === 'guest' ? 'guest' : null));
-
-  var availableIds = (TOPIC_REGISTRY || []).filter(function (r) { return r.available; }).map(function (r) { return r.id; });
-  var counts = getAccessibleTopicCounts(availableIds);
-
-  return (
-    <React.Fragment>
-      <CourseBrowserBase
-        {...props}
-        userTier={userTier}
-        onLockedClick={setLockedTopicId}
-      />
-      {lockedTopicId && (
-        <UpgradeModal
-          reason="locked-course"
-          requiredTier={getTopicAccessTier(lockedTopicId)}
-          counts={counts}
-          onClose={function () { setLockedTopicId(null); }}
-          onUpgrade={function () { router.push('/plan'); }}
-        />
-      )}
-    </React.Fragment>
-  );
+  // flag on: 懒加载 paywall wrapper (此刻才 import membership/supabase/UpgradeModal)
+  return <CourseBrowserPaywallLazy {...props} />;
 }
 
 // ─── CourseBrowserBase: 原 CourseBrowser 实现 (paywall props 全可选) ───
-function CourseBrowserBase(props) {
+// export 供 CourseBrowserPaywall.js 包装 (flag on 路径)。
+export function CourseBrowserBase(props) {
   var topicProgress = useTopicProgress();
   // Mode 状态:从 localStorage 读;冷启动 'grade'(按学校年级 → 默认 G7)
   var [mode, setMode] = useState(function() {
