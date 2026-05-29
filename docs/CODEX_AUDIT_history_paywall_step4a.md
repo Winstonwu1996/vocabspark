@@ -118,3 +118,89 @@ P0-2: ...
 - 最重要:**P0-1 flag off 零行为变化**。这是创始人硬要求 + 生产用户保护的核心。如果你发现 flag off 有任何行为漂移 / 新网络调用 → 必须 No-Go。
 - Step 4a 故意不做进课拦截(留 Step 4b)。loading/error 期首页不锁是有意的分层,不是 bug —— 但请确认这个分层在 Step 4b 接上前不会造成「付费课被免费学」的真实漏洞窗口。
 - modal live 未验证是已知缺口,我会 preview canary 补。你只需判断代码逻辑对不对 + 是否同意 canary 是必要的补测手段。
+
+---
+
+# Round 2 复审 — P0-1 修复后 (4fd4998)
+
+Round 1 你给 No-Go (P0-1): `CourseBrowser.js` 顶层静态 import `useUserTier` → membership → supabase, 把 paywall 代码打进 flag-off 的 `/history` bundle。已修。本轮请确认 P0-1 实质关闭。
+
+## 范围边界澄清 (重要 — 防止被不一致信息干扰)
+
+**Round 1 的前提需要修正**: "以前 /history 没有 supabase import" 不准确。
+- `/history` 基线 (origin/main, paywall 之前) 已通过 `pages/history/index.js → BrandNavBar → UserCenter (UserAvatar) → 静态 import '../lib/supabase'` 初始化 Supabase auth client。
+- `components/UserCenter.js:5` 是静态 `import { supabase }`, `UserAvatar` 同模块导出, BrandNavBar 取 UserAvatar 即拉整模块。
+- 所以 chunk 802 (supabase GoTrue) 在 `/history` graph 里是 **baseline**, 非本次引入。
+
+**因此 Step 4a 的 P0 目标精确表述为**:
+> flag off 时, **不新增 paywall / membership 引入的** runtime —— 不新增 Supabase auth 初始化, 不触发 `useUserTier`, 不调 `/api/stripe/check-subscription`。
+> **不是**「/history 全局无 Supabase」(那个 baseline 就有, 不在本次范围)。
+
+## 审核范围
+
+```bash
+git diff f28f207..4fd4998   # Round 1 → P0-1 修
+```
+关键文件:
+- `components/history-engine/CourseBrowser.js` (顶层 import 改 + dynamic 懒加载)
+- `components/history-engine/CourseBrowserPaywall.js` (新 · 隔离 paywall 依赖)
+
+## 我已验证 (附证据, 请独立复核)
+
+1. **CourseBrowser.js 顶层 import 清单** (请 grep 确认):
+   - ✅ 无 `membership` / `useUserTier`
+   - ✅ 无 `UpgradeModal`
+   - ✅ 无 `useRouter`
+   - ✅ 无直接 `supabase`
+   - 保留: react, next/dynamic, theme, history-topics, history-grade-map,
+     history-tiers (纯模块无 supabase), history-paywall-flag, ./theme
+2. **flag off 不触发 dynamic import**: `CourseBrowser` flag off → `<CourseBrowserBase/>`,
+   `CourseBrowserPaywallLazy` 永不渲染 → `import('./CourseBrowserPaywall')` 不执行。
+3. **bundle 层 (build-manifest + chunk grep)**:
+   - `/history` 页面 chunk (`pages/history-*.js`) **不含** `check-subscription` / `tier_load_error` / `UpgradeModal` 组件体串
+   - membership 代码落在懒块 `812-*.js` (+ vocab/plan 页, 它们本来就用)
+   - chunk 802 (supabase) 仍在 /history graph — 经查是 BrandNavBar→UserCenter baseline, 非本次
+4. `node scripts/test-history-tiers.mjs` → 130/130
+5. `npm run build` 全绿
+
+## 请重点确认
+
+**R2-1 P0-1 是否实质关闭**
+- grep `CourseBrowser.js` 顶层 import, 确认无 membership/supabase/UpgradeModal/useRouter
+- 确认 flag off 路径 (`<CourseBrowserBase/>`) 不可能触发 `import('./CourseBrowserPaywall')`
+- 确认 flag off 时不存在 `useUserTier` 调用 / `/api/stripe/check-subscription` 请求 / membership 侧 supabase 调用
+- 同意「BrandNavBar→UserCenter 既有 supabase 是 baseline, 不算本次引入」吗?
+
+**R2-2 dynamic ssr:false 的 UX 影响 (新增关注)**
+`CourseBrowserPaywallLazy = dynamic(() => import('./CourseBrowserPaywall'), { ssr: false })`
+- flag ON 时, ssr:false 意味着 CourseBrowser 在 SSR + 首屏 client render 时返回 null/占位, 懒块加载后才渲染课表。这会不会让 flag-on 的 `/history` 首屏短暂空白 (课表闪现)?
+- 这个空白窗口可接受吗? 还是该给 dynamic 加 loading 占位 (如先渲染 CourseBrowserBase 不锁版, 懒块到位再加锁)?
+- preview canary (flag on) 能否覆盖这个 UX? 还是需要额外处理?
+
+**R2-3 回归 Round 1 其它结论**
+Round 1 你已确认 (除 P0-1):
+- getAccessibleTopicCounts 返回 1/8/41/51 正确
+- CourseBrowser 只被 /history import, 没泄漏播放器/Atlas
+- {...props} patch 正确
+- loading/error 乐观放行 Step 4a 可接受 (前提 Step 4b 做真 mount gate)
+- modal 点击逻辑代码通, 但需 canary live 验 (Round 1 你被 Vercel SSO 挡住)
+请确认 P0-1 修复**没有破坏**上述任何一条。
+
+## 输出格式
+
+```md
+## VERDICT (Round 2)
+[ ] Go — P0-1 实质关闭, Step 4a 可继续 (待 canary modal live 验)
+[ ] Go with minor adjustments
+[ ] No-Go — P0-1 仍未关闭 / 修复引入新问题
+
+## P0-1 关闭确认
+- 顶层 import 干净: Y/N
+- flag off 不触发 dynamic import: Y/N
+- flag off 无新 paywall runtime: Y/N
+- baseline supabase 边界认同: Y/N
+
+## R2-2 ssr:false UX 结论
+
+## 其它 (R2-3 回归 / 新发现)
+```

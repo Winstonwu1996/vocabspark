@@ -16,9 +16,11 @@ import {
   getGradeTags,
 } from '../../lib/history-grade-map';
 import { HC } from './theme';
-// Step 4a: paywall flag。⚠️ P0-1 (Codex): 这里**绝不** import membership / supabase /
-// UpgradeModal — 否则 flag off 时 supabase GoTrue auth client 会被初始化进 /history 首页
-// (BroadcastChannel + storage 读 + auth listener), 违反「flag off 零 runtime」。
+// Step 4a: paywall flag。⚠️ P0-1 (Codex): 这里**绝不** import membership / useUserTier /
+// UpgradeModal — 保证 flag off 时不新增 paywall/membership 引入的任何 runtime:
+// 不新增 Supabase auth 初始化、不触发 useUserTier、不调 /api/stripe/check-subscription。
+// (注: /history 基线已通过 BrandNavBar → UserCenter 静态 import supabase, 那是既有
+//  baseline, 非本次引入; Step 4a 的目标是「不新增 paywall runtime」而非「/history 全局无 supabase」。)
 // canAccessTopic / getTopicAccessTier 来自 history-tiers (纯模块, 无 supabase, 安全)。
 // paywall wrapper (含 useUserTier) 走 next/dynamic 懒加载, flag off 时 import() 永不触发。
 import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
