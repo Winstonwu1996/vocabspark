@@ -8,7 +8,6 @@
 //
 // props: topic（当前课，可空）, onSwitch(topicId), defaultMode?（缺省 'grade'）
 import React, { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { FONT_DISPLAY } from '../../lib/theme';
 import { THROUGH_LINES, TOPIC_REGISTRY, getTopic } from '../../lib/history-topics';
 import {
@@ -26,11 +25,24 @@ import { HC } from './theme';
 import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
 import { canAccessTopic, getTopicAccessTier } from '../../lib/history-tiers';
 
-// flag on 才会真正 import('./CourseBrowserPaywall') — 连带的 membership/supabase 也只在那时加载
-var CourseBrowserPaywallLazy = dynamic(
-  function () { return import('./CourseBrowserPaywall').then(function (m) { return m.CourseBrowserPaywall; }); },
-  { ssr: false }
-);
+// flag on 时的本地 loader (R2-2 Codex minor): 不用 next/dynamic 的 ssr:false (会让选课区
+// SSR + 首屏 client render 短暂空白), 改为先渲染 CourseBrowserBase 不锁版, mount 后
+// 懒加载 paywall wrapper, 到位再替换 → flag-on 首屏无空白, 锁标随后补上 (浏览乐观,
+// 真 gate 在进课时 Step 4b)。flag off 时此 loader 永不渲染 → import() 永不触发,
+// membership/supabase 不进 flag-off bundle (P0-1 隔离不变)。
+function CourseBrowserPaywallLoader(props) {
+  var [Paywall, setPaywall] = useState(null);
+  useEffect(function () {
+    var mounted = true;
+    import('./CourseBrowserPaywall').then(function (m) {
+      if (mounted) setPaywall(function () { return m.CourseBrowserPaywall; });
+    }).catch(function () { /* 懒块加载失败 → 维持不锁的 Base, 不崩 */ });
+    return function () { mounted = false; };
+  }, []);
+  // 懒块到位前: 先渲染不锁版 CourseBrowserBase (无空白, props 完整传入)
+  if (!Paywall) return <CourseBrowserBase {...props} />;
+  return <Paywall {...props} />;
+}
 
 var MODE_STORAGE_KEY = 'history-course-browser-mode';
 
@@ -356,8 +368,8 @@ function ThroughLineView(props) {
 // flag 是 env 常量, session 内不变 → 分支稳定, 不违反 hooks 规则。
 export function CourseBrowser(props) {
   if (!ENABLE_HISTORY_PAYWALL) return <CourseBrowserBase {...props} />;
-  // flag on: 懒加载 paywall wrapper (此刻才 import membership/supabase/UpgradeModal)
-  return <CourseBrowserPaywallLazy {...props} />;
+  // flag on: loader 先渲染 Base 不锁版, mount 后懒加载 paywall wrapper 替换 (无首屏空白)
+  return <CourseBrowserPaywallLoader {...props} />;
 }
 
 // ─── CourseBrowserBase: 原 CourseBrowser 实现 (paywall props 全可选) ───
