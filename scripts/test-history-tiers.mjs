@@ -22,6 +22,7 @@ import {
   canAccessTopic,
   canAccessLens,
   canAccessLensWithReceipts,
+  computeGateAccess,
   lensCompletedFrom,
   getProOnlyTopics,
   getFreeTopics,
@@ -298,6 +299,42 @@ eq("learningReceipts=null 不崩 → 按未完成走 tier gate",
 eq("Free 用户进 free 课 lens (没学过) → allow",
    canAccessLensWithReceipts('tang-song-china', 'su-shi', 'free', receipts),
    'allow');
+
+// ════════════════════════════════════════════════════════════
+console.log("\n── computeGateAccess · Step 4b 进课 gate 决策 ──");
+// ════════════════════════════════════════════════════════════
+// loading → 'loading' (不据此放 deny)
+eq("loading → 'loading'", computeGateAccess({ state: 'loading' }, 'cold-war-1962', 'jfk', null), 'loading');
+
+// error → fail-closed: 付费课 deny, 免费课 allow
+eq("error + Pro 课 → error-blocked (fail-closed)", computeGateAccess({ state: 'error' }, 'cold-war-1962', 'jfk', null), 'error-blocked');
+eq("error + Basic 课 → error-blocked", computeGateAccess({ state: 'error' }, 'crusades-1099', 'x', null), 'error-blocked');
+eq("error + free 白名单课 → allow (免费内容放行)", computeGateAccess({ state: 'error' }, 'tang-song-china', 'huizong', null), 'allow');
+eq("error + guest 试用课 → allow", computeGateAccess({ state: 'error' }, 'magna-carta-1215', 'king-john', null), 'allow');
+
+// active pro → 全 allow
+eq("active pro + HS 课 → allow", computeGateAccess({ state: 'active', tier: 'pro' }, 'cold-war-1962', 'jfk', null), 'allow');
+eq("active basic + basic 课 → allow", computeGateAccess({ state: 'active', tier: 'basic' }, 'crusades-1099', 'x', null), 'allow');
+eq("active basic + HS 课 → deny", computeGateAccess({ state: 'active', tier: 'basic' }, 'cold-war-1962', 'jfk', null), 'deny');
+
+// free → 白名单 allow, basic/pro 课 deny
+eq("free + 白名单课 → allow", computeGateAccess({ state: 'free' }, 'tang-song-china', 'huizong', null), 'allow');
+eq("free + basic 课 → deny", computeGateAccess({ state: 'free' }, 'crusades-1099', 'x', null), 'deny');
+eq("free + HS 课 → deny", computeGateAccess({ state: 'free' }, 'cold-war-1962', 'jfk', null), 'deny');
+
+// guest → 仅试用课 allow
+eq("guest + 试用课 → allow", computeGateAccess({ state: 'guest' }, 'magna-carta-1215', 'king-john', null), 'allow');
+eq("guest + free 白名单课 → deny (需注册)", computeGateAccess({ state: 'guest' }, 'tang-song-china', 'huizong', null), 'deny');
+
+// grandfather: free 用户已学过的 Pro lens → view-only-grandfathered
+var gfReceipts = { 'cold-war-1962': { 'jfk': { ts: 1 } } };
+eq("free + 学过的 Pro lens → view-only-grandfathered",
+   computeGateAccess({ state: 'free' }, 'cold-war-1962', 'jfk', gfReceipts), 'view-only-grandfathered');
+eq("free + 没学的 Pro lens → deny (同课不同 lens)",
+   computeGateAccess({ state: 'free' }, 'cold-war-1962', 'khrushchev', gfReceipts), 'deny');
+
+// active 无 tier 字段 → 兜底 free
+eq("active 无 tier → 兜底 free (basic 课 deny)", computeGateAccess({ state: 'active' }, 'crusades-1099', 'x', null), 'deny');
 
 // ════════════════════════════════════════════════════════════
 console.log("\n══════════════════════════════════════════════════");

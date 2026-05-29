@@ -98,6 +98,10 @@ import { ProfileSetup } from '../../components/history-engine/ProfileSetup';
 import { findViewIdByTopicId } from '../../lib/atlas-views';
 import { parseTopicYear, getChinaDynastyForYear, isChinaTopic } from '../../lib/china-dynasty-map';
 import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/notebooks/index.js';
+// Step 4b-1: 进课 tier gate (flag off 时 CourseGateMount 不渲染 → 不调 useUserTier)。
+// ⚠️ 不在此静态 import membership/useUserTier — 隔离在 CourseGate.js (经 CourseGateMount 懒加载)。
+import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
+import { CourseGateMount } from '../../components/history-engine/CourseGateMount';
 
 // ─── 主组件 ────────────────────────────────────────────────────────
 export default function HistoryPage() {
@@ -906,6 +910,25 @@ export default function HistoryPage() {
     setConversationLog([]);
   };
 
+  // ─── Step 4b-1: 进课 tier gate ─────────────────────────────────
+  // gateAccess 由 CourseGateMount→CourseGate 上报 (flag off / 懒块未到位时维持 null = 乐观)。
+  var [gateAccess, setGateAccess] = useState(null);
+  var [showUpgradeGate, setShowUpgradeGate] = useState(false);
+  // 是否放行进 conversation: flag off 永远放行; flag on 只挡 deny / error-blocked。
+  // loading / null / allow / view-only-grandfathered 都放行 (浏览乐观, 同 4a;
+  // loading 小窗口已知, 4b-3 active→降级 兜底; canary 验证 tier 通常先于点击解析)。
+  var passesEntryGate = function() {
+    if (!ENABLE_HISTORY_PAYWALL) return true;
+    return !(gateAccess === 'deny' || gateAccess === 'error-blocked');
+  };
+  // 包一层进 conversation 的入口 (onStart / onResume / onClearAndStart 共用)。
+  var gatedEnter = function(realEnterFn) {
+    return function() {
+      if (!passesEntryGate()) { setShowUpgradeGate(true); return; }
+      realEnterFn();
+    };
+  };
+
   // ─── 进入 mastery gate ──────────────────────────────────────────
   var startMasteryGate = function() {
     setPhase("mastery");
@@ -1446,6 +1469,17 @@ export default function HistoryPage() {
       ` }} />
 
       <div className="h-page">
+        {/* Step 4b-1: 进课 tier gate (flag on 才挂载, 懒加载 CourseGate)。
+            上报 gateAccess + 用户点进课被拦时渲染 UpgradeModal。flag off 时此组件不存在。 */}
+        {ENABLE_HISTORY_PAYWALL && (
+          <CourseGateMount
+            topicId={topicId}
+            lensId={effectiveLensId}
+            showModal={showUpgradeGate}
+            onAccessChange={setGateAccess}
+            onCloseModal={function() { setShowUpgradeGate(false); }}
+          />
+        )}
         {/* Stage 4：embedded 模式下父 atlas-lab 已有 nav，这里不重复渲染 */}
         {!embedded && (
           <BrandNavBar
@@ -1561,7 +1595,7 @@ export default function HistoryPage() {
             <IntroScreen
               topic={topic}
               topicId={topicId}
-              onStart={startConversation}
+              onStart={gatedEnter(startConversation)}
               curriculum={curriculum}
               historyProfile={historyProfile}
               englishLevel={englishLevel}
@@ -1604,17 +1638,17 @@ export default function HistoryPage() {
               }}
               onShowWalkthrough={function() { setShowWalkthrough(true); }}
               savedSession={savedSession}
-              onResume={function() {
+              onResume={gatedEnter(function() {
                 if (!savedSession) return;
                 setConversationLog(savedSession.conversationLog || []);
                 setTurnIndex(savedSession.turnIndex || 0);
                 setPhase("conversation");
-              }}
-              onClearAndStart={function() {
+              })}
+              onClearAndStart={gatedEnter(function() {
                 clearInProgress(topicId);
                 setSavedSession(null);
                 startConversation();
-              }}
+              })}
             />
           )}
 
