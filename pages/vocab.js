@@ -8789,8 +8789,11 @@ export default function App() {
 
       {phase !== "review" && phase !== "done" && phase !== "batch_loading" && phase !== "cloze" && phase !== "speed_wait" && (() => {
         // Round 4 修复：mnemonic_fill 是"4 选 1 拼写辨识"，顶部显示 currentWord 等于直接送答案
-        // 改成显示问号 + "????" 占位（音标也藏起来），等用户提交后再揭晓
-        var hideTargetWord = phase === "spectrum" && spectrumData?.type === "mnemonic_fill";
+        // 改成显示问号 + "????" 占位（音标也藏起来），等用户提交后再揭晓。
+        // morph_fill（词形辨析）同理：标题词 = 正解词形（antitoxin），且外层会显示中文释义
+        // (抗毒素) → 学生看标题就能选 A，把 MorphFillGame 内部挪卡的修复架空（Codex 审出）。
+        // 一并隐藏标题+释义，逼学生从句子语法判断词形。hideMeaning 由 hideTargetWord 派生 → 同步生效。
+        var hideTargetWord = phase === "spectrum" && (spectrumData?.type === "mnemonic_fill" || spectrumData?.type === "morph_fill");
         // 猜一猜阶段也必须隐藏释义 — 否则即使没 teachData，reviewWordData[w].meaning 会剧透答案
         var hideMeaning = hideTargetWord || phase === "guess";
         // D: 优先英文 gloss（用 1000 高频词写的简短英文释义）— 让用户先用英文思考英文
