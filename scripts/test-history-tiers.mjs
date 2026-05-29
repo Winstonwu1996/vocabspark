@@ -21,10 +21,13 @@ import {
   tierMeetsRequirement,
   canAccessTopic,
   canAccessLens,
+  canAccessLensWithReceipts,
+  lensCompletedFrom,
   getProOnlyTopics,
   getFreeTopics,
   getBasicTopics,
   getTopicCountsByTier,
+  getAccessibleTopicCounts,
 } from "../lib/history-tiers.js";
 
 var pass = 0, fail = 0;
@@ -244,6 +247,57 @@ eq("basic 数 = 2 (crusades + byzantine)", counts.basic, 2);
 eq("pro 数 = 2 (cold-war + french-rev)", counts.pro, 2);
 eq("total = 7", counts.total, 7);
 ok("getTopicCountsByTier(null) 兜底", getTopicCountsByTier(null).total === 0);
+
+// ════════════════════════════════════════════════════════════
+console.log("\n── getAccessibleTopicCounts · 累计可学数 (P1-1 Codex 实施审计) ──");
+// ════════════════════════════════════════════════════════════
+// 7 门样本: guest=1, free=2, basic=2, pro=2 (互斥)
+// 累计: guest 能学 1; free 能学 1+2=3; basic 能学 1+2+2=5; pro 能学全 7
+var acc = getAccessibleTopicCounts(sampleAll);
+eq("累计 guest = 1 (只游客试用课)", acc.guest, 1);
+eq("累计 free = 3 (guest 1 + free 2)", acc.free, 3);
+eq("累计 basic = 5 (含 free 全部 + basic 2)", acc.basic, 5);
+eq("累计 pro = 7 (全部可学)", acc.pro, 7);
+ok("累计 pro >= 累计 basic >= 累计 free >= 累计 guest (单调)",
+   acc.pro >= acc.basic && acc.basic >= acc.free && acc.free >= acc.guest);
+ok("getAccessibleTopicCounts(null) 兜底 {0,0,0,0}",
+   JSON.stringify(getAccessibleTopicCounts(null)) === JSON.stringify({guest:0,free:0,basic:0,pro:0}));
+// v1.2 §7 文案锁定: 51 门 available (10 HS) → 1/8/41/51
+// (用代表性子集验证累计语义; 真 51 门数字在 cumulative smoke 验证过)
+
+// ════════════════════════════════════════════════════════════
+console.log("\n── lensCompletedFrom · grandfather caller-facing (P1-4) ──");
+// ════════════════════════════════════════════════════════════
+var receipts = {
+  'cold-war-1962': { 'jfk': { ts: 123, fact: 'x' }, 'arkhipov': { ts: 456 } },
+  'tang-song-china': { 'huizong': { ts: 789 } },
+};
+ok("学过的 lens → true", lensCompletedFrom(receipts, 'cold-war-1962', 'jfk') === true);
+ok("学过的另一 lens → true", lensCompletedFrom(receipts, 'cold-war-1962', 'arkhipov') === true);
+ok("同 topic 没学的 lens → false", lensCompletedFrom(receipts, 'cold-war-1962', 'proxy-war-peasant') === false);
+ok("没学过的 topic → false", lensCompletedFrom(receipts, 'french-revolution-1789', 'robespierre') === false);
+ok("learningReceipts=null → false", lensCompletedFrom(null, 'cold-war-1962', 'jfk') === false);
+ok("learningReceipts=undefined → false", lensCompletedFrom(undefined, 'cold-war-1962', 'jfk') === false);
+ok("learningReceipts={} → false", lensCompletedFrom({}, 'cold-war-1962', 'jfk') === false);
+
+// ════════════════════════════════════════════════════════════
+console.log("\n── canAccessLensWithReceipts · 便捷版 (P1-4 难误用) ──");
+// ════════════════════════════════════════════════════════════
+eq("Free 用户 + 学过的 Pro lens → grandfathered (从 receipts 自动查)",
+   canAccessLensWithReceipts('cold-war-1962', 'jfk', 'free', receipts),
+   'view-only-grandfathered');
+eq("Free 用户 + 没学过的 Pro lens → deny",
+   canAccessLensWithReceipts('cold-war-1962', 'proxy-war-peasant', 'free', receipts),
+   'deny');
+eq("Pro 用户 + 没学过的 Pro lens → allow",
+   canAccessLensWithReceipts('cold-war-1962', 'proxy-war-peasant', 'pro', receipts),
+   'allow');
+eq("learningReceipts=null 不崩 → 按未完成走 tier gate",
+   canAccessLensWithReceipts('cold-war-1962', 'jfk', 'free', null),
+   'deny');
+eq("Free 用户进 free 课 lens (没学过) → allow",
+   canAccessLensWithReceipts('tang-song-china', 'su-shi', 'free', receipts),
+   'allow');
 
 // ════════════════════════════════════════════════════════════
 console.log("\n══════════════════════════════════════════════════");

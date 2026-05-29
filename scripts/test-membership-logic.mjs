@@ -4,9 +4,13 @@
    覆盖 Step 1 useUserTier hook 的核心决策逻辑:
    5 状态生命周期 + 错误重试 + tierLost 信号 + cache 写入策略
 
-   不测 React hook 本身 (mount / useEffect / Supabase auth subscription),
-   那些留给 Step 4-10 真接 UI 时的 integration smoke. 纯逻辑覆盖足以保证
-   决策树正确, hook 内部只是把这些 helper 串起来调用 setState.
+   P1-3 修复后 (Codex 实施审计): lib/membership.js 的 loadTier 现在**真的调用**
+   decideOnResponse / decideOnError (不再内联重写), 所以这 90+ assertions 锁的是
+   hook 真实决策路径, 不只是孤立 helper.
+
+   仍不测 React hook 的 lifecycle 部分 (mount / useEffect / Supabase auth
+   subscription / 30s 轮询 / unmount cleanup), 那些留给 Step 4-10 真接 UI 时的
+   integration smoke. 纯逻辑覆盖 + hook 调用同一份 helper = 决策树正确性有保证.
 */
 
 import {
@@ -20,6 +24,7 @@ import {
   isDowngrade,
   isUpgrade,
   shouldWriteCache,
+  getCacheAction,
   hashUserId,
 } from "../lib/membership-logic.js";
 
@@ -153,6 +158,22 @@ ok("FREE 写 cache", shouldWriteCache("free") === true);
 ok("GUEST 写 cache", shouldWriteCache("guest") === true);
 ok("LOADING 绝不写 cache (避免持久化中间态)", shouldWriteCache("loading") === false);
 ok("ERROR 绝不写 cache (规划 §7 Codex P0-4 要求)", shouldWriteCache("error") === false);
+
+// ════════════════════════════════════════════════════════════
+console.log("\n── getCacheAction (P1-2: guest 不污染 vocab 共享 key) ──");
+// ════════════════════════════════════════════════════════════
+eq("ACTIVE + pro → write 'pro'", getCacheAction("active", "pro"), { type: "write", value: "pro" });
+eq("ACTIVE + basic → write 'basic'", getCacheAction("active", "basic"), { type: "write", value: "basic" });
+eq("ACTIVE + 异常 tier → 兜底 write 'free'", getCacheAction("active", "weird"), { type: "write", value: "free" });
+eq("FREE → write 'free'", getCacheAction("free", "free"), { type: "write", value: "free" });
+eq("GUEST → remove (绝不写 'guest' 进 vocab 共享 key)", getCacheAction("guest", "guest"), { type: "remove" });
+eq("LOADING → skip", getCacheAction("loading", null), { type: "skip" });
+eq("ERROR → skip", getCacheAction("error", null), { type: "skip" });
+ok("getCacheAction 永远不返回 value='guest' (P1-2 核心不变量)",
+   ["loading","active","free","guest","error"].every(function(s){
+     var a = getCacheAction(s, "guest");
+     return a.type !== "write" || a.value !== "guest";
+   }));
 
 // ════════════════════════════════════════════════════════════
 console.log("\n── hashUserId (PII 保护 + funnel 关联) ──");
