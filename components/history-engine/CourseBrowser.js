@@ -366,8 +366,7 @@ function CourseBrowserPaywall(props) {
   return (
     <React.Fragment>
       <CourseBrowserBase
-        topic={props.topic}
-        onSwitch={props.onSwitch}
+        {...props}
         userTier={userTier}
         onLockedClick={setLockedTopicId}
       />
