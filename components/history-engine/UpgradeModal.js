@@ -127,6 +127,9 @@ export var UpgradeModal = function (props) {
       onClick={dismissable ? onClose : undefined}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={h.title}
         onClick={function (e) { e.stopPropagation(); }}
         style={{
           background: C.card,

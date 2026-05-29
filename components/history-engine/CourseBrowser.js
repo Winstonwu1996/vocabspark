@@ -8,6 +8,7 @@
 //
 // props: topic（当前课，可空）, onSwitch(topicId), defaultMode?（缺省 'grade'）
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { FONT_DISPLAY } from '../../lib/theme';
 import { THROUGH_LINES, TOPIC_REGISTRY, getTopic } from '../../lib/history-topics';
 import {
@@ -15,6 +16,11 @@ import {
   getGradeTags,
 } from '../../lib/history-grade-map';
 import { HC } from './theme';
+// Step 4a: paywall 锁标 (flag off 时下面这些完全不参与渲染)
+import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
+import { useUserTier } from '../../lib/membership';
+import { canAccessTopic, getTopicAccessTier, getAccessibleTopicCounts } from '../../lib/history-tiers';
+import { UpgradeModal } from './UpgradeModal';
 
 var MODE_STORAGE_KEY = 'history-course-browser-mode';
 
@@ -33,6 +39,10 @@ function useTopicProgress() {
 }
 
 // 单张课卡渲染（grade / AP / 脉络三个 Mode 共用）
+// Step 4a 可选 paywall props (不传 = 原行为逐字不变):
+//   locked       — 此课超出用户 tier (flag on 才会算出 true)
+//   lockTier     — 此课所需 tier ('basic' | 'pro'), 锁标右下角显示
+//   onLockedClick(topicId) — 点锁课时调 (弹 UpgradeModal), 不走 onSwitch
 function CourseCard(opts) {
   var t = opts.topic;
   var done = opts.done;
@@ -40,10 +50,17 @@ function CourseCard(opts) {
   var clickable = opts.clickable;
   var onSwitch = opts.onSwitch;
   var leftColor = opts.leftColor || HC.accent;
+  var locked = opts.locked; // Step 4a: 仅 flag on + 超 tier 时为 true
+  var lockTier = opts.lockTier;
+  var onLockedClick = opts.onLockedClick;
   var tags = getGradeTags(t.id);
+  // 锁课点击走升级弹窗; 否则原 onSwitch 逻辑
+  var handleClick = locked
+    ? function() { if (onLockedClick) onLockedClick(t.id); }
+    : (clickable ? function() { onSwitch(t.id); } : undefined);
   return (
     <div
-      onClick={clickable ? function() { onSwitch(t.id); } : undefined}
+      onClick={handleClick}
       style={{
         flex: '1 1 220px', minWidth: 200,
         padding: '10px 12px',
@@ -51,13 +68,15 @@ function CourseCard(opts) {
         borderTop: '1px solid ' + (done ? HC.green : (isCurrent ? leftColor : HC.border)),
         borderRight: '1px solid ' + (done ? HC.green : (isCurrent ? leftColor : HC.border)),
         borderBottom: '1px solid ' + (done ? HC.green : (isCurrent ? leftColor : HC.border)),
-        borderLeft: '3px solid ' + leftColor,
+        borderLeft: '3px solid ' + (locked ? HC.border : leftColor),
         borderRadius: 8, fontSize: 12, color: HC.text,
-        cursor: clickable ? 'pointer' : 'default', transition: 'all 0.15s',
+        cursor: (locked || clickable) ? 'pointer' : 'default', transition: 'all 0.15s',
+        opacity: locked ? 0.62 : 1,
       }}>
       <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3}}>
         <strong style={{fontSize: 13, color: HC.ink}}>{t.title.cn}</strong>
-        {done ? <span style={{color: HC.green, fontSize: 14}}>✓</span> :
+        {locked ? <span style={{fontSize: 13}} title={'需要 ' + (lockTier === 'pro' ? 'Pro' : 'Basic')}>🔒</span> :
+         done ? <span style={{color: HC.green, fontSize: 14}}>✓</span> :
          isCurrent ? <span style={{
            fontSize: 9, padding: '1px 6px', background: leftColor, color: '#fff',
            borderRadius: 999, fontWeight: 700, letterSpacing: 1,
@@ -79,7 +98,11 @@ function CourseCard(opts) {
           ⚡ {done.xpEarned} XP · {new Date(done.completedAt).toLocaleDateString('zh-CN')}
         </div>
       ) : null}
-      {clickable && !done ? (
+      {locked ? (
+        <div style={{fontSize: 10, color: HC.textSec, fontWeight: 600, marginTop: 3}}>
+          🔒 {lockTier === 'pro' ? 'Pro' : 'Basic'} 解锁
+        </div>
+      ) : clickable && !done ? (
         <div style={{fontSize: 10, color: HC.accent, fontWeight: 600, marginTop: 3}}>
           → 点击进入这一课
         </div>
@@ -95,6 +118,14 @@ function chipStyle(color) {
     color: color, borderRadius: 4, fontWeight: 600,
     border: '1px solid ' + color + '33',
   };
+}
+
+// Step 4a: 给 CourseCard 算锁标 props (userTier 缺省 = base path / loading → 不锁)。
+// 返回空对象时 CourseCard 行为逐字不变。
+function lockPropsFor(topicId, userTier, onLockedClick) {
+  if (!userTier) return {};                              // base 路径 / tier loading → 不锁
+  if (canAccessTopic(topicId, userTier)) return {};      // 可学 → 不锁
+  return { locked: true, lockTier: getTopicAccessTier(topicId), onLockedClick: onLockedClick };
 }
 
 // ─── Mode 1:按学校年级 ────────────────────────────────────────────────
@@ -158,7 +189,8 @@ function GradeView(props) {
           return (
             <CourseCard key={t.id} topic={t} done={done} isCurrent={isCurrent}
               clickable={!isCurrent && props.onSwitch} onSwitch={props.onSwitch}
-              leftColor={HC.teal} />
+              leftColor={HC.teal}
+              {...lockPropsFor(t.id, props.userTier, props.onLockedClick)} />
           );
         })}
       </div>
@@ -228,7 +260,8 @@ function ApView(props) {
                 return (
                   <CourseCard key={t.id} topic={t} done={done} isCurrent={isCurrent}
                     clickable={!isCurrent && props.onSwitch} onSwitch={props.onSwitch}
-                    leftColor={HC.accent} />
+                    leftColor={HC.accent}
+                    {...lockPropsFor(t.id, props.userTier, props.onLockedClick)} />
                 );
               })}
             </div>
@@ -280,7 +313,8 @@ function ThroughLineView(props) {
                 return (
                   <CourseCard key={t.id} topic={t} done={done} isCurrent={isCurrent}
                     clickable={!isCurrent && props.onSwitch} onSwitch={props.onSwitch}
-                    leftColor={line.color} />
+                    leftColor={line.color}
+                    {...lockPropsFor(t.id, props.userTier, props.onLockedClick)} />
                 );
               })}
             </div>
@@ -306,8 +340,52 @@ function ThroughLineView(props) {
   );
 }
 
-// ─── 主组件:CourseBrowser ─────────────────────────────────────────────
+// ─── 主组件:CourseBrowser (flag gate) ────────────────────────────────
+// Step 4a: flag off → CourseBrowserBase 原行为逐字不变 (不调 useUserTier, 0 网络调用);
+//          flag on  → CourseBrowserPaywall (锁标 + UpgradeModal)。
+// flag 是 env 常量, session 内不变 → 分支稳定, 不违反 hooks 规则。
 export function CourseBrowser(props) {
+  if (!ENABLE_HISTORY_PAYWALL) return <CourseBrowserBase {...props} />;
+  return <CourseBrowserPaywall {...props} />;
+}
+
+// Step 4a: flag on 时的 paywall 包装 — 算 tier + 锁课点击弹 UpgradeModal。
+function CourseBrowserPaywall(props) {
+  var tierInfo = useUserTier();
+  var router = useRouter();
+  var [lockedTopicId, setLockedTopicId] = useState(null);
+
+  // tier loading/error → userTier=null → CourseBrowserBase 不锁任何课 (浏览乐观, 真 gate 在进课时)
+  var userTier = tierInfo.isActive ? tierInfo.tier
+    : (tierInfo.state === 'free' ? 'free'
+    : (tierInfo.state === 'guest' ? 'guest' : null));
+
+  var availableIds = (TOPIC_REGISTRY || []).filter(function (r) { return r.available; }).map(function (r) { return r.id; });
+  var counts = getAccessibleTopicCounts(availableIds);
+
+  return (
+    <React.Fragment>
+      <CourseBrowserBase
+        topic={props.topic}
+        onSwitch={props.onSwitch}
+        userTier={userTier}
+        onLockedClick={setLockedTopicId}
+      />
+      {lockedTopicId && (
+        <UpgradeModal
+          reason="locked-course"
+          requiredTier={getTopicAccessTier(lockedTopicId)}
+          counts={counts}
+          onClose={function () { setLockedTopicId(null); }}
+          onUpgrade={function () { router.push('/plan'); }}
+        />
+      )}
+    </React.Fragment>
+  );
+}
+
+// ─── CourseBrowserBase: 原 CourseBrowser 实现 (paywall props 全可选) ───
+function CourseBrowserBase(props) {
   var topicProgress = useTopicProgress();
   // Mode 状态:从 localStorage 读;冷启动 'grade'(按学校年级 → 默认 G7)
   var [mode, setMode] = useState(function() {
@@ -385,15 +463,18 @@ export function CourseBrowser(props) {
         })}
       </div>
 
-      {/* Mode 内容 */}
+      {/* Mode 内容 (userTier/onLockedClick 缺省 = 不锁, base 路径行为不变) */}
       {effectiveMode === 'grade' && (
-        <GradeView topic={props.topic} onSwitch={props.onSwitch} topicProgress={topicProgress} />
+        <GradeView topic={props.topic} onSwitch={props.onSwitch} topicProgress={topicProgress}
+          userTier={props.userTier} onLockedClick={props.onLockedClick} />
       )}
       {effectiveMode === 'ap' && (
-        <ApView topic={props.topic} onSwitch={props.onSwitch} topicProgress={topicProgress} />
+        <ApView topic={props.topic} onSwitch={props.onSwitch} topicProgress={topicProgress}
+          userTier={props.userTier} onLockedClick={props.onLockedClick} />
       )}
       {effectiveMode === 'throughline' && (
-        <ThroughLineView topic={props.topic} onSwitch={props.onSwitch} topicProgress={topicProgress} />
+        <ThroughLineView topic={props.topic} onSwitch={props.onSwitch} topicProgress={topicProgress}
+          userTier={props.userTier} onLockedClick={props.onLockedClick} />
       )}
     </div>
   );
