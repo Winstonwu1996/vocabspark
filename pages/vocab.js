@@ -6107,6 +6107,7 @@ export default function App() {
           word: w,
           phonetic: d.phonetic || "",
           meaning: d.meaning || "（释义将随学习自动补全）",
+          status: status, // 供 shouldRequireTypedRecall 将来收窄到只 focus(🟡🔴) 词用（Codex 指出 item 原先没带 status）
           _priority: rankPriority(status, d),
         };
       })
