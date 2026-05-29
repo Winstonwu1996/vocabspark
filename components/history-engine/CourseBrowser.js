@@ -21,7 +21,7 @@ import { HC } from './theme';
 // (注: /history 基线已通过 BrandNavBar → UserCenter 静态 import supabase, 那是既有
 //  baseline, 非本次引入; Step 4a 的目标是「不新增 paywall runtime」而非「/history 全局无 supabase」。)
 // canAccessTopic / getTopicAccessTier 来自 history-tiers (纯模块, 无 supabase, 安全)。
-// paywall wrapper (含 useUserTier) 走 next/dynamic 懒加载, flag off 时 import() 永不触发。
+// paywall wrapper (含 useUserTier) 走本地 loader + import() 懒加载, flag off 时 import() 永不触发。
 import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
 import { canAccessTopic, getTopicAccessTier } from '../../lib/history-tiers';
 
@@ -97,7 +97,7 @@ function CourseCard(opts) {
       }}>
       <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3}}>
         <strong style={{fontSize: 13, color: HC.ink}}>{t.title.cn}</strong>
-        {locked ? <span style={{fontSize: 13}} title={'需要 ' + (lockTier === 'pro' ? 'Pro' : 'Basic')}>🔒</span> :
+        {locked ? <span style={{fontSize: 13}} title={'需要 ' + tierName(lockTier)}>🔒</span> :
          done ? <span style={{color: HC.green, fontSize: 14}}>✓</span> :
          isCurrent ? <span style={{
            fontSize: 9, padding: '1px 6px', background: leftColor, color: '#fff',
@@ -122,7 +122,7 @@ function CourseCard(opts) {
       ) : null}
       {locked ? (
         <div style={{fontSize: 10, color: HC.textSec, fontWeight: 600, marginTop: 3}}>
-          🔒 {lockTier === 'pro' ? 'Pro' : 'Basic'} 解锁
+          🔒 {tierName(lockTier)} 解锁
         </div>
       ) : clickable && !done ? (
         <div style={{fontSize: 10, color: HC.accent, fontWeight: 600, marginTop: 3}}>
@@ -140,6 +140,12 @@ function chipStyle(color) {
     color: color, borderRadius: 4, fontWeight: 600,
     border: '1px solid ' + color + '33',
   };
+}
+
+function tierName(tier) {
+  if (tier === 'pro') return 'Pro';
+  if (tier === 'free') return 'Free';
+  return 'Basic';
 }
 
 // Step 4a: 给 CourseCard 算锁标 props (userTier 缺省 = base path / loading → 不锁)。

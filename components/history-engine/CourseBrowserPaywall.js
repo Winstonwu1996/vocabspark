@@ -1,6 +1,6 @@
 // ─── history-engine: CourseBrowserPaywall (flag on 才懒加载) ──────────
 // Step 4a P0-1 修 (Codex): paywall 相关依赖 (useUserTier → membership,
-// + UpgradeModal + useRouter) 全部隔离在本文件。CourseBrowser.js 用 next/dynamic
+// + UpgradeModal + useRouter) 全部隔离在本文件。CourseBrowser.js 用本地 loader + import()
 // 懒加载本文件, flag off 时 import() 永不触发 → 不新增 paywall/membership 引入的
 // 任何 runtime (useUserTier / /api/stripe/check-subscription / membership 侧 supabase 用法)。
 //
