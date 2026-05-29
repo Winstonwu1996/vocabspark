@@ -134,7 +134,8 @@ export var UpgradeModal = function (props) {
         style={{
           background: C.card,
           borderRadius: 16,
-          maxWidth: 440, width: '100%',
+          maxWidth: 'min(440px, calc(100vw - 24px))', width: '100%',
+          boxSizing: 'border-box',
           padding: '22px 22px 18px',
           boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
           border: '1px solid ' + C.border,
@@ -167,7 +168,8 @@ export var UpgradeModal = function (props) {
         {/* 三维对照表 */}
         <div style={{
           marginTop: 14, marginBottom: 16,
-          border: '1px solid ' + C.border, borderRadius: 10, overflow: 'hidden',
+          border: '1px solid ' + C.border, borderRadius: 10, overflowX: 'auto', overflowY: 'hidden',
+          WebkitOverflowScrolling: 'touch',
         }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
