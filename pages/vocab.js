@@ -13,6 +13,7 @@ import { createSyncClient } from '../lib/sync-client'; // Step 0A.3 抽离 sync 
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
+import { checkMorphFill } from '../lib/morphFillSanitize';
 
 // wordInput 自动去重 (保留首次出现顺序 + 原始大小写)。在数据加载/导入时调用，
 // 让词库始终无重复 — 用户不用再手动点"去重词库"。守卫已改按 distinct 词数放行纯去重。
@@ -880,10 +881,17 @@ var buildCollocationFillPrompt = (word) => {
 // 4 个选项都是同根词的不同词形，迫使学生理解词根+词缀含义
 var buildMorphFillPrompt = (word) => {
   return "为 \"" + word + "\" 设计【词根拆解 + 词形辨析】题。\n\n" +
-    "【任务】先简短拆解词根，再给一个场景 + 一句空格句，4 个选项都是【" + word + " 的同根词不同词形】（动词/形容词/名词/副词）。\n\n" +
-    "【词根拆解】1 行：用「+」连接前缀 + 词根 + 后缀，每段标含义\n" +
+    "【任务】给一个场景 + 一句空格句，4 个选项都是【" + word + " 的同根词不同词形】（动词/形容词/名词/副词）。\n" +
+    "morph 拆解和 explanation 在【学生答题之后】才展示——做题时只看场景+句子。\n\n" +
+    "❗❗ 严禁泄答案（线上实测过这个坑）❗❗\n" +
+    "1. scenario 严禁包含目标词 \"" + word + "\" 的英文 verbatim（包括大小写变体）。\n" +
+    "2. scenario 严禁包含目标词的中文翻译/含义（比如目标词是 antitoxin，scenario 不能写\"打抗毒素\"\"需要抗毒素\"）。\n" +
+    "3. scenario 应该用【上位概念 / 间接描述】引出情境（例：不是\"她需要打 antitoxin\"，而是\"她需要一种能中和毒素的物质\"）。\n" +
+    "4. sentence 留 ___ 给目标词形，___ 周围必须是中性英文（不能让学生靠 collocation 直接猜出）。\n" +
+    "违反任何一条 → 题作废，重新生成。\n\n" +
+    "【词根拆解（morph）— 只用于 explanation】1 行：用「+」连接前缀 + 词根 + 后缀，每段标含义\n" +
     "例：comprehend → com- (一起) + -prehend (抓住) → 全部抓住 = 理解\n\n" +
-    "【场景】1 句画像化（用学生世界），引出需要某种词形的情境\n\n" +
+    "【场景】1 句画像化（用学生世界），引出需要某种词形的情境，不暴露目标词或其翻译\n\n" +
     "【句子】1 句完整英文，留 ___ 给目标词形\n" +
     "句子的【语法位置】决定要哪种词形（need a noun / need a verb / need an adj 等）\n\n" +
     "【4 个选项 — 关键】\n" +
@@ -898,12 +906,13 @@ var buildMorphFillPrompt = (word) => {
     '  "options": {"A":"comprehend","B":"comprehensive","C":"comprehension","D":"comprehensible"},\n' +
     '  "answer": "A",\n' +
     '  "explanation": "couldn\'t 后接动词原形，A 是 verb；B/D 是 adj，C 是 noun，都不对"\n' +
-    "}\n\n" +
+    "}\n" +
+    "注意上面 scenario 中**没有** comprehend 这个词、也没有\"理解/搞懂\"等直接翻译——这是合规示范。\n\n" +
     "【输出严格 JSON】\n" +
     '{\n' +
     '  "type": "morph_fill",\n' +
     '  "morph": "前缀 + 词根 + 后缀 → 含义推导",\n' +
-    '  "scenario": "1 句画像化场景",\n' +
+    '  "scenario": "1 句画像化场景（不含目标词及其中文翻译）",\n' +
     '  "sentence": "1 句含 ___ 的英文",\n' +
     '  "options": {"A":"同根词形 1","B":"同根词形 2","C":"同根词形 3","D":"同根词形 4"},\n' +
     '  "answer": "正确词形的字母",\n' +
@@ -2188,13 +2197,10 @@ var MorphFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
   };
   return (
     <>
-      <div style={S.specTag}>🧬 词根拆解</div>
-      <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>看词根理解，选对词形填空</div>
-      {data.morph && (
-        <div style={{ padding:"12px 14px", marginBottom:12, background:C.purpleLight, border:"1px solid "+C.purple+"44", borderRadius:10, fontSize:14.5, lineHeight:1.7, color:C.text, fontFamily:"'Inter',"+FONT, fontWeight:600 }}>
-          🧬 {data.morph}
-        </div>
-      )}
+      <div style={S.specTag}>🧬 词形辨析</div>
+      <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>读场景 + 句子，选对的词形填空（提交后看词根拆解）</div>
+      {/* morph 卡片移到 submitted 后 explanation 里显示, 避免在题前给出含 -in/-ic/-ically 等
+          后缀-词性映射, 让学生闭眼选答案 (线上实测 antitoxin 案例) */}
       <div style={{ padding:"12px 14px", marginBottom:12, background:C.bg, borderLeft:"3px solid "+C.teal, borderRadius:"0 10px 10px 0", fontSize:14, lineHeight:1.7, color:C.text }}>
         {data.scenario}
       </div>
@@ -2233,6 +2239,12 @@ var MorphFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
       {submitted && (
         <div style={{ ...S.specDecoded, marginTop:4 }}>
           <div style={{ color:isCorrect?C.green:C.gold, fontWeight:700, marginBottom:8 }}>{isCorrect?"✓ 正确！+10 XP":"💛 差一点！答案是 "+data.answer+" — 这个词会在复习里再见你"}</div>
+          {/* morph 拆解作为解析显示, 不在题前剧透答案 */}
+          {data.morph && (
+            <div style={{ padding:"10px 12px", marginTop:6, marginBottom:8, background:C.purpleLight, border:"1px solid "+C.purple+"44", borderRadius:10, fontSize:14, lineHeight:1.7, color:C.text, fontFamily:"'Inter',"+FONT, fontWeight:600 }}>
+              🧬 {data.morph}
+            </div>
+          )}
           {data.explanation && <div style={{ lineHeight:1.7, fontSize:14, color:C.text }}>{data.explanation}</div>}
           <button onClick={onNext} disabled={loading} style={{ ...S.specCheckBtn, marginTop:16, background:"linear-gradient(135deg, "+C.green+" 0%, #2eb67a 100%)", boxShadow:"0 4px 12px "+C.green+"55" }}>{nextLabel || "→ 下一个词"}</button>
         </div>
@@ -4836,15 +4848,38 @@ export default function App() {
 
         // Spectrum (fire and forget, waits for classify to route to right game type)
         // Phase 2 Round 1: spectrum prompt 按 wordType 路由（A → gradient_choice，其他 legacy）
-        classifyByWord[word].then(function(cls) {
-          return callWithClientRetry(function() {
-            return callAPIFast(sysP, buildSpectrumPrompt(word, cls), { preferredProviders: preferred });
+        // 兜底重试：morph_fill 偶尔泄答案（scenario 含目标词 verbatim），命中 → 重试 2 次（用 word 参数捕获）
+        (function (capturedWord) {
+          var doSpectrumAttempt = function (attemptsLeft) {
+            return classifyByWord[capturedWord].then(function (cls) {
+              return callWithClientRetry(function () {
+                return callAPIFast(sysP, buildSpectrumPrompt(capturedWord, cls), { preferredProviders: preferred });
+              });
+            }).then(function (raw) {
+              var parsed = raw ? tryJSON(raw) : null;
+              if (parsed && parsed.type === "morph_fill") {
+                var check = checkMorphFill(parsed, capturedWord);
+                if (check.leaked && attemptsLeft > 0) {
+                  console.warn("[loadBatch] morph_fill " + check.reason + " for '" + capturedWord + "', retrying (" + attemptsLeft + " left)");
+                  return new Promise(function (r) { setTimeout(r, 800); }).then(function () {
+                    return doSpectrumAttempt(attemptsLeft - 1);
+                  });
+                }
+                if (check.leaked) {
+                  // 重试耗尽：丢弃这道 spectrum，让流程跳过到下一词（比给学生看泄题题更好）
+                  console.warn("[loadBatch] morph_fill " + check.reason + " exhausted for '" + capturedWord + "', skip spectrum");
+                  return null;
+                }
+              }
+              return parsed;
+            });
+          };
+          doSpectrumAttempt(2).then(function (finalParsed) {
+            dataCache.current[capturedWord].spectrum = finalParsed;
+          }).catch(function (err) {
+            console.warn("[loadBatch] spectrum failed for " + capturedWord + ":", err.message);
           });
-        }).then(function(raw) {
-          dataCache.current[word].spectrum = raw ? tryJSON(raw) : null;
-        }).catch(function(err) {
-          console.warn("[loadBatch] spectrum failed for " + word + ":", err.message);
-        });
+        })(word);
       })(w, wLrn, shardProviders[i % shardProviders.length]);
     }
 
