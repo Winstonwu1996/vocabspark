@@ -28,13 +28,18 @@ export function CourseGate(props) {
   var tierInfo = useUserTier();
   var router = useRouter();
 
-  // learningReceipts (grandfather 用) — 读一次, topicId/lensId 变才重读
+  // learningReceipts (grandfather 用) — topicId/lensId 变重读。
+  // Codex P2-e (round5): 也把 tierInfo.state 列为依赖。否则学完当前 lens (saveLearningReceipt
+  // 写了 localStorage) 后, 若 tier poll 把同一挂载页转到 free/error (退订/到期/订阅 API 故障),
+  // 这个 memo 仍是完成前的旧快照 → computeGateAccess 看不到刚存的 receipt → 误 deny 而非
+  // view-only-grandfathered。tier 状态转移正是 grandfather 被调用的时机, 此时重读即可接住。
+  var tierState = tierInfo && tierInfo.state;
   var learningReceipts = useMemo(function () {
     try {
       var all = loadAll();
       return (all && all.historyData && all.historyData.learningReceipts) || null;
     } catch (e) { return null; }
-  }, [topicId, lensId]);
+  }, [topicId, lensId, tierState]);
 
   var access = computeGateAccess(tierInfo, topicId, lensId, learningReceipts);
 
