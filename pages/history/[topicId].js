@@ -1034,6 +1034,10 @@ export default function HistoryPage() {
     if (phase !== 'conversation') return;
     if (freshAccessForEffect !== 'allow') return; // 等 access 真恢复
     pendingAutoAdvanceRef.current = false;
+    // Codex round9 (P2-m): access 已恢复, 先清降级 modal —— 否则 CourseGate 会把升级 modal 盖在
+    // 续推进的课上面。
+    setShowUpgradeGate(false);
+    setGatePauseInPlace(false);
     advanceTurn();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [freshAccessForEffect, phase]);
