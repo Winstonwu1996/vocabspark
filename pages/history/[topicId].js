@@ -819,6 +819,9 @@ export default function HistoryPage() {
   // ─── 用户提交答案 ────────────────────────────────────────────────
   var submitUserResponse = function() {
     if (!userInput.trim()) return;
+    // Step 4b-3 Codex round3 (P2-f): 降级守卫必须在**写入 transcript 之前** —— 否则答案已 append、
+    // textarea 已清空, 推进却被拦, 关 modal 后答案卡在同一题造成重复/陈旧 user turn。
+    if (blockedByDowngrade()) return;
     var content = userInput.trim();
     var turn = effectiveTurns[turnIndex];
     setConversationLog(function(prev) {
@@ -1017,10 +1020,12 @@ export default function HistoryPage() {
   // 5-26 (用户反馈): 4 题精简到 2 题口语化, 减少元认知负担。
   // 纯附加存 historyData.learningReceipts[topicId][lensId]；不动 turnIndex/completedTopics。
   // MVP：英文表达只存进 receipt，不自动推桥词队列（pushedToVocab:false，二期再开「加入复习」）。
+  // 返回 true=已保存并推进; false=被降级拦截 (caller / ConversationStream 据此**不**标记已交,
+  // 保留收据表单, 避免「表单消失但没存」→ 恢复后无收据却能进 mastery (Codex round3 P2-e)。
   var submitLearningReceipt = function(payload) {
-    if (!topicId) return;
+    if (!topicId) return false;
     // Step 4b-3 Codex round2: 降级后不许「完成」lens (存 receipt = 拿 grandfather)。
-    if (blockedByDowngrade()) return;
+    if (blockedByDowngrade()) return false;
     try {
       var lensTitle = null;
       if (effectiveLensId && topicLenses && topicLenses.length) {
@@ -1038,6 +1043,7 @@ export default function HistoryPage() {
     }
     // 5-26 (Codex P0-6): 收据保存后自动进笔记屏(消除二次点击), 不再停在 conversation 等用户再点。
     proceedToNotebook();
+    return true;
   };
 
   // ─── 完成 Topic ─────────────────────────────────────────────────

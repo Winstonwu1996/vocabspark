@@ -820,8 +820,11 @@ export function ConversationStream(props) {
             lensTitle={props.lensTitle}
             completedTurnCount={turns.length}
             onSubmit={function (payload) {
-              try { props.onSubmitReceipt(payload); } catch (e) {}
-              setReceiptSubmitted(true);
+              // Step 4b-3 (Codex round3 P2-e): host 返回 false = 降级拦截, 未保存 → **不**标已交,
+              // 保留收据表单 (否则表单消失但没存, 恢复后无收据却能进 mastery)。
+              var ok = true;
+              try { ok = props.onSubmitReceipt(payload); } catch (e) {}
+              if (ok !== false) setReceiptSubmitted(true);
             }}
           />
         ) : (props.previewMode && !(topic && topic.masteryChecks && topic.masteryChecks.required && topic.masteryChecks.required.length)) ? (
