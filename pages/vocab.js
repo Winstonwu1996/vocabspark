@@ -4850,7 +4850,12 @@ export default function App() {
 
         // Spectrum (fire and forget, waits for classify to route to right game type)
         // Phase 2 Round 1: spectrum prompt 按 wordType 路由（A → gradient_choice，其他 legacy）
-        // 兜底重试：morph_fill 偶尔泄答案（scenario 含目标词 verbatim），命中 → 重试 2 次（用 word 参数捕获）
+        // ★ 性能修复（Codex 诊断线上"加载变慢"回归）：morph_fill 泄题旧逻辑最多跑 3 次 LLM +
+        //   2×800ms sleep，放大整批 AI 调用量（5 个 C 类词都泄题可额外 +10 次调用），间接挤压
+        //   /api/chat / 限流 / provider 容量 → 拖慢真正关键路径（guess/teach）。改为：
+        //   · scenario 含目标词 = 题本身已不可信 → 直接跳过这道 morph 游戏（该词仍有 guess+teach），不重试。
+        //   · options 结构残缺 = 偶发畸形 → 给 1 次即时重试（无 sleep）恢复；再坏就跳过。
+        //   prompt 约束 + hideTargetWord + 卡片后置已是主防线，重试收益小于它对吞吐的压力。
         (function (capturedWord) {
           var doSpectrumAttempt = function (attemptsLeft) {
             return classifyByWord[capturedWord].then(function (cls) {
@@ -4861,22 +4866,21 @@ export default function App() {
               var parsed = raw ? tryJSON(raw) : null;
               if (parsed && parsed.type === "morph_fill") {
                 var check = checkMorphFill(parsed, capturedWord);
-                if (check.leaked && attemptsLeft > 0) {
-                  console.warn("[loadBatch] morph_fill " + check.reason + " for '" + capturedWord + "', retrying (" + attemptsLeft + " left)");
-                  return new Promise(function (r) { setTimeout(r, 800); }).then(function () {
-                    return doSpectrumAttempt(attemptsLeft - 1);
-                  });
-                }
                 if (check.leaked) {
-                  // 重试耗尽：丢弃这道 spectrum，让流程跳过到下一词（比给学生看泄题题更好）
-                  console.warn("[loadBatch] morph_fill " + check.reason + " exhausted for '" + capturedWord + "', skip spectrum");
+                  var structural = check.reason && check.reason.indexOf("options_missing") === 0;
+                  if (structural && attemptsLeft > 0) {
+                    console.warn("[loadBatch] morph_fill " + check.reason + " for '" + capturedWord + "', 1 即时重试");
+                    return doSpectrumAttempt(attemptsLeft - 1); // 无 sleep
+                  }
+                  // scenario 泄题 → 直接跳过；结构畸形重试耗尽 → 也跳过。给学生看泄题题/坏题更糟。
+                  console.warn("[loadBatch] morph_fill " + check.reason + " for '" + capturedWord + "', skip spectrum");
                   return null;
                 }
               }
               return parsed;
             });
           };
-          doSpectrumAttempt(2).then(function (finalParsed) {
+          doSpectrumAttempt(1).then(function (finalParsed) { // 最多 1 次重试（仅结构畸形用得到）
             dataCache.current[capturedWord].spectrum = finalParsed;
           }).catch(function (err) {
             console.warn("[loadBatch] spectrum failed for " + capturedWord + ":", err.message);
