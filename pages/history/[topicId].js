@@ -911,23 +911,49 @@ export default function HistoryPage() {
   };
 
   // ─── Step 4b-1: 进课 tier gate ─────────────────────────────────
-  // gateAccess 由 CourseGateMount→CourseGate 上报 (flag off / 懒块未到位时维持 null = 乐观)。
-  var [gateAccess, setGateAccess] = useState(null);
+  // CourseGate 上报 {access, topicId, lensId}。Codex P1 修: 结论带标签, 播放器页只信
+  // 对应"当前 topic+lens"的 fresh 结论, 绝不吃旧 lens/topic 的陈旧 allow (防 stale 绕过)。
+  var [gateResult, setGateResult] = useState(null); // { access, topicId, lensId } | null
   var [showUpgradeGate, setShowUpgradeGate] = useState(false);
-  // 是否放行进 conversation: flag off 永远放行; flag on 只挡 deny / error-blocked。
-  // loading / null / allow / view-only-grandfathered 都放行 (浏览乐观, 同 4a;
-  // loading 小窗口已知, 4b-3 active→降级 兜底; canary 验证 tier 通常先于点击解析)。
-  var passesEntryGate = function() {
-    if (!ENABLE_HISTORY_PAYWALL) return true;
-    return !(gateAccess === 'deny' || gateAccess === 'error-blocked');
+  var [gateChecking, setGateChecking] = useState(false); // 点了进课但 gate 还没落定, 挂起中
+  var pendingEnterRef = useRef(null); // 挂起的进 conversation 函数, gate 落定后执行
+  var onGateAccessChange = function(access, gTopicId, gLensId) {
+    setGateResult({ access: access, topicId: gTopicId, lensId: gLensId });
   };
-  // 包一层进 conversation 的入口 (onStart / onResume / onClearAndStart 共用)。
+  // 当前 topic+lens 的 fresh 结论: 标签不匹配 (切了 lens/topic 还没重报) → 视为未落定 'loading'。
+  var freshGateAccess = function() {
+    if (!gateResult) return 'loading';
+    if (gateResult.topicId !== topicId || gateResult.lensId !== effectiveLensId) return 'loading';
+    return gateResult.access;
+  };
+  // 包一层进 conversation 的入口 (onStart / onResume / onClearAndStart / notebook 切 lens 共用)。
+  // Codex P1 修: 不再乐观放行 loading/stale。未落定 → 挂起点击, 等 gate 报当前 topic+lens
+  // 的结论后再放行 (allow/grandfather) 或弹升级 (deny/error-blocked)。
   var gatedEnter = function(realEnterFn) {
     return function() {
-      if (!passesEntryGate()) { setShowUpgradeGate(true); return; }
-      realEnterFn();
+      if (!ENABLE_HISTORY_PAYWALL) { realEnterFn(); return; }
+      var a = freshGateAccess();
+      if (a === 'allow' || a === 'view-only-grandfathered') { realEnterFn(); return; }
+      if (a === 'deny' || a === 'error-blocked') { setShowUpgradeGate(true); return; }
+      // a === 'loading' (未落定 / stale): 挂起, 等 gate 落定 (下方 effect 处理)
+      pendingEnterRef.current = realEnterFn;
+      setGateChecking(true);
     };
   };
+
+  // gate 落定后处理挂起的进课点击 (Codex P1: 不乐观放行, 等真结论)
+  var freshAccessForEffect = freshGateAccess();
+  useEffect(function() {
+    if (!gateChecking || !pendingEnterRef.current) return;
+    var a = freshAccessForEffect;
+    if (a === 'loading') return; // 还没落定, 继续等
+    var fn = pendingEnterRef.current;
+    pendingEnterRef.current = null;
+    setGateChecking(false);
+    if (a === 'allow' || a === 'view-only-grandfathered') { fn(); }
+    else { setShowUpgradeGate(true); } // deny / error-blocked
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [freshAccessForEffect, gateChecking]);
 
   // ─── 进入 mastery gate ──────────────────────────────────────────
   var startMasteryGate = function() {
@@ -1476,9 +1502,18 @@ export default function HistoryPage() {
             topicId={topicId}
             lensId={effectiveLensId}
             showModal={showUpgradeGate}
-            onAccessChange={setGateAccess}
+            onAccessChange={onGateAccessChange}
             onCloseModal={function() { setShowUpgradeGate(false); }}
           />
+        )}
+        {/* Step 4b-1: gate 挂起期轻量提示 (fast-click / 切 lens 等结论落定, <1s) */}
+        {ENABLE_HISTORY_PAYWALL && gateChecking && (
+          <div style={{
+            position: "fixed", top: 12, left: "50%", transform: "translateX(-50%)",
+            zIndex: 2200, padding: "8px 16px", borderRadius: 999,
+            background: "rgba(44,36,32,0.9)", color: "#fff8e8", fontSize: 13,
+            fontFamily: FONT, boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
+          }}>检查学习权限中…</div>
         )}
         {/* Stage 4：embedded 模式下父 atlas-lab 已有 nav，这里不重复渲染 */}
         {!embedded && (
@@ -1750,7 +1785,12 @@ export default function HistoryPage() {
                 setTurnIndex(0);
                 setConversationLog([]);
                 setSavedSession(null);
-                setPhase("conversation");
+                // Codex P2 修: notebook 切 lens 也要过 gate。不能同步 gatedEnter (闭包里
+                // effectiveLensId 还是旧 lens), 必须挂起等新 lens 的 gate 结论落定再进 —
+                // 防 grandfather 用户从 notebook 直开同课未学的锁定 lens 绕过 gate。
+                if (!ENABLE_HISTORY_PAYWALL) { setPhase("conversation"); return; }
+                pendingEnterRef.current = function() { setPhase("conversation"); };
+                setGateChecking(true);
               }}
             />
           )}

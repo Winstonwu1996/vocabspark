@@ -38,11 +38,12 @@ export function CourseGate(props) {
 
   var access = computeGateAccess(tierInfo, topicId, lensId, learningReceipts);
 
-  // 上报 gate 结论给播放器页
+  // 上报 gate 结论给播放器页 — 带 topicId/lensId 标签 (Codex P1: 防 stale,
+  // 播放器页据此判断结论是否对应"当前"topic+lens, 不吃旧 lens 的陈旧 allow)。
   useEffect(function () {
-    if (typeof props.onAccessChange === 'function') props.onAccessChange(access);
+    if (typeof props.onAccessChange === 'function') props.onAccessChange(access, topicId, lensId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [access]);
+  }, [access, topicId, lensId]);
 
   if (!props.showModal) return null;
 
