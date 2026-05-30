@@ -1085,9 +1085,11 @@ export default function HistoryPage() {
 
   // ─── 完成 Topic ─────────────────────────────────────────────────
   var completeTopic = function(masteryResults) {
-    // Step 4b-3 Codex round6 (P2-i): 进 mastery 后才掉 tier 也要拦 —— 否则做完题 onPass 直接
-    // 存完成态/XP, 绕过降级。读 ref (定时器/异步回调安全)。
-    if (blockedByDowngrade()) return;
+    // Step 4b-3 Codex round6/8 (P2-i/l): 进 mastery 后才掉 tier 也要拦 —— 否则做完题 onPass 直接
+    // 存完成态/XP, 绕过降级。但不能只 return: MasteryGateOverlay 此刻已 setGateStep(3), 留在
+    // phase=mastery 会渲染空白卡死 → 退回 notebook (稳定可重试屏, 其 onContinue 已被守卫;
+    // access 恢复后可重进 mastery, startMasteryGate 重置 gateStep)。modal 由 blockedByDowngrade 弹。
+    if (blockedByDowngrade()) { setPhase('notebook'); return; }
     // 计算 XP（软化版 — Winston review #9：分数低也能过，但 XP 反映表现）
     var base = topic.xpRewards.base; // 100 for difficulty 3
     var bonus =
