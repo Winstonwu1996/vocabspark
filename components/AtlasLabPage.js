@@ -17,6 +17,8 @@ import KeyFiguresRow from './KeyFiguresRow';
 import { BrandNavBar } from './BrandNavBar';
 import AtlasOnboarding from './AtlasOnboarding';
 import MapLegend from './MapLegend';
+import { ENABLE_HISTORY_PAYWALL } from '../lib/history-paywall-flag';
+import { AtlasUpgradeMount } from './AtlasUpgradeMount';
 
 const HC = {
   parchment:   '#f4ead0',
@@ -144,6 +146,9 @@ export default function AtlasLabPage({
   // iframe + postMessage 实现单页面感，atlas 状态完全保留
   const [learningMode, setLearningMode] = useState('browse');  // 'browse' | 'embedded'
   const [embedUrl, setEmbedUrl] = useState(null);
+  // Step 4b-2 (方案 B): iframe 内子页 gate 真 deny 时回传 → 父页关 iframe + Atlas 层弹升级。
+  // { topicId, requiredTier } | null。flag-off 时子页 gate 不触发 → 永不被 set。
+  const [gateDenied, setGateDenied] = useState(null);
 
   // 监听 iframe 内 /history 的 postMessage（关闭 / 完成事件）
   useEffect(() => {
@@ -154,6 +159,12 @@ export default function AtlasLabPage({
       if (event.data.type === 'close') {
         setLearningMode('browse');
         setEmbedUrl(null);
+      } else if (event.data.type === 'gate-denied') {
+        // Step 4b-2 (P2-h): 子页在 iframe 内被 tier 拒 → 关 iframe, 在 Atlas 层弹升级
+        // (升级页 /plan 是整页跳转, 不能挤在 iframe 里)。
+        setLearningMode('browse');
+        setEmbedUrl(null);
+        setGateDenied({ topicId: event.data.topicId, requiredTier: event.data.requiredTier });
       } else if (event.data.type === 'complete') {
         setLearningMode('browse');
         setEmbedUrl(null);
@@ -854,6 +865,16 @@ export default function AtlasLabPage({
                 title="History Engine"
               />
             </div>
+          )}
+
+          {/* Step 4b-2 (方案 B / P2-h): iframe 内子页被 tier 拒 → 父页关 iframe + 这里弹升级。
+              flag-off 时 gateDenied 永不被 set → 懒块永不加载 (Atlas chunk 零新增)。 */}
+          {ENABLE_HISTORY_PAYWALL && gateDenied && (
+            <AtlasUpgradeMount
+              topicId={gateDenied.topicId}
+              requiredTier={gateDenied.requiredTier}
+              onClose={() => setGateDenied(null)}
+            />
           )}
 
           {/* 整合 /history：完成 Topic 后回 atlas 触发庆祝 toast */}

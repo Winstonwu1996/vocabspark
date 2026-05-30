@@ -53,7 +53,28 @@ export function CourseGate(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [access, topicId, lensId]);
 
+  // Step 4b-2 (方案 B / Codex round10 P2-h): 在 Atlas iframe 内被真 deny 时, 不在小框里渲染
+  // 子页 UpgradeModal / 不 router.push('/plan') (那会把方案页挤进 iframe), 而是 postMessage
+  // 回父页 → 父页关 iframe + 在 Atlas 层弹升级。error-blocked (网络失败) 不回传, 仍在 iframe
+  // 内显示网络重试 modal (是网络问题, 不是 tier 拒绝)。
+  var inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
+  var goesToParent = !!props.embedded && inIframe && access === 'deny';
+  useEffect(function () {
+    if (!props.showModal || !goesToParent) return;
+    try {
+      window.parent.postMessage({
+        source: 'history-engine',
+        type: 'gate-denied',
+        topicId: topicId,
+        requiredTier: getTopicAccessTier(topicId),
+      }, '*');
+    } catch (e) {}
+    if (typeof props.onCloseModal === 'function') props.onCloseModal(); // 关子页 modal, 父页接管
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.showModal, goesToParent, topicId]);
+
   if (!props.showModal) return null;
+  if (goesToParent) return null; // 嵌入态真 deny: 交父页弹升级, iframe 内不渲染
 
   // Codex P2-g (round10): error-blocked (tier 查询 API 耗尽重试) 不是真 deny —— 用户可能是
   // 已付费会员, 只是 check-subscription 临时故障。不能弹「升级」modal (误导付费用户 + 无重试)。

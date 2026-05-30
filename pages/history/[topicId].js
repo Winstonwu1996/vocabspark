@@ -1528,6 +1528,7 @@ export default function HistoryPage() {
           <CourseGateMount
             topicId={topicId}
             lensId={gateLensId}
+            embedded={embedded}
             showModal={showUpgradeGate}
             onAccessChange={onGateAccessChange}
             onCloseModal={function() {
