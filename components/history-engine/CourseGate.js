@@ -84,14 +84,19 @@ export function CourseGate(props) {
   if (!props.showModal) return null;
   if (goesToParent) return null; // 嵌入态真 deny: 交父页弹升级, iframe 内不渲染
 
+  // 当前 modal 的 reason + 升级目标 tier (配额类 → Basic 最低无限档; 否则课程访问 tier)。
+  var reason = props.modalReason || 'locked-course';
+  var reqTier = (reason === 'lens-quota' || reason === 'sidekick-quota') ? 'basic' : getTopicAccessTier(topicId);
+
   // 升级动作: 嵌入态 (iframe) → 回传父页 (同 P2-h, 父页关 iframe + 整页弹升级);
   // 非嵌入 → 整页跳 /plan。view-only 占位屏 / UpgradeModal 共用。
+  // Codex round2 P2-e: 回传父页要带 reason + 正确 tier, 否则父页对配额拦截误开 locked-course(Guest/Free)。
   var doUpgrade = function () {
     if (props.embedded && inIframe) {
       try {
         window.parent.postMessage({
           source: 'history-engine', type: 'gate-denied',
-          topicId: topicId, requiredTier: getTopicAccessTier(topicId),
+          topicId: topicId, requiredTier: reqTier, reason: reason,
         }, '*');
       } catch (e) {}
       if (typeof props.onCloseModal === 'function') props.onCloseModal();
@@ -125,12 +130,7 @@ export function CourseGate(props) {
     .filter(function (r) { return r.available; })
     .map(function (r) { return r.id; });
 
-  // Step 3: reason 由页面传 ('locked-course' 超 tier / 'lens-quota' / 'sidekick-quota' 配额用尽)。
-  // 配额拦截时 access 仍是 'allow', 走到这里靠 modalReason 弹对的配额文案。
-  // Codex round1 P2-b: 配额类升级目标是 **Basic** (最低无限档), 不是课程访问 tier (guest/free)
-  // —— 否则 CTA 会说「升级 游客/Free」。locked-course 才用课程 requiredTier。
-  var reason = props.modalReason || 'locked-course';
-  var reqTier = (reason === 'lens-quota' || reason === 'sidekick-quota') ? 'basic' : getTopicAccessTier(topicId);
+  // reason/reqTier 已在上方算 (配额类 → Basic; locked-course → 课程 tier)。Codex round1 P2-b。
   return (
     <UpgradeModal
       reason={reason}

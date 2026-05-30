@@ -162,9 +162,10 @@ export default function AtlasLabPage({
       } else if (event.data.type === 'gate-denied') {
         // Step 4b-2 (P2-h): 子页在 iframe 内被 tier 拒 → 关 iframe, 在 Atlas 层弹升级
         // (升级页 /plan 是整页跳转, 不能挤在 iframe 里)。
+        // Step 3 (P2-e): 带 reason (locked-course / lens-quota / sidekick-quota) 让父页弹对的文案。
         setLearningMode('browse');
         setEmbedUrl(null);
-        setGateDenied({ topicId: event.data.topicId, requiredTier: event.data.requiredTier });
+        setGateDenied({ topicId: event.data.topicId, requiredTier: event.data.requiredTier, reason: event.data.reason || 'locked-course' });
       } else if (event.data.type === 'complete') {
         setLearningMode('browse');
         setEmbedUrl(null);
@@ -873,6 +874,7 @@ export default function AtlasLabPage({
             <AtlasUpgradeMount
               topicId={gateDenied.topicId}
               requiredTier={gateDenied.requiredTier}
+              reason={gateDenied.reason}
               onClose={() => setGateDenied(null)}
             />
           )}

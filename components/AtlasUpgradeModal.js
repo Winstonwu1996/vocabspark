@@ -16,7 +16,7 @@ export function AtlasUpgradeModal(props) {
     .map(function (r) { return r.id; });
   return (
     <UpgradeModal
-      reason="locked-course"
+      reason={props.reason || 'locked-course'}
       requiredTier={props.requiredTier || 'basic'}
       counts={getAccessibleTopicCounts(availableIds)}
       onClose={props.onClose}
