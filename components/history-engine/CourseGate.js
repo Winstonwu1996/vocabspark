@@ -58,7 +58,9 @@ export function CourseGate(props) {
   // 回父页 → 父页关 iframe + 在 Atlas 层弹升级。error-blocked (网络失败) 不回传, 仍在 iframe
   // 内显示网络重试 modal (是网络问题, 不是 tier 拒绝)。
   var inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
-  var goesToParent = !!props.embedded && inIframe && access === 'deny';
+  // Step 4b-3 (P2-g): 中途降级「原地暂停」(pauseInPlace) 不回传父页 —— 否则父页关 iframe 撕掉
+  // 当前课、丢失当前轮。仅**进课入口**被拒 (pauseInPlace=false) 才回传。
+  var goesToParent = !!props.embedded && inIframe && access === 'deny' && !props.pauseInPlace;
   useEffect(function () {
     if (!props.showModal || !goesToParent) return;
     try {

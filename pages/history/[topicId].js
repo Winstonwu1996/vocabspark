@@ -926,6 +926,9 @@ export default function HistoryPage() {
   // 对应"当前 topic+lens"的 fresh 结论, 绝不吃旧 lens/topic 的陈旧 allow (防 stale 绕过)。
   var [gateResult, setGateResult] = useState(null); // { access, topicId, lensId } | null
   var [showUpgradeGate, setShowUpgradeGate] = useState(false);
+  // Step 4b-3 (Codex round4 P2-g): 区分「进课入口被拒」(嵌入态要回传父页关 iframe) 与
+  // 「对话中途降级暂停」(必须**原地**暂停, 不能关 iframe 丢失当前轮)。此 flag=true → 抑制父页回传。
+  var [gatePauseInPlace, setGatePauseInPlace] = useState(false);
   var [gateChecking, setGateChecking] = useState(false); // 点了进课但 gate 还没落定, 挂起中
   // Codex P1 (round8): notebook 切到锁定 lens 时, **不能**提前 setSelectedLensId 让 gate 评估 —
   // 那会在 gate 未落定的窗口把锁定 lens 变成 current, 经 notebook「继续」/ MasteryGate cancel
@@ -954,7 +957,8 @@ export default function HistoryPage() {
       if (a === 'allow') { realEnterFn(); return; }
       // Step 4b-3: view-only-grandfathered 不再当 allow 进对话, 改弹只读占位屏
       // (CourseGate 据 access 渲染对应 modal); deny / error-blocked 同样弹 modal。
-      if (a === 'view-only-grandfathered' || a === 'deny' || a === 'error-blocked') { setShowUpgradeGate(true); return; }
+      // 这是**进课入口**被拒 (非中途降级) → 嵌入态应回传父页, pauseInPlace=false。
+      if (a === 'view-only-grandfathered' || a === 'deny' || a === 'error-blocked') { setGatePauseInPlace(false); setShowUpgradeGate(true); return; }
       // a === 'loading' (未落定 / stale): 挂起, 等 gate 落定 (下方 effect 处理)
       // Codex P2-d (round4): 给挂起回调打 topic/lens 标签。否则点「继续上次」(闭包套着旧
       // savedSession) 后在 tier 请求落定前切了 lens, 这个陈旧 resume 会在新 lens 下重放旧
@@ -985,6 +989,8 @@ export default function HistoryPage() {
     else {
       // Step 4b-3: view-only-grandfathered → 只读占位屏; deny/error-blocked → 升级/网络 modal。
       // 候选 lens (若有) 持续到 modal 关闭 (Codex P2-i), 让 CourseGate 据被拦 lens 算出正确 modal。
+      // 进课入口被拒 (非中途降级) → 嵌入态回传父页, pauseInPlace=false。
+      setGatePauseInPlace(false);
       setShowUpgradeGate(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -997,7 +1003,11 @@ export default function HistoryPage() {
   var blockedByDowngrade = function() {
     if (!ENABLE_HISTORY_PAYWALL) return false;
     var ga = freshGateAccess();
-    if (ga === 'deny' || ga === 'view-only-grandfathered') { setShowUpgradeGate(true); return true; }
+    if (ga === 'deny' || ga === 'view-only-grandfathered') {
+      setGatePauseInPlace(true); // 原地暂停: 嵌入态也不回传父页 (P2-g), 不撕掉当前课
+      setShowUpgradeGate(true);
+      return true;
+    }
     return false;
   };
 
@@ -1555,10 +1565,12 @@ export default function HistoryPage() {
             topicId={topicId}
             lensId={gateLensId}
             embedded={embedded}
+            pauseInPlace={gatePauseInPlace}
             showModal={showUpgradeGate}
             onAccessChange={onGateAccessChange}
             onCloseModal={function() {
               setShowUpgradeGate(false);
+              setGatePauseInPlace(false);
               setGateCandidateLens(null); // Codex P2-i: modal 关才清候选 (期间它评估的是被拦的 lens)
             }}
           />
