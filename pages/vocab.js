@@ -4709,7 +4709,10 @@ export default function App() {
         setBatchTip(readyWordSet.size > 0 ? "✅ 首词已就绪，正在为你打开学习页面..." : "⏳ 加载完成，正在进入学习...");
         setBatchProgress(function() { return batchTotalR.current || 0; });
         var elapsed = Date.now() - batchStartedAtMs;
-        var minDisplayMs = 5000;
+        // P0-1（延迟审计）：首词已就绪（多发生在 5/10 词里程碑边界 — 下批首词常已预取缓存，
+        // 几毫秒就绪）时，旧 5000ms 地板会让用户白等约 4.6s。就绪时把地板降到 1500ms
+        // （仍留一点最小展示避免 loading 屏闪一下就消失），冷加载（没就绪、force 兜底）保持 5000。
+        var minDisplayMs = readyWordSet.size > 0 ? 1500 : 5000;
         var delay = Math.max(readyWordSet.size > 0 ? 400 : 200, minDisplayMs - elapsed);
         setTimeout(function() {
           if (resolveEarlyStart) resolveEarlyStart();
@@ -5459,10 +5462,12 @@ export default function App() {
 
     var ready = function() {
       var d = dataCache.current[nextWord];
-      // 真正的切词 gate：只要 guess 到达就能进猜词页（第一阶段）
-      // Teach 是后续阶段，即使未 ready，applyWordData 的轮询会在用户进 teach 页时接住
-      // 之前要求 teach 同时 ready 是过度保守 — 让用户等不必要的时间
-      return !!(d && d.guess);
+      // 真正的切词 gate：guess 到达 OR guess 已失败（applyWordData 对 guessFailed 有
+      // "题目暂时没准备好 + 重试"降级 UI，能立即接住）→ 都算 ready。
+      // P1-1（延迟审计）：旧 gate 只认 d.guess，guess 三层重试耗尽(guessFailed)时不算 ready
+      //   → 用户白等 5-12s speed_wait 再走冗余整组重载，而降级 UI 本可立即接住。
+      // Teach 是后续阶段，未 ready 时 applyWordData 轮询会在进 teach 页时接住。
+      return !!(d && (d.guess || d.guessFailed));
     };
 
     if (ready()) {
@@ -5483,14 +5488,17 @@ export default function App() {
     }
 
     if (!ready() || speedWaitAbortRef.current) {
-      // Fallback：用 silent 模式补救加载，**不**触发 batch_loading UI
-      // （避免给用户"开始新一组"的错觉 — 之前用 streaming:true 会切到 batch_loading 屏，
-      // 让用户以为"刚学的几个词不算了，要重新一组"）
+      // P1-2（延迟审计）：超时后【不再 await 整组 loadBatch】——旧逻辑让用户在 12s speed_wait
+      // 后再干等非流式整组重载（~18-22s 串行卡顿），而 applyWordData 的骨架屏 + 200ms 轮询
+      // 本可立即接住后台补来的 guess。改为：立即进词（骨架屏），后台 fire-and-forget 补 cache。
+      // 仍用 silent 模式，不触发 batch_loading UI（避免"重新一组"的错觉）。
       dataCache.current[nextWord] = null;
-      console.warn('[waitAndEnterNextWord] timeout, silent fallback for', nextWord);
-      try {
-        await loadBatch(nextIdx, learnedSnapshot, undefined, { silent: true, streaming: false });
-      } catch(e) { console.warn('[fallback loadBatch] failed:', e?.message); }
+      console.warn('[waitAndEnterNextWord] timeout, enter skeleton + background reload for', nextWord);
+      setIdx(nextIdx);
+      applyWordData(nextWord);
+      loadBatch(nextIdx, learnedSnapshot, undefined, { silent: true, streaming: false })
+        .catch(function(e) { console.warn('[fallback loadBatch] failed:', e?.message); });
+      return;
     }
 
     setIdx(nextIdx);
