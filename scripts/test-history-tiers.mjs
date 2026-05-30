@@ -314,12 +314,16 @@ eq("error + Pro 课 → error-blocked (fail-closed)", computeGateAccess({ state:
 eq("error + Basic 课 → error-blocked", computeGateAccess({ state: 'error' }, 'crusades-1099', 'x', null), 'error-blocked');
 eq("error + free 白名单课 → allow (免费内容放行)", computeGateAccess({ state: 'error' }, 'tang-song-china', 'huizong', null), 'allow');
 eq("error + guest 试用课 → allow", computeGateAccess({ state: 'error' }, 'magna-carta-1215', 'king-john', null), 'allow');
-// Codex P2-c (round4): grandfather 永久优先, tier 查询失败不该锁出已学完的付费 lens
+// Step 4b-3 (Codex round1 改): tier 未知 (error) 时不再对已学付费 lens 返回 view-only-grandfathered
+// —— view-only 现在是「升级重学」占位屏, 臆测付费用户缺 tier 会误劝; 改 error-blocked (网络重试,
+// 刷新解析真值)。grandfather 只在已知缺 tier (free/guest state) 时出现。
 var errGfReceipts = { 'cold-war-1962': { 'jfk': { ts: 1 } } };
-eq("error + 学过的 Pro lens → view-only-grandfathered (grandfather 先于 fail-closed)",
-   computeGateAccess({ state: 'error' }, 'cold-war-1962', 'jfk', errGfReceipts), 'view-only-grandfathered');
-eq("error + 没学的 Pro lens → error-blocked (仍 fail-closed)",
+eq("error + 学过的 Pro lens → error-blocked (tier 未知不臆测, 网络重试)",
+   computeGateAccess({ state: 'error' }, 'cold-war-1962', 'jfk', errGfReceipts), 'error-blocked');
+eq("error + 没学的 Pro lens → error-blocked",
    computeGateAccess({ state: 'error' }, 'cold-war-1962', 'khrushchev', errGfReceipts), 'error-blocked');
+eq("error + 学过的 free 课 lens → allow (免费内容 fail-open, 不被 view-only 挡)",
+   computeGateAccess({ state: 'error' }, 'tang-song-china', 'huizong', errGfReceipts), 'allow');
 
 // active pro → 全 allow
 eq("active pro + HS 课 → allow", computeGateAccess({ state: 'active', tier: 'pro' }, 'cold-war-1962', 'jfk', null), 'allow');

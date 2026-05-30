@@ -131,7 +131,15 @@ export function CourseGate(props) {
 // Step 4b-3 (方案 A): grandfather 只读占位屏。已学过但缺 tier 的 lens —— 给可见确认 + 重学升级入口。
 // 故意不回放原始对话 (transcript 未按 lens 存; 见 docs/STEP_4B3_GRANDFATHER_DESIGN.md)。自包含, 无 membership。
 function ViewOnlyGrandfatherModal(props) {
-  var tierName = (props.requiredTier === 'pro') ? 'Pro' : (props.requiredTier === 'basic' ? 'Basic' : 'Basic');
+  // Codex round1 P2-b: requiredTier 'free'/'guest' 时只需免费账号/登录, 不是付费升级 ——
+  // 不能误标 "升级 Basic"。区分免费账号 vs 付费两档文案。
+  var rt = props.requiredTier;
+  var isFreeAcct = (rt === 'free' || rt === 'guest');
+  var tierName = (rt === 'pro') ? 'Pro' : 'Basic';
+  var bodyText = isFreeAcct
+    ? '这个视角你之前完成过,一直为你保留。想重新学一遍,登录一个免费账号就行。'
+    : ('这个视角你之前完成过,一直为你保留。想重新学一遍,需要升级到 ' + tierName + '。');
+  var ctaText = isFreeAcct ? '登录免费账号重新学' : ('升级 ' + tierName + ' 重新学');
   var overlay = {
     position: 'fixed', inset: 0, zIndex: 2300, background: 'rgba(28,22,18,0.55)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
@@ -157,9 +165,9 @@ function ViewOnlyGrandfatherModal(props) {
         <div style={{ fontSize: 30, marginBottom: 10 }}>✓</div>
         <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>你已经学过这个视角</div>
         <div style={{ fontSize: 13.5, lineHeight: 1.6, color: '#6b5b50', marginBottom: 18 }}>
-          这个视角你之前完成过,一直为你保留。想重新学一遍,需要升级到 {tierName}。
+          {bodyText}
         </div>
-        <button style={primaryBtn} onClick={props.onUpgrade}>升级 {tierName} 重新学</button>
+        <button style={primaryBtn} onClick={props.onUpgrade}>{ctaText}</button>
         <button style={ghostBtn} onClick={props.onClose}>先这样</button>
       </div>
     </div>
