@@ -103,8 +103,8 @@ import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/noteboo
 import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
 import { CourseGateMount } from '../../components/history-engine/CourseGateMount';
 // Step 3 配额: daily-quota 纯逻辑 + quota-store 锁/持久化层 (均无 membership, 静态 import 不破坏隔离)。
-import { canUseLens, canUseSidekick, getRemainingLenses, getLensQuota, getRemainingSidekick, getSidekickQuota, lensKey } from '../../lib/daily-quota';
-import { tryUseLens, tryUseSidekick, readLensUsage, readSidekickUsage } from '../../lib/quota-store';
+import { canUseLens, getRemainingLenses, getLensQuota, getRemainingSidekick, getSidekickQuota, lensKey, todayStr } from '../../lib/daily-quota';
+import { tryUseLens, tryUseSidekick, refundSidekick, readLensUsage, readSidekickUsage } from '../../lib/quota-store';
 
 // ─── 主组件 ────────────────────────────────────────────────────────
 export default function HistoryPage() {
@@ -167,13 +167,19 @@ export default function HistoryPage() {
   // Sidekick 发送 — 主对话不受影响，但 AI 知道当前 Topic 上下文 + 离题保护
   var sendSidekick = async function() {
     if (!sidekickInput.trim() || sidekickThinking) return;
-    // Step 3: Sidekick 每日配额预检 (仅 guest/free; tier 未落定→跳过不误拦)。用尽 → 弹 sidekick-quota。
-    if (ENABLE_HISTORY_PAYWALL && freshTierRef.current
-        && !canUseSidekick(readSidekickUsage(), freshTierRef.current)) {
-      setGatePauseInPlace(false);
-      setGateModalReason('sidekick-quota');
-      setShowUpgradeGate(true);
-      return;
+    // Step 3 (Codex round1 P2-a): Sidekick 配额走「锁内 reserve-before」原子门 —— 必须在发请求/
+    // 显示答案**之前**占额, 否则 1 个剩额时两个并发 send 都过预检、都拿到答案、只 1 个计入 →
+    // 正是锁要堵的并发超扣。tier 未落定 → 跳过 (不误拦)。reserve 失败 → 弹 sidekick-quota。
+    var skEventId = null;
+    if (ENABLE_HISTORY_PAYWALL && freshTierRef.current) {
+      var resv = await tryUseSidekick(freshTierRef.current);
+      if (!resv.ok) {
+        setGatePauseInPlace(false);
+        setGateModalReason('sidekick-quota');
+        setShowUpgradeGate(true);
+        return;
+      }
+      skEventId = resv.eventId; // 已占额; API 失败时退还 (refundSidekick)
     }
     var content = sidekickInput.trim();
     var newLog = sidekickLog.concat([{ role: "user", content: content, timestamp: new Date().toISOString() }]);
@@ -228,16 +234,14 @@ export default function HistoryPage() {
         saveSidekickLog(topicId, updated);
         return updated;
       });
-      // Step 3: 成功 (非 fallback) 响应 → 锁内记一次 Sidekick 配额 (eventId union 防 sync 丢扣)。
-      // fire-and-forget: 答案已给, 不因记账阻塞 UI; 多 tab 竞态输则该次不计 (锁内 canUseSidekick=false)。
-      if (ENABLE_HISTORY_PAYWALL && freshTierRef.current) {
-        tryUseSidekick(freshTierRef.current).catch(function () {});
-      }
+      // Step 3: 配额已在入口 reserve (skEventId), 成功不再重复扣。
       setSidekickStreaming("");
       setSidekickThinking(false);
     } catch (e) {
       setSidekickThinking(false);
       setSidekickStreaming("");
+      // Step 3: API 失败 (fallback) → 退还入口 reserve 的配额, 不让网络抖动白扣一次提问。
+      if (skEventId) { refundSidekick(skEventId).catch(function () {}); }
       setSidekickLog(function(prev) {
         var updated = prev.concat([{ role: "ai", content: "（网络不稳，再试一次？）", timestamp: new Date().toISOString(), isFallback: true }]);
         saveSidekickLog(topicId, updated);
@@ -1110,8 +1114,10 @@ export default function HistoryPage() {
     if (!ENABLE_HISTORY_PAYWALL) return;
     var tier = freshTierRef.current;
     if (!tier) return;
-    var key = lensKey(topicId, effectiveLensId);
-    if (lensDeductedRef.current === key) return; // 本 lens 已处理过
+    // Codex round1 P3-c: guard key 含当天日期 —— 否则页面跨午夜仍挂载、同 lens 再开时 ref 仍匹配,
+    // markLensStarted 提前 return, tryUseLens 没机会 normalize+记今天 → 新一天首次同 lens 不计。
+    var key = lensKey(topicId, effectiveLensId) + '|' + todayStr();
+    if (lensDeductedRef.current === key) return; // 本 lens 今天已处理过
     lensDeductedRef.current = key;
     tryUseLens(tier, topicId, effectiveLensId).then(function (ok) {
       if (!ok) {

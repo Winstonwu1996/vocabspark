@@ -127,10 +127,14 @@ export function CourseGate(props) {
 
   // Step 3: reason 由页面传 ('locked-course' 超 tier / 'lens-quota' / 'sidekick-quota' 配额用尽)。
   // 配额拦截时 access 仍是 'allow', 走到这里靠 modalReason 弹对的配额文案。
+  // Codex round1 P2-b: 配额类升级目标是 **Basic** (最低无限档), 不是课程访问 tier (guest/free)
+  // —— 否则 CTA 会说「升级 游客/Free」。locked-course 才用课程 requiredTier。
+  var reason = props.modalReason || 'locked-course';
+  var reqTier = (reason === 'lens-quota' || reason === 'sidekick-quota') ? 'basic' : getTopicAccessTier(topicId);
   return (
     <UpgradeModal
-      reason={props.modalReason || 'locked-course'}
-      requiredTier={getTopicAccessTier(topicId)}
+      reason={reason}
+      requiredTier={reqTier}
       counts={getAccessibleTopicCounts(availableIds)}
       onClose={props.onCloseModal}
       onUpgrade={doUpgrade}
