@@ -17,13 +17,18 @@ export function CourseGateMount(props) {
     import('./CourseGate').then(function (m) {
       if (mounted) setGate(function () { return m.CourseGate; });
     }).catch(function () {
-      // Codex P2 修: 懒块加载失败时, gate 永不上报 → 播放器页 freshGateAccess 永远
-      // 'loading' → 挂起点击卡死。改为上报 tier-aware fallback 让 pending 解除:
-      // 免费课 (guest/free) → allow (网络抖动不该挡免费内容); 付费课 → error-blocked (fail-closed)。
-      // 镜像 computeGateAccess 的 error 分支语义。
+      // Codex P2 (round2): 懒块加载失败时 gate 永不上报 → 播放器页 freshGateAccess 永远
+      // 'loading' → 挂起点击卡死。需上报 fallback 让 pending 解除。
+      // Codex P2 (round3) 修正: 本 catch 跑在 useUserTier **之前** —— 此刻完全不知用户
+      // 身份 (游客 / 注册 free / 付费)。所以不能像 computeGateAccess 的 error 分支那样
+      // 把 'free' 课判 allow: 那会让**未注册游客**进到「注册才可学」的 free 课。
+      // 唯一对所有人开放的是 guest 试用课 (req==='guest')。其余一律 fail-closed:
+      // - 'error-blocked' → 播放器页留在 IntroScreen 不进对话 (A1 设计, 营销页仍可见)。
+      // 代价: 注册 free 用户遇 chunk 加载失败时也被挡 (网络抖动罕见), 换「绝不漏过付费/
+      // 注册墙」的安全。注: 此刻 Gate 仍 null, UpgradeModal 无法渲染, 故只能 fail-closed。
       if (mounted && typeof props.onAccessChange === 'function') {
         var req = getTopicAccessTier(props.topicId);
-        var fallback = (req === 'guest' || req === 'free') ? 'allow' : 'error-blocked';
+        var fallback = (req === 'guest') ? 'allow' : 'error-blocked';
         props.onAccessChange(fallback, props.topicId, props.lensId);
       }
     });

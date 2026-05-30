@@ -920,7 +920,8 @@ export default function HistoryPage() {
   var [gateResult, setGateResult] = useState(null); // { access, topicId, lensId } | null
   var [showUpgradeGate, setShowUpgradeGate] = useState(false);
   var [gateChecking, setGateChecking] = useState(false); // 点了进课但 gate 还没落定, 挂起中
-  var pendingEnterRef = useRef(null); // 挂起的进 conversation 函数, gate 落定后执行
+  var pendingEnterRef = useRef(null); // 挂起的进 conversation 函数, gate allow 后执行
+  var pendingDenyRef = useRef(null); // 被拒时的回滚 (如 notebook 切 lens 失败恢复原 lens), 可空
   var onGateAccessChange = function(access, gTopicId, gLensId) {
     setGateResult({ access: access, topicId: gTopicId, lensId: gLensId });
   };
@@ -952,10 +953,17 @@ export default function HistoryPage() {
     var a = freshAccessForEffect;
     if (a === 'loading') return; // 还没落定, 继续等
     var fn = pendingEnterRef.current;
+    var denyFn = pendingDenyRef.current;
     pendingEnterRef.current = null;
+    pendingDenyRef.current = null;
     setGateChecking(false);
     if (a === 'allow' || a === 'view-only-grandfathered') { fn(); }
-    else { setShowUpgradeGate(true); } // deny / error-blocked
+    else {
+      // deny / error-blocked: 先跑回滚 (如恢复原 lens, Codex P2-a 防破坏已完成 lens),
+      // 再弹升级 modal。
+      if (typeof denyFn === 'function') denyFn();
+      setShowUpgradeGate(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [freshAccessForEffect, gateChecking]);
 
@@ -1783,17 +1791,32 @@ export default function HistoryPage() {
                 return map;
               })()}
               onSwitchLens={function(newLensId) {
-                // 切到另一个未学的视角:重置 turn/log/lens, 切回 conversation phase。
+                // 切到另一个视角:重置 turn/log/lens, 切回 conversation phase。
                 // saveLearningReceipt 已存当前 lens 的 receipt → 切回来时这个 lens 仍标已完成。
+                if (!ENABLE_HISTORY_PAYWALL) {
+                  setSelectedLensId(newLensId);
+                  setTurnIndex(0);
+                  setConversationLog([]);
+                  setSavedSession(null);
+                  setPhase("conversation");
+                  return;
+                }
+                // Codex P2-a (round3): paywall on 时不能在 gate 落定前就清 log/turn/session —
+                // 否则 grandfather/降级用户切到锁定 lens 被 deny 时, 已完成 lens 的 transcript
+                // 被清空、卡在锁定 lens 回不去。
+                // 做法: 只先切 selectedLensId (让 gate 评估新 lens, 它 key 在 effectiveLensId),
+                // 破坏性重置 (log/turn/session) 推迟到 allow 才做; deny 则恢复原 lens, 不动 transcript。
+                var prevLensId = selectedLensId;
                 setSelectedLensId(newLensId);
-                setTurnIndex(0);
-                setConversationLog([]);
-                setSavedSession(null);
-                // Codex P2 修: notebook 切 lens 也要过 gate。不能同步 gatedEnter (闭包里
-                // effectiveLensId 还是旧 lens), 必须挂起等新 lens 的 gate 结论落定再进 —
-                // 防 grandfather 用户从 notebook 直开同课未学的锁定 lens 绕过 gate。
-                if (!ENABLE_HISTORY_PAYWALL) { setPhase("conversation"); return; }
-                pendingEnterRef.current = function() { setPhase("conversation"); };
+                pendingEnterRef.current = function() {
+                  setTurnIndex(0);
+                  setConversationLog([]);
+                  setSavedSession(null);
+                  setPhase("conversation");
+                };
+                pendingDenyRef.current = function() {
+                  setSelectedLensId(prevLensId); // 回滚: 留在 notebook, 保住已完成 lens 的 transcript
+                };
                 setGateChecking(true);
               }}
             />
