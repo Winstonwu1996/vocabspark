@@ -575,17 +575,21 @@ export default function HistoryPage() {
     }
 
     // ── DEV shortcut: ?skipto=mastery 跳到 mastery gate 测试 ──
-    try {
-      var params = new URLSearchParams(window.location.search);
-      var skipTo = params.get("skipto");
-      if (skipTo === "mastery") {
-        setPhase("mastery");
-        setGateStep(0);
-      } else if (skipTo === "complete") {
-        setTopicXpEarned(175);
-        setPhase("complete");
-      }
-    } catch (e) {}
+    // Codex P1 修: paywall on 时禁用此捷径 — 否则 ?skipto=mastery 能跳进任意锁课的
+    // mastery/complete, 再经 MasteryGate cancel/pass 进 conversation 绕过 tier gate。
+    if (!ENABLE_HISTORY_PAYWALL) {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var skipTo = params.get("skipto");
+        if (skipTo === "mastery") {
+          setPhase("mastery");
+          setGateStep(0);
+        } else if (skipTo === "complete") {
+          setTopicXpEarned(175);
+          setPhase("complete");
+        }
+      } catch (e) {}
+    }
 
     // 清理 visualViewport listener
     return cleanup;
