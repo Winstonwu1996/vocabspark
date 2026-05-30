@@ -1796,7 +1796,14 @@ export default function HistoryPage() {
             <ConceptReview
               topicId={topicId}
               isEnglish={englishLevel === "high"}
-              onContinue={startMasteryGate}
+              onContinue={function() {
+                // Codex P3 (round9): lens-switch gate 挂起期 (notebook 里 gateChecking 仅由
+                // onSwitchLens 置位), 不让用户点测验 CTA 进 mastery —— 否则挂起回调落定后会把人从
+                // mastery 拽回 conversation (allow), 或在 mastery 上弹升级 modal (deny)。
+                // 挂起 <1s, 期间顶部已有「检查学习权限中…」提示。
+                if (ENABLE_HISTORY_PAYWALL && gateChecking) return;
+                startMasteryGate();
+              }}
               topicLenses={topicLenses}
               effectiveLensId={effectiveLensId}
               lensCompletion={(function() {
