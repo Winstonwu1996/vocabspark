@@ -920,15 +920,22 @@ export default function HistoryPage() {
   var [gateResult, setGateResult] = useState(null); // { access, topicId, lensId } | null
   var [showUpgradeGate, setShowUpgradeGate] = useState(false);
   var [gateChecking, setGateChecking] = useState(false); // 点了进课但 gate 还没落定, 挂起中
+  // Codex P1 (round8): notebook 切到锁定 lens 时, **不能**提前 setSelectedLensId 让 gate 评估 —
+  // 那会在 gate 未落定的窗口把锁定 lens 变成 current, 经 notebook「继续」/ MasteryGate cancel
+  // 可绕过进锁定 lens 的 conversation/收据流。改用独立候选通道: gate 评估 gateCandidateLens,
+  // selectedLensId 只在 allow 才真正切。candidate 期间整个 UI 仍停在原 (已授权) lens, 无绕过窗口。
+  var [gateCandidateLens, setGateCandidateLens] = useState(null);
   var pendingEnterRef = useRef(null); // 挂起的进 conversation 函数, gate allow 后执行
-  var pendingDenyRef = useRef(null); // 被拒时的回滚 (如 notebook 切 lens 失败恢复原 lens), 可空
+  var pendingDenyRef = useRef(null); // 被拒时的回滚 (如清候选 lens), 可空
   var onGateAccessChange = function(access, gTopicId, gLensId) {
     setGateResult({ access: access, topicId: gTopicId, lensId: gLensId });
   };
-  // 当前 topic+lens 的 fresh 结论: 标签不匹配 (切了 lens/topic 还没重报) → 视为未落定 'loading'。
+  // gate 当前评估的 lens: 有候选 (notebook 切 lens 挂起中) 用候选, 否则用 effectiveLensId。
+  var gateLensId = gateCandidateLens || effectiveLensId;
+  // 当前 topic + 被 gate 的 lens 的 fresh 结论: 标签不匹配 (切了 lens/topic 还没重报) → 'loading'。
   var freshGateAccess = function() {
     if (!gateResult) return 'loading';
-    if (gateResult.topicId !== topicId || gateResult.lensId !== effectiveLensId) return 'loading';
+    if (gateResult.topicId !== topicId || gateResult.lensId !== gateLensId) return 'loading';
     return gateResult.access;
   };
   // 包一层进 conversation 的入口 (onStart / onResume / onClearAndStart / notebook 切 lens 共用)。
@@ -944,7 +951,7 @@ export default function HistoryPage() {
       // Codex P2-d (round4): 给挂起回调打 topic/lens 标签。否则点「继续上次」(闭包套着旧
       // savedSession) 后在 tier 请求落定前切了 lens, 这个陈旧 resume 会在新 lens 下重放旧
       // transcript。effect 解析时校验标签 == 当前 effectiveLensId, 不匹配作废。
-      pendingEnterRef.current = { fn: realEnterFn, topicId: topicId, lensId: effectiveLensId };
+      pendingEnterRef.current = { fn: realEnterFn, topicId: topicId, lensId: gateLensId };
       setGateChecking(true);
     };
   };
@@ -956,7 +963,7 @@ export default function HistoryPage() {
     var pend = pendingEnterRef.current;
     // Codex P2-d: 挂起回调若 topic/lens 已变 (用户在 tier 落定前切了 lens) → 作废,
     // 绝不拿旧 savedSession 在新 lens 重放。清挂起 + 退出 checking。
-    if (pend.topicId !== topicId || pend.lensId !== effectiveLensId) {
+    if (pend.topicId !== topicId || pend.lensId !== gateLensId) {
       pendingEnterRef.current = null;
       pendingDenyRef.current = null;
       setGateChecking(false);
@@ -1524,7 +1531,7 @@ export default function HistoryPage() {
         {ENABLE_HISTORY_PAYWALL && (
           <CourseGateMount
             topicId={topicId}
-            lensId={effectiveLensId}
+            lensId={gateLensId}
             showModal={showUpgradeGate}
             onAccessChange={onGateAccessChange}
             onCloseModal={function() { setShowUpgradeGate(false); }}
@@ -1813,26 +1820,29 @@ export default function HistoryPage() {
                   setPhase("conversation");
                   return;
                 }
-                // Codex P2-a (round3): paywall on 时不能在 gate 落定前就清 log/turn/session —
-                // 否则 grandfather/降级用户切到锁定 lens 被 deny 时, 已完成 lens 的 transcript
-                // 被清空、卡在锁定 lens 回不去。
-                // 做法: 只先切 selectedLensId (让 gate 评估新 lens, 它 key 在 effectiveLensId),
-                // 破坏性重置 (log/turn/session) 推迟到 allow 才做; deny 则恢复原 lens, 不动 transcript。
-                var prevLensId = selectedLensId;
-                setSelectedLensId(newLensId);
-                // Codex P2-d: 挂起回调打 newLensId 标签 (effect 校验 == effectiveLensId 才执行)
+                // Codex P1 (round8): paywall on 时**不提前动 selectedLensId** —— 用独立候选通道
+                // gateCandidateLens 让 gate 评估新 lens。原因: 提前 setSelectedLensId 会在 gate
+                // 未落定的窗口把锁定 lens 变 current, notebook「继续」/ MasteryGate cancel 能借此
+                // 进锁定 lens 的 conversation/收据流 (绕过)。
+                // candidate 期间整个 UI 仍停在原 (已授权) lens; 破坏性重置 (log/turn/session) 与切
+                // lens 全推迟到 allow 才一起做 (Codex P2-a: 不在落定前清 transcript); deny 只清候选,
+                // selectedLensId 从没动过, 无需回滚也无绕过窗口。
+                setGateCandidateLens(newLensId);
+                // Codex P2-d: 挂起回调打 newLensId 标签 (effect 校验 == gateLensId 才执行)
                 pendingEnterRef.current = {
                   topicId: topicId,
                   lensId: newLensId,
                   fn: function() {
+                    setSelectedLensId(newLensId); // allow 才真正切 lens
                     setTurnIndex(0);
                     setConversationLog([]);
                     setSavedSession(null);
+                    setGateCandidateLens(null);
                     setPhase("conversation");
                   },
                 };
                 pendingDenyRef.current = function() {
-                  setSelectedLensId(prevLensId); // 回滚: 留在 notebook, 保住已完成 lens 的 transcript
+                  setGateCandidateLens(null); // deny: 啥都没改, 只清候选, 留在 notebook 原 lens
                 };
                 setGateChecking(true);
               }}
