@@ -941,7 +941,10 @@ export default function HistoryPage() {
       if (a === 'allow' || a === 'view-only-grandfathered') { realEnterFn(); return; }
       if (a === 'deny' || a === 'error-blocked') { setShowUpgradeGate(true); return; }
       // a === 'loading' (未落定 / stale): 挂起, 等 gate 落定 (下方 effect 处理)
-      pendingEnterRef.current = realEnterFn;
+      // Codex P2-d (round4): 给挂起回调打 topic/lens 标签。否则点「继续上次」(闭包套着旧
+      // savedSession) 后在 tier 请求落定前切了 lens, 这个陈旧 resume 会在新 lens 下重放旧
+      // transcript。effect 解析时校验标签 == 当前 effectiveLensId, 不匹配作废。
+      pendingEnterRef.current = { fn: realEnterFn, topicId: topicId, lensId: effectiveLensId };
       setGateChecking(true);
     };
   };
@@ -950,9 +953,18 @@ export default function HistoryPage() {
   var freshAccessForEffect = freshGateAccess();
   useEffect(function() {
     if (!gateChecking || !pendingEnterRef.current) return;
+    var pend = pendingEnterRef.current;
+    // Codex P2-d: 挂起回调若 topic/lens 已变 (用户在 tier 落定前切了 lens) → 作废,
+    // 绝不拿旧 savedSession 在新 lens 重放。清挂起 + 退出 checking。
+    if (pend.topicId !== topicId || pend.lensId !== effectiveLensId) {
+      pendingEnterRef.current = null;
+      pendingDenyRef.current = null;
+      setGateChecking(false);
+      return;
+    }
     var a = freshAccessForEffect;
     if (a === 'loading') return; // 还没落定, 继续等
-    var fn = pendingEnterRef.current;
+    var fn = pend.fn;
     var denyFn = pendingDenyRef.current;
     pendingEnterRef.current = null;
     pendingDenyRef.current = null;
@@ -1808,11 +1820,16 @@ export default function HistoryPage() {
                 // 破坏性重置 (log/turn/session) 推迟到 allow 才做; deny 则恢复原 lens, 不动 transcript。
                 var prevLensId = selectedLensId;
                 setSelectedLensId(newLensId);
-                pendingEnterRef.current = function() {
-                  setTurnIndex(0);
-                  setConversationLog([]);
-                  setSavedSession(null);
-                  setPhase("conversation");
+                // Codex P2-d: 挂起回调打 newLensId 标签 (effect 校验 == effectiveLensId 才执行)
+                pendingEnterRef.current = {
+                  topicId: topicId,
+                  lensId: newLensId,
+                  fn: function() {
+                    setTurnIndex(0);
+                    setConversationLog([]);
+                    setSavedSession(null);
+                    setPhase("conversation");
+                  },
                 };
                 pendingDenyRef.current = function() {
                   setSelectedLensId(prevLensId); // 回滚: 留在 notebook, 保住已完成 lens 的 transcript

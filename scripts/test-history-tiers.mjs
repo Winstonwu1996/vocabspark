@@ -311,6 +311,12 @@ eq("error + Pro 课 → error-blocked (fail-closed)", computeGateAccess({ state:
 eq("error + Basic 课 → error-blocked", computeGateAccess({ state: 'error' }, 'crusades-1099', 'x', null), 'error-blocked');
 eq("error + free 白名单课 → allow (免费内容放行)", computeGateAccess({ state: 'error' }, 'tang-song-china', 'huizong', null), 'allow');
 eq("error + guest 试用课 → allow", computeGateAccess({ state: 'error' }, 'magna-carta-1215', 'king-john', null), 'allow');
+// Codex P2-c (round4): grandfather 永久优先, tier 查询失败不该锁出已学完的付费 lens
+var errGfReceipts = { 'cold-war-1962': { 'jfk': { ts: 1 } } };
+eq("error + 学过的 Pro lens → view-only-grandfathered (grandfather 先于 fail-closed)",
+   computeGateAccess({ state: 'error' }, 'cold-war-1962', 'jfk', errGfReceipts), 'view-only-grandfathered');
+eq("error + 没学的 Pro lens → error-blocked (仍 fail-closed)",
+   computeGateAccess({ state: 'error' }, 'cold-war-1962', 'khrushchev', errGfReceipts), 'error-blocked');
 
 // active pro → 全 allow
 eq("active pro + HS 课 → allow", computeGateAccess({ state: 'active', tier: 'pro' }, 'cold-war-1962', 'jfk', null), 'allow');
