@@ -55,6 +55,15 @@ export function CourseGate(props) {
 
   if (!props.showModal) return null;
 
+  // Codex P2-g (round10): error-blocked (tier 查询 API 耗尽重试) 不是真 deny —— 用户可能是
+  // 已付费会员, 只是 check-subscription 临时故障。不能弹「升级」modal (误导付费用户 + 无重试)。
+  // 改弹网络重试提示, 把 UpgradeModal 留给真正的 tier deny。
+  // (注: round7 已处理 chunk 加载失败的同类提示, 那条在 CourseGateMount; 这条是 tier 查询失败,
+  //  chunk 已加载, 在本组件处理。)
+  if (access === 'error-blocked') {
+    return <GateNetworkErrorModal onClose={props.onCloseModal} />;
+  }
+
   var availableIds = (TOPIC_REGISTRY || [])
     .filter(function (r) { return r.available; })
     .map(function (r) { return r.id; });
@@ -67,6 +76,45 @@ export function CourseGate(props) {
       onClose={props.onCloseModal}
       onUpgrade={function () { router.push('/plan'); }}
     />
+  );
+}
+
+// 自包含网络重试提示 — tier 查询失败 (error-blocked) 时显示, 人话 + 刷新入口, 不弹升级。
+function GateNetworkErrorModal(props) {
+  function reload() {
+    if (typeof window !== 'undefined' && window.location) window.location.reload();
+  }
+  var overlay = {
+    position: 'fixed', inset: 0, zIndex: 2300, background: 'rgba(28,22,18,0.55)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+  };
+  var card = {
+    background: '#fffdf8', borderRadius: 16, padding: '24px 22px', maxWidth: 340,
+    width: '100%', boxShadow: '0 12px 40px rgba(0,0,0,0.28)', textAlign: 'center',
+    fontFamily: 'inherit', color: '#2c2420',
+  };
+  var primaryBtn = {
+    width: '100%', padding: '11px 0', borderRadius: 999, border: 'none',
+    background: '#c46b30', color: '#fff8e8', fontSize: 15, fontWeight: 600,
+    cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10,
+  };
+  var ghostBtn = {
+    width: '100%', padding: '9px 0', borderRadius: 999,
+    border: '1px solid rgba(44,36,32,0.2)', background: 'transparent',
+    color: '#6b5b50', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
+  };
+  return (
+    <div style={overlay} onClick={props.onClose}>
+      <div style={card} onClick={function (e) { e.stopPropagation(); }}>
+        <div style={{ fontSize: 30, marginBottom: 10 }}>📡</div>
+        <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>网络好像有点不稳</div>
+        <div style={{ fontSize: 13.5, lineHeight: 1.6, color: '#6b5b50', marginBottom: 18 }}>
+          暂时没法确认你的会员状态。刷新一下页面通常就好了。
+        </div>
+        <button style={primaryBtn} onClick={reload}>刷新重试</button>
+        <button style={ghostBtn} onClick={props.onClose}>先不了</button>
+      </div>
+    </div>
   );
 }
 
