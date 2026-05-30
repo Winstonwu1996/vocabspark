@@ -181,12 +181,11 @@ eq("Pro 用户能学 HS lens",
    canAccessLens('cold-war-1962', 'jfk', 'pro', false),
    'allow');
 
-// Pro 用户复习已学 → grandfathered (即便他付费, 已学过也走 view-only? 不, allow 更合理)
-// 实际语义: hasCompletedLens=true 时一律 view-only, 防止重新学的 conversation 状态机重启
-// 但 Pro 用户可以选择重学 — 这层 UI 决定, lib 只标 "grandfathered" 表示已经学过
-eq("Pro 用户已学过的 lens 也标 grandfathered (UI 据此提供 view 或 replay 选项)",
+// Step 4b-3: grandfather 改为「缺 tier 时的回退」。tier 够的用户 (即便已学过) → 直接 allow,
+// 可正常重学, 不被劝升级。view-only-grandfathered 只留给「缺 tier 但已学过」者。
+eq("Pro 用户已学过的 Pro lens → allow (持有 tier, 可重学, 不走 view-only)",
    canAccessLens('cold-war-1962', 'jfk', 'pro', true),
-   'view-only-grandfathered');
+   'allow');
 
 // Free 课用户访问 free 课 lens → allow (已通过 topic gate)
 eq("Free 用户进 free 课 lens", canAccessLens('tang-song-china', 'huizong', 'free', false), 'allow');
@@ -298,6 +297,10 @@ eq("learningReceipts=null 不崩 → 按未完成走 tier gate",
    'deny');
 eq("Free 用户进 free 课 lens (没学过) → allow",
    canAccessLensWithReceipts('tang-song-china', 'su-shi', 'free', receipts),
+   'allow');
+// Step 4b-3: tier 优先 — 持 tier 者重访已学 lens → allow (非 view-only), grandfather 只回退给缺 tier
+eq("Pro 用户 + 学过的 Pro lens → allow (grandfather 回退不触发)",
+   canAccessLensWithReceipts('cold-war-1962', 'jfk', 'pro', receipts),
    'allow');
 
 // ════════════════════════════════════════════════════════════

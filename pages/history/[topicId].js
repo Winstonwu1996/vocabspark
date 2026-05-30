@@ -752,6 +752,13 @@ export default function HistoryPage() {
 
   // ─── 推进到下一轮 ───────────────────────────────────────────────
   var advanceTurn = function() {
+    // Step 4b-3 (方案 X): 对话中途 tier 掉档 (未完成 lens 变 over-tier → freshGateAccess 'deny')
+    // → 拦推进 + 弹升级, 停在当前轮。已完成 lens 走 grandfather 不受影响; error-blocked (网络
+    // 抖动) 不拦 (fail-open, 不因瞬时网络问题打断学习)。gate 每 30s 经 onAccessChange 重报。
+    if (ENABLE_HISTORY_PAYWALL && freshGateAccess() === 'deny') {
+      setShowUpgradeGate(true);
+      return;
+    }
     var nextIdx = turnIndex + 1;
     setTurnIndex(nextIdx);
     // O6：每次推进保存进度（mid-conversation only）
@@ -945,8 +952,10 @@ export default function HistoryPage() {
     return function() {
       if (!ENABLE_HISTORY_PAYWALL) { realEnterFn(); return; }
       var a = freshGateAccess();
-      if (a === 'allow' || a === 'view-only-grandfathered') { realEnterFn(); return; }
-      if (a === 'deny' || a === 'error-blocked') { setShowUpgradeGate(true); return; }
+      if (a === 'allow') { realEnterFn(); return; }
+      // Step 4b-3: view-only-grandfathered 不再当 allow 进对话, 改弹只读占位屏
+      // (CourseGate 据 access 渲染对应 modal); deny / error-blocked 同样弹 modal。
+      if (a === 'view-only-grandfathered' || a === 'deny' || a === 'error-blocked') { setShowUpgradeGate(true); return; }
       // a === 'loading' (未落定 / stale): 挂起, 等 gate 落定 (下方 effect 处理)
       // Codex P2-d (round4): 给挂起回调打 topic/lens 标签。否则点「继续上次」(闭包套着旧
       // savedSession) 后在 tier 请求落定前切了 lens, 这个陈旧 resume 会在新 lens 下重放旧
@@ -973,10 +982,10 @@ export default function HistoryPage() {
     var fn = pend.fn;
     pendingEnterRef.current = null;
     setGateChecking(false);
-    if (a === 'allow' || a === 'view-only-grandfathered') { fn(); }
+    if (a === 'allow') { fn(); }
     else {
-      // deny / error-blocked: 弹 modal。候选 lens (若有) 持续到 modal 关闭 (Codex P2-i),
-      // 让 CourseGate 对被拦的 lens 算出正确 modal (网络重试 vs 升级)。
+      // Step 4b-3: view-only-grandfathered → 只读占位屏; deny/error-blocked → 升级/网络 modal。
+      // 候选 lens (若有) 持续到 modal 关闭 (Codex P2-i), 让 CourseGate 据被拦 lens 算出正确 modal。
       setShowUpgradeGate(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

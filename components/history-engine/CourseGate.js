@@ -76,6 +76,34 @@ export function CourseGate(props) {
   if (!props.showModal) return null;
   if (goesToParent) return null; // 嵌入态真 deny: 交父页弹升级, iframe 内不渲染
 
+  // 升级动作: 嵌入态 (iframe) → 回传父页 (同 P2-h, 父页关 iframe + 整页弹升级);
+  // 非嵌入 → 整页跳 /plan。view-only 占位屏 / UpgradeModal 共用。
+  var doUpgrade = function () {
+    if (props.embedded && inIframe) {
+      try {
+        window.parent.postMessage({
+          source: 'history-engine', type: 'gate-denied',
+          topicId: topicId, requiredTier: getTopicAccessTier(topicId),
+        }, '*');
+      } catch (e) {}
+      if (typeof props.onCloseModal === 'function') props.onCloseModal();
+    } else {
+      router.push('/plan');
+    }
+  };
+
+  // Step 4b-3 (方案 A): view-only-grandfathered = 缺 tier 但已学过 → 只读占位屏。
+  // 不回放原始对话 (transcript 未按 lens 存), 给「已学过 ✓ + 重新学需升级」。
+  if (access === 'view-only-grandfathered') {
+    return (
+      <ViewOnlyGrandfatherModal
+        requiredTier={getTopicAccessTier(topicId)}
+        onUpgrade={doUpgrade}
+        onClose={props.onCloseModal}
+      />
+    );
+  }
+
   // Codex P2-g (round10): error-blocked (tier 查询 API 耗尽重试) 不是真 deny —— 用户可能是
   // 已付费会员, 只是 check-subscription 临时故障。不能弹「升级」modal (误导付费用户 + 无重试)。
   // 改弹网络重试提示, 把 UpgradeModal 留给真正的 tier deny。
@@ -95,8 +123,46 @@ export function CourseGate(props) {
       requiredTier={getTopicAccessTier(topicId)}
       counts={getAccessibleTopicCounts(availableIds)}
       onClose={props.onCloseModal}
-      onUpgrade={function () { router.push('/plan'); }}
+      onUpgrade={doUpgrade}
     />
+  );
+}
+
+// Step 4b-3 (方案 A): grandfather 只读占位屏。已学过但缺 tier 的 lens —— 给可见确认 + 重学升级入口。
+// 故意不回放原始对话 (transcript 未按 lens 存; 见 docs/STEP_4B3_GRANDFATHER_DESIGN.md)。自包含, 无 membership。
+function ViewOnlyGrandfatherModal(props) {
+  var tierName = (props.requiredTier === 'pro') ? 'Pro' : (props.requiredTier === 'basic' ? 'Basic' : 'Basic');
+  var overlay = {
+    position: 'fixed', inset: 0, zIndex: 2300, background: 'rgba(28,22,18,0.55)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+  };
+  var card = {
+    background: '#fffdf8', borderRadius: 16, padding: '24px 22px', maxWidth: 360,
+    width: '100%', boxShadow: '0 12px 40px rgba(0,0,0,0.28)', textAlign: 'center',
+    fontFamily: 'inherit', color: '#2c2420',
+  };
+  var primaryBtn = {
+    width: '100%', padding: '11px 0', borderRadius: 999, border: 'none',
+    background: '#c46b30', color: '#fff8e8', fontSize: 15, fontWeight: 600,
+    cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10,
+  };
+  var ghostBtn = {
+    width: '100%', padding: '9px 0', borderRadius: 999,
+    border: '1px solid rgba(44,36,32,0.2)', background: 'transparent',
+    color: '#6b5b50', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
+  };
+  return (
+    <div style={overlay} onClick={props.onClose}>
+      <div style={card} onClick={function (e) { e.stopPropagation(); }}>
+        <div style={{ fontSize: 30, marginBottom: 10 }}>✓</div>
+        <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>你已经学过这个视角</div>
+        <div style={{ fontSize: 13.5, lineHeight: 1.6, color: '#6b5b50', marginBottom: 18 }}>
+          这个视角你之前完成过,一直为你保留。想重新学一遍,需要升级到 {tierName}。
+        </div>
+        <button style={primaryBtn} onClick={props.onUpgrade}>升级 {tierName} 重新学</button>
+        <button style={ghostBtn} onClick={props.onClose}>先这样</button>
+      </div>
+    </div>
   );
 }
 
