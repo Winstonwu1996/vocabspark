@@ -48,10 +48,16 @@ export function CourseGate(props) {
 
   // 上报 gate 结论给播放器页 — 带 topicId/lensId 标签 (Codex P1: 防 stale,
   // 播放器页据此判断结论是否对应"当前"topic+lens, 不吃旧 lens 的陈旧 allow)。
+  // Step 3 (配额): 第 4 参带原始 tier ('guest'/'free'/'basic'/'pro'), 供页面算每日配额。
+  // tier 只在此隔离组件内可得 (useUserTier); 页面据此调 daily-quota 纯逻辑。flag-off 时本组件
+  // 不挂载 → 页面拿不到 tier → 配额逻辑全短路 (字节级不变)。
+  var reportTier = (tierInfo && tierInfo.state === 'active') ? (tierInfo.tier || 'free')
+    : (tierInfo && (tierInfo.state === 'free' || tierInfo.state === 'guest')) ? tierInfo.state
+    : null; // loading/error → null, 页面据此跳过配额 (不误扣)
   useEffect(function () {
-    if (typeof props.onAccessChange === 'function') props.onAccessChange(access, topicId, lensId);
+    if (typeof props.onAccessChange === 'function') props.onAccessChange(access, topicId, lensId, reportTier);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [access, topicId, lensId]);
+  }, [access, topicId, lensId, reportTier]);
 
   // Step 4b-2 (方案 B / Codex round10 P2-h): 在 Atlas iframe 内被真 deny 时, 不在小框里渲染
   // 子页 UpgradeModal / 不 router.push('/plan') (那会把方案页挤进 iframe), 而是 postMessage
@@ -119,9 +125,11 @@ export function CourseGate(props) {
     .filter(function (r) { return r.available; })
     .map(function (r) { return r.id; });
 
+  // Step 3: reason 由页面传 ('locked-course' 超 tier / 'lens-quota' / 'sidekick-quota' 配额用尽)。
+  // 配额拦截时 access 仍是 'allow', 走到这里靠 modalReason 弹对的配额文案。
   return (
     <UpgradeModal
-      reason="locked-course"
+      reason={props.modalReason || 'locked-course'}
       requiredTier={getTopicAccessTier(topicId)}
       counts={getAccessibleTopicCounts(availableIds)}
       onClose={props.onCloseModal}

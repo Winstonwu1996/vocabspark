@@ -102,6 +102,9 @@ import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/noteboo
 // ⚠️ 不在此静态 import membership/useUserTier — 隔离在 CourseGate.js (经 CourseGateMount 懒加载)。
 import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
 import { CourseGateMount } from '../../components/history-engine/CourseGateMount';
+// Step 3 配额: daily-quota 纯逻辑 + quota-store 锁/持久化层 (均无 membership, 静态 import 不破坏隔离)。
+import { canUseLens, canUseSidekick, getRemainingLenses, getLensQuota, getRemainingSidekick, getSidekickQuota, lensKey } from '../../lib/daily-quota';
+import { tryUseLens, tryUseSidekick, readLensUsage, readSidekickUsage } from '../../lib/quota-store';
 
 // ─── 主组件 ────────────────────────────────────────────────────────
 export default function HistoryPage() {
@@ -164,6 +167,14 @@ export default function HistoryPage() {
   // Sidekick 发送 — 主对话不受影响，但 AI 知道当前 Topic 上下文 + 离题保护
   var sendSidekick = async function() {
     if (!sidekickInput.trim() || sidekickThinking) return;
+    // Step 3: Sidekick 每日配额预检 (仅 guest/free; tier 未落定→跳过不误拦)。用尽 → 弹 sidekick-quota。
+    if (ENABLE_HISTORY_PAYWALL && freshTierRef.current
+        && !canUseSidekick(readSidekickUsage(), freshTierRef.current)) {
+      setGatePauseInPlace(false);
+      setGateModalReason('sidekick-quota');
+      setShowUpgradeGate(true);
+      return;
+    }
     var content = sidekickInput.trim();
     var newLog = sidekickLog.concat([{ role: "user", content: content, timestamp: new Date().toISOString() }]);
     setSidekickLog(newLog);
@@ -217,6 +228,11 @@ export default function HistoryPage() {
         saveSidekickLog(topicId, updated);
         return updated;
       });
+      // Step 3: 成功 (非 fallback) 响应 → 锁内记一次 Sidekick 配额 (eventId union 防 sync 丢扣)。
+      // fire-and-forget: 答案已给, 不因记账阻塞 UI; 多 tab 竞态输则该次不计 (锁内 canUseSidekick=false)。
+      if (ENABLE_HISTORY_PAYWALL && freshTierRef.current) {
+        tryUseSidekick(freshTierRef.current).catch(function () {});
+      }
       setSidekickStreaming("");
       setSidekickThinking(false);
     } catch (e) {
@@ -613,6 +629,7 @@ export default function HistoryPage() {
         _prewritten: true,
       };
       setConversationLog(function(prev) { return prev.concat([prewrittenEntry]); });
+      markLensStarted(); // Step 3: 第一条非 fallback AI 内容交付 → 扣视角配额 (幂等, 一 lens 一次)
       // 模拟 streaming 节奏（让用户感觉自然——不是瞬间出现一大段）
       setAiThinking(false);
       // 自动进入下一节点（如果当前节点不需用户答）
@@ -715,6 +732,7 @@ export default function HistoryPage() {
         timestamp: new Date().toISOString(),
       };
       setConversationLog(function(prev) { return prev.concat([entry]); });
+      markLensStarted(); // Step 3: 第一条非 fallback AI 内容交付 → 扣视角配额 (幂等; fallback 分支不扣)
       setAiStreaming("");
       setAiThinking(false);
 
@@ -931,6 +949,9 @@ export default function HistoryPage() {
   // 对应"当前 topic+lens"的 fresh 结论, 绝不吃旧 lens/topic 的陈旧 allow (防 stale 绕过)。
   var [gateResult, setGateResult] = useState(null); // { access, topicId, lensId } | null
   var [showUpgradeGate, setShowUpgradeGate] = useState(false);
+  // Step 3: gate modal 的 reason ('locked-course' 超 tier / 'lens-quota' / 'sidekick-quota')。
+  // 配额拦截时 access 仍是 'allow' (tier 够), 靠此 reason 让 CourseGate 弹对的配额文案。
+  var [gateModalReason, setGateModalReason] = useState('locked-course');
   // Step 4b-3 (Codex round4 P2-g): 区分「进课入口被拒」(嵌入态要回传父页关 iframe) 与
   // 「对话中途降级暂停」(必须**原地**暂停, 不能关 iframe 丢失当前轮)。此 flag=true → 抑制父页回传。
   var [gatePauseInPlace, setGatePauseInPlace] = useState(false);
@@ -945,11 +966,13 @@ export default function HistoryPage() {
   // 持有旧 advanceTurn 闭包 (gate 翻转前捕获), 直接读 freshGateAccess() 会拿到陈旧 allow → 多推进一步。
   // 改读此 ref (跨 render 稳定, .current 永远是最新值), 定时器即便用旧闭包也能看到当前 access。
   var freshGateAccessRef = useRef('loading');
+  var freshTierRef = useRef(null); // Step 3: 最新 tier, 供 async 配额扣减取 (防陈旧闭包)
+  var lensDeductedRef = useRef(null); // Step 3: 本次已扣减的 lensKey (一 lens 只扣一次)
   // Step 4b-3 (Codex round7 P2-k): 被降级拦下的 autoAdvance 轮 (无手动按钮) 待恢复标记。
   // 独立于 modal/gatePauseInPlace —— 用户可能先关 modal, 恢复不能依赖那个 flag。
   var pendingAutoAdvanceRef = useRef(false);
-  var onGateAccessChange = function(access, gTopicId, gLensId) {
-    setGateResult({ access: access, topicId: gTopicId, lensId: gLensId });
+  var onGateAccessChange = function(access, gTopicId, gLensId, gTier) {
+    setGateResult({ access: access, topicId: gTopicId, lensId: gLensId, tier: gTier || null });
   };
   // gate 当前评估的 lens: 有候选 (notebook 切 lens 挂起中) 用候选, 否则用 effectiveLensId。
   var gateLensId = gateCandidateLens || effectiveLensId;
@@ -961,6 +984,24 @@ export default function HistoryPage() {
   };
   // 每 render 同步最新结论到 ref (render 期赋值, 任何定时器在 render 后触发都读到最新值)。
   freshGateAccessRef.current = freshGateAccess();
+  // Step 3 (配额): 当前 tier (账号级, 不依赖 lens)。null = 未落定/error → 配额逻辑跳过 (不误扣)。
+  // ref 供 async (first-bubble 扣减 / sidekick) 取最新 tier, 避免陈旧闭包。
+  var currentTier = (gateResult && gateResult.tier) || null;
+  freshTierRef.current = currentTier;
+  // Step 5: 配额 UI 数据。仅 guest/free 有限额 → 给 chip/marker; basic+/null → null (不显示, 付费无打扰)。
+  // 每 render 读 localStorage (轻量, 仅 flag-on+guest/free 时); flag-off / 付费 → 直接 null 零成本。
+  var quotaInfo = null;
+  if (ENABLE_HISTORY_PAYWALL && (currentTier === 'guest' || currentTier === 'free')) {
+    var _lensU = readLensUsage();
+    var _skU = readSidekickUsage();
+    quotaInfo = {
+      lensRemaining: getRemainingLenses(_lensU, currentTier),
+      lensQuota: getLensQuota(currentTier),
+      sidekickRemaining: getRemainingSidekick(_skU, currentTier),
+      sidekickQuota: getSidekickQuota(currentTier),
+      usedLensIds: (_lensU && _lensU.usedLensIds) || [],
+    };
+  }
   // 包一层进 conversation 的入口 (onStart / onResume / onClearAndStart / notebook 切 lens 共用)。
   // Codex P1 修: 不再乐观放行 loading/stale。未落定 → 挂起点击, 等 gate 报当前 topic+lens
   // 的结论后再放行 (allow/grandfather) 或弹升级 (deny/error-blocked)。
@@ -968,11 +1009,15 @@ export default function HistoryPage() {
     return function() {
       if (!ENABLE_HISTORY_PAYWALL) { realEnterFn(); return; }
       var a = freshGateAccess();
-      if (a === 'allow') { realEnterFn(); return; }
+      if (a === 'allow') {
+        // Step 3: tier 够后再过每日视角配额 (仅 guest/free 受限)。用尽 → 弹 lens-quota, 不进。
+        if (lensQuotaBlocksEntry()) { setGatePauseInPlace(false); setGateModalReason('lens-quota'); setShowUpgradeGate(true); return; }
+        realEnterFn(); return;
+      }
       // Step 4b-3: view-only-grandfathered 不再当 allow 进对话, 改弹只读占位屏
       // (CourseGate 据 access 渲染对应 modal); deny / error-blocked 同样弹 modal。
       // 这是**进课入口**被拒 (非中途降级) → 嵌入态应回传父页, pauseInPlace=false。
-      if (a === 'view-only-grandfathered' || a === 'deny' || a === 'error-blocked') { setGatePauseInPlace(false); setShowUpgradeGate(true); return; }
+      if (a === 'view-only-grandfathered' || a === 'deny' || a === 'error-blocked') { setGatePauseInPlace(false); setGateModalReason('locked-course'); setShowUpgradeGate(true); return; }
       // a === 'loading' (未落定 / stale): 挂起, 等 gate 落定 (下方 effect 处理)
       // Codex P2-d (round4): 给挂起回调打 topic/lens 标签。否则点「继续上次」(闭包套着旧
       // savedSession) 后在 tier 请求落定前切了 lens, 这个陈旧 resume 会在新 lens 下重放旧
@@ -999,12 +1044,17 @@ export default function HistoryPage() {
     var fn = pend.fn;
     pendingEnterRef.current = null;
     setGateChecking(false);
-    if (a === 'allow') { fn(); }
+    if (a === 'allow') {
+      // Step 3: 挂起进课落定为 allow 后, 同样要过每日视角配额 (否则 loading→allow 路径绕过配额)。
+      if (lensQuotaBlocksEntry(pend.lensId)) { setGatePauseInPlace(false); setGateModalReason('lens-quota'); setShowUpgradeGate(true); }
+      else { fn(); }
+    }
     else {
       // Step 4b-3: view-only-grandfathered → 只读占位屏; deny/error-blocked → 升级/网络 modal。
       // 候选 lens (若有) 持续到 modal 关闭 (Codex P2-i), 让 CourseGate 据被拦 lens 算出正确 modal。
       // 进课入口被拒 (非中途降级) → 嵌入态回传父页, pauseInPlace=false。
       setGatePauseInPlace(false);
+      setGateModalReason('locked-course');
       setShowUpgradeGate(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1020,6 +1070,7 @@ export default function HistoryPage() {
     var ga = freshGateAccessRef.current;
     if (ga === 'deny' || ga === 'view-only-grandfathered') {
       setGatePauseInPlace(true); // 原地暂停: 嵌入态也不回传父页 (P2-g), 不撕掉当前课
+      setGateModalReason('locked-course');
       setShowUpgradeGate(true);
       return true;
     }
@@ -1041,6 +1092,36 @@ export default function HistoryPage() {
     advanceTurn();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [freshAccessForEffect, phase]);
+
+  // ─── Step 3: lens 每日配额 (视角配额) ───────────────────────────────
+  // 进课预检 (同步读, UX 快速拦截): 仅 guest/free 受限 (basic+ canUseLens 恒 true)。
+  // tier 未落定 (null) → 不拦 (gate 的 loading 挂起已管进课时机)。已用过的 lens 幂等放行。
+  // 返回 true = 配额挡住, 不该进。
+  var lensQuotaBlocksEntry = function(lensIdToCheck) {
+    if (!ENABLE_HISTORY_PAYWALL) return false;
+    var tier = currentTier;
+    if (!tier) return false;
+    return !canUseLens(readLensUsage(), tier, topicId, lensIdToCheck || effectiveLensId);
+  };
+
+  // first-bubble 锁扣减 (权威, 多 tab 串行): 课真正产出第一条非 fallback 内容时调一次。
+  // 幂等 (lensKey + lensDeductedRef 双保险)。多 tab 竞态输 → 回弹出对话 + 弹 lens-quota modal。
+  var markLensStarted = function() {
+    if (!ENABLE_HISTORY_PAYWALL) return;
+    var tier = freshTierRef.current;
+    if (!tier) return;
+    var key = lensKey(topicId, effectiveLensId);
+    if (lensDeductedRef.current === key) return; // 本 lens 已处理过
+    lensDeductedRef.current = key;
+    tryUseLens(tier, topicId, effectiveLensId).then(function (ok) {
+      if (!ok) {
+        lensDeductedRef.current = null; // 没扣成 → 换 lens 后允许重试
+        setGateModalReason('lens-quota');
+        setShowUpgradeGate(true); // access='allow' → CourseGate 弹 UpgradeModal(lens-quota), 不回传父页
+        setPhase('intro'); // 回弹出对话 (rare 多 tab 竞态)
+      }
+    }).catch(function () { lensDeductedRef.current = null; });
+  };
 
   // ─── 进入 mastery gate ──────────────────────────────────────────
   var startMasteryGate = function() {
@@ -1602,11 +1683,13 @@ export default function HistoryPage() {
             lensId={gateLensId}
             embedded={embedded}
             pauseInPlace={gatePauseInPlace}
+            modalReason={gateModalReason}
             showModal={showUpgradeGate}
             onAccessChange={onGateAccessChange}
             onCloseModal={function() {
               setShowUpgradeGate(false);
               setGatePauseInPlace(false);
+              setGateModalReason('locked-course'); // 复位, 下次默认超 tier
               setGateCandidateLens(null); // Codex P2-i: modal 关才清候选 (期间它评估的是被拦的 lens)
             }}
           />
@@ -1688,7 +1771,7 @@ export default function HistoryPage() {
           )}
 
           {/* ── Topic Hero ── */}
-          <TopicHero topic={topic} phase={phase} englishLevel={englishLevel} onSetEnglishLevel={function(v){ setEnglishLevelState(v); saveEnglishLevel(v); }} />
+          <TopicHero topic={topic} phase={phase} quotaInfo={quotaInfo} englishLevel={englishLevel} onSetEnglishLevel={function(v){ setEnglishLevelState(v); saveEnglishLevel(v); }} />
 
           {/* ── Geography Section ── */}
           {/* 5-5: simplifiedMode (embedded / fromAtlas / pendingRole) 时隐藏 */}
@@ -1876,6 +1959,7 @@ export default function HistoryPage() {
               onTermClick={setActiveTerm}
               onMustClick={setActiveMust}
               topic={topic}
+              quotaInfo={quotaInfo}
             />
           )}
 
@@ -2105,6 +2189,19 @@ function TopicHero(props) {
         );
       })()}
       <div className="hook">{topic.oneLineHook.cn}</div>
+      {/* Step 5: 每日配额 chip (仅 guest/free 有 quotaInfo; 付费/flag-off 不显示) */}
+      {props.quotaInfo && (
+        <div style={{
+          marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 8,
+          padding: '4px 12px', borderRadius: 999,
+          background: 'rgba(196, 107, 48, 0.08)', border: '1px solid rgba(196, 107, 48, 0.22)',
+          fontSize: 12, color: HC.accent, fontWeight: 600,
+        }}>
+          <span>今日 {props.quotaInfo.lensRemaining}/{props.quotaInfo.lensQuota} 视角</span>
+          <span style={{ opacity: 0.4 }}>·</span>
+          <span>问小 U {props.quotaInfo.sidekickRemaining}/{props.quotaInfo.sidekickQuota}</span>
+        </div>
+      )}
       {/* #3 教材对照 banner — 让 Willow 感觉"this is my actual schoolwork" */}
       {tb && (
         <div style={{
@@ -3615,6 +3712,19 @@ function SidekickFAB(props) {
             )}
             <div ref={endRef}></div>
           </div>
+
+          {/* Step 5: Sidekick 剩余次数 (仅 guest/free; 用完给升级提示, 点发送会被 sendSidekick 预检拦) */}
+          {props.quotaInfo && (
+            <div style={{
+              padding: "4px 12px 0", fontSize: 11,
+              color: props.quotaInfo.sidekickRemaining <= 0 ? HC.accent : HC.textSec,
+              fontWeight: props.quotaInfo.sidekickRemaining <= 0 ? 600 : 400,
+            }}>
+              {props.quotaInfo.sidekickRemaining <= 0
+                ? "今日问小 U 已用完 · 升级 Basic 无限提问"
+                : "今日还能问 " + props.quotaInfo.sidekickRemaining + "/" + props.quotaInfo.sidekickQuota + " 次"}
+            </div>
+          )}
 
           {/* 输入区 */}
           <div style={{
