@@ -752,13 +752,9 @@ export default function HistoryPage() {
 
   // ─── 推进到下一轮 ───────────────────────────────────────────────
   var advanceTurn = function() {
-    // Step 4b-3 (方案 X): 对话中途 tier 掉档 (未完成 lens 变 over-tier → freshGateAccess 'deny')
-    // → 拦推进 + 弹升级, 停在当前轮。已完成 lens 走 grandfather 不受影响; error-blocked (网络
-    // 抖动) 不拦 (fail-open, 不因瞬时网络问题打断学习)。gate 每 30s 经 onAccessChange 重报。
-    if (ENABLE_HISTORY_PAYWALL && freshGateAccess() === 'deny') {
-      setShowUpgradeGate(true);
-      return;
-    }
+    // Step 4b-3 (方案 X): 对话中途 tier 掉档 → 拦推进 + 弹 modal, 停在当前轮。
+    // (deny=没学过的变 over-tier; view-only-grandfathered=在重学已学过的但掉了 tier — 都拦。)
+    if (blockedByDowngrade()) return;
     var nextIdx = turnIndex + 1;
     setTurnIndex(nextIdx);
     // O6：每次推进保存进度（mid-conversation only）
@@ -991,8 +987,20 @@ export default function HistoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [freshAccessForEffect, gateChecking]);
 
+  // Step 4b-3 (方案 X) Codex round2: 统一「降级拦推进」守卫。任何前向推进 (下一轮 / 交收据 /
+  // 进笔记 / 进 mastery) 前调。tier 掉档使当前 lens 变 deny (没学过) 或 view-only-grandfathered
+  // (在重学已学过的, 但已掉 tier) → 拦 + 弹对应 modal。error-blocked (网络抖动) / loading 不拦
+  // (fail-open, 不因瞬时问题打断学习)。返回 true = 已拦截, caller 应 return。
+  var blockedByDowngrade = function() {
+    if (!ENABLE_HISTORY_PAYWALL) return false;
+    var ga = freshGateAccess();
+    if (ga === 'deny' || ga === 'view-only-grandfathered') { setShowUpgradeGate(true); return true; }
+    return false;
+  };
+
   // ─── 进入 mastery gate ──────────────────────────────────────────
   var startMasteryGate = function() {
+    if (blockedByDowngrade()) return;
     setPhase("mastery");
     setGateStep(0);
   };
@@ -1001,6 +1009,7 @@ export default function HistoryPage() {
   // Receipt 提交后 / 已交 receipt 用户从 conversation allDone 推进 / 都先进笔记屏。
   // 笔记屏点 "我看过了, 开始考核" → startMasteryGate。
   var proceedToNotebook = function() {
+    if (blockedByDowngrade()) return;
     setPhase("notebook");
   };
 
@@ -1010,6 +1019,8 @@ export default function HistoryPage() {
   // MVP：英文表达只存进 receipt，不自动推桥词队列（pushedToVocab:false，二期再开「加入复习」）。
   var submitLearningReceipt = function(payload) {
     if (!topicId) return;
+    // Step 4b-3 Codex round2: 降级后不许「完成」lens (存 receipt = 拿 grandfather)。
+    if (blockedByDowngrade()) return;
     try {
       var lensTitle = null;
       if (effectiveLensId && topicLenses && topicLenses.length) {
