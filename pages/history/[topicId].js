@@ -754,7 +754,12 @@ export default function HistoryPage() {
   var advanceTurn = function() {
     // Step 4b-3 (方案 X): 对话中途 tier 掉档 → 拦推进 + 弹 modal, 停在当前轮。
     // (deny=没学过的变 over-tier; view-only-grandfathered=在重学已学过的但掉了 tier — 都拦。)
-    if (blockedByDowngrade()) return;
+    if (blockedByDowngrade()) {
+      // autoAdvance 轮无手动 continue 按钮 → 记下, access 恢复后由 recovery effect 自动续 (P2-j/k)。
+      var ct = effectiveTurns[turnIndex];
+      if (ct && ct.autoAdvance) pendingAutoAdvanceRef.current = true;
+      return;
+    }
     var nextIdx = turnIndex + 1;
     setTurnIndex(nextIdx);
     // O6：每次推进保存进度（mid-conversation only）
@@ -940,6 +945,9 @@ export default function HistoryPage() {
   // 持有旧 advanceTurn 闭包 (gate 翻转前捕获), 直接读 freshGateAccess() 会拿到陈旧 allow → 多推进一步。
   // 改读此 ref (跨 render 稳定, .current 永远是最新值), 定时器即便用旧闭包也能看到当前 access。
   var freshGateAccessRef = useRef('loading');
+  // Step 4b-3 (Codex round7 P2-k): 被降级拦下的 autoAdvance 轮 (无手动按钮) 待恢复标记。
+  // 独立于 modal/gatePauseInPlace —— 用户可能先关 modal, 恢复不能依赖那个 flag。
+  var pendingAutoAdvanceRef = useRef(false);
   var onGateAccessChange = function(access, gTopicId, gLensId) {
     setGateResult({ access: access, topicId: gTopicId, lensId: gLensId });
   };
@@ -1018,18 +1026,17 @@ export default function HistoryPage() {
     return false;
   };
 
-  // Step 4b-3 (Codex round6 P2-j): 降级暂停后若 access 恢复 → 解暂停; autoAdvance 轮无手动 continue
-  // 按钮 (ConversationStream 隐藏), 不续推进会卡死 → 自动续 advanceTurn。手动轮有按钮, 不替用户点。
+  // Step 4b-3 (Codex round6→7 P2-j/k): autoAdvance 轮无手动 continue 按钮, 被降级拦后即使 access
+  // 恢复也无人再推进 → 卡死。用独立 ref (不依赖 modal, 用户可能先关 modal), access 恢复即续推进。
+  // 手动轮有 continue 按钮, 靠用户再点自然重过守卫, 无需此 recovery。
   useEffect(function() {
-    if (!ENABLE_HISTORY_PAYWALL || !gatePauseInPlace) return;
+    if (!ENABLE_HISTORY_PAYWALL || !pendingAutoAdvanceRef.current) return;
     if (phase !== 'conversation') return;
     if (freshAccessForEffect !== 'allow') return; // 等 access 真恢复
-    setGatePauseInPlace(false);
-    setShowUpgradeGate(false);
-    var t = effectiveTurns[turnIndex];
-    if (t && t.autoAdvance) advanceTurn();
+    pendingAutoAdvanceRef.current = false;
+    advanceTurn();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [freshAccessForEffect, gatePauseInPlace, phase, turnIndex]);
+  }, [freshAccessForEffect, phase]);
 
   // ─── 进入 mastery gate ──────────────────────────────────────────
   var startMasteryGate = function() {
