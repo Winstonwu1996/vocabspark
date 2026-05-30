@@ -936,6 +936,10 @@ export default function HistoryPage() {
   // selectedLensId 只在 allow 才真正切。candidate 期间整个 UI 仍停在原 (已授权) lens, 无绕过窗口。
   var [gateCandidateLens, setGateCandidateLens] = useState(null);
   var pendingEnterRef = useRef(null); // 挂起的进 conversation 函数, gate allow 后执行
+  // Step 4b-3 (Codex round5 P2-h): 最新 gate 结论的 ref。已排期的 auto-advance / tired-mode 定时器
+  // 持有旧 advanceTurn 闭包 (gate 翻转前捕获), 直接读 freshGateAccess() 会拿到陈旧 allow → 多推进一步。
+  // 改读此 ref (跨 render 稳定, .current 永远是最新值), 定时器即便用旧闭包也能看到当前 access。
+  var freshGateAccessRef = useRef('loading');
   var onGateAccessChange = function(access, gTopicId, gLensId) {
     setGateResult({ access: access, topicId: gTopicId, lensId: gLensId });
   };
@@ -947,6 +951,8 @@ export default function HistoryPage() {
     if (gateResult.topicId !== topicId || gateResult.lensId !== gateLensId) return 'loading';
     return gateResult.access;
   };
+  // 每 render 同步最新结论到 ref (render 期赋值, 任何定时器在 render 后触发都读到最新值)。
+  freshGateAccessRef.current = freshGateAccess();
   // 包一层进 conversation 的入口 (onStart / onResume / onClearAndStart / notebook 切 lens 共用)。
   // Codex P1 修: 不再乐观放行 loading/stale。未落定 → 挂起点击, 等 gate 报当前 topic+lens
   // 的结论后再放行 (allow/grandfather) 或弹升级 (deny/error-blocked)。
@@ -1002,7 +1008,8 @@ export default function HistoryPage() {
   // (fail-open, 不因瞬时问题打断学习)。返回 true = 已拦截, caller 应 return。
   var blockedByDowngrade = function() {
     if (!ENABLE_HISTORY_PAYWALL) return false;
-    var ga = freshGateAccess();
+    // 读 ref 而非 freshGateAccess() —— 防陈旧定时器闭包 (P2-h) 看到翻转前的 allow。
+    var ga = freshGateAccessRef.current;
     if (ga === 'deny' || ga === 'view-only-grandfathered') {
       setGatePauseInPlace(true); // 原地暂停: 嵌入态也不回传父页 (P2-g), 不撕掉当前课
       setShowUpgradeGate(true);
