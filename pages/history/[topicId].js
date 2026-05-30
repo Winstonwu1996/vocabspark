@@ -759,6 +759,7 @@ export default function HistoryPage() {
       saveInProgress(topicId, {
         turnIndex: nextIdx,
         conversationLog: conversationLog,
+        lensId: effectiveLensId || null, // Codex P2-j: 存档绑定 lens, resume 时按此 lens 过 gate
       });
     }
     // 走完最后一轮 → 清掉 in-progress
@@ -926,7 +927,6 @@ export default function HistoryPage() {
   // selectedLensId 只在 allow 才真正切。candidate 期间整个 UI 仍停在原 (已授权) lens, 无绕过窗口。
   var [gateCandidateLens, setGateCandidateLens] = useState(null);
   var pendingEnterRef = useRef(null); // 挂起的进 conversation 函数, gate allow 后执行
-  var pendingDenyRef = useRef(null); // 被拒时的回滚 (如清候选 lens), 可空
   var onGateAccessChange = function(access, gTopicId, gLensId) {
     setGateResult({ access: access, topicId: gTopicId, lensId: gLensId });
   };
@@ -965,22 +965,18 @@ export default function HistoryPage() {
     // 绝不拿旧 savedSession 在新 lens 重放。清挂起 + 退出 checking。
     if (pend.topicId !== topicId || pend.lensId !== gateLensId) {
       pendingEnterRef.current = null;
-      pendingDenyRef.current = null;
       setGateChecking(false);
       return;
     }
     var a = freshAccessForEffect;
     if (a === 'loading') return; // 还没落定, 继续等
     var fn = pend.fn;
-    var denyFn = pendingDenyRef.current;
     pendingEnterRef.current = null;
-    pendingDenyRef.current = null;
     setGateChecking(false);
     if (a === 'allow' || a === 'view-only-grandfathered') { fn(); }
     else {
-      // deny / error-blocked: 先跑回滚 (如恢复原 lens, Codex P2-a 防破坏已完成 lens),
-      // 再弹升级 modal。
-      if (typeof denyFn === 'function') denyFn();
+      // deny / error-blocked: 弹 modal。候选 lens (若有) 持续到 modal 关闭 (Codex P2-i),
+      // 让 CourseGate 对被拦的 lens 算出正确 modal (网络重试 vs 升级)。
       setShowUpgradeGate(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1534,7 +1530,10 @@ export default function HistoryPage() {
             lensId={gateLensId}
             showModal={showUpgradeGate}
             onAccessChange={onGateAccessChange}
-            onCloseModal={function() { setShowUpgradeGate(false); }}
+            onCloseModal={function() {
+              setShowUpgradeGate(false);
+              setGateCandidateLens(null); // Codex P2-i: modal 关才清候选 (期间它评估的是被拦的 lens)
+            }}
           />
         )}
         {/* Step 4b-1: gate 挂起期轻量提示 (fast-click / 切 lens 等结论落定, <1s) */}
@@ -1704,12 +1703,29 @@ export default function HistoryPage() {
               }}
               onShowWalkthrough={function() { setShowWalkthrough(true); }}
               savedSession={savedSession}
-              onResume={gatedEnter(function() {
+              onResume={function() {
                 if (!savedSession) return;
-                setConversationLog(savedSession.conversationLog || []);
-                setTurnIndex(savedSession.turnIndex || 0);
-                setPhase("conversation");
-              })}
+                // Codex P2-j: in-progress 存档是 topic 级, resume 必须按**存档自己的 lens** 过 gate,
+                // 而非当前默认 lens。否则降级用户对 grandfather lens A 过 gate 却恢复了锁定 lens B 的
+                // 存档 (绕过)。老存档无 lensId → 当前 lens 兜底 (= paywall 前行为, 不动旧数据)。
+                var sessionLens = savedSession.lensId || effectiveLensId;
+                var doResume = function() {
+                  if (savedSession.lensId) setSelectedLensId(savedSession.lensId); // 恢复存档的 lens
+                  setConversationLog(savedSession.conversationLog || []);
+                  setTurnIndex(savedSession.turnIndex || 0);
+                  setGateCandidateLens(null);
+                  setPhase("conversation");
+                };
+                // session lens == 当前被 gate 的 lens (或 flag off): 直接走 gatedEnter 判当前。
+                if (!ENABLE_HISTORY_PAYWALL || sessionLens === gateLensId) {
+                  gatedEnter(doResume)();
+                  return;
+                }
+                // session lens 与当前不同: 用候选通道让 gate 评估 session 的 lens。
+                setGateCandidateLens(sessionLens);
+                pendingEnterRef.current = { topicId: topicId, lensId: sessionLens, fn: doResume };
+                setGateChecking(true);
+              }}
               onClearAndStart={gatedEnter(function() {
                 clearInProgress(topicId);
                 setSavedSession(null);
@@ -1848,9 +1864,9 @@ export default function HistoryPage() {
                     setPhase("conversation");
                   },
                 };
-                pendingDenyRef.current = function() {
-                  setGateCandidateLens(null); // deny: 啥都没改, 只清候选, 留在 notebook 原 lens
-                };
+                // Codex P2-i: deny/error-blocked 时不清候选 —— 否则 CourseGate 会改判当前 (已完成)
+                // lens, 弹错 modal (该弹网络重试却弹升级)。候选 lens 持续到 modal 关闭 (onCloseModal 清),
+                // CourseGate 才能对被拦的新 lens 算出正确 access。
                 setGateChecking(true);
               }}
             />
