@@ -167,13 +167,17 @@ export default function HistoryPage() {
   // Sidekick 发送 — 主对话不受影响，但 AI 知道当前 Topic 上下文 + 离题保护
   var sendSidekick = async function() {
     if (!sidekickInput.trim() || sidekickThinking) return;
+    // Codex round3 P2: 在**任何 await 之前**同步置 thinking=true —— 否则 reserve 的 Web Locks await
+    // 期间双击/连按 Enter 会以 thinking=false 重入, 同一问发两次、扣两次配额。
+    setSidekickThinking(true);
     // Step 3 (Codex round1 P2-a): Sidekick 配额走「锁内 reserve-before」原子门 —— 必须在发请求/
-    // 显示答案**之前**占额, 否则 1 个剩额时两个并发 send 都过预检、都拿到答案、只 1 个计入 →
-    // 正是锁要堵的并发超扣。tier 未落定 → 跳过 (不误拦)。reserve 失败 → 弹 sidekick-quota。
+    // 显示答案**之前**占额, 否则 1 个剩额时两个并发 send 都过、只 1 个计入 → 正是锁要堵的并发超扣。
+    // tier 未落定 → 跳过 (不误拦)。reserve 失败 → 复位 thinking + 弹 sidekick-quota。
     var skEventId = null;
     if (ENABLE_HISTORY_PAYWALL && freshTierRef.current) {
       var resv = await tryUseSidekick(freshTierRef.current);
       if (!resv.ok) {
+        setSidekickThinking(false);
         setGatePauseInPlace(false);
         setGateModalReason('sidekick-quota');
         setShowUpgradeGate(true);
@@ -185,7 +189,6 @@ export default function HistoryPage() {
     var newLog = sidekickLog.concat([{ role: "user", content: content, timestamp: new Date().toISOString() }]);
     setSidekickLog(newLog);
     setSidekickInput("");
-    setSidekickThinking(true);
     setSidekickStreaming("");
 
     try {
