@@ -1018,6 +1018,19 @@ export default function HistoryPage() {
     return false;
   };
 
+  // Step 4b-3 (Codex round6 P2-j): 降级暂停后若 access 恢复 → 解暂停; autoAdvance 轮无手动 continue
+  // 按钮 (ConversationStream 隐藏), 不续推进会卡死 → 自动续 advanceTurn。手动轮有按钮, 不替用户点。
+  useEffect(function() {
+    if (!ENABLE_HISTORY_PAYWALL || !gatePauseInPlace) return;
+    if (phase !== 'conversation') return;
+    if (freshAccessForEffect !== 'allow') return; // 等 access 真恢复
+    setGatePauseInPlace(false);
+    setShowUpgradeGate(false);
+    var t = effectiveTurns[turnIndex];
+    if (t && t.autoAdvance) advanceTurn();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [freshAccessForEffect, gatePauseInPlace, phase, turnIndex]);
+
   // ─── 进入 mastery gate ──────────────────────────────────────────
   var startMasteryGate = function() {
     if (blockedByDowngrade()) return;
@@ -1065,6 +1078,9 @@ export default function HistoryPage() {
 
   // ─── 完成 Topic ─────────────────────────────────────────────────
   var completeTopic = function(masteryResults) {
+    // Step 4b-3 Codex round6 (P2-i): 进 mastery 后才掉 tier 也要拦 —— 否则做完题 onPass 直接
+    // 存完成态/XP, 绕过降级。读 ref (定时器/异步回调安全)。
+    if (blockedByDowngrade()) return;
     // 计算 XP（软化版 — Winston review #9：分数低也能过，但 XP 反映表现）
     var base = topic.xpRewards.base; // 100 for difficulty 3
     var bonus =
