@@ -57,3 +57,29 @@ vocab 页有 sync client,history 页没有。给 history 挂**第二个** client
 
 **待创始人决策**:① 方案 1(单一共享单例,推荐)还是方案 2(服务端窄端点)?② 现在就启动编码,还是
 先做完 Step 7-10 再回头专注做 sync?
+
+---
+
+## 6. 实施进度 (2026-05-31, 创始人「现在就做, 趁核心用户只 chompcloud, 保证可备份」)
+
+分支 `claude/sync-redesign-phase1`。Codex 多轮 + Workflow 多维审 (9 确认/6 驳回) 全程把关。
+
+**已做 (安全增量, 待 canary→合 main)**:
+- R5: mergeHistoryData field-level union (learningReceipts/reviewPool/sidekickLogs/inProgress savedAt/userWorldview)。
+- 兜底备份 `lib/local-backup.js`: premigration 永久点 + 滚动(KEEP=2, ≤500K char) + 全局 SIGNED_OUT 清备份。
+- 单例 `lib/sync-client-singleton.js` + vocab 切 getSyncClient (byte-identical, 顺带修 remount 残留 client 隐患)。
+  回调按操作钉死 (`__getActiveCallbacks` + `_pinCallbacks`) 防切页混用。
+- Phase 2 history **push-only**: 完成课/对话推进触发 syncToCloud (cloudReady 闸门保证安全)。
+
+**未做 / 已知限制 (留 history-pull 专项, 单独审 + canary)**:
+- **history-first 会话进度被 vocab 登录覆盖的窄边界** (P1, 但**上线前既存**, 非本次引入): history 从不
+  主动 pull/setCloudReady; push-only 已大幅缓解 (访问过 vocab 即 cloudReady→推上云), premigration 备份可恢复。
+  彻底修需 history 自驱动 pull —— 而 pull 必须含 ①owner 校验 (防共享浏览器跨账号污染, 见下) ②foreign 态清 React
+  ③state 全量重应用 ④freshness。本次试过改 vocab 登录合并来救, 引入跨账号污染等多个 P1 (登录路径极精细),
+  已**还原**, 不动付费核心。
+- **跨账号污染** (P1, 单用户不可达): 非 vocab 页登出不清主 blob → 共享浏览器他人遗留 blob。需 owner 校验 +
+  登出清主 blob (后者要防 token 过期 spurious SIGNED_OUT 误清 → 需区分主动登出)。
+- **两设备并发编辑同一课 409 turn 回退** (P1, 单用户不可达, 需并发多设备 push)。
+- **history 标量偏好 (englishLevel/autoRecommend/profile/curriculum) 跨设备 newer-blob 覆盖** (P2, 可恢复偏好)。
+
+→ 下一专项: history 自驱动 pull + 上述 owner/state-reapply/freshness 一并解决, 用户增长前完成。
