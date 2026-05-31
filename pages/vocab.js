@@ -9,7 +9,7 @@ import UserCenter from '../components/UserCenter';
 import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../components/PetAvatar';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
-import { createSyncClient } from '../lib/sync-client'; // Step 0A.3 抽离 sync 编排到通用 lib
+import { getSyncClient } from '../lib/sync-client-singleton'; // 方案1: vocab+history 共用单一同步实例
 import { backupOnBoot } from '../lib/local-backup'; // sync 重构兜底: sync 前快照 blob
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
@@ -3489,7 +3489,8 @@ export default function App() {
   useEffect(function() {
     if (syncClientRef.current) return; // 防热重载/StrictMode 双跑
     backupOnBoot(); // sync 引擎初始化前先快照 blob (永久 premigration + 滚动), 兜底高风险 sync 重构
-    syncClientRef.current = createSyncClient({
+    syncClientRef.current = getSyncClient({
+      ownerLabel: 'vocab',
       getAuthHeaders: function(ct) { return getAuthHeaders(ct); },
       getUser: function() { return userRef.current; },
       loadLocalSnapshot: function() { return loadSave(); },
