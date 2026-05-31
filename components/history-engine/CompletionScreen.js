@@ -160,8 +160,9 @@ export function CompletionScreen(props) {
           </div>
         )}
 
-        {/* Step 9: free/guest 看到「考点词进 Vocab」(Basic+ 权益) 升级提示。Basic+/flag-off 不显示 (词已推桥)。 */}
-        {props.bridgeUpsell && props.bridgeUpsell.show && hasReview && (
+        {/* Step 9: free/guest 看到「考点词进 Vocab」(Basic+ 权益) 升级提示。Basic+/flag-off 不显示 (词已推桥)。
+            Codex P3: gate 在 words.length (桥只推词); concept-only 复习没桥词, 否则升级文案误导。 */}
+        {props.bridgeUpsell && props.bridgeUpsell.show && reviewPool.words.length > 0 && (
           <div style={{
             marginTop: 18, padding: "12px 14px", textAlign: "left",
             background: "rgba(196, 107, 48, 0.08)", border: "1px solid rgba(196, 107, 48, 0.22)",
