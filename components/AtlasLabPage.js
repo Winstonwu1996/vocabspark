@@ -173,6 +173,7 @@ export default function AtlasLabPage({
           historyTopicId: event.data.topicId,
           atlasId: event.data.atlasId,
           xp: event.data.xp || 175,
+          cta: event.data.cta || null, // Codex P2-b: 'register'(游客) | 'upgrade'(free) | null
         });
         setCompletedHistoryTopics((prev) => ({ ...prev, [event.data.topicId]: { xpEarned: event.data.xp || 175 } }));
       }
@@ -898,6 +899,17 @@ export default function AtlasLabPage({
             }}>
               <span style={{ fontSize: 22 }}>🏆</span>
               <span>{lang === 'cn' ? `通关 +${completionToast.xp} XP！` : `Completed +${completionToast.xp} XP!`}</span>
+              {/* Codex P2-b: 嵌入态通关的注册/升级 CTA 在父页 toast 呈现 (整页跳 /plan, 不困 iframe) */}
+              {completionToast.cta && (
+                <button
+                  onClick={() => { if (typeof window !== 'undefined') window.location.href = '/plan'; }}
+                  style={{
+                    background: '#fff8e8', border: 'none', color: '#1a7c52',
+                    borderRadius: 999, padding: '4px 12px', fontSize: 12.5, fontWeight: 700,
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}
+                >{completionToast.cta === 'register' ? '免费注册' : '升级解锁更多'}</button>
+              )}
               <button
                 onClick={() => setCompletionToast(null)}
                 style={{

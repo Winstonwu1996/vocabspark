@@ -25,6 +25,8 @@ var _dedupeWordInputStr = function(s) {
 import { US_LIFE_1000 } from '../lib/preset-us-life-1000';
 import { loadLearningTime, tickIfActive, installActivityListeners, calcSavings, formatTime } from '../lib/learningTimer';
 import * as XLSX from 'xlsx';
+// Step 9 consumer-gate: 「考点词进 Vocab」是 Basic+ 权益 → flag on 时按 tier gate history-bridge 待选区呈现。
+import { ENABLE_HISTORY_PAYWALL } from '../lib/history-paywall-flag';
 
 /* ═══════════════════════════════════════════════════════
    Vocab by Know U. — AI 英语私教 · 词汇课
@@ -7142,8 +7144,12 @@ export default function App() {
         </div>
       )}
 
-      {/* 整合 history：history 通关后的推荐词（不污染主词单 — 用户主动选择是否加入）*/}
-      {historyBridgeQueue.length > 0 && (
+      {/* 整合 history：history 通关后的推荐词（不污染主词单 — 用户主动选择是否加入）
+          Step 9 consumer-gate: 「考点词进 Vocab」= Basic+ 权益。flag on 且 tier **已确认**非 Basic/Pro
+          → 不呈现 (词仍留 bridgeQueue.history, 升级后自动出现)。未确认前放行 (不误伤付费用户, 同 vocab 既有
+          tierLoaded 策略)。flag off → 不限。*/}
+      {historyBridgeQueue.length > 0
+        && !(ENABLE_HISTORY_PAYWALL && tierLoaded && userTier !== 'basic' && userTier !== 'pro') && (
         <div style={{
           marginBottom: 16, padding: '12px 14px',
           background: 'linear-gradient(135deg, #f0e6d2 0%, #e8dcb6 100%)',

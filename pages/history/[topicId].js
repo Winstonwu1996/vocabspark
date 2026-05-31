@@ -1233,10 +1233,10 @@ export default function HistoryPage() {
     }
     // 整合 vocab：把错词推到 history 独立队列（**不直接污染 vocab 主词单**）
     // 用户在 vocab 模块会看到"📚 来自 history 的词 (N)"卡片，可主动选择 加入 / 跳过
-    // Step 9: 「考点词进 Vocab」是 Basic+ 权益 (规划 §2)。flag on 时只 Basic/Pro 推桥;
-    // free/guest 跳过 (CompletionScreen 显示升级提示)。flag off → 不限 (paywall 前行为)。
-    var bridgeEntitled = !ENABLE_HISTORY_PAYWALL || currentTier === 'basic' || currentTier === 'pro';
-    if (reviewWords.length > 0 && bridgeEntitled) {
+    // Step 9 (consumer-gate, Codex P2-a 修): **总是**推桥保留词 (所有 tier), 不在 producer 端按 tier 拦
+    // —— 否则 Free 升级后那门课的词丢失需重学。「考点词进 Vocab」(Basic+) 的 entitlement 改在 vocab 侧
+    // 按 tier gate 呈现 (词留 bridgeQueue.history, 升级即呈现)。CompletionScreen 给 free/guest 升级提示。
+    if (reviewWords.length > 0) {
       try {
         bridgeReviewToVocab(reviewWords, { topicId: topicId, priority: "must-memorize" });
       } catch (e) { console.warn("bridge to vocab failed:", e); }
@@ -1293,6 +1293,10 @@ export default function HistoryPage() {
           topicId: topicId,
           atlasId: fromAtlas.atlasId,
           xp: topicXpEarned || 175,
+          // Codex P2-b: 嵌入态通关 iframe 会关掉 → CompletionScreen 的注册/升级 CTA 看不到。
+          // 把 CTA 意图带给父页, 由父页通关 toast 在 Atlas 层呈现 (整页跳 /plan, 不困在 iframe)。
+          cta: (ENABLE_HISTORY_PAYWALL && currentTier === 'guest') ? 'register'
+            : (ENABLE_HISTORY_PAYWALL && currentTier === 'free') ? 'upgrade' : null,
         }, "*");
       } catch (e) { console.warn("postMessage to atlas failed:", e); }
       return;
