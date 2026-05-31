@@ -14,7 +14,7 @@ import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeW
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
 import { checkMorphFill } from '../lib/morphFillSanitize';
-import { shouldRequireTypedRecall, hasTypedAnswer } from '../lib/typedRecall';
+import { hasTypedAnswer } from '../lib/typedRecall';
 
 // wordInput 自动去重 (保留首次出现顺序 + 原始大小写)。在数据加载/导入时调用，
 // 让词库始终无重复 — 用户不用再手动点"去重词库"。守卫已改按 distinct 词数放行纯去重。
@@ -6248,6 +6248,17 @@ export default function App() {
     setQuickReviewMeaningLoading(false);
   };
 
+  // 进卡即后台预取标准释义（type-first 默写：揭晓时要拿它对照）。免费词典优先，
+  // 取不到才退 LLM；ensureQuickReviewMeaning 内部对已有释义早退，幂等安全。
+  useEffect(function() {
+    if (screen !== "quick_review") return;
+    var item = quickReviewQueue[quickReviewIdx];
+    if (!item) return;
+    var has = item.meaning && item.meaning !== "（释义将随学习自动补全）"
+      && item.meaning !== "释义加载失败，请凭印象判断" && item.meaning.trim();
+    if (!has) ensureQuickReviewMeaning(quickReviewIdx);
+  }, [screen, quickReviewIdx]);
+
   var markQuickReview = function(result) {
     var item = quickReviewQueue[quickReviewIdx];
     if (!item) return;
@@ -6656,8 +6667,11 @@ export default function App() {
 
   if (screen === "quick_review") {
     var qr = quickReviewQueue[quickReviewIdx];
-    // 手填回忆模式：有可用释义才走（要拿释义当揭晓的标准答案）。否则回退旧闪卡。
-    var qrTypedMode = shouldRequireTypedRecall(qr);
+    // 手填回忆是复习的默认形态（type-first）：所有词都先空框默写，逼出真实主动回忆，
+    // 杜绝选择/翻卡的"凭感觉"。标准释义在进卡时已后台预取（ensureQuickReviewMeaning，
+    // 免费词典优先），揭晓时拿来对照；个别取不到时也照样能凭印象自评。
+    var qrMeaningReady = qr && qr.meaning && qr.meaning !== "（释义将随学习自动补全）"
+      && qr.meaning !== "释义加载失败，请凭印象判断" && qr.meaning.trim();
     var qrSelfGradeButtons = (
       <>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
@@ -6672,65 +6686,51 @@ export default function App() {
       <div style={S.root}><div className="vs-desktop-container" style={S.container}>
         <div style={S.topBar}><button style={S.backBtn} aria-label="退出返回 Vocab 主页" onClick={() => setScreen("setup")}>← 退出</button><div style={{fontSize:13,color:C.textSec}}>快速复习 {quickReviewIdx+1}/{quickReviewQueue.length}</div></div>
         <div style={{...S.card, textAlign:"center", padding:"30px 20px"}}>
-          <div style={S.tag}>🔄 快速复习</div>
+          <div style={S.tag}>✍️ 默写复习</div>
           <h2 style={{fontSize:34,margin:"8px 0 4px"}}>{qr?.word}</h2>
           {!!qr?.phonetic && <div style={{fontSize:14,color:C.textSec,marginBottom:16}}>{qr.phonetic}</div>}
 
-          {qrTypedMode ? (
-            !quickReviewFlipped ? (
-              /* 手填回忆：先打中文（空框逼出真实回忆，没法排除法），再对答案 */
-              <>
-                <div style={{fontSize:13,color:C.textSec,marginBottom:10}}>这个词中文什么意思？先自己打出来 👇</div>
-                <input
-                  type="text"
-                  value={quickReviewTyped}
-                  onChange={function(e){ setQuickReviewTyped(e.target.value); }}
-                  onKeyDown={function(e){ if (e.key === "Enter" && hasTypedAnswer(quickReviewTyped)) { setQuickReviewFlipped(true); } }}
-                  placeholder="打出你记得的中文意思…"
-                  autoFocus
-                  style={{width:"100%",padding:"12px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:16,outline:"none",boxSizing:"border-box",textAlign:"center",marginBottom:12}}
-                />
-                <button
-                  style={{...S.primaryBtn, opacity: hasTypedAnswer(quickReviewTyped) ? 1 : 0.5, cursor: hasTypedAnswer(quickReviewTyped) ? "pointer" : "not-allowed"}}
-                  disabled={!hasTypedAnswer(quickReviewTyped)}
-                  onClick={() => { setQuickReviewFlipped(true); }}
-                >对答案 👆</button>
-                <div style={{marginTop:10}}>
-                  <button onClick={() => { setQuickReviewTyped(""); setQuickReviewFlipped(true); }} style={{background:"transparent",border:"none",color:C.textSec,cursor:"pointer",fontSize:13,padding:0,textDecoration:"underline"}}>想不起，直接看答案 →</button>
-                </div>
-              </>
-            ) : (
-              /* 揭晓：你写的 ↔ 标准释义 并排，自评有据可依 */
-              <>
-                <div style={{display:"flex",flexDirection:"column",gap:8,margin:"8px 0 16px",textAlign:"left"}}>
-                  <div style={{padding:"10px 14px",background:C.accentLight,border:"1px solid "+C.accent+"33",borderRadius:10,lineHeight:1.6}}>
-                    <span style={{fontWeight:700,color:C.accent,marginRight:6}}>你写的</span>{hasTypedAnswer(quickReviewTyped) ? quickReviewTyped : <span style={{color:C.textSec,fontStyle:"italic"}}>（没作答）</span>}
-                  </div>
-                  <div style={{padding:"10px 14px",background:C.greenLight,border:"1px solid "+C.green+"33",borderRadius:10,lineHeight:1.6}}>
-                    <span style={{fontWeight:700,color:C.green,marginRight:6}}>参考</span>{qr.meaning}
-                  </div>
-                </div>
-                <div style={{fontSize:12.5,color:C.textSec,marginBottom:10}}>对照一下——你抓住意思了吗？诚实选：</div>
-                {qrSelfGradeButtons}
-              </>
-            )
+          {!quickReviewFlipped ? (
+            /* 手填回忆：先打中文（空框逼出真实回忆，没法排除法），再对答案 */
+            <>
+              <div style={{fontSize:13,color:C.textSec,marginBottom:10}}>这个词中文什么意思？先自己默写出来 👇</div>
+              <input
+                type="text"
+                value={quickReviewTyped}
+                onChange={function(e){ setQuickReviewTyped(e.target.value); }}
+                onKeyDown={function(e){ if (e.key === "Enter" && hasTypedAnswer(quickReviewTyped)) { setQuickReviewFlipped(true); ensureQuickReviewMeaning(quickReviewIdx); } }}
+                placeholder="打出你记得的中文意思…"
+                autoFocus
+                style={{width:"100%",padding:"12px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:16,outline:"none",boxSizing:"border-box",textAlign:"center",marginBottom:12}}
+              />
+              <button
+                style={{...S.primaryBtn, opacity: hasTypedAnswer(quickReviewTyped) ? 1 : 0.5, cursor: hasTypedAnswer(quickReviewTyped) ? "pointer" : "not-allowed"}}
+                disabled={!hasTypedAnswer(quickReviewTyped)}
+                onClick={() => { setQuickReviewFlipped(true); ensureQuickReviewMeaning(quickReviewIdx); }}
+              >对答案 👆</button>
+              <div style={{marginTop:10}}>
+                <button onClick={() => { setQuickReviewTyped(""); setQuickReviewFlipped(true); ensureQuickReviewMeaning(quickReviewIdx); }} style={{background:"transparent",border:"none",color:C.textSec,cursor:"pointer",fontSize:13,padding:0,textDecoration:"underline"}}>想不起，直接看答案 →</button>
+              </div>
+            </>
           ) : (
-            /* 回退：无可用释义的词，保留旧"翻转查看"闪卡 */
-            !quickReviewFlipped ? (
-              <button style={S.primaryBtn} onClick={() => { setQuickReviewFlipped(true); ensureQuickReviewMeaning(quickReviewIdx); }}>翻转查看 👆</button>
-            ) : (
-              <>
-                <div style={{margin:"8px 0 16px",padding:"12px 14px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,textAlign:"left",lineHeight:1.7}}>
-                  {(() => {
-                    var hasMeaning = qr?.meaning && qr.meaning !== "（释义将随学习自动补全）" && qr.meaning.trim();
-                    if (hasMeaning) return <span>释义：{qr.meaning}</span>;
-                    if (quickReviewMeaningLoading) return <span style={{ color:C.textSec, fontStyle:"italic" }}>释义加载中…</span>;
-                    return <span style={{ color:C.textSec, fontStyle:"italic" }}>暂无释义 · <button onClick={() => ensureQuickReviewMeaning(quickReviewIdx)} style={{ background:"transparent", border:"none", color:C.accent, cursor:"pointer", fontSize:13, fontWeight:600, padding:0, textDecoration:"underline" }}>点这里加载 →</button></span>;
-                  })()}
+            /* 揭晓：你写的 ↔ 标准释义 并排，自评有据可依。释义已进卡预取，个别没取到也能凭印象自评 */
+            <>
+              <div style={{display:"flex",flexDirection:"column",gap:8,margin:"8px 0 16px",textAlign:"left"}}>
+                <div style={{padding:"10px 14px",background:C.accentLight,border:"1px solid "+C.accent+"33",borderRadius:10,lineHeight:1.6}}>
+                  <span style={{fontWeight:700,color:C.accent,marginRight:6}}>你写的</span>{hasTypedAnswer(quickReviewTyped) ? quickReviewTyped : <span style={{color:C.textSec,fontStyle:"italic"}}>（没作答）</span>}
                 </div>
-                {qrSelfGradeButtons}
-              </>
-            )
+                <div style={{padding:"10px 14px",background:C.greenLight,border:"1px solid "+C.green+"33",borderRadius:10,lineHeight:1.6}}>
+                  <span style={{fontWeight:700,color:C.green,marginRight:6}}>参考</span>
+                  {qrMeaningReady
+                    ? qr.meaning
+                    : quickReviewMeaningLoading
+                      ? <span style={{color:C.textSec,fontStyle:"italic"}}>释义加载中…</span>
+                      : <span style={{color:C.textSec,fontStyle:"italic"}}>释义暂时拿不到，凭你的印象判断即可</span>}
+                </div>
+              </div>
+              <div style={{fontSize:12.5,color:C.textSec,marginBottom:10}}>对照一下——你抓住意思了吗？诚实选：</div>
+              {qrSelfGradeButtons}
+            </>
           )}
         </div>
       </div>{confirmModalEl}</div>
@@ -7008,9 +7008,9 @@ export default function App() {
         var stepDef;
         if (!dailyPlan.quickDone && dailyPlan.toReview.length > 0) {
           stepDef = {
-            id:"review", icon:"🔄", title:"快速复习", color:C.teal,
-            sub: dailyPlan.toReview.length + " 个词到期 · 约 " + dailyPlan.quickMin + " 分钟",
-            cta: "▶ 开始复习 · " + dailyPlan.toReview.length + " 词",
+            id:"review", icon:"✍️", title:"默写复习", color:C.teal,
+            sub: "默写释义、检验真记住 · " + dailyPlan.toReview.length + " 词 · 约 " + dailyPlan.quickMin + " 分钟",
+            cta: "▶ 开始默写 · " + dailyPlan.toReview.length + " 词",
             onClick: function(){ startQuickReview("due"); },
           };
         } else if (dailyPlan.quickDone && !dailyPlan.deepDone && !dailyPlan.deepLocked) {
