@@ -7,6 +7,8 @@ import UpdateBanner from "../components/UpdateBanner";
 import BetaBadge from "../components/BetaBadge";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { trackFunnel } from "../lib/analytics";
+import { supabase } from "../lib/supabase";
+import { clearBackups } from "../lib/local-backup";
 // 副作用 import：触发 sentry.client.config.js 初始化（仅在浏览器）
 if (typeof window !== "undefined") {
   // eslint-disable-next-line global-require
@@ -26,6 +28,20 @@ export default function App({ Component, pageProps }) {
       router.events.off('routeChangeComplete', handleRouteChange);
     };
   }, [router.events]);
+
+  // 全局登出兜底: 任何页面登出 (SIGNED_OUT) 都清掉进度兜底备份键 —— 否则共享浏览器上
+  // vocabspark_v1__premigration_bak / __bak__* 仍留完整进度/画像 blob (workflow P1 隐私)。
+  // 放 _app 覆盖所有登出入口 (vocab 自己的 handleLogout 已清; home/writing/plan/history 等只 signOut)。
+  useEffect(function() {
+    var sub = supabase.auth.onAuthStateChange(function(event) {
+      if (event === 'SIGNED_OUT') {
+        try { clearBackups(); } catch (e) {}
+      }
+    });
+    return function() {
+      try { sub && sub.data && sub.data.subscription && sub.data.subscription.unsubscribe(); } catch (e) {}
+    };
+  }, []);
 
   return (
     <ErrorBoundary>

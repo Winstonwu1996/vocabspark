@@ -4135,13 +4135,13 @@ export default function App() {
         setSyncStatus("error");
       } else {
         var cloudData = cloudRes.data;
-        // newer-wins 保护：local 比 cloud 新 (闪退没同步成功) → 智能合并而非覆盖。
-        // 阈值 5 分钟：容忍系统时钟漂移。
+        // 本地与云端都有数据 → 总是 mergeStates 合并 (union), 绝不用 cloud 整体覆盖 local。
+        // 原来只在 local 比 cloud 新 >5 分钟时才合并, 否则 doSave(cloudData) 整体覆盖 → 会清掉本地
+        // 「还没推上云」的进度。Phase 2 后 history 进度可能只在本地 (cloudReady 未解锁时 push 被闸门拦),
+        // 若用户随后开 vocab 触发本路径且本地不比云新 5 分钟, 那门刚学完的历史课就被云端覆盖丢失 (workflow P1)。
+        // mergeStates 与 _maybePullCloud(focus/refresh) 同款 union 合并, 两端各自的新数据都不丢。
         var localData = await loadSave();
-        var localTime = localData?.updatedAt ? new Date(localData.updatedAt).getTime() : 0;
-        var cloudTime = cloudData?.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
-        if (localData && cloudData && localTime > cloudTime + 300000) {
-          console.warn('[auth] local newer than cloud, merging both');
+        if (localData && cloudData) {
           var loginMerged;
           try {
             loginMerged = mergeStates(localData, cloudData);
@@ -4150,7 +4150,7 @@ export default function App() {
           await doSave(loginMerged);
           _applyCloudData(loginMerged);
           setShowWelcome(false);
-          syncToCloud(); // 推送合并后的数据
+          syncToCloud(); // 推送合并后的数据 (把本地未同步的历史进度也带上云)
         } else if (cloudData) {
           await doSave(cloudData);
           _applyCloudData(cloudData);
