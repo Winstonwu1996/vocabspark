@@ -15,7 +15,7 @@ import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeW
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
 import { checkMorphFill } from '../lib/morphFillSanitize';
-import { shouldRequireTypedRecall, hasTypedAnswer } from '../lib/typedRecall';
+import { hasTypedAnswer, hasUsableMeaning } from '../lib/typedRecall';
 
 // wordInput 自动去重 (保留首次出现顺序 + 原始大小写)。在数据加载/导入时调用，
 // 让词库始终无重复 — 用户不用再手动点"去重词库"。守卫已改按 distinct 词数放行纯去重。
@@ -2661,7 +2661,8 @@ export default function App() {
   var [quickReviewTyped, setQuickReviewTyped] = useState(""); // 手填中文回忆测试的输入
   var [quickReviewStats, setQuickReviewStats] = useState({ remembered:0, fuzzy:0, forgot:0 });
   // 快速复习释义懒加载缓存：只为缺 meaning 的词异步拉一次
-  var [quickReviewMeaningLoading, setQuickReviewMeaningLoading] = useState(false);
+  var [quickReviewMeaningLoadingWord, setQuickReviewMeaningLoadingWord] = useState(""); // 正在取释义的 word（按词绑定 loading，避免上一张卡完成误清当前卡）
+  var _meaningStatusRef = useRef({}); // word -> 'loading' | 'failed'：去重 + 不重试已失败（成功则写入队列/rwd）
   // 自定义 confirm 模态框（替代 native confirm 防止移动浏览器拦截）
   var [confirmModal, setConfirmModal] = useState(null);
   var confirmAsync = function(opts) {
@@ -2862,6 +2863,11 @@ export default function App() {
   // tier 是否已从网络确认过（用于限制检查：未确认前放行，避免误伤付费用户）
   var [tierLoaded, setTierLoaded] = useState(false);
   var [showLogin, setShowLogin] = useState(false);
+  // 会话被动失效（token 刷新失败/被吊销，非用户主动登出）→ 显式提示重新登录，
+  // 而不是默默把 user 置空、徽章消失、同步静默锁死（chompcloud 3 天未上云事件根因）。
+  var [sessionExpired, setSessionExpired] = useState(false);
+  var _userLogoutRef = useRef(false); // 区分"用户主动登出" vs "被动失效"，避免登出也弹过期提示
+  var _sessionExpiredRef = useRef(false); // 镜像 sessionExpired，供异步 handleAuthUser 判定"是否从失效中恢复"(强制并集合并)
   // 支持 /vocab?login=1 URL 参数：从首页"登录/注册"跳转过来时自动打开登录弹窗
   useEffect(function() {
     if (typeof window === "undefined") return;
@@ -3942,6 +3948,8 @@ export default function App() {
   };
 
   var handleLogout = async function() {
+    _userLogoutRef.current = true; // 标记主动登出：监听器里据此不弹"会话过期"
+    setSessionExpired(false);
     // 先同步最新数据到云端
     if (userRef.current) {
       try {
@@ -3956,7 +3964,9 @@ export default function App() {
         }
       } catch(e) { console.warn('[logout-sync] failed:', e.message); }
     }
-    await supabase.auth.signOut();
+    // 跨 tab 广播"主动登出"意图：其他 tab 收到广播的 SIGNED_OUT 时据此吃掉，不误弹过期横幅 (P3)
+    try { localStorage.setItem('vs_active_logout', String(Date.now())); } catch(e) {}
+    try { await supabase.auth.signOut(); } catch(e) { console.warn('[logout] signOut failed:', e.message); } // 包 try/catch：抛错也要走完下方本地清理 (P3)
     accessTokenRef.current = null; // 清掉缓存的 token
     // 清理本地数据，防止下一个用户看到
     try {
@@ -3970,6 +3980,7 @@ export default function App() {
       localStorage.removeItem(STUDY_STREAK_KEY);
       localStorage.removeItem("vocabspark_tier");
       clearBackups(); // Codex P1: 连兜底备份一起清, 共享浏览器登出不留进度 blob
+      localStorage.removeItem("vs_was_logged_in"); // 清"曾登录"标记，避免登出后启动期误判为被动失效 (P1)
     } catch(e) {}
     setUser(null); userRef.current = null;
     // Step 0A.3: setCloudReady(false) 登出后闸门重置, lib 持有
@@ -4103,7 +4114,13 @@ export default function App() {
   var _authInFlightRef = useRef(false);
   var _authTimersRef = useRef([]); // onAuthStateChange 推迟执行的 setTimeout id，unmount 时清
   var handleAuthUser = async function(u, event, session) {
+    var recoveringFromExpiry = _sessionExpiredRef.current; // 在清除前捕获：本次登录是否在"修复被动失效"
     setUser(u); userRef.current = u;
+    if (u) {
+      setSessionExpired(false); _sessionExpiredRef.current = false; // 拿到有效用户 → 清除过期提示
+      _userLogoutRef.current = false; // 防御性复位 (P3)：避免 signOut 异常导致 ref 卡死、吃掉后续真实过期
+      try { localStorage.setItem('vs_was_logged_in', '1'); } catch(e) {} // 标记"曾登录"，供启动期死 token 检测 (P1)
+    }
     if (!u) return;
 
     // 缓存最新 access token：优先用 event session 直接取 (Supabase 官方推荐),
@@ -4146,8 +4163,11 @@ export default function App() {
         var localData = await loadSave();
         var localTime = localData?.updatedAt ? new Date(localData.updatedAt).getTime() : 0;
         var cloudTime = cloudData?.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
-        if (localData && cloudData && localTime > cloudTime + 300000) {
-          console.warn('[auth] local newer than cloud, merging both');
+        // P2 修复：从被动失效中恢复时无条件走并集合并，绕过 5 分钟阈值。
+        // 否则失效后 <5 分钟内学的词，重登时 localTime 不够新 → 落入下方覆盖分支被云端冲掉，
+        // 与横幅"不会丢失进度"承诺矛盾。mergeStates 是并集 + validateMerged 防缩水，强制合并安全。
+        if (localData && cloudData && (recoveringFromExpiry || localTime > cloudTime + 300000)) {
+          console.warn('[auth] merging local+cloud' + (recoveringFromExpiry ? ' (recovering from session expiry)' : ' (local newer)'));
           var loginMerged;
           try {
             loginMerged = mergeStates(localData, cloudData);
@@ -4366,6 +4386,29 @@ export default function App() {
 
     var {data: {subscription}} = supabase.auth.onAuthStateChange(function(event, session) {
       var u = session?.user || null;
+      // 被动失效检测：token 刷新失败/被吊销 → 弹"会话过期"提示重新登录恢复云同步，而非默默锁死。
+      // 两个触发点：
+      //  (a) 会话中失效 → SIGNED_OUT 且 userRef.current 之前有值；
+      //  (b) 启动期死 token (P1，chompcloud 真实场景) → SIGNED_OUT 或 INITIAL_SESSION 拿到 null，
+      //      userRef 还没来得及设，靠持久化的 vs_was_logged_in 标记识别"曾登录但现在没 session"。
+      if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !u)) {
+        var intentional = _userLogoutRef.current;
+        if (!intentional) {
+          // 跨 tab (P3)：另一个 tab 主动登出会广播 SIGNED_OUT 到本 tab；据近 10s 内的 localStorage
+          // 标记吃掉，避免本 tab 误弹"会话过期"。
+          try {
+            var _alo = parseInt(localStorage.getItem('vs_active_logout') || '0', 10);
+            if (_alo && (Date.now() - _alo) < 10000) intentional = true;
+          } catch(e) {}
+        }
+        var _wasLoggedIn = false;
+        try { _wasLoggedIn = localStorage.getItem('vs_was_logged_in') === '1'; } catch(e) {}
+        if (intentional) {
+          _userLogoutRef.current = false; // 主动登出（本 tab 或跨 tab）已处理，吃掉这次事件
+        } else if (userRef.current || _wasLoggedIn) {
+          setSessionExpired(true); _sessionExpiredRef.current = true;
+        }
+      }
       // Supabase v2 已知死锁陷阱：onAuthStateChange 回调持有 auth 内部锁，回调里 await
       // 其他 supabase.auth 方法会等同一把锁 → 永久死锁、promise 永不 resolve。
       // handleAuthUser 内部会 await supabase.auth.getSession()（loadFromCloud 的
@@ -6160,6 +6203,7 @@ export default function App() {
       return;
     }
 
+    _meaningStatusRef.current = {}; // 新一轮复习：清释义取数状态，让上轮临时失败的词本轮可重试 (Codex P3)
     setQuickReviewQueue(queue);
     setQuickReviewIdx(0);
     setQuickReviewFlipped(false);
@@ -6171,52 +6215,69 @@ export default function App() {
   // 翻转时若 meaning 缺失，懒加载一次中文释义并持久化
   var ensureQuickReviewMeaning = async function(idx) {
     var item = quickReviewQueue[idx];
-    if (!item) return;
-    var has = item.meaning && item.meaning !== "（释义将随学习自动补全）" && item.meaning.trim();
-    if (has) return;
-    setQuickReviewMeaningLoading(true);
+    if (!item || !item.word) return;
+    if (hasUsableMeaning(item.meaning)) return; // 已有可用释义
+    var word = item.word; // 按 word（非 idx）追踪，揭晓时队列可能已换批 (Codex P1)
+    var st = _meaningStatusRef.current[word];
+    if (st === 'loading' || st === 'failed') return; // in-flight 去重 + 已失败不重试 (Codex P2)
+    _meaningStatusRef.current[word] = 'loading';
+    setQuickReviewMeaningLoadingWord(word);
     var meaning = "";
     var failReason = "";
-    // 路径 1: 免费 mymemory API（无 rate limit，速度快，质量足够）
     try {
-      var resp = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(item.word) + "&langpair=en|zh-CN", { signal: AbortSignal.timeout(5000) });
-      var data = await resp.json();
-      var t = data?.responseData?.translatedText || "";
-      // 简单清洗 + 校验：mymemory 偶尔返回原英文（无翻译），过滤掉
-      t = t.trim();
-      if (t && t.toLowerCase() !== item.word.toLowerCase() && /[一-鿿]/.test(t)) {
-        meaning = t.slice(0, 60);
-      }
-    } catch(e) { failReason = "dict timeout"; }
-    // 路径 2: 兜底用 LLM（仅 path1 失败时）
-    if (!meaning) {
+      // 路径 1: 免费 mymemory API（无 rate limit，速度快，质量足够）
       try {
-        var prompt = "给出英文单词 \"" + item.word + "\" 的中文释义。一句话 ≤ 20 字，含词性（名/动/形）。直接输出释义。";
-        var raw = await callAPIFast("你是简洁的英汉词典助手", prompt);
-        meaning = (raw || "").trim().replace(/^["「『\s]+|["」』\s]+$/g, "").slice(0, 60);
-      } catch(e) {
-        failReason = e.message || "LLM failed";
-        console.warn("[ensureQuickReviewMeaning] LLM fallback failed:", failReason);
+        var resp = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(word) + "&langpair=en|zh-CN", { signal: AbortSignal.timeout(5000) });
+        var data = await resp.json();
+        var t = data?.responseData?.translatedText || "";
+        // 简单清洗 + 校验：mymemory 偶尔返回原英文（无翻译），过滤掉
+        t = t.trim();
+        if (t && t.toLowerCase() !== word.toLowerCase() && /[一-鿿]/.test(t)) {
+          meaning = t.slice(0, 60);
+        }
+      } catch(e) { failReason = "dict timeout"; }
+      // 路径 2: 兜底用 LLM（仅 path1 失败时）
+      if (!meaning) {
+        try {
+          var prompt = "给出英文单词 \"" + word + "\" 的中文释义。一句话 ≤ 20 字，含词性（名/动/形）。直接输出释义。";
+          var raw = await callAPIFast("你是简洁的英汉词典助手", prompt);
+          meaning = (raw || "").trim().replace(/^["「『\s]+|["」』\s]+$/g, "").slice(0, 60);
+        } catch(e) {
+          failReason = e.message || "LLM failed";
+          console.warn("[ensureQuickReviewMeaning] LLM fallback failed:", failReason);
+        }
       }
+    } finally {
+      if (hasUsableMeaning(meaning)) {
+        _meaningStatusRef.current[word] = 'done';
+        // 按 word 写回（不按 idx）：只覆盖仍缺释义的同词卡，杜绝把旧请求结果写到换批后同 idx 的别的词上
+        setQuickReviewQueue(function(q) {
+          var changed = false;
+          var nq = q.map(function(it) {
+            if (it && it.word === word && !hasUsableMeaning(it.meaning)) { changed = true; return Object.assign({}, it, { meaning: meaning }); }
+            return it;
+          });
+          return changed ? nq : q;
+        });
+        upsertReviewWordData(word, { meaning: meaning });
+      } else {
+        _meaningStatusRef.current[word] = 'failed'; // 标记已尝试失败：不再重试、不污染 meaning 文案
+        console.warn("[ensureQuickReviewMeaning] all paths failed for " + word + ": " + failReason);
+      }
+      // 仅当 loading 仍指向本词时才清，避免清掉后来卡片的 loading
+      setQuickReviewMeaningLoadingWord(function(w) { return w === word ? "" : w; });
     }
-    if (meaning) {
-      setQuickReviewQueue(function(q) {
-        var nq = q.slice();
-        if (nq[idx]) nq[idx] = Object.assign({}, nq[idx], { meaning: meaning });
-        return nq;
-      });
-      upsertReviewWordData(item.word, { meaning: meaning });
-    } else {
-      // 失败时给出具体提示而不是静默
-      setQuickReviewQueue(function(q) {
-        var nq = q.slice();
-        if (nq[idx]) nq[idx] = Object.assign({}, nq[idx], { meaning: "释义加载失败，请凭印象判断" });
-        return nq;
-      });
-      console.warn("[ensureQuickReviewMeaning] all paths failed for " + item.word + ": " + failReason);
-    }
-    setQuickReviewMeaningLoading(false);
   };
+
+  // 进卡即后台预取标准释义（type-first 默写：揭晓时要拿它对照）。免费词典优先，
+  // 取不到才退 LLM；ensureQuickReviewMeaning 内部对已有释义早退，幂等安全。
+  useEffect(function() {
+    if (screen !== "quick_review") return;
+    var item = quickReviewQueue[quickReviewIdx];
+    if (!item) return;
+    // ensure 内部已按 word 去重 / 跳过已失败 / 跳过已有释义，这里只需触发
+    if (!hasUsableMeaning(item.meaning)) ensureQuickReviewMeaning(quickReviewIdx);
+  }, [screen, quickReviewIdx]);
 
   var markQuickReview = function(result) {
     var item = quickReviewQueue[quickReviewIdx];
@@ -6626,8 +6687,22 @@ export default function App() {
 
   if (screen === "quick_review") {
     var qr = quickReviewQueue[quickReviewIdx];
-    // 手填回忆模式：有可用释义才走（要拿释义当揭晓的标准答案）。否则回退旧闪卡。
-    var qrTypedMode = shouldRequireTypedRecall(qr);
+    if (!qr) {
+      // 队列空/越界兜底 (Codex P3)：不在 render 里 setState，给个可退出的安全态
+      return (
+        <div style={S.root}><div className="vs-desktop-container" style={S.container}>
+          <div style={{...S.card, textAlign:"center", padding:"40px 20px"}}>
+            <div style={{fontSize:15,color:C.textSec,marginBottom:16}}>没有可复习的单词了</div>
+            <button style={S.primaryBtn} onClick={() => setScreen("setup")}>← 返回主页</button>
+          </div>
+        </div>{confirmModalEl}</div>
+      );
+    }
+    // 手填回忆是复习的默认形态（type-first）：所有词都先空框默写，逼出真实主动回忆，
+    // 杜绝选择/翻卡的"凭感觉"。标准释义在进卡时已后台预取（ensureQuickReviewMeaning，
+    // 免费词典优先），揭晓时拿来对照；个别取不到时也照样能凭印象自评。
+    var qrMeaningReady = hasUsableMeaning(qr.meaning);
+    var qrMeaningLoading = quickReviewMeaningLoadingWord === qr.word;
     var qrSelfGradeButtons = (
       <>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
@@ -6642,65 +6717,51 @@ export default function App() {
       <div style={S.root}><div className="vs-desktop-container" style={S.container}>
         <div style={S.topBar}><button style={S.backBtn} aria-label="退出返回 Vocab 主页" onClick={() => setScreen("setup")}>← 退出</button><div style={{fontSize:13,color:C.textSec}}>快速复习 {quickReviewIdx+1}/{quickReviewQueue.length}</div></div>
         <div style={{...S.card, textAlign:"center", padding:"30px 20px"}}>
-          <div style={S.tag}>🔄 快速复习</div>
+          <div style={S.tag}>✍️ 默写复习</div>
           <h2 style={{fontSize:34,margin:"8px 0 4px"}}>{qr?.word}</h2>
           {!!qr?.phonetic && <div style={{fontSize:14,color:C.textSec,marginBottom:16}}>{qr.phonetic}</div>}
 
-          {qrTypedMode ? (
-            !quickReviewFlipped ? (
-              /* 手填回忆：先打中文（空框逼出真实回忆，没法排除法），再对答案 */
-              <>
-                <div style={{fontSize:13,color:C.textSec,marginBottom:10}}>这个词中文什么意思？先自己打出来 👇</div>
-                <input
-                  type="text"
-                  value={quickReviewTyped}
-                  onChange={function(e){ setQuickReviewTyped(e.target.value); }}
-                  onKeyDown={function(e){ if (e.key === "Enter" && hasTypedAnswer(quickReviewTyped)) { setQuickReviewFlipped(true); } }}
-                  placeholder="打出你记得的中文意思…"
-                  autoFocus
-                  style={{width:"100%",padding:"12px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:16,outline:"none",boxSizing:"border-box",textAlign:"center",marginBottom:12}}
-                />
-                <button
-                  style={{...S.primaryBtn, opacity: hasTypedAnswer(quickReviewTyped) ? 1 : 0.5, cursor: hasTypedAnswer(quickReviewTyped) ? "pointer" : "not-allowed"}}
-                  disabled={!hasTypedAnswer(quickReviewTyped)}
-                  onClick={() => { setQuickReviewFlipped(true); }}
-                >对答案 👆</button>
-                <div style={{marginTop:10}}>
-                  <button onClick={() => { setQuickReviewTyped(""); setQuickReviewFlipped(true); }} style={{background:"transparent",border:"none",color:C.textSec,cursor:"pointer",fontSize:13,padding:0,textDecoration:"underline"}}>想不起，直接看答案 →</button>
-                </div>
-              </>
-            ) : (
-              /* 揭晓：你写的 ↔ 标准释义 并排，自评有据可依 */
-              <>
-                <div style={{display:"flex",flexDirection:"column",gap:8,margin:"8px 0 16px",textAlign:"left"}}>
-                  <div style={{padding:"10px 14px",background:C.accentLight,border:"1px solid "+C.accent+"33",borderRadius:10,lineHeight:1.6}}>
-                    <span style={{fontWeight:700,color:C.accent,marginRight:6}}>你写的</span>{hasTypedAnswer(quickReviewTyped) ? quickReviewTyped : <span style={{color:C.textSec,fontStyle:"italic"}}>（没作答）</span>}
-                  </div>
-                  <div style={{padding:"10px 14px",background:C.greenLight,border:"1px solid "+C.green+"33",borderRadius:10,lineHeight:1.6}}>
-                    <span style={{fontWeight:700,color:C.green,marginRight:6}}>参考</span>{qr.meaning}
-                  </div>
-                </div>
-                <div style={{fontSize:12.5,color:C.textSec,marginBottom:10}}>对照一下——你抓住意思了吗？诚实选：</div>
-                {qrSelfGradeButtons}
-              </>
-            )
+          {!quickReviewFlipped ? (
+            /* 手填回忆：先打中文（空框逼出真实回忆，没法排除法），再对答案 */
+            <>
+              <div style={{fontSize:13,color:C.textSec,marginBottom:10}}>这个词中文什么意思？先自己默写出来 👇</div>
+              <input
+                type="text"
+                value={quickReviewTyped}
+                onChange={function(e){ setQuickReviewTyped(e.target.value); }}
+                onKeyDown={function(e){ if (e.key === "Enter" && hasTypedAnswer(quickReviewTyped)) { setQuickReviewFlipped(true); ensureQuickReviewMeaning(quickReviewIdx); } }}
+                placeholder="打出你记得的中文意思…"
+                autoFocus
+                style={{width:"100%",padding:"12px 14px",borderRadius:10,border:"1.5px solid "+C.border,fontFamily:FONT,fontSize:16,outline:"none",boxSizing:"border-box",textAlign:"center",marginBottom:12}}
+              />
+              <button
+                style={{...S.primaryBtn, opacity: hasTypedAnswer(quickReviewTyped) ? 1 : 0.5, cursor: hasTypedAnswer(quickReviewTyped) ? "pointer" : "not-allowed"}}
+                disabled={!hasTypedAnswer(quickReviewTyped)}
+                onClick={() => { setQuickReviewFlipped(true); ensureQuickReviewMeaning(quickReviewIdx); }}
+              >对答案 👆</button>
+              <div style={{marginTop:10}}>
+                <button onClick={() => { setQuickReviewTyped(""); setQuickReviewFlipped(true); ensureQuickReviewMeaning(quickReviewIdx); }} style={{background:"transparent",border:"none",color:C.textSec,cursor:"pointer",fontSize:13,padding:0,textDecoration:"underline"}}>想不起，直接看答案 →</button>
+              </div>
+            </>
           ) : (
-            /* 回退：无可用释义的词，保留旧"翻转查看"闪卡 */
-            !quickReviewFlipped ? (
-              <button style={S.primaryBtn} onClick={() => { setQuickReviewFlipped(true); ensureQuickReviewMeaning(quickReviewIdx); }}>翻转查看 👆</button>
-            ) : (
-              <>
-                <div style={{margin:"8px 0 16px",padding:"12px 14px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,textAlign:"left",lineHeight:1.7}}>
-                  {(() => {
-                    var hasMeaning = qr?.meaning && qr.meaning !== "（释义将随学习自动补全）" && qr.meaning.trim();
-                    if (hasMeaning) return <span>释义：{qr.meaning}</span>;
-                    if (quickReviewMeaningLoading) return <span style={{ color:C.textSec, fontStyle:"italic" }}>释义加载中…</span>;
-                    return <span style={{ color:C.textSec, fontStyle:"italic" }}>暂无释义 · <button onClick={() => ensureQuickReviewMeaning(quickReviewIdx)} style={{ background:"transparent", border:"none", color:C.accent, cursor:"pointer", fontSize:13, fontWeight:600, padding:0, textDecoration:"underline" }}>点这里加载 →</button></span>;
-                  })()}
+            /* 揭晓：你写的 ↔ 标准释义 并排，自评有据可依。释义已进卡预取，个别没取到也能凭印象自评 */
+            <>
+              <div style={{display:"flex",flexDirection:"column",gap:8,margin:"8px 0 16px",textAlign:"left"}}>
+                <div style={{padding:"10px 14px",background:C.accentLight,border:"1px solid "+C.accent+"33",borderRadius:10,lineHeight:1.6}}>
+                  <span style={{fontWeight:700,color:C.accent,marginRight:6}}>你写的</span>{hasTypedAnswer(quickReviewTyped) ? quickReviewTyped : <span style={{color:C.textSec,fontStyle:"italic"}}>（没作答）</span>}
                 </div>
-                {qrSelfGradeButtons}
-              </>
-            )
+                <div style={{padding:"10px 14px",background:C.greenLight,border:"1px solid "+C.green+"33",borderRadius:10,lineHeight:1.6}}>
+                  <span style={{fontWeight:700,color:C.green,marginRight:6}}>参考</span>
+                  {qrMeaningReady
+                    ? qr.meaning
+                    : qrMeaningLoading
+                      ? <span style={{color:C.textSec,fontStyle:"italic"}}>释义加载中…</span>
+                      : <span style={{color:C.textSec,fontStyle:"italic"}}>释义暂时拿不到，凭你的印象判断即可</span>}
+                </div>
+              </div>
+              <div style={{fontSize:12.5,color:C.textSec,marginBottom:10}}>对照一下——你抓住意思了吗？诚实选：</div>
+              {qrSelfGradeButtons}
+            </>
           )}
         </div>
       </div>{confirmModalEl}</div>
@@ -6864,6 +6925,19 @@ export default function App() {
 
       <AppHeroHeader stats={stats} studyStreak={getStudyStreak()} user={user} onUserCenterClick={function(){ setShowUserCenter(true); }} syncStatus={syncStatus} lastSyncAt={lastSyncAt} onSyncRetry={function(){ if (userRef.current) syncToCloud(); }} />
 
+      {/* 会话过期提示：被动掉登录态时显式提醒重新登录，恢复云同步（点击不会清本地数据，
+          重新登录会把本地进度并集合并后推上云）。绝不在此处提供"清除/退出"等破坏性操作。 */}
+      {sessionExpired && !user && (
+        <div role="alert" style={{ background:"#fff4e6", border:"1px solid "+C.accent, borderRadius:12, margin:"10px 16px 0", padding:"12px 14px", display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", boxShadow:"0 2px 10px rgba(196,107,48,0.12)" }}>
+          <span style={{ fontSize:18 }}>⚠️</span>
+          <div style={{ flex:"1 1 200px", minWidth:0, fontSize:13.5, color:C.text, lineHeight:1.5, fontFamily:FONT }}>
+            <strong>登录已过期，云同步已暂停</strong>
+            <div style={{ color:C.textSec, fontSize:12.5, marginTop:2 }}>你的进度暂时只保存在本机。重新登录即可恢复云端备份（不会丢失当前进度）。</div>
+          </div>
+          <button onClick={function(){ setShowLogin(true); }} style={{ ...S.primaryBtn, padding:"8px 18px", fontSize:13.5, whiteSpace:"nowrap" }}>重新登录</button>
+        </div>
+      )}
+
       {/* 我的小本本卡：整合 宠物 + streak + XP + 词数，用叙事化文案替代散落的数据条
           替代旧的"连续学习激励条"，把分散的成长信号收成一个"温暖的我的世界" */}
       {(() => {
@@ -6965,9 +7039,9 @@ export default function App() {
         var stepDef;
         if (!dailyPlan.quickDone && dailyPlan.toReview.length > 0) {
           stepDef = {
-            id:"review", icon:"🔄", title:"快速复习", color:C.teal,
-            sub: dailyPlan.toReview.length + " 个词到期 · 约 " + dailyPlan.quickMin + " 分钟",
-            cta: "▶ 开始复习 · " + dailyPlan.toReview.length + " 词",
+            id:"review", icon:"✍️", title:"默写复习", color:C.teal,
+            sub: "默写释义、检验真记住 · " + dailyPlan.toReview.length + " 词 · 约 " + dailyPlan.quickMin + " 分钟",
+            cta: "▶ 开始默写 · " + dailyPlan.toReview.length + " 词",
             onClick: function(){ startQuickReview("due"); },
           };
         } else if (dailyPlan.quickDone && !dailyPlan.deepDone && !dailyPlan.deepLocked) {
