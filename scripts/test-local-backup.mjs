@@ -46,19 +46,30 @@ console.log('\n[2] snapshotBackup: 去重 + 新增');
   ok('内容相同 → 不重复 (仍 1 份)', mod.listBackups().length === 1);
 }
 
-console.log('\n[3] snapshotBackup: 超 KEEP(3) 修剪最旧');
+console.log('\n[3] snapshotBackup: 超 KEEP(2) 先修剪最旧再写');
 {
   var ls = freshLS();
-  // 手动塞 4 个不同时间戳的旧备份, 再快照新内容 → 应修剪到 3
+  // 塞 3 个旧备份, 再快照新内容 → 先修剪到 KEEP-1=1 再写 → 共 2 份
   ls.setItem('vocabspark_v1__bak__2026-01-01T00-00-00-000Z', '{"old":1}');
   ls.setItem('vocabspark_v1__bak__2026-01-02T00-00-00-000Z', '{"old":2}');
   ls.setItem('vocabspark_v1__bak__2026-01-03T00-00-00-000Z', '{"old":3}');
   ls.setItem('vocabspark_v1', '{"new":1}');
-  mod.snapshotBackup(); // 第 4 份 → 触发修剪
+  mod.snapshotBackup();
   var baks = mod.listBackups();
-  ok('修剪到 KEEP=3 份', baks.length === 3);
-  ok('删的是最旧 (2026-01-01 不在了)', baks.every(function (b) { return b.ts.indexOf('2026-01-01') !== 0; }));
+  ok('修剪到 KEEP=2 份', baks.length === 2);
+  ok('删的是最旧 (2026-01-01/02 不在了)', baks.every(function (b) { return b.ts.indexOf('2026-01-01') !== 0 && b.ts.indexOf('2026-01-02') !== 0; }));
   ok('最新内容在', ls.getItem(baks[baks.length - 1].key) === '{"new":1}');
+}
+
+console.log('\n[3b] 大 blob 超 MAX_BACKUP_CHARS → 跳过备份 (Codex P2)');
+{
+  var ls = freshLS();
+  var big = '{"x":"' + 'a'.repeat(600000) + '"}'; // > 500K 字符
+  ls.setItem('vocabspark_v1', big);
+  mod.snapshotPreMigrationOnce();
+  mod.snapshotBackup();
+  ok('大 blob 不写 premigration', ls.getItem('vocabspark_v1__premigration_bak') == null);
+  ok('大 blob 不写滚动备份', mod.listBackups().length === 0);
 }
 
 console.log('\n[4] restoreBackup: 写回主 blob');
