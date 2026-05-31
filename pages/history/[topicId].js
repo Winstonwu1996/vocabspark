@@ -163,10 +163,16 @@ export default function HistoryPage() {
   var [sidekickInput, setSidekickInput] = useState("");
   var [sidekickStreaming, setSidekickStreaming] = useState("");
   var [sidekickThinking, setSidekickThinking] = useState(false);
+  // backlog (workflow round2 P3): 同步 busy 闸 —— state 守卫读的是 render 时的旧 sidekickThinking,
+  // 同一 tick 内双击/连按会都看到 false 而重入。ref 同步置位, 真正防同-tick 重入 (与锁/early-thinking 互补)。
+  var sidekickBusyRef = useRef(false);
 
   // Sidekick 发送 — 主对话不受影响，但 AI 知道当前 Topic 上下文 + 离题保护
   var sendSidekick = async function() {
-    if (!sidekickInput.trim() || sidekickThinking) return;
+    // backlog (workflow round2 P3): 同步 busy ref 守卫先于一切 —— state 守卫 (sidekickThinking) 读旧值,
+    // 防不住同-tick 双击重入; ref 同步置位才真防。
+    if (!sidekickInput.trim() || sidekickThinking || sidekickBusyRef.current) return;
+    sidekickBusyRef.current = true;
     // Codex round3 P2: 在**任何 await 之前**同步置 thinking=true —— 否则 reserve 的 Web Locks await
     // 期间双击/连按 Enter 会以 thinking=false 重入, 同一问发两次、扣两次配额。
     setSidekickThinking(true);
@@ -177,8 +183,18 @@ export default function HistoryPage() {
     // refund 会被下次 merge 复活。union 语义下「记了即永久」, 故 API 失败也消耗 1 次额 (罕见网络抖动,
     // 相对 free 20/天成本可忽略), 换取在所有同步状态下都正确的强制 (规划选 B 严格)。
     if (ENABLE_HISTORY_PAYWALL && freshTierRef.current) {
-      var resv = await tryUseSidekick(freshTierRef.current);
+      var resv;
+      // backlog (workflow P3 #9, revert Step 0B 时连带丢了, 此处补回): tryUseSidekick (Web Locks/
+      // quota-store) 若异常 reject, 不能让 thinking/busy 永久卡死 FAB。reject → 复位 + return (fail-closed)。
+      try {
+        resv = await tryUseSidekick(freshTierRef.current);
+      } catch (e) {
+        sidekickBusyRef.current = false;
+        setSidekickThinking(false);
+        return;
+      }
       if (!resv.ok) {
+        sidekickBusyRef.current = false;
         setSidekickThinking(false);
         // Codex round5 P2: Sidekick 是**课中侧边追问**, 用尽配额不该撕掉嵌入课 → 原地弹 (pauseInPlace=true),
         // CourseGate 不回传父页 (不关 iframe)。用户关掉继续上课; 点升级才经 doUpgrade 回传父页。
@@ -240,12 +256,14 @@ export default function HistoryPage() {
         saveSidekickLog(topicId, updated);
         return updated;
       });
-      // Step 3: 配额已在入口 reserve (skEventId), 成功不再重复扣。
+      // Step 3: 配额已在入口 reserve, 成功不再重复扣。
       setSidekickStreaming("");
       setSidekickThinking(false);
+      sidekickBusyRef.current = false;
     } catch (e) {
       setSidekickThinking(false);
       setSidekickStreaming("");
+      sidekickBusyRef.current = false;
       // Codex round4 P2-g: 不退还配额 (union 合并下 refund 不可靠) — 见入口 reserve 处说明。
       setSidekickLog(function(prev) {
         var updated = prev.concat([{ role: "ai", content: "（网络不稳，再试一次？）", timestamp: new Date().toISOString(), isFallback: true }]);
@@ -1837,6 +1855,7 @@ export default function HistoryPage() {
               topicLenses={topicLenses}
               hasLensesForTopic={hasLensesForTopic}
               selectedLensId={effectiveLensId}
+              quotaInfo={quotaInfo}
               pendingRole={pendingRole}
               embedded={embedded}
               fromAtlas={fromAtlas}
@@ -3198,6 +3217,7 @@ function IntroScreen(props) {
                 selectedLensId={props.selectedLensId}
                 onSelect={props.onSelectLens}
                 topicId={props.topicId}
+                quotaInfo={props.quotaInfo}
               />
             </div>
           </details>
@@ -3207,6 +3227,7 @@ function IntroScreen(props) {
             selectedLensId={props.selectedLensId}
             onSelect={props.onSelectLens}
             topicId={props.topicId}
+            quotaInfo={props.quotaInfo}
           />
         )
       )}
@@ -3354,6 +3375,9 @@ function LensSelector(props) {
           var active = selectedId === lens.id;
           var icon = lensIcon[lens.id] || '🎭';
           var minutes = Math.round(lens.nodeCount * 2.5);
+          // backlog (Step 5): 今日已用过该 lens? (仅 guest/free 有 quotaInfo; 付费/flag-off 无 → 不标)
+          var usedToday = !!(props.quotaInfo && props.quotaInfo.usedLensIds
+            && props.quotaInfo.usedLensIds.indexOf(lensKey(props.topicId, lens.id)) >= 0);
           return (
             <button
               key={lens.id}
@@ -3403,6 +3427,9 @@ function LensSelector(props) {
               })()}
               <div style={{fontSize: 11, color: HC.textSec, opacity: 0.85}}>
                 {lens.nodeCount} 节 · 约 {minutes} 分钟
+                {usedToday && (
+                  <span style={{ marginLeft: 8, color: HC.accent, fontWeight: 600 }}>· ✓ 今日已学过</span>
+                )}
               </div>
             </button>
           );
