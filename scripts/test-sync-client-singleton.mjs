@@ -2,7 +2,7 @@
    用注入 factory 避免依赖真 createSyncClient (它需 BroadcastChannel)。
    跑: node scripts/test-sync-client-singleton.mjs */
 
-import { getSyncClient, getActiveOwner, __resetSyncClientSingleton } from '../lib/sync-client-singleton.js';
+import { getSyncClient, getActiveOwner, resetCloudReadyOnSignOut, __resetSyncClientSingleton } from '../lib/sync-client-singleton.js';
 
 var pass = 0, fail = 0;
 function ok(name, cond) { if (cond) { pass++; console.log('  ✓ ' + name); } else { fail++; console.log('  ✗ FAIL: ' + name); } }
@@ -54,6 +54,27 @@ console.log('\n[4] 配置项取首次传入 (proxied 含 channelName/paths)');
   // 第二次传不同配置 → 被忽略 (实例已建)
   getSyncClient({ ownerLabel: 'history', channelName: 'OTHER' }, recordingFactory);
   ok('二次配置被忽略 (实例不重建, channelName 仍 knowu_sync)', inst.proxied.channelName === 'knowu_sync');
+}
+
+console.log('\n[5] resetCloudReadyOnSignOut: 重锁 push 闸门 + 清版本 (Codex P1)');
+{
+  __resetSyncClientSingleton();
+  var calls = { cloudReady: [], version: [] };
+  var clientFactory = function () {
+    return {
+      setCloudReady: function (v) { calls.cloudReady.push(v); },
+      setSyncVersion: function (v) { calls.version.push(v); },
+    };
+  };
+  getSyncClient({ ownerLabel: 'vocab' }, clientFactory);
+  resetCloudReadyOnSignOut();
+  ok('setCloudReady(false) 被调用', calls.cloudReady.indexOf(false) !== -1);
+  ok('setSyncVersion(0) 被调用', calls.version.indexOf(0) !== -1);
+  // 无实例时不抛
+  __resetSyncClientSingleton();
+  var threw = false;
+  try { resetCloudReadyOnSignOut(); } catch (e) { threw = true; }
+  ok('无实例时 reset 不抛', threw === false);
 }
 
 console.log('\n──────────────────────────');

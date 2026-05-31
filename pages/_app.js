@@ -9,6 +9,7 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import { trackFunnel } from "../lib/analytics";
 import { supabase } from "../lib/supabase";
 import { clearBackups } from "../lib/local-backup";
+import { resetCloudReadyOnSignOut } from "../lib/sync-client-singleton";
 // 副作用 import：触发 sentry.client.config.js 初始化（仅在浏览器）
 if (typeof window !== "undefined") {
   // eslint-disable-next-line global-require
@@ -36,6 +37,8 @@ export default function App({ Component, pageProps }) {
     var sub = supabase.auth.onAuthStateChange(function(event) {
       if (event === 'SIGNED_OUT') {
         try { clearBackups(); } catch (e) {}
+        // 重锁共享同步实例的 push 闸门, 防换账号先开 /history 时用前一账号就绪态误推 (Codex P1)
+        try { resetCloudReadyOnSignOut(); } catch (e) {}
       }
     });
     return function() {
