@@ -2126,6 +2126,11 @@ export default function HistoryPage() {
               topicId={topicId}
               englishLevel={englishLevel}
               xpEarned={topicXpEarned}
+              guestRegister={{
+                // Step 7: 游客 (未登录 → tier='guest') 通关 → 注册引导。flag off / 已登录不显示。
+                show: ENABLE_HISTORY_PAYWALL && currentTier === 'guest',
+                onRegister: function() { if (typeof window !== 'undefined') window.location.href = '/plan'; },
+              }}
               reviewPool={topicReviewPool}
               freeChatLog={freeChatLog}
               freeChatInput={freeChatInput}

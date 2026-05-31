@@ -139,6 +139,27 @@ export function CompletionScreen(props) {
             "这是 " + topic.title.cn + " 的故事 — 你刚走完了它。"}
         </div>
 
+        {/* Step 7: 游客通关 (magna-carta 唯一游客试用课) → 注册免费引导。flag off / 已登录用户不显示。 */}
+        {props.guestRegister && props.guestRegister.show && (
+          <div style={{
+            marginTop: 18, padding: "14px 16px", textAlign: "center",
+            background: "rgba(196, 107, 48, 0.08)", border: "1px solid rgba(196, 107, 48, 0.25)",
+            borderRadius: 12,
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: HC.ink, marginBottom: 4 }}>想继续学下去?</div>
+            <div style={{ fontSize: 12.5, color: HC.inkLight, lineHeight: 1.6, marginBottom: 12 }}>
+              注册一个免费账号 —— 再多 7 门课免费学,进度还能换设备接着用。
+            </div>
+            <button
+              onClick={props.guestRegister.onRegister}
+              style={{
+                padding: "10px 24px", background: HC.accent, color: "#fff8e8", border: "none",
+                borderRadius: 999, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              }}
+            >免费注册,解锁更多</button>
+          </div>
+        )}
+
         {/* ── Review Pool 提示（错的进 vocab 复习池） ── */}
         {hasReview && (
           <div style={{
