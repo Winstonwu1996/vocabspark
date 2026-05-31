@@ -6191,6 +6191,7 @@ export default function App() {
       return;
     }
 
+    _meaningStatusRef.current = {}; // 新一轮复习：清释义取数状态，让上轮临时失败的词本轮可重试 (Codex P3)
     setQuickReviewQueue(queue);
     setQuickReviewIdx(0);
     setQuickReviewFlipped(false);
