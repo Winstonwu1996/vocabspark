@@ -992,21 +992,6 @@ export default function HistoryPage() {
     startConversation();
   };
 
-  // Step 8 (Codex round2 P2): 从 /history 选课页点锁定 Pro 课的「试看」会带 ?sample=1 跳进本页 ——
-  // 等 gate 落定到 deny (Free 够不到的 Pro 课) 再自动进样章; allow (Pro 用户手敲 URL) → 忽略参数正常进课。
-  useEffect(function () {
-    if (!ENABLE_HISTORY_PAYWALL) return;
-    if (sampleAutoStartedRef.current || samplePreview) return;
-    if (typeof window === 'undefined') return;
-    var wantSample = false;
-    try { wantSample = new URLSearchParams(window.location.search).get('sample') === '1'; } catch (e) {}
-    if (!wantSample) return;
-    if (freshGateAccessRef.current !== 'deny') return; // 等 gate 报 deny 才进 (Pro 用户=allow 不触发)
-    sampleAutoStartedRef.current = true;
-    startSamplePreview();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gateResult, samplePreview]);
-
   // ─── Step 4b-1: 进课 tier gate ─────────────────────────────────
   // CourseGate 上报 {access, topicId, lensId}。Codex P1 修: 结论带标签, 播放器页只信
   // 对应"当前 topic+lens"的 fresh 结论, 绝不吃旧 lens/topic 的陈旧 allow (防 stale 绕过)。
@@ -1051,6 +1036,22 @@ export default function HistoryPage() {
   // ref 供 async (first-bubble 扣减 / sidekick) 取最新 tier, 避免陈旧闭包。
   var currentTier = (gateResult && gateResult.tier) || null;
   freshTierRef.current = currentTier;
+
+  // Step 8 (Codex round2/3 P2): /history 选课页点锁定 Pro 课的「试看」带 ?sample=1 跳进本页 ——
+  // 等 gate 落定到 deny (Free 够不到的 Pro 课) 再自动进样章; allow (Pro 用户手敲 URL) → 忽略参数正常进课。
+  // 必须放在 gateResult 声明之后, 否则 deps 里的 gateResult 是 var-hoist 的 undefined, effect 永不重跑 (round3 P2)。
+  useEffect(function () {
+    if (!ENABLE_HISTORY_PAYWALL) return;
+    if (sampleAutoStartedRef.current || samplePreview) return;
+    if (typeof window === 'undefined') return;
+    var wantSample = false;
+    try { wantSample = new URLSearchParams(window.location.search).get('sample') === '1'; } catch (e) {}
+    if (!wantSample) return;
+    if (freshGateAccess() !== 'deny') return; // 等 gate 报 deny 才进 (Pro 用户=allow 不触发)
+    sampleAutoStartedRef.current = true;
+    startSamplePreview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gateResult, samplePreview]);
   // Step 5: 配额 UI 数据。仅 guest/free 有限额 → 给 chip/marker; basic+/null → null (不显示, 付费无打扰)。
   // 每 render 读 localStorage (轻量, 仅 flag-on+guest/free 时); flag-off / 付费 → 直接 null 零成本。
   var quotaInfo = null;
