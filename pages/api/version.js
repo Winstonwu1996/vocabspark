@@ -4,9 +4,10 @@
 // no-store：绝不能被 CDN/浏览器缓存，否则新版发布后仍返回旧 SHA，提示永不触发。
 
 export default function handler(req, res) {
+  // 与 next.config.js 的 NEXT_PUBLIC_BUILD_ID 同一优先级，保证两端可直接比较
   const version =
-    process.env.VERCEL_GIT_COMMIT_SHA ||
     process.env.VERCEL_DEPLOYMENT_ID ||
+    process.env.VERCEL_GIT_COMMIT_SHA ||
     'dev';
 
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');

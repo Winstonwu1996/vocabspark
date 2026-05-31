@@ -1,10 +1,13 @@
 /** @type {import('next').NextConfig} */
-// 部署版本号：Vercel build 时注入 VERCEL_GIT_COMMIT_SHA → 烘焙进客户端 bundle。
-// 客户端持有"打开页面那一刻的 build"，运行时的 /api/version 返回"当前线上 build"，
-// 两者不一致即说明发了新版 → 提示用户刷新。本地 dev 两者都是 'dev'，不会误报。
+// 部署版本号：build 时注入 → 烘焙进客户端 bundle。客户端持有"打开页面那一刻的
+// build"，运行时的 /api/version 返回"当前线上 build"，两者不一致即说明发了新版 →
+// 提示用户刷新。优先 VERCEL_DEPLOYMENT_ID（每次重新部署都变，能识别"同一 commit
+// 重新部署/回滚"，commit SHA 识别不了）；本地 dev 两者都是 'dev'，不会误报。
+// 注：需在 Vercel 项目开启 "Automatically expose System Environment Variables"，
+//     否则线上退化为 'dev' 静默禁用（不会误报，只是不提示）。
 const BUILD_ID =
-  process.env.VERCEL_GIT_COMMIT_SHA ||
   process.env.VERCEL_DEPLOYMENT_ID ||
+  process.env.VERCEL_GIT_COMMIT_SHA ||
   'dev';
 
 const nextConfig = {

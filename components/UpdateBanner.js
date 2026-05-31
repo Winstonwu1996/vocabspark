@@ -35,22 +35,28 @@ export default function UpdateBanner() {
     if (!CURRENT_BUILD || CURRENT_BUILD === 'dev') return;
 
     var stopped = false;
+    var inFlight = false; // 防止慢网络下轮询请求重叠堆积
 
     var check = function () {
       // 标签页不可见时不查（省请求；变可见会再触发一次 check）
-      if (document.visibilityState === 'hidden') return;
+      if (document.visibilityState === 'hidden' || inFlight) return;
+      inFlight = true;
       fetch('/api/version', { cache: 'no-store' })
         .then(function (res) { return res.ok ? res.json() : null; })
         .then(function (data) {
           if (stopped || !data || !data.version) return;
           var latest = data.version;
-          if (latest === 'dev' || latest === CURRENT_BUILD) return;
+          // 收敛分支：线上版本回到当前/dev/已忽略版本（如回滚），主动收掉横条，避免卡住误报
+          if (latest === 'dev' || latest === CURRENT_BUILD || latest === dismissedRef.current) {
+            latestRef.current = null;
+            setShow(false);
+            return;
+          }
           latestRef.current = latest;
-          // 用户已对这个具体版本点过"稍后" → 不再打扰；新版本会令 latest 变化从而重弹
-          if (latest === dismissedRef.current) return;
           setShow(true);
         })
-        .catch(function () { /* fail-open：网络/接口异常不打扰用户 */ });
+        .catch(function () { /* fail-open：网络/接口异常不打扰用户 */ })
+        .then(function () { inFlight = false; });
     };
 
     var onVisible = function () {
@@ -81,8 +87,8 @@ export default function UpdateBanner() {
 
   return (
     <div
-      role="status"
-      aria-live="polite"
+      role="region"
+      aria-label="新版本提示"
       style={{
         position: 'fixed',
         left: 0,
@@ -94,7 +100,8 @@ export default function UpdateBanner() {
         fontFamily: FONT,
         fontSize: 14,
         fontWeight: 600,
-        padding: '12px 16px',
+        // iOS home indicator 安全区：基础 12px + 安全区内边距
+        padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -105,7 +112,7 @@ export default function UpdateBanner() {
         letterSpacing: '0.01em',
       }}
     >
-      <span>✨ 有新版本可用，刷新即可获得最新修复</span>
+      <span aria-live="polite">✨ 有新版本可用，刷新即可获得最新修复</span>
       <button
         onClick={handleReload}
         style={{
