@@ -81,5 +81,18 @@ vocab 页有 sync client,history 页没有。给 history 挂**第二个** client
   登出清主 blob (后者要防 token 过期 spurious SIGNED_OUT 误清 → 需区分主动登出)。
 - **两设备并发编辑同一课 409 turn 回退** (P1, 单用户不可达, 需并发多设备 push)。
 - **history 标量偏好 (englishLevel/autoRecommend/profile/curriculum) 跨设备 newer-blob 覆盖** (P2, 可恢复偏好)。
+- **删 1-2 词不同步("复活")** (烦但不丢数据): 删词确认框 + intent 只在 ≥3 触发; 服务端守卫对任意词数
+  减少都要 intent 否则拒绝保留。试过"删 ≥1 即打 broad intent"修, Codex P1: 本地陈旧时会误授权删掉没
+  见过的云端新词 (跨设备丢词) → 已还原。正确修法: word-scoped intent 或删前先 pull 刷新本地。
+- history 同步状态条已加 (安全, 已上分支): 让用户看见同步; 但学完 history 不立刻推 (push-only 需 vocab
+  先解锁 cloudReady) 仍待 history-pull 专项解决。
 
-→ 下一专项: history 自驱动 pull + 上述 owner/state-reapply/freshness 一并解决, 用户增长前完成。
+→ 下一专项 (sync-polish): history 自驱动 pull + owner校验 + state-reapply + freshness + 删词 word-scoped
+  intent, 一并解决, 用户增长前完成。
+
+## 7. 重要发现 — 会话失效才是"3 天未上云"主因 (并发分支)
+
+并发分支 `fix-session-expiry` (commit 74c4080) 查出 chompcloud **3 天未上云的真正根因**:
+**auth 会话被动失效 → getAuthHeaders 拿不到 token → push/load 静默失败 → 同步锁死**。这很可能才是
+canary 看到"同步指示器卡在 X 分钟前不动"的主因 (与本分支单例改动无关)。两条线 (本 sync 重构 +
+session-expiry 修复) 都改 vocab.js, 合并前需协调先后 + 解冲突。
