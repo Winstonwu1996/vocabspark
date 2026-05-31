@@ -251,7 +251,7 @@ export function CompletionScreen(props) {
             )}
             <div style={{marginTop: 8, fontSize: 11, opacity: 0.75, fontStyle: "italic"}}>
               {reviewPool.bridged === false
-                ? <span>你关闭了「自动推荐」，这些词没有加入 Vocab。想加可去 <a href="/history" style={{color: HC.teal, fontWeight: 600}}>历史首页一键导入</a>。</span>
+                ? <span>你关闭了「自动推荐」，这些词没有加入 Vocab。想加可去 <a href="/history" style={{color: HC.teal, fontWeight: 600}}>历史首页</a>重新打开「自动推荐」。</span>
                 : <span>✓ 已加到 <a href="/vocab" style={{color: HC.teal, fontWeight: 600}}>Vocab 模块词单</a>，下次进 vocab 会出现复习。</span>}
             </div>
           </div>

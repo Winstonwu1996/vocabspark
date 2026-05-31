@@ -553,7 +553,8 @@ export default function HistoryPage() {
     var __skipProfileBlock = !!(__searchParamsForProfile && (
       __searchParamsForProfile.get("embedded") === "1" ||
       __searchParamsForProfile.get("from") === "atlas" ||
-      __searchParamsForProfile.get("role") === "1"
+      __searchParamsForProfile.get("role") === "1" ||
+      __searchParamsForProfile.get("sample") === "1"  // Step 8 (Codex round6 P2): 试看样章不强填画像表
     ));
 
     if (hp) {
