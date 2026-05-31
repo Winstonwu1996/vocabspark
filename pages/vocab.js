@@ -1333,9 +1333,6 @@ var PRESETS_BY_GOAL = {
 /* ─── Storage: localStorage ─── */
 var SKEY = "vocabspark_v1";         // permanent key — never change this
 var SKEY_OLD = "vocabspark_release_2"; // migration source
-// 本浏览器 blob 归属的 userId (纯本地, 不进同步 blob → 不会被 mergeProgress 白名单丢)。
-// 登录时据此判断本地 blob 是否属于当前用户: 是→可合并; 他人遗留→丢弃 (防共享浏览器跨账号污染)。
-var OWNER_KEY = "vocabspark_owner";
 var CONC_KEY = "vocabspark_concurrency_cap_v1";
 /* ─── 本地存储层（统一到 SKEY，不再用独立 key） ─── */
 var loadSave = async () => {
@@ -4138,23 +4135,16 @@ export default function App() {
         setSyncStatus("error");
       } else {
         var cloudData = cloudRes.data;
+        // newer-wins 保护：local 比 cloud 新 (闪退没同步成功) → 智能合并而非覆盖。
+        // 阈值 5 分钟：容忍系统时钟漂移。
+        // 注: 「history-first 会话只在本地的进度被 cloud 覆盖」是上线前就存在的窄边界 (history 从不主动
+        //   推); Phase 2 push-only 已大幅缓解 (vocab 访问过 → cloudReady → history 推上云), 彻底修复
+        //   需 history 自驱动 pull (含 owner 校验 + 状态重应用), 留作 sync 重构后续专项, 不动 vocab 登录核心。
         var localData = await loadSave();
-        // 共享浏览器: 本地 blob 归属他人 (owner 标记非当前用户) → 整体丢弃, 绝不并入当前账号
-        // (Codex P1: 否则 mergeStates union 会把前一个用户的进度/画像上传进当前用户云端)。
-        var localOwner = null;
-        try { localOwner = localStorage.getItem(OWNER_KEY); } catch (e) {}
-        if (localData && localOwner && localOwner !== u.id) {
-          try { localStorage.removeItem(SKEY); } catch (e) {}
-          try { clearBackups(); } catch (e) {}
-          localData = null;
-        }
         var localTime = localData?.updatedAt ? new Date(localData.updatedAt).getTime() : 0;
         var cloudTime = cloudData?.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
-        // 仅当本地数据「可信属于当前用户」才合并保留: owner 标记匹配, 或旧 blob 无标记但比云新 >5 分钟
-        // (保守回退到上线前行为, 不回归)。可信合并 → union 不丢本地未同步进度 (含 cloudReady 未解锁时
-        // 只落本地的 history 进度, workflow P1)。否则 cloud 权威覆盖。
-        var localTrusted = localData && (localOwner === u.id || (!localOwner && localTime > cloudTime + 300000));
-        if (localData && cloudData && localTrusted) {
+        if (localData && cloudData && localTime > cloudTime + 300000) {
+          console.warn('[auth] local newer than cloud, merging both');
           var loginMerged;
           try {
             loginMerged = mergeStates(localData, cloudData);
@@ -4163,7 +4153,7 @@ export default function App() {
           await doSave(loginMerged);
           _applyCloudData(loginMerged);
           setShowWelcome(false);
-          syncToCloud(); // 推送合并后的数据 (把本地未同步的历史进度也带上云)
+          syncToCloud(); // 推送合并后的数据
         } else if (cloudData) {
           await doSave(cloudData);
           _applyCloudData(cloudData);
@@ -4173,8 +4163,6 @@ export default function App() {
           if (syncClientRef.current) syncClientRef.current.setCloudReady(true);
           syncToCloud();
         }
-        // 标记本浏览器 blob 现归属当前用户 (下次登录据此判可信)
-        try { localStorage.setItem(OWNER_KEY, u.id); } catch (e) {}
       }
       _loadTier(u.id);
     } finally {
