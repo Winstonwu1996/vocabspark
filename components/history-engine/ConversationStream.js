@@ -811,9 +811,25 @@ export function ConversationStream(props) {
       )}
 
       {allDone && (
-        // Receipt gate：lens 完成、mastery 之前先收 4 件学习证据。
-        // 已交过 / 本次已交 / host 未接 onSubmitReceipt（如 atlas embed）→ 直接进 mastery。
-        (props.onSubmitReceipt && !props.existingReceipt && !receiptSubmitted) ? (
+        // Step 8: 「试看 5 分钟」样章走完 —— 不进收据/考核/完成, 直接弹升级 CTA (最高优先级分支)。
+        props.samplePreview ? (
+          <div className="continue-bar" style={{flexDirection: "column", gap: 12, padding: "24px 0"}}>
+            <div style={{fontSize: 15, color: HC.accent, fontWeight: 800, textAlign: "center"}}>
+              🎬 5 分钟样章看完啦
+            </div>
+            <div style={{fontSize: 13, color: HC.textSec, textAlign: "center", lineHeight: 1.7, maxWidth: 460}}>
+              这只是开头{props.sampleFullCount ? ("（完整课程共 " + props.sampleFullCount + " 节对话）") : ""}。<br/>
+              升级 Pro 解锁完整课程：苏格拉底式深度对话 + 考点笔记 + 记忆考核，把这门课真正学透。
+            </div>
+            <button
+              className="continue-btn"
+              style={{background: HC.accent, fontSize: 15, padding: "14px 36px"}}
+              onClick={props.onSampleUpgrade}
+            >
+              升级 Pro 看完整课程 →
+            </button>
+          </div>
+        ) : (props.onSubmitReceipt && !props.existingReceipt && !receiptSubmitted) ? (
           <LearningReceiptCard
             englishLevel={props.englishLevel}
             existingReceipt={props.existingReceipt}

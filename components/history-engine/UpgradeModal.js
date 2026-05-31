@@ -214,7 +214,7 @@ export var UpgradeModal = function (props) {
             {reason === 'tier-lost' ? '重新订阅 Pro' : '升级 ' + ((TIER_LABEL[requiredTier] || {}).name || 'Basic')}
           </button>
 
-          {/* locked-course: 「先看 1 分钟预告」次级行动 (规划 §7, 不把用户引回选课页) */}
+          {/* locked-course: 「试看 5 分钟」次级行动 (Step 8 样章, 规划 §7, 不把用户引回选课页) */}
           {reason === 'locked-course' && typeof onPreview === 'function' && (
             <button
               onClick={onPreview}
@@ -224,7 +224,7 @@ export var UpgradeModal = function (props) {
                 color: C.text, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
               }}
             >
-              👀 先看 1 分钟课程预告
+              👀 先免费试看 5 分钟
             </button>
           )}
 

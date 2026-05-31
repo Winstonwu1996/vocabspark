@@ -139,6 +139,7 @@ export function CourseGate(props) {
       counts={getAccessibleTopicCounts(availableIds)}
       onClose={props.onCloseModal}
       onUpgrade={doUpgrade}
+      onPreview={props.onPreview}
     />
   );
 }

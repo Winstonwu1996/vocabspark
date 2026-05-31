@@ -102,6 +102,9 @@ import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/noteboo
 // Step 4b-1: 进课 tier gate (flag off 时 CourseGateMount 不渲染 → 不调 useUserTier)。
 // ⚠️ 不在此静态 import membership/useUserTier — 隔离在 CourseGate.js (经 CourseGateMount 懒加载)。
 import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
+
+// Step 8: 「试看 5 分钟」样章放出的对话节数 (前 N 节)。
+var SAMPLE_PREVIEW_TURNS = 3;
 import { CourseGateMount } from '../../components/history-engine/CourseGateMount';
 // Step 3 配额: daily-quota 纯逻辑 + quota-store 锁/持久化层 (均无 membership, 静态 import 不破坏隔离)。
 import { canUseLens, getRemainingLenses, getLensQuota, getRemainingSidekick, getSidekickQuota, lensKey, todayStr, normalizeLensUsage } from '../../lib/daily-quota';
@@ -353,6 +356,10 @@ export default function HistoryPage() {
   // ─── Story-First Pedagogy v3 桥接（见 docs/STORY_FIRST_PEDAGOGY.md）───
   // 如 Topic 有 storyboard（lib/history-storyboards/{topicId}.js）走新模型，
   // 否则 fallback 到旧 conversationTurns。
+  // Step 8: 「试看 5 分钟」样章状态。samplePreviewRef 给 async 闭包 (markLensStarted 等) 读最新值。
+  var [samplePreview, setSamplePreview] = useState(false);
+  var samplePreviewRef = useRef(false);
+  useEffect(function () { samplePreviewRef.current = samplePreview; }, [samplePreview]);
   // v3 lens 模型：用户可选不同角色视角看同一事件——effectiveTurns 按 lens 加载
   var [selectedLensId, setSelectedLensId] = useState(null);
   var topicLenses = topic ? getTopicLenses(topicId) : [];
@@ -363,7 +370,10 @@ export default function HistoryPage() {
   var topicDefaultLensMeta = (topic && hasLensesForTopic) ? getTopicLensMeta(topicId) : null;
   var effectiveLensId = selectedLensId
     || (topicDefaultLensMeta ? topicDefaultLensMeta.id : (hasLensesForTopic && topicLenses[0] ? topicLenses[0].id : null));
-  var effectiveTurns = topic ? getEffectiveTurns(topicId, topic, effectiveLensId) : [];
+  var fullTurns = topic ? getEffectiveTurns(topicId, topic, effectiveLensId) : [];
+  // Step 8: 「试看 5 分钟」样章 —— Free 用户在 locked HS 课点试看 → 只放前 SAMPLE_PREVIEW_TURNS 节,
+  // 走完弹「升级 Pro 看完整」CTA (不存进度 / 不扣配额 / 不进考核完成)。flag off 永不进入 samplePreview。
+  var effectiveTurns = samplePreview ? fullTurns.slice(0, SAMPLE_PREVIEW_TURNS) : fullTurns;
   // Learning Receipt：该 (topic,lens) 是否已交过收据（memo 避免每次渲染 parse 整个 blob）。
   // 仅判定「往期已交」；本会话刚交由 ConversationStream 内部 receiptSubmitted 处理。
   var existingReceipt = useMemo(function() {
@@ -808,8 +818,8 @@ export default function HistoryPage() {
     }
     var nextIdx = turnIndex + 1;
     setTurnIndex(nextIdx);
-    // O6：每次推进保存进度（mid-conversation only）
-    if (nextIdx > 0 && nextIdx < effectiveTurns.length && phase === "conversation") {
+    // O6：每次推进保存进度（mid-conversation only）。Step 8: 试看样章不落进度 (避免污染真实 resume)。
+    if (!samplePreview && nextIdx > 0 && nextIdx < effectiveTurns.length && phase === "conversation") {
       saveInProgress(topicId, {
         turnIndex: nextIdx,
         conversationLog: conversationLog,
@@ -972,6 +982,14 @@ export default function HistoryPage() {
     setConversationLog([]);
   };
 
+  // Step 8: 从 locked-course UpgradeModal「试看 5 分钟」进入 —— 关 gate modal, 标 samplePreview,
+  // 直接进对话 (有意绕过 gate: 试看就是给未授权用户体验前几节)。前 3 节走完弹升级 CTA。
+  var startSamplePreview = function() {
+    setShowUpgradeGate(false);
+    setSamplePreview(true);
+    startConversation();
+  };
+
   // ─── Step 4b-1: 进课 tier gate ─────────────────────────────────
   // CourseGate 上报 {access, topicId, lensId}。Codex P1 修: 结论带标签, 播放器页只信
   // 对应"当前 topic+lens"的 fresh 结论, 绝不吃旧 lens/topic 的陈旧 allow (防 stale 绕过)。
@@ -1095,6 +1113,8 @@ export default function HistoryPage() {
   // (fail-open, 不因瞬时问题打断学习)。返回 true = 已拦截, caller 应 return。
   var blockedByDowngrade = function() {
     if (!ENABLE_HISTORY_PAYWALL) return false;
+    // Step 8: 试看样章本就是未授权用户试用 Pro 课 (gate 结论必是 deny) —— 不拦, 让前 3 节走完弹升级 CTA。
+    if (samplePreviewRef.current) return false;
     // 读 ref 而非 freshGateAccess() —— 防陈旧定时器闭包 (P2-h) 看到翻转前的 allow。
     var ga = freshGateAccessRef.current;
     if (ga === 'deny' || ga === 'view-only-grandfathered') {
@@ -1137,6 +1157,7 @@ export default function HistoryPage() {
   // 幂等 (lensKey + lensDeductedRef 双保险)。多 tab 竞态输 → 回弹出对话 + 弹 lens-quota modal。
   var markLensStarted = function() {
     if (!ENABLE_HISTORY_PAYWALL) return;
+    if (samplePreviewRef.current) return; // Step 8: 试看样章不扣视角配额 (是 Pro 课试用, 非 Free 日常用量)
     var tier = freshTierRef.current;
     if (!tier) return;
     // Codex round1 P3-c: guard key 含当天日期 —— 否则页面跨午夜仍挂载、同 lens 再开时 ref 仍匹配,
@@ -1726,6 +1747,7 @@ export default function HistoryPage() {
             modalReason={gateModalReason}
             showModal={showUpgradeGate}
             onAccessChange={onGateAccessChange}
+            onPreview={startSamplePreview}
             onCloseModal={function() {
               setShowUpgradeGate(false);
               setGatePauseInPlace(false);
@@ -1957,6 +1979,9 @@ export default function HistoryPage() {
                 onSubmitReceipt={submitLearningReceipt}
                 existingReceipt={existingReceipt}
                 previewMode={topic && topic.isPreview}
+                samplePreview={samplePreview}
+                sampleFullCount={fullTurns.length}
+                onSampleUpgrade={function () { if (typeof window !== 'undefined') window.location.href = '/plan'; }}
                 onTermClick={setActiveTerm}
                 onMustClick={setActiveMust}
                 onJumpToMap={jumpToMap}
