@@ -1863,7 +1863,8 @@ export default function HistoryPage() {
         {/* 同步状态提示: 让用户看见 history 进度有没有上云 (原来 history 页没有任何同步提示) */}
         {!embedded && user && historySyncState && (
           <div style={{
-            position: "fixed", top: 12, right: 12, zIndex: 2200,
+            // top:60 放在 BrandNavBar 下方, 不挡右上角头像/账号菜单; pointerEvents:none 即便重叠也不拦点击 (Codex P2)
+            position: "fixed", top: 60, right: 12, zIndex: 2200, pointerEvents: "none",
             padding: "6px 12px", borderRadius: 999,
             background: historySyncState === 'error' ? "rgba(176,58,46,0.92)" : "rgba(22,122,90,0.92)",
             color: "#fff", fontSize: 12.5, fontWeight: 600,
