@@ -14,7 +14,7 @@ import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeW
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
 import { checkMorphFill } from '../lib/morphFillSanitize';
-import { hasTypedAnswer } from '../lib/typedRecall';
+import { hasTypedAnswer, hasUsableMeaning } from '../lib/typedRecall';
 
 // wordInput 自动去重 (保留首次出现顺序 + 原始大小写)。在数据加载/导入时调用，
 // 让词库始终无重复 — 用户不用再手动点"去重词库"。守卫已改按 distinct 词数放行纯去重。
@@ -2660,7 +2660,8 @@ export default function App() {
   var [quickReviewTyped, setQuickReviewTyped] = useState(""); // 手填中文回忆测试的输入
   var [quickReviewStats, setQuickReviewStats] = useState({ remembered:0, fuzzy:0, forgot:0 });
   // 快速复习释义懒加载缓存：只为缺 meaning 的词异步拉一次
-  var [quickReviewMeaningLoading, setQuickReviewMeaningLoading] = useState(false);
+  var [quickReviewMeaningLoadingWord, setQuickReviewMeaningLoadingWord] = useState(""); // 正在取释义的 word（按词绑定 loading，避免上一张卡完成误清当前卡）
+  var _meaningStatusRef = useRef({}); // word -> 'loading' | 'failed'：去重 + 不重试已失败（成功则写入队列/rwd）
   // 自定义 confirm 模态框（替代 native confirm 防止移动浏览器拦截）
   var [confirmModal, setConfirmModal] = useState(null);
   var confirmAsync = function(opts) {
@@ -6201,51 +6202,58 @@ export default function App() {
   // 翻转时若 meaning 缺失，懒加载一次中文释义并持久化
   var ensureQuickReviewMeaning = async function(idx) {
     var item = quickReviewQueue[idx];
-    if (!item) return;
-    var has = item.meaning && item.meaning !== "（释义将随学习自动补全）" && item.meaning.trim();
-    if (has) return;
-    setQuickReviewMeaningLoading(true);
+    if (!item || !item.word) return;
+    if (hasUsableMeaning(item.meaning)) return; // 已有可用释义
+    var word = item.word; // 按 word（非 idx）追踪，揭晓时队列可能已换批 (Codex P1)
+    var st = _meaningStatusRef.current[word];
+    if (st === 'loading' || st === 'failed') return; // in-flight 去重 + 已失败不重试 (Codex P2)
+    _meaningStatusRef.current[word] = 'loading';
+    setQuickReviewMeaningLoadingWord(word);
     var meaning = "";
     var failReason = "";
-    // 路径 1: 免费 mymemory API（无 rate limit，速度快，质量足够）
     try {
-      var resp = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(item.word) + "&langpair=en|zh-CN", { signal: AbortSignal.timeout(5000) });
-      var data = await resp.json();
-      var t = data?.responseData?.translatedText || "";
-      // 简单清洗 + 校验：mymemory 偶尔返回原英文（无翻译），过滤掉
-      t = t.trim();
-      if (t && t.toLowerCase() !== item.word.toLowerCase() && /[一-鿿]/.test(t)) {
-        meaning = t.slice(0, 60);
-      }
-    } catch(e) { failReason = "dict timeout"; }
-    // 路径 2: 兜底用 LLM（仅 path1 失败时）
-    if (!meaning) {
+      // 路径 1: 免费 mymemory API（无 rate limit，速度快，质量足够）
       try {
-        var prompt = "给出英文单词 \"" + item.word + "\" 的中文释义。一句话 ≤ 20 字，含词性（名/动/形）。直接输出释义。";
-        var raw = await callAPIFast("你是简洁的英汉词典助手", prompt);
-        meaning = (raw || "").trim().replace(/^["「『\s]+|["」』\s]+$/g, "").slice(0, 60);
-      } catch(e) {
-        failReason = e.message || "LLM failed";
-        console.warn("[ensureQuickReviewMeaning] LLM fallback failed:", failReason);
+        var resp = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(word) + "&langpair=en|zh-CN", { signal: AbortSignal.timeout(5000) });
+        var data = await resp.json();
+        var t = data?.responseData?.translatedText || "";
+        // 简单清洗 + 校验：mymemory 偶尔返回原英文（无翻译），过滤掉
+        t = t.trim();
+        if (t && t.toLowerCase() !== word.toLowerCase() && /[一-鿿]/.test(t)) {
+          meaning = t.slice(0, 60);
+        }
+      } catch(e) { failReason = "dict timeout"; }
+      // 路径 2: 兜底用 LLM（仅 path1 失败时）
+      if (!meaning) {
+        try {
+          var prompt = "给出英文单词 \"" + word + "\" 的中文释义。一句话 ≤ 20 字，含词性（名/动/形）。直接输出释义。";
+          var raw = await callAPIFast("你是简洁的英汉词典助手", prompt);
+          meaning = (raw || "").trim().replace(/^["「『\s]+|["」』\s]+$/g, "").slice(0, 60);
+        } catch(e) {
+          failReason = e.message || "LLM failed";
+          console.warn("[ensureQuickReviewMeaning] LLM fallback failed:", failReason);
+        }
       }
+    } finally {
+      if (hasUsableMeaning(meaning)) {
+        _meaningStatusRef.current[word] = 'done';
+        // 按 word 写回（不按 idx）：只覆盖仍缺释义的同词卡，杜绝把旧请求结果写到换批后同 idx 的别的词上
+        setQuickReviewQueue(function(q) {
+          var changed = false;
+          var nq = q.map(function(it) {
+            if (it && it.word === word && !hasUsableMeaning(it.meaning)) { changed = true; return Object.assign({}, it, { meaning: meaning }); }
+            return it;
+          });
+          return changed ? nq : q;
+        });
+        upsertReviewWordData(word, { meaning: meaning });
+      } else {
+        _meaningStatusRef.current[word] = 'failed'; // 标记已尝试失败：不再重试、不污染 meaning 文案
+        console.warn("[ensureQuickReviewMeaning] all paths failed for " + word + ": " + failReason);
+      }
+      // 仅当 loading 仍指向本词时才清，避免清掉后来卡片的 loading
+      setQuickReviewMeaningLoadingWord(function(w) { return w === word ? "" : w; });
     }
-    if (meaning) {
-      setQuickReviewQueue(function(q) {
-        var nq = q.slice();
-        if (nq[idx]) nq[idx] = Object.assign({}, nq[idx], { meaning: meaning });
-        return nq;
-      });
-      upsertReviewWordData(item.word, { meaning: meaning });
-    } else {
-      // 失败时给出具体提示而不是静默
-      setQuickReviewQueue(function(q) {
-        var nq = q.slice();
-        if (nq[idx]) nq[idx] = Object.assign({}, nq[idx], { meaning: "释义加载失败，请凭印象判断" });
-        return nq;
-      });
-      console.warn("[ensureQuickReviewMeaning] all paths failed for " + item.word + ": " + failReason);
-    }
-    setQuickReviewMeaningLoading(false);
   };
 
   // 进卡即后台预取标准释义（type-first 默写：揭晓时要拿它对照）。免费词典优先，
@@ -6254,9 +6262,8 @@ export default function App() {
     if (screen !== "quick_review") return;
     var item = quickReviewQueue[quickReviewIdx];
     if (!item) return;
-    var has = item.meaning && item.meaning !== "（释义将随学习自动补全）"
-      && item.meaning !== "释义加载失败，请凭印象判断" && item.meaning.trim();
-    if (!has) ensureQuickReviewMeaning(quickReviewIdx);
+    // ensure 内部已按 word 去重 / 跳过已失败 / 跳过已有释义，这里只需触发
+    if (!hasUsableMeaning(item.meaning)) ensureQuickReviewMeaning(quickReviewIdx);
   }, [screen, quickReviewIdx]);
 
   var markQuickReview = function(result) {
@@ -6667,11 +6674,22 @@ export default function App() {
 
   if (screen === "quick_review") {
     var qr = quickReviewQueue[quickReviewIdx];
+    if (!qr) {
+      // 队列空/越界兜底 (Codex P3)：不在 render 里 setState，给个可退出的安全态
+      return (
+        <div style={S.root}><div className="vs-desktop-container" style={S.container}>
+          <div style={{...S.card, textAlign:"center", padding:"40px 20px"}}>
+            <div style={{fontSize:15,color:C.textSec,marginBottom:16}}>没有可复习的单词了</div>
+            <button style={S.primaryBtn} onClick={() => setScreen("setup")}>← 返回主页</button>
+          </div>
+        </div>{confirmModalEl}</div>
+      );
+    }
     // 手填回忆是复习的默认形态（type-first）：所有词都先空框默写，逼出真实主动回忆，
     // 杜绝选择/翻卡的"凭感觉"。标准释义在进卡时已后台预取（ensureQuickReviewMeaning，
     // 免费词典优先），揭晓时拿来对照；个别取不到时也照样能凭印象自评。
-    var qrMeaningReady = qr && qr.meaning && qr.meaning !== "（释义将随学习自动补全）"
-      && qr.meaning !== "释义加载失败，请凭印象判断" && qr.meaning.trim();
+    var qrMeaningReady = hasUsableMeaning(qr.meaning);
+    var qrMeaningLoading = quickReviewMeaningLoadingWord === qr.word;
     var qrSelfGradeButtons = (
       <>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
@@ -6723,7 +6741,7 @@ export default function App() {
                   <span style={{fontWeight:700,color:C.green,marginRight:6}}>参考</span>
                   {qrMeaningReady
                     ? qr.meaning
-                    : quickReviewMeaningLoading
+                    : qrMeaningLoading
                       ? <span style={{color:C.textSec,fontStyle:"italic"}}>释义加载中…</span>
                       : <span style={{color:C.textSec,fontStyle:"italic"}}>释义暂时拿不到，凭你的印象判断即可</span>}
                 </div>
