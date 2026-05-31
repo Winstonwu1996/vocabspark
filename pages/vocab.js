@@ -3123,13 +3123,12 @@ export default function App() {
           setWordInput(d.wordInput || '');
           return;
         }
-      }
-      // 任意删词 (≥1) 都打意图标记：服务端守卫对"词数减少"一律要求 intent, 否则拒绝并保留 (防误删)。
-      // 原来只在 ≥3 弹框时才打 → 删 1-2 个词没 intent → 服务端拒绝 → 拉云/跨设备时词复活。
-      // 确认框仍只对 ≥3 (批量) 弹, 删一两个词不打扰。
-      if (deleted.length >= 1) {
+        // 用户主动确认删词 → 设 intent，让服务端 L1 守卫放行 wordInput 缩水
         _markIntent('user_edit_wordInput');
       }
+      // 注: 删 1-2 词 (<3) 不打 intent → 服务端守卫拒绝缩水 → 会"复活" (烦但不丢数据)。
+      // 对 ≤2 删除直接打 broad intent 有跨设备隐患: 本地陈旧时会误授权删掉没见过的云端新词 (Codex P1)。
+      // 正确修法 (word-scoped intent / 删前先 pull) 留作 sync-polish 专项, 见 docs/STEP_0B_SYNC_REDESIGN.md §6。
 
       d.wordInput = wordInput;
       doSave(d);
