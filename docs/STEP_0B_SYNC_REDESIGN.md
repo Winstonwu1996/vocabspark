@@ -86,9 +86,15 @@ vocab 页有 sync client,history 页没有。给 history 挂**第二个** client
   见过的云端新词 (跨设备丢词) → 已还原。正确修法: word-scoped intent 或删前先 pull 刷新本地。
 - history 同步状态条已加 (安全, 已上分支): 让用户看见同步; 但学完 history 不立刻推 (push-only 需 vocab
   先解锁 cloudReady) 仍待 history-pull 专项解决。
+- **push 陈旧对话日志** (P2, 既存): submitUserResponse setConversationLog 后立刻 advanceTurn,
+  saveInProgress 写的是上一轮 log → pushHistorySync 推陈旧快照 → 极端时机关页, 跨设备 resume 少最新一答。
+  修: save 前同步构造追加后的 log, 或 state 落定后再推。
+- **mergeInProgress 复活已清的 inProgress** (P2): 完成课删 inProgress[topic] 后 stale 推 → 409 merge
+  本地缺该 key、服务端还有 → union 把服务端 stale resume 抄回 → 完成的课仍显"继续"。修: 用 tombstone
+  或"该 topic 已在 completedTopics → 视为删除"。
 
 → 下一专项 (sync-polish): history 自驱动 pull + owner校验 + state-reapply + freshness + 删词 word-scoped
-  intent, 一并解决, 用户增长前完成。
+  intent + 上面两个 resume P2, 一并解决, 用户增长前完成。
 
 ## 7. 重要发现 — 会话失效才是"3 天未上云"主因 (并发分支)
 
