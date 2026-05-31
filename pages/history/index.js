@@ -8,8 +8,10 @@ import { BrandNavBar } from '../../components/BrandNavBar';
 import { FONT, FONT_DISPLAY, globalCSS } from '../../lib/theme';
 import { HC } from '../../components/history-engine/theme';
 import { CourseBrowser } from '../../components/history-engine/CourseBrowser';
+import { HistoryProToolsMount } from '../../components/history-engine/HistoryProToolsMount';
 import { findViewIdByTopicId } from '../../lib/atlas-views';
 import { loadEnglishLevel, saveEnglishLevel } from '../../lib/history-storage';
+import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
 
 // 6 张卖点卡。顺序按「中国家长付费决策」排：① 学校对得上 ② 三视角 ③ 中国底子 ④ 地图 ⑤ 双语+发音 ⑥ 史料考证。
 // 措辞硬规则（升学规划专家 + 历史老师双 Agent 一致建议）：
@@ -241,6 +243,9 @@ export default function HistoryHome() {
               }}>{hero.atlas}</a>
             </div>
           </div>
+
+          {/* ── Step 10: 会员专属工具区 (自动推荐开关 + Pro 一键全推)。flag off 永不挂载 ── */}
+          {ENABLE_HISTORY_PAYWALL && <HistoryProToolsMount />}
 
           {/* ── 选课：51 门，支持「按年级 / AP / 脉络」三种 Mode 切换 ── */}
           <CourseBrowser onSwitch={goTopic} />

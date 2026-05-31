@@ -82,6 +82,7 @@ import {
   bridgeReviewToVocab,
   saveLearningReceipt,
   loadLearningReceipt,
+  getHistoryAutoRecommend,
 } from '../../lib/history-storage';
 import { inferCurriculum } from '../../lib/curriculum-data';
 
@@ -1236,7 +1237,8 @@ export default function HistoryPage() {
     // Step 9 (consumer-gate, Codex P2-a 修): **总是**推桥保留词 (所有 tier), 不在 producer 端按 tier 拦
     // —— 否则 Free 升级后那门课的词丢失需重学。「考点词进 Vocab」(Basic+) 的 entitlement 改在 vocab 侧
     // 按 tier gate 呈现 (词留 bridgeQueue.history, 升级即呈现)。CompletionScreen 给 free/guest 升级提示。
-    if (reviewWords.length > 0) {
+    // Step 10: flag on 时尊重「自动推荐」开关 (默认 on)。flag off → 永远推 (byte-identical 历史行为)。
+    if (reviewWords.length > 0 && (!ENABLE_HISTORY_PAYWALL || getHistoryAutoRecommend())) {
       try {
         bridgeReviewToVocab(reviewWords, { topicId: topicId, priority: "must-memorize" });
       } catch (e) { console.warn("bridge to vocab failed:", e); }
