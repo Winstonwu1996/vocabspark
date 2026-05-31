@@ -50,3 +50,38 @@
 
 ## 请给结论
 落实是否到位（重点 #1 自评零改动、#2 typed 不进 sync、#3 占位列表完整性）+ 整体合并部署 go/no-go。
+
+---
+
+# 2026-05-31 迭代：手填默写设为复习默认形态（type-first）+ 入口更显眼
+
+## 起因
+创始人反馈"这个功能你一直没上线"。排查（含查 chompcloud 真实数据）确认：功能 5/28 即已上线，但
+(1) 藏在"快速复习"里、(2) 约 **21%** 缺释义的词会回退成旧翻卡（数据库实测 487/613 有可用释义），
+体验不一致 → 没被注意到。创始人决定：**保留自评（零 LLM）**、**留在快速复习但更显眼**。
+
+## 改动（commits `bf82d63` + `b439c6e` + `1a41862`）
+- **type-first**：删掉 `shouldRequireTypedRecall` 的释义门槛与旧翻卡回退分支，所有复习词默认空框默写。
+  `shouldRequireTypedRecall` 不再被 vocab.js 调用（lib 仍导出，未删）。
+- **进卡预取释义**：新 `useEffect([screen, quickReviewIdx])` → `ensureQuickReviewMeaning`（免费词典 mymemory 优先，
+  失败退 callAPIFast LLM），揭晓即有对照；取不到时"参考"框显示"凭印象判断"，仍可自评。
+- **入口更显眼**：日计划步骤卡 title `快速复习`→`✍️ 默写复习`、sub/cta 点明"默写释义、检验真记住"，屏内 tag→`✍️ 默写复习`。
+- **自评判分零改动**（`markQuickReview` 未动），typed 答案仍不进 sync / 不持久化。
+
+## Codex 复审：首轮 No-Go → 修复后 Go
+首轮 **No-Go** 发现（均已修，`b439c6e`）：
+- **P1（污染自评依据）**：`ensureQuickReviewMeaning` 按 `idx` 写回，stale 预取请求可能把 A 词释义写到换批后同 idx 的 B 词。
+  → 改为按 captured `word` + functional `map`，只覆盖 `it.word===word && !hasUsableMeaning(it.meaning)` 的卡。
+- **P2**：无 in-flight 去重（effect+揭晓 handler 重复请求）；`quickReviewMeaningLoading` 全局 boolean 会被上一张卡完成误清；
+  "可用释义"判断三处不一致、拿 meaning 文案当状态机。
+  → 新增 `_meaningStatusRef`(word→loading/failed/done) 去重+不重试失败；loading 改 `quickReviewMeaningLoadingWord`（按词）；
+  统一 `hasUsableMeaning`；失败不再写占位进 meaning。
+- **P3**：无 `!qr` 越界兜底、loading 清理不在 finally。→ 加可退出安全态（不在 render setState）+ 全流程 try/finally。
+
+复审 **Go**，残留仅 P3：`_meaningStatusRef.failed` 跨复习轮残留 → 已加 `startQuickReview` 处 `_meaningStatusRef.current={}` 重置（`1a41862`），
+临时失败的词下一轮可重试。
+
+## 测试 / 部署
+- `node scripts/test-typed-recall.mjs` 23/23（Codex 复审实跑）；`npm run build` 通过。
+- 已合 main + 部署（deploy `dpl_7ZYBjidkxNBaSFrHpK6mQ1GNJeMc`，2026-05-31）。
+- 仍待"部署后女儿真用验证"默写体验。

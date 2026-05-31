@@ -2,7 +2,28 @@
 
 记录已上线修复留下的、Codex 评为**非阻断**的后续项，避免遗忘。每项含：背景、位置、建议改法、为何当前不阻断。
 
-最后更新：2026-05-24
+最后更新：2026-05-31
+
+---
+
+## 已上线 — 2026-05-31：会话被动失效静默锁死同步（chompcloud 事故根因）
+经 **Workflow 多维度审查（16 agent，安全/竞态/回归/边界 + 对抗式验证）** + 真实数据复原，已部署：
+
+- **事故**：用户 chompcloud@gmail（uid `d3906a86…`）云端进度冻结在 5/28 06:13（version 1527），3 天未上云。
+  数据库确认：唯一 session 5/28 创建后从未刷新（access token 1h 过期、refresh 一直失败）。
+- **根因链**：token 刷新失败/被吊销 → Supabase 发 `SIGNED_OUT` → `setUser(null)` →
+  导航栏同步徽章（`user && syncStatus` 才渲染）整块消失 + 推云闸门锁死 → 用户无感继续本地学习、永不上云。
+  叠加"旧标签页跑旧 bundle"（已由 UpdateBanner `50edd30` 缓解）= 完整成因。
+- **复原**：指导用户**原 tab 重新登录**（不登出/不清缓存）→ 既有 SIGNED_IN 并集合并路径把本地 3 天进度推云：
+  version 1527→1528、wordStatusMap 816→926（+110，只增不减）。
+- **修复**（`74c4080` 初版 + `9fd4682` 审查后）：
+  - 新增 `sessionExpired` 状态 + `_userLogoutRef`/`_sessionExpiredRef`/`vs_was_logged_in`/`vs_active_logout`。
+  - 被动失效（非主动登出的 SIGNED_OUT，或**启动期 INITIAL_SESSION 拿到 null 且曾登录** ← Workflow P1）→
+    学习页弹"登录已过期，云同步已暂停 · 重新登录"横幅（只引导安全重登，不提供破坏性操作）。
+  - **Workflow P2（丢数据）**：重登并集合并被 5min 阈值挡住 → 失效后 <5min 学的词会被云端覆盖。
+    改为从失效恢复时**无条件走 mergeStates 并集**（绕过阈值，validateMerged 仍防缩水）。
+  - **Workflow P3**：多 tab 主动登出经广播误弹横幅（`vs_active_logout` 跨 tab 吃掉）；
+    `signOut` 包 try/catch + 拿到有效 user 时复位 `_userLogoutRef`（防 ref 卡死吃掉后续真实过期）。
 
 ---
 
