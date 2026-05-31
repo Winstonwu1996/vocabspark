@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { BrandNavBar } from "../components/BrandNavBar";
 import { C, FONT, FONT_DISPLAY, NUM, S, globalCSS } from "../lib/theme";
 
 var STORAGE_KEY = "knowu_willow_summer_checkin_2026_v1";
+var CELEBRATED_KEY = "knowu_willow_summer_checkin_2026_celebrated_v1";
 var START_DATE = "2026-06-09";
 var END_DATE = "2026-07-13";
 var TOTAL_DAYS = 35;
@@ -141,6 +142,10 @@ var getMissingItems = function(entry, historyPlan) {
   return missing;
 };
 
+var getDaysRemaining = function(dateId) {
+  return Math.max(0, daysBetweenInclusive(dateId, END_DATE) - 1);
+};
+
 var cardStyle = {
   background: C.card,
   border: "1px solid " + C.border,
@@ -271,11 +276,104 @@ var ToggleRow = function({ checked, title, sub, onToggle, tone, timeType }) {
   );
 };
 
+var CelebrationModal = function({ open, dateId, onClose }) {
+  if (!open) return null;
+  var dayIndex = getDayIndex(dateId);
+  var left = getDaysRemaining(dateId);
+  var flowers = ["🎉", "🌸", "✨", "🔥", "🌟", "💪", "🎊", "🚀"];
+  return (
+    <div style={{
+      position: "fixed",
+      inset: 0,
+      zIndex: 1000,
+      background: "rgba(22,27,34,0.46)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 18,
+    }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes willowConfettiFall {
+          0% { opacity: 0; transform: translateY(-24px) rotate(0deg) scale(0.8); }
+          12% { opacity: 1; }
+          100% { opacity: 0; transform: translateY(220px) rotate(260deg) scale(1.1); }
+        }
+        @keyframes willowModalPop {
+          0% { opacity: 0; transform: scale(0.92) translateY(12px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      ` }} />
+      <div style={{
+        position: "relative",
+        width: "min(520px, 100%)",
+        background: "linear-gradient(135deg, #fff 0%, #fff8e8 100%)",
+        border: "1px solid " + C.gold + "66",
+        borderRadius: 18,
+        boxShadow: "0 24px 70px rgba(22,27,34,0.28)",
+        padding: "28px 24px 22px",
+        textAlign: "center",
+        overflow: "hidden",
+        animation: "willowModalPop 0.2s ease-out",
+      }}>
+        {flowers.map(function(f, i) {
+          return (
+            <span key={i} style={{
+              position: "absolute",
+              top: -20,
+              left: (8 + i * 12) + "%",
+              fontSize: 20 + (i % 3) * 4,
+              animation: "willowConfettiFall " + (2.2 + i * 0.12) + "s ease-in-out infinite",
+              animationDelay: (i * 0.13) + "s",
+              pointerEvents: "none",
+            }}>{f}</span>
+          );
+        })}
+        <div style={{ fontSize: 42, lineHeight: 1, marginBottom: 10 }}>🎉</div>
+        <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: 27, lineHeight: 1.2, margin: "0 0 10px", color: C.text, letterSpacing: 0 }}>
+          太棒了，老己！
+        </h2>
+        <p style={{ fontSize: 15, color: C.text, lineHeight: 1.75, margin: "0 auto 12px", maxWidth: 430 }}>
+          Day {dayIndex} 满格完成。今天这波无敌，牛 X。暑假进度少一天，我的修炼值就多一格。
+        </p>
+        <div style={{
+          background: C.greenLight,
+          border: "1px solid " + C.green + "33",
+          borderRadius: 12,
+          padding: "11px 12px",
+          color: C.green,
+          fontSize: 13.5,
+          fontWeight: 800,
+          lineHeight: 1.55,
+          marginBottom: 16,
+        }}>
+          离回去开挂、碾压美国小伙伴，又近了一天。剩下 {left} 天，继续稳住。
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            ...S.primaryBtn,
+            width: "auto",
+            display: "inline-flex",
+            padding: "12px 22px",
+            fontSize: 14,
+            borderRadius: 12,
+          }}
+        >
+          收下，继续享受暑假
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export default function SummerCheckinPage() {
   var [entries, setEntries] = useState({});
   var [selectedDate, setSelectedDate] = useState(START_DATE);
   var [hydrated, setHydrated] = useState(false);
   var [guidelineOpen, setGuidelineOpen] = useState(false);
+  var [celebrationOpen, setCelebrationOpen] = useState(false);
+  var [celebratedDates, setCelebratedDates] = useState({});
+  var lastCompleteRef = useRef({});
   var dates = useMemo(getAllDates, []);
   var entry = getEntry(entries, selectedDate);
   var completion = getCompletion(entry);
@@ -288,6 +386,8 @@ export default function SummerCheckinPage() {
     try {
       var raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) setEntries(JSON.parse(raw) || {});
+      var celebratedRaw = window.localStorage.getItem(CELEBRATED_KEY);
+      if (celebratedRaw) setCelebratedDates(JSON.parse(celebratedRaw) || {});
     } catch (e) {}
     setSelectedDate(clampDateId(toDateId(new Date())));
     setHydrated(true);
@@ -300,6 +400,26 @@ export default function SummerCheckinPage() {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
     } catch (e) {}
   }, [entries, hydrated]);
+
+  useEffect(function() {
+    if (typeof window === "undefined") return;
+    if (!hydrated) return;
+    try {
+      window.localStorage.setItem(CELEBRATED_KEY, JSON.stringify(celebratedDates));
+    } catch (e) {}
+  }, [celebratedDates, hydrated]);
+
+  useEffect(function() {
+    if (!hydrated) return;
+    var wasComplete = !!lastCompleteRef.current[selectedDate];
+    if (completion.complete && !wasComplete && !celebratedDates[selectedDate]) {
+      setCelebrationOpen(true);
+      setCelebratedDates(function(prev) {
+        return { ...prev, [selectedDate]: true };
+      });
+    }
+    lastCompleteRef.current[selectedDate] = completion.complete;
+  }, [completion.complete, selectedDate, hydrated, celebratedDates]);
 
   var updateEntry = function(patch) {
     setEntries(function(prev) {
@@ -385,6 +505,12 @@ export default function SummerCheckinPage() {
       delete next[selectedDate];
       return next;
     });
+    setCelebratedDates(function(prev) {
+      var next = { ...prev };
+      delete next[selectedDate];
+      return next;
+    });
+    lastCompleteRef.current[selectedDate] = false;
   };
 
   return (
@@ -412,6 +538,11 @@ export default function SummerCheckinPage() {
       ` }} />
 
       <BrandNavBar activeTab="checkin" user={null} onUserCenterClick={function() {}} />
+      <CelebrationModal
+        open={celebrationOpen}
+        dateId={selectedDate}
+        onClose={function() { setCelebrationOpen(false); }}
+      />
 
       <main className="checkin-shell">
         <section style={{
@@ -429,7 +560,7 @@ export default function SummerCheckinPage() {
                 Willow 暑假学习打卡
               </h1>
               <p style={{ margin: 0, color: C.textSec, fontSize: 14, lineHeight: 1.7, maxWidth: 680 }}>
-                6 月 7 日下午到国内，6 月 8 日倒时差，6 月 9 日开始打卡；7 月 14 日上午返美，打卡到 7 月 13 日。每日守住数理逻辑、英文阅读、词汇复习、世界历史四条线。
+                6 月 7 日下午到国内，6 月 8 日倒时差，6 月 9 日开始打卡；7 月 14 日上午返美，打卡到 7 月 13 日。每天满格一次，就是一次小升级。
               </p>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -465,21 +596,24 @@ export default function SummerCheckinPage() {
               }}
             >
               <span>
-                <span style={{ display: "block", fontSize: 14, fontWeight: 900, color: C.text }}>Willow 的暑假学习纲领</span>
-                <span style={{ display: "block", fontSize: 12, color: C.textSec, marginTop: 2 }}>不是把暑假塞满，而是每天守住几条线。</span>
+                <span style={{ display: "block", fontSize: 14, fontWeight: 900, color: C.text }}>老己的暑假修炼纲领</span>
+                <span style={{ display: "block", fontSize: 12, color: C.textSec, marginTop: 2 }}>不是把暑假塞满，而是每天稳稳升级。</span>
               </span>
               <span style={{ fontSize: 12, color: C.accent, fontWeight: 800, whiteSpace: "nowrap" }}>{guidelineOpen ? "收起" : "展开"}</span>
             </button>
             {guidelineOpen && (
               <div style={{ borderTop: "1px solid " + C.border, padding: "13px 14px 15px", fontSize: 13, color: C.text, lineHeight: 1.75 }}>
                 <p style={{ margin: "0 0 10px" }}>
-                  Willow，这个计划不是为了把你的暑假变成另一个上学日。它只是把每天最重要的几件事固定下来：逻辑训练、英文阅读、单词复习和历史理解。很多任务可以在车上、路上、等人的时候用手机完成，真正需要安静坐下来的主要是阅读和数学老师课。
+                  老己，这个计划不是为了把我的暑假变成另一个上学日。它只是把每天最重要的几件事固定下来：逻辑训练、英文阅读、单词复习和历史理解。很多任务我可以在车上、路上、等人的时候用手机完成，真正需要安静坐下来的主要是阅读和数学老师课。
                 </p>
                 <p style={{ margin: "0 0 10px" }}>
-                  这样做的好处是，你不会因为回国生活节奏很散，就把英语输入、词汇和思考能力断掉；也不会因为每天任务太重，失去暑假的感觉。完成这些基础线以后，剩下的时间就是你的暑假：朋友、家人、户外、电影、节目和放松。
+                  这样做的好处是，我不会因为回国生活节奏很散，就把英语输入、词汇和思考能力断掉；也不会因为每天任务太重，失去暑假的感觉。完成这些基础线以后，剩下的时间就是我的暑假：朋友、家人、户外、电影、节目和放松。每天完成 5/5 都是一次小胜利，太棒了，稳住就是无敌。
                 </p>
                 <p style={{ margin: "0 0 10px" }}>
-                  这个暑假也要留出足够时间检查身体健康，包括牙齿、视力、脊柱和日常姿势。学习计划只是帮助你保持节奏，身体状态才是长期学习和生活的底盘。
+                  这个暑假我也要留出足够时间检查身体健康，包括牙齿、视力、脊柱和日常姿势。学习计划只是帮助我保持节奏，身体状态才是长期学习和生活的底盘。
+                </p>
+                <p style={{ margin: "0 0 10px", fontWeight: 800, color: C.accent }}>
+                  暑假进度每天少一点，但我的修炼值每天多一点。等我回美国，状态拉满，回去开挂，碾压美国小伙伴。牛 X。
                 </p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   <TimeBadge type="block" />
@@ -493,8 +627,8 @@ export default function SummerCheckinPage() {
 
           <div className="checkin-stats" style={{ marginTop: 18 }}>
             {[
-              { label: "已完整完成", value: completedDays + "/" + TOTAL_DAYS, sub: "含短视频边界", color: C.green },
-              { label: "核心学习线", value: coreDays + "/" + TOTAL_DAYS, sub: "数理/阅读/单词/历史", color: C.accent },
+              { label: "满格修炼", value: completedDays + "/" + TOTAL_DAYS, sub: "5/5 就撒花", color: C.green },
+              { label: "主线战力", value: coreDays + "/" + TOTAL_DAYS, sub: "数理/阅读/单词/历史", color: C.accent },
               { label: "本周数学课", value: weekMathDone + "/" + WEEKLY_MATH_TARGET, sub: formatDate(week.start) + " - " + formatDate(week.end), color: C.purple },
               { label: "非故事阅读", value: weekNonfiction + "/" + WEEKLY_NONFICTION_TARGET, sub: "科学类 + 议论文", color: C.teal },
             ].map(function(stat) {
@@ -543,7 +677,7 @@ export default function SummerCheckinPage() {
               </div>
 
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-                <span style={{ ...S.heroStatPillAccent, padding: "5px 10px", fontSize: 12 }}>{completion.done}/{completion.total} 项完成</span>
+                <span style={{ ...S.heroStatPillAccent, padding: "5px 10px", fontSize: 12 }}>{completion.done}/{completion.total} 项完成 · {completion.complete ? "太棒了" : "满格就撒花"}</span>
                 <span style={{ ...S.heroStatPillGold, padding: "5px 10px", fontSize: 12 }}>{historyPlan.label}</span>
                 <span style={{ ...S.heroStatPillGreen, padding: "5px 10px", fontSize: 12 }}>短视频 {entry.shortVideoMinutes || 0}/40 分钟</span>
               </div>
@@ -725,7 +859,7 @@ export default function SummerCheckinPage() {
               <textarea
                 value={entry.dayNote}
                 onChange={function(e) { updateEntry({ dayNote: e.target.value }); }}
-                placeholder="今日最值得记录的一句话"
+                placeholder="今天牛在哪？写一句给老己看的肯定"
                 rows={3}
                 style={{ ...S.textarea, marginTop: 12 }}
               />
@@ -737,7 +871,7 @@ export default function SummerCheckinPage() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                 <div>
                   <div style={smallLabelStyle}>35-day map</div>
-                  <div style={{ fontSize: 16, fontWeight: 900, color: C.text }}>假期进度</div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: C.text }}>修炼进度</div>
                 </div>
                 <div style={{ ...NUM, fontWeight: 900, color: C.accent }}>{Math.round((selectedIdx / TOTAL_DAYS) * 100)}%</div>
               </div>
@@ -779,10 +913,10 @@ export default function SummerCheckinPage() {
             <div style={cardStyle}>
               <div style={smallLabelStyle}>Selected day</div>
               <h3 style={{ fontFamily: FONT_DISPLAY, fontSize: 18, margin: "5px 0 8px", letterSpacing: 0 }}>
-                {completion.complete ? "当天已全部完成" : "当天还缺什么"}
+                {completion.complete ? "当天满格完成" : "当天还差什么"}
               </h3>
               {completion.complete ? (
-                <p style={{ fontSize: 13, color: C.green, lineHeight: 1.7, margin: 0, fontWeight: 700 }}>这一天的基础线已经守住。</p>
+                <p style={{ fontSize: 13, color: C.green, lineHeight: 1.7, margin: 0, fontWeight: 800 }}>太棒了，老己。这一天 5/5 满格，回去开挂倒计时又少一天。</p>
               ) : (
                 <div style={{ display: "grid", gap: 7 }}>
                   {missingItems.map(function(item) {

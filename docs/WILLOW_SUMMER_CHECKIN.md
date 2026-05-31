@@ -20,6 +20,7 @@ Small local-first Know U. Learning tool for Willow's 2026 China summer study pla
 - Outdoor activity is encouraged in the overall summer plan but is not tracked as a check-in item because Willow already likes it.
 - Short video cap: 40 minutes/day. Long-form video content is governed by content approval, not time approval in this check-in tool.
 - Guideline copy reminds Willow to leave enough time for health checks, including teeth, vision, spine, and daily posture.
+- Completion behavior: when a selected day reaches 5/5 completion, the page shows a one-time celebratory modal for that day.
 
 ## English Diagnosis
 
