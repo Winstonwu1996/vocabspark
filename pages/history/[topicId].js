@@ -83,8 +83,12 @@ import {
   saveLearningReceipt,
   loadLearningReceipt,
   getHistoryAutoRecommend,
+  loadAll,
 } from '../../lib/history-storage';
 import { inferCurriculum } from '../../lib/curriculum-data';
+import { getSyncClient } from '../../lib/sync-client-singleton'; // 方案1: 与 vocab 共用单一同步实例
+import { backupOnBoot } from '../../lib/local-backup'; // sync 前快照兜底
+import { detectSyncGate } from '../../lib/progressMergePolicy';
 
 // ─── history-engine 抽离组件（pages/history.js 和未来的 AtlasLabPage embed mode 共用）
 import { HC } from '../../components/history-engine/theme';
@@ -128,6 +132,60 @@ export default function HistoryPage() {
   var [worldview, setWorldview] = useState(null);
   var [user, setUser] = useState(null);
   var [xp, setXp] = useState(0);
+
+  // ─── Phase 2: history 接入「单一共享同步客户端」(push-only) ──────────────────
+  // history 进度变更 (完成课 / 推进对话存档) 触发 syncToCloud, 让历史进度也能上云跨设备 ——
+  // 不再只靠"碰巧打开 vocab 顺带推"。客户端是与 vocab 共用的同一实例 (方案1, 单一真相源)。
+  // 安全: 客户端内部 cloudReady 闸门 —— vocab 拉过云 (本 tab 访问过 vocab) 才解锁 push;
+  // 否则 syncToCloud 静默不推 (history 进度仍存本地, 下次 vocab 拉云时 newer-wins 合并带上, 不丢)。
+  // 下载侧沿用 vocab 既有 pull (整 blob 含 historyData) + 本页挂载读 localStorage。
+  // (history 自驱动 pull + player state 全量重应用 = 高风险, 留作后续专项; 见 sync redesign doc。)
+  var userRef = useRef(null);
+  useEffect(function () { userRef.current = user; }, [user]);
+  var historySyncRef = useRef(null);
+  var historyGetAuthHeaders = async function (includeContentType) {
+    var headers = {};
+    if (includeContentType) headers['Content-Type'] = 'application/json';
+    try {
+      var s = await supabase.auth.getSession();
+      var token = s && s.data && s.data.session && s.data.session.access_token;
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+    } catch (e) {}
+    return headers;
+  };
+  // 与 vocab doSave 一对一: 浅合并 + 重盖 updatedAt (共享客户端无论哪页活跃, 落盘行为必须一致)。
+  var historySaveSnapshot = function (d) {
+    try {
+      if (typeof window === 'undefined') return;
+      var existing = null;
+      try { var raw = localStorage.getItem('vocabspark_v1'); if (raw) existing = JSON.parse(raw); } catch (e) {}
+      var merged = Object.assign({ schemaVersion: 2, completedWords: [] }, existing || {}, d, { updatedAt: new Date().toISOString() });
+      localStorage.setItem('vocabspark_v1', JSON.stringify(merged));
+    } catch (e) {}
+  };
+  useEffect(function () {
+    if (historySyncRef.current) return;
+    if (typeof window === 'undefined') return;
+    backupOnBoot(); // sync 引擎初始化前快照 blob (与 vocab 一致)
+    historySyncRef.current = getSyncClient({
+      ownerLabel: 'history',
+      getAuthHeaders: historyGetAuthHeaders,
+      getUser: function () { return userRef.current; },
+      loadLocalSnapshot: function () { return loadAll(); },
+      saveLocalSnapshot: function (d) { historySaveSnapshot(d); },
+      // onCloudData: blob 已由 saveLocalSnapshot 落盘 (权威); history 各 save 都读最新 localStorage,
+      // 故不全量重应用 React state (重应用整页状态 = 高风险, 留后续); UI 在下次挂载/导航刷新。
+      onCloudData: function () {},
+      onSyncStatus: function () {},
+      detectSyncGate: function (data) { return detectSyncGate(data); },
+      trackEvent: function () {},
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // 进度变更后触发推送 (内部 cloudReady 闸门 + debounce; 未 ready 时静默不推, 安全)。
+  var pushHistorySync = function () {
+    try { if (historySyncRef.current) historySyncRef.current.syncToCloud(); } catch (e) {}
+  };
 
   // —— 对话状态 ——
   var [conversationLog, setConversationLog] = useState([]); // [{role, turn, content, timestamp}]
@@ -829,6 +887,7 @@ export default function HistoryPage() {
         conversationLog: conversationLog,
         lensId: effectiveLensId || null, // Codex P2-j: 存档绑定 lens, resume 时按此 lens 过 gate
       });
+      pushHistorySync(); // Phase 2: 对话推进存档 → 推云 (cloudReady 才真推; client debounce 合并频繁推送)
     }
     // 走完最后一轮 → 清掉 in-progress。Step 8 (Codex P2): 试看样章不碰真实进度 ——
     // 否则截断 3 节走完会清掉该 topic 真实的 in-progress (如订阅期已开课、降级后又点试看的用户)。
@@ -1325,6 +1384,7 @@ export default function HistoryPage() {
 
     setPhase("complete");
     setShowCompletion(true);
+    pushHistorySync(); // Phase 2: 完成一门课 → 推云 (cloudReady 才真推, 否则静默安全)
   };
 
   // 整合 atlas-lab：从 atlas 来 + 完成 Topic → 8 秒后自动跳回 atlas（带 ?completed=1 触发庆祝 toast）
