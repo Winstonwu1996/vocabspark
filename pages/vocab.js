@@ -2861,6 +2861,10 @@ export default function App() {
   // tier 是否已从网络确认过（用于限制检查：未确认前放行，避免误伤付费用户）
   var [tierLoaded, setTierLoaded] = useState(false);
   var [showLogin, setShowLogin] = useState(false);
+  // 会话被动失效（token 刷新失败/被吊销，非用户主动登出）→ 显式提示重新登录，
+  // 而不是默默把 user 置空、徽章消失、同步静默锁死（chompcloud 3 天未上云事件根因）。
+  var [sessionExpired, setSessionExpired] = useState(false);
+  var _userLogoutRef = useRef(false); // 区分"用户主动登出" vs "被动失效"，避免登出也弹过期提示
   // 支持 /vocab?login=1 URL 参数：从首页"登录/注册"跳转过来时自动打开登录弹窗
   useEffect(function() {
     if (typeof window === "undefined") return;
@@ -3936,6 +3940,8 @@ export default function App() {
   };
 
   var handleLogout = async function() {
+    _userLogoutRef.current = true; // 标记主动登出：监听器里据此不弹"会话过期"
+    setSessionExpired(false);
     // 先同步最新数据到云端
     if (userRef.current) {
       try {
@@ -4096,6 +4102,7 @@ export default function App() {
   var _authTimersRef = useRef([]); // onAuthStateChange 推迟执行的 setTimeout id，unmount 时清
   var handleAuthUser = async function(u, event, session) {
     setUser(u); userRef.current = u;
+    if (u) setSessionExpired(false); // 拿到有效用户 → 清除过期提示
     if (!u) return;
 
     // 缓存最新 access token：优先用 event session 直接取 (Supabase 官方推荐),
@@ -4355,6 +4362,15 @@ export default function App() {
 
     var {data: {subscription}} = supabase.auth.onAuthStateChange(function(event, session) {
       var u = session?.user || null;
+      // 被动失效检测：SIGNED_OUT 且非用户主动登出（token 刷新失败/被吊销）→ 弹"会话过期"
+      // 提示用户重新登录恢复云同步，而不是默默锁死同步。userRef 之前有值 = 确实从登录态掉出来。
+      if (event === 'SIGNED_OUT') {
+        if (_userLogoutRef.current) {
+          _userLogoutRef.current = false; // 主动登出已由 handleLogout 处理，吃掉这次事件
+        } else if (userRef.current) {
+          setSessionExpired(true);
+        }
+      }
       // Supabase v2 已知死锁陷阱：onAuthStateChange 回调持有 auth 内部锁，回调里 await
       // 其他 supabase.auth 方法会等同一把锁 → 永久死锁、promise 永不 resolve。
       // handleAuthUser 内部会 await supabase.auth.getSession()（loadFromCloud 的
@@ -6851,6 +6867,19 @@ export default function App() {
       )}
 
       <AppHeroHeader stats={stats} studyStreak={getStudyStreak()} user={user} onUserCenterClick={function(){ setShowUserCenter(true); }} syncStatus={syncStatus} lastSyncAt={lastSyncAt} onSyncRetry={function(){ if (userRef.current) syncToCloud(); }} />
+
+      {/* 会话过期提示：被动掉登录态时显式提醒重新登录，恢复云同步（点击不会清本地数据，
+          重新登录会把本地进度并集合并后推上云）。绝不在此处提供"清除/退出"等破坏性操作。 */}
+      {sessionExpired && !user && (
+        <div role="alert" style={{ background:"#fff4e6", border:"1px solid "+C.accent, borderRadius:12, margin:"10px 16px 0", padding:"12px 14px", display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", boxShadow:"0 2px 10px rgba(196,107,48,0.12)" }}>
+          <span style={{ fontSize:18 }}>⚠️</span>
+          <div style={{ flex:"1 1 200px", minWidth:0, fontSize:13.5, color:C.text, lineHeight:1.5, fontFamily:FONT }}>
+            <strong>登录已过期，云同步已暂停</strong>
+            <div style={{ color:C.textSec, fontSize:12.5, marginTop:2 }}>你的进度暂时只保存在本机。重新登录即可恢复云端备份（不会丢失当前进度）。</div>
+          </div>
+          <button onClick={function(){ setShowLogin(true); }} style={{ ...S.primaryBtn, padding:"8px 18px", fontSize:13.5, whiteSpace:"nowrap" }}>重新登录</button>
+        </div>
+      )}
 
       {/* 我的小本本卡：整合 宠物 + streak + XP + 词数，用叙事化文案替代散落的数据条
           替代旧的"连续学习激励条"，把分散的成长信号收成一个"温暖的我的世界" */}
