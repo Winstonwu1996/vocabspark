@@ -103,7 +103,7 @@ import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/noteboo
 import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
 import { CourseGateMount } from '../../components/history-engine/CourseGateMount';
 // Step 3 配额: daily-quota 纯逻辑 + quota-store 锁/持久化层 (均无 membership, 静态 import 不破坏隔离)。
-import { canUseLens, getRemainingLenses, getLensQuota, getRemainingSidekick, getSidekickQuota, lensKey, todayStr } from '../../lib/daily-quota';
+import { canUseLens, getRemainingLenses, getLensQuota, getRemainingSidekick, getSidekickQuota, lensKey, todayStr, normalizeLensUsage } from '../../lib/daily-quota';
 import { tryUseLens, tryUseSidekick, readLensUsage, readSidekickUsage } from '../../lib/quota-store';
 
 // ─── 主组件 ────────────────────────────────────────────────────────
@@ -1026,7 +1026,8 @@ export default function HistoryPage() {
       lensQuota: getLensQuota(currentTier),
       sidekickRemaining: getRemainingSidekick(_skU, currentTier),
       sidekickQuota: getSidekickQuota(currentTier),
-      usedLensIds: (_lensU && _lensU.usedLensIds) || [],
+      // Codex: 用 normalize 后的 usedLensIds (跨日则空) —— 否则午夜后 badge 把昨天的 lens 标「今日已学过」。
+      usedLensIds: normalizeLensUsage(_lensU).usedLensIds,
     };
   }
   // 包一层进 conversation 的入口 (onStart / onResume / onClearAndStart / notebook 切 lens 共用)。
