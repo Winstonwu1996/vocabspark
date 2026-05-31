@@ -826,8 +826,9 @@ export default function HistoryPage() {
         lensId: effectiveLensId || null, // Codex P2-j: 存档绑定 lens, resume 时按此 lens 过 gate
       });
     }
-    // 走完最后一轮 → 清掉 in-progress
-    if (nextIdx >= effectiveTurns.length) {
+    // 走完最后一轮 → 清掉 in-progress。Step 8 (Codex P2): 试看样章不碰真实进度 ——
+    // 否则截断 3 节走完会清掉该 topic 真实的 in-progress (如订阅期已开课、降级后又点试看的用户)。
+    if (!samplePreview && nextIdx >= effectiveTurns.length) {
       clearInProgress(topicId);
     }
   };
