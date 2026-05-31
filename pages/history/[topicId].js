@@ -89,7 +89,6 @@ import { inferCurriculum } from '../../lib/curriculum-data';
 import { getSyncClient } from '../../lib/sync-client-singleton'; // 方案1: 与 vocab 共用单一同步实例
 import { backupOnBoot } from '../../lib/local-backup'; // sync 前快照兜底
 import { detectSyncGate } from '../../lib/progressMergePolicy';
-import { mergeStates, validateMerged } from '../../lib/syncMerge'; // history 自驱动拉云解锁用
 
 // ─── history-engine 抽离组件（pages/history.js 和未来的 AtlasLabPage embed mode 共用）
 import { HC } from '../../components/history-engine/theme';
@@ -134,18 +133,17 @@ export default function HistoryPage() {
   var [user, setUser] = useState(null);
   var [xp, setXp] = useState(0);
 
-  // ─── Phase 2: history 接入「单一共享同步客户端」(自驱动拉云 + push) ──────────────
-  // history 进度变更 (完成课 / 推进对话存档) 触发 syncToCloud, 让历史进度上云跨设备。
-  // 客户端是与 vocab 共用的同一实例 (方案1, 单一真相源)。
-  // 自驱动拉云 (historyUnlockSync): 挂载后若 cloudReady 未解锁 (本 tab 没先开过 vocab),
-  // history 自己拉一次云 + mergeStates union 合并 + setCloudReady → 学完即可直接推, 不必先切 vocab。
-  // 安全: 拉取发生在「已登录会话中=同一用户」(同 vocab 的 _maybePullCloud 焦点拉取, union 合并),
-  // 故无跨账号串号风险 (新用户登录由 vocab 登录路径处理, history 只读已登录 session)。
-  // onSyncStatus 上报 → 顶部「已同步」状态条, 让用户看得见 (原来 history 页无任何同步提示)。
+  // ─── Phase 2: history 接入「单一共享同步客户端」(push-only) ──────────────────
+  // history 进度变更 (完成课 / 推进对话存档) 触发 syncToCloud, 让历史进度上云跨设备 ——
+  // 不再只靠"碰巧打开 vocab 顺带推"。客户端是与 vocab 共用的同一实例 (方案1, 单一真相源)。
+  // 安全: 客户端内部 cloudReady 闸门 —— vocab 拉过云 (本 tab 访问过 vocab) 才解锁 push;
+  // 否则 syncToCloud 静默不推 (history 进度仍存本地, 下次 vocab 拉云时合并带上, 不丢)。
+  // onSyncStatus 上报 → 顶部「已同步」状态条, 让用户看得见同步有没有发生。
+  // (history 自驱动拉云解锁 = 需全局 owner 防护 + 拉后状态重应用, 高风险, 留作独立专项;
+  //  见 docs/STEP_0B_SYNC_REDESIGN.md §6 + Codex canary 审 P1/P2。)
   var userRef = useRef(null);
   useEffect(function () { userRef.current = user; }, [user]);
   var historySyncRef = useRef(null);
-  var historyUnlockDoneRef = useRef(false);
   var [historySyncState, setHistorySyncState] = useState(null); // 'syncing'|'synced'|'idle'|'error'|null
   var [historyLastSyncAt, setHistoryLastSyncAt] = useState(0);
   var historyGetAuthHeaders = async function (includeContentType) {
@@ -190,36 +188,6 @@ export default function HistoryPage() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // 自驱动拉云解锁: user 就绪后, 若共享客户端还没 cloudReady (本 tab 没先开过 vocab) → history 自己拉一次云
-  // + union 合并 + 解锁 push, 让"学完 history 直接同步"不必先切 vocab。镜像 vocab 的 _maybePullCloud (union),
-  // 发生在已登录会话内 (同一用户) → 安全。读云失败不解锁 (不覆盖云端)。
-  useEffect(function () {
-    if (!user || !user.id) return;
-    if (historyUnlockDoneRef.current) return;
-    var client = historySyncRef.current;
-    if (!client) return;
-    var st = client.getSyncStatus ? client.getSyncStatus() : {};
-    if (st && st.cloudReady) { historyUnlockDoneRef.current = true; return; } // vocab 已解锁, history 直接能推
-    if (st && st.inFlight) return; // 有同步在飞, 等下次 (effect 会随 user/状态再跑)
-    historyUnlockDoneRef.current = true;
-    (async function () {
-      try {
-        var res = await client.loadFromCloud(user.id);
-        if (!res || !res.ok) { historyUnlockDoneRef.current = false; return; } // 读云失败 → 不解锁, 留待重试
-        var cloudData = res.data;
-        var localData = loadAll();
-        if (cloudData && localData) {
-          try { var m = mergeStates(localData, cloudData); if (validateMerged(m, cloudData)) historySaveSnapshot(m); } catch (e) {}
-        } else if (cloudData) {
-          historySaveSnapshot(cloudData);
-        }
-        client.setCloudReady(true);
-        client.syncToCloud(); // flush 本地攒着的 history 进度
-      } catch (e) { historyUnlockDoneRef.current = false; }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
   // 进度变更后触发推送 (内部 cloudReady 闸门 + debounce; 未 ready 时静默不推, 安全)。
   var pushHistorySync = function () {
