@@ -1233,7 +1233,10 @@ export default function HistoryPage() {
     }
     // 整合 vocab：把错词推到 history 独立队列（**不直接污染 vocab 主词单**）
     // 用户在 vocab 模块会看到"📚 来自 history 的词 (N)"卡片，可主动选择 加入 / 跳过
-    if (reviewWords.length > 0) {
+    // Step 9: 「考点词进 Vocab」是 Basic+ 权益 (规划 §2)。flag on 时只 Basic/Pro 推桥;
+    // free/guest 跳过 (CompletionScreen 显示升级提示)。flag off → 不限 (paywall 前行为)。
+    var bridgeEntitled = !ENABLE_HISTORY_PAYWALL || currentTier === 'basic' || currentTier === 'pro';
+    if (reviewWords.length > 0 && bridgeEntitled) {
       try {
         bridgeReviewToVocab(reviewWords, { topicId: topicId, priority: "must-memorize" });
       } catch (e) { console.warn("bridge to vocab failed:", e); }
@@ -2130,6 +2133,11 @@ export default function HistoryPage() {
                 // Step 7: 游客 (未登录 → tier='guest') 通关 → 注册引导。flag off / 已登录不显示。
                 show: ENABLE_HISTORY_PAYWALL && currentTier === 'guest',
                 onRegister: function() { if (typeof window !== 'undefined') window.location.href = '/plan'; },
+              }}
+              bridgeUpsell={{
+                // Step 9: 「考点词进 Vocab」是 Basic+ 权益。flag on + free/guest → 显示升级提示 (词未推桥)。
+                show: ENABLE_HISTORY_PAYWALL && (currentTier === 'free' || currentTier === 'guest'),
+                onUpgrade: function() { if (typeof window !== 'undefined') window.location.href = '/plan'; },
               }}
               reviewPool={topicReviewPool}
               freeChatLog={freeChatLog}

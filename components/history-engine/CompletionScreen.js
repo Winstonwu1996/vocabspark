@@ -160,6 +160,26 @@ export function CompletionScreen(props) {
           </div>
         )}
 
+        {/* Step 9: free/guest 看到「考点词进 Vocab」(Basic+ 权益) 升级提示。Basic+/flag-off 不显示 (词已推桥)。 */}
+        {props.bridgeUpsell && props.bridgeUpsell.show && hasReview && (
+          <div style={{
+            marginTop: 18, padding: "12px 14px", textAlign: "left",
+            background: "rgba(196, 107, 48, 0.08)", border: "1px solid rgba(196, 107, 48, 0.22)",
+            borderRadius: 12, fontSize: 12.5, lineHeight: 1.55, color: HC.text,
+          }}>
+            <span style={{ fontWeight: 700, color: HC.accent }}>📚 想把这些考点词带进 Vocab 复习?</span>
+            <span> 升级 Basic 后,history 的考点词会自动进 Vocab 待选区,跟你的单词一起循环复习。</span>
+            <button
+              onClick={props.bridgeUpsell.onUpgrade}
+              style={{
+                display: "block", marginTop: 10, padding: "8px 18px", background: HC.accent,
+                color: "#fff8e8", border: "none", borderRadius: 999, fontSize: 13, fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >升级 Basic</button>
+          </div>
+        )}
+
         {/* ── Review Pool 提示（错的进 vocab 复习池） ── */}
         {hasReview && (
           <div style={{
