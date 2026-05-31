@@ -10,6 +10,7 @@ import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../co
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
 import { createSyncClient } from '../lib/sync-client'; // Step 0A.3 抽离 sync 编排到通用 lib
+import { backupOnBoot } from '../lib/local-backup'; // sync 重构兜底: sync 前快照 blob
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
@@ -3487,6 +3488,7 @@ export default function App() {
   // useRef 确保实例只创建一次; 各 callback 内闭包到本组件 state 始终新鲜。
   useEffect(function() {
     if (syncClientRef.current) return; // 防热重载/StrictMode 双跑
+    backupOnBoot(); // sync 引擎初始化前先快照 blob (永久 premigration + 滚动), 兜底高风险 sync 重构
     syncClientRef.current = createSyncClient({
       getAuthHeaders: function(ct) { return getAuthHeaders(ct); },
       getUser: function() { return userRef.current; },
