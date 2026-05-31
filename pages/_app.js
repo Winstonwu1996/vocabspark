@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { Analytics } from "@vercel/analytics/react";
 import NetworkBanner from "../components/NetworkBanner";
+import UpdateBanner from "../components/UpdateBanner";
 import BetaBadge from "../components/BetaBadge";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { trackFunnel } from "../lib/analytics";
@@ -29,6 +30,7 @@ export default function App({ Component, pageProps }) {
   return (
     <ErrorBoundary>
       <NetworkBanner />
+      <UpdateBanner />
       <Component {...pageProps} />
       <BetaBadge />
       <Analytics />

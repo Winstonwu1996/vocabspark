@@ -1,6 +1,17 @@
 /** @type {import('next').NextConfig} */
+// 部署版本号：Vercel build 时注入 VERCEL_GIT_COMMIT_SHA → 烘焙进客户端 bundle。
+// 客户端持有"打开页面那一刻的 build"，运行时的 /api/version 返回"当前线上 build"，
+// 两者不一致即说明发了新版 → 提示用户刷新。本地 dev 两者都是 'dev'，不会误报。
+const BUILD_ID =
+  process.env.VERCEL_GIT_COMMIT_SHA ||
+  process.env.VERCEL_DEPLOYMENT_ID ||
+  'dev';
+
 const nextConfig = {
   reactStrictMode: true,
+  env: {
+    NEXT_PUBLIC_BUILD_ID: BUILD_ID,
+  },
   async rewrites() {
     return [
       { source: '/', destination: '/home' },
