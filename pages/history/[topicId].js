@@ -104,7 +104,7 @@ import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
 import { CourseGateMount } from '../../components/history-engine/CourseGateMount';
 // Step 3 配额: daily-quota 纯逻辑 + quota-store 锁/持久化层 (均无 membership, 静态 import 不破坏隔离)。
 import { canUseLens, getRemainingLenses, getLensQuota, getRemainingSidekick, getSidekickQuota, lensKey, todayStr } from '../../lib/daily-quota';
-import { tryUseLens, tryUseSidekick, refundSidekick, readLensUsage, readSidekickUsage } from '../../lib/quota-store';
+import { tryUseLens, tryUseSidekick, readLensUsage, readSidekickUsage } from '../../lib/quota-store';
 
 // ─── 主组件 ────────────────────────────────────────────────────────
 export default function HistoryPage() {
@@ -173,7 +173,9 @@ export default function HistoryPage() {
     // Step 3 (Codex round1 P2-a): Sidekick 配额走「锁内 reserve-before」原子门 —— 必须在发请求/
     // 显示答案**之前**占额, 否则 1 个剩额时两个并发 send 都过、只 1 个计入 → 正是锁要堵的并发超扣。
     // tier 未落定 → 跳过 (不误拦)。reserve 失败 → 复位 thinking + 弹 sidekick-quota。
-    var skEventId = null;
+    // Codex round4 P2-g: 不退还 —— eventIds 是 union 合并 (append-only), 一旦同步/其它 tab 有副本,
+    // refund 会被下次 merge 复活。union 语义下「记了即永久」, 故 API 失败也消耗 1 次额 (罕见网络抖动,
+    // 相对 free 20/天成本可忽略), 换取在所有同步状态下都正确的强制 (规划选 B 严格)。
     if (ENABLE_HISTORY_PAYWALL && freshTierRef.current) {
       var resv = await tryUseSidekick(freshTierRef.current);
       if (!resv.ok) {
@@ -183,7 +185,6 @@ export default function HistoryPage() {
         setShowUpgradeGate(true);
         return;
       }
-      skEventId = resv.eventId; // 已占额; API 失败时退还 (refundSidekick)
     }
     var content = sidekickInput.trim();
     var newLog = sidekickLog.concat([{ role: "user", content: content, timestamp: new Date().toISOString() }]);
@@ -243,8 +244,7 @@ export default function HistoryPage() {
     } catch (e) {
       setSidekickThinking(false);
       setSidekickStreaming("");
-      // Step 3: API 失败 (fallback) → 退还入口 reserve 的配额, 不让网络抖动白扣一次提问。
-      if (skEventId) { refundSidekick(skEventId).catch(function () {}); }
+      // Codex round4 P2-g: 不退还配额 (union 合并下 refund 不可靠) — 见入口 reserve 处说明。
       setSidekickLog(function(prev) {
         var updated = prev.concat([{ role: "ai", content: "（网络不稳，再试一次？）", timestamp: new Date().toISOString(), isFallback: true }]);
         saveSidekickLog(topicId, updated);
@@ -1125,8 +1125,9 @@ export default function HistoryPage() {
     tryUseLens(tier, topicId, effectiveLensId).then(function (ok) {
       if (!ok) {
         lensDeductedRef.current = null; // 没扣成 → 换 lens 后允许重试
+        setGatePauseInPlace(false); // 非原地暂停: 嵌入态 CourseGate 据 quota reason 回传父页
         setGateModalReason('lens-quota');
-        setShowUpgradeGate(true); // access='allow' → CourseGate 弹 UpgradeModal(lens-quota), 不回传父页
+        setShowUpgradeGate(true);
         setPhase('intro'); // 回弹出对话 (rare 多 tab 竞态)
       }
     }).catch(function () { lensDeductedRef.current = null; });

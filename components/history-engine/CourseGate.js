@@ -64,33 +64,34 @@ export function CourseGate(props) {
   // 回父页 → 父页关 iframe + 在 Atlas 层弹升级。error-blocked (网络失败) 不回传, 仍在 iframe
   // 内显示网络重试 modal (是网络问题, 不是 tier 拒绝)。
   var inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
-  // Step 4b-3 (P2-g): 中途降级「原地暂停」(pauseInPlace) 不回传父页 —— 否则父页关 iframe 撕掉
-  // 当前课、丢失当前轮。仅**进课入口**被拒 (pauseInPlace=false) 才回传。
-  var goesToParent = !!props.embedded && inIframe && access === 'deny' && !props.pauseInPlace;
+  // 当前 modal 的 reason + 升级目标 tier (配额类 → Basic 最低无限档; 否则课程访问 tier)。
+  var reason = props.modalReason || 'locked-course';
+  var isQuotaReason = (reason === 'lens-quota' || reason === 'sidekick-quota');
+  var reqTier = isQuotaReason ? 'basic' : getTopicAccessTier(topicId);
+
+  // Step 4b-2/3 + Step 3 (Codex round4 P2-h): 嵌入态 (Atlas iframe) 内被拦 → 回传父页 (父页关 iframe
+  // + 整页弹升级), 不在小框里渲染子 modal / 不 router.push('/plan')。
+  // - 真 deny (access==='deny') 或 **配额用尽** (isQuotaReason, 此时 access 仍 'allow') 都要回传。
+  // - pauseInPlace (中途降级原地暂停) 例外: 不回传, 否则父页关 iframe 撕掉当前课。
+  // - error-blocked (网络失败) 不回传, iframe 内显示网络重试 modal。
+  var goesToParent = !!props.embedded && inIframe && !props.pauseInPlace && (access === 'deny' || isQuotaReason);
   useEffect(function () {
     if (!props.showModal || !goesToParent) return;
     try {
       window.parent.postMessage({
-        source: 'history-engine',
-        type: 'gate-denied',
-        topicId: topicId,
-        requiredTier: getTopicAccessTier(topicId),
+        source: 'history-engine', type: 'gate-denied',
+        topicId: topicId, requiredTier: reqTier, reason: reason,
       }, '*');
     } catch (e) {}
     if (typeof props.onCloseModal === 'function') props.onCloseModal(); // 关子页 modal, 父页接管
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.showModal, goesToParent, topicId]);
+  }, [props.showModal, goesToParent, topicId, reqTier, reason]);
 
   if (!props.showModal) return null;
-  if (goesToParent) return null; // 嵌入态真 deny: 交父页弹升级, iframe 内不渲染
+  if (goesToParent) return null; // 嵌入态被拦 (deny/配额): 交父页弹升级, iframe 内不渲染
 
-  // 当前 modal 的 reason + 升级目标 tier (配额类 → Basic 最低无限档; 否则课程访问 tier)。
-  var reason = props.modalReason || 'locked-course';
-  var reqTier = (reason === 'lens-quota' || reason === 'sidekick-quota') ? 'basic' : getTopicAccessTier(topicId);
-
-  // 升级动作: 嵌入态 (iframe) → 回传父页 (同 P2-h, 父页关 iframe + 整页弹升级);
-  // 非嵌入 → 整页跳 /plan。view-only 占位屏 / UpgradeModal 共用。
-  // Codex round2 P2-e: 回传父页要带 reason + 正确 tier, 否则父页对配额拦截误开 locked-course(Guest/Free)。
+  // 升级动作 (非嵌入 / pauseInPlace 原地暂停 时用): 整页跳 /plan; 嵌入态本不该走到这 (上面已回传),
+  // 但 pauseInPlace 例外仍可能在 iframe 渲染 → 兜底也回传父页。
   var doUpgrade = function () {
     if (props.embedded && inIframe) {
       try {
