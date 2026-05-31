@@ -194,6 +194,59 @@ console.log("\n[8] R5 直接测 mergeHistoryData: 单边缺失 + dup word newer 
   ok("dup word newer metadata 赢 (note=new)", rp.words.find(function (w) { return w.word === "dup"; }).note === "new");
 }
 
+console.log("\n[9] R5 P1: inProgress 同 topic 取 savedAt 较新 (不被 blob updatedAt 误判)");
+{
+  // local 的 blob 较新 (做了 vocab → updatedAt 12:30), 但它的 lesson savedAt 较旧 (10:00, turn 9);
+  // server lesson savedAt 较新 (11:45, turn 11)。应取 server 的 turn 11 (最近在这门课上动的赢)。
+  var local = { updatedAt: "2026-05-31T12:30:00Z", historyData: {
+    inProgress: { topicX: { turnIndex: 9, lensId: "l1", savedAt: "2026-05-31T10:00:00Z" } } } };
+  var server = { updatedAt: "2026-05-31T11:45:00Z", historyData: {
+    inProgress: { topicX: { turnIndex: 11, lensId: "l1", savedAt: "2026-05-31T11:45:00Z" } } } };
+  var m = mergeProgress(local, server).historyData;
+  ok("同 topic: savedAt 较新的 turn 11 赢 (blob 较新的 local 不靠 updatedAt 抢)", m.inProgress.topicX.turnIndex === 11);
+
+  // 不同 topic → union 都在
+  var l2 = { updatedAt: "2026-05-31T12:00:00Z", historyData: { inProgress: { A: { turnIndex: 2, savedAt: "2026-05-31T12:00:00Z" } } } };
+  var s2 = { updatedAt: "2026-05-31T11:00:00Z", historyData: { inProgress: { B: { turnIndex: 3, savedAt: "2026-05-31T11:00:00Z" } } } };
+  var m2 = mergeProgress(l2, s2).historyData;
+  ok("不同 topic 都保留 (A+B)", m2.inProgress.A && m2.inProgress.B);
+
+  // savedAt 缺失 → 退回 localNewer (local 较新 → local 赢)
+  var l3 = { updatedAt: "2026-05-31T12:00:00Z", historyData: { inProgress: { Z: { turnIndex: 5 } } } };
+  var s3 = { updatedAt: "2026-05-31T11:00:00Z", historyData: { inProgress: { Z: { turnIndex: 7 } } } };
+  var m3 = mergeProgress(l3, s3).historyData;
+  ok("savedAt 缺失 → 退回 localNewer (local turn 5 赢)", m3.inProgress.Z.turnIndex === 5);
+}
+
+console.log("\n[10] R5 P1: userWorldview 累积数组 union (不丢另一端 selfDisclosure)");
+{
+  var local = { updatedAt: "2026-05-31T12:00:00Z", historyData: { userWorldview: {
+    reasoningStyle: { pattern: "newest" },
+    selfDisclosure: [{ topic: "t1", turn: 2, content: "我喜欢历史", at: "2026-05-31T10:00:00Z" }],
+    valueEmphasis: ["collective"], topicsCompleted: ["t1"] } } };
+  var server = { updatedAt: "2026-05-31T11:00:00Z", historyData: { userWorldview: {
+    reasoningStyle: { pattern: "older" },
+    selfDisclosure: [{ topic: "t2", turn: 3, content: "我在中国长大", at: "2026-05-31T09:00:00Z" }],
+    valueEmphasis: ["individual"], topicsCompleted: ["t2"] } } };
+  var m = mergeProgress(local, server).historyData.userWorldview;
+  ok("selfDisclosure union (两条都在, 不丢)", m.selfDisclosure.length === 2);
+  ok("valueEmphasis union (collective+individual)", m.valueEmphasis.indexOf("collective") !== -1 && m.valueEmphasis.indexOf("individual") !== -1);
+  ok("topicsCompleted union (t1+t2)", m.topicsCompleted.indexOf("t1") !== -1 && m.topicsCompleted.indexOf("t2") !== -1);
+  ok("reasoningStyle 标量字段 newer 赢 (newest)", m.reasoningStyle.pattern === "newest");
+
+  // selfDisclosure dedupe: 同一条 (相同 topic|turn|content) 两端都有 → 去重为 1
+  var l2 = { updatedAt: "2026-05-31T12:00:00Z", historyData: { userWorldview: {
+    selfDisclosure: [{ topic: "t1", turn: 2, content: "同一句", at: "2026-05-31T10:00:00Z" }] } } };
+  var s2 = { updatedAt: "2026-05-31T11:00:00Z", historyData: { userWorldview: {
+    selfDisclosure: [{ topic: "t1", turn: 2, content: "同一句", at: "2026-05-31T10:00:00Z" }] } } };
+  var m2 = mergeProgress(l2, s2).historyData.userWorldview;
+  ok("selfDisclosure 重复条目去重 (1 条)", m2.selfDisclosure.length === 1);
+
+  // 单边缺 userWorldview → 返回另一边 (不报错)
+  var m3 = mergeHistoryData({ userWorldview: { selfDisclosure: [{ topic: "x", turn: 1, content: "c" }] } }, {}, true);
+  ok("单边缺 userWorldview → 保留有的那边", m3.userWorldview.selfDisclosure.length === 1);
+}
+
 console.log("\n──────────────────────────");
 console.log("PASS " + pass + " / FAIL " + fail);
 process.exit(fail === 0 ? 0 : 1);
