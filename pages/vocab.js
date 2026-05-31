@@ -7145,12 +7145,12 @@ export default function App() {
       )}
 
       {/* 整合 history：history 通关后的推荐词（不污染主词单 — 用户主动选择是否加入）
-          Step 9 consumer-gate: 「考点词进 Vocab」= Basic+ 权益。flag on 时不呈现给:
-          - 未登录游客 (!user) —— 游客 tier 不会 load, 必须当确定非付费直接挡 (Codex P2);
-          - 已登录但 tier 已确认非 Basic/Pro。
-          (登录用户 tier 未确认前放行, 不误伤付费用户。) 词仍留 bridgeQueue.history, 升级后自动出现。flag off → 不限。*/}
+          Step 9 consumer-gate: 「考点词进 Vocab」= Basic+ **付费权益** → flag on 时 **fail-closed**:
+          只在 tier **已确认** Basic/Pro 才呈现。Codex round3: 不能「未确认前放行」(那是给非付费功能防误伤的
+          策略, 但桥是付费 gate, 放行 = free 用户在 tier load 窗口内白拿)。游客/free/未 load → 不显示。
+          词仍留 bridgeQueue.history, 升级/tier 确认后自动出现 (卡片靠下, ~1s tier load 延迟可忽略)。flag off → 不限。*/}
       {historyBridgeQueue.length > 0
-        && !(ENABLE_HISTORY_PAYWALL && (!user || (tierLoaded && userTier !== 'basic' && userTier !== 'pro'))) && (
+        && (!ENABLE_HISTORY_PAYWALL || (tierLoaded && (userTier === 'basic' || userTier === 'pro'))) && (
         <div style={{
           marginBottom: 16, padding: '12px 14px',
           background: 'linear-gradient(135deg, #f0e6d2 0%, #e8dcb6 100%)',
