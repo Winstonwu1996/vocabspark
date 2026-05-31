@@ -10,7 +10,7 @@ import { PetAvatar, moodFromLabel, ACCESSORY_CATALOG, getAccessory } from '../co
 import { ConfirmModal } from '../components/ConfirmModal';
 import { mergeStates, validateMerged } from '../lib/syncMerge';
 import { getSyncClient } from '../lib/sync-client-singleton'; // 方案1: vocab+history 共用单一同步实例
-import { backupOnBoot } from '../lib/local-backup'; // sync 重构兜底: sync 前快照 blob
+import { backupOnBoot, clearBackups } from '../lib/local-backup'; // sync 重构兜底: sync 前快照 blob + 登出清备份
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
@@ -3966,6 +3966,7 @@ export default function App() {
       localStorage.removeItem(DEEP_REVIEW_DAILY_KEY);
       localStorage.removeItem(STUDY_STREAK_KEY);
       localStorage.removeItem("vocabspark_tier");
+      clearBackups(); // Codex P1: 连兜底备份一起清, 共享浏览器登出不留进度 blob
     } catch(e) {}
     setUser(null); userRef.current = null;
     // Step 0A.3: setCloudReady(false) 登出后闸门重置, lib 持有
@@ -3999,6 +4000,7 @@ export default function App() {
         localStorage.removeItem(DAILY_NEW_QUOTA_KEY);
         localStorage.removeItem(DEEP_REVIEW_DAILY_KEY);
         localStorage.removeItem(STUDY_STREAK_KEY);
+        clearBackups(); // Codex P1: 重置也清兜底备份
       }
     } catch (e) {}
     

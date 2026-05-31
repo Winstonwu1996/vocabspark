@@ -84,6 +84,20 @@ console.log('\n[5] 边界: 无 blob / 无 window 不报错');
   ok('localStorage 不可用 → 静默不抛', threw === false);
 }
 
+console.log('\n[6] clearBackups: 登出/重置清掉所有备份键 (Codex P1 隐私)');
+{
+  var ls = freshLS();
+  ls.setItem('vocabspark_v1', '{"d":1}');
+  mod.snapshotPreMigrationOnce();
+  mod.snapshotBackup();
+  ok('清前有 premigration + 滚动备份', ls.getItem('vocabspark_v1__premigration_bak') != null && mod.listBackups().length >= 1);
+  mod.clearBackups();
+  ok('清后 premigration 没了', ls.getItem('vocabspark_v1__premigration_bak') == null);
+  ok('清后滚动备份没了', mod.listBackups().length === 0);
+  // 主 blob 不受影响 (clearBackups 只清备份键)
+  ok('主 blob 不受影响', ls.getItem('vocabspark_v1') === '{"d":1}');
+}
+
 console.log('\n──────────────────────────');
 console.log('PASS ' + pass + ' / FAIL ' + fail);
 if (fail > 0) process.exit(1);
