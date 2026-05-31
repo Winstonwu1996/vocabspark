@@ -3123,7 +3123,11 @@ export default function App() {
           setWordInput(d.wordInput || '');
           return;
         }
-        // 用户主动确认删词 → 设 intent，让服务端 L1 守卫放行 wordInput 缩水
+      }
+      // 任意删词 (≥1) 都打意图标记：服务端守卫对"词数减少"一律要求 intent, 否则拒绝并保留 (防误删)。
+      // 原来只在 ≥3 弹框时才打 → 删 1-2 个词没 intent → 服务端拒绝 → 拉云/跨设备时词复活。
+      // 确认框仍只对 ≥3 (批量) 弹, 删一两个词不打扰。
+      if (deleted.length >= 1) {
         _markIntent('user_edit_wordInput');
       }
 
