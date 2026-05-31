@@ -151,6 +151,49 @@ console.log("\n[6] mergeHistoryData stats 一致性 + passthrough 安全 (Codex 
   ok("stats 其它子字段 passthrough 不丢 (customField)", hs.customField === "keep-me");
 }
 
+console.log("\n[7] R5: learningReceipts / reviewPool / sidekickLogs field-level union (不丢另一端)");
+{
+  // localNewer 判定靠 updatedAt: local 较新
+  var local = { updatedAt: "2026-05-30T10:00:00Z", historyData: {
+    learningReceipts: { topicA: { lens1: { done: true } } },
+    reviewPool: { words: [{ word: "alpha" }], concepts: [{ conceptId: "c1" }] },
+    sidekickLogs: { topicA: [{ q: "a1" }] },
+  } };
+  var server = { updatedAt: "2026-05-30T09:00:00Z", historyData: {
+    learningReceipts: { topicA: { lens2: { done: true } }, topicB: { lens1: { done: true } } },
+    reviewPool: { words: [{ word: "beta" }], concepts: [{ conceptId: "c2" }] },
+    sidekickLogs: { topicB: [{ q: "b1" }] },
+  } };
+  var m = mergeProgress(local, server).historyData;
+
+  // learningReceipts: 两层 union — topicA 的 lens1+lens2 + topicB.lens1 都在
+  ok("receipts: topicA.lens1 保留 (local 侧)", !!(m.learningReceipts.topicA && m.learningReceipts.topicA.lens1));
+  ok("receipts: topicA.lens2 保留 (server 侧, 不被 newer 整体盖掉)", !!m.learningReceipts.topicA.lens2);
+  ok("receipts: topicB.lens1 保留 (server 独有 topic)", !!(m.learningReceipts.topicB && m.learningReceipts.topicB.lens1));
+
+  // reviewPool: 两端 words / concepts union
+  var ws = m.reviewPool.words.map(function (w) { return w.word; });
+  ok("reviewPool.words union (alpha+beta)", ws.indexOf("alpha") !== -1 && ws.indexOf("beta") !== -1);
+  var cs = m.reviewPool.concepts.map(function (c) { return c.conceptId; });
+  ok("reviewPool.concepts union (c1+c2)", cs.indexOf("c1") !== -1 && cs.indexOf("c2") !== -1);
+
+  // sidekickLogs: union by topic — topicA(local) + topicB(server) 都在
+  ok("sidekickLogs: topicA 保留 (local)", Array.isArray(m.sidekickLogs.topicA));
+  ok("sidekickLogs: topicB 保留 (server, 不被 newer 整体盖掉)", Array.isArray(m.sidekickLogs.topicB));
+}
+
+console.log("\n[8] R5 直接测 mergeHistoryData: 单边缺失 + dup word newer 赢 metadata");
+{
+  // 单边缺失不报错 / 返回另一边
+  ok("local 无 historyData → 返回 server", mergeHistoryData(null, { reviewPool: { words: [{ word: "x" }] } }, false).reviewPool.words.length === 1);
+  // dup word: 两端都有 'dup', newer (local) 的 metadata 赢, 且只出现一次
+  var l = { reviewPool: { words: [{ word: "dup", note: "new" }], concepts: [] } };
+  var s = { reviewPool: { words: [{ word: "dup", note: "old" }], concepts: [] } };
+  var rp = mergeHistoryData(l, s, true).reviewPool; // localNewer=true
+  ok("dup word 去重为 1 条", rp.words.filter(function (w) { return w.word === "dup"; }).length === 1);
+  ok("dup word newer metadata 赢 (note=new)", rp.words.find(function (w) { return w.word === "dup"; }).note === "new");
+}
+
 console.log("\n──────────────────────────");
 console.log("PASS " + pass + " / FAIL " + fail);
 process.exit(fail === 0 ? 0 : 1);
