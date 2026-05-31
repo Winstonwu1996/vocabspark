@@ -180,7 +180,9 @@ export default function HistoryPage() {
       var resv = await tryUseSidekick(freshTierRef.current);
       if (!resv.ok) {
         setSidekickThinking(false);
-        setGatePauseInPlace(false);
+        // Codex round5 P2: Sidekick 是**课中侧边追问**, 用尽配额不该撕掉嵌入课 → 原地弹 (pauseInPlace=true),
+        // CourseGate 不回传父页 (不关 iframe)。用户关掉继续上课; 点升级才经 doUpgrade 回传父页。
+        setGatePauseInPlace(true);
         setGateModalReason('sidekick-quota');
         setShowUpgradeGate(true);
         return;
