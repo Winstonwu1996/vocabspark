@@ -1282,14 +1282,15 @@ export default function HistoryPage() {
     // —— 否则 Free 升级后那门课的词丢失需重学。「考点词进 Vocab」(Basic+) 的 entitlement 改在 vocab 侧
     // 按 tier gate 呈现 (词留 bridgeQueue.history, 升级即呈现)。CompletionScreen 给 free/guest 升级提示。
     // Step 10: flag on 时尊重「自动推荐」开关 (默认 on)。flag off → 永远推 (byte-identical 历史行为)。
-    // Codex P3: didBridge 记录是否真推了 —— 开关关 (或推失败) 时 CompletionScreen 不能谎称"已推荐到 Vocab"。
-    var didBridge = reviewWords.length > 0 && (!ENABLE_HISTORY_PAYWALL || getHistoryAutoRecommend());
-    if (didBridge) {
+    // autoRecOff = 「有词可推、但开关关掉了」—— 仅此情形 CompletionScreen 不能谎称"已加进复习单"。
+    // (Codex round5 P2: 概念-only / 无词 时 autoRecOff=false → bridged=true, 不误判成"你关了开关"。)
+    var autoRecOff = reviewWords.length > 0 && ENABLE_HISTORY_PAYWALL && !getHistoryAutoRecommend();
+    if (reviewWords.length > 0 && !autoRecOff) {
       try {
         bridgeReviewToVocab(reviewWords, { topicId: topicId, priority: "must-memorize" });
-      } catch (e) { didBridge = false; console.warn("bridge to vocab failed:", e); }
+      } catch (e) { console.warn("bridge to vocab failed:", e); }
     }
-    setTopicReviewPool({ words: reviewWords, concepts: reviewConcepts, bridged: didBridge });
+    setTopicReviewPool({ words: reviewWords, concepts: reviewConcepts, bridged: !autoRecOff });
 
     saveTranscript(topicId, conversationLog);
     saveTopicCompletion(topicId, {
