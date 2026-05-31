@@ -77,6 +77,34 @@ Use ONLY these existing modules. Do NOT invent helper functions that don't exist
 - **Soft auth**: `X-User-Id` header for rate limiting, not strict token verify. Strict verify only for payments/account changes.
 - **Storyboard-driven pedagogy**: History lessons are JSON storyboard files in `data/history/`, NOT free-form AI conversations. AI sidekick operates within structured steps.
 
+## Review Protocol — When to Escalate
+
+When completing any task, check these three conditions before saying "done":
+
+1. **这个改动出错了，用户会丢数据或丢钱吗？** (sync, payment, auth, data migration)
+2. **改动跨 5 个以上文件吗？** (large refactor, new module, cross-cutting change)
+3. **这是第一次做这类事吗？** (new module, new architecture pattern, new integration)
+
+**Any "yes" → proactively suggest**: "这个改动风险较高，建议用 workflow 多维度审查（安全/逻辑/回归/边界条件并行扫描），要跑吗？"
+
+**All "no" → suggest cross-model review or skip**: `/codex-review` for code changes, `/codex-audit` for analysis, or no review for trivial changes.
+
+### High-risk areas in this project (always suggest Workflow review)
+
+- `pages/api/sync.js` and anything touching `lib/syncMerge.js` or `lib/progressMergePolicy.js`
+- `pages/api/stripe-webhook.js` and `lib/stripe-prices.js`
+- `lib/auth-server.js` and any auth flow changes
+- New module scaffolding (Focus, Writing, or future modules)
+- `lib/llm-providers.js` circuit breaker / key rotation logic
+
+### Standard review tiers
+
+| Tier | When | Action |
+|------|------|--------|
+| **No review** | CSS, copy, single storyboard edit | Ship directly |
+| **Cross-model** (`/codex-review`) | Normal feature work, bug fixes, prompt tuning | Codex reviews Claude's work |
+| **Workflow** | Matches any of the 3 conditions above, or touches high-risk areas | Multi-agent parallel scan |
+
 ## Reference Docs
 
 - `docs/OPS.md` — Operations runbook (service accounts, DNS, deployment)
