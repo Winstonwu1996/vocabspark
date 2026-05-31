@@ -102,6 +102,8 @@ import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/noteboo
 // Step 4b-1: 进课 tier gate (flag off 时 CourseGateMount 不渲染 → 不调 useUserTier)。
 // ⚠️ 不在此静态 import membership/useUserTier — 隔离在 CourseGate.js (经 CourseGateMount 懒加载)。
 import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
+// getTopicAccessTier 纯函数 (无 membership; 已经由 CourseGateMount 进播放器静态图) —— Step 8 限定样章仅 Pro 课。
+import { getTopicAccessTier } from '../../lib/history-tiers';
 
 // Step 8: 「试看 5 分钟」样章放出的对话节数 (前 N 节)。
 var SAMPLE_PREVIEW_TURNS = 3;
@@ -1047,6 +1049,9 @@ export default function HistoryPage() {
     var wantSample = false;
     try { wantSample = new URLSearchParams(window.location.search).get('sample') === '1'; } catch (e) {}
     if (!wantSample) return;
+    // Codex round4 P2: 只对 Pro 课放样章 —— 否则 free/guest 手敲 /history/<basic-topic>?sample=1
+    // 也会拿到 Basic 课前 3 节 (UI 只对 Pro 课给链接, URL 入口必须同样校验 tier)。
+    if (getTopicAccessTier(topicId) !== 'pro') return;
     if (freshGateAccess() !== 'deny') return; // 等 gate 报 deny 才进 (Pro 用户=allow 不触发)
     sampleAutoStartedRef.current = true;
     startSamplePreview();
@@ -1277,12 +1282,14 @@ export default function HistoryPage() {
     // —— 否则 Free 升级后那门课的词丢失需重学。「考点词进 Vocab」(Basic+) 的 entitlement 改在 vocab 侧
     // 按 tier gate 呈现 (词留 bridgeQueue.history, 升级即呈现)。CompletionScreen 给 free/guest 升级提示。
     // Step 10: flag on 时尊重「自动推荐」开关 (默认 on)。flag off → 永远推 (byte-identical 历史行为)。
-    if (reviewWords.length > 0 && (!ENABLE_HISTORY_PAYWALL || getHistoryAutoRecommend())) {
+    // Codex P3: didBridge 记录是否真推了 —— 开关关 (或推失败) 时 CompletionScreen 不能谎称"已推荐到 Vocab"。
+    var didBridge = reviewWords.length > 0 && (!ENABLE_HISTORY_PAYWALL || getHistoryAutoRecommend());
+    if (didBridge) {
       try {
         bridgeReviewToVocab(reviewWords, { topicId: topicId, priority: "must-memorize" });
-      } catch (e) { console.warn("bridge to vocab failed:", e); }
+      } catch (e) { didBridge = false; console.warn("bridge to vocab failed:", e); }
     }
-    setTopicReviewPool({ words: reviewWords, concepts: reviewConcepts });
+    setTopicReviewPool({ words: reviewWords, concepts: reviewConcepts, bridged: didBridge });
 
     saveTranscript(topicId, conversationLog);
     saveTopicCompletion(topicId, {

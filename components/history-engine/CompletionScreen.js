@@ -195,7 +195,7 @@ export function CompletionScreen(props) {
             borderLeft: "3px solid " + HC.teal,
           }}>
             <div style={{fontWeight: 700, color: HC.teal, marginBottom: 6, fontSize: 12}}>
-              📝 这些下次再考一次（已加进复习单）
+              📝 这些下次再考一次{reviewPool.bridged === false ? "" : "（已加进复习单）"}
             </div>
             {reviewPool.words.length > 0 && (
               <div style={{marginBottom: 4}}>
@@ -250,7 +250,9 @@ export function CompletionScreen(props) {
               </div>
             )}
             <div style={{marginTop: 8, fontSize: 11, opacity: 0.75, fontStyle: "italic"}}>
-              ✓ 已加到 <a href="/vocab" style={{color: HC.teal, fontWeight: 600}}>Vocab 模块词单</a>，下次进 vocab 会出现复习。
+              {reviewPool.bridged === false
+                ? <span>你关闭了「自动推荐」，这些词没有加入 Vocab。想加可去 <a href="/history" style={{color: HC.teal, fontWeight: 600}}>历史首页一键导入</a>。</span>
+                : <span>✓ 已加到 <a href="/vocab" style={{color: HC.teal, fontWeight: 600}}>Vocab 模块词单</a>，下次进 vocab 会出现复习。</span>}
             </div>
           </div>
         )}
