@@ -2865,6 +2865,7 @@ export default function App() {
   // 而不是默默把 user 置空、徽章消失、同步静默锁死（chompcloud 3 天未上云事件根因）。
   var [sessionExpired, setSessionExpired] = useState(false);
   var _userLogoutRef = useRef(false); // 区分"用户主动登出" vs "被动失效"，避免登出也弹过期提示
+  var _sessionExpiredRef = useRef(false); // 镜像 sessionExpired，供异步 handleAuthUser 判定"是否从失效中恢复"(强制并集合并)
   // 支持 /vocab?login=1 URL 参数：从首页"登录/注册"跳转过来时自动打开登录弹窗
   useEffect(function() {
     if (typeof window === "undefined") return;
@@ -3956,7 +3957,9 @@ export default function App() {
         }
       } catch(e) { console.warn('[logout-sync] failed:', e.message); }
     }
-    await supabase.auth.signOut();
+    // 跨 tab 广播"主动登出"意图：其他 tab 收到广播的 SIGNED_OUT 时据此吃掉，不误弹过期横幅 (P3)
+    try { localStorage.setItem('vs_active_logout', String(Date.now())); } catch(e) {}
+    try { await supabase.auth.signOut(); } catch(e) { console.warn('[logout] signOut failed:', e.message); } // 包 try/catch：抛错也要走完下方本地清理 (P3)
     accessTokenRef.current = null; // 清掉缓存的 token
     // 清理本地数据，防止下一个用户看到
     try {
@@ -3969,6 +3972,7 @@ export default function App() {
       localStorage.removeItem(DEEP_REVIEW_DAILY_KEY);
       localStorage.removeItem(STUDY_STREAK_KEY);
       localStorage.removeItem("vocabspark_tier");
+      localStorage.removeItem("vs_was_logged_in"); // 清"曾登录"标记，避免登出后启动期误判为被动失效 (P1)
     } catch(e) {}
     setUser(null); userRef.current = null;
     // Step 0A.3: setCloudReady(false) 登出后闸门重置, lib 持有
@@ -4101,8 +4105,13 @@ export default function App() {
   var _authInFlightRef = useRef(false);
   var _authTimersRef = useRef([]); // onAuthStateChange 推迟执行的 setTimeout id，unmount 时清
   var handleAuthUser = async function(u, event, session) {
+    var recoveringFromExpiry = _sessionExpiredRef.current; // 在清除前捕获：本次登录是否在"修复被动失效"
     setUser(u); userRef.current = u;
-    if (u) setSessionExpired(false); // 拿到有效用户 → 清除过期提示
+    if (u) {
+      setSessionExpired(false); _sessionExpiredRef.current = false; // 拿到有效用户 → 清除过期提示
+      _userLogoutRef.current = false; // 防御性复位 (P3)：避免 signOut 异常导致 ref 卡死、吃掉后续真实过期
+      try { localStorage.setItem('vs_was_logged_in', '1'); } catch(e) {} // 标记"曾登录"，供启动期死 token 检测 (P1)
+    }
     if (!u) return;
 
     // 缓存最新 access token：优先用 event session 直接取 (Supabase 官方推荐),
@@ -4142,8 +4151,11 @@ export default function App() {
         var localData = await loadSave();
         var localTime = localData?.updatedAt ? new Date(localData.updatedAt).getTime() : 0;
         var cloudTime = cloudData?.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
-        if (localData && cloudData && localTime > cloudTime + 300000) {
-          console.warn('[auth] local newer than cloud, merging both');
+        // P2 修复：从被动失效中恢复时无条件走并集合并，绕过 5 分钟阈值。
+        // 否则失效后 <5 分钟内学的词，重登时 localTime 不够新 → 落入下方覆盖分支被云端冲掉，
+        // 与横幅"不会丢失进度"承诺矛盾。mergeStates 是并集 + validateMerged 防缩水，强制合并安全。
+        if (localData && cloudData && (recoveringFromExpiry || localTime > cloudTime + 300000)) {
+          console.warn('[auth] merging local+cloud' + (recoveringFromExpiry ? ' (recovering from session expiry)' : ' (local newer)'));
           var loginMerged;
           try {
             loginMerged = mergeStates(localData, cloudData);
@@ -4362,13 +4374,27 @@ export default function App() {
 
     var {data: {subscription}} = supabase.auth.onAuthStateChange(function(event, session) {
       var u = session?.user || null;
-      // 被动失效检测：SIGNED_OUT 且非用户主动登出（token 刷新失败/被吊销）→ 弹"会话过期"
-      // 提示用户重新登录恢复云同步，而不是默默锁死同步。userRef 之前有值 = 确实从登录态掉出来。
-      if (event === 'SIGNED_OUT') {
-        if (_userLogoutRef.current) {
-          _userLogoutRef.current = false; // 主动登出已由 handleLogout 处理，吃掉这次事件
-        } else if (userRef.current) {
-          setSessionExpired(true);
+      // 被动失效检测：token 刷新失败/被吊销 → 弹"会话过期"提示重新登录恢复云同步，而非默默锁死。
+      // 两个触发点：
+      //  (a) 会话中失效 → SIGNED_OUT 且 userRef.current 之前有值；
+      //  (b) 启动期死 token (P1，chompcloud 真实场景) → SIGNED_OUT 或 INITIAL_SESSION 拿到 null，
+      //      userRef 还没来得及设，靠持久化的 vs_was_logged_in 标记识别"曾登录但现在没 session"。
+      if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !u)) {
+        var intentional = _userLogoutRef.current;
+        if (!intentional) {
+          // 跨 tab (P3)：另一个 tab 主动登出会广播 SIGNED_OUT 到本 tab；据近 10s 内的 localStorage
+          // 标记吃掉，避免本 tab 误弹"会话过期"。
+          try {
+            var _alo = parseInt(localStorage.getItem('vs_active_logout') || '0', 10);
+            if (_alo && (Date.now() - _alo) < 10000) intentional = true;
+          } catch(e) {}
+        }
+        var _wasLoggedIn = false;
+        try { _wasLoggedIn = localStorage.getItem('vs_was_logged_in') === '1'; } catch(e) {}
+        if (intentional) {
+          _userLogoutRef.current = false; // 主动登出（本 tab 或跨 tab）已处理，吃掉这次事件
+        } else if (userRef.current || _wasLoggedIn) {
+          setSessionExpired(true); _sessionExpiredRef.current = true;
         }
       }
       // Supabase v2 已知死锁陷阱：onAuthStateChange 回调持有 auth 内部锁，回调里 await
