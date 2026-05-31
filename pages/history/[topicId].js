@@ -893,6 +893,7 @@ export default function HistoryPage() {
     // 否则截断 3 节走完会清掉该 topic 真实的 in-progress (如订阅期已开课、降级后又点试看的用户)。
     if (!samplePreview && nextIdx >= effectiveTurns.length) {
       clearInProgress(topicId);
+      pushHistorySync(); // Codex P2: 清掉 in-progress 后也推云, 否则云端留陈旧 resume → 跨设备误显「继续」
     }
   };
 
