@@ -4501,6 +4501,7 @@ export default function App() {
     try { localStorage.removeItem(DAILY_KEY); } catch(e) {}
     try { localStorage.removeItem(DAILY_NEW_QUOTA_KEY); } catch(e) {}
     try { localStorage.removeItem(DEEP_REVIEW_DAILY_KEY); } catch(e) {}
+    try { clearBackups(); } catch(e) {} // Codex P2: 进度重置也清兜底备份, 否则旧进度可从备份恢复
     // 清 Phase 1.5 AI 缓存（让重置后的单词走全新生成路径）
     try {
       var toDelete = [];
