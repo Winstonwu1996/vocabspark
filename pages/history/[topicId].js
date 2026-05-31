@@ -359,6 +359,7 @@ export default function HistoryPage() {
   // Step 8: 「试看 5 分钟」样章状态。samplePreviewRef 给 async 闭包 (markLensStarted 等) 读最新值。
   var [samplePreview, setSamplePreview] = useState(false);
   var samplePreviewRef = useRef(false);
+  var sampleAutoStartedRef = useRef(false); // 防 ?sample=1 自动进样章重复触发
   useEffect(function () { samplePreviewRef.current = samplePreview; }, [samplePreview]);
   // v3 lens 模型：用户可选不同角色视角看同一事件——effectiveTurns 按 lens 加载
   var [selectedLensId, setSelectedLensId] = useState(null);
@@ -990,6 +991,21 @@ export default function HistoryPage() {
     setSamplePreview(true);
     startConversation();
   };
+
+  // Step 8 (Codex round2 P2): 从 /history 选课页点锁定 Pro 课的「试看」会带 ?sample=1 跳进本页 ——
+  // 等 gate 落定到 deny (Free 够不到的 Pro 课) 再自动进样章; allow (Pro 用户手敲 URL) → 忽略参数正常进课。
+  useEffect(function () {
+    if (!ENABLE_HISTORY_PAYWALL) return;
+    if (sampleAutoStartedRef.current || samplePreview) return;
+    if (typeof window === 'undefined') return;
+    var wantSample = false;
+    try { wantSample = new URLSearchParams(window.location.search).get('sample') === '1'; } catch (e) {}
+    if (!wantSample) return;
+    if (freshGateAccessRef.current !== 'deny') return; // 等 gate 报 deny 才进 (Pro 用户=allow 不触发)
+    sampleAutoStartedRef.current = true;
+    startSamplePreview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gateResult, samplePreview]);
 
   // ─── Step 4b-1: 进课 tier gate ─────────────────────────────────
   // CourseGate 上报 {access, topicId, lensId}。Codex P1 修: 结论带标签, 播放器页只信

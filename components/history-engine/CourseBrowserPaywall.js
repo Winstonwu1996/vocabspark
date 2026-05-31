@@ -44,6 +44,9 @@ export function CourseBrowserPaywall(props) {
           counts={counts}
           onClose={function () { setLockedTopicId(null); }}
           onUpgrade={function () { router.push('/plan'); }}
+          onPreview={getTopicAccessTier(lockedTopicId) === 'pro'
+            ? function () { router.push('/history/' + lockedTopicId + '?sample=1'); }
+            : undefined}
         />
       )}
     </React.Fragment>
