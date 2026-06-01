@@ -4124,6 +4124,18 @@ export default function App() {
     }
     if (!u) return;
 
+    // 共享浏览器换账号 (新用户 ≠ 本机 blob 归属) → 先清掉上一个账号的本机 blob + 备份, 让下面按云端重建。
+    // 否则 doSave 是浅合并, 上一个账号的字段 (尤其 historyData) 会残留, 被当前账号的同步 (含 history
+    // 「记住进度」按钮 + vocab 自动同步) 误推到当前账号云端 (Codex P1, 跨账号污染)。同一用户重登 (含被动
+    // 失效恢复) owner 相同 → 不清, 保留本地未同步进度。
+    try {
+      var _prevOwner = localStorage.getItem('vocabspark_owner');
+      if (_prevOwner && _prevOwner !== u.id) {
+        localStorage.removeItem(SKEY);
+        try { clearBackups(); } catch (e) {}
+      }
+    } catch (e) {}
+
     // 缓存最新 access token：优先用 event session 直接取 (Supabase 官方推荐),
     // 避免在 auth 回调链里额外 getSession。供 beforeunload 同步路径用。
     if (session && session.access_token) accessTokenRef.current = session.access_token;
