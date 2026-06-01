@@ -225,11 +225,17 @@ export default function HistoryPage() {
       // saveWorldview(旧 state) 还会把刚合并的真实画像覆盖掉。重读这些等价于重跑挂载时的加载。
       var freshWv = loadWorldview();
       if (freshWv) setWorldview(freshWv);
+      // profile: 镜像挂载时的双源逻辑 (history 字段化 profile 优先, 否则 legacy vocab 自由文本)。
       var freshHp = loadHistoryProfile();
+      var freshLoaded = loadProfile();
+      setProfileText(freshLoaded.profile || "");
       if (freshHp) {
         setHistoryProfile(freshHp);
         setProfileFields(historyProfileToFields(freshHp));
         if (!freshHp.placeholder) setNeedsProfileSetup(false); // 云端有真实 profile → 不再要求填表
+      } else if (freshLoaded.profile) {
+        // 云端只有 legacy vocab 自由文本 profile → 字段化, 让 ProfileSetup 能预填导入的 vocab 画像 (Codex P2)
+        setProfileFields(parseProfileFields(freshLoaded.profile));
       }
       setCurriculum(loadCurriculum());
       setXp(getXp());
