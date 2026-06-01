@@ -194,6 +194,38 @@ export default function HistoryPage() {
     try { if (historySyncRef.current) historySyncRef.current.syncToCloud(); } catch (e) {}
   };
 
+  // 「记住进度」悬浮按钮: 用户主动把 history 进度同步上云, 不必先去 vocab (创始人 UX 反馈)。
+  // 解锁 cloudReady 闸门 + 推送; 冲突走客户端现成 409 拉合并重推 (R5 union, 不丢)。点一次本会话即解锁,
+  // 之后学完课自动同步。owner 护栏: 本机 blob 归属别的账号时拒绝, 防共享设备 (你 + Willow) 跨账号混进度。
+  var [historySaveMsg, setHistorySaveMsg] = useState(null); // 临时提示 (owner 不符 / 未登录)
+  var saveHistoryToCloud = function () {
+    if (!user || !user.id) {
+      setHistorySaveMsg('登录后才能把进度同步到云端');
+      return;
+    }
+    var owner = null;
+    try { owner = localStorage.getItem('vocabspark_owner'); } catch (e) {}
+    // owner 已标记且非当前用户 → 本机数据属于别的账号 → 拒绝上推 (防跨账号污染)。
+    // 未标记 (老用户/本机首次) → 放行 (bootstrap): 这是当前用户自己的本地进度。
+    if (owner && owner !== user.id) {
+      setHistorySaveMsg('这台设备当前是别的账号的进度。请先打开 Vocab 或重新登录确认是你的,再同步。');
+      return;
+    }
+    var client = historySyncRef.current;
+    if (!client) return;
+    try {
+      client.setCloudReady(true);  // 解锁 push 闸门 (本会话此后学完课也会自动同步)
+      client.syncToCloud();         // 推本地进度 (含 409 拉合并重推, 不覆盖云端别设备的新数据)
+      try { localStorage.setItem('vocabspark_owner', user.id); } catch (e) {}
+      setHistorySaveMsg(null);
+    } catch (e) {}
+  };
+  useEffect(function () {
+    if (!historySaveMsg) return;
+    var t = setTimeout(function () { setHistorySaveMsg(null); }, 5000);
+    return function () { clearTimeout(t); };
+  }, [historySaveMsg]);
+
   // —— 对话状态 ——
   var [conversationLog, setConversationLog] = useState([]); // [{role, turn, content, timestamp}]
   var [aiStreaming, setAiStreaming] = useState(""); // 当前正在流入的 AI 文字
@@ -1881,6 +1913,32 @@ export default function HistoryPage() {
                   return '✓ 已同步' + (rel ? ' · ' + rel : '');
                 })()}
           </div>
+        )}
+        {/* 「记住进度」悬浮按钮: 用户主动同步到云端, 不必先去 vocab (创始人 UX 反馈) */}
+        {!embedded && user && (
+          <button
+            onClick={saveHistoryToCloud}
+            disabled={historySyncState === 'syncing'}
+            aria-label="把学习进度同步到云端"
+            style={{
+              position: "fixed", bottom: 18, right: 16, zIndex: 2200,
+              padding: "10px 16px", borderRadius: 999, border: "none",
+              background: HC.accent, color: "#fff8e8", fontSize: 13.5, fontWeight: 700,
+              fontFamily: FONT, boxShadow: "0 4px 16px rgba(0,0,0,0.28)",
+              cursor: historySyncState === 'syncing' ? "default" : "pointer",
+              opacity: historySyncState === 'syncing' ? 0.75 : 1,
+            }}
+          >
+            {historySyncState === 'syncing' ? '☁️ 同步中…' : '☁️ 记住进度'}
+          </button>
+        )}
+        {historySaveMsg && (
+          <div role="status" style={{
+            position: "fixed", bottom: 64, right: 16, zIndex: 2200, maxWidth: 280,
+            padding: "10px 14px", borderRadius: 12, background: "rgba(44,36,32,0.95)",
+            color: "#fff8e8", fontSize: 13, lineHeight: 1.55, fontFamily: FONT,
+            boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
+          }}>{historySaveMsg}</div>
         )}
         {/* Stage 4：embedded 模式下父 atlas-lab 已有 nav，这里不重复渲染 */}
         {!embedded && (

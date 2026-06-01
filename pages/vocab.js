@@ -3981,6 +3981,7 @@ export default function App() {
       localStorage.removeItem("vocabspark_tier");
       clearBackups(); // Codex P1: 连兜底备份一起清, 共享浏览器登出不留进度 blob
       localStorage.removeItem("vs_was_logged_in"); // 清"曾登录"标记，避免登出后启动期误判为被动失效 (P1)
+      localStorage.removeItem("vocabspark_owner"); // 清 blob 归属标记 (history 同步按钮护栏用)
     } catch(e) {}
     setUser(null); userRef.current = null;
     // Step 0A.3: setCloudReady(false) 登出后闸门重置, lib 持有
@@ -4186,6 +4187,9 @@ export default function App() {
           if (syncClientRef.current) syncClientRef.current.setCloudReady(true);
           syncToCloud();
         }
+        // 本机 blob 现已是该用户的数据 → 标记归属, 供 history「记住进度」按钮的 owner 护栏判断
+        // (共享设备换账号后重新登录即更新, 让 history 同步按钮能正确识别是谁的进度)。
+        try { localStorage.setItem('vocabspark_owner', u.id); } catch(e) {}
       }
       _loadTier(u.id);
     } finally {
