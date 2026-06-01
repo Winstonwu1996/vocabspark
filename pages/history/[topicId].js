@@ -204,6 +204,8 @@ export default function HistoryPage() {
   var [historySaveMsg, setHistorySaveMsg] = useState(null); // 临时提示 (同步结果 / 未登录)
   var [historySavePending, setHistorySavePending] = useState(false); // 用户点了按钮、等异步同步落定
   var saveHistoryToCloud = function () {
+    // 试看 5 分钟 (Pro 课样章) 设计上不存进度: 不让试看的临时态经 union 合并写进真实 blob (workflow review)。
+    if (samplePreviewRef.current) return;
     if (!user || !user.id) {
       setHistorySaveMsg('登录后才能把进度同步到云端');
       return;
@@ -1965,8 +1967,9 @@ export default function HistoryPage() {
             对话阶段隐藏 —— 底部 sticky 输入条有语音/发送, 避免悬浮按钮盖住发送键 (Codex P2)。
             对话推进会自动同步 (cloudReady 后), 这按钮主要给 intro/笔记/完成屏的主动保存。
             conversation 阶段隐藏 (底部输入条); mastery 阶段隐藏 (.mastery-overlay 满屏弹窗, 本按钮会盖住
-            Submit/Skip); showUpgradeGate 打开时隐藏 (UpgradeModal z-index 2100, 本按钮 2200, 会挡点击)。Codex P2。 */}
-        {!embedded && user && phase !== 'conversation' && phase !== 'mastery' && !showUpgradeGate && (
+            Submit/Skip); showUpgradeGate 打开时隐藏 (弹窗打开时不让用户同时操作底层悬浮按钮, 专注弹窗);
+            samplePreview 试看阶段隐藏 (样章不存进度, 不该触发同步)。Codex P2 + workflow review。 */}
+        {!embedded && user && phase !== 'conversation' && phase !== 'mastery' && !showUpgradeGate && !samplePreview && (
           <button
             onClick={saveHistoryToCloud}
             disabled={historySyncState === 'syncing'}
