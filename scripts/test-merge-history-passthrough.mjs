@@ -247,6 +247,41 @@ console.log("\n[10] R5 P1: userWorldview 累积数组 union (不丢另一端 sel
   ok("单边缺 userWorldview → 保留有的那边", m3.userWorldview.selfDisclosure.length === 1);
 }
 
+console.log("\n[11] 初始 seed 不得覆盖真实 worldview 标量 (Codex P2: 新设备先开 /history 点同步)");
+{
+  // local = 新设备 mount 刚 seed 的 placeholder (initialSeed, updatedAt 更新), server = 真实已演化画像 (较旧)
+  var localSeed = { updatedAt: "2026-05-31T12:00:00Z", historyData: { userWorldview: {
+    initialSeed: true,
+    reasoningStyle: { pattern: "unknown — placeholder 假设" },
+    knowledgeAnchors: { "x": { strength: "likely-strong" } },
+    selfDisclosure: [{ topic: "fresh", turn: 1, content: "本设备刚说的", at: "2026-05-31T11:30:00Z" }],
+    valueEmphasis: [] } } };
+  var serverReal = { updatedAt: "2026-05-31T09:00:00Z", historyData: { userWorldview: {
+    reasoningStyle: { pattern: "deductive, 已观察 8 课" },
+    knowledgeAnchors: { "x": { strength: "confirmed-strong" } },
+    selfDisclosure: [{ topic: "t-real", turn: 4, content: "真实披露", at: "2026-05-30T10:00:00Z" }],
+    valueEmphasis: ["collective"] } } };
+  var w = mergeProgress(localSeed, serverReal).historyData.userWorldview;
+  ok("真实 reasoningStyle 标量赢 (seed 不靠更新 updatedAt 抢)", w.reasoningStyle.pattern === "deductive, 已观察 8 课");
+  ok("真实 knowledgeAnchors 标量赢", w.knowledgeAnchors.x.strength === "confirmed-strong");
+  ok("本设备新 selfDisclosure 仍 union 进来 (不丢)", w.selfDisclosure.some(function(d){return d.content==="本设备刚说的";}));
+  ok("真实 selfDisclosure 也在", w.selfDisclosure.some(function(d){return d.content==="真实披露";}));
+  ok("真实端 valueEmphasis 不被 seed 空数组清掉", w.valueEmphasis.indexOf("collective") !== -1);
+  ok("合并结果不再标记 initialSeed (已含真实数据)", w.initialSeed === undefined);
+
+  // 两端都 seed → 维持 newer 赢 (不被新规则干扰)
+  var both1 = { updatedAt: "2026-05-31T12:00:00Z", historyData: { userWorldview: { initialSeed: true, reasoningStyle: { pattern: "newer-seed" } } } };
+  var both2 = { updatedAt: "2026-05-31T09:00:00Z", historyData: { userWorldview: { initialSeed: true, reasoningStyle: { pattern: "older-seed" } } } };
+  var wb = mergeProgress(both1, both2).historyData.userWorldview;
+  ok("两端都 seed → newer 赢 + 仍是 seed", wb.reasoningStyle.pattern === "newer-seed" && wb.initialSeed === true);
+
+  // 两端都非 seed → 行为不变 (newer 赢), 既有用户零回归
+  var real1 = { updatedAt: "2026-05-31T12:00:00Z", historyData: { userWorldview: { reasoningStyle: { pattern: "newer-real" } } } };
+  var real2 = { updatedAt: "2026-05-31T09:00:00Z", historyData: { userWorldview: { reasoningStyle: { pattern: "older-real" } } } };
+  var wr = mergeProgress(real1, real2).historyData.userWorldview;
+  ok("两端都非 seed → newer 赢 (零回归)", wr.reasoningStyle.pattern === "newer-real" && wr.initialSeed === undefined);
+}
+
 console.log("\n──────────────────────────");
 console.log("PASS " + pass + " / FAIL " + fail);
 process.exit(fail === 0 ? 0 : 1);
