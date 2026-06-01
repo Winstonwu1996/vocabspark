@@ -318,6 +318,25 @@ console.log("\n[12] pruneCompletedInProgress: 已完成课的过期续点丢弃,
   ok("无 inProgress → 不抛", pruneCompletedInProgress({ historyData: { completedTopics: {} } }) !== undefined);
 }
 
+console.log("\n[13] placeholder historyData.profile 不得覆盖真实云端 profile (Codex P2)");
+{
+  // local = atlas/sample 流自动存的 placeholder profile (updatedAt 更新), server = 真实填写 (较旧)
+  var locP = { updatedAt: "2026-05-31T12:00:00Z", historyData: { profile: { placeholder: true, grade: "7", name: "" } } };
+  var srvP = { updatedAt: "2026-05-31T09:00:00Z", historyData: { profile: { grade: "8", name: "Willow", interests: ["history"] } } };
+  var p = mergeProgress(locP, srvP).historyData.profile;
+  ok("真实 profile 赢 (placeholder 不靠更新 updatedAt 抢)", p.name === "Willow" && !p.placeholder);
+  ok("真实 profile 字段完整保留", Array.isArray(p.interests) && p.interests[0] === "history");
+
+  // 两端都真实 → newer 赢 (零回归)
+  var r1 = { updatedAt: "2026-05-31T12:00:00Z", historyData: { profile: { name: "newer-real" } } };
+  var r2 = { updatedAt: "2026-05-31T09:00:00Z", historyData: { profile: { name: "older-real" } } };
+  ok("两端都真实 → newer 赢 (零回归)", mergeProgress(r1, r2).historyData.profile.name === "newer-real");
+
+  // 单边缺 profile → 保留有的那边
+  var m = mergeHistoryData({ profile: { name: "only-local" } }, {}, true);
+  ok("单边缺 profile → 保留有的那边", m.profile.name === "only-local");
+}
+
 console.log("\n──────────────────────────");
 console.log("PASS " + pass + " / FAIL " + fail);
 process.exit(fail === 0 ? 0 : 1);
