@@ -10,6 +10,7 @@ import {
   validateProgressMerge,
   applyProgressGuards,
 } from "../lib/progressMergePolicy.js";
+import { pruneCompletedInProgress } from "../lib/syncMerge.js";
 
 var pass = 0, fail = 0;
 function ok(name, cond) {
@@ -280,6 +281,41 @@ console.log("\n[11] 初始 seed 不得覆盖真实 worldview 标量 (Codex P2: �
   var real2 = { updatedAt: "2026-05-31T09:00:00Z", historyData: { userWorldview: { reasoningStyle: { pattern: "older-real" } } } };
   var wr = mergeProgress(real1, real2).historyData.userWorldview;
   ok("两端都非 seed → newer 赢 (零回归)", wr.reasoningStyle.pattern === "newer-real" && wr.initialSeed === undefined);
+}
+
+console.log("\n[12] pruneCompletedInProgress: 已完成课的过期续点丢弃, 重学续点保留 (Codex P2)");
+{
+  // 续点早于完成 → 过期, 丢弃
+  var d1 = { historyData: {
+    completedTopics: { "qin": { completedAt: "2026-05-31T12:00:00Z" } },
+    inProgress: { "qin": { savedAt: "2026-05-31T10:00:00Z", turn: 3 } } } };
+  pruneCompletedInProgress(d1);
+  ok("续点早于 completedAt → 丢弃", d1.historyData.inProgress.qin === undefined);
+
+  // 重学: 续点晚于完成 → 保留
+  var d2 = { historyData: {
+    completedTopics: { "qin": { completedAt: "2026-05-31T10:00:00Z" } },
+    inProgress: { "qin": { savedAt: "2026-05-31T12:00:00Z", turn: 1 } } } };
+  pruneCompletedInProgress(d2);
+  ok("重学续点 (savedAt > completedAt) → 保留", d2.historyData.inProgress.qin !== undefined);
+
+  // 未完成的课 → 续点保留
+  var d3 = { historyData: {
+    completedTopics: {},
+    inProgress: { "han": { savedAt: "2026-05-31T10:00:00Z" } } } };
+  pruneCompletedInProgress(d3);
+  ok("未完成课的续点 → 保留", d3.historyData.inProgress.han !== undefined);
+
+  // 时间戳缺失 + 已完成 → 视为过期丢弃 (无法证明晚于完成)
+  var d4 = { historyData: {
+    completedTopics: { "tang": { completedAt: "2026-05-31T10:00:00Z" } },
+    inProgress: { "tang": { turn: 2 } } } };
+  pruneCompletedInProgress(d4);
+  ok("续点缺 savedAt + 已完成 → 丢弃", d4.historyData.inProgress.tang === undefined);
+
+  // 缺字段 / 空 → 不报错
+  ok("无 historyData → 原样返回不抛", pruneCompletedInProgress({}) !== undefined);
+  ok("无 inProgress → 不抛", pruneCompletedInProgress({ historyData: { completedTopics: {} } }) !== undefined);
 }
 
 console.log("\n──────────────────────────");

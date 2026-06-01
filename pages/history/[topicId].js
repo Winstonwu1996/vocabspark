@@ -59,6 +59,7 @@ import {
   parseProfileFields,
   injectPlaceholders,
   getOrSeedWorldview,
+  loadWorldview,
   saveWorldview,
   saveTopicCompletion,
   saveTranscript,
@@ -217,7 +218,12 @@ export default function HistoryPage() {
       if (!ok) {
         setHistorySaveMsg('⚠ 同步未成功，进度已留在本设备，请检查网络后重试');
         setHistorySavePending(false);
+        return;
       }
+      // 拉云已把真实云端 worldview 合进本地 (Codex P2): 重读进 React state, 否则学完课时
+      // saveWorldview(newWv) 会拿挂载时的 seed 旧 state 把刚合并的真实画像覆盖掉。
+      var freshWv = loadWorldview();
+      if (freshWv) setWorldview(freshWv);
       // ok=true: onSyncStatus→historySyncState 落定后, 由下面的 effect 升级为「✓ 已同步」。
     }).catch(function () {
       setHistorySaveMsg('⚠ 同步未成功，进度已留在本设备，请检查网络后重试');
