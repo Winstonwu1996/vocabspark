@@ -369,6 +369,29 @@ console.log("\n[13] placeholder historyData.profile 不得覆盖真实云端 pro
   ok("只有 curriculum 无 profile → 保留", mw3.curriculum && mw3.curriculum.region === "only-cur");
 }
 
+console.log("\n[14] 空 profile/wordInput 不抹云端真实值 (Codex P2: 新设备先开 /history, 本地 updatedAt 虚高)");
+{
+  // 本地较新但 profile 空, 云端较旧但有短 profile (长度差<20) → 原会让空本地赢; 修复后云端真实值赢
+  var lEmpty = { updatedAt: "2026-05-31T12:00:00Z", profile: "", wordInput: "" };
+  var sReal = { updatedAt: "2026-05-31T09:00:00Z", profile: "Tom, 13", wordInput: "apple\nbanana" };
+  var mp = mergeProgress(lEmpty, sReal);
+  ok("空本地 profile 不抹云端短 profile", mp.profile === "Tom, 13");
+  ok("空本地 wordInput 不抹云端短词表", mp.wordInput === "apple\nbanana");
+
+  // 反向: 本地有、云端空 → 本地赢 (不被空云端抹)
+  var lReal = { updatedAt: "2026-05-31T09:00:00Z", profile: "Amy", wordInput: "cat" };
+  var sEmpty = { updatedAt: "2026-05-31T12:00:00Z", profile: "", wordInput: "" };
+  var mp2 = mergeProgress(lReal, sEmpty);
+  ok("空云端 profile 不抹本地真实值", mp2.profile === "Amy");
+  ok("空云端 wordInput 不抹本地词表", mp2.wordInput === "cat");
+
+  // 两端皆非空 → 原 newer/较长逻辑不变 (零回归)
+  var lN = { updatedAt: "2026-05-31T12:00:00Z", profile: "newer", wordInput: "n1" };
+  var sN = { updatedAt: "2026-05-31T09:00:00Z", profile: "older", wordInput: "o1" };
+  var mp3 = mergeProgress(lN, sN);
+  ok("两端非空 profile → newer 赢 (零回归)", mp3.profile === "newer");
+}
+
 console.log("\n──────────────────────────");
 console.log("PASS " + pass + " / FAIL " + fail);
 process.exit(fail === 0 ? 0 : 1);
