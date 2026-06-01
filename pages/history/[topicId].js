@@ -201,6 +201,7 @@ export default function HistoryPage() {
   // 尤其共用设备时一眼看出有没有登错号。(共用浏览器登不同账号的彻底数据隔离 = 按用户分命名空间存储的架构专项,
   //  见 docs/STEP_0B_SYNC_REDESIGN.md; 这里靠"显示账号 + 文案"做透明提示, 不做复杂且易错的本地 owner 护栏。)
   var [historySaveMsg, setHistorySaveMsg] = useState(null); // 临时提示 (同步结果 / 未登录)
+  var [historySavePending, setHistorySavePending] = useState(false); // 用户点了按钮、等异步同步落定
   var saveHistoryToCloud = function () {
     if (!user || !user.id) {
       setHistorySaveMsg('登录后才能把进度同步到云端');
@@ -211,14 +212,29 @@ export default function HistoryPage() {
     try {
       client.setCloudReady(true);  // 解锁 push 闸门 (本会话此后学完课也会自动同步)
       client.syncToCloud();         // 推本地进度 (含 409 拉合并重推, 不覆盖云端别设备的新数据)
-      setHistorySaveMsg('✓ 已同步到你的账号：' + (user.email || '当前登录账号') + '（共用设备请确认是你自己）');
+      // 不在异步完成前就报「已同步」(Codex P2): 先显示进行中, 等 onSyncStatus 落定再升级为 ✓/⚠。
+      setHistorySavePending(true);
+      setHistorySaveMsg('☁️ 正在同步到你的账号：' + (user.email || '当前登录账号') + '…（共用设备请确认是你自己）');
     } catch (e) {}
   };
+  // 同步真正完成/失败后再更新提示 —— onSyncStatus → historySyncState 驱动, 避免假成功提示。
+  useEffect(function () {
+    if (!historySavePending) return;
+    if (historySyncState === 'synced') {
+      setHistorySaveMsg('✓ 已同步到你的账号：' + (user && user.email ? user.email : '当前登录账号'));
+      setHistorySavePending(false);
+    } else if (historySyncState === 'error') {
+      setHistorySaveMsg('⚠ 同步未成功，进度已留在本设备，请检查网络后重试');
+      setHistorySavePending(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historySyncState, historySavePending]);
   useEffect(function () {
     if (!historySaveMsg) return;
+    if (historySavePending) return; // 同步进行中, 不自动消失 (等落定换成 ✓/⚠ 再计时)
     var t = setTimeout(function () { setHistorySaveMsg(null); }, 5000);
     return function () { clearTimeout(t); };
-  }, [historySaveMsg]);
+  }, [historySaveMsg, historySavePending]);
 
   // —— 对话状态 ——
   var [conversationLog, setConversationLog] = useState([]); // [{role, turn, content, timestamp}]
@@ -1910,8 +1926,9 @@ export default function HistoryPage() {
         )}
         {/* 「记住进度」悬浮按钮: 用户主动同步到云端, 不必先去 vocab (创始人 UX 反馈)。
             对话阶段隐藏 —— 底部 sticky 输入条有语音/发送, 避免悬浮按钮盖住发送键 (Codex P2)。
-            对话推进会自动同步 (cloudReady 后), 这按钮主要给 intro/笔记/完成屏的主动保存。 */}
-        {!embedded && user && phase !== 'conversation' && (
+            对话推进会自动同步 (cloudReady 后), 这按钮主要给 intro/笔记/完成屏的主动保存。
+            showUpgradeGate 打开时隐藏 —— UpgradeModal z-index 2100, 本按钮 2200, 不隐藏会盖在弹窗上挡点击 (Codex P2)。 */}
+        {!embedded && user && phase !== 'conversation' && !showUpgradeGate && (
           <button
             onClick={saveHistoryToCloud}
             disabled={historySyncState === 'syncing'}
@@ -1929,7 +1946,7 @@ export default function HistoryPage() {
             {historySyncState === 'syncing' ? '☁️ 同步中…' : '☁️ 记住进度'}
           </button>
         )}
-        {historySaveMsg && (
+        {historySaveMsg && !showUpgradeGate && (
           <div role="status" style={{
             position: "fixed", bottom: 64, right: 16, zIndex: 2200, maxWidth: 280,
             padding: "10px 14px", borderRadius: 12, background: "rgba(44,36,32,0.95)",
