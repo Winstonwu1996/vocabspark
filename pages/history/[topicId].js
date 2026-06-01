@@ -208,14 +208,21 @@ export default function HistoryPage() {
       return;
     }
     var client = historySyncRef.current;
-    if (!client) return;
-    try {
-      client.setCloudReady(true);  // 解锁 push 闸门 (本会话此后学完课也会自动同步)
-      client.syncToCloud();         // 推本地进度 (含 409 拉合并重推, 不覆盖云端别设备的新数据)
-      // 不在异步完成前就报「已同步」(Codex P2): 先显示进行中, 等 onSyncStatus 落定再升级为 ✓/⚠。
-      setHistorySavePending(true);
-      setHistorySaveMsg('☁️ 正在同步到你的账号：' + (user.email || '当前登录账号') + '…（共用设备请确认是你自己）');
-    } catch (e) {}
+    if (!client || typeof client.enablePushFromCloud !== 'function') return;
+    // 不在异步完成前就报「已同步」(Codex P2): 先显示进行中, 等落定再升级为 ✓/⚠。
+    setHistorySavePending(true);
+    setHistorySaveMsg('☁️ 正在同步到你的账号：' + (user.email || '当前登录账号') + '…（共用设备请确认是你自己）');
+    // 先拉云合并再解锁推送 (Codex P1): 不绕过首拉闸门, 避免 version-0 云端被本地旧 blob 覆盖。
+    Promise.resolve(client.enablePushFromCloud()).then(function (ok) {
+      if (!ok) {
+        setHistorySaveMsg('⚠ 同步未成功，进度已留在本设备，请检查网络后重试');
+        setHistorySavePending(false);
+      }
+      // ok=true: onSyncStatus→historySyncState 落定后, 由下面的 effect 升级为「✓ 已同步」。
+    }).catch(function () {
+      setHistorySaveMsg('⚠ 同步未成功，进度已留在本设备，请检查网络后重试');
+      setHistorySavePending(false);
+    });
   };
   // 同步真正完成/失败后再更新提示 —— onSyncStatus → historySyncState 驱动, 避免假成功提示。
   useEffect(function () {
@@ -1927,8 +1934,9 @@ export default function HistoryPage() {
         {/* 「记住进度」悬浮按钮: 用户主动同步到云端, 不必先去 vocab (创始人 UX 反馈)。
             对话阶段隐藏 —— 底部 sticky 输入条有语音/发送, 避免悬浮按钮盖住发送键 (Codex P2)。
             对话推进会自动同步 (cloudReady 后), 这按钮主要给 intro/笔记/完成屏的主动保存。
-            showUpgradeGate 打开时隐藏 —— UpgradeModal z-index 2100, 本按钮 2200, 不隐藏会盖在弹窗上挡点击 (Codex P2)。 */}
-        {!embedded && user && phase !== 'conversation' && !showUpgradeGate && (
+            conversation 阶段隐藏 (底部输入条); mastery 阶段隐藏 (.mastery-overlay 满屏弹窗, 本按钮会盖住
+            Submit/Skip); showUpgradeGate 打开时隐藏 (UpgradeModal z-index 2100, 本按钮 2200, 会挡点击)。Codex P2。 */}
+        {!embedded && user && phase !== 'conversation' && phase !== 'mastery' && !showUpgradeGate && (
           <button
             onClick={saveHistoryToCloud}
             disabled={historySyncState === 'syncing'}
