@@ -3981,7 +3981,6 @@ export default function App() {
       localStorage.removeItem("vocabspark_tier");
       clearBackups(); // Codex P1: 连兜底备份一起清, 共享浏览器登出不留进度 blob
       localStorage.removeItem("vs_was_logged_in"); // 清"曾登录"标记，避免登出后启动期误判为被动失效 (P1)
-      localStorage.removeItem("vocabspark_owner"); // 清 blob 归属标记 (history 同步按钮护栏用)
     } catch(e) {}
     setUser(null); userRef.current = null;
     // Step 0A.3: setCloudReady(false) 登出后闸门重置, lib 持有
@@ -4124,19 +4123,6 @@ export default function App() {
     }
     if (!u) return;
 
-    // 共享浏览器换账号 (新用户 ≠ 本机 blob 归属) → 先清掉上一个账号的本机 blob + 备份, 让下面按云端重建。
-    // 否则 doSave 是浅合并, 上一个账号的字段 (尤其 historyData) 会残留, 被当前账号的同步 (含 history
-    // 「记住进度」按钮 + vocab 自动同步) 误推到当前账号云端 (Codex P1, 跨账号污染)。同一用户重登 (含被动
-    // 失效恢复) owner 相同 → 不清, 保留本地未同步进度。
-    try {
-      var _prevOwner = localStorage.getItem('vocabspark_owner');
-      if (_prevOwner && _prevOwner !== u.id) {
-        localStorage.removeItem(SKEY);
-        localStorage.removeItem(SKEY_OLD); // Codex P2: loadSave 会把 SKEY_OLD 迁回 SKEY, 不清则上一个账号又复活
-        try { clearBackups(); } catch (e) {}
-      }
-    } catch (e) {}
-
     // 缓存最新 access token：优先用 event session 直接取 (Supabase 官方推荐),
     // 避免在 auth 回调链里额外 getSession。供 beforeunload 同步路径用。
     if (session && session.access_token) accessTokenRef.current = session.access_token;
@@ -4200,9 +4186,6 @@ export default function App() {
           if (syncClientRef.current) syncClientRef.current.setCloudReady(true);
           syncToCloud();
         }
-        // 本机 blob 现已是该用户的数据 → 标记归属, 供 history「记住进度」按钮的 owner 护栏判断
-        // (共享设备换账号后重新登录即更新, 让 history 同步按钮能正确识别是谁的进度)。
-        try { localStorage.setItem('vocabspark_owner', u.id); } catch(e) {}
       }
       _loadTier(u.id);
     } finally {

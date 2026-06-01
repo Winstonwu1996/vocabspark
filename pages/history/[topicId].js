@@ -196,21 +196,14 @@ export default function HistoryPage() {
 
   // 「记住进度」悬浮按钮: 用户主动把 history 进度同步上云, 不必先去 vocab (创始人 UX 反馈)。
   // 解锁 cloudReady 闸门 + 推送; 冲突走客户端现成 409 拉合并重推 (R5 union, 不丢)。点一次本会话即解锁,
-  // 之后学完课自动同步。owner 护栏: 本机 blob 归属别的账号时拒绝, 防共享设备 (你 + Willow) 跨账号混进度。
-  var [historySaveMsg, setHistorySaveMsg] = useState(null); // 临时提示 (owner 不符 / 未登录)
+  // 之后学完课自动同步。
+  // 跨账号说明: 同步到「当前登录账号」的云端。点完明确显示同步到了哪个账号 (showing email), 让用户心里有数 ——
+  // 尤其共用设备时一眼看出有没有登错号。(共用浏览器登不同账号的彻底数据隔离 = 按用户分命名空间存储的架构专项,
+  //  见 docs/STEP_0B_SYNC_REDESIGN.md; 这里靠"显示账号 + 文案"做透明提示, 不做复杂且易错的本地 owner 护栏。)
+  var [historySaveMsg, setHistorySaveMsg] = useState(null); // 临时提示 (同步结果 / 未登录)
   var saveHistoryToCloud = function () {
     if (!user || !user.id) {
       setHistorySaveMsg('登录后才能把进度同步到云端');
-      return;
-    }
-    var owner = null;
-    try { owner = localStorage.getItem('vocabspark_owner'); } catch (e) {}
-    // 必须确认本机 blob 归属当前用户才上推 (Codex P1)。owner 在 vocab handleAuthUser 拉云后标记 ——
-    // 即登录走过一次云端确认才算可信。owner 未标记 (上线前的旧会话, 从没经 handleAuthUser) 或归属别的
-    // 账号 → 不 bootstrap-信任 (否则共享浏览器上把别人的进度推到当前账号) → 拒绝并提示重登一次。
-    // 重新登录 / 打开一次 vocab 会经 handleAuthUser 确认身份并标记 owner, 之后本按钮即可用。
-    if (owner !== user.id) {
-      setHistorySaveMsg('为确认是你的进度,请先重新登录一次(或打开一次 Vocab),再点同步。共享设备时尤其要确认。');
       return;
     }
     var client = historySyncRef.current;
@@ -218,7 +211,7 @@ export default function HistoryPage() {
     try {
       client.setCloudReady(true);  // 解锁 push 闸门 (本会话此后学完课也会自动同步)
       client.syncToCloud();         // 推本地进度 (含 409 拉合并重推, 不覆盖云端别设备的新数据)
-      setHistorySaveMsg(null);
+      setHistorySaveMsg('✓ 已同步到你的账号：' + (user.email || '当前登录账号') + '（共用设备请确认是你自己）');
     } catch (e) {}
   };
   useEffect(function () {
@@ -1922,7 +1915,8 @@ export default function HistoryPage() {
           <button
             onClick={saveHistoryToCloud}
             disabled={historySyncState === 'syncing'}
-            aria-label="把学习进度同步到云端"
+            aria-label="把学习进度同步到你的云端账号"
+            title="把这台设备的学习进度同步到你的云端账号，换设备也能接着学。共用设备时请确认当前登录的是你自己。"
             style={{
               position: "fixed", bottom: 18, right: 16, zIndex: 2200,
               padding: "10px 16px", borderRadius: 999, border: "none",
