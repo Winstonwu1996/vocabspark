@@ -46,7 +46,7 @@
 ## ~~BACKLOG-2：服务端 pet 守卫改对象级合并（P2）~~ ✅ 已完成（2026-05-24）
 - **来源**：`fix-sync-gate-falsepositive` 的 Codex 审计 P2（移除客户端 pet 启发式后留下）。
 - **已解决**：`c047ee1` "pet 服务端守卫改对象级合并 — 默认/陈旧快照不再覆盖云端非空标量" + `260abb4` "pet 守卫保留字段补 lastFeedAt/evolvedAt"（均 Codex P2，已合 main 部署）。pet 守卫已从"整字段回退"改为对象级合并：保留 cloud 非空标量字段，同时仍挡 totalFed 倒退 + unlocked 缩水。
-- **遗留清理**：早期起草 WIP 还在 `git stash`（`pet-guard P2 WIP` / `...tests`），现已被上述提交取代，**可 `git stash drop` 删除**（基线已变，别 pop）。
+- **遗留清理**：早期起草 WIP（`pet-guard P2 WIP` / `...tests`）已被上述提交取代，**已于 2026-05-31 `git stash drop`**。同轮还清理了两条 atlas/history-prompts WIP stash（narrative builder 已在 main），已备份到 `~/Desktop/vocabspark-stash-backup-2026-05-31/` 后 drop。
 
 ---
 
