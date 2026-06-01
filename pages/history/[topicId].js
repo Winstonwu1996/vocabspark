@@ -205,10 +205,12 @@ export default function HistoryPage() {
     }
     var owner = null;
     try { owner = localStorage.getItem('vocabspark_owner'); } catch (e) {}
-    // owner 已标记且非当前用户 → 本机数据属于别的账号 → 拒绝上推 (防跨账号污染)。
-    // 未标记 (老用户/本机首次) → 放行 (bootstrap): 这是当前用户自己的本地进度。
-    if (owner && owner !== user.id) {
-      setHistorySaveMsg('这台设备当前是别的账号的进度。请先打开 Vocab 或重新登录确认是你的,再同步。');
+    // 必须确认本机 blob 归属当前用户才上推 (Codex P1)。owner 在 vocab handleAuthUser 拉云后标记 ——
+    // 即登录走过一次云端确认才算可信。owner 未标记 (上线前的旧会话, 从没经 handleAuthUser) 或归属别的
+    // 账号 → 不 bootstrap-信任 (否则共享浏览器上把别人的进度推到当前账号) → 拒绝并提示重登一次。
+    // 重新登录 / 打开一次 vocab 会经 handleAuthUser 确认身份并标记 owner, 之后本按钮即可用。
+    if (owner !== user.id) {
+      setHistorySaveMsg('为确认是你的进度,请先重新登录一次(或打开一次 Vocab),再点同步。共享设备时尤其要确认。');
       return;
     }
     var client = historySyncRef.current;
@@ -216,7 +218,6 @@ export default function HistoryPage() {
     try {
       client.setCloudReady(true);  // 解锁 push 闸门 (本会话此后学完课也会自动同步)
       client.syncToCloud();         // 推本地进度 (含 409 拉合并重推, 不覆盖云端别设备的新数据)
-      try { localStorage.setItem('vocabspark_owner', user.id); } catch (e) {}
       setHistorySaveMsg(null);
     } catch (e) {}
   };
@@ -1914,8 +1915,10 @@ export default function HistoryPage() {
                 })()}
           </div>
         )}
-        {/* 「记住进度」悬浮按钮: 用户主动同步到云端, 不必先去 vocab (创始人 UX 反馈) */}
-        {!embedded && user && (
+        {/* 「记住进度」悬浮按钮: 用户主动同步到云端, 不必先去 vocab (创始人 UX 反馈)。
+            对话阶段隐藏 —— 底部 sticky 输入条有语音/发送, 避免悬浮按钮盖住发送键 (Codex P2)。
+            对话推进会自动同步 (cloudReady 后), 这按钮主要给 intro/笔记/完成屏的主动保存。 */}
+        {!embedded && user && phase !== 'conversation' && (
           <button
             onClick={saveHistoryToCloud}
             disabled={historySyncState === 'syncing'}

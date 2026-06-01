@@ -4132,6 +4132,7 @@ export default function App() {
       var _prevOwner = localStorage.getItem('vocabspark_owner');
       if (_prevOwner && _prevOwner !== u.id) {
         localStorage.removeItem(SKEY);
+        localStorage.removeItem(SKEY_OLD); // Codex P2: loadSave 会把 SKEY_OLD 迁回 SKEY, 不清则上一个账号又复活
         try { clearBackups(); } catch (e) {}
       }
     } catch (e) {}
