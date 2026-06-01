@@ -213,6 +213,7 @@ export default function HistoryPage() {
     // 不在异步完成前就报「已同步」(Codex P2): 先显示进行中, 等落定再升级为 ✓/⚠。
     setHistorySavePending(true);
     setHistorySaveMsg('☁️ 正在同步到你的账号：' + (user.email || '当前登录账号') + '…（共用设备请确认是你自己）');
+    var clickTopicId = topicId; // 点击时的 topic; async 落定后若已切走则不应用 topic-scoped state
     // 先拉云合并再解锁推送 (Codex P1): 不绕过首拉闸门, 避免 version-0 云端被本地旧 blob 覆盖。
     Promise.resolve(client.enablePushFromCloud()).then(function (ok) {
       if (!ok) {
@@ -240,8 +241,11 @@ export default function HistoryPage() {
       setCurriculum(loadCurriculum());
       setXp(getXp());
       setEnglishLevelState(loadEnglishLevel());
-      setSidekickLog(loadSidekickLog(topicId));
-      setSavedSession(loadInProgress(topicId)); // 跨设备 resume: 拉云带来/prune 掉的「继续上次」卡片即时刷新
+      // sidekickLog / savedSession 是 topic-scoped: 点完若已切到别的 topic, 别用旧 topic 的数据覆盖新 intro。
+      if (topicIdRef.current === clickTopicId) {
+        setSidekickLog(loadSidekickLog(clickTopicId));
+        setSavedSession(loadInProgress(clickTopicId)); // 跨设备 resume: 「继续上次」卡片即时刷新
+      }
       // ok=true: onSyncStatus→historySyncState 落定后, 由下面的 effect 升级为「✓ 已同步」。
     }).catch(function () {
       setHistorySaveMsg('⚠ 同步未成功，进度已留在本设备，请检查网络后重试');
@@ -491,6 +495,8 @@ export default function HistoryPage() {
   // 初始 null：URL 解析完成前不渲染任何 topic（否则非 Magna 直链/iframe 首帧会闪 Magna
   // 并多发一次 /api/narrative?topicId=magna-carta-1215）。urlResolved 决定首屏是 shell 还是内容。
   var [topicId, setTopicId] = useState(null);
+  var topicIdRef = useRef(null);
+  topicIdRef.current = topicId; // 最新 topic, 供 async 回调判断是否已切走 (防 topic-scoped state 错配)
   var [urlResolved, setUrlResolved] = useState(false);
   var topic = topicId ? getTopic(topicId) : null;
   // ─── Story-First Pedagogy v3 桥接（见 docs/STORY_FIRST_PEDAGOGY.md）───
