@@ -220,10 +220,21 @@ export default function HistoryPage() {
         setHistorySavePending(false);
         return;
       }
-      // 拉云已把真实云端 worldview 合进本地 (Codex P2): 重读进 React state, 否则学完课时
-      // saveWorldview(newWv) 会拿挂载时的 seed 旧 state 把刚合并的真实画像覆盖掉。
+      // onCloudData 是 no-op → 拉云合并后手动把 blob 派生的 React state 全部重读 (Codex P2): 否则旧
+      // (seed worldview / placeholder profile) state 会让 prompt/intro chip 用错数据, 学完课时
+      // saveWorldview(旧 state) 还会把刚合并的真实画像覆盖掉。重读这些等价于重跑挂载时的加载。
       var freshWv = loadWorldview();
       if (freshWv) setWorldview(freshWv);
+      var freshHp = loadHistoryProfile();
+      if (freshHp) {
+        setHistoryProfile(freshHp);
+        setProfileFields(historyProfileToFields(freshHp));
+        if (!freshHp.placeholder) setNeedsProfileSetup(false); // 云端有真实 profile → 不再要求填表
+      }
+      setCurriculum(loadCurriculum());
+      setXp(getXp());
+      setEnglishLevelState(loadEnglishLevel());
+      setSidekickLog(loadSidekickLog(topicId));
       // ok=true: onSyncStatus→historySyncState 落定后, 由下面的 effect 升级为「✓ 已同步」。
     }).catch(function () {
       setHistorySaveMsg('⚠ 同步未成功，进度已留在本设备，请检查网络后重试');

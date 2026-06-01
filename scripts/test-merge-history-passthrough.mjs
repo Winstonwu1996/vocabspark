@@ -335,6 +335,21 @@ console.log("\n[13] placeholder historyData.profile 不得覆盖真实云端 pro
   // 单边缺 profile → 保留有的那边
   var m = mergeHistoryData({ profile: { name: "only-local" } }, {}, true);
   ok("单边缺 profile → 保留有的那边", m.profile.name === "only-local");
+
+  // curriculum 跟随 profile 同侧: placeholder local 较新 → 真实 server profile 赢, server curriculum 也赢
+  var lc = { updatedAt: "2026-05-31T12:00:00Z", historyData: {
+    profile: { placeholder: true, city: "Irvine", grade: "7" }, curriculum: { region: "Irvine", grade: "7" } } };
+  var sc = { updatedAt: "2026-05-31T09:00:00Z", historyData: {
+    profile: { city: "Boston", grade: "8" }, curriculum: { region: "Boston", grade: "8" } } };
+  var mc = mergeProgress(lc, sc).historyData;
+  ok("真实 profile 赢", mc.profile.city === "Boston");
+  ok("curriculum 跟随真实 profile 同侧 (不配占位 Irvine)", mc.curriculum.region === "Boston");
+
+  // 两端都真实: profile + curriculum 都 newer 赢 (同侧, 零回归)
+  var lc2 = { updatedAt: "2026-05-31T12:00:00Z", historyData: { profile: { city: "NYC" }, curriculum: { region: "NYC" } } };
+  var sc2 = { updatedAt: "2026-05-31T09:00:00Z", historyData: { profile: { city: "LA" }, curriculum: { region: "LA" } } };
+  var mc2 = mergeProgress(lc2, sc2).historyData;
+  ok("两端真实 → profile+curriculum 同为 newer (NYC)", mc2.profile.city === "NYC" && mc2.curriculum.region === "NYC");
 }
 
 console.log("\n──────────────────────────");
