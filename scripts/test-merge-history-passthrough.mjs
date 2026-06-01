@@ -350,6 +350,23 @@ console.log("\n[13] placeholder historyData.profile 不得覆盖真实云端 pro
   var sc2 = { updatedAt: "2026-05-31T09:00:00Z", historyData: { profile: { city: "LA" }, curriculum: { region: "LA" } } };
   var mc2 = mergeProgress(lc2, sc2).historyData;
   ok("两端真实 → profile+curriculum 同为 newer (NYC)", mc2.profile.city === "NYC" && mc2.curriculum.region === "NYC");
+
+  // 胜出侧无 curriculum → 退到另一侧, 不抹成 undefined (Codex P2)
+  var lw = { updatedAt: "2026-05-31T12:00:00Z", historyData: { profile: { placeholder: true, city: "Irvine" } } }; // 占位 profile, 无 curriculum
+  var sw = { updatedAt: "2026-05-31T09:00:00Z", historyData: { profile: { city: "Boston" }, curriculum: { region: "Boston" } } };
+  var mw = mergeProgress(lw, sw).historyData;
+  ok("真实 server profile 赢 + 其 curriculum 保留", mw.profile.city === "Boston" && mw.curriculum.region === "Boston");
+
+  // profile 胜出侧 (server) 无 curriculum, 但 local 有 → 退到 local, 不丢
+  var lw2 = { updatedAt: "2026-05-31T12:00:00Z", historyData: { profile: { placeholder: true }, curriculum: { region: "legacy" } } };
+  var sw2 = { updatedAt: "2026-05-31T09:00:00Z", historyData: { profile: { city: "Boston" } } }; // 真实但无 curriculum
+  var mw2 = mergeProgress(lw2, sw2).historyData;
+  ok("胜出侧无 curriculum → 退到另一侧 (legacy 不丢)", mw2.curriculum && mw2.curriculum.region === "legacy");
+
+  // 只有 curriculum, 无 profile → 不抹 (newer 侧)
+  var lw3 = { updatedAt: "2026-05-31T12:00:00Z", historyData: { curriculum: { region: "only-cur" } } };
+  var mw3 = mergeProgress(lw3, { updatedAt: "2026-05-31T09:00:00Z", historyData: {} }).historyData;
+  ok("只有 curriculum 无 profile → 保留", mw3.curriculum && mw3.curriculum.region === "only-cur");
 }
 
 console.log("\n──────────────────────────");

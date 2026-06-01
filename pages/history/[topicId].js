@@ -235,6 +235,7 @@ export default function HistoryPage() {
       setXp(getXp());
       setEnglishLevelState(loadEnglishLevel());
       setSidekickLog(loadSidekickLog(topicId));
+      setSavedSession(loadInProgress(topicId)); // 跨设备 resume: 拉云带来/prune 掉的「继续上次」卡片即时刷新
       // ok=true: onSyncStatus→historySyncState 落定后, 由下面的 effect 升级为「✓ 已同步」。
     }).catch(function () {
       setHistorySaveMsg('⚠ 同步未成功，进度已留在本设备，请检查网络后重试');
