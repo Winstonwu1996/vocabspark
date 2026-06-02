@@ -2428,6 +2428,10 @@ export default function HistoryPage() {
                 });
                 setShowCompletion(false);
                 setSelectedLensId(null);
+                // 清 atlas 角色态 (Codex P2): role 流 (?role=1) 进来的课, 不清 pendingRole 会让 intro 仍
+                // 锁在旧角色、LensSelector 被折叠且 prompt 仍带旧 roleContext → 换不成视角。清掉 → intro 走
+                // 普通路径显示 prominent LensSelector, 用户真正能重选另一视角。
+                setPendingRole(null);
                 clearInProgress(topicId);
                 setSavedSession(null);
               }}
