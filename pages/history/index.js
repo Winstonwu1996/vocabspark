@@ -114,7 +114,8 @@ export default function HistoryHome() {
   }, []);
 
   // 选课流程：首页 → 对应 Atlas (地图预热 + 人物 + 因果) → 「深度学」嵌入式进对话。
-  // 11 门暂无 Atlas 视图的课 fallback 直接进 /history/<id> 学习,等 Atlas view 建好后自动走主路径。
+  // 2026-05-26 起全部 51 门 available 课都有 Atlas view (含原 11 门孤儿课), 实测 51/51 命中 → 统一走 atlas。
+  // else 分支仅作未来新课暂缺 view 时的防御性兜底, 正常不触发。
   var goTopic = function(topicId) {
     if (!topicId) return;
     var viewId = findViewIdByTopicId(topicId);

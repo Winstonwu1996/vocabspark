@@ -146,6 +146,8 @@ export default function AtlasLabPage({
   // iframe + postMessage 实现单页面感，atlas 状态完全保留
   const [learningMode, setLearningMode] = useState('browse');  // 'browse' | 'embedded'
   const [embedUrl, setEmbedUrl] = useState(null);
+  // 全局「换课」抽屉 (导航审查): 从 atlas 浏览态 + 嵌入式课内都能一键拉出, 51 门快速跳, 不用退回首页重找。
+  const [showSwitcher, setShowSwitcher] = useState(false);
   // Step 4b-2 (方案 B): iframe 内子页 gate 真 deny 时回传 → 父页关 iframe + Atlas 层弹升级。
   // { topicId, requiredTier } | null。flag-off 时子页 gate 不触发 → 永不被 set。
   const [gateDenied, setGateDenied] = useState(null);
@@ -286,6 +288,15 @@ export default function AtlasLabPage({
     if (first) router.push('/atlas-lab/' + first.id);
   };
 
+  // 换课抽屉选课 → 跳到该课 atlas view。嵌入式课内点也先关 iframe 再跳, 不困在旧课里。
+  const jumpToCourse = (viewId) => {
+    setShowSwitcher(false);
+    if (!viewId || viewId === activeViewId) return;
+    setEmbedUrl(null);
+    setLearningMode('browse');
+    router.push('/atlas-lab/' + viewId);
+  };
+
   const GRADE_LABELS = lang === 'cn' ? {
     5: 'HSS-5 美国早期',
     6: 'HSS-6 古代世界',
@@ -359,6 +370,17 @@ export default function AtlasLabPage({
             <div style={{ fontFamily: 'serif', fontSize: 15, fontWeight: 700, color: HC.text, letterSpacing: 1, marginRight: 4 }}>
               Atlas <span style={{ color: HC.accent }}>Lab</span>
             </div>
+
+            {/* 全部课程: 一键拉出 51 门换课抽屉 (跨年级快速跳, 比逐个 grade tab + chip 翻找快) */}
+            <button
+              onClick={() => setShowSwitcher(true)}
+              title={lang === 'cn' ? '查看 / 切换全部 51 门课' : 'Browse / switch all 51 courses'}
+              style={{
+                padding: '4px 10px', background: 'transparent', color: HC.accent,
+                border: '1px solid ' + HC.border, borderRadius: 6, fontSize: 11,
+                fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+              }}
+            >📚 {lang === 'cn' ? '全部课程' : 'All courses'}</button>
 
             {/* 学段 tab */}
             <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
@@ -857,15 +879,81 @@ export default function AtlasLabPage({
                 <span style={{ flex: 1, textAlign: 'center', opacity: 0.85, fontWeight: 600 }}>
                   {meta.title && (meta.title[lang] || meta.title.cn)}
                 </span>
-                <span style={{ fontSize: 11, opacity: 0.6 }}>
-                  {lang === 'cn' ? '深度学模式' : 'Deep Learn'}
-                </span>
+                {/* 课内换课: 不用退出再穿好几层, 一键拉出 51 门快速跳 (导航审查 B) */}
+                <button
+                  onClick={() => setShowSwitcher(true)}
+                  style={{
+                    background: 'rgba(255,248,232,0.12)', color: '#fff8e8',
+                    border: '1px solid rgba(255,248,232,0.25)', borderRadius: 999,
+                    padding: '5px 12px', fontSize: 12, cursor: 'pointer',
+                    fontFamily: 'inherit', fontWeight: 600,
+                  }}
+                >📚 {lang === 'cn' ? '换课' : 'Switch'}</button>
               </div>
               <iframe
                 src={embedUrl}
                 style={{ flex: 1, border: 'none', width: '100%', background: '#f4ead0' }}
                 title="History Engine"
               />
+            </div>
+          )}
+
+          {/* 换课抽屉 (导航审查 B): 浏览态 + 嵌入式课内共用, 51 门按学段分组快速跳, 顶部留「历史首页」出口 (A 返回)。 */}
+          {showSwitcher && (
+            <div
+              onClick={() => setShowSwitcher(false)}
+              style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(26,20,16,0.55)', display: 'flex', justifyContent: 'flex-end' }}
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-label={lang === 'cn' ? '换一门课' : 'Switch course'}
+                style={{ width: 'min(380px, 92vw)', height: '100%', background: HC.parchment, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 32px rgba(0,0,0,0.3)' }}
+              >
+                <div style={{ flex: '0 0 auto', padding: '14px 16px', borderBottom: '1px solid ' + HC.border, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontFamily: 'serif', fontSize: 16, fontWeight: 700, color: HC.text, flex: 1 }}>
+                    {lang === 'cn' ? '换一门课' : 'Switch course'}
+                  </span>
+                  <Link href="/history" style={{ fontSize: 12, color: HC.accent, textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    {lang === 'cn' ? '← 历史首页' : '← History home'}
+                  </Link>
+                  <button onClick={() => setShowSwitcher(false)} aria-label={lang === 'cn' ? '关闭' : 'Close'}
+                    style={{ background: 'transparent', border: 'none', fontSize: 20, color: HC.textSec, cursor: 'pointer', lineHeight: 1, padding: 0 }}>✕</button>
+                </div>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '8px 12px 24px' }}>
+                  {availableGrades.map(g => {
+                    const items = (viewsByGrade[g] || []).slice().sort((a, b) =>
+                      (typeof a.year === 'number' ? a.year : 0) - (typeof b.year === 'number' ? b.year : 0));
+                    if (!items.length) return null;
+                    return (
+                      <div key={g} style={{ marginBottom: 14 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: HC.textSec, letterSpacing: 0.5, margin: '8px 4px 6px' }}>
+                          {GRADE_LABELS[g] || ('G' + g)}
+                        </div>
+                        {items.map(m => {
+                          const isCurrent = m.id === activeViewId;
+                          return (
+                            <button key={m.id} onClick={() => jumpToCourse(m.id)} disabled={isCurrent}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
+                                padding: '9px 12px', marginBottom: 4, borderRadius: 8,
+                                background: isCurrent ? HC.accentLight : HC.card,
+                                border: '1px solid ' + (isCurrent ? HC.accent : HC.border),
+                                cursor: isCurrent ? 'default' : 'pointer', fontFamily: 'inherit',
+                              }}>
+                              <span style={{ flex: 1, minWidth: 0 }}>
+                                <span style={{ fontSize: 13.5, fontWeight: 600, color: HC.ink }}>{(m.title && (m.title[lang] || m.title.cn)) || m.id}</span>
+                                <span style={{ fontSize: 11, color: HC.textSec, marginLeft: 6 }}>{formatYear(m.year)}</span>
+                              </span>
+                              {isCurrent && <span style={{ fontSize: 10, color: HC.accent, fontWeight: 700 }}>{lang === 'cn' ? '当前' : 'now'}</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
 
