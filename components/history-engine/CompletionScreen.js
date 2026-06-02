@@ -271,11 +271,18 @@ export function CompletionScreen(props) {
               onClick={function() { setShowFreeChat(true); }}
             >💬 想继续聊？</button>
           )}
+          {/* 换个视角重看 — 仅多视角 topic 显示。现状只有「再做一遍」(=同视角重来), 三视角是 history 卖点, 给显式入口 */}
+          {props.canSwitchLens && props.onSwitchLens && (
+            <button className="continue-btn" style={{background: "#6c4499"}} onClick={props.onSwitchLens}>🎭 换个视角重看</button>
+          )}
           <button className="continue-btn" style={{background: HC.teal}} onClick={function() {
             if (window.confirm("确定要再做一遍？这会清空当前 Topic 的进度（不影响 XP 累计）。")) {
               props.onAgain();
             }
           }}>再做一遍</button>
+          {/* 统一返回选课 — 不论从 atlas 还是直达进来都能回 /history (直达进来的课原本完成屏无返回入口) */}
+          <a href="/history" className="continue-btn"
+            style={{background: "transparent", color: HC.textSec, border: "1px solid " + HC.border, textDecoration: "none", display: "inline-flex", alignItems: "center"}}>← 返回选课</a>
         </div>
       </div>
       </div>{/* /.completion-flipbook-wrap */}

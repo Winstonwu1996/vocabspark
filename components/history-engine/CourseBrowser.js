@@ -24,6 +24,9 @@ import { HC } from './theme';
 // paywall wrapper (含 useUserTier) 走本地 loader + import() 懒加载, flag off 时 import() 永不触发。
 import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
 import { canAccessTopic, getTopicAccessTier } from '../../lib/history-tiers';
+// 入课路径徽章: 有 atlas view 的课点了先到地图 (/atlas-lab), 否则直达单课页 —— 让用户点之前心里有数。
+// (findViewIdByTopicId 是纯配置查找, 无 supabase/membership, 不破坏 flag-off bundle 隔离)
+import { findViewIdByTopicId } from '../../lib/atlas-views';
 
 // flag on 时的本地 loader (R2-2 Codex minor): 不用 next/dynamic 的 ssr:false (会让选课区
 // SSR + 首屏 client render 短暂空白), 改为先渲染 CourseBrowserBase 不锁版, mount 后
@@ -76,6 +79,7 @@ function CourseCard(opts) {
   var lockTier = opts.lockTier;
   var onLockedClick = opts.onLockedClick;
   var tags = getGradeTags(t.id);
+  var hasMap = !!findViewIdByTopicId(t.id); // 该课是否走 atlas 地图入口
   // 锁课点击走升级弹窗; 否则原 onSwitch 逻辑
   var handleClick = locked
     ? function() { if (onLockedClick) onLockedClick(t.id); }
@@ -107,14 +111,16 @@ function CourseCard(opts) {
       <div style={{fontSize: 11, opacity: 0.78, lineHeight: 1.4}}>
         {t.title.en} · {t.year}
       </div>
-      {/* 双标签 chip:G7 + AP U1 + APUSH P3 — 让两类家长心智都看到（升学规划专家建议） */}
-      {(tags.grade || tags.apWorld || tags.apush) && (
-        <div style={{display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5}}>
-          {tags.grade && <span style={chipStyle(HC.teal)}>{tags.grade}</span>}
-          {tags.apWorld && <span style={chipStyle(HC.accent)}>AP World {tags.apWorld}</span>}
-          {tags.apush && <span style={chipStyle(HC.accent)}>APUSH {tags.apush}</span>}
-        </div>
-      )}
+      {/* 入课路径徽章 + 双标签 chip:含地图/直接学 · G7 + AP U1 + APUSH P3 */}
+      <div style={{display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5}}>
+        <span style={chipStyle(hasMap ? HC.teal : HC.accent)}
+          title={hasMap ? '点开先看主题地图，再进入这一课' : '点开直接开始学这一课'}>
+          {hasMap ? '🗺 含地图' : '📖 直接学'}
+        </span>
+        {tags.grade && <span style={chipStyle(HC.teal)}>{tags.grade}</span>}
+        {tags.apWorld && <span style={chipStyle(HC.accent)}>AP World {tags.apWorld}</span>}
+        {tags.apush && <span style={chipStyle(HC.accent)}>APUSH {tags.apush}</span>}
+      </div>
       {done && done.xpEarned ? (
         <div style={{fontSize: 10, color: HC.gold, fontWeight: 600, marginTop: 3}}>
           ⚡ {done.xpEarned} XP · {new Date(done.completedAt).toLocaleDateString('zh-CN')}

@@ -2065,6 +2065,11 @@ export default function HistoryPage() {
           {/* ── Topic Hero ── */}
           <TopicHero topic={topic} phase={phase} quotaInfo={quotaInfo} englishLevel={englishLevel} onSetEnglishLevel={function(v){ setEnglishLevelState(v); saveEnglishLevel(v); }} />
 
+          {/* 阶段进度指示器 — 让用户看见"在第几步/还要过几关"(导航审查: 5 phase 全在一页, 无位置感) */}
+          {topic && !needsProfileSetup && (phase === "conversation" || phase === "notebook" || phase === "mastery" || phase === "complete") && (
+            <PhaseProgress phase={phase} />
+          )}
+
           {/* ── Geography Section ── */}
           {/* 5-5: simplifiedMode (embedded / fromAtlas / pendingRole) 时隐藏 */}
           {/*       — 用户已在 atlas-lab 看过完整地图,不重复 */}
@@ -2409,6 +2414,23 @@ export default function HistoryPage() {
               onSendFreeChat={sendFreeChat}
               onMustClick={setActiveMust}
               onTermClick={setActiveTerm}
+              canSwitchLens={hasLensesForTopic && topicLenses && topicLenses.length > 1}
+              onSwitchLens={function() {
+                // 回 intro 并清当前视角 → intro 的 LensSelector 让用户重选另一视角 (不同于"再做一遍"的同视角)
+                setPhase("intro");
+                setTurnIndex(0);
+                setConversationLog([]);
+                setGateStep(0);
+                setGateResults({
+                  spelling: { score: 0, errors: [], items: [] },
+                  definition: { score: 0, results: [] },
+                  application: { score: 0, results: [] },
+                });
+                setShowCompletion(false);
+                setSelectedLensId(null);
+                clearInProgress(topicId);
+                setSavedSession(null);
+              }}
               onAgain={function() {
                 setPhase("intro");
                 setTurnIndex(0);
@@ -3149,6 +3171,44 @@ function FeatureItem(props) {
         <div style={{fontWeight: 700, color: HC.ink, marginBottom: 2}}>{props.name}</div>
         <div style={{fontSize: 11.5, color: HC.text, opacity: 0.88}}>{props.desc}</div>
       </div>
+    </div>
+  );
+}
+
+// ─── Phase Progress：单课 5 阶段进度指示器（导航审查：5 phase 全在一页无位置感）──
+function PhaseProgress(props) {
+  var STEPS = [
+    { key: "intro", label: "准备" },
+    { key: "conversation", label: "对话" },
+    { key: "notebook", label: "笔记" },
+    { key: "mastery", label: "考核" },
+    { key: "complete", label: "完成" },
+  ];
+  var curIdx = -1;
+  for (var i = 0; i < STEPS.length; i++) { if (STEPS[i].key === props.phase) { curIdx = i; break; } }
+  if (curIdx < 0) return null;
+  return (
+    <div
+      role="status"
+      aria-label={"学习进度：第 " + (curIdx + 1) + " 步，共 " + STEPS.length + " 步，" + STEPS[curIdx].label}
+      style={{
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 2, flexWrap: "wrap",
+        margin: "2px 0 16px", padding: "7px 12px", background: HC.parchmentHi,
+        border: "1px solid " + HC.border, borderRadius: 999, fontSize: 12, fontFamily: FONT,
+      }}
+    >
+      {STEPS.map(function (s, i) {
+        var done = i < curIdx, cur = i === curIdx;
+        return (
+          <span key={s.key} style={{ display: "inline-flex", alignItems: "center" }}>
+            {i > 0 && <span style={{ opacity: 0.35, margin: "0 4px" }}>›</span>}
+            <span style={{ color: done ? HC.green : (cur ? HC.accent : HC.textSec), fontWeight: cur ? 700 : 500 }}>
+              {done ? "✓" : (cur ? "●" : "○")} {s.label}
+            </span>
+          </span>
+        );
+      })}
+      <span style={{ marginLeft: 8, opacity: 0.65, color: HC.textSec }}>{(curIdx + 1) + "/" + STEPS.length}</span>
     </div>
   );
 }
