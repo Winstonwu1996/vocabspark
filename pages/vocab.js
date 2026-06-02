@@ -3086,7 +3086,7 @@ export default function App() {
         // → syncToCloud 把 default pet 推上云端覆盖用户真实进度。
         // 现在 default 只活在 React state，未登录用户首次喂食时 savePet 才持久化（那时
         // 已是真值）；登录用户由 _applyCloudData 拉云端 pet 覆盖。
-        if (d?.pet) setPet(d.pet);
+        if (d?.pet) setPet(normalizePet(d.pet));
         else { setPet(defaultPet()); }
       } catch(e) {}
     }).catch(function() {});
@@ -3285,9 +3285,16 @@ export default function App() {
 
   /* ─── 学习宠物：加载 / 持久化 / 喂食 ─── */
   // 默认初始化的宠物
+  // 全系统 AI 助手 / 宠物统一叫「小 U」(创始人 2026-06-02)。LEGACY_PET_NAME = 旧默认名,
+  // 读到时归一为「小 U」(仅显示层归一, 不强制回写云端 —— 见上面 chompcloud 默认宠物不 doSave 的修复)。
+  var LEGACY_PET_NAME = "小毛球";
+  var normalizePet = function(p) {
+    if (p && p.name === LEGACY_PET_NAME) return Object.assign({}, p, { name: "小 U" });
+    return p;
+  };
   var defaultPet = function() {
     return {
-      name: "小毛球",
+      name: "小 U",
       species: "kitten",
       hunger: 80,
       happiness: 70,
@@ -3861,16 +3868,16 @@ export default function App() {
     // 下次拉云端旧数据覆盖本地新进度的回退 bug）
     if (d.pet) {
       setPet(function(currentPet) {
-        if (!currentPet) return d.pet;
+        if (!currentPet) return normalizePet(d.pet);
         var localFed = Number(currentPet.totalFed) || 0;
         var cloudFed = Number(d.pet.totalFed) || 0;
         if (localFed > cloudFed) {
           console.log('[applyCloudData] keeping local pet (totalFed ' + localFed + ' > cloud ' + cloudFed + ')');
-          return currentPet;
+          return normalizePet(currentPet);
         }
         // 即便取云端的，也合并本地配饰解锁（数组并集，避免回退）
         var unionUnlocked = Array.from(new Set((currentPet.unlocked||[]).concat(d.pet.unlocked||[])));
-        return Object.assign({}, d.pet, { unlocked: unionUnlocked });
+        return normalizePet(Object.assign({}, d.pet, { unlocked: unionUnlocked }));
       });
     }
     // 恢复学习 session（闪退/换设备登录后从 idx 继续，不要从头开始）。

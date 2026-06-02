@@ -72,14 +72,15 @@ function setLocalCache(key, value) {
 }
 
 // 读 Vocab 模块的宠物名 — 全局共享一只 AI 宠物
-// 默认 "小毛球"（vocab.js defaultPet 的 name），用户可在 vocab 改名
+// 全系统统一叫「小 U」(创始人 2026-06-02); 旧默认名 "小毛球" 读到时归一为「小 U」。用户自定义名保留。
 function getPetName() {
-  if (typeof window === 'undefined') return '小毛球';
+  if (typeof window === 'undefined') return '小 U';
   try {
     const raw = localStorage.getItem('vocabspark_v1');
     const d = raw ? JSON.parse(raw) : null;
-    return (d && d.pet && d.pet.name) || '小毛球';
-  } catch (_) { return '小毛球'; }
+    const n = (d && d.pet && d.pet.name) || '小 U';
+    return n === '小毛球' ? '小 U' : n;
+  } catch (_) { return '小 U'; }
 }
 
 // ─── 单行解读 hook（共享 fetch 逻辑） ─────────────────────────────────
