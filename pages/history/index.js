@@ -30,29 +30,29 @@ var SELLING_POINTS = [
     icon: '🎭',
     cn: '同一段历史，3 个真实视角讲一遍',
     en: 'One event, 3 real voices walking through it',
-    sub: '掌权者怎么想、夹在中间的人怎么活、被碾过去的人怎么说 —— 三种立场各自讲完，观点不是给的，是从对照里自己长出来的。写 essay、答 DBQ 直接能用。',
-    subEn: 'How the powerful one thinks, how the in-between one lives, how the one underneath speaks. Three takes told in full, so a perspective grows out of the comparison instead of being handed to her. Works for essays and DBQs.',
+    sub: '掌权者怎么想、夹在中间的人怎么活、被碾过去的人怎么说 —— 三种立场各自讲完，观点不是塞给孩子的，是从对照里自己长出来的。写 essay、答 DBQ 直接能用。',
+    subEn: 'How the powerful one thinks, how the in-between one lives, how the one underneath speaks. Three takes told in full, so a perspective grows out of the comparison instead of being handed over. Works for essays and DBQs.',
   },
   {
     icon: '🀄',
     cn: '中文底子是主场，不是包袱',
-    en: 'Her Chinese background is the home court, not a handicap',
-    sub: '讲法国大革命对着戊戌变法看，讲冷战让你说说家里听过的版本 —— 两边视角同时在，反而比美国本地孩子学得透。',
-    subEn: 'We pair the French Revolution with the Hundred Days\' Reform, and ask her what the Cold War sounded like at her family table. Two sides at once, often she reads further than American-born classmates.',
+    en: 'A Chinese background is the home court, not a handicap',
+    sub: '讲法国大革命对着戊戌变法看，讲冷战聊聊家里长辈记得的版本 —— 两边视角同时在，孩子反而比本地同学读得透。',
+    subEn: 'We pair the French Revolution with the Hundred Days\' Reform, and ask about the version of the Cold War heard at the family table. Two sides at once — often your child reads further than American-born classmates.',
   },
   {
     icon: '🗺',
-    cn: '先看地图再听人讲',
-    en: 'See the map first, then hear the people',
-    sub: '配套 Atlas Lab 历史地图系统：从君士坦丁堡到伊斯坦布尔、汉朝同时代的罗马在哪里，因果关系画在地图上，看完一眼记得住。',
-    subEn: 'Atlas Lab places 51 events on the map with their causal chains. From Constantinople to Istanbul, or where Rome sat at the same time as the Han, geography first, sticks longer.',
+    cn: '陌生的地名人名，先在地图上立住',
+    en: 'Unfamiliar names and places — pinned on the map first',
+    sub: '君士坦丁堡在哪、十字军打的是谁、新教和旧教差在哪 —— Atlas 把地名、人物、宗教背景、因果画在一张图上。国内孩子最缺的那块人文土壤，这里一眼补上，名字不再是天书。',
+    subEn: 'Where Constantinople sits, who the Crusades were against, how Protestant differs from Catholic — Atlas pins the places, people, religious background and cause-and-effect on one map. The cultural ground a kid from China is missing, filled in at a glance — names stop being gibberish.',
   },
   {
     icon: '🔤',
     cn: '中英文随时切，考点单词金色高亮',
     en: 'Toggle Chinese / English anytime, exam-key words highlighted in gold',
     sub: '想用中文听就中文，想练英文就切英文。AI 说话里的考点词点一下看 IPA + 真人发音，AP 阅读题里要认得的那些词，一边听一边记。',
-    subEn: 'Chinese when she wants to understand, English when she wants to practice. Tap a key word for IPA + native audio. The words AP reading tests actually use, heard and read at the same time.',
+    subEn: 'Chinese to understand, English to practice — switch anytime. Tap a key word for IPA + native audio. The words AP reading tests actually use, heard and read at the same time.',
   },
   {
     icon: '📜',
@@ -66,25 +66,27 @@ var SELLING_POINTS = [
 // Hero 文案双语
 var HERO_COPY = {
   cn: {
-    h1Line1: '她在国内能把唐宋背得倒背如流，',
-    h1Line2: '到这边历史课只能拿 B-。',
-    sub1Line1: '不是她不努力 —— 是 essay 要的「为什么」「谁吃亏」「你怎么看」，',
-    sub1Line2: '国内的历史课里没人这样问过她。',
-    sub2Line1: '我们把每段历史拆成 3 个人的视角，从看懂到说得清，',
-    sub2Line2: '直到她能写出一段经得起追问的论证。',
-    honest: '我们不打包票拿 A —— 我们让她从「背得出」变成「说得清」。分数是副产品，不是承诺。',
-    hint: '👇 选一段历史开始。第一次进会先花 30 秒认识你（只存这台设备上）。',
+    tagline: '世界历史 AI 私教 · 给在美国读 6 年级到高中的孩子',
+    h1Line1: '在国内，历史背熟就能拿高分。',
+    h1Line2: '到了美国课堂，光背 —— 只够 B-。',
+    sub1Line1: '一边是没人教过他美国课堂那套：自己提观点、用证据站稳，还得看出「这话谁说的、立场偏哪」；',
+    sub1Line2: '一边是满屏陌生的英文地名、人名、宗教背景 —— 缺了那块人文土壤，本该熟的历史也成了坎。',
+    sub2Line1: '我们把每段历史拆成三个真实视角 —— 掌权者、夹在中间的人、被碾压的人 —— 让观点从对照里自己长出来；',
+    sub2Line2: '再用 Atlas 地图把地名、人物、宗教、因果先立住 —— 名字不再是天书，故事才真正听得进去。',
+    honest: '不是帮孩子多背几遍 —— 是把 B- 到 A 之间真正差的那件事教给他：自己下判断，写出经得起追问的论证。',
+    hint: '👇 选一段历史开始。第一次进会先花 30 秒认识孩子（只存这台设备上）。',
     atlas: '🗺 想先看地图？进入 Atlas Lab →',
   },
   en: {
-    h1Line1: 'She could recite the Tang and Song dynasties by heart back in China.',
-    h1Line2: 'Now her social-studies grade is a B-.',
-    sub1Line1: 'It is not that she is not trying. American essays ask "why", "who paid the cost", "what do you think",',
-    sub1Line2: 'questions no one ever asked her in a history class back home.',
-    sub2Line1: 'We break each piece of history into 3 people\'s points of view, taking her from understanding to saying it clearly,',
-    sub2Line2: 'until she can write an argument that holds up under questioning.',
-    honest: 'We don\'t promise A grades. We help her go from "able to recite" to "able to explain". Grades are a byproduct, not a promise.',
-    hint: '👇 Pick a piece of history to start. First time in, you\'ll spend 30 seconds telling us about her (stored only on this device).',
+    tagline: 'World-history AI tutor · for kids in U.S. grades 6 to high school',
+    h1Line1: 'Back home, memorizing history was enough for top marks.',
+    h1Line2: 'In a U.S. classroom, memorizing alone — only a B-.',
+    sub1Line1: 'One: no one taught him what the U.S. classroom wants — make a claim, back it with evidence, and notice "who is saying this, and whose side are they on";',
+    sub1Line2: 'Two: a screen full of unfamiliar English place names, people, and religious backgrounds — without that cultural ground, even history he should know becomes a wall.',
+    sub2Line1: 'We break each piece of history into three real perspectives — the one in power, the one caught in between, the one crushed underneath — so a viewpoint grows out of the comparison;',
+    sub2Line2: 'then Atlas pins the places, people, religions and cause-and-effect on a map first — names stop being gibberish, and the story finally lands.',
+    honest: 'Not making your child memorize more — teaching the one thing that actually separates a B- from an A: forming a judgment of their own, and writing an argument that holds up under questioning.',
+    hint: '👇 Pick a piece of history to start. First time in, you\'ll spend 30 seconds telling us about your child (stored only on this device).',
     atlas: '🗺 Want the map first? Open Atlas Lab →',
   },
 };
@@ -179,6 +181,14 @@ export default function HistoryHome() {
               })}
             </div>
 
+            {/* 定位句 kicker：直接告诉用户这是什么（在美 6 年级-高中学生的世界历史 AI 私教） */}
+            <div style={{
+              fontSize: 12.5, fontWeight: 700, color: HC.accent,
+              letterSpacing: 0.3, marginBottom: 10, paddingRight: 70,
+            }}>
+              {hero.tagline}
+            </div>
+
             <h1 style={{
               margin: "0 0 10px", fontFamily: FONT_DISPLAY,
               fontSize: 24, lineHeight: 1.3, color: HC.ink,
@@ -218,14 +228,14 @@ export default function HistoryHome() {
               })}
             </div>
 
-            {/* 诚实声明（升学规划专家强烈建议）：不打包票拿 A，否则长期口碑反噬 */}
+            {/* 价值陈述（替原"不打包票拿 A"免责声明，创始人 2026-06-02）：直说我们补的是 B- 到 A 真正差的能力 */}
             <div style={{
               marginTop: 14,
-              padding: "8px 12px",
-              background: "rgba(0,0,0,0.03)",
+              padding: "10px 14px",
+              background: "rgba(196, 107, 48, 0.07)",
               borderRadius: 8,
-              fontSize: 11.5, color: HC.textSec, opacity: 0.9, lineHeight: 1.5,
-              fontStyle: "italic",
+              borderLeft: "3px solid " + HC.accent,
+              fontSize: 13, color: HC.text, lineHeight: 1.6,
             }}>
               {hero.honest}
             </div>
