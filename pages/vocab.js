@@ -16,6 +16,7 @@ import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
 import { checkMorphFill } from '../lib/morphFillSanitize';
 import { hasTypedAnswer, hasUsableMeaning } from '../lib/typedRecall';
+import { isCompleteTeachJSON } from '../lib/teachValidate';
 
 // wordInput 自动去重 (保留首次出现顺序 + 原始大小写)。在数据加载/导入时调用，
 // 让词库始终无重复 — 用户不用再手动点"去重词库"。守卫已改按 distinct 词数放行纯去重。
@@ -4908,25 +4909,30 @@ export default function App() {
             }).then(function(raw) {
               var ex = dataCache.current[word];
               if (!ex) return;
-              var finalJSON = raw ? (tryJSON(raw) || parsePartialJSON(raw)) : null;
-              var goodFinal = finalJSON && finalJSON.opening && finalJSON.teach;
-              var goodStreamed = ex.teachJSON && ex.teachJSON.opening && ex.teachJSON.teach;
-              if (goodFinal) {
+              // 最终成功判定只用严格 tryJSON（不用 parsePartialJSON——它会自动补括号造出
+              // {opening,teach:{}} 这类半截对象），并用 isCompleteTeachJSON 校验必备结构。
+              var finalJSON = raw ? tryJSON(raw) : null;
+              if (isCompleteTeachJSON(finalJSON)) {
                 ex.teachJSON = finalJSON;
                 ex.teach = null;
-              } else if (goodStreamed) {
-                // 整体 parse 失败/不完整，但流式阶段已拿到完整结构化 JSON → 保留它，绝不退回原始 JSON 文本
+                ex.teachFailed = false;
+              } else if (isCompleteTeachJSON(ex.teachJSON)) {
+                // 末尾整体 parse 失败/不完整，但流式阶段已拿到完整结构化 JSON → 保留它
                 ex.teach = null;
-              } else if (typeof raw === "string" && /^[\s﻿`]*[\[{]/.test(raw)) {
-                // JSON 模式响应但拿不到完整结构（截断/缺字段/缓存污染）→ 标失败重试，
-                // 绝不把 JSON 源码当 markdown 倒给用户看（economical teach 页显示原始 JSON 根因）
-                ex.teachFailed = true;
-                ex.teach = null;
-                ex.teachJSON = null;
+                ex.teachFailed = false;
               } else {
-                // 真·非 JSON 文本（legacy markdown 路径）才按 markdown 渲染
-                ex.teach = raw ? addSpeakMarkers(raw) : null;
-                ex.teachJSON = null;
+                // 无完整结构。jsonMode 下响应本应是 JSON：解析出对象但不完整、或文本含 JSON
+                // （含 ```json 包裹 / "Here is:" 前缀）→ 标失败走重试 UI，绝不把 JSON 倒给用户。
+                // 仅当确实是非 JSON 纯文本时才按 legacy markdown 渲染。
+                var jsonish = !!finalJSON || (typeof raw === "string" && /[\[{]/.test(raw.slice(0, 300)));
+                if (jsonish || !raw) {
+                  ex.teachFailed = true;
+                  ex.teach = null;
+                  ex.teachJSON = null;
+                } else {
+                  ex.teach = addSpeakMarkers(raw);
+                  ex.teachJSON = null;
+                }
               }
               ex.teachStreaming = false;
               if ((ex.teachJSON || ex.teach || ex.teachFailed) && !ex._streamReadyTriggered) {
@@ -5138,6 +5144,7 @@ export default function App() {
       setTeachContent(d.teach);
       setTeachWaitSec(0);
     } else if (d?.teachFailed) {
+      setTeachData(null); // 清掉流式阶段残留的半截 teachData，否则会盖过失败态继续渲染半截笔记
       setTeachContent("__FAILED__");
       setTeachWaitSec(0);
       setTeachStreaming(false);
@@ -5175,6 +5182,7 @@ export default function App() {
             clearTimeout(teachTimeoutRef.current);
           }
         } else if (cached?.teachFailed) {
+          setTeachData(null); // 清掉流式残留的半截 teachData，让失败态正常展示重试
           setTeachContent("__FAILED__");
           setTeachWaitSec(0);
           setTeachStreaming(false);
@@ -9317,7 +9325,7 @@ export default function App() {
             </div>
           )}
         </>
-        : teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解暂时加载不出来</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");setTeachData(null);callWithClientRetry(function(){return callAPI(sysP,buildTeachPrompt(currentWord,learned));}).then(function(raw){var finalJSON=raw?(tryJSON(raw)||parsePartialJSON(raw)):null;if(finalJSON&&finalJSON.opening&&finalJSON.teach){dataCache.current[currentWord].teachJSON=finalJSON;dataCache.current[currentWord].teach=null;dataCache.current[currentWord].teachFailed=false;setTeachData(finalJSON);}else if(typeof raw==="string"&&/^[\s﻿`]*[\[{]/.test(raw)){dataCache.current[currentWord].teachFailed=true;setTeachContent("__FAILED__");}else{var content=raw?addSpeakMarkers(raw):null;if(content){dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachContent(content);}else{setTeachContent("__FAILED__");}}}).catch(function(){setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
+        : teachContent === "__FAILED__" ? <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:14,color:C.red,marginBottom:12}}>讲解暂时加载不出来</div><button style={S.primaryBtn} onClick={function(){setTeachContent("");setTeachData(null);callWithClientRetry(function(){return callAPI(sysP,buildTeachPrompt(currentWord,learned));}).then(function(raw){var finalJSON=raw?tryJSON(raw):null;if(isCompleteTeachJSON(finalJSON)){dataCache.current[currentWord].teachJSON=finalJSON;dataCache.current[currentWord].teach=null;dataCache.current[currentWord].teachFailed=false;setTeachContent("");setTeachData(finalJSON);}else{var jsonish=!!finalJSON||(typeof raw==="string"&&/[\[{]/.test(raw.slice(0,300)));if(jsonish||!raw){dataCache.current[currentWord].teachFailed=true;dataCache.current[currentWord].teachJSON=null;setTeachData(null);setTeachContent("__FAILED__");}else{var content=addSpeakMarkers(raw);dataCache.current[currentWord].teach=content;dataCache.current[currentWord].teachFailed=false;setTeachData(null);setTeachContent(content);}}}).catch(function(){setTeachData(null);setTeachContent("__FAILED__");});}}>重试</button><button style={{...S.ghostBtn,marginLeft:8}} onClick={function(){if(spectrumData){setPhaseDir(1);setPhase("spectrum");}else goNextWord();}}>跳过此词 →</button></div>
         : !teachContent ? (() => {
           // 根据等待秒数动态展示不同提示，给用户进度感
           var s = teachWaitSec;

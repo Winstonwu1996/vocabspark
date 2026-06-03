@@ -3,6 +3,7 @@
 // 客户端任何失败都会 fallback 到 /api/chat，不会影响生产稳定性。
 import { checkPerIpLimit, checkPerUserLimit } from "../../lib/ratelimit";
 import { getCached, setCached, cachedTextToSSEStream } from "../../lib/teachCache";
+import { isCompleteTeachJSON } from "../../lib/teachValidate";
 import * as Sentry from "@sentry/nextjs";
 
 export const config = {
@@ -132,7 +133,13 @@ export default async function handler(req) {
   // 命中则秒回（封装为 SSE 流，客户端无感知）。
   if (cacheKey && !isBYO) {
     const cached = await getCached(cacheKey);
-    if (cached) {
+    // 命中也要校验：jsonMode 下，旧 bundle 仍可能带 v2 cacheKey 命中历史污染条目
+    // （可解析但缺字段）。不完整则当未命中，落到下方 LLM 重新生成，绝不回污染内容 (Codex P2)。
+    let cachedOk = !!cached;
+    if (cached && jsonMode) {
+      try { cachedOk = isCompleteTeachJSON(JSON.parse(cached)); } catch (e) { cachedOk = false; }
+    }
+    if (cached && cachedOk) {
       return new Response(cachedTextToSSEStream(cached), {
         status: 200,
         headers: {
@@ -312,9 +319,8 @@ export default async function handler(req) {
                     // 仅 JSON.parse 通过不够——模型偶尔漏字段会产出"可解析但不完整"的 JSON，
                     // 一旦缓存就对所有命中该 key 的用户串原始 JSON（economical teach 页根因）。
                     try {
-                      const _p = JSON.parse(fullText);
-                      if (_p && _p.opening && _p.teach) valid = true;
-                      else console.warn(`[chat-stream] cache skip - JSON missing opening/teach for ${cacheKey}`);
+                      if (isCompleteTeachJSON(JSON.parse(fullText))) valid = true;
+                      else console.warn(`[chat-stream] cache skip - incomplete teach JSON for ${cacheKey}`);
                     } catch (e) {
                       console.warn(`[chat-stream] cache skip - invalid JSON for ${cacheKey}: ${e.message}`);
                     }
