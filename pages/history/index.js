@@ -66,7 +66,7 @@ var SELLING_POINTS = [
 // Hero 文案双语
 var HERO_COPY = {
   cn: {
-    tagline: '世界历史 AI 私教 · 给在美国读 6 年级到高中的孩子',
+    tagline: '世界历史 AI 私教 · 给在美国读 6 年级到高中的华人孩子',
     h1Line1: '在国内，历史背熟就能拿高分。',
     h1Line2: '到了美国课堂，光背 —— 只够 B-。',
     sub1Line1: '一边是没人教过他美国课堂那套：自己提观点、用证据站稳，还得看出「这话谁说的、立场偏哪」；',
@@ -78,7 +78,7 @@ var HERO_COPY = {
     atlas: '🗺 想先看地图？进入 Atlas Lab →',
   },
   en: {
-    tagline: 'World-history AI tutor · for kids in U.S. grades 6 to high school',
+    tagline: 'World-history AI tutor · for Chinese-heritage kids in U.S. grades 6 to high school',
     h1Line1: 'Back home, memorizing history was enough for top marks.',
     h1Line2: 'In a U.S. classroom, memorizing alone — only a B-.',
     sub1Line1: 'One: no one taught him what the U.S. classroom wants — make a claim, back it with evidence, and notice "who is saying this, and whose side are they on";',
@@ -181,21 +181,22 @@ export default function HistoryHome() {
               })}
             </div>
 
-            {/* 定位句 kicker：直接告诉用户这是什么（在美 6 年级-高中学生的世界历史 AI 私教） */}
-            <div style={{
-              fontSize: 12.5, fontWeight: 700, color: HC.accent,
-              letterSpacing: 0.3, marginBottom: 10, paddingRight: 70,
-            }}>
-              {hero.tagline}
-            </div>
-
+            {/* 主标题：定位句（这是什么——在美 6 年级-高中华人孩子的世界历史 AI 私教） */}
             <h1 style={{
-              margin: "0 0 10px", fontFamily: FONT_DISPLAY,
+              margin: "0 0 8px", fontFamily: FONT_DISPLAY,
               fontSize: 24, lineHeight: 1.3, color: HC.ink,
               paddingRight: 70,
             }}>
-              {hero.h1Line1}<br/>{hero.h1Line2}
+              {hero.tagline}
             </h1>
+
+            {/* 副标题：记忆对比钩子（背熟拿高分 → 美国课堂只够 B-） */}
+            <div style={{
+              fontSize: 16.5, fontWeight: 600, color: HC.accent,
+              lineHeight: 1.45, marginBottom: 12, paddingRight: 70,
+            }}>
+              {hero.h1Line1}<br/>{hero.h1Line2}
+            </div>
             <p style={{
               margin: "0 0 6px", fontSize: 14, color: HC.text, lineHeight: 1.65,
             }}>
