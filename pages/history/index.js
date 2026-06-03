@@ -184,7 +184,7 @@ export default function HistoryHome() {
             {/* 主标题：定位句（这是什么——在美 6 年级-高中华人孩子的世界历史 AI 私教） */}
             <h1 style={{
               margin: "0 0 8px", fontFamily: FONT_DISPLAY,
-              fontSize: 24, lineHeight: 1.3, color: HC.ink,
+              fontSize: 24, lineHeight: 1.3, color: HC.accent,
               paddingRight: 70,
             }}>
               {hero.tagline}
@@ -192,7 +192,7 @@ export default function HistoryHome() {
 
             {/* 副标题：记忆对比钩子（背熟拿高分 → 美国课堂只够 B-） */}
             <div style={{
-              fontSize: 16.5, fontWeight: 600, color: HC.accent,
+              fontSize: 16.5, fontWeight: 600, color: HC.ink,
               lineHeight: 1.45, marginBottom: 12, paddingRight: 70,
             }}>
               {hero.h1Line1}<br/>{hero.h1Line2}
