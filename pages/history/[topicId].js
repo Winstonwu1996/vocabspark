@@ -3669,6 +3669,9 @@ function LensSelector(props) {
     'emperor-huizong': '🎨',
     'su-shi': '🍵',
     'li-qingzhao': '📜',
+    'planter-actor': '⚜️',
+    'toussaint-mediator': '♟️',
+    'field-worker-receiving-end': '🔥',
   };
 
   // 第一次建议哪个 lens（每 Topic 不同——按戏剧强度 / 入门难度）
@@ -3681,6 +3684,7 @@ function LensSelector(props) {
     'age-of-exploration-1492': { id: 'anacaona-jr', reason: '12 岁 Taíno 女孩同龄锚点 + 5 年家族灭族最强情感入口 + areíto 文化 carrier (per Sarah audit)' },
     'mali-empire-1235':        { id: 'aisha-1413',  reason: '14 岁 Mande 女孩同龄锚点 + female-literacy-carrier + N5 12,000 enslaved + N12 4-Topic information preservation closing' },
     'tang-song-china':         { id: 'li-qingzhao', reason: '15 岁山东文学世家同龄锚点 + female-literacy-carrier + N5+N6 1126-1129《金石录》文物南运 cross-lens + N12 5 Topic information preservation 五面体 closing' },
+    'haitian-revolution-1791': { id: 'field-worker-receiving-end', reason: '无名少年点火 = 黑人能动性 (AP DBQ 必考) + 最强情感入口' },
   };
   var firstHint = firstChoiceHint[props.topicId];
   var firstLens = firstHint && lenses.find(function(l) { return l.id === firstHint.id; });
