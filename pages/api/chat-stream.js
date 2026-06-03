@@ -308,8 +308,14 @@ export default async function handler(req) {
                 let valid = false;
                 if (fullText && fullText.length > 50) {
                   if (jsonMode) {
-                    // teach 是 JSON 模式，必须能解析才缓存
-                    try { JSON.parse(fullText); valid = true; } catch (e) {
+                    // teach 是 JSON 模式：不仅要能解析，还必须含必备结构字段（opening + teach）才缓存。
+                    // 仅 JSON.parse 通过不够——模型偶尔漏字段会产出"可解析但不完整"的 JSON，
+                    // 一旦缓存就对所有命中该 key 的用户串原始 JSON（economical teach 页根因）。
+                    try {
+                      const _p = JSON.parse(fullText);
+                      if (_p && _p.opening && _p.teach) valid = true;
+                      else console.warn(`[chat-stream] cache skip - JSON missing opening/teach for ${cacheKey}`);
+                    } catch (e) {
                       console.warn(`[chat-stream] cache skip - invalid JSON for ${cacheKey}: ${e.message}`);
                     }
                   } else {
