@@ -203,10 +203,13 @@ function AudioPlayer(props) {
     window.dispatchEvent(new CustomEvent('audio-pause-all'));  // 先停别的播放器（此刻本实例还没开播，不会误停自己）
     synth.cancel();
     var voices = synth.getVoices() || [];
-    var preferred = voices.find(function (v) {
-      return v.lang && v.lang.indexOf('en') === 0 && /Samantha|Karen|Victoria|Daniel|Google US English/.test(v.name);
-    }) || voices.find(function (v) { return v.lang === 'en-US'; })
-      || voices.find(function (v) { return v.lang && v.lang.indexOf('en') === 0; });
+    var enVoices = voices.filter(function (v) { return v.lang && v.lang.indexOf('en') === 0; });
+    // 优先用用户在系统里下载的「高级/增强」英文语音 (Premium/Enhanced/Siri)，其次常见自然音色，
+    // 再次任意 en-US，最后任意英文 —— 这样用户下载了高清语音才真正用得上
+    var preferred = enVoices.find(function (v) { return /Premium|Enhanced|Siri|高级|增强/i.test(v.name); })
+      || enVoices.find(function (v) { return /Samantha|Ava|Allison|Karen|Victoria|Serena|Daniel|Google US English/i.test(v.name); })
+      || enVoices.find(function (v) { return v.lang === 'en-US'; })
+      || enVoices[0];
     // 切成 ≤240 字的块（贪心按词打包，规避部分浏览器对长 utterance 的截断 bug；
     // 不靠句号分句——破折号/列表式长段没有 .!? 也能被切开）
     var words = enText.split(/\s+/).filter(Boolean);
