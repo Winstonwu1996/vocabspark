@@ -38,7 +38,7 @@ claim 总数:  30
 | 6 | "1866 年 1 月，坂本龙马牵线，萨长同盟成立（西乡 + 木户）"（§3 / §4.5 / 附录 A）| date | encyclopedia | 维基 Satchō Alliance：1866-01-21 京都，Sakamoto Ryōma 牵线，Saigō Takamori（萨）+ Kido Takayoshi（长）| ✅verified |
 | 7 | "1868 年 1 月 3 日，王政復古，权力收归天皇睦仁（明治天皇）"（§1 / §4.6 / 附录 A）| date | encyclopedia | 维基 Meiji Restoration / Britannica：1868-01-03 ōsei fukko，Emperor Mutsuhito（追谥 Meiji）| ✅verified |
 | 8 | "1868 年 4 月 6 日《五条御誓文》（Charter Oath）"（§4.7 / §5A / 附录 A）| date+quote | primary | Columbia AFE 1868 Charter Oath PDF：1868-04-06 颁布；Art.5 "Knowledge shall be sought throughout the world…" 逐字对得上 | ✅verified |
-| 9 | "戊辰战争 1868-69；1868 年 5 月 15 日上野之战，西乡破幕军"（§3 / §4.6 / 附录 A）| date | encyclopedia | 维基 Boshin War / Battle of Ueno：1868-05-15，Saigō 领兵击溃彰义队，基本终结德川残部 | ✅verified |
+| 9 | "戊辰战争 1868-69；1868 年初夏（阴历五月十五 = 公历 7 月 4 日）上野之战，西乡破幕军"（§3 / §4.6 / 附录 A）| date | encyclopedia | 维基 Boshin War / Battle of Ueno：公历 1868-07-04（阴历五月十五），Saigō 领兵击溃彰义队，基本终结德川残部 | ✅verified |
 | 10 | "1871 年废藩置县（haihan chiken），两百多藩改府县"（§4.8 / 附录 A）| date+number | encyclopedia | 维基 Abolition of the han system：1871，271 藩 → 72/3 府县（"两百多藩"= ~271 准确量级）| ✅verified |
 | 11 | "1871-73 岩仓使节团出访欧美（岩仓具视 + 大久保利通）"（§4.9 / 附录 A）| date | encyclopedia | 维基 Iwakura Mission：1871 出发，1873 返；Iwakura Tomomi 团长，含 Ōkubo / Kido / Itō | ✅verified |
 | 12 | "1873 征兵令——满二十一岁男丁服役"（§3 / §4.10 / §5B / 附录 A）| date+number | encyclopedia | 维基 Conscription Ordinance 1873：满 21 岁男性服役（4 年现役 + 3 年预备）| ✅verified |

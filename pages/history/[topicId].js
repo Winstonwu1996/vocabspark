@@ -3672,6 +3672,9 @@ function LensSelector(props) {
     'planter-actor': '⚜️',
     'toussaint-mediator': '♟️',
     'field-worker-receiving-end': '🔥',
+    'samurai-reformer-actor': '⚙️',
+    'saigo-mediator': '🏯',
+    'farm-daughter-receiving-end': '🌾',
   };
 
   // 第一次建议哪个 lens（每 Topic 不同——按戏剧强度 / 入门难度）
@@ -3685,6 +3688,7 @@ function LensSelector(props) {
     'mali-empire-1235':        { id: 'aisha-1413',  reason: '14 岁 Mande 女孩同龄锚点 + female-literacy-carrier + N5 12,000 enslaved + N12 4-Topic information preservation closing' },
     'tang-song-china':         { id: 'li-qingzhao', reason: '15 岁山东文学世家同龄锚点 + female-literacy-carrier + N5+N6 1126-1129《金石录》文物南运 cross-lens + N12 5 Topic information preservation 五面体 closing' },
     'haitian-revolution-1791': { id: 'field-worker-receiving-end', reason: '无名少年点火 = 黑人能动性 (AP DBQ 必考) + 最强情感入口' },
+    'meiji-restoration-1868': { id: 'farm-daughter-receiving-end', reason: '农家女儿承受自上而下的现代化 + 同龄锚点 + 哥哥被征兵情感入口' },
   };
   var firstHint = firstChoiceHint[props.topicId];
   var firstLens = firstHint && lenses.find(function(l) { return l.id === firstHint.id; });
