@@ -80,6 +80,10 @@ function AudioPlayer(props) {
     }
     if (available !== null && resolvedSrc !== null) return;
 
+    // 复位成「探测中」——否则切走 high 再切回时，上轮残留的 available=false 会让本节点
+    // 在 HEAD 探测完成前就误显「设备语音」按钮（Codex P2：stale availability race）
+    setAvailable(null);
+    setResolvedSrc(null);
     // 先探 mp3
     fetch(srcMP3, { method: 'HEAD' })
       .then(function (r) {
@@ -160,6 +164,11 @@ function AudioPlayer(props) {
 
   function playFile() {
     if (!resolvedSrc) return;
+    // 防御：若上一刻还在用设备语音（mode 刚从 tts 翻到 file），先把它停掉，避免无主语音继续响
+    if (ttsActiveRef.current && typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      ttsActiveRef.current = false;
+    }
     if (!audioRef.current) {
       var a = new Audio();
       a.preload = 'metadata';
