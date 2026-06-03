@@ -4911,18 +4911,17 @@ export default function App() {
               if (!ex) return;
               // 最终成功判定只用严格 tryJSON（不用 parsePartialJSON——它会自动补括号造出
               // {opening,teach:{}} 这类半截对象），并用 isCompleteTeachJSON 校验必备结构。
+              // 最终成功只认严格 tryJSON(raw) 解析出的完整对象：parsePartialJSON 会补括号造半截
+              // 对象，绝不参与"成功"判定，只用于流式 live preview。截断的 raw → tryJSON 返回 null → 失败。
               var finalJSON = raw ? tryJSON(raw) : null;
               if (isCompleteTeachJSON(finalJSON)) {
                 ex.teachJSON = finalJSON;
                 ex.teach = null;
                 ex.teachFailed = false;
-              } else if (isCompleteTeachJSON(ex.teachJSON)) {
-                // 末尾整体 parse 失败/不完整，但流式阶段已拿到完整结构化 JSON → 保留它
-                ex.teach = null;
-                ex.teachFailed = false;
               } else {
                 // 无完整结构。jsonMode 下响应本应是 JSON：解析出对象但不完整、或文本含 JSON
                 // （含 ```json 包裹 / "Here is:" 前缀）→ 标失败走重试 UI，绝不把 JSON 倒给用户。
+                // 同时清掉流式残留的半截 teachJSON，避免轮询又把它当预览盖过失败态。
                 // 仅当确实是非 JSON 纯文本时才按 legacy markdown 渲染。
                 var jsonish = !!finalJSON || (typeof raw === "string" && /[\[{]/.test(raw.slice(0, 300)));
                 if (jsonish || !raw) {
@@ -4942,6 +4941,10 @@ export default function App() {
               }
             }).catch(function(err) {
               console.warn("[loadBatch] teach failed for " + word + ":", err.message);
+              // 清掉流式阶段可能写入的半截 teachJSON/teach：否则轮询会先命中 teachJSON.opening
+              // 把半截预览盖过失败态、永不进 teachFailed 分支 (Codex P1)。
+              dataCache.current[word].teachJSON = null;
+              dataCache.current[word].teach = null;
               dataCache.current[word].teachFailed = true;
               dataCache.current[word].teachStreaming = false;
               if (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed) {
