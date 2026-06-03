@@ -140,6 +140,15 @@ function AudioPlayer(props) {
     };
   }, []);
 
+  // englishLevel 切走 high（canShow 变 false）→ 控件隐藏，但要把还在播的设备语音也停掉
+  useEffect(function () {
+    if (!canShow && ttsActiveRef.current && typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      ttsActiveRef.current = false;
+      setPlaying(false);
+    }
+  }, [canShow]);
+
   // 播放模式：'file' = 预生成高清语音存在 / 'tts' = 设备语音兜底 / null = 不显示按钮
   var mode = (available === true && resolvedSrc) ? 'file' : (available === false && canTts ? 'tts' : null);
 
@@ -188,13 +197,17 @@ function AudioPlayer(props) {
       return v.lang && v.lang.indexOf('en') === 0 && /Samantha|Karen|Victoria|Daniel|Google US English/.test(v.name);
     }) || voices.find(function (v) { return v.lang === 'en-US'; })
       || voices.find(function (v) { return v.lang && v.lang.indexOf('en') === 0; });
-    // 分句成 ≤240 字的块（规避部分浏览器对长 utterance 的截断 bug）
-    var pieces = enText.match(/[^.!?]+[.!?]*\s*/g) || [enText];
+    // 切成 ≤240 字的块（贪心按词打包，规避部分浏览器对长 utterance 的截断 bug；
+    // 不靠句号分句——破折号/列表式长段没有 .!? 也能被切开）
+    var words = enText.split(/\s+/).filter(Boolean);
     var chunks = [];
-    pieces.forEach(function (p) {
-      if (chunks.length && (chunks[chunks.length - 1] + p).length < 240) chunks[chunks.length - 1] += p;
-      else chunks.push(p);
+    var cur = '';
+    words.forEach(function (w) {
+      if (cur && (cur + ' ' + w).length > 240) { chunks.push(cur); cur = w; }
+      else { cur = cur ? cur + ' ' + w : w; }
     });
+    if (cur) chunks.push(cur);
+    if (!chunks.length) chunks = [enText];
     var remaining = chunks.length;
     ttsActiveRef.current = true;
     setPlaying(true);
