@@ -16,7 +16,7 @@
 //   5. 英文短语 (≥2 单词) → 灰色虚线下划线，点出翻译
 import React, { useState } from 'react';
 import { HC } from './theme';
-import { findMustMemorizeHits } from '../../lib/history-topics';
+import { findMustMemorizeHits, findConceptByInlineTerm } from '../../lib/history-topics';
 import { findGlossaryHits } from '../../lib/history-glossary';
 import { findEnglishPhrases, translatePhrase, getCachedTranslation } from '../../lib/history-translate';
 
@@ -28,6 +28,9 @@ export function findMustMemorizeData(topic, word) {
   if (v) return v;
   var c = (topic.mustMemorize.concepts || []).find(function(x) { return x.en.toLowerCase() === word.toLowerCase(); });
   if (c) return Object.assign({}, c, { word: c.en, cn: c.cn });
+  // 派生短语 (如 **Hagia Sophia** 来自复合标题 "Hagia Sophia / Church of Holy Wisdom") 也反查到 concept (Codex P2)
+  var dc = findConceptByInlineTerm(topic, word);
+  if (dc) return Object.assign({}, dc, { word: word, cn: dc.cn });
   return null;
 }
 
