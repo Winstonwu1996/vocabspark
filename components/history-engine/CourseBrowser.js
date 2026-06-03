@@ -166,8 +166,9 @@ function lockPropsFor(topicId, userTier, onLockedClick) {
 function GradeView(props) {
   var registry = TOPIC_REGISTRY || [];
   var topicProgress = props.topicProgress;
-  var grades = ['G6', 'G7', 'G8', 'HS']; // G5 暂无课，先不渲染
-  // 默认 tab:已学过最多的那一档；冷启动 G7（内容最强 + 新移民最痛）
+  // G5 美国早期史: 交叉挂现成早期美国史课 (tags.g5), 这些课同时仍在 G7/G8。空年级 tab 自动不渲染。
+  var grades = ['G5', 'G6', 'G7', 'G8', 'HS'];
+  // 默认 tab:冷启动 G7（内容最强 + 新移民最痛）
   var [activeGrade, setActiveGrade] = useState('G7');
 
   // 按 grade 分桶
@@ -175,10 +176,12 @@ function GradeView(props) {
   registry.forEach(function(reg) {
     if (!reg.available) return;
     var tags = getGradeTags(reg.id);
-    var g = tags.grade || 'HS';
-    byGrade[g] = byGrade[g] || [];
     var t = getTopic(reg.id);
-    if (t) byGrade[g].push({ topic: t, registry: reg });
+    if (!t) return;
+    var g = tags.grade || 'HS';
+    (byGrade[g] = byGrade[g] || []).push({ topic: t, registry: reg });
+    // 交叉挂 G5 (一门课可同时属本年级 + G5 早期美国史)
+    if (tags.g5 && g !== 'G5') (byGrade['G5'] = byGrade['G5'] || []).push({ topic: t, registry: reg });
   });
 
   // 按 year 排序课
