@@ -3678,6 +3678,9 @@ function LensSelector(props) {
     'bolshevik-organizer-actor': '🚩',
     'kerensky-mediator': '🎩',
     'textile-worker-receiving-end': '🍞',
+    'restructuring-winner-actor': '📈',
+    'veteran-mediator': '🎖️',
+    'rustbelt-family-receiving-end': '🏭',
   };
 
   // 第一次建议哪个 lens（每 Topic 不同——按戏剧强度 / 入门难度）
@@ -3693,6 +3696,7 @@ function LensSelector(props) {
     'haitian-revolution-1791': { id: 'field-worker-receiving-end', reason: '无名少年点火 = 黑人能动性 (AP DBQ 必考) + 最强情感入口' },
     'meiji-restoration-1868': { id: 'farm-daughter-receiving-end', reason: '农家女儿承受自上而下的现代化 + 同龄锚点 + 哥哥被征兵情感入口' },
     'russian-revolution-1917': { id: 'textile-worker-receiving-end', reason: '纺织女工面包罢工点燃二月革命 = 受害者变火种 + 最强情感入口' },
+    'contemporary-us-1980': { id: 'rustbelt-family-receiving-end', reason: '留下来付账的人家 = 国内课纲最缺的视角 + 工厂灯一班班灭最强情感锚' },
   };
   var firstHint = firstChoiceHint[props.topicId];
   var firstLens = firstHint && lenses.find(function(l) { return l.id === firstHint.id; });
