@@ -2701,6 +2701,7 @@ export default function App() {
   var [deepSessionStats, setDeepSessionStats] = useState({ remembered:0, fuzzy:0, forgot:0 });
   var deepReviewCacheRef = useRef({});
   var deepReviewInflightRef = useRef({});
+  var deepReviewReqRef = useRef(""); // 最近一次请求的词：异步响应回来时若已切词则丢弃，防串卡（bellies↔benevolent 串资料根因）
   var fileRef = useRef(null);
   var [setupTab, setSetupTab] = useState("profile");
   var [profileLocked, setProfileLocked] = useState(false);
@@ -6492,6 +6493,7 @@ export default function App() {
 
   var loadDeepReviewContent = async function(word) {
     if (!word) return;
+    deepReviewReqRef.current = word; // 记下"当前要展示的词"
     setDeepReviewLoading(true);
     setDeepLoadSec(0);
     setDeepReviewContent("");
@@ -6499,6 +6501,9 @@ export default function App() {
     setDeepQuizSelect("");
     setDeepQuizSubmitted(false);
     var payload = await fetchDeepReviewPayload(word);
+    // 过期响应守卫：await 期间用户已切到别的词（prefetch 让下一词可能先于本词返回）→ 丢弃，
+    // 否则会把 word 的资料写到当前屏幕另一个词的标题下（bellies↔benevolent 串资料根因）。
+    if (deepReviewReqRef.current !== word) return;
     setDeepReviewContent(payload.teach || "暂无内容");
     setDeepQuiz(payload.quiz || null);
     setDeepReviewLoading(false);
