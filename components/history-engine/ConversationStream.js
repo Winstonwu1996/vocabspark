@@ -32,6 +32,7 @@ function AudioPlayer(props) {
   // props: { topicId, lensId, turnId, englishLevel }
   // ⚠️ 所有 hook 必须在顶部 unconditional——React Rules of Hooks
   var [playing, setPlaying] = useState(false);
+  var [showHint, setShowHint] = useState(false);    // 「设备语音怎么更自然」提示气泡
   var [available, setAvailable] = useState(null);  // null = 未检测，true/false = 已检测
   var [progress, setProgress] = useState(0);
   var audioRef = useRef(null);
@@ -224,46 +225,86 @@ function AudioPlayer(props) {
 
   function togglePlay() { if (mode === 'file') playFile(); else playTts(); }
 
+  // 平台检测：苹果设备可在系统设置免费下载「增强」英文语音，Web Speech 会自动用上
+  var ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
+  var isApple = /iPhone|iPad|iPod|Macintosh|Mac OS X/.test(ua);
+
   return (
-    <div style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 6,
-      marginTop: 6,
-      padding: '4px 10px',
-      borderRadius: 999,
-      background: playing ? HC.accent : 'rgba(0,0,0,0.04)',
-      color: playing ? '#fff8e8' : HC.textSec,
-      fontSize: 11,
-      cursor: 'pointer',
-      userSelect: 'none',
-      fontFamily: 'inherit',
-      transition: 'background 0.15s',
-    }}
-    onClick={togglePlay}
-    title={playing ? '暂停' : (mode === 'file' ? '朗读 (高清语音)' : '朗读 (设备语音)')}>
-      <span style={{ fontSize: 13 }}>{playing ? '⏸' : '🔊'}</span>
-      <span>{playing ? '暂停' : '朗读'}</span>
-      {mode === 'file' && playing && progress > 0 && (
-        <span style={{
-          display: 'inline-block',
-          width: 30,
-          height: 3,
-          background: 'rgba(255,255,255,0.3)',
-          borderRadius: 2,
-          marginLeft: 4,
-          overflow: 'hidden',
-        }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6, position: 'relative', verticalAlign: 'middle' }}>
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '4px 10px',
+        borderRadius: 999,
+        background: playing ? HC.accent : 'rgba(0,0,0,0.04)',
+        color: playing ? '#fff8e8' : HC.textSec,
+        fontSize: 11,
+        cursor: 'pointer',
+        userSelect: 'none',
+        fontFamily: 'inherit',
+        transition: 'background 0.15s',
+      }}
+      onClick={togglePlay}
+      title={playing ? '暂停' : (mode === 'file' ? '朗读 (高清语音)' : '朗读 (设备语音)')}>
+        <span style={{ fontSize: 13 }}>{playing ? '⏸' : '🔊'}</span>
+        <span>{playing ? '暂停' : '朗读'}</span>
+        {mode === 'file' && playing && progress > 0 && (
           <span style={{
-            display: 'block',
-            width: Math.round(progress * 100) + '%',
-            height: '100%',
-            background: '#fff8e8',
-            transition: 'width 0.2s',
-          }} />
+            display: 'inline-block',
+            width: 30,
+            height: 3,
+            background: 'rgba(255,255,255,0.3)',
+            borderRadius: 2,
+            marginLeft: 4,
+            overflow: 'hidden',
+          }}>
+            <span style={{
+              display: 'block',
+              width: Math.round(progress * 100) + '%',
+              height: '100%',
+              background: '#fff8e8',
+              transition: 'width 0.2s',
+            }} />
+          </span>
+        )}
+      </span>
+
+      {/* 设备语音模式：给一个「想更自然？」小提示（按平台给步骤；高清文件模式不需要） */}
+      {mode === 'tts' && (
+        <span
+          onClick={function (e) { e.stopPropagation(); setShowHint(function (v) { return !v; }); }}
+          title="想要更自然的发音？"
+          style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 16, height: 16, borderRadius: 999,
+            border: '1px solid ' + HC.border, color: HC.textSec,
+            fontSize: 10, cursor: 'pointer', userSelect: 'none', lineHeight: 1,
+          }}>ⓘ</span>
+      )}
+      {mode === 'tts' && showHint && (
+        <span style={{
+          position: 'absolute', top: '100%', left: 0, marginTop: 4, zIndex: 50,
+          width: 248, padding: '10px 12px',
+          background: '#fffdf8', border: '1px solid ' + HC.border, borderRadius: 10,
+          boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
+          fontSize: 11.5, lineHeight: 1.6, color: HC.text,
+          fontFamily: 'inherit', cursor: 'default', textAlign: 'left', whiteSpace: 'normal',
+        }}>
+          <span style={{ fontWeight: 700, color: HC.ink }}>想要更自然的英文发音？（免费）</span>
+          <br />
+          {isApple
+            ? '苹果设备：打开「设置 → 辅助功能 → 朗读内容 → 声音 → 英语」，下载一个标着「增强 / 高级」音质的英文语音；回到这里再点朗读就会明显更自然。（Mac 在「系统设置 → 辅助功能 → 朗读内容」里下载。）'
+            : '安卓 / 鸿蒙：打开「设置 → 无障碍 → 文字转语音 (TTS)」，换一个或下载更自然的英文语音引擎；部分机型可在应用商店装更好的 TTS 引擎。'}
+          <br />
+          <span
+            onClick={function (e) { e.stopPropagation(); setShowHint(false); }}
+            style={{ display: 'inline-block', marginTop: 6, color: HC.accent, fontWeight: 600, cursor: 'pointer' }}>
+            知道了
+          </span>
         </span>
       )}
-    </div>
+    </span>
   );
 }
 
