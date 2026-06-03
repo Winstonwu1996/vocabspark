@@ -35,6 +35,7 @@ function AudioPlayer(props) {
   var [available, setAvailable] = useState(null);  // null = 未检测，true/false = 已检测
   var [progress, setProgress] = useState(0);
   var audioRef = useRef(null);
+  var ttsActiveRef = useRef(false);  // 本实例是否正在用「设备语音」播
 
   // 计算 src(优先 MP3 — 文件 ~10x 小;若 .mp3 不存在 fallback .wav)
   var canShow = props.englishLevel === 'high' && props.topicId && props.lensId && typeof props.turnId !== 'undefined';
@@ -47,6 +48,11 @@ function AudioPlayer(props) {
 
   // 实际可用的 src（先 mp3 探测，404 fallback wav）—— 在 state 里
   var [resolvedSrc, setResolvedSrc] = useState(null);
+
+  // 设备语音兜底：无预生成文件时，用 Web Speech API 朗读 EN 文本（零生成/零存储/永远跟文字同步）
+  var ttsSupported = typeof window !== 'undefined' && typeof window.speechSynthesis !== 'undefined';
+  var enText = typeof props.enText === 'string' ? props.enText.trim() : '';
+  var canTts = canShow && ttsSupported && enText.length > 0;
 
   // HEAD 检测文件存在；优先 .mp3 / fallback .wav；用模块级缓存避免重复
   useEffect(function () {
@@ -106,6 +112,11 @@ function AudioPlayer(props) {
         audioRef.current.pause();
         setPlaying(false);
       }
+      if (ttsActiveRef.current && typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        ttsActiveRef.current = false;
+        setPlaying(false);
+      }
     }
     window.addEventListener('audio-pause-all', handler);
     return function () { window.removeEventListener('audio-pause-all', handler); };
@@ -122,15 +133,22 @@ function AudioPlayer(props) {
         } catch (e) { /* 忽略 */ }
         audioRef.current = null;
       }
+      if (ttsActiveRef.current && typeof window !== 'undefined' && window.speechSynthesis) {
+        try { window.speechSynthesis.cancel(); } catch (e) { /* 忽略 */ }
+        ttsActiveRef.current = false;
+      }
     };
   }, []);
 
+  // 播放模式：'file' = 预生成高清语音存在 / 'tts' = 设备语音兜底 / null = 不显示按钮
+  var mode = (available === true && resolvedSrc) ? 'file' : (available === false && canTts ? 'tts' : null);
+
   // ⚠️ 所有 hook 调完再做 conditional return
   if (!canShow) return null;
-  if (available === false) return null;
-  if (available === null) return null;
+  if (available === null) return null;   // 探测中
+  if (!mode) return null;                 // 既无预生成文件，也没法用设备语音兜底
 
-  function togglePlay() {
+  function playFile() {
     if (!resolvedSrc) return;
     if (!audioRef.current) {
       var a = new Audio();
@@ -155,6 +173,44 @@ function AudioPlayer(props) {
     }
   }
 
+  function playTts() {
+    var synth = window.speechSynthesis;
+    if (playing) {
+      synth.cancel();
+      ttsActiveRef.current = false;
+      setPlaying(false);
+      return;
+    }
+    window.dispatchEvent(new CustomEvent('audio-pause-all'));  // 先停别的播放器（此刻本实例还没开播，不会误停自己）
+    synth.cancel();
+    var voices = synth.getVoices() || [];
+    var preferred = voices.find(function (v) {
+      return v.lang && v.lang.indexOf('en') === 0 && /Samantha|Karen|Victoria|Daniel|Google US English/.test(v.name);
+    }) || voices.find(function (v) { return v.lang === 'en-US'; })
+      || voices.find(function (v) { return v.lang && v.lang.indexOf('en') === 0; });
+    // 分句成 ≤240 字的块（规避部分浏览器对长 utterance 的截断 bug）
+    var pieces = enText.match(/[^.!?]+[.!?]*\s*/g) || [enText];
+    var chunks = [];
+    pieces.forEach(function (p) {
+      if (chunks.length && (chunks[chunks.length - 1] + p).length < 240) chunks[chunks.length - 1] += p;
+      else chunks.push(p);
+    });
+    var remaining = chunks.length;
+    ttsActiveRef.current = true;
+    setPlaying(true);
+    chunks.forEach(function (chunk) {
+      var u = new SpeechSynthesisUtterance(chunk.trim());
+      u.lang = 'en-US';
+      if (preferred) u.voice = preferred;
+      u.rate = 0.95;
+      u.onend = function () { remaining -= 1; if (remaining <= 0) { ttsActiveRef.current = false; setPlaying(false); } };
+      u.onerror = function () { remaining -= 1; if (remaining <= 0) { ttsActiveRef.current = false; setPlaying(false); } };
+      synth.speak(u);
+    });
+  }
+
+  function togglePlay() { if (mode === 'file') playFile(); else playTts(); }
+
   return (
     <div style={{
       display: 'inline-flex',
@@ -172,10 +228,10 @@ function AudioPlayer(props) {
       transition: 'background 0.15s',
     }}
     onClick={togglePlay}
-    title={playing ? '暂停' : '朗读 (VibeVoice)'}>
+    title={playing ? '暂停' : (mode === 'file' ? '朗读 (高清语音)' : '朗读 (设备语音)')}>
       <span style={{ fontSize: 13 }}>{playing ? '⏸' : '🔊'}</span>
       <span>{playing ? '暂停' : '朗读'}</span>
-      {playing && progress > 0 && (
+      {mode === 'file' && playing && progress > 0 && (
         <span style={{
           display: 'inline-block',
           width: 30,
@@ -648,6 +704,7 @@ export function ConversationStream(props) {
                       lensId={props.lensId}
                       turnId={entry.turn}
                       englishLevel={props.englishLevel}
+                      enText={entry.content}
                     />
                   )}
                 </div>
