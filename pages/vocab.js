@@ -5198,10 +5198,13 @@ export default function App() {
       // 超时 35s：大部分正常请求 15s 内完成
       teachTimeoutRef.current = setTimeout(function() {
         if (teachPollRef.current) clearInterval(teachPollRef.current);
-        // 如果 JSON 还没到，降级显示失败
+        // 超时仍无【完整】teachJSON（半截 preview 也算失败）→ 清预览 + 失败重试，
+        // 绝不把半截 preview 在此处定格成"非 streaming 成功态" (Codex)。
         var cached = dataCache.current[pollWord];
-        if (!cached?.teachJSON) {
-          setTeachContent(function(prev) { return prev || "__FAILED__"; });
+        if (!isCompleteTeachJSON(cached && cached.teachJSON)) {
+          if (cached) { cached.teachFailed = true; cached.teachJSON = null; cached.teach = null; }
+          setTeachData(null);
+          setTeachContent("__FAILED__");
         }
         setTeachWaitSec(0);
         setTeachStreaming(false);
