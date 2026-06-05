@@ -265,7 +265,7 @@ authorNotes: |
 1536       Calvin 27 岁——出版 Institutes of the Christian Religion
 1541       Calvin 32 岁——回 Geneva 接管神权城邦
 1545-1563  Council of Trent——天主教反宗教改革会议
-1546       Luther 63 岁死
+1546       Luther 62 岁死
 1547       Henry VIII 死——9 岁 Edward VI 继位（新教强化）
 1553       Edward VI 死——Mary I 继位（"Bloody Mary"5 年烧 300 新教徒）
 1553       Servetus 在 Geneva 被 Calvin 烧死（新教内部异端杀异端）
@@ -779,7 +779,7 @@ authorNotes: |
 **为后来 Lutheran / Calvinist / Anglican 牧师可以结婚铺路**——
 **新教牧师有家庭**这件事就**始于 Luther + Katharina 1525 婚姻**。
 
-##### 1546 年 2 月 18 日 — 63 岁死
+##### 1546 年 2 月 18 日 — 62 岁死
 
 **Luther 一辈子身体不好（修道院苦行 + 后来肥胖 + 高血压）**——
 **1546 年 2 月——他回老家 Eisleben 调解一个家族纷争**——
@@ -1028,7 +1028,7 @@ authorNotes: |
 **他**用 Catholic 的工具反 Catholic 的内容**——
 **这是 Reformation 内部矛盾**的最强表达**。
 
-##### 1564 年 5 月 27 日 — 55 岁死
+##### 1564 年 5 月 27 日 — 54 岁死
 
 **Calvin 一辈子身体差**——
 **头痛 + 胃溃疡 + 肺病 + 痛风**——
@@ -2732,7 +2732,7 @@ authorNotes: |
 1540        Pope Paul III 批准 Society of Jesus（耶稣会）
 1541        Calvin 32 岁回 Geneva 接管神权
 1545-1563   Council of Trent——天主教反宗教改革会议
-1546.2.18   Luther 63 岁死
+1546.2.18   Luther 62 岁死
 1547        Henry VIII 死——Edward VI 继位（新教强化）
 1553        Edward VI 死——Mary I 继位（"Bloody Mary"）
 1553        Servetus 在 Geneva 被 Calvin 烧死
@@ -2741,7 +2741,7 @@ authorNotes: |
 1556        Ignatius of Loyola 65 岁死
 1558        Mary 死——Elizabeth I 继位（45 年新教稳定期）
 1559        Elizabethan Settlement——英国 Anglican 教会奠基
-1564.5.27   Calvin 55 岁死
+1564.5.27   Calvin 54 岁死
 1572.8.24   Saint Bartholomew's Day Massacre（法国 5,000-30,000 新教徒死）
 1583        利玛窦到中国广东肇庆
 1588        Spanish Armada 失败——新教在英国稳固

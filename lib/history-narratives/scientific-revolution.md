@@ -25,7 +25,7 @@
 
 教会跟大学的关系也不是「教会压制科学」这种二元对立。中世纪大学 (Paris, Oxford, Bologna, Padua) 本身就是教会创办的, 或者跟主教 chapter (大教堂教士团) 紧密绑定。教 Aristotle 自然哲学的大学 master 几乎都是 cleric (教士)。James Hannam 在《The Genesis of Science》(2011) 里有一句关键话: 中世纪科学之所以可能, **正是因为**有教会这个跨国机构提供了拉丁语共同语、修道院抄本、大学薪水。
 
-> Most medieval professors were clergy. The University of Paris, Oxford, Bologna — these were Church-sponsored or Church-tied institutions. James Hannam's *The Genesis of Science* (2011) argues that medieval science existed BECAUSE the Church gave Europe a shared language (Latin), book-copying monasteries, and university salaries. The "Church vs. science" cartoon misses how science fed on Church infrastructure.
+> Most medieval professors were clergy. The University of Paris, Oxford, Bologna — these were Church-sponsored or Church-tied institutions. James Hannam's The Genesis of Science (2011) argues that medieval science existed BECAUSE the Church gave Europe a shared language (Latin), book-copying monasteries, and university salaries. The "Church vs. science" cartoon misses how science fed on Church infrastructure.
 
 到了 15 世纪后半, 两件事改变了知识传播的速度和地理范围。第一件是 1455 Gutenberg 印刷术 (回挂 Renaissance Topic): 一本《Almagest》的拉丁文印本卖去 Krakow、Bologna、Wittenberg, 成本是手抄本的几十分之一。第二件是 Renaissance 学者去 Constantinople 陷落 (1453) 前后从拜占庭僧侣手里拿到了大量希腊原文 — 不是阿拉伯语转译, 是 Plato、Archimedes、Apollonius 的希腊原文。这两件事让一个波兰小镇的教士也能在书桌上同时摆 Ptolemy 拉丁版、Archimedes 希腊版、阿拉伯天文表。
 
@@ -53,11 +53,11 @@ Nicolaus Copernicus 1473 年出生在波兰 Toruń, 一个 Hanseatic League (汉
 
 Copernicus 1510 年代就写好了一个手稿叫《Commentariolus》(小评注), 在朋友圈手抄流通, 没出版。他迟迟不出版正本, 部分是因为完美主义 — 他的数据要再精化 — 部分是因为他知道这本书会引起神学摩擦。1539 年一个 Lutheran 年轻数学家 Georg Joachim Rheticus 从 Wittenberg 跑去 Frombork 找 Copernicus, 住了两年半, 帮他整理书稿、催他出版。最终 1543 年初春, 书稿送到 Nuremberg 的印刷厂 (Lutheran 城市, Catholic 神父的书在 Lutheran 印刷厂印 — 这就是 Reformation 后的怪异格局)。
 
-> Copernicus actually drafted his system around 1510-1514 in a short manuscript called *Commentariolus* (Little Commentary), passed hand-to-hand among friends, never printed. He delayed the full book for 30 years — perfectionism, plus he knew it would cause friction. In 1539 a young Lutheran mathematician, **Georg Joachim Rheticus**, traveled from Wittenberg to Frombork to push him. The book finally went to a Nuremberg printer (a Lutheran city printing a Catholic priest's book — Reformation made everything weirder).
+> Copernicus actually drafted his system around 1510-1514 in a short manuscript called Commentariolus (Little Commentary), passed hand-to-hand among friends, never printed. He delayed the full book for 30 years — perfectionism, plus he knew it would cause friction. In 1539 a young Lutheran mathematician, **Georg Joachim Rheticus**, traveled from Wittenberg to Frombork to push him. The book finally went to a Nuremberg printer (a Lutheran city printing a Catholic priest's book — Reformation made everything weirder).
 
 书出版前, 印刷监督换了人。Lutheran 神学家 **Andreas Osiander** 接手最后流程, 他在 Copernicus 不在场的情况下加了一篇匿名前言, 大意是: 这本书不是说地球真的转了, 这只是一个**便于计算的假说**, 不要拿它跟圣经比较。Owen Gingerich 在《The Book Nobody Read》(2004) 用三十年时间追踪存世的初版《De revolutionibus》— 大约 270 多本现存 (Gingerich 估计 1543 第一版印数 ~400-500), 他发现 Osiander 这篇前言**起到了缓冲作用**: 1543 年到 1600 年这 50 多年里, 罗马教会基本没干涉这本书, 大学甚至开课讲它。
 
-> Just before printing, a Lutheran theologian named **Andreas Osiander** took over the press. Without Copernicus's permission, he added an anonymous preface saying: this book doesn't claim Earth really moves — it's just a useful **hypothesis** for calculation, don't compare it to the Bible. Owen Gingerich's *The Book Nobody Read* (2004) tracked surviving 1543 first editions (about 270 still exist; original print run roughly 400-500). His finding: Osiander's preface acted as a shield. For 50+ years, Rome did not interfere. Universities even taught it.
+> Just before printing, a Lutheran theologian named **Andreas Osiander** took over the press. Without Copernicus's permission, he added an anonymous preface saying: this book doesn't claim Earth really moves — it's just a useful **hypothesis** for calculation, don't compare it to the Bible. Owen Gingerich's The Book Nobody Read (2004) tracked surviving 1543 first editions (about 270 still exist; original print run roughly 400-500). His finding: Osiander's preface acted as a shield. For 50+ years, Rome did not interfere. Universities even taught it.
 
 Copernicus 死前到底有没有看到印好的样书, 史料有两说: 一说他 1543 年 5 月 24 日卧床中拿到样书后当天去世 (这是 Tiedemann Giese 1543 年的描述, 也是后世传记最常引用的版本); 另一说他已经中风太严重, 来不及理解。两种说法都没法证伪。重要的是: 他**没有亲自跟 Osiander 摊牌**, 也没机会公开声明「我说的是真实物理, 不是假说」。这个未澄清的暧昧, 让这本书在它最脆弱的头 50 年里活下来了。
 
@@ -65,7 +65,7 @@ Copernicus 死前到底有没有看到印好的样书, 史料有两说: 一说�
 
 教会反应温和, 也不是「教会瞎了」, 而是 1540s-1590s 的罗马有更紧的事 — Council of Trent (特伦特会议 1545-1563) 在处理 Reformation 危机, 反 Lutheran 比反 Copernicus 重要得多。再加上《De revolutionibus》是一本 400 多页满是球面三角公式的拉丁专著, 读懂它需要数学训练, 真正能读的人全欧洲不超过几百, 他们大多是大学数学教席 — 教会的人。Gingerich 的研究还表明: 当时的天文学家把 Copernicus 当成**计算工具**用 (因为它的行星位置表挺准), 但日常算法还是 Ptolemy。两套系统并行了几十年。
 
-> Why did Rome stay quiet 1543-1600? Trent Council (1545-1563) was busy fighting Lutherans, not philosophers. And *De revolutionibus* was a 400-page Latin technical book full of spherical trigonometry — maybe a few hundred Europeans could actually read it, most of them university math chairs (Church employees). Gingerich's research shows astronomers used Copernicus as a **calculation tool** when his planet tables worked better, but kept Ptolemy for daily use. Two systems ran in parallel for decades.
+> Why did Rome stay quiet 1543-1600? Trent Council (1545-1563) was busy fighting Lutherans, not philosophers. And De revolutionibus was a 400-page Latin technical book full of spherical trigonometry — maybe a few hundred Europeans could actually read it, most of them university math chairs (Church employees). Gingerich's research shows astronomers used Copernicus as a **calculation tool** when his planet tables worked better, but kept Ptolemy for daily use. Two systems ran in parallel for decades.
 
 这就是 Copernicus 的真实形状: 不是叛逆英雄, 是**教会内部的 canon, 用 Reformation 撕开的缝隙在 Lutheran 印刷厂出版了一本 Catholic 神父的天文书, 借助 Lutheran 神学家加的「假说」前言躲过了头 50 年审查**。每一个细节都跟「理性 vs 教会」的 Whig 故事不合。
 
@@ -79,9 +79,9 @@ Copernicus 死后 50 年, 接力棒到了一个完全不同的人手里: 丹麦�
 
 > Tycho Brahe (born 1546, Danish noble) had two events that defined him. First, in 1566, age 20, he lost part of his nose in a sword duel over a math argument and wore a metal prosthetic the rest of his life (probably brass, based on a 2010-2012 grave reopening). Second, in November 1572, he recorded a **nova** — a new star — in Cassiopeia, bright enough to see in daylight, lasting 18 months. Aristotle had said the heavens above the Moon never changed. A new star meant Aristotle was wrong about something. That hit harder than any abstract argument.
 
-**Grade 7 sensory hook ⭐ — 想象 1572 年 11 月 11 日的那个晚上**: 26 岁的 Brahe 那天傍晚在丹麦南部 Herrevad 修道院 (他叔叔 Steen Bille 当院长的西多会 Cistercian 修道院, 也是 Brahe 当时的化学实验室) 吃完晚饭, 像往常一样走出门抬头看星空。他眼睛盯着 Cassiopeia (仙后座 — 北天那个 W 形的 5 颗亮星)。这一晚有问题。**那个 W 多了一颗星**。比金星还亮。一颗他昨天晚上、上周晚上、过去 26 年每个晚上都没见过的星。Brahe 当场愣住, 叫旁边的仆人来确认 — 仆人也看到了。他写信给朋友: "Novam Stellam"(一颗新星)。这颗星接下来 16 个月一直亮在天上 (1572 年 11 月到 1574 年 3 月才彻底消失), 整个欧洲所有抬头的人都看到了。
+**Grade 7 sensory hook  — 想象 1572 年 11 月 11 日的那个晚上**: 26 岁的 Brahe 那天傍晚在丹麦南部 Herrevad 修道院 (他叔叔 Steen Bille 当院长的西多会 Cistercian 修道院, 也是 Brahe 当时的化学实验室) 吃完晚饭, 像往常一样走出门抬头看星空。他眼睛盯着 Cassiopeia (仙后座 — 北天那个 W 形的 5 颗亮星)。这一晚有问题。**那个 W 多了一颗星**。比金星还亮。一颗他昨天晚上、上周晚上、过去 26 年每个晚上都没见过的星。Brahe 当场愣住, 叫旁边的仆人来确认 — 仆人也看到了。他写信给朋友: "Novam Stellam"(一颗新星)。这颗星接下来 16 个月一直亮在天上 (1572 年 11 月到 1574 年 3 月才彻底消失), 整个欧洲所有抬头的人都看到了。
 
-> Grade 7 sensory hook: imagine the evening of November 11, 1572. Brahe, age 26, walks out of his uncle's monastery at Herrevad after dinner. He looks up at Cassiopeia — that W-shape of five bright stars he has known since childhood. **The W has one extra star.** Brighter than Venus. A star that wasn't there yesterday, wasn't there last week, wasn't there in any of his 26 years of looking up. He freezes, calls a servant to confirm. The servant sees it too. Brahe writes to a friend that night: *Novam Stellam* — "a new star." It stayed bright in the sky for the next 16 months (November 1572 to March 1574) — every educated person in Europe who looked up saw it.
+> Grade 7 sensory hook: imagine the evening of November 11, 1572. Brahe, age 26, walks out of his uncle's monastery at Herrevad after dinner. He looks up at Cassiopeia — that W-shape of five bright stars he has known since childhood. **The W has one extra star.** Brighter than Venus. A star that wasn't there yesterday, wasn't there last week, wasn't there in any of his 26 years of looking up. He freezes, calls a servant to confirm. The servant sees it too. Brahe writes to a friend that night: Novam Stellam — "a new star." It stayed bright in the sky for the next 16 months (November 1572 to March 1574) — every educated person in Europe who looked up saw it.
 
 想象你今晚走出家门看天上, 突然多了一颗你昨晚没见过、比月亮以外所有东西都亮的星 — 那种「我从小看到大的天空, 今晚不一样了」的感觉, 就是 1572 年 11 月欧洲所有人的感觉。在 Aristotelian 宇宙观里, 月球以上的天界 (sphere of fixed stars 恒星天) 是 **永恒不变** 的 — 这是 1400 年的教条。一颗从无到有的新星说: **「Aristotle 错了。」** 这不是一个学者书房里的辩论, 是一个 12 岁孩子也能抬头确认的事实。
 
@@ -89,7 +89,7 @@ Copernicus 死后 50 年, 接力棒到了一个完全不同的人手里: 丹麦�
 
 **careful framing**: 现代天文学知道这颗 1572 年的「新星」其实是 **Tycho's supernova (SN 1572)** — 一颗距离地球约 8000-10000 光年的恒星爆炸 (Type Ia 超新星, 现代用 X 射线望远镜还能看到它的残骸) — 不是真正「新生」, 是已存在恒星的死亡爆发。但 1572 年的人不知道这是 supernova (这个词 1934 年 Walter Baade + Fritz Zwicky 才造出来) — 他们看到的就是「新星」, 这个 empirical 事实跟它的现代解释无关。1572 nova 在 17c-19c 一直被叫「Tycho's Star」(第谷星) — 因为 Brahe 1573 出版的小册子《De nova stella》是当时最系统的观测记录 (J.R. Herrick《The 1572 Supernova: Tycho Brahe's Account》1999 + David H. Clark & F. Richard Stephenson《The Historical Supernovae》1977 是现代天文史 standard sources)。
 
-> Careful framing: modern astronomy knows the 1572 "new star" was actually **Tycho's supernova (SN 1572)** — a stellar explosion ~8,000-10,000 light-years away (Type Ia supernova; X-ray telescopes can still see its remnant today). Not literally new — the death-burst of an existing star. But 1572 observers had no concept of supernovas (the word came in 1934 from Walter Baade and Fritz Zwicky). The empirical fact — a bright new point of light — does not depend on the modern explanation. The 1572 nova was called **"Tycho's Star"** in 17th-19th century because Brahe's 1573 booklet *De nova stella* was the most systematic record (modern sources: J.R. Herrick's *The 1572 Supernova: Tycho Brahe's Account* 1999; David H. Clark and F. Richard Stephenson's *The Historical Supernovae* 1977).
+> Careful framing: modern astronomy knows the 1572 "new star" was actually **Tycho's supernova (SN 1572)** — a stellar explosion ~8,000-10,000 light-years away (Type Ia supernova; X-ray telescopes can still see its remnant today). Not literally new — the death-burst of an existing star. But 1572 observers had no concept of supernovas (the word came in 1934 from Walter Baade and Fritz Zwicky). The empirical fact — a bright new point of light — does not depend on the modern explanation. The 1572 nova was called **"Tycho's Star"** in 17th-19th century because Brahe's 1573 booklet De nova stella was the most systematic record (modern sources: J.R. Herrick's The 1572 Supernova: Tycho Brahe's Account 1999; David H. Clark and F. Richard Stephenson's The Historical Supernovae 1977).
 
 1572 nova 不是一个理论辩论, 是一个肉眼能看到的、欧洲所有受过教育的人都得抬头确认的事件。Brahe 1573 年出版的小册子《De nova stella》记录了这次观测, 让他从一个贵族科学爱好者变成欧洲名人。丹麦国王 Frederick II 给他在 Hven 岛 (Copenhagen 跟 Malmö 之间一个小岛) 建了 Uraniborg 天文台 (1576 起), 这是欧洲第一个国家资助的现代天文台, 装备了当时最大、最精密的肉眼观测仪器 — 大墙象限仪、大赤道仪、巨型 sextant。Brahe 在 Hven 工作 20 年, 积累了人类肉眼天文观测的最高精度数据 (角分级别), 这套数据后来落到 Kepler 手里, 改变了整个故事。
 
@@ -109,7 +109,7 @@ Kepler 1571 年出生在德国西南部 Weil der Stadt, Lutheran 家庭, Tübing
 
 1609 年 Kepler 在 Prague 出版《Astronomia Nova》(新天文学), 包含两条「行星运动定律」: 第一定律行星走椭圆轨道, 太阳在一个焦点上; 第二定律行星扫过的面积在等时间里相等 (等面积定律, 解释为什么行星近太阳时跑得快)。1619 年他在 Linz 出版《Harmonice Mundi》(世界的和谐), 加了第三定律: 行星周期的平方跟跟太阳距离的立方成正比。这三条定律到 1670s 还没人完全理解为什么是这样, 直到 Newton 证明它们是万有引力的几何后果 — 这就是为什么 Part 1 的 Lens 1 主角必须等到 Newton 才能闭合。
 
-> 1609, Kepler published *Astronomia Nova* (New Astronomy) in Prague with two laws: planets move in **ellipses** with the Sun at one focus; a planet sweeps equal areas in equal times (so it speeds up near the Sun). 1619, in *Harmonice Mundi*, he added a third: a planet's period squared is proportional to its average distance cubed. Nobody understood WHY these laws held until Newton derived them from gravity 80 years later. That's the bridge to Part 2.
+> 1609, Kepler published Astronomia Nova (New Astronomy) in Prague with two laws: planets move in **ellipses** with the Sun at one focus; a planet sweeps equal areas in equal times (so it speeds up near the Sun). 1619, in Harmonice Mundi, he added a third: a planet's period squared is proportional to its average distance cubed. Nobody understood WHY these laws held until Newton derived them from gravity 80 years later. That's the bridge to Part 2.
 
 Kepler 的人生还有一个 Reformation 阴影必须讲: 他母亲 Katharina Kepler 1615-1621 年在 Württemberg 公国被指控为巫女 (witch), 经过 6 年法律拉锯, Kepler 亲自从 Linz 跑回去给母亲做辩护人, 写了一份 128 页的法律辩护书。她最终被释放但身体已经垮, 1622 年去世。这场审判跟 Lutheran 神学的 Augsburg 信纲、跟 30 年战争前夕的恐慌氛围、跟 Kepler 因为他的 Lutheran 身份在 Catholic Graz 被驱逐过两次等等都纠缠在一起 (Kepler 1600 年到 Prague, 部分原因就是 Catholic 反 Lutheran 的 Graz 政策让他失去了教师职位)。「Kepler 是冷静理性的科学家」这种叙事完全没法装下他实际过的日子 — 他每天在算行星椭圆的同时, 也在给母亲写法律辩护、跟反宗教改革的 Catholic 当局周旋、在 30 年战争里搬家避难。
 
@@ -129,31 +129,31 @@ Galileo Galilei 1564 年 2 月 15 日生在 Pisa (跟 Shakespeare、Marlowe 同�
 
 Padua 的 Galileo 不是后世以为的「天文学家」, 他主要做**力学** (mechanics): 落体加速度、抛物线弹道、单摆等时性、斜面实验。这是工程学跟物理学的交叉, 在威尼斯特别有市场 — 威尼斯军工厂 Arsenale 是欧洲最大的造船工坊, 弹道、起重、滑轮都是真金白银的应用。Pamela Smith《The Body of the Artisan》(2004) 强调一个被低估的视角: 17 世纪「科学」很大一部分长在**工匠经验** (artisanal knowledge) 上 — 造船工、镜匠、铸炮师、钟表匠的 hands-on 知识, 不是大学经院哲学派生的。Galileo 在 Padua 自己开了一个仪器工坊, 卖军用 sector (一种比例计算尺), 也卖给学生上课用, 这是他工资以外的正经收入。
 
-> The Padua-era Galileo was NOT primarily an astronomer. He worked on **mechanics**: falling bodies, projectile arcs, pendulum timing, inclined planes. This was engineering-physics, and Venice — home of the **Arsenale**, Europe's biggest shipyard — paid well for it. Pamela Smith's *The Body of the Artisan* (2004) shows how much of 17th-century "science" actually grew out of **artisanal knowledge** — shipwrights, lens-grinders, cannon-makers, clockmakers with hands-on skills, not university scholastic philosophy. Galileo ran his own instrument shop in Padua selling military sectors (calculating tools) and teaching aids — a real second income.
+> The Padua-era Galileo was NOT primarily an astronomer. He worked on **mechanics**: falling bodies, projectile arcs, pendulum timing, inclined planes. This was engineering-physics, and Venice — home of the **Arsenale**, Europe's biggest shipyard — paid well for it. Pamela Smith's The Body of the Artisan (2004) shows how much of 17th-century "science" actually grew out of **artisanal knowledge** — shipwrights, lens-grinders, cannon-makers, clockmakers with hands-on skills, not university scholastic philosophy. Galileo ran his own instrument shop in Padua selling military sectors (calculating tools) and teaching aids — a real second income.
 
-1608 年秋, 一件荷兰的事改变了一切。荷兰 Middelburg 镜匠 **Hans Lippershey** 1608 年 9 月向荷兰共和国总督申请「望远镜」专利 (荷兰语 *kijker*, 意思是「看远的东西」), 专利没批 (审议认为该装置太容易复制), 但消息几个月内就通过商人、外交官、同行信件传遍欧洲。1609 年 5 月, Galileo 在 Padua 听到这个消息 — 他没看到原物, 但听了原理描述后, 几天内自己做出了一个 3 倍放大率的版本, 几个月内做到 8 倍, 1609 年底做到 20 倍, 1610 年初做到 30 倍。他的镜片磨工不仅借鉴了 Murano 玻璃工艺 (威尼斯特产), 还自己优化了曲率, 这是 artisanal 工坊背景直接转成科学突破的标准案例。
+1608 年秋, 一件荷兰的事改变了一切。荷兰 Middelburg 镜匠 **Hans Lippershey** 1608 年 9 月向荷兰共和国总督申请「望远镜」专利 (荷兰语 kijker, 意思是「看远的东西」), 专利没批 (审议认为该装置太容易复制), 但消息几个月内就通过商人、外交官、同行信件传遍欧洲。1609 年 5 月, Galileo 在 Padua 听到这个消息 — 他没看到原物, 但听了原理描述后, 几天内自己做出了一个 3 倍放大率的版本, 几个月内做到 8 倍, 1609 年底做到 20 倍, 1610 年初做到 30 倍。他的镜片磨工不仅借鉴了 Murano 玻璃工艺 (威尼斯特产), 还自己优化了曲率, 这是 artisanal 工坊背景直接转成科学突破的标准案例。
 
-> Autumn 1608, a Dutch event changed everything. **Hans Lippershey**, a lens-grinder in Middelburg, applied for a patent on a "looker" (Dutch *kijker*) — a tube with two lenses that magnified distant objects. The patent was denied (too easy to copy), but news spread across Europe in months through merchants, diplomats, letters. May 1609, Galileo in Padua heard of it. He never saw the Dutch original. From the description alone, he built a 3x model in days, 8x in weeks, 20x by year's end, 30x by early 1610. His lens-grinding drew on Venice's Murano glass tradition AND his own curvature improvements — pure artisanal-to-science transfer.
+> Autumn 1608, a Dutch event changed everything. **Hans Lippershey**, a lens-grinder in Middelburg, applied for a patent on a "looker" (Dutch kijker) — a tube with two lenses that magnified distant objects. The patent was denied (too easy to copy), but news spread across Europe in months through merchants, diplomats, letters. May 1609, Galileo in Padua heard of it. He never saw the Dutch original. From the description alone, he built a 3x model in days, 8x in weeks, 20x by year's end, 30x by early 1610. His lens-grinding drew on Venice's Murano glass tradition AND his own curvature improvements — pure artisanal-to-science transfer.
 
 1609 年冬到 1610 年 1 月, Galileo 把望远镜对准夜空, 看到了三件以前没人看到的事。月球表面有山、有谷、有阴影投射 — 不是 Aristotelian 完美光滑天体。木星周围有四颗小亮点, 它们每晚位置不同, 几周观测后 Galileo 确认它们是**绕木星转的卫星** — 这是地心说的直接反例 (有天体不绕地球转就存在)。银河 (Milky Way) 不是一片云, 是数不清的暗淡恒星的集合 — 宇宙比 Aristotle 预想的大得多。1610 年 3 月, Galileo 把这些观测写成一本 60 页拉丁小书《Sidereus Nuncius》(星界使者) , 在威尼斯印刷, 印了 550 本, 几周内卖光, 整个欧洲学术圈震动。
 
-> Winter 1609 to January 1610, Galileo aimed his telescope at the night sky and saw three things nobody had seen. The Moon had **mountains, valleys, shadows** — not Aristotle's perfect smooth heavenly body. Jupiter had **four small lights** that changed position each night — moons orbiting Jupiter, meaning some objects in the universe orbit something other than Earth (a direct hit on geocentrism). The Milky Way was not a cloud but **countless dim stars** — the universe was vastly bigger than Aristotle imagined. March 1610, Galileo wrote it up as a 60-page Latin booklet, *Sidereus Nuncius* (Starry Messenger), printed 550 copies in Venice, sold out in weeks. Europe's intellectual world shook.
+> Winter 1609 to January 1610, Galileo aimed his telescope at the night sky and saw three things nobody had seen. The Moon had **mountains, valleys, shadows** — not Aristotle's perfect smooth heavenly body. Jupiter had **four small lights** that changed position each night — moons orbiting Jupiter, meaning some objects in the universe orbit something other than Earth (a direct hit on geocentrism). The Milky Way was not a cloud but **countless dim stars** — the universe was vastly bigger than Aristotle imagined. March 1610, Galileo wrote it up as a 60-page Latin booklet, Sidereus Nuncius (Starry Messenger), printed 550 copies in Venice, sold out in weeks. Europe's intellectual world shook.
 
 但《Sidereus Nuncius》的读法不是「Galileo 单独跟教会决战」, 而是一场精心设计的**宫廷职业升级**。书里把木星四颗卫星命名为 **Medicea Sidera** (美第奇之星) — 献给 Florence 美第奇大公 Cosimo II 跟他的三个弟弟。Mario Biagioli《Galileo Courtier》(1993) 详细论证: Galileo 1610 年所有的动作都在精心计算, 目的是从 Padua 的大学教师 (技术工人身份) 升级到 Florence 美第奇宫廷的 **filosofo e matematico primario** (首席哲学家+数学家, 一种贵族-knowledge 中间身份)。结果他成功了 — 1610 年 9 月他离开 Padua, 接受美第奇朝廷职位, 终身固定俸禄 1000 scudi (是 Padua 工资的 5 倍), 不用上课。
 
-> But *Sidereus Nuncius* was NOT a lonely Galileo confronting the Church. It was a carefully designed **career move**. The four Jupiter moons were named **Medicea Sidera** ("Medicean stars") — dedicated to Cosimo II, Grand Duke of Florence, and his three brothers. Mario Biagioli's *Galileo Courtier* (1993) shows every 1610 move was calculated to upgrade Galileo from "Padua university math teacher" (a technical-worker rank) to "**chief philosopher and mathematician** of the Medici court" (a noble-knowledge hybrid rank). It worked. September 1610 he left Padua, took the Medici post, locked in a lifetime salary of 1,000 scudi — five times Padua, no teaching.
+> But Sidereus Nuncius was NOT a lonely Galileo confronting the Church. It was a carefully designed **career move**. The four Jupiter moons were named **Medicea Sidera** ("Medicean stars") — dedicated to Cosimo II, Grand Duke of Florence, and his three brothers. Mario Biagioli's Galileo Courtier (1993) shows every 1610 move was calculated to upgrade Galileo from "Padua university math teacher" (a technical-worker rank) to "**chief philosopher and mathematician** of the Medici court" (a noble-knowledge hybrid rank). It worked. September 1610 he left Padua, took the Medici post, locked in a lifetime salary of 1,000 scudi — five times Padua, no teaching.
 
 这次跳槽表面看起来很成功, 但 Biagioli 的论点是: Galileo **离开了 Padua 的威尼斯保护伞, 走进了 Florence 美第奇朝廷, 而美第奇朝廷在政治上跟罗马教廷紧密绑定**。这个选择在 1610 年看起来是名利双收的明智之举, 但它埋下了 1633 年宗教法庭审判的结构性伏笔 — 当 Galileo 1632 年出版《Dialogue Concerning the Two Chief World Systems》挑战 Ptolemy 跟 Tychonic 系统的时候, 美第奇大公保护他的能力远远不如威尼斯共和国能保护一个 Padua 教授。这是 Part 2 的伏笔, Part 1 不展开, 但 1610 这一步**就是后来悲剧的种子**。
 
-> Surface read: brilliant promotion. Biagioli's argument: Galileo **traded Venice's protection for Medici patronage, and the Medici were politically tied to Rome**. In 1610 this looked like winning. By 1633, when his *Dialogue Concerning the Two Chief World Systems* hit the Inquisition, the Medici Grand Duke could not protect him the way the Venetian Republic could have protected a Padua professor. Part 2 will show that. The seed of his trial was planted in his 1610 victory move. Triumph and trap, same gesture.
+> Surface read: brilliant promotion. Biagioli's argument: Galileo **traded Venice's protection for Medici patronage, and the Medici were politically tied to Rome**. In 1610 this looked like winning. By 1633, when his Dialogue Concerning the Two Chief World Systems hit the Inquisition, the Medici Grand Duke could not protect him the way the Venetian Republic could have protected a Padua professor. Part 2 will show that. The seed of his trial was planted in his 1610 victory move. Triumph and trap, same gesture.
 
 1610 这一年还有一个 Part 1 必须 setup 的人物关系: 罗马有一个年轻的红衣主教叫 **Maffeo Barberini** (1568-1644), 数学跟诗都很懂, 1611 年 4 月 Galileo 访问罗马时, Barberini 写了一首拉丁诗赞美 Galileo 的发现, 两人关系融洽。Barberini 1623 年当选教皇, 名号 **Urban VIII**。1624 年 Galileo 来罗马见他, 他还允许 Galileo 用「假说」方式讨论日心说。这段 1610-1624 的友谊在 1633 完全反转 — Urban VIII 亲自下令 Inquisition 审 Galileo。Stillman Drake《Galileo at Work》(1978) 用编年方式重建了这段关系的崩塌过程, 是 Part 2 的核心。Part 1 只 setup: 1610 时 Galileo 跟未来的教皇是诗友。
 
-> One person Part 1 must set up: Cardinal **Maffeo Barberini** (1568-1644), a Roman noble, mathematically literate, also a published Latin poet. When Galileo visited Rome in April 1611, Barberini wrote him a Latin poem praising the Jupiter moons. They were friendly. Barberini became **Pope Urban VIII** in 1623. In 1624 he allowed Galileo to discuss heliocentrism "as a hypothesis." Then in 1633, Urban VIII personally pushed the Inquisition trial. Stillman Drake's *Galileo at Work* (1978) reconstructs the collapse year by year — that's Part 2's core. Part 1 sets up only this: in 1610, Galileo and the future Pope were poetry friends.
+> One person Part 1 must set up: Cardinal **Maffeo Barberini** (1568-1644), a Roman noble, mathematically literate, also a published Latin poet. When Galileo visited Rome in April 1611, Barberini wrote him a Latin poem praising the Jupiter moons. They were friendly. Barberini became **Pope Urban VIII** in 1623. In 1624 he allowed Galileo to discuss heliocentrism "as a hypothesis." Then in 1633, Urban VIII personally pushed the Inquisition trial. Stillman Drake's Galileo at Work (1978) reconstructs the collapse year by year — that's Part 2's core. Part 1 sets up only this: in 1610, Galileo and the future Pope were poetry friends.
 
 Galileo 1610 这一段 anchor 了几个反 Whig 重点: (1) 望远镜不是 Galileo 发明的, 是荷兰镜匠 Lippershey, Galileo 是**改进者**, 他能改进是因为 Padua artisanal 工坊背景; (2) Galileo 出书目的不是公开挑战教会, 是**朝廷职业升级**, 他用木星卫星给美第奇大公送礼; (3) 1610 时罗马教廷高层 (Barberini) 跟 Galileo 是朋友, 后来的悲剧不是「天主教永恒反科学」, 是 1610-1633 政治环境跟个人关系的具体崩塌; (4) Galileo 的力学工作 (Padua 18 年的真正主业) 比天文学更早奠定现代物理 — 但 Whig 故事只记得望远镜跟审判, 不记得斜面跟单摆。
 
-> Anti-Whig anchors from Galileo 1610: (1) the telescope was a Dutch **lens-grinder's** invention, Galileo improved it via Padua's artisan workshop tradition; (2) *Sidereus Nuncius* was published as a **court career move**, dedicating Jupiter's moons to the Medici, not as confrontation; (3) in 1610, top Vatican figures like Cardinal Barberini were Galileo's **friends** — the 1633 trial was a specific 23-year political collapse, not eternal Catholic anti-science; (4) Galileo's biggest scientific work was actually his **mechanics** (falling bodies, pendulums, projectiles) at Padua, not telescopic astronomy — but the Whig story only remembers the telescope and the trial, not the inclined planes.
+> Anti-Whig anchors from Galileo 1610: (1) the telescope was a Dutch **lens-grinder's** invention, Galileo improved it via Padua's artisan workshop tradition; (2) Sidereus Nuncius was published as a **court career move**, dedicating Jupiter's moons to the Medici, not as confrontation; (3) in 1610, top Vatican figures like Cardinal Barberini were Galileo's **friends** — the 1633 trial was a specific 23-year political collapse, not eternal Catholic anti-science; (4) Galileo's biggest scientific work was actually his **mechanics** (falling bodies, pendulums, projectiles) at Padua, not telescopic astronomy — but the Whig story only remembers the telescope and the trial, not the inclined planes.
 
 ---
 
@@ -177,11 +177,11 @@ Galileo 1610 这一段 anchor 了几个反 Whig 重点: (1) 望远镜不是 Gali
 
 所以 Part 1 的 1610 时空切片其实是这样的: 一个 22 岁的法国农民出身的修士预备生在巴黎学拉丁神学, 他将变成欧洲科学通信的中央枢纽; 一个英国 yeoman 农场上的婴儿还要 33 年才会被早产到一个 1 升的壶里, 他将写《Principia》; 一个 Berlin Academy 的女天文学家拒席事件还要 100 年才会发生, 那时连 Berlin Academy 本身都还不存在 (它 1700 年才成立)。**1610 这个时间点的特别之处是: 它是 Copernicus、Kepler、Galileo 这第一代日心说工作刚刚 take off 的时刻, 同时是后来三 lens 主角的生命都还没展开的时刻**。Part 1 写的是「receiving-end 的世界已经在塑形」— 后人会承担的所有结构性约束 (Academy payroll 排女性、信件网络做枢纽、绝对 monarchy 资助科学), 在 1610 时都还没建好, 但建造过程已经开始。
 
-> So Part 1's 1610 freeze-frame: a 22-year-old peasant-born French novice studying Latin theology in Paris will become Europe's science-letter hub. An English yeoman baby is still 33 years from being born premature into a 1-quart jug — he will write the *Principia*. A Berlin Academy comet-discoverer's denied seat is 100 years away — the Berlin Academy itself doesn't exist yet (founded 1700). What's special about 1610: it's the moment Copernicus-Kepler-Galileo work has just taken off, while none of our lens characters are alive. Part 1 is about **how the world that will receive them is being shaped right now**. The structural constraints they'll face — Academies refusing women on the payroll, letter-networks as central hubs, absolute monarchies funding science — none of those exist yet in 1610. But the building has started.
+> So Part 1's 1610 freeze-frame: a 22-year-old peasant-born French novice studying Latin theology in Paris will become Europe's science-letter hub. An English yeoman baby is still 33 years from being born premature into a 1-quart jug — he will write the Principia. A Berlin Academy comet-discoverer's denied seat is 100 years away — the Berlin Academy itself doesn't exist yet (founded 1700). What's special about 1610: it's the moment Copernicus-Kepler-Galileo work has just taken off, while none of our lens characters are alive. Part 1 is about **how the world that will receive them is being shaped right now**. The structural constraints they'll face — Academies refusing women on the payroll, letter-networks as central hubs, absolute monarchies funding science — none of those exist yet in 1610. But the building has started.
 
 Grade 7 anchor: 想象 1610 年 5 月 1 日是一个 Friday afternoon。Padua 的码头工人在装 Galileo 搬家的箱子, Prague 的 Kepler 在第二次校对《Astronomia Nova》的勘误, Paris 修道院里 22 岁的 Mersenne 第一次穿上 Minim 修士的灰袍, Lincolnshire 田里 Newton 的爷爷在赶羊, Saxony 的 Winkelmann 家族还要 60 年才生 Maria。这些人之间没有一个见过另一个, 但他们都在同一根历史链条上, 链条的一端 1610 已经开始动, 另一端 (Newton 1687《Principia》) 要等 77 年。我们的故事从这里展开。
 
-> Grade 7 anchor — imagine May 1, 1610, a Friday afternoon. Padua dockworkers pack Galileo's moving crates. In Prague, Kepler proofreads errata for *Astronomia Nova*. In Paris, 22-year-old Mersenne wears his gray Minim friar's robe for the first time. In a Lincolnshire field, Newton's grandfather herds sheep. In Saxony, the Winkelmann family is still 60 years from having Maria. None of these people will ever meet another. But they're all on the same historical chain. One end (1610) is already moving; the other end (Newton's 1687 *Principia*) is 77 years away. Our story starts here.
+> Grade 7 anchor — imagine May 1, 1610, a Friday afternoon. Padua dockworkers pack Galileo's moving crates. In Prague, Kepler proofreads errata for Astronomia Nova. In Paris, 22-year-old Mersenne wears his gray Minim friar's robe for the first time. In a Lincolnshire field, Newton's grandfather herds sheep. In Saxony, the Winkelmann family is still 60 years from having Maria. None of these people will ever meet another. But they're all on the same historical chain. One end (1610) is already moving; the other end (Newton's 1687 Principia) is 77 years away. Our story starts here.
 
 ---
 
@@ -193,11 +193,11 @@ Part 1 写到 1610 春结束。这一段历史的内部张力是: Copernicus 154
 
 Part 2 (1610-1660s) 会写: Galileo 朝廷悲剧的完整 23 年弧线 (Barberini 友谊 → 1616 第一次 admonition → 1632《Dialogue》→ 1633 审判 → 1642 软禁去世); 30 年战争 (1618-1648) 怎么把欧洲学术地理重新洗牌; **Mersenne 通信网络** 怎么变成战火中的科学连接组织; Descartes 1637《Discourse on the Method》怎么把方法论从神学里拆出来; Royal Society 1660 跟 Académie des Sciences 1666 这两个国家级科学机构怎么诞生。Part 2 是 Lens 2 Mersenne 真正登场的部分。
 
-> Part 2 (1610-1660s) will cover: Galileo's full 23-year court tragedy (Barberini friendship → 1616 first admonition → 1632 *Dialogue* → 1633 trial → 1642 death under house arrest); how the Thirty Years' War (1618-1648) redrew Europe's intellectual geography; how **Mersenne's letter-network** became the science-glue holding Europe together through war; how Descartes's 1637 *Discourse on the Method* peeled methodology away from theology; how the Royal Society (1660) and Académie des Sciences (1666) — Europe's first state science academies — were born. Part 2 is when Lens 2 Mersenne fully enters.
+> Part 2 (1610-1660s) will cover: Galileo's full 23-year court tragedy (Barberini friendship → 1616 first admonition → 1632 Dialogue → 1633 trial → 1642 death under house arrest); how the Thirty Years' War (1618-1648) redrew Europe's intellectual geography; how **Mersenne's letter-network** became the science-glue holding Europe together through war; how Descartes's 1637 Discourse on the Method peeled methodology away from theology; how the Royal Society (1660) and Académie des Sciences (1666) — Europe's first state science academies — were born. Part 2 is when Lens 2 Mersenne fully enters.
 
-Part 3 (1660s-1727) 会写: Newton 出生跟 1665-1666 黑死病期间在 Woolsthorpe 的 *annus mirabilis*; 《Principia Mathematica》1687 出版; Newton 1696 进 Royal Mint 当 Warden 又升 Master, 用同一个分析方法追剑伪币犯送上绞架 (Lens 1 enforcer 这一面); Newton 一生跟炼金术、神学异端、跟 Hooke 跟 Leibniz 的激烈争执; 同时 Maria Winkelmann Kirch 1710 被 Berlin Academy 拒席, 标记新生科学机构的性别排他性 (Lens 3); Mersenne 1648 死后欧洲学术机构化的反讽 — 信件网络让位给 payroll, payroll 默认排女性。Part 3 是 Lens 1 Newton 跟 Lens 3 Maria Kirch 同时登场, 两条线一起把 Scientific Revolution 收束。
+Part 3 (1660s-1727) 会写: Newton 出生跟 1665-1666 黑死病期间在 Woolsthorpe 的 annus mirabilis; 《Principia Mathematica》1687 出版; Newton 1696 进 Royal Mint 当 Warden 又升 Master, 用同一个分析方法追剑伪币犯送上绞架 (Lens 1 enforcer 这一面); Newton 一生跟炼金术、神学异端、跟 Hooke 跟 Leibniz 的激烈争执; 同时 Maria Winkelmann Kirch 1710 被 Berlin Academy 拒席, 标记新生科学机构的性别排他性 (Lens 3); Mersenne 1648 死后欧洲学术机构化的反讽 — 信件网络让位给 payroll, payroll 默认排女性。Part 3 是 Lens 1 Newton 跟 Lens 3 Maria Kirch 同时登场, 两条线一起把 Scientific Revolution 收束。
 
-> Part 3 (1660s-1727) will cover: Newton's birth, his 1665-1666 plague *annus mirabilis* at Woolsthorpe, the *Principia* (1687), and his lesser-known 1696 transfer to the Royal Mint as Warden then Master — where he sent counterfeiters to the gallows using forensic methods (Lens 1's enforcer face). Newton's lifelong tangle with alchemy, theological heresy, and bitter feuds (Hooke, Leibniz). Meanwhile **Maria Winkelmann Kirch's 1710 denial of a Berlin Academy seat** marks the gender-exclusionary structure of the new scientific institutions (Lens 3). After Mersenne's 1648 death, the irony unfolds: letter-networks give way to payrolled academies, and payroll quietly excludes women by default. Part 3 is when Lens 1 Newton and Lens 3 Maria Kirch enter simultaneously, closing the arc.
+> Part 3 (1660s-1727) will cover: Newton's birth, his 1665-1666 plague annus mirabilis at Woolsthorpe, the Principia (1687), and his lesser-known 1696 transfer to the Royal Mint as Warden then Master — where he sent counterfeiters to the gallows using forensic methods (Lens 1's enforcer face). Newton's lifelong tangle with alchemy, theological heresy, and bitter feuds (Hooke, Leibniz). Meanwhile **Maria Winkelmann Kirch's 1710 denial of a Berlin Academy seat** marks the gender-exclusionary structure of the new scientific institutions (Lens 3). After Mersenne's 1648 death, the irony unfolds: letter-networks give way to payrolled academies, and payroll quietly excludes women by default. Part 3 is when Lens 1 Newton and Lens 3 Maria Kirch enter simultaneously, closing the arc.
 
 但 Part 1 在这里停。1610 春, Galileo 收拾箱子, Kepler 校对错字, Mersenne 穿上修士袍, Newton 还没出生, Maria Kirch 还要 60 年。世界正在改变, 但没人知道改成什么样。
 
@@ -207,22 +207,22 @@ Part 3 (1660s-1727) 会写: Newton 出生跟 1665-1666 黑死病期间在 Woolst
 
 ## Anti-Fab Citations (Part 1 主要史料)
 
-1. **Owen Gingerich**, *The Book Nobody Read: Chasing the Revolutions of Nicolaus Copernicus*, Walker & Co. 2004 — 30 年追踪 1543 第一版《De revolutionibus》存世本, 反驳「没人读 Copernicus」的旧论点。
-2. **James Hannam**, *The Genesis of Science: How the Christian Middle Ages Launched the Scientific Revolution*, Regnery 2011 (英国版书名 *God's Philosophers* 2009) — 中世纪大学 + 教会知识基础设施怎么让科学革命成为可能。
-3. **Mario Biagioli**, *Galileo, Courtier: The Practice of Science in the Culture of Absolutism*, University of Chicago Press 1993 — Galileo 1610 朝廷职业升级的微观社会学分析。
-4. **Pamela H. Smith**, *The Body of the Artisan: Art and Experience in the Scientific Revolution*, University of Chicago Press 2004 — 工匠经验跟早期现代科学的交叉, 望远镜、镜片、铸炮、解剖。
-5. **Stillman Drake**, *Galileo at Work: His Scientific Biography*, University of Chicago Press 1978 — Galileo 编年实证生平, Drake 用日记跟手稿重建每月活动, 反对各种英雄化或妖魔化叙事。
+1. **Owen Gingerich**, The Book Nobody Read: Chasing the Revolutions of Nicolaus Copernicus, Walker & Co. 2004 — 30 年追踪 1543 第一版《De revolutionibus》存世本, 反驳「没人读 Copernicus」的旧论点。
+2. **James Hannam**, The Genesis of Science: How the Christian Middle Ages Launched the Scientific Revolution, Regnery 2011 (英国版书名 God's Philosophers 2009) — 中世纪大学 + 教会知识基础设施怎么让科学革命成为可能。
+3. **Mario Biagioli**, Galileo, Courtier: The Practice of Science in the Culture of Absolutism, University of Chicago Press 1993 — Galileo 1610 朝廷职业升级的微观社会学分析。
+4. **Pamela H. Smith**, The Body of the Artisan: Art and Experience in the Scientific Revolution, University of Chicago Press 2004 — 工匠经验跟早期现代科学的交叉, 望远镜、镜片、铸炮、解剖。
+5. **Stillman Drake**, Galileo at Work: His Scientific Biography, University of Chicago Press 1978 — Galileo 编年实证生平, Drake 用日记跟手稿重建每月活动, 反对各种英雄化或妖魔化叙事。
 
 > Secondary anchors: Westfall (Newton biography), Caspar (Kepler biography), Christianson (Brahe biography), Heilbron (Galileo biography). Will appear in Part 2 and Part 3 as those characters take center stage.
 
 ---
 
-*End of Part 1. Word count target: ~400-500 lines markdown. Next: Part 2 staging file covers 1610-1660s.*
+End of Part 1. Word count target: ~400-500 lines markdown. Next: Part 2 staging file covers 1610-1660s.
 # Scientific Revolution 1543-1687 · Part 2 (1610-1648)
 
 **Audience**: Grade 7 + AP World
 **Time window**: 1610 Galileo telescope → 1633 Galileo trial → 1637 Descartes《Discours》→ 1648 Mersenne dies + Westphalia
-**Lens 2 主角**: **Mersenne (lonely-mediator)** — 22 → 60 岁, 通信网建立期 ⭐⭐⭐
+**Lens 2 主角**: **Mersenne (lonely-mediator)** — 22 → 60 岁, 通信网建立期 
 **Newton**: 还没出生 (1642 圣诞节出生 — Part 2 末尾)
 **Maria Kirch**: 还要 22 年才出生 (1670)
 
@@ -236,7 +236,7 @@ Part 3 (1660s-1727) 会写: Newton 出生跟 1665-1666 黑死病期间在 Woolst
 
 Galileo took his telescope and pointed it at Jupiter in 1610. He saw 4 moons — Io, Europa, Ganymede, Callisto. But he did one extra clever thing: he named them **Medicea Sidera (Medicean Stars)**, dedicating them to Cosimo II de' Medici, Grand Duke of Tuscany.
 
-**反 Whig 钢筋** ⭐:
+**反 Whig 钢筋** :
 The Whiggish version 说「Galileo 是孤独天才 vs 教会」 — 错。
 真实版本: Galileo 是非常会玩政治的 court mathematician。他用 Medicean Stars 这一招换到 Florence 的 court 职位 + 终身年薪 1000 scudi (托斯卡纳金币, 当时一个熟练工匠年收入 ~50 scudi — Galileo 的 court 薪资是工匠 20 倍)。
 
@@ -250,7 +250,7 @@ This is a key anti-Whig point: Galileo voluntarily moved CLOSER to Church power 
 
 1616.2.26 Cardinal Robert Bellarmine — 当时罗马教廷最有学问的神学家 — 把 Galileo 叫过去, 给他一个口头警告: 不要「持有 (hold)」或「教授 (teach)」哥白尼日心说 as physical truth — 但 as a mathematical hypothesis 可以讨论。
 
-**careful framing** ⭐ (Maurice Finocchiaro《Retrying Galileo》2005):
+**careful framing**  (Maurice Finocchiaro《Retrying Galileo》2005):
 - 这不是「禁令 (ban)」 — Galileo 没有被禁止做天文学
 - 这不是「火刑威胁」 — Bellarmine 没有威胁烧死 Galileo
 - 这是「教学限制」 — 你可以算, 不能宣称这是物理真理
@@ -299,7 +299,7 @@ This was the political detonator. Not «science vs religion» — it was «clien
 - Galileo 在 1633.6.22 公开 abjuration (放弃) — 跪下念誓词「我 Galileo Galilei 自由地放弃 (abjure) ...」
 - 「Eppur si muove (它仍在动)」— 这句话 没有 同时代史料, 是 1757 年 Giuseppe Baretti 的英文书里第一次出现的, 大概率是后世传说
 
-**careful framing** ⭐:
+**careful framing** :
 - 不是火刑 — Bruno 1600 才是火刑
 - 不是物理酷刑 — territio 是程序里的口头威胁, 没有实际执行
 - 不是终身监狱 — 是软禁 (house arrest), 在他自己的 Arcetri 别墅
@@ -332,7 +332,7 @@ Maria Celeste 给爸爸: 缝衣服, 做药 (修道院药房), 写信开导 (爸�
 
 这本书走私出意大利 — 1638 在 Leiden (荷兰新教共和国) 出版, by Elsevier (没错, 就是后来 21c 那个学术出版巨头的祖宗 House of Elzevir)。
 
-**Cross-lens micro-detail** ⭐:
+**Cross-lens micro-detail** :
 Galileo 1633-1638 软禁中写《Discorsi》 — 跟 Tang-Song Su Shi 1080 黄州被贬中写《赤壁赋》/《念奴娇》 是同一个 pattern: **perpetrator-actor 系统打压 lonely-mediator → lonely-mediator 在被打压期间产出最重要的作品**。
 - Galileo: court patron Urban VIII 翻脸 → Arcetri 软禁 → 写《Discorsi》
 - Su Shi: 朝廷新党打压 → 黄州贬谪 → 写《赤壁赋》
@@ -354,7 +354,7 @@ René Descartes 1596.3.31 出生在 La Haye en Touraine (法国中部), 母亲 1
 
 10 岁 (1606) 送进 **Collège Royal Henry-Le-Grand at La Flèche** — 法国当时最好的 Jesuit (耶稣会) 学校, 专门给法国贵族子弟读的。
 
-**反 Whig 钢筋** ⭐:
+**反 Whig 钢筋** :
 现代叙事爱说「Descartes 反对宗教, 用 reason 取代 faith」 — 错。
 真实: Descartes 一辈子是天主教徒, 受最好的 Jesuit 教育, 他的哲学是 **想给 天主教信仰一个更稳的逻辑地基**, 不是要推翻信仰。
 
@@ -372,7 +372,7 @@ Side note: **Marin Mersenne** 比 Descartes 大 8 岁, 也在 La Flèche — 但
 
 1619 转去 Bavaria (德国南部), 加入 Maximilian I (天主教阵营) 的军队。1619.11.10 在 Ulm (现代德国巴伐利亚州) 一个 stove-heated room (有炉子的暖房) 里, 他做了 **3 个梦**:
 
-**1619 stove-room 3 dreams** ⭐ (反 Whig 关键):
+**1619 stove-room 3 dreams**  (反 Whig 关键):
 - 梦 1: 强风把他吹向一个教堂
 - 梦 2: 雷声 + 火花充满房间
 - 梦 3: 一本字典 + 一首拉丁诗 「Quod vitae sectabor iter? (我应该走人生哪条路?)」
@@ -387,7 +387,7 @@ Descartes 自己解读这 3 个梦: 这是上帝给他的 calling — 他要建�
 
 **Why?** Holland 是当时欧洲最开放的出版市场 — 因为它没有中央权威 (不像法国天主教 / 意大利教皇), 出版商可以印 controversial 的书。Descartes 在荷兰住了 20 年 (1628-1649), 期间换了 24 个住址 — 因为他不想被任何朋友 / 仰慕者 找到打扰他写作。
 
-**反 Whig 钢筋** ⭐:
+**反 Whig 钢筋** :
 天主教 Descartes 选择新教国 Holland 写作 — 这不符合「天主教 vs 新教」的二元叙事。真实: 1600s 学者跨教派流动是常态, religious authority 跟 intellectual authority 分开走。
 
 (类似 Galileo 1638《Discorsi》 在新教 Leiden 出版 — pattern 一样。)
@@ -432,7 +432,7 @@ He died from the cold + the 5 AM schedule, most likely. The poison hypothesis is
 
 ---
 
-## §8 Mersenne 1588-1648 — Lens 2 主角部分 ⭐⭐⭐
+## §8 Mersenne 1588-1648 — Lens 2 主角部分 
 
 **这是 Lens 2 narrative 的核心** — Mersenne 是整个 Scientific Revolution 故事里的「lonely-mediator」典型: 一个没有自己 spotlight 的修士, 用 78 人的通信网把分散在欧洲各国的科学家连成一个 invisible college (隐形学院)。
 
@@ -501,7 +501,7 @@ Mersenne 不只是 broker — 他自己也做研究:
 Mersenne 1644 提出 一个 list, 猜测 2^p - 1 是素数 for p = 2, 3, 5, 7, 13, 17, 19, 31, 67, 127, 257。
 他猜对了大部分, 错了 p=67 (不是素数) 和 p=257 (不是素数), 漏了 p=61, 89, 107。
 
-**21c 还在用** ⭐:
+**21c 还在用** :
 Mersenne primes 现在是 cryptography (密码学) + 大整数搜索的核心。**GIMPS (Great Internet Mersenne Prime Search)** 是 1996 起跑的志愿计算项目, 2018 年找到 2^82,589,933 - 1 (24,862,048 位数), 是当前已知最大素数。**一个 17 世纪修士 写下的数字 list, 21 世纪密码学 + 区块链 还在用。**
 
 ### 1644 · 帮 Pascal 打 Torricelli 真空实验
@@ -537,7 +537,7 @@ Mersenne 死后, 他的通信网 短暂瘫痪 — Pascal / Descartes (1650 死) 
 
 18 年后在巴黎正式化为 **Académie des Sciences** (1666 成立, by Colbert under Louis XIV)。
 
-**反 Whig 关键** ⭐:
+**反 Whig 关键** :
 - Mersenne 是 Minim Order 修士 — 终身天主教神职人员
 - Mersenne 是 17c 欧洲科学最关键的 broker
 - 「教会 vs 科学」单一叙事 在 Mersenne 这里 完全 不成立
@@ -557,12 +557,12 @@ The Mersenne model was unrepeatable as personal practice — it took an institut
 
 1618-1648 三十年战争, 欧洲死 ~ **800 万 (8M)**, 大部分是德语区。
 
-**careful framing** ⭐:
+**careful framing** :
 800 万这个数字 不是精确 — 是 1990s 历史人口学 Geoffrey Parker / Peter Wilson 的估算。范围是 4-8M 平民死亡 + 1-2M 士兵阵亡。一些早期估算 (19c) 高达 12M, 现代倾向 4-8M。
 
 德意志地区人口在战争中下降 30-40% (某些地区如波美拉尼亚 / 黑森 高达 50%)。
 
-#### 1631.5.20 Magdeburg 屠城 — 让数字有脸 ⭐
+#### 1631.5.20 Magdeburg 屠城 — 让数字有脸 
 
 「死 800 万」是抽象数字。让它具体: **1631 年 5 月 20 日 Magdeburg 屠城 (Sack of Magdeburg)**。
 
@@ -574,7 +574,7 @@ Magdeburg 是 Saxony-Anhalt 北部一个新教 (Lutheran) 大城市, 易北河 (
 
 > May 20, 1631 — the **Sack of Magdeburg**. A Lutheran city of ~35,000 people on the Elbe, second-tier in size in the German lands, under siege since March by the Catholic Imperial Army under Count Tilly. After 2,400 defenders fell, three days of slaughter, rape, and fire killed roughly 25,000 civilians plus 10,000 soldiers and clergy — about 80% of the population (Geoff Mortimer 2018, Peter Wilson 2009 estimates). 90% of the city burned. ~5,000 survivors. Tilly wrote to his patron Maximilian I of Bavaria: "Never was such a victory since the destruction of Jerusalem" — comparing himself to the Roman destroyers of the Second Temple in 70 AD. All of Europe heard.
 
-**Galileo 在 Florence 软禁 1633 之前, 1631 听到 Magdeburg 消息** — 他 1631.7 给朋友 Elia Diodati 的信里写 (现存 *Le Opere di Galileo Galilei* 国家版第 14 卷 letter 2168): 这消息让他「为德意志兄弟流泪」(piange per i fratelli di Germania). Galileo 不是政治人, 但 Magdeburg 这件事大到他个人 letter 里也要提。
+**Galileo 在 Florence 软禁 1633 之前, 1631 听到 Magdeburg 消息** — 他 1631.7 给朋友 Elia Diodati 的信里写 (现存 Le Opere di Galileo Galilei 国家版第 14 卷 letter 2168): 这消息让他「为德意志兄弟流泪」(piange per i fratelli di Germania). Galileo 不是政治人, 但 Magdeburg 这件事大到他个人 letter 里也要提。
 
 **单独 anchor 选项 (Kepler 个人代价)**: Kepler 1626 在 Linz 被围城, 4 岁的女儿 Susanna 因围城期间饥饿 + 麻疹 1626 死 (实际 Kepler 失去多个孩子, 其中 Susanna 6 岁死的说法在传记里有, 具体年龄史料略有出入 — Max Caspar 1948《Kepler》传记给的是 1626 围城后病死)。Kepler 1626.10 给朋友信里写: 「失去孩子的痛 + 失去家的痛 + 失去秩序的痛, 同时来。」 30 年战争对学者个人 + 对城市集体 是 **同一种** 暴力。
 
@@ -713,7 +713,7 @@ Pattern 对照:
 **Audience**: Grade 7 + AP World History
 
 **Lens 主角分布 / Lens Distribution in Part 3**:
-- **Lens 1 (perpetrator-actor)**: **Isaac Newton** — 1643 出生 → 1687《Principia》出版, 44 岁 (this part 主角 ⭐⭐⭐)
+- **Lens 1 (perpetrator-actor)**: **Isaac Newton** — 1643 出生 → 1687《Principia》出版, 44 岁 (this part 主角 )
 - **Lens 2 (lonely-mediator)**: Marin Mersenne 已死 (1648.9.1, Part 2 末) — 但 Royal Society Secretary Henry Oldenburg 接班通信网模式 (institutionalized 形式)
 - **Lens 3 (receiving-end)**: **Maria Kirch** — 1670 Saxony Panitzsch 出生, Part 3 末 17 岁, Lens 3 narrative 在 setup
 
@@ -813,9 +813,9 @@ Elisabetha 嫁 Hevelius 后跟丈夫一起观测 18 年 (1663-1681 高强度观�
 
 **careful framing — 学界争议**: Elisabetha 在《Prodromus》编辑工作中的 **具体 contribution 范围** 学界至今议论. Schiebinger 1989 (pp. 70-78) + Alic 1986 (pp. 121-128) + Ogilvie 1986 (Hevelius entry) 都认: Elisabetha 是 **major editor + co-observer + 1687-1690 唯一执行者**, 没有她书出不来. 但 1690 publication 上 author 是 "Johannes Hevelius" 单独署名 (Elisabetha 在 preface acknowledged 但不是 co-author). 现代 (1989 后) 越来越多文献把她记为 **co-editor 或 even co-author**, 但具体 contribution 比例 (e.g. 多少星是她观测的, 多少校对是她做的) 史料不够 reconstruction — 现存 Hevelius archives 在 Paris Observatory + Hannover Leibniz archives, 1979 后才系统数字化。
 
-> Careful framing — scholarly debate: how much of *Prodromus Astronomiae* (1690) is Elisabetha's work? Schiebinger 1989, Alic 1986, Ogilvie 1986 all credit her as **major editor + co-observer + sole executor 1687-1690**. The book wouldn't exist without her. But 1690 publication credits "Johannes Hevelius" alone — she's acknowledged in the preface, not on the title page. Post-1989 literature increasingly treats her as **co-editor or co-author**, but the exact split (which stars she observed, which she edited) cannot be fully reconstructed from surviving archives at Paris Observatory and the Hannover Leibniz papers.
+> Careful framing — scholarly debate: how much of Prodromus Astronomiae (1690) is Elisabetha's work? Schiebinger 1989, Alic 1986, Ogilvie 1986 all credit her as **major editor + co-observer + sole executor 1687-1690**. The book wouldn't exist without her. But 1690 publication credits "Johannes Hevelius" alone — she's acknowledged in the preface, not on the title page. Post-1989 literature increasingly treats her as **co-editor or co-author**, but the exact split (which stars she observed, which she edited) cannot be fully reconstructed from surviving archives at Paris Observatory and the Hannover Leibniz papers.
 
-#### 1693 Elisabetha 死 — 但观测台还在 ⭐ 关键 narrative bridge
+#### 1693 Elisabetha 死 — 但观测台还在  关键 narrative bridge
 
 **1693.12.22** Elisabetha 死, 46 岁, Danzig. Hevelius 后人 (女儿 Catharina Elisabetha) 继续 maintain Stellaeburgum 观测台到 18 世纪初, 但 instruments 老旧 + 没有持续 funding。
 
@@ -869,7 +869,7 @@ Maria Kirch 跟 Gottfried: 28 年龄差, 18 年合作 (1692-1710), 1702 彗星�
 
 ---
 
-## §12 Newton 1643-1687 — Lens 1 主角部分 ⭐⭐⭐ / Newton 1643-1687: The Lens 1 Protagonist
+## §12 Newton 1643-1687 — Lens 1 主角部分  / Newton 1643-1687: The Lens 1 Protagonist
 
 ### §12.1 童年 1643-1661 / Childhood 1643-1661
 
@@ -974,7 +974,7 @@ Newton 1668 自己磨镜 + 自己造了第一台 **reflecting telescope** (反�
 
 **最 honest 的 framing**: 这一句 19c 当 Newton 谦逊典范, 21c 学者注意到 Hooke 身材矮小驼背 + 当时 Newton-Hooke 关系正在恶化 — Newton 此句可能有 sarcasm。**史料模糊** — Newton 自己没有留下 explicit 注解说明意图, 后人只能从上下文推断。这是 Newton 25 年记仇的中段, 不是和解 — 但「sarcasm」是 21c 主流推测, 不是 1676 信里 explicit 写出的事实。
 
-> Whig myth (19th century reading): "Newton humbly acknowledges his predecessors." Twenty-first century scholars (George Smith ed., *Cambridge Companion to Newton* 2002; Iliffe 2017; Gleick 2003) increasingly read this as **sarcasm**. Hooke was short and hunchbacked (his contemporary John Aubrey wrote "low of stature, very crooked"). The line was written five months into a Newton-Hooke priority fight, mid-way through their 25-year feud. Westfall 1980 stays neutral; Manuel 1968 leans sarcastic but careful. **Honest framing**: Newton left no explicit note about his intent; modern scholars infer from context. The 19th-century humility reading is now in retreat but not dead. Treat as **ambiguous with sarcasm reading currently dominant**.
+> Whig myth (19th century reading): "Newton humbly acknowledges his predecessors." Twenty-first century scholars (George Smith ed., Cambridge Companion to Newton 2002; Iliffe 2017; Gleick 2003) increasingly read this as **sarcasm**. Hooke was short and hunchbacked (his contemporary John Aubrey wrote "low of stature, very crooked"). The line was written five months into a Newton-Hooke priority fight, mid-way through their 25-year feud. Westfall 1980 stays neutral; Manuel 1968 leans sarcastic but careful. **Honest framing**: Newton left no explicit note about his intent; modern scholars infer from context. The 19th-century humility reading is now in retreat but not dead. Treat as **ambiguous with sarcasm reading currently dominant**.
 
 > 引用 / Citation: Manuel《Portrait of Isaac Newton》ch. 7 (1968) + Westfall《Never at Rest》ch. 7 (1980) + George E. Smith ed.《The Cambridge Companion to Newton》(Cambridge UP, 2002) + Rob Iliffe《Priest of Nature》(Oxford, 2017).
 
@@ -996,7 +996,7 @@ Halley 兴奋要看证明. Newton 在堆乱的纸里 **找不到**. (Westfall �
 
 > 引用 / Citation: Westfall《Never at Rest》ch. 10 — 用 Newton + Halley 1684-1687 通信 + Royal Society 会议记录还原.
 
-### §12.4 alchemy + 神学 — 反 Whig 关键 ⭐ / Alchemy and Theology: The Anti-Whig Key
+### §12.4 alchemy + 神学 — 反 Whig 关键  / Alchemy and Theology: The Anti-Whig Key
 
 #### 1670s 起 25 年 alchemy + 神学手稿 — 现存 ~1.3 million 字
 
@@ -1273,13 +1273,13 @@ Lens 3 的故事 不是 「女性后来也加入科学了」. Lens 3 的故事�
 **3 lens**:
 - Newton (system-builder, perpetrator-actor) 1687-1727
 - Mersenne (lonely-mediator, 已死 1648 — 此 part 反思他的网络遗产)
-- **Maria Winkelmann Kirch (receiving-end) 1670-1720 ⭐⭐⭐ Part 4 主角**
+- **Maria Winkelmann Kirch (receiving-end) 1670-1720  Part 4 主角**
 
 ---
 
 ## §16 Newton 1687-1727 后期 — system-builder 的复杂晚年
 
-### §16.0 1693 The Black Year — 50 岁 Newton 精神崩溃 ⭐ Lens 1 中段 critical
+### §16.0 1693 The Black Year — 50 岁 Newton 精神崩溃  Lens 1 中段 critical
 
 #### 1687-1693 之间: Principia 之后 Newton 在 Cambridge 的孤立期
 
@@ -1347,9 +1347,9 @@ Pepys 收到信后非常担心, 写信给 Newton 共同朋友 John Millington �
 
 「写《Principia》的 Newton, 6 年后 50 岁突发崩溃, 写信给老朋友 Locke 指控他「想用女人陷害我」 — 完全 paranoid delusion. Newton 不是「不会犯错的天才」, 是有 chronic 心理压力 + 长期化学品暴露 + 25 年双重生活的 50 岁中年人. **Black Year 不是污点也不是悲剧 — 是 Lens 1 perpetrator-actor 自己付出的代价之一**。后来 Newton 1696 在 Mint 把 28 + 伪币犯送上绞架时, 那个 systematic + relentless 的执行力, 跟 1693 崩溃后给 Pepys 写绝望信的 Newton 是同一个人。」
 
-> Crucial Lens 1 anchor: the man who wrote *Principia* fell apart six years later. At 50 he wrote unhinged letters to his oldest friends, accusing John Locke of "endeavouring to embroil me with women" — pure paranoid delusion. He wasn't "the genius who never broke." He was a 50-year-old with chronic anxiety, chemical exposure, and 25 years of religious double-life — who broke for three months, recovered, and then sent 28 counterfeiters to the gallows. The same man.
+> Crucial Lens 1 anchor: the man who wrote Principia fell apart six years later. At 50 he wrote unhinged letters to his oldest friends, accusing John Locke of "endeavouring to embroil me with women" — pure paranoid delusion. He wasn't "the genius who never broke." He was a 50-year-old with chronic anxiety, chemical exposure, and 25 years of religious double-life — who broke for three months, recovered, and then sent 28 counterfeiters to the gallows. The same man.
 
-> 引用 / Citation: Frank E. Manuel,《A Portrait of Isaac Newton》(Harvard, 1968) ch. 9. Richard Westfall,《Never at Rest》(Cambridge, 1980) ch. 11. Rob Iliffe,《Priest of Nature》(Oxford, 2017) ch. 8. Newton 1693.9.13 给 Pepys 信 + 1693.9.16 给 Locke 信原文现存 Pepys archive (Magdalene College Cambridge) + Bodleian Library Locke MSS。Spargo & Pounds, "Newton's Derangement of the Intellect: New Light on an Old Problem", *Notes and Records of the Royal Society* 34 (1979) — Newton hair sample mercury analysis。
+> 引用 / Citation: Frank E. Manuel,《A Portrait of Isaac Newton》(Harvard, 1968) ch. 9. Richard Westfall,《Never at Rest》(Cambridge, 1980) ch. 11. Rob Iliffe,《Priest of Nature》(Oxford, 2017) ch. 8. Newton 1693.9.13 给 Pepys 信 + 1693.9.16 给 Locke 信原文现存 Pepys archive (Magdalene College Cambridge) + Bodleian Library Locke MSS。Spargo & Pounds, "Newton's Derangement of the Intellect: New Light on an Old Problem", Notes and Records of the Royal Society 34 (1979) — Newton hair sample mercury analysis。
 
 ### §16.1 1689 Convention Parliament — Cambridge 议员
 
@@ -1486,7 +1486,7 @@ Voltaire (法国哲人) 1727.3 正在 London 流亡, 亲眼见 Newton 国葬。�
 
 ---
 
-## §17 Maria Winkelmann Kirch 1670-1720 — Lens 3 receiving-end 主角 ⭐⭐⭐
+## §17 Maria Winkelmann Kirch 1670-1720 — Lens 3 receiving-end 主角 
 
 ### §17.0 为什么 Maria Kirch 是 Lens 3 主角?
 
@@ -1566,7 +1566,7 @@ Gottfried Kirch 1700.7 任 Berlin Academy 第一任 astronomer + 编 calendar (�
 
 Gottfried 月薪 500 thaler (银币, 当时柏林一个工匠年薪约 100-150 thaler, 所以 500/月 = 中产阶级)。Maria 没有 official 职位 — 她是 "astronomer's wife", 但实际上半数观测都是她做的。
 
-### §17.3 1702.4.21 彗星发现 ⭐ Lens 3 核心时刻
+### §17.3 1702.4.21 彗星发现  Lens 3 核心时刻
 
 #### 那一夜
 

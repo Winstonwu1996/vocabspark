@@ -409,7 +409,7 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 
 **He** won the gamble.
 
-##### 1519 — Arrival in Mexico + Burning the Ships
+##### 1519 — Arrival in Mexico + Scuttling the Ships
 
 **February 1519 — Cortés arrived at Yucatán** —
 **In March he fought local people in Tabasco** — won — and was given **20 enslaved local women** —
@@ -419,8 +419,8 @@ After 1660  Full trans-Atlantic slave trade system consolidated
 **Without her — Cortés almost certainly could not have conquered the Aztecs** (see her section below).
 
 **In July 1519 — Cortés founded the colony of Vera Cruz on the Gulf coast** —
-**He did something** crazy: **he burned his own ships** —
-**All 11 ships** — **burned** —
+**He did something** crazy: **he scuttled or ran aground his own ships** —
+**All 11 ships** — **scuttled or beached** —
 **To leave his men** with no way back —
 **They could only **go inland into Mexico + conquer + die** —
 **This is** one of the most famous "burn the boats" moves in military history —
@@ -2331,7 +2331,7 @@ But **U.S. textbooks partly still lean this way**.
 1514        Bartolomé at age 30 — reads Sirach passage, conversion
 1517-1518   Cortés at age 33 reaches Cuba
 1519.2      Cortés departs Cuba with 11 ships + 500 men
-1519.7      Cortés burns his ships at Vera Cruz
+1519.7      Cortés scuttles or beaches his ships at Vera Cruz
 1519.11.8   Cortés meets Moctezuma
 1520.6.30   Noche Triste — Cortés retreats
 1521.5-8    Tenochtitlán siege 80 days + smallpox

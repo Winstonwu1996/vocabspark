@@ -39,7 +39,7 @@
 
 ### 跨 Topic 衔接预告
 
-* **Tang-Song 中国**——日本 607-894 年持续派遣唐使，直接输入律令制、汉字、佛教、建筑；Heian 文学的假名字母（*Kana*）从汉字草书演变而来。同一段时间里，唐朝从大陆向外辐射，日本是最主动的接收端之一。
+* **Tang-Song 中国**——日本 607-894 年持续派遣唐使，直接输入律令制、汉字、佛教、建筑；Heian 文学的假名字母（Kana）从汉字草书演变而来。同一段时间里，唐朝从大陆向外辐射，日本是最主动的接收端之一。
 * **蒙古 Topic（Mongol Empire）**——1274 + 1281 年忽必烈的征日是蒙古帝国扩张中最著名的两次失败；北条时宗这个 lens 直接衔接 Mongol Topic 的东亚战役。
 * **Byzantine Topic**——政子 1221 年演讲跟拜占庭狄奥多拉（Theodora）532 年 Nika 暴动演讲并列：两个女性在政权最危险的时刻开口，各自改变了历史走向。
 
@@ -79,7 +79,7 @@
 
 ### 794 年迁都平安京——新首都的政治含义
 
-784 年，光仁天皇之子桓武天皇（Kanmu Tennō，737-806）先把首都从奈良迁到长冈京（Nagaokakyō）。迁都 10 年后因灾异频发，841 年再迁到平安京（Heiankyō）——即今日京都。
+784 年，光仁天皇之子桓武天皇（Kanmu Tennō，737-806）先把首都从奈良迁到长冈京（Nagaokakyō）。迁都 10 年后因灾异频发，794 年再迁到平安京（Heiankyō）——即今日京都。
 
 为什么要离开奈良？历史学界的主流解读（Farris 1998《Sacred Texts and Buried Treasures》；古瀬奈津子 2003）是：奈良寺院经济规模庞大，僧侣势力（特别是法相宗、华严宗大寺）深度介入政治，765-770 年道鏡（Dōkyō）事件——一个僧侣差点通过宇佐八幡神谕取得天皇宝座——让皇室意识到必须物理切断与寺院的地理连结。
 
@@ -242,18 +242,18 @@ Heian 时代的另一面是不断扩张的「武士（Samurai）」阶层——�
 
 ---
 
-*主要参考文献（anti-fab 底稿）*
+主要参考文献（anti-fab 底稿）
 
-- Ivan Morris, *The World of the Shining Prince: Court Life in Ancient Japan*, 1964
-- Helen McCullough, *Classical Japanese Prose: An Anthology*, Stanford UP, 1990
-- Jeffrey Mass, *Warrior Government in Early Medieval Japan*, Yale UP, 1989
-- Paul Varley, *Japanese Culture*, 4th ed., U of Hawaii P, 2000
-- George Sansom, *Japan: A Short Cultural History*, Stanford UP, 1931; *A History of Japan to 1334*, Stanford UP, 1958
-- Donald Shively & William McCullough (eds.), *The Cambridge History of Japan*, vol. 2, Cambridge UP, 1999
-- William Wayne Farris, *Sacred Texts and Buried Treasures*, U of Hawaii P, 1998
-- Royall Tyler (trans.), *The Tale of Genji*, Viking, 2001
-- Mark Hudson, *Ruins of Identity: Ethnogenesis in the Japanese Islands*, U of Hawaii P, 1999
-- Edwin Reischauer, *Ennin's Travels in T'ang China*, Ronald Press, 1955
+- Ivan Morris, The World of the Shining Prince: Court Life in Ancient Japan, 1964
+- Helen McCullough, Classical Japanese Prose: An Anthology, Stanford UP, 1990
+- Jeffrey Mass, Warrior Government in Early Medieval Japan, Yale UP, 1989
+- Paul Varley, Japanese Culture, 4th ed., U of Hawaii P, 2000
+- George Sansom, Japan: A Short Cultural History, Stanford UP, 1931; A History of Japan to 1334, Stanford UP, 1958
+- Donald Shively & William McCullough (eds.), The Cambridge History of Japan, vol. 2, Cambridge UP, 1999
+- William Wayne Farris, Sacred Texts and Buried Treasures, U of Hawaii P, 1998
+- Royall Tyler (trans.), The Tale of Genji, Viking, 2001
+- Mark Hudson, Ruins of Identity: Ethnogenesis in the Japanese Islands, U of Hawaii P, 1999
+- Edwin Reischauer, Ennin's Travels in T'ang China, Ronald Press, 1955
 # T4 Medieval Japan 794-1603 — Narrative Part 2
 
 > Staging file. Grade 7 Story-First Pedagogy v2.
@@ -264,11 +264,11 @@ Heian 时代的另一面是不断扩张的「武士（Samurai）」阶层——�
 
 ## §6 北条时宗 1251-1268: 出生 + 成为第 8 代执权
 
-1251 年，一个孩子在镰仓（*Kamakura*，今神奈川县）出生。这座城不是日本首都——京都（*Kyōto*）才是天皇（*tennō*）的地方——但镰仓才是真正掌权的地方。
+1251 年，一个孩子在镰仓（Kamakura，今神奈川县）出生。这座城不是日本首都——京都（Kyōto）才是天皇（tennō）的地方——但镰仓才是真正掌权的地方。
 
-孩子的父亲是北条时赖（*Hōjō Tokiyori*，1227-1263），第 5 代执权（*shikken*，"摄政"的武士政权版本）。「执权」这个头衔要解释清楚：它不是将军（*shōgun*），将军是名义上最高军事领袖，执权是将军的行政长官。北条家掌控的是执权职位，所以他们是幕府真正的决策者，却不是最表面的招牌。这层套娃结构——天皇→将军→执权→北条家——是镰仓政治的基本格局，理解了这个，才能理解 1268 年时宗面对蒙古来信时做的选择。
+孩子的父亲是北条时赖（Hōjō Tokiyori，1227-1263），第 5 代执权（shikken，"摄政"的武士政权版本）。「执权」这个头衔要解释清楚：它不是将军（shōgun），将军是名义上最高军事领袖，执权是将军的行政长官。北条家掌控的是执权职位，所以他们是幕府真正的决策者，却不是最表面的招牌。这层套娃结构——天皇→将军→执权→北条家——是镰仓政治的基本格局，理解了这个，才能理解 1268 年时宗面对蒙古来信时做的选择。
 
-时宗生下来就是 this system 的继承人。他的名字「时宗」（*Tokimune*）遵循北条家命名惯例：「时」字代代相传。他从小接受武士（*bushi*）教育——骑射、剑术、汉文学——同时也受到禅宗（*Zen*）的熏陶。禅宗在镰仓武士阶层 13 世纪迅速流行，原因是它的实践性：打坐（*zazen*）不要求大量经典诵读，符合武士的直接行动偏好。这一点之后很重要。
+时宗生下来就是 this system 的继承人。他的名字「时宗」（Tokimune）遵循北条家命名惯例：「时」字代代相传。他从小接受武士（bushi）教育——骑射、剑术、汉文学——同时也受到禅宗（Zen）的熏陶。禅宗在镰仓武士阶层 13 世纪迅速流行，原因是它的实践性：打坐（zazen）不要求大量经典诵读，符合武士的直接行动偏好。这一点之后很重要。
 
 **1263 年，时赖死。时宗 12 岁。**
 
@@ -280,29 +280,29 @@ Heian 时代的另一面是不断扩张的「武士（Samurai）」阶层——�
 
 ### 信来自谁
 
-忽必烈（*Kublai Khan*，1215-1294）是成吉思汗（*Chinggis Khan*）的孙子。成吉思汗 1227 年死——时宗的祖父北条泰时那一代的事。忽必烈 1260 年成为蒙古大汗（*Khagan*），1271 年把他的政权改名「大元」（*Dà Yuán*），今天史书称元朝（*Yuan Dynasty*）。他在位期间完成了灭南宋（1279 年），同时向日本、越南、爪哇、缅甸派兵——一个在四面同时扩张的帝国。
+忽必烈（Kublai Khan，1215-1294）是成吉思汗（Chinggis Khan）的孙子。成吉思汗 1227 年死——时宗的祖父北条泰时那一代的事。忽必烈 1260 年成为蒙古大汗（Khagan），1271 年把他的政权改名「大元」（Dà Yuán），今天史书称元朝（Yuan Dynasty）。他在位期间完成了灭南宋（1279 年），同时向日本、越南、爪哇、缅甸派兵——一个在四面同时扩张的帝国。
 
 这里有一个 Grade 7 值得停下来算的时间感：成吉思汗 1227 年死，忽必烈 1215 年生，他是成吉思汗活着时出生的孙子。时宗 1251 年生，那一年忽必烈 36 岁——一个已经是成熟政治家的中年人。1268 年蒙古使者来到日本时，时宗 17 岁，忽必烈 53 岁。这是一个孙子辈的少年执权，面对一个帝国老人派来的信使。
 
 ### 信的内容
 
-1268 年 1 月，一艘高丽（*Goryeo*，今朝鲜半岛）船带着元朝信使到达日本太宰府（*Dazaifu*，九州北部的行政中心）。信由汉文写成，是蒙古外交的标准格式。
+1268 年 1 月，一艘高丽（Goryeo，今朝鲜半岛）船带着元朝信使到达日本太宰府（Dazaifu，九州北部的行政中心）。信由汉文写成，是蒙古外交的标准格式。
 
-信的语气，今天读来非常清楚地是外交压迫：它称日本为「贵国」（*your honoured country*），但不称日本国王（天皇），而是用「日本国王」这个从蒙古角度创造的称谓——蒙古从不承认日本内部天皇/将军/执权的层级，在他们眼里，日本就是一个需要臣服的「国」。
+信的语气，今天读来非常清楚地是外交压迫：它称日本为「贵国」（your honoured country），但不称日本国王（天皇），而是用「日本国王」这个从蒙古角度创造的称谓——蒙古从不承认日本内部天皇/将军/执权的层级，在他们眼里，日本就是一个需要臣服的「国」。
 
-信的结尾，据《蒙古国牒状》（*Monkoku chōjō*，汉文原件由日本史料保存）载，最后一句实质意思是：「若至此仍不遣使往来，则不得不使用兵力」。日本学者 Conlan 2001 和欧洲蒙古史学者 Sansom 1931 都引用了这封信，措辞是外交劝降，不是立刻宣战，但威胁再清楚不过。
+信的结尾，据《蒙古国牒状》（Monkoku chōjō，汉文原件由日本史料保存）载，最后一句实质意思是：「若至此仍不遣使往来，则不得不使用兵力」。日本学者 Conlan 2001 和欧洲蒙古史学者 Sansom 1931 都引用了这封信，措辞是外交劝降，不是立刻宣战，但威胁再清楚不过。
 
 ### 朝廷 vs 幕府的分裂
 
 这封信引发了日本内部第一次大分歧。
 
-信送到太宰府，太宰府转报镰仓幕府，镰仓幕府转报京都朝廷。于是两套权力机构都要表态——天皇（当时是龟山天皇，*Kameyama Tennō*，在位 1259-1274）和他周围的公家贵族（*kuge*），以及幕府时宗。
+信送到太宰府，太宰府转报镰仓幕府，镰仓幕府转报京都朝廷。于是两套权力机构都要表态——天皇（当时是龟山天皇，Kameyama Tennō，在位 1259-1274）和他周围的公家贵族（kuge），以及幕府时宗。
 
 朝廷一方：有声音主张议和，甚至派遣答复使者，避免战争。这不全是怯懦——公家文化有通过外交和文书处理危机的悠久传统，唐朝-宋朝时代，日本曾经主动派遣唐使学习，对外来文明有过开放的历史。
 
 时宗的选择：完全拒绝。不回信，不派使者。
 
-这里要做一个关键的反 Whig（*anti-Whig*）暂停：
+这里要做一个关键的反 Whig（anti-Whig）暂停：
 
 > **为什么时宗拒绝？不是因为他是「日本民族英雄」。**
 
@@ -316,9 +316,9 @@ Conlan 2001《In Little Need of Divine Intervention》明确指出：时宗的�
 
 1274 年，文永之役——蒙古第一次真的来了，又退了（详见 §8）。
 
-著名的斩使，发生在第一次入侵失败之后：1275 年 9 月，忽必烈再派杜世忠等五名使者前来劝降，时宗下令将他们斩于镰仓的龙之口（*Tatsunokuchi*）。
+著名的斩使，发生在第一次入侵失败之后：1275 年 9 月，忽必烈再派杜世忠等五名使者前来劝降，时宗下令将他们斩于镰仓的龙之口（Tatsunokuchi）。
 
-斩杀外国使者是国际外交史上极其罕见的举动。蒙古的驿站系统（*yam*，见 Mongol Topic cross-ref）正是建立在使者神圣不可侵犯的原则上——这是帝国之间信息传递的基础设施。斩杀使者意味着：不只是拒绝通话，而是摔断了电话机。
+斩杀外国使者是国际外交史上极其罕见的举动。蒙古的驿站系统（yam，见 Mongol Topic cross-ref）正是建立在使者神圣不可侵犯的原则上——这是帝国之间信息传递的基础设施。斩杀使者意味着：不只是拒绝通话，而是摔断了电话机。
 
 时宗为什么这样做？注意时间顺序：第一次入侵已经发生，斩使不是为了阻止战争——战争已经来过了。一种解读：他要彻底堵死朝廷「也许可以议和」的可能性。使者死了，外交渠道物理上切断，镰仓就是唯一的决策者。另一种解读：他 24 岁，刚挺过第一次入侵，需要一个不可撤回的姿态来证明自己不可动摇。
 
@@ -332,9 +332,9 @@ Conlan 2001《In Little Need of Divine Intervention》明确指出：时宗的�
 
 在理解 1274 年入侵之前，要先做一次跨 Topic 的位置感：
 
-忽必烈是 Sorghaghtani（*索尔哈黑塔尼*，约 1190-1252）的儿子，Sorghaghtani 是 Toluiid 一系（Tolui 是成吉思汗第四子）的景教（*Nestorian Christianity*）徒母亲，是把帝国从纯军事扩张转向行政治理的关键人物（Mongol Topic §3）。忽必烈继承的不只是成吉思汗的征服冲动，也继承了 Sorghaghtani 系对「如何统治被征服地区」的制度思考。
+忽必烈是 Sorghaghtani（索尔哈黑塔尼，约 1190-1252）的儿子，Sorghaghtani 是 Toluiid 一系（Tolui 是成吉思汗第四子）的景教（Nestorian Christianity）徒母亲，是把帝国从纯军事扩张转向行政治理的关键人物（Mongol Topic §3）。忽必烈继承的不只是成吉思汗的征服冲动，也继承了 Sorghaghtani 系对「如何统治被征服地区」的制度思考。
 
-1274 年，忽必烈已经完成灭南宋战争的大半工程（南宋 1279 年才正式灭亡）。日本入侵的时间选择，与南宋战争叠加——这意味着他是在同时打两个方向，而对日本方向，他大量使用了高丽（*Goryeo*）作为跳板：高丽早在 1259 年就向蒙古称臣，高丽人提供船只、粮草、向导、部分兵力。
+1274 年，忽必烈已经完成灭南宋战争的大半工程（南宋 1279 年才正式灭亡）。日本入侵的时间选择，与南宋战争叠加——这意味着他是在同时打两个方向，而对日本方向，他大量使用了高丽（Goryeo）作为跳板：高丽早在 1259 年就向蒙古称臣，高丽人提供船只、粮草、向导、部分兵力。
 
 这是 Mongol 帝国到达其地理能力边界的一次延伸：草原骑兵的核心优势是陆地机动性，海战从来不是蒙古的强项。
 
@@ -342,27 +342,27 @@ Conlan 2001《In Little Need of Divine Intervention》明确指出：时宗的�
 
 1274 年，蒙古-高丽联军出发。关于人数，历史文献有分歧：
 
-- 《元史》（*Yuan Shi*，元朝官方史书，1370 年编）记载「忻都」（指挥官 Khindun/Hindun）率军 15,000-25,000；
-- 《高丽史》（*Goryeo Sa*，高丽官方史书，15 世纪编）记载合计约 33,000；
+- 《元史》（Yuan Shi，元朝官方史书，1370 年编）记载「忻都」（指挥官 Khindun/Hindun）率军 15,000-25,000；
+- 《高丽史》（Goryeo Sa，高丽官方史书，15 世纪编）记载合计约 33,000；
 - Turnbull 2008《The Mongol Invasions of Japan》用 25,000-30,000 作为较稳健的估计，配 900 艘船左右。
 
 **Careful framing**: 数字分歧来自史书编写时间（均在入侵后数十年到百年）和政治立场（各方都有夸大或缩小的动机）。Grade 7 读者用「约 25,000-30,000 人，近 900 艘船」即可，不用假装精确。
 
-1274 年 10 月，联军从合浦（*Happo*，今韩国马山）出发，经对马岛（*Tsushima*）、壹岐岛（*Iki*）——两岛守军被迅速击溃——在博多湾（*Hakata Bay*，今福冈市）登陆。
+1274 年 10 月，联军从合浦（Happo，今韩国马山）出发，经对马岛（Tsushima）、壹岐岛（Iki）——两岛守军被迅速击溃——在博多湾（Hakata Bay，今福冈市）登陆。
 
 ### 你从没见过这种打法
 
-这是日本武士（*bushi*）第一次遭遇蒙古式战争。
+这是日本武士（bushi）第一次遭遇蒙古式战争。
 
 日本武士战争有一套礼仪：双方武将先互报名号，一对一单挑，弓马之间有规则。这套传统有真实的军事逻辑——11-12 世纪日本内部战争确实是小规模武士对决——但到了 13 世纪，在蒙古人面前，这套规则变成了灾难。
 
 蒙古军队的战法：
 
-**集团战术（*collective tactics*）**: 千户（*minhan*）编制下，数百人同步移动，弓手轮替，长矛兵掩护。日本武士冲过去单挑，迎接他的是整排箭雨。
+**集团战术（collective tactics）**: 千户（minhan）编制下，数百人同步移动，弓手轮替，长矛兵掩护。日本武士冲过去单挑，迎接他的是整排箭雨。
 
-**火器——铁炮（*tetsuhau*，てつはう）**: 这是 1274 年战场最让日本武士错愕的武器。「铁炮」不是后来明朝的火绳枪，而是一种铁壳炸弹，填入火药和铁片，点燃后抛掷，爆炸时产生声响、火光、碎片。
+**火器——铁炮（tetsuhau，てつはう）**: 这是 1274 年战场最让日本武士错愕的武器。「铁炮」不是后来明朝的火绳枪，而是一种铁壳炸弹，填入火药和铁片，点燃后抛掷，爆炸时产生声响、火光、碎片。
 
-今天我们有视觉证据：《蒙古袭来绘词》（*Mōko Shūrai Ekotoba*，「蒙古来袭绘画记录」，13 世纪末绘制）记录了这场战争，其中有描绘铁炮爆炸的画面——空中圆球，火焰喷射，武士的马匹受惊倒地。
+今天我们有视觉证据：《蒙古袭来绘词》（Mōko Shūrai Ekotoba，「蒙古来袭绘画记录」，13 世纪末绘制）记录了这场战争，其中有描绘铁炮爆炸的画面——空中圆球，火焰喷射，武士的马匹受惊倒地。
 
 **Careful framing**: Conlan 2001 详细分析了《蒙古袭来绘词》的史料局限：这幅绘卷是战后绘制，部分画面是为了颂扬参战武士的英勇，有夸张成分；绘词中某些场景描绘的是赞助者本人的战功，存在个人宣传成分。铁炮确实存在（考古出土有实物），但其在战场上的决定性作用，比绘词描绘的可能要小一些。
 
@@ -370,21 +370,21 @@ Conlan 2001《In Little Need of Divine Intervention》明确指出：时宗的�
 
 ### 第一次台风与撤退
 
-博多湾战斗持续了约一整天。日本守军节节后退，退守到大宰府（*Dazaifu*）防线——这是九州北部最重要的行政和军事中心，建于 7 世纪，有古代防御工事。
+博多湾战斗持续了约一整天。日本守军节节后退，退守到大宰府（Dazaifu）防线——这是九州北部最重要的行政和军事中心，建于 7 世纪，有古代防御工事。
 
-当晚发生了蒙古史书和日本史书都记录的事：台风（*taifū*）。
+当晚发生了蒙古史书和日本史书都记录的事：台风（taifū）。
 
 一场突如其来的风暴打入博多湾，蒙古-高丽舰队锚泊在湾内，船只相互碰撞，部分沉没，部分漂散。联军指挥官判断继续留在湾内危险，下令撤退，返回合浦。
 
-**关于「神风（*kamikaze*，かみかぜ）」——第一次 careful framing**:
+**关于「神风（kamikaze，かみかぜ）」——第一次 careful framing**:
 
 「神风」字面意思是「神的风」，今天几乎所有通俗历史叙述都把这场台风描述为「神风救了日本」。这是一个需要仔细拆解的叙事：
 
-**事实一**: 1274 年确实有台风影响了蒙古舰队，但当时日本文献里这场风并没有被普遍叫做「神风」。「神風」这个词在《古事记》（*Kojiki*，712 年）里出现过，最初指伊势（*Ise*）海峡的海风，是神圣的风，与战争无关。
+**事实一**: 1274 年确实有台风影响了蒙古舰队，但当时日本文献里这场风并没有被普遍叫做「神风」。「神風」这个词在《古事记》（Kojiki，712 年）里出现过，最初指伊势（Ise）海峡的海风，是神圣的风，与战争无关。
 
 **事实二**: 1274 年战场，蒙古军并没有被台风完全消灭。他们撤退，但完整地撤退了——大部分军队安全返回高丽。日本军事抵抗（武士死守大宰府防线）是联军撤退的共同原因之一，不能把胜利完全归因于台风。
 
-**事实三**: Conlan 2001 通过考察 13-15 世纪的日本文献，论证「神风」作为解释 1274 和 1281 年蒙古入侵失败的系统性叙事，是在入侵发生之后数十年到一两个世纪间，由统治者——尤其是神社（*jinja*）神职人员和后来的统治者——主动建构的意识形态叙事。当时的武士，在战后申请封赏的文书里，写的是他们自己的战功，而不是神风的功劳。
+**事实三**: Conlan 2001 通过考察 13-15 世纪的日本文献，论证「神风」作为解释 1274 和 1281 年蒙古入侵失败的系统性叙事，是在入侵发生之后数十年到一两个世纪间，由统治者——尤其是神社（jinja）神职人员和后来的统治者——主动建构的意识形态叙事。当时的武士，在战后申请封赏的文书里，写的是他们自己的战功，而不是神风的功劳。
 
 1274 年的真相更接近：日本武士防守 + 台风 = 蒙古撤退。两个因素都有，不能只保留一个。
 
@@ -392,9 +392,9 @@ Conlan 2001《In Little Need of Divine Intervention》明确指出：时宗的�
 
 1274 年结束后，时宗没有松口气。他知道忽必烈不会就此罢手。
 
-1275-1280 年，他命令博多湾沿岸的御家人（*gokenin*，「将军家的人」，也就是效忠幕府的地方武士领主）修建防御工事：
+1275-1280 年，他命令博多湾沿岸的御家人（gokenin，「将军家的人」，也就是效忠幕府的地方武士领主）修建防御工事：
 
-**元寇防壁（*Genkō Bōeki*，「抵御元朝侵犯的防壁」）**: 一道沿博多湾海岸线延伸约 20 公里的石墙，高约 2-3 米，宽约 2-3 米，用石块砌成，顶部可供弓手站立射击。
+**元寇防壁（Genkō Bōeki，「抵御元朝侵犯的防壁」）**: 一道沿博多湾海岸线延伸约 20 公里的石墙，高约 2-3 米，宽约 2-3 米，用石块砌成，顶部可供弓手站立射击。
 
 这是日本有史以来最大规模的工程动员之一。数千御家人家族被征调参与建设，工程历时约 5 年。成本——用土地征发劳役、用粮食维持工事——是幕府财政的一次巨大消耗，但时宗坚持完成。
 
@@ -410,8 +410,8 @@ Conlan 2001《In Little Need of Divine Intervention》明确指出：时宗的�
 
 **两支舰队同时出发**:
 
-- **东路军（*Tōro Gun*）**: 约 40,000 人，主要由蒙古军和高丽军组成，从高丽合浦出发，配备约 900 艘战船；
-- **江南军（*Kōnan Gun*）**: 约 100,000 人，主要由刚被征服的南宋（旧宋军队被改编入元朝军队）士兵组成，从今浙江、福建出发，配备约 3,500 艘战船。
+- **东路军（Tōro Gun）**: 约 40,000 人，主要由蒙古军和高丽军组成，从高丽合浦出发，配备约 900 艘战船；
+- **江南军（Kōnan Gun）**: 约 100,000 人，主要由刚被征服的南宋（旧宋军队被改编入元朝军队）士兵组成，从今浙江、福建出发，配备约 3,500 艘战船。
 
 **合计约 140,000 人，约 4,400 艘船。**
 
@@ -425,13 +425,13 @@ Conlan 2001《In Little Need of Divine Intervention》明确指出：时宗的�
 
 蒙古战法依赖登陆——马上作战，需要上岸才能展开骑兵优势。石墙把博多湾变成了一道拒绝蒙古骑兵的障碍：从船上下来，就面对石墙后的弓手，没有展开空间。东路军尝试在多处强行登陆，均被击退。
 
-日本武士的夜袭（**鳥船作战**，*torifu-sen*，「鸟船」战术）——日本武士用小型快船趁夜摸到蒙古大船边，爬上甲板近战，或者放火。这种战法在开阔海战里没有优势，但在蒙古舰队密集停泊于博多湾内时非常有效：大船不灵活，小船快速，夜间视线差，蒙古军难以组织有效反击。
+日本武士的夜袭（**鳥船作战**，torifu-sen，「鸟船」战术）——日本武士用小型快船趁夜摸到蒙古大船边，爬上甲板近战，或者放火。这种战法在开阔海战里没有优势，但在蒙古舰队密集停泊于博多湾内时非常有效：大船不灵活，小船快速，夜间视线差，蒙古军难以组织有效反击。
 
-《蒙古袭来绘词》里有一幅著名画面：一艘日本小船上，武士竹崎季长（*Takezaki Suenaga*，1246-约 1314）策马冲向蒙古军阵。这幅画是竹崎季长本人出资委托绘制，目的是向幕府证明自己的战功以获封赏——这一史实告诉我们这幅绘词的第一个作用：它是一份战功申诉材料，不是客观历史记录。但它也告诉我们：个人武士英勇地与蒙古军战斗是真实发生的，不全是神风的功劳。
+《蒙古袭来绘词》里有一幅著名画面：一艘日本小船上，武士竹崎季长（Takezaki Suenaga，1246-约 1314）策马冲向蒙古军阵。这幅画是竹崎季长本人出资委托绘制，目的是向幕府证明自己的战功以获封赏——这一史实告诉我们这幅绘词的第一个作用：它是一份战功申诉材料，不是客观历史记录。但它也告诉我们：个人武士英勇地与蒙古军战斗是真实发生的，不全是神风的功劳。
 
 ### 弘安台风
 
-东路军与日本守军在博多湾僵持了近两个月（6 月-8 月），等待江南军到来。两支舰队在平户岛（*Hirado*）附近会合后，准备决定性登陆。
+东路军与日本守军在博多湾僵持了近两个月（6 月-8 月），等待江南军到来。两支舰队在平户岛（Hirado）附近会合后，准备决定性登陆。
 
 1281 年 8 月 15-16 日（农历闰 7 月初 1），台风袭击九州沿海。
 
@@ -439,7 +439,7 @@ Conlan 2001《In Little Need of Divine Intervention》明确指出：时宗的�
 
 蒙古-元朝舰队的结构存在一个致命问题：
 
-江南军的船只，据后来的研究（包括 Delgado 2001 对沉船遗址的水下考古），部分是仓促改造的内河平底船，不适合大洋风浪。造船工程中有腐败（*Goryeo* 和江南地方官员在建造合同中偷工减料，这一点在元朝内部审查记录里有记载）。船只在台风中批量进水、解体、沉没。
+江南军的船只，据后来的研究（包括 Delgado 2001 对沉船遗址的水下考古），部分是仓促改造的内河平底船，不适合大洋风浪。造船工程中有腐败（Goryeo 和江南地方官员在建造合同中偷工减料，这一点在元朝内部审查记录里有记载）。船只在台风中批量进水、解体、沉没。
 
 **Farris 1996《Heavenly Warriors》估计**：台风造成的蒙古-高丽-南宋溺亡人数约 60,000-100,000 人。《元史》等记载部分幸存者次日登岸后遭日本守军歼灭，具体数字各史料不一（30,000 为常见引用，但来源不统一）。整支远征军几乎全军覆没。**总损失估计与入侵规模上下限之间有算术张力，学界对具体分项数字没有共识**（Turnbull 2008；Farris 1996）。
 
@@ -451,9 +451,9 @@ Conlan 2001《In Little Need of Divine Intervention》明确指出：时宗的�
 
 **谁在建构「神风」叙事？**
 
-首先是神社（*jinja*）和寺庙：战争结束后，幕府命令全国神社寺庙举行祈祷感谢仪式。神职人员有动机把台风解释为他们祈祷的成果——「我们的祈祷召来了神的风」。这既是宗教解释，也是机构利益。
+首先是神社（jinja）和寺庙：战争结束后，幕府命令全国神社寺庙举行祈祷感谢仪式。神职人员有动机把台风解释为他们祈祷的成果——「我们的祈祷召来了神的风」。这既是宗教解释，也是机构利益。
 
-其次是「神国（*Shinkoku*）」意识形态：13-15 世纪，日本统治者越来越多地使用「日本是神佑之国」的话语。Conlan 2001 和本多博（*Honda Hiroshi*）2020 年研究都指出，这一意识形态体系是在蒙古入侵之后逐渐建构的，不是早就存在的稳定信念。蒙古入侵的失败，成了论证「日本受神保护」的主要证据——但这是事后把台风塞进了已有神学框架，而不是当时的第一反应。
+其次是「神国（Shinkoku）」意识形态：13-15 世纪，日本统治者越来越多地使用「日本是神佑之国」的话语。Conlan 2001 和本多博（Honda Hiroshi）2020 年研究都指出，这一意识形态体系是在蒙古入侵之后逐渐建构的，不是早就存在的稳定信念。蒙古入侵的失败，成了论证「日本受神保护」的主要证据——但这是事后把台风塞进了已有神学框架，而不是当时的第一反应。
 
 **武士的视角**:
 
@@ -475,7 +475,7 @@ Conlan 2001《In Little Need of Divine Intervention》明确指出：时宗的�
 
 **御家人封赏危机**:
 
-镰仓幕府建立在御家人（*gokenin*）体制上。御家人效忠将军（实质是幕府/北条家），战时出兵，战后获得封赏——通常是土地（*honryo*，本领，即将土地授予御家人的制度）。这是幕府 legitimacy 的基础：打仗有回报。
+镰仓幕府建立在御家人（gokenin）体制上。御家人效忠将军（实质是幕府/北条家），战时出兵，战后获得封赏——通常是土地（honryo，本领，即将土地授予御家人的制度）。这是幕府 legitimacy 的基础：打仗有回报。
 
 但 1281 年的战争，打赢了，没有占领任何土地。蒙古人溺死了，日本没有从敌方夺取任何新领土可以分封。
 
@@ -487,11 +487,11 @@ Mass 1989《Warrior Government in Early Medieval Japan》论证：1281 年之后
 
 **财政消耗**:
 
-石墙的建造（1275-1280），博多湾的长期守备，军事动员的粮草物流——这些全部需要钱。幕府从御家人那里征调，御家人从自己的庄园（*shōen*）里挤，庄园的压力传到农民身上。1281 年之后，时宗继续维持博多湾的警戒（忽必烈直到 1294 年死前始终在准备第三次远征，但最终没有实现），这意味着消耗没有停止。
+石墙的建造（1275-1280），博多湾的长期守备，军事动员的粮草物流——这些全部需要钱。幕府从御家人那里征调，御家人从自己的庄园（shōen）里挤，庄园的压力传到农民身上。1281 年之后，时宗继续维持博多湾的警戒（忽必烈直到 1294 年死前始终在准备第三次远征，但最终没有实现），这意味着消耗没有停止。
 
 **时宗的禅与疲惫**:
 
-时宗在 1280 年前后，邀请中国禅僧无学祖元（*Mugaku Sogen*，1226-1286）来日本，担任圆觉寺（*Engakuji*）的开山住持。圆觉寺 1282 年建成，专门为弘安之役战死者超度——这是时宗给战死者的精神补偿，也是他个人禅宗信仰的外化。
+时宗在 1280 年前后，邀请中国禅僧无学祖元（Mugaku Sogen，1226-1286）来日本，担任圆觉寺（Engakuji）的开山住持。圆觉寺 1282 年建成，专门为弘安之役战死者超度——这是时宗给战死者的精神补偿，也是他个人禅宗信仰的外化。
 
 无学祖元留下了一则关于时宗的著名禅对话记录（虽然其可靠性经后世增饰，需谨慎对待）：时宗问「如何克服恐惧」，祖元答「洞然无依」——意思是当你什么都不执着，就没有什么可怕的了。这段对话不管真实程度如何，折射出时宗在 1268-1281 年间承受的持续高压：他从 17 岁到 30 岁，13 年里几乎没有停止危机应对。
 
@@ -501,22 +501,22 @@ Mass 1989《Warrior Government in Early Medieval Japan》论证：1281 年之后
 
 死因史书未明确记载。「病逝」是一般说法，具体疾病不详。现代历史学家推测可能是长期高压导致的身体衰竭，或是某种感染性疾病。他没有留下详细的遗言记录。
 
-他的儿子贞时（*Sadatoki*，1271-1311）继任第 9 代执权，时年 13 岁——又一个少年执权。北条家再次进入过渡期。
+他的儿子贞时（Sadatoki，1271-1311）继任第 9 代执权，时年 13 岁——又一个少年执权。北条家再次进入过渡期。
 
 时宗死后，镰仓留下他参与建立的两座禅寺：
 
-- **建长寺（*Kenchōji*）**: 1253 年由父亲时赖建立，时宗成年后持续支持；
-- **圆觉寺（*Engakuji*）**: 1282 年时宗为弘安之役战死者建立。
+- **建长寺（Kenchōji）**: 1253 年由父亲时赖建立，时宗成年后持续支持；
+- **圆觉寺（Engakuji）**: 1282 年时宗为弘安之役战死者建立。
 
-今天，这两座寺庙仍然矗立在镰仓，是镰仓五山（*Kamakura Gozan*，镰仓最重要的五座禅寺）中排名第一和第二的寺庙，每年吸引数百万游客。时宗的建寺遗产活过了他的政权七百多年。
+今天，这两座寺庙仍然矗立在镰仓，是镰仓五山（Kamakura Gozan，镰仓最重要的五座禅寺）中排名第一和第二的寺庙，每年吸引数百万游客。时宗的建寺遗产活过了他的政权七百多年。
 
 ### 系统危机的种子——「system-hardening」的代价
 
-时宗的历史遗产，在主流日本历史叙述里长期被描述为「英雄」——抵御蒙古的守护者。这个叙事在 20 世纪曾经被用于民族主义目的，「神风特攻队（*kamikaze tokkōtai*）」——二战末期飞行员驾机撞击美国军舰——直接借用了「神风」这个名词，试图唤起 1281 年的历史意象。
+时宗的历史遗产，在主流日本历史叙述里长期被描述为「英雄」——抵御蒙古的守护者。这个叙事在 20 世纪曾经被用于民族主义目的，「神风特攻队（kamikaze tokkōtai）」——二战末期飞行员驾机撞击美国军舰——直接借用了「神风」这个名词，试图唤起 1281 年的历史意象。
 
 但历史学家的视角要更复杂：
 
-时宗做到了他要做的事——他用中央化的政治姿态，把镰仓幕府定位为日本抵御外来威胁的唯一合法领导者，压制了朝廷的议和选项，完成了御家人的军事动员，建造了有效的防御工事，挺过了两次入侵。他是一个有效的系统维护者（*system-hardener*）。
+时宗做到了他要做的事——他用中央化的政治姿态，把镰仓幕府定位为日本抵御外来威胁的唯一合法领导者，压制了朝廷的议和选项，完成了御家人的军事动员，建造了有效的防御工事，挺过了两次入侵。他是一个有效的系统维护者（system-hardener）。
 
 但他的「系统硬化」同时把系统的裂缝封进了内部：
 
@@ -525,7 +525,7 @@ Mass 1989《Warrior Government in Early Medieval Japan》论证：1281 年之后
 - 他 33 岁早死，留下 13 岁的儿子，又是一次权力真空；
 - 忽必烈在 1294 年死前一直维持对日本的压力，日本守备消耗没有终止。
 
-时宗死后 50 年，1333 年，镰仓幕府被后醍醐天皇（*Go-Daigo Tennō*）和足利尊氏（*Ashikaga Takauji*）的联军摧毁。倒幕的军事力量来源，正是那些在 1281 年后封赏不足、忠诚松动的御家人家族。
+时宗死后 50 年，1333 年，镰仓幕府被后醍醐天皇（Go-Daigo Tennō）和足利尊氏（Ashikaga Takauji）的联军摧毁。倒幕的军事力量来源，正是那些在 1281 年后封赏不足、忠诚松动的御家人家族。
 
 > **这是历史学的经典悖论之一**: 一个人用全部力量防住了外部威胁，却因为这个过程把内部结构压得脆弱，最终让体制在他死后数十年崩塌。时宗的胜利是真实的；幕府崩溃的根源埋在他的胜利里，也是真实的。这两件事同时为真。
 
@@ -535,7 +535,7 @@ Mass 1989《Warrior Government in Early Medieval Japan》论证：1281 年之后
 
 ### 跨 lens #1: 政子 vs 时宗——同一个北条家，同一种结构性动作
 
-北条政子（*Hōjō Masako*，1156-1225）和北条时宗（1251-1284）是同一个家族里的两代人，隔了 95 年，但他们做了结构上几乎相同的事：
+北条政子（Hōjō Masako，1156-1225）和北条时宗（1251-1284）是同一个家族里的两代人，隔了 95 年，但他们做了结构上几乎相同的事：
 
 | | 政子 1221 (承久之乱) | 时宗 1268-1281 (蒙古) |
 |---|---|---|
@@ -562,7 +562,7 @@ Mass 1989《Warrior Government in Early Medieval Japan》论证：1281 年之后
 
 ### 跨 Topic #2: 蒙古使者 ↔ Mongol Yam 驿站网络
 
-1268 年忽必烈派来的那封信，能在「数月内」从大都（*Dadu*，今北京）传到日本太宰府，依赖的正是蒙古的 Yam（*站赤*，驿站）系统——每 25-50 公里一站，配马匹和信使，是欧亚大陆 13 世纪信息传递最快的基础设施（Mongol Topic §3, Ögedei 段）。
+1268 年忽必烈派来的那封信，能在「数月内」从大都（Dadu，今北京）传到日本太宰府，依赖的正是蒙古的 Yam（站赤，驿站）系统——每 25-50 公里一站，配马匹和信使，是欧亚大陆 13 世纪信息传递最快的基础设施（Mongol Topic §3, Ögedei 段）。
 
 时宗斩杀使者这个动作，不只是外交拒绝，也是物理切断了这条信息通道的日本端口。在 Yam 系统看来，使者是神圣的——从成吉思汗时代起，使者受到特殊保护，这是跨文化贸易和外交的前提（参见 Mongol Topic 花剌子模段：1219 年 Chinggis 征花剌子模，起因正是花剌子模王杀了蒙古商队使节）。时宗的斩使在蒙古人眼里，是和 1219 年花剌子模事件同级别的冒犯。
 
@@ -574,7 +574,7 @@ Mass 1989《Warrior Government in Early Medieval Japan》论证：1281 年之后
 
 宋朝禅宗中心（天童山、径山）→ 博多（九州口岸）→ 镰仓（幕府中心）
 
-类似于 Islamic Rise Topic 中，巴格达的知识（翻译运动，*Bayt al-Hikmah*，智慧宫）通过贸易路线向外辐射的模式——知识跟随人口流动，人口流动跟随制度中心的吸引力。佛教知识在 13 世纪东亚，和伊斯兰知识在 8-10 世纪中亚，走的是结构上相同的路径：一个中心生产知识，周边通过人的迁移吸收。
+类似于 Islamic Rise Topic 中，巴格达的知识（翻译运动，Bayt al-Hikmah，智慧宫）通过贸易路线向外辐射的模式——知识跟随人口流动，人口流动跟随制度中心的吸引力。佛教知识在 13 世纪东亚，和伊斯兰知识在 8-10 世纪中亚，走的是结构上相同的路径：一个中心生产知识，周边通过人的迁移吸收。
 
 时宗邀请无学祖元来日本，是一次主动的知识导入——他用禅宗帮自己管理政治压力下的个人心理状态，也用圆觉寺的建立维系武士阶层的精神凝聚。宗教在这里不是装饰，是治理工具。
 
@@ -595,11 +595,11 @@ Mass 1989《Warrior Government in Early Medieval Japan》论证：1281 年之后
 
 ---
 
-*总行数: 约 420 行*
+总行数: 约 420 行
 
-*Careful framing 引用: Conlan 2001《In Little Need of Divine Intervention》(神风叙事批判); Turnbull 2008《The Mongol Invasions of Japan 1274 and 1281》(兵力数字); Farris 1996《Heavenly Warriors》(死亡估计); Mass 1989《Warrior Government in Early Medieval Japan》(御家人封赏危机); Sansom 1931 (1268 使者信件引用)*
+Careful framing 引用: Conlan 2001《In Little Need of Divine Intervention》(神风叙事批判); Turnbull 2008《The Mongol Invasions of Japan 1274 and 1281》(兵力数字); Farris 1996《Heavenly Warriors》(死亡估计); Mass 1989《Warrior Government in Early Medieval Japan》(御家人封赏危机); Sansom 1931 (1268 使者信件引用)
 
-*反 Whig 核心处理: §7 斩使动机 (幕府 vs 朝廷权力博弈); §8 台风解读 (军事抵抗 + 台风双因素); §9 神风叙事建构 (后代意识形态化); §10 system-hardening 代价 (胜利埋下崩溃根源); §11 英雄化叙事解构 (政子 + 时宗都是权力维护者)*
+反 Whig 核心处理: §7 斩使动机 (幕府 vs 朝廷权力博弈); §8 台风解读 (军事抵抗 + 台风双因素); §9 神风叙事建构 (后代意识形态化); §10 system-hardening 代价 (胜利埋下崩溃根源); §11 英雄化叙事解构 (政子 + 时宗都是权力维护者)
 # T4 Medieval Japan 794-1603 — Narrative Part 3
 
 > **Lens 主角提示**
@@ -887,7 +887,7 @@ Part 3 的三条线索交织在一起：
 
 ---
 
-*总行数：约 376 行*
+总行数：约 376 行
 # T4 Medieval Japan 794-1603 — Narrative Part 4
 
 > 包含 §16 政子主段深化 / §17 战国 1560-1603 / §18 三 lens 1500 切片 / §19 Cross-Topic 缝合 + reflection
@@ -937,13 +937,13 @@ Part 3 的三条线索交织在一起：
 
 Hōjō Masako was born into a provincial warrior family — not the imperial courtiers of Kyoto, not the Minamoto bloodline, but the Hōjō of Izu province, a name near the margins of 12th-century Japanese power. Her father, Hōjō Tokimasa (1138-1215), was an influential local warrior chief with no national standing.
 
-In 1180, Masako was 24 years old and fell in love with Minamoto no Yoritomo (1147-1199), a Minamoto prince exiled to Izu after political defeat at the hands of Taira no Kiyomori. Yoritomo had spent nearly 20 years in Izu under a kind of house arrest. Her father Tokimasa initially opposed the match — marrying a daughter to a politically defeated exile was a liability. But Tokimasa rapidly reconsidered: in 1180 Yoritomo raised an armed movement against the Taira. The Minamoto banner had followers again. Tokimasa shifted, placing his political bet on his daughter and son-in-law. The *Azuma Kagami* ("Mirror of the East," the shogunate's official chronicle, finalized around the late 13th century) records this episode, but its framing carries a legitimizing tilt toward Yoritomo's founding of the shogunate — a tilt requiring care.
+In 1180, Masako was 24 years old and fell in love with Minamoto no Yoritomo (1147-1199), a Minamoto prince exiled to Izu after political defeat at the hands of Taira no Kiyomori. Yoritomo had spent nearly 20 years in Izu under a kind of house arrest. Her father Tokimasa initially opposed the match — marrying a daughter to a politically defeated exile was a liability. But Tokimasa rapidly reconsidered: in 1180 Yoritomo raised an armed movement against the Taira. The Minamoto banner had followers again. Tokimasa shifted, placing his political bet on his daughter and son-in-law. The Azuma Kagami ("Mirror of the East," the shogunate's official chronicle, finalized around the late 13th century) records this episode, but its framing carries a legitimizing tilt toward Yoritomo's founding of the shogunate — a tilt requiring care.
 
 From 1180 to 1199, Masako was Yoritomo's wife and an inside witness to the founding years of the Kamakura Bakufu. She had four children: two died young, and two survived to adulthood — Yoriie (1182-1204) and Sanetomo (1192-1219).
 
 In 1199 Yoritomo died. Masako was 43.
 
-That was the pivot. She did not take Buddhist vows and withdraw — the conventional choice for a warrior widow of her time. She remained at the center of power, becoming the key interface between the Hōjō clan and the shogunal position. The label later applied to her, "Ama Shōgun" (Nun Shogun), first appears in the *Azuma Kagami* records around 1221 as the chronicle's own summary of her role — not a self-designation, not a formal office title. Paul Varley (1994) cautions that later literature and textbooks repeatedly amplified the term, giving Masako's image a tidier "female power" narrative than the contemporary reality supports.
+That was the pivot. She did not take Buddhist vows and withdraw — the conventional choice for a warrior widow of her time. She remained at the center of power, becoming the key interface between the Hōjō clan and the shogunal position. The label later applied to her, "Ama Shōgun" (Nun Shogun), first appears in the Azuma Kagami records around 1221 as the chronicle's own summary of her role — not a self-designation, not a formal office title. Paul Varley (1994) cautions that later literature and textbooks repeatedly amplified the term, giving Masako's image a tidier "female power" narrative than the contemporary reality supports.
 
 In 1203, Masako was 47 when her father Tokimasa deposed the shogun Yoriie — her own son — and installed Yoriie's brother Sanetomo as the third shogun. Masako acquiesced. This is the moment that reveals her. Helen McCullough (1985) reads Masako as an active participant, not a victim of the scheme. From that reading, Masako made a judgment putting political interest over maternal feeling: the shogunal position was a tool of the Hōjō house, and Yoriie was a piece on that tool's board, not the board itself. The anti-Whig point is significant here. Reading Masako as "a patient mother enduring patriarchal oppression" is a 19th-century projection onto a 12th-13th century political agent. McCullough's reading is harder and more accurate.
 
@@ -953,11 +953,11 @@ In 1219, Sanetomo was assassinated. Masako was 63. The system she maintained sur
 
 Retired Emperor Go-Toba (1180-1239) issued an edict calling for warriors loyal to the shogunate (gokenin) to abandon Kamakura and return to Kyoto's authority. It was the gravest political crisis since the shogunate's founding. In the assembly of Kamakura warriors, Masako spoke.
 
-The version preserved in the *Azuma Kagami*, in Helen McCullough's 1985 translation:
+The version preserved in the Azuma Kagami, in Helen McCullough's 1985 translation:
 
 > "Think of the favor his late lordship showed you — mountains cannot match it, nor can the sea. Don't be swayed by the words of those who bear false witness... Those of you who want to continue in the late lord's service, resist this imperial order."
 
-The speech's place in Japanese history is irreplaceable — it is one of the most important recorded female political voices in the entire record. But its source carries complexity that cannot be bypassed. The *Azuma Kagami* is the shogunate's official chronicle, written more than fifty years after the speech occurred. David Bialock (2007) and Varley (1994) both note visible signs of "textual formalization" in the passage — balanced phrasing, controlled rhythm, perfectly fitted to a later narrative need for a legendary woman who held the shogunate firm. The speech may have been shaped and polished by later hands. Even so, it cannot be dismissed outright. The shogunate's victory in the Jōkyū Disturbance is historical fact. That this victory involved Masako's political action has substantial basis. Primary sources have political interests, but political interest does not equal invention.
+The speech's place in Japanese history is irreplaceable — it is one of the most important recorded female political voices in the entire record. But its source carries complexity that cannot be bypassed. The Azuma Kagami is the shogunate's official chronicle, written more than fifty years after the speech occurred. David Bialock (2007) and Varley (1994) both note visible signs of "textual formalization" in the passage — balanced phrasing, controlled rhythm, perfectly fitted to a later narrative need for a legendary woman who held the shogunate firm. The speech may have been shaped and polished by later hands. Even so, it cannot be dismissed outright. The shogunate's victory in the Jōkyū Disturbance is historical fact. That this victory involved Masako's political action has substantial basis. Primary sources have political interests, but political interest does not equal invention.
 
 The disturbance's outcome: the shogunate won. Retired Emperor Go-Toba was exiled to Oki Island. This was the first time in Japanese history that imperial authority was formally defeated by a warrior government. The emperor would not recover real political power until the Meiji Restoration of 1868.
 
@@ -997,15 +997,15 @@ A necessary framing note first: the term "Sengoku Jidai" (Age of the Warring Sta
 
 **Oda Nobunaga (1534-1582)**
 
-Nobunaga's significance is that he made unification imaginable rather than merely possible. Three things to remember about him. First, *rakuichi rakuza* (free-market policy): he abolished the traditional guild monopolies in his territories, allowing any merchant to trade in the market — this was not modern economic liberalism, but a practical move to attract population and tax base by breaking old monopolies. Second, he was the first to systematically integrate the matchlock musket (*tanegashima*, introduced from Portugal in 1543) into battlefield tactics. At the 1575 Battle of Nagashino, his volley-firing infantry formations broke Takeda cavalry, transforming the shape of Japanese warfare. Third, starting in 1576 he built Azuchi Castle (Azuchi-jō), an architectural political statement — not mountain-fortress defense, but an authority display commanding the plains below. In 1582, Nobunaga was killed at Honnō-ji by his general Akechi Mitsuhide in a sudden betrayal — the "Honnō-ji Incident." The unification mission was left unfinished.
+Nobunaga's significance is that he made unification imaginable rather than merely possible. Three things to remember about him. First, rakuichi rakuza (free-market policy): he abolished the traditional guild monopolies in his territories, allowing any merchant to trade in the market — this was not modern economic liberalism, but a practical move to attract population and tax base by breaking old monopolies. Second, he was the first to systematically integrate the matchlock musket (tanegashima, introduced from Portugal in 1543) into battlefield tactics. At the 1575 Battle of Nagashino, his volley-firing infantry formations broke Takeda cavalry, transforming the shape of Japanese warfare. Third, starting in 1576 he built Azuchi Castle (Azuchi-jō), an architectural political statement — not mountain-fortress defense, but an authority display commanding the plains below. In 1582, Nobunaga was killed at Honnō-ji by his general Akechi Mitsuhide in a sudden betrayal — the "Honnō-ji Incident." The unification mission was left unfinished.
 
 **Toyotomi Hideyoshi (1537-1598)**
 
-Hideyoshi's origins were in the peasantry — clearly documented in contemporary sources, though he later tried to fabricate a noble lineage. He spent roughly a decade completing what Nobunaga had left unfinished and by 1590 eliminated the last resistant power, the Hōjō clan (note: this is the late-Sengoku Hōjō, an unrelated family to the Kamakura-era Hōjō, who only shared the name). Unification — *tenka tōitsu* — was achieved. But Hideyoshi's next decisions nearly cancelled everything: he launched invasions of Korea in 1592 and 1597, known in Japanese as the *Bunroku no eki* and *Keichō no eki*, and in Chinese as the Wanli Korean War. This is a cross-topic event — the Ming Wanli Emperor (1563-1620) sent forces to aid Korea. The two invasions together lasted six years. Japanese forces ultimately withdrew. Both Korea and the Ming dynasty sustained severe damage. Before Hideyoshi died in 1598, his stated military goal — "entering Tang," meaning conquering China — had completely failed.
+Hideyoshi's origins were in the peasantry — clearly documented in contemporary sources, though he later tried to fabricate a noble lineage. He spent roughly a decade completing what Nobunaga had left unfinished and by 1590 eliminated the last resistant power, the Hōjō clan (note: this is the late-Sengoku Hōjō, an unrelated family to the Kamakura-era Hōjō, who only shared the name). Unification — tenka tōitsu — was achieved. But Hideyoshi's next decisions nearly cancelled everything: he launched invasions of Korea in 1592 and 1597, known in Japanese as the Bunroku no eki and Keichō no eki, and in Chinese as the Wanli Korean War. This is a cross-topic event — the Ming Wanli Emperor (1563-1620) sent forces to aid Korea. The two invasions together lasted six years. Japanese forces ultimately withdrew. Both Korea and the Ming dynasty sustained severe damage. Before Hideyoshi died in 1598, his stated military goal — "entering Tang," meaning conquering China — had completely failed.
 
 **Tokugawa Ieyasu (1543-1616)**
 
-Hideyoshi's death immediately created a power vacuum inside the Toyotomi regime. In 1600 the Battle of Sekigahara settled the outcome: Ieyasu's coalition won. In 1603, Ieyasu received the appointment of Seii Taishōgun and established the Edo Bakufu. What distinguished this shogunate was its staying power: 265 years (1603-1868), the most stable governance structure in Japanese history, the *bakuhan taisei* — a combination of the shogun's direct domain and the semi-autonomous domains of regional lords (*daimyō*). The political price of this stability was that Japan's contact with the outside world was progressively tightened from the 17th century onward, culminating in the 1635 *sakoku* edict, which in principle prohibited Japanese from leaving and foreigners from entering, leaving only the port of Nagasaki open to Dutch and Chinese traders.
+Hideyoshi's death immediately created a power vacuum inside the Toyotomi regime. In 1600 the Battle of Sekigahara settled the outcome: Ieyasu's coalition won. In 1603, Ieyasu received the appointment of Seii Taishōgun and established the Edo Bakufu. What distinguished this shogunate was its staying power: 265 years (1603-1868), the most stable governance structure in Japanese history, the bakuhan taisei — a combination of the shogun's direct domain and the semi-autonomous domains of regional lords (daimyō). The political price of this stability was that Japan's contact with the outside world was progressively tightened from the 17th century onward, culminating in the 1635 sakoku edict, which in principle prohibited Japanese from leaving and foreigners from entering, leaving only the port of Nagasaki open to Dutch and Chinese traders.
 
 The 150 years of the Sengoku period do not reduce to "Japan's unification." They are three specific individuals making consecutive high-stakes political gambles under specific historical conditions, each bet carrying enormous human costs — estimates for civil war deaths across this 150 years run into the millions, with no modern scholarly consensus on exact numbers.
 
@@ -1039,11 +1039,11 @@ The 150 years of the Sengoku period do not reduce to "Japan's unification." They
 
 In 1500, Japan and the world stand at a particular moment. Here is where the three lens figures are that year.
 
-**Hōjō Masako** — dead for 275 years. Her 1221 speech survives inside the *Azuma Kagami* as text, but the Hōjō clan that executed her political legacy collapsed in 1333. The emperor Go-Daigo, in alliance with the warrior Ashikaga Takauji, overthrew the Kamakura shogunate. The last Hōjō regent, Hōjō Takatoki, killed himself, and the Hōjō bloodline ended. The system Masako had built — the shogunal office held under Hōjō management — survived only 108 years after her death. By 1500, her memory exists in writing, but her descendants never recovered power. The Muromachi Bakufu (1336-1573) was the Ashikaga's regime, not a Hōjō continuation.
+**Hōjō Masako** — dead for 275 years. Her 1221 speech survives inside the Azuma Kagami as text, but the Hōjō clan that executed her political legacy collapsed in 1333. The emperor Go-Daigo, in alliance with the warrior Ashikaga Takauji, overthrew the Kamakura shogunate. The last Hōjō regent, Hōjō Takatoki, killed himself, and the Hōjō bloodline ended. The system Masako had built — the shogunal office held under Hōjō management — survived only 108 years after her death. By 1500, her memory exists in writing, but her descendants never recovered power. The Muromachi Bakufu (1336-1573) was the Ashikaga's regime, not a Hōjō continuation.
 
 **Hōjō Tokimune** (1251-1284) — dead for 216 years. Engakuji, the Zen monastery he founded in 1282 in commemoration of those who died resisting the Mongol invasions, still stands in Kamakura in 1500 and continues operating as a religious center. His decision to reject Kublai Khan's envoys and execute them was retold in the Muromachi period through the lens of "kamikaze" — the idea that divine winds protected Japan from the Mongols — and by 1500 the "sacred country of Japan" ideological framework was already a politically usable tool, waiting for future hands to deploy it further.
 
-**Sesshū Tōyō** (1420-1506) — 80 years old, in Yamaguchi, spending his final years. He is completing what will become one of his most important works, the *Amanohashidate-zu* (View of Amanohashidate), using the ink techniques he brought back from China to depict a Japanese landscape. He traveled to Ming China in 1467 aboard a tributary trade vessel (*kanegafune*), studied the brush methods of the Song and Yuan masters, and carried those techniques back to Japan, applying them to Japanese mountains, water, and specific places. At 80, Sesshū is still producing work — a creative persistence almost without precedent in medieval Japanese art history.
+**Sesshū Tōyō** (1420-1506) — 80 years old, in Yamaguchi, spending his final years. He is completing what will become one of his most important works, the Amanohashidate-zu (View of Amanohashidate), using the ink techniques he brought back from China to depict a Japanese landscape. He traveled to Ming China in 1467 aboard a tributary trade vessel (kanegafune), studied the brush methods of the Song and Yuan masters, and carried those techniques back to Japan, applying them to Japanese mountains, water, and specific places. At 80, Sesshū is still producing work — a creative persistence almost without precedent in medieval Japanese art history.
 
 **The pattern across all three.**
 
@@ -1067,7 +1067,7 @@ Medieval Japan 794-1603 不是一个孤立在东亚的故事。它在五个地�
 
 **第一条缝：蒙古帝国 → Medieval Japan**
 
-忽必烈 (1215-1294) 是 Sorghaghtani (孛儿帖赤那真，约 1190-1252) 的孙子。VocabSpark 蒙古帝国 Topic 的叙事核心之一，是 Sorghaghtani 怎样管理并培养了她的儿子们成为帝国下一代领导者。她的孙子送来了 1274 年和 1281 年的两次远征舰队——那是蒙古帝国扩张边界的终点之一。时宗建在镰仓湾的石墙，和两次台风，挡住了这条线。「Sorghaghtani 的孙子送来了铁炮，但时宗的石墙和 kaze (风) 挡住了」——这一句话把两个 Topic 缝在一起。
+忽必烈 (1215-1294) 是 Sorghaghtani (孛儿帖赤那真，约 1190-1252) 的儿子。VocabSpark 蒙古帝国 Topic 的叙事核心之一，是 Sorghaghtani 怎样管理并培养了她的儿子们成为帝国下一代领导者。她的儿子送来了 1274 年和 1281 年的两次远征舰队——那是蒙古帝国扩张边界的终点之一。时宗建在镰仓湾的石墙，和两次台风，挡住了这条线。「Sorghaghtani 的儿子送来了铁炮，但时宗的石墙和 kaze (风) 挡住了」——这一句话把两个 Topic 缝在一起。
 
 **第二条缝：Tang-Song → Medieval Japan**
 
@@ -1105,11 +1105,11 @@ Medieval Japan 794-1603 is not a story isolated in East Asia. It connects to Top
 
 **Connection one: Mongol Empire → Medieval Japan**
 
-Kublai Khan (1215-1294) was the grandson of Sorghaghtani (Börte Chino'a, c. 1190-1252). One of the central narrative figures in VocabSpark's Mongol Empire Topic is how Sorghaghtani managed and cultivated her sons as the empire's next-generation leadership. Her grandson sent the invasion fleets of 1274 and 1281 — they represent one of the Mongol Empire's expansion endpoints. The stone walls Tokimune built at Kamakura Bay, and two typhoons, stopped that line. "Sorghaghtani's grandson sent the iron cannon, but Tokimune's walls and the kaze (wind) stopped them" — one sentence stitches the two Topics together.
+Kublai Khan (1215-1294) was the son of Sorghaghtani (Börte Chino'a, c. 1190-1252). One of the central narrative figures in VocabSpark's Mongol Empire Topic is how Sorghaghtani managed and cultivated her sons as the empire's next-generation leadership. Her son sent the invasion fleets of 1274 and 1281 — they represent one of the Mongol Empire's expansion endpoints. The stone walls Tokimune built at Kamakura Bay, and two typhoons, stopped that line. "Sorghaghtani's son sent the iron cannon, but Tokimune's walls and the kaze (wind) stopped them" — one sentence stitches the two Topics together.
 
 **Connection two: Tang-Song → Medieval Japan**
 
-The Tang embassy missions (*kentōshi*, 630-894) were Japan's institutionalized expression of a deliberate choice to learn from the continent: sending envoys to Tang China and bringing back writing, law codes, architecture, and Buddhist ritual. This relationship ended in 894. The tribute trade (*kangō bōeki*, 1401-1547) was its successor — the official trade system between Japan and Ming China. Sesshū was a cultural beneficiary of this system. Without the tribute trade, he would not have boarded the ship to China in 1467. Japanese civilization is a case study in active selective absorption — not passive reception, but deliberate selection, then transformation into Japanese form.
+The Tang embassy missions (kentōshi, 630-894) were Japan's institutionalized expression of a deliberate choice to learn from the continent: sending envoys to Tang China and bringing back writing, law codes, architecture, and Buddhist ritual. This relationship ended in 894. The tribute trade (kangō bōeki, 1401-1547) was its successor — the official trade system between Japan and Ming China. Sesshū was a cultural beneficiary of this system. Without the tribute trade, he would not have boarded the ship to China in 1467. Japanese civilization is a case study in active selective absorption — not passive reception, but deliberate selection, then transformation into Japanese form.
 
 **Connection three: Byzantine → Medieval Japan**
 
@@ -1121,7 +1121,7 @@ Lorenzo de' Medici (1449-1492) died in 1492. In 1500, Sesshū is still painting 
 
 **Connection five: Pre-Columbian (T5) → this Topic**
 
-In 1492, Columbus set out across the Atlantic. That same year, Sesshū was 72, painting *Huike Cutting Off His Arm* in Yamaguchi, the ink not yet dry. The Inca emperor Pachacuti (c. 1418-1471) had been dead for 21 years; Machu Picchu he built was then at its peak of use. Malintzin (c. 1500-1529) had just been born, or had not yet been born. The world is not synchronized. Medieval Japan 794-1603, the Aztec Empire 1427-1521, the Florentine Renaissance, the fall of the Mali Empire — all happening on the same planet, separated not by time but by the degree and direction of connection. "Different civilizations have different senses of time" is a cognitive tool more important than any single Topic.
+In 1492, Columbus set out across the Atlantic. That same year, Sesshū was 72, painting Huike Cutting Off His Arm in Yamaguchi, the ink not yet dry. The Inca emperor Pachacuti (c. 1418-1471) had been dead for 21 years; Machu Picchu he built was then at its peak of use. Malintzin (c. 1500-1529) had just been born, or had not yet been born. The world is not synchronized. Medieval Japan 794-1603, the Aztec Empire 1427-1521, the Florentine Renaissance, the fall of the Mali Empire — all happening on the same planet, separated not by time but by the degree and direction of connection. "Different civilizations have different senses of time" is a cognitive tool more important than any single Topic.
 
 ---
 
@@ -1139,4 +1139,4 @@ If you were one of them, would you have made different choices?
 
 ---
 
-*(End of Part 4 staging. Total lines: approximately 380.)*
+(End of Part 4 staging. Total lines: approximately 380.)

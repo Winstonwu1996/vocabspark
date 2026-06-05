@@ -64,7 +64,7 @@ authorNotes: |
 >   **Renaissance 在自己中心被反向运动反扑**——
 >   **课本一般不写这段**
 > - **同时代中国是明朝鼎盛**——**永乐 1405-1433 郑和七下西洋**——
->   **比哥伦布早 87 年到非洲东岸**——
+>   **比哥伦布早约 70 年到非洲东岸**——
 >   **但**明朝 1433 年突然停止远航**——**为什么"中国 Renaissance"没发生**？
 >   **这是 Joseph Needham 著名问题——历史学最大谜题之一**
 >
@@ -362,7 +362,7 @@ authorNotes: |
 
 **2. 1492 年 7 月 — 西班牙驱逐犹太人**
 **1492 年 1 月 — Reconquista（西班牙基督教夺回半岛 700 年战争）完成**——
-**同年 3 月 — Ferdinand 跟 Isabella 颁布 *Alhambra Decree* 驱逐西班牙犹太人**——
+**同年 3 月 — Ferdinand 跟 Isabella 颁布 Alhambra Decree 驱逐西班牙犹太人**——
 **7 月 — 大约 15-20 万犹太人被强制离开西班牙**——
 **他们带着 capital + 拉比传统书 + 印刷术知识——逃到 Florence / Venice / Antwerp / Ottoman Empire**——
 ——这一波难民**间接喂养 Renaissance 印刷业大爆发**——
@@ -384,7 +384,7 @@ authorNotes: |
 **5. 1494 年 8 月 — 法王 Charles VIII 24 岁带 25,000 大军入侵意大利**
 **法王要争夺 Naples 王位（继承权官司）**——
 **Charles 带火炮 + 步兵——是欧洲第一支**用火药彻底改写战争**的军队**——
-**意大利城邦的旧式防御 + 雇佣兵 *condottieri*（雇佣兵）在火炮面前不堪一击**——
+**意大利城邦的旧式防御 + 雇佣兵 condottieri（雇佣兵）在火炮面前不堪一击**——
 **Charles 一路南下——经 Milan + Florence + Rome + Naples——
 所到之处**意大利城邦投降**。
 
@@ -404,9 +404,9 @@ authorNotes: |
 **他不是天降——他是**填补 23 个月里 Medici 真空 + Charles 入侵 + 全城恐慌**形成的真空。
 
 **Botticelli 在这 23 个月里精神 swing**——
-**Lorenzo 时代他画 *Birth of Venus*(1485)——异教维纳斯 + 古典神话 + 优雅 humanism**——
+**Lorenzo 时代他画 Birth of Venus(1485)——异教维纳斯 + 古典神话 + 优雅 humanism**——
 **Lorenzo 死后他逐步靠近 Savonarola——
-1500 年画 *Mystical Nativity*(神秘耶诞)——画风变得严肃 + 神秘 + 反 humanism**——
+1500 年画 Mystical Nativity(神秘耶诞)——画风变得严肃 + 神秘 + 反 humanism**——
 ——**一个画家的画风彻底改写——
 就在这 23 个月**Florence 灵魂换轨**的窗口里完成**。
 
@@ -517,7 +517,7 @@ authorNotes: |
 **几个月后他自己也被烧**——
 **这是最戏剧性的报应**。
 
-> ⚠️ **教学要点**：Savonarola 不是"反 Renaissance 的疯子"——
+>  **教学要点**：Savonarola 不是"反 Renaissance 的疯子"——
 > **他**揭露了 Renaissance 真实的伦理矛盾**：
 > Renaissance **的"优雅 + 古典 + 人文主义"和**当时教会腐败 + 民众贫困 + 道德松动**共存**——
 > **Savonarola 抓到了这个矛盾——但他的解决方法极端**——
@@ -802,7 +802,7 @@ authorNotes: |
 **今天叫**"Renaissance Man"（文艺复兴式的全才）**——
 **这个词从 Leonardo 来**——**他是定义这个词的人**。
 
-> ⚠️ **AP 思考**：现代教育常**过早分科**——
+>  **AP 思考**：现代教育常**过早分科**——
 > 7 年级学生被分成"文科生"或"理科生"——
 > **这跟 Renaissance 思想完全相反**——
 > **Da Vinci 12 岁进 Verrocchio 工作室什么都学**——
@@ -872,7 +872,7 @@ authorNotes: |
 - **艺术 patron**——给后人留下圣彼得 + Sistine Chapel
 - **改革催化剂**——他的奢华 + 战争**直接催生 Reformation**
 
-> ⚠️ **教学要点**：Julius II 跟 Pope Clement VI（Black Death 时期）是**同样复杂**——
+>  **教学要点**：Julius II 跟 Pope Clement VI（Black Death 时期）是**同样复杂**——
 > **个人道德有问题**——但**也有不可否认的贡献**——
 > **历史不是"评判一个人是好是坏"——是看见复杂性**。
 
@@ -995,7 +995,7 @@ authorNotes: |
 
 ##### 1538 年 — 遇到 Vittoria Colonna,Michelangelo 唯一的精神同伴
 
-**1538 年 Michelangelo 63 岁**——**他刚画完 Sistine Chapel 的 *Last Judgment*（最后审判,1536-41）**——
+**1538 年 Michelangelo 63 岁**——**他刚画完 Sistine Chapel 的 Last Judgment（最后审判,1536-41）**——
 **这时他**已经活成 Renaissance 的活化石**——**朋友陆续死光 + 教皇换了一个又一个**——
 **他**在 Rome 一个公共讲座上**遇到了**Vittoria Colonna**(46 岁)——
 **他俩都没结过婚 + 都已经过半生 + 都对宗教改革的氛围敏感**——
@@ -1004,8 +1004,8 @@ authorNotes: |
 - **生在罗马名门 Colonna 家族**(中世纪末意大利最古老的贵族之一)
 - **19 岁嫁给 Pescara 侯爵**——丈夫 1525 年战死——她**26 岁守寡**——
 - **从此再也没有再嫁**——**用余生写诗 + 研究神学 + 跟改革派来往**
-- **是 Renaissance 第一个**自己出版诗集**的女性**——*Rime*(《诗集》,1538 年第一版)
-- **她是 *spirituali*(意大利"内部改革派")的核心成员**——
+- **是 Renaissance 第一个**自己出版诗集**的女性**——Rime(《诗集》,1538 年第一版)
+- **她是 spirituali(意大利"内部改革派")的核心成员**——
   这一派**反对 Luther 的分裂——但**同情 Luther 对教会腐败的批评**——他们想**从天主教内部改革**
 
 ——**Vittoria 不是普通的女 patron**——
@@ -1019,21 +1019,21 @@ authorNotes: |
 **他**讨厌交际 + 不刮胡子 + 衣服脏 + 跟所有人打架**——
 **但**遇到 Vittoria 之后**——他**开始写诗**——
 
-**他给 Vittoria 写了 100 多首十四行诗(*sonnetti*）**——
+**他给 Vittoria 写了 100 多首十四行诗(sonnetti）**——
 **主题包括**：
 - **她作为他**精神上的"指路人"**——比 Beatrice 之于 Dante,但是真实通信不是文学幻想
 - **老年面对死亡的焦虑 + 救赎的渴望**
 - **柏拉图式的"灵魂 vs 肉体"——
   这一点很 Renaissance:用古典哲学语言谈论基督教灵魂**
 
-**Vittoria 也写诗回应他**——**她的诗集 *Rime* 收了若干给 Michelangelo 的篇章**——
+**Vittoria 也写诗回应他**——**她的诗集 Rime 收了若干给 Michelangelo 的篇章**——
 **两人这种"诗对答"——是 Renaissance 极少的男女知识分子真正平等的互动留档**——
 **这些诗 18 世纪才被系统编辑出版**——
 **今天在牛津 Bodleian 图书馆 + 梵蒂冈图书馆有手稿**。
 
-> 💡 **这一遍让你听见 Michelangelo 老年内心的转向**——
+>  **这一遍让你听见 Michelangelo 老年内心的转向**——
 > **不是 Sarah Chen audit 推测的"突然变软"——
-> 是一个 60 多岁的 *artigiano*(匠人)终于在精神上找到一个**可以平等对话的人**——
+> 是一个 60 多岁的 artigiano(匠人)终于在精神上找到一个**可以平等对话的人**——
 > 他写"我的灵魂在你面前赤裸"——这种语言他对教皇 / 朋友 / 学生从来不用——
 > **只对 Vittoria 用**。
 
@@ -1044,7 +1044,7 @@ authorNotes: |
 **他错过了她临终前的最后一面**——
 
 **几年后他给朋友 Condivi 的信里有一句留下来的原话**(意大利语):
-> *"a gran dolore mi rimase, di non aver baciata la fronte"*
+> "a gran dolore mi rimase, di non aver baciata la fronte"
 > (它给我留下巨大的悲痛,因为我没能吻她的额头)
 
 ——**这是 Michelangelo 一辈子**最少见的"软"语言**——
@@ -1054,7 +1054,7 @@ authorNotes: |
 **老年 Michelangelo 越来越退出社交 + 越来越孤独 + 越来越靠宗教自慰**——
 **这一切都跟**1547 失去 Vittoria**有结构关系**。
 
-> ⚠️ **教学要点**:Vittoria Colonna 改变了我们看 Renaissance 性别故事的方式——
+>  **教学要点**:Vittoria Colonna 改变了我们看 Renaissance 性别故事的方式——
 > **不只是 Isabella d'Este 那种**"权势女 patron"**例外**——
 > 也有 Vittoria 这种**"思想平等的女知识分子"**——
 > **她不靠丈夫 + 不靠儿子 + 不靠美貌**——
@@ -1123,20 +1123,20 @@ authorNotes: |
 
 **1508 年 25 岁——教皇 Julius II 把 Raphael 召到 Rome**——
 **同一年——Michelangelo 也在 Rome 开始画 Sistine Chapel 天顶**——
-**Julius 让 Raphael 画 Vatican 的另一组房间——*Stanze*（教皇起居室,共 4 间）**——
+**Julius 让 Raphael 画 Vatican 的另一组房间——Stanze（教皇起居室,共 4 间）**——
 **两个人**隔着几条走廊**同时为 Julius 工作**——
 
 **Raphael 画 Stanza della Segnatura（签字室,教皇审批文件的房间）**——
 **这间屋子的墙壁上有 4 幅大 fresco**：
-- **东墙：哲学（*The School of Athens*）**
-- **西墙：神学（*Disputa*）**
+- **东墙：哲学（The School of Athens）**
+- **西墙：神学（Disputa）**
 - **南墙：诗歌（Parnassus 山）**
 - **北墙：法律 / 正义**
 
 ——**这是 Renaissance "古典 + 基督教 + 艺术 + 法律" 4 个支柱的视觉百科全书**——
 **Raphael 用 4 面墙总结了**人文主义全部知识结构**。
 
-##### *The School of Athens*（雅典学派,1509-1511）— 一张画讲完 Renaissance
+##### The School of Athens（雅典学派,1509-1511）— 一张画讲完 Renaissance
 
 **这一幅 fresco 是 Raphael 26 岁那年画的**——
 **画面上**：**古希腊罗马 50+ 位哲学家 + 数学家**齐聚在一个**仿罗马 Pantheon 的拱顶大厅**——
@@ -1189,7 +1189,7 @@ authorNotes: |
 **如果 Raphael 多活 30 年——他可能盖过 Michelangelo**——
 **但他 37 岁就走——这是 Renaissance 最大的"假如"**。
 
-> ⚠️ **教学要点**：Raphael 跟 Da Vinci / Michelangelo 三个人**是**截然不同的人格**——
+>  **教学要点**：Raphael 跟 Da Vinci / Michelangelo 三个人**是**截然不同的人格**——
 > - **Da Vinci**：野路子天才,什么都想搞,半成品多
 > - **Michelangelo**:**痛苦的工匠,一辈子跟自己跟 patron 打架**
 > - **Raphael**：**温润的综合者**,**懂如何让客户开心 + 让自己也舒服**
@@ -1263,7 +1263,7 @@ authorNotes: |
 **天主教觉得他**是 Luther 的祖**——
 **新教觉得他**胆小不彻底**——
 
-> ⚠️ **教学要点**：Erasmus 是一个**典型的"先驱却不参加革命"角色**——
+>  **教学要点**：Erasmus 是一个**典型的"先驱却不参加革命"角色**——
 > 他**点燃了大火**——但**他不参加大火**——
 > **历史中这种角色经常出现**：
 > - **Voltaire** 启蒙先驱不参加法国大革命
@@ -1346,7 +1346,7 @@ authorNotes: |
 **他 17 年**没交一张画**——
 **Isabella 再有权势——她**也催不动**他**。
 
-> ⚠️ **教学要点**：Da Vinci 是雇佣关系中**最难管的艺术家**——
+>  **教学要点**：Da Vinci 是雇佣关系中**最难管的艺术家**——
 > **Isabella 这种最有权势的女性**也**催不动**他——
 > **这显示 Renaissance 时期**艺术家 vs patron 的张力**——
 > **patron 给钱 + 给项目——但艺术家最终**控制创作进度**——
@@ -1407,7 +1407,7 @@ authorNotes: |
 **没有他这种工人——Renaissance 的思想**传不出去**——
 **他是**沉默的多数——但**功能性最重要**。
 
-> ⚠️ **教学要点**：每场"文化革命"都依赖**沉默的工人**——
+>  **教学要点**：每场"文化革命"都依赖**沉默的工人**——
 > **Renaissance 不只是 Da Vinci——也是 Antonio 这种印刷工**——
 > **改革开放不只是邓小平——也是深圳第一代打工者**——
 > **互联网时代不只是 Steve Jobs——也是富士康工人**——
@@ -1450,7 +1450,7 @@ authorNotes: |
 **是 Renaissance 时代最深的体验之一**——
 **也是后来 Reformation + 反 Reformation + 宗教战争中**普通人**的体验**。
 
-> ⚠️ **教学要点**：每场"历史大事件"对普通人**意味着不同**——
+>  **教学要点**：每场"历史大事件"对普通人**意味着不同**——
 > **Savonarola 烧 Vanity 对历史学家是"Renaissance 自我反扑的标志"**——
 > **对 Lucia 是"我家奶奶给我的镜子被烧了"**——
 > **两种视角都对**——但**只看历史学家视角丢失了**人的真实痛**——
@@ -2093,7 +2093,7 @@ authorNotes: |
 - **Elon Musk 跨电动车 + 火箭 + 隧道 + AI**——同样模式
 - **现代 STEM + 人文跨学科教育**——本质上回到 Verrocchio 工作室模式（什么都教）
 
-> ⚠️ **AP 思考**：**Renaissance 500 年回声**——
+>  **AP 思考**：**Renaissance 500 年回声**——
 > **跟其他时代不同**——它**没"完全过去"**——
 > **它**变成了 Western 文化的 default 操作系统**：
 > - "天才崇拜" — 现在还在 Hollywood / Silicon Valley
@@ -2241,7 +2241,7 @@ authorNotes: |
 
 **Hypothesis 5：印刷术结构差异**
 - 欧洲**字母文字**——印刷术发明后**任何**新作品**都能印**——
-- 中国**汉字几万**——印刷术存在 400 年但**主要用来印经书**——传播新知速度慢
+- 中国**汉字几万字模**——制铸成本极高——活字相对雕版的优势被抵消，制约了新知传播
 
 ##### Needham Question 的现代相关
 
@@ -2273,7 +2273,7 @@ authorNotes: |
 **王阳明解决"个人道德"——Da Vinci 解决"自然规律"**——
 **这个根本差异**就是**为什么科学革命发生在欧洲不是中国**。
 
-> ⚠️ **AP 思考**：**Da Vinci 比王阳明"更现代"吗**？
+>  **AP 思考**：**Da Vinci 比王阳明"更现代"吗**？
 > **不**——这种比较**误导**——
 > **王阳明的"知行合一"在伦理学上至今深刻**——
 > **Da Vinci 在科学技术上至今深刻**——
@@ -2362,7 +2362,7 @@ authorNotes: |
 - **不把"暗面"当成**"否认成就"**——
 - **学历史不是站队——是看清复杂性**
 
-> ⚠️ **教学硬约束**（Rule 0）：
+>  **教学硬约束**（Rule 0）：
 > "**作为一个中国人——我承认 Renaissance 推动了西方很多结构变化——艺术 + 科学 + 个人主体性**——
 > **但我也承认 Renaissance 同时是殖民 + 反犹 + 性别压迫的精神基础**——
 > **同时代中国明朝有自己的高度——王阳明 + 郑和 + 紫禁城——不是落后**——
@@ -2594,7 +2594,7 @@ authorNotes: |
 | **Machiavelli** | 政治学家 1469-1527 | 《The Prince》——现代政治学起源——政治脱离宗教道德 |
 | **Vesalius** | 解剖学家 1514-1564 | 《De Humani Corporis Fabrica》——西方解剖学奠基 |
 | **王阳明** | 中国同代哲学家 1472-1529 | "心即理 + 知行合一"——东方"重生"代表——Da Vinci 的中国对照 |
-| **郑和** | 明朝航海家 1371-1433 | 七下西洋——比哥伦布早 87 年——但 1433 后明朝停 |
+| **郑和** | 明朝航海家 1371-1433 | 七下西洋——比哥伦布早约 70 年——但 1433 后明朝停 |
 
 ## 附录 D：可视化提示（地图 / 时间线）
 

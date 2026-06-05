@@ -88,12 +88,12 @@ It sounds like climate has nothing to do with constitutional history. But **a wa
          ↓ grants fief
        Knights (~5,000 people)
          ↓ owes service
-    Peasants (~90% of population)
+    Peasants (majority; ~40-50% were villeins/bonded, plus all women excluded)
 ```
 
-Each level "did homage" to the level above — *I give you land; you give me soldiers and taxes*. **This was a two-way contract, not absolute obedience.** That matters: the barons believed they and the king were bound by **mutual obligation**, not "whatever the king says goes."
+Each level "did homage" to the level above — I give you land; you give me soldiers and taxes. **This was a two-way contract, not absolute obedience.** That matters: the barons believed they and the king were bound by **mutual obligation**, not "whatever the king says goes."
 
-But ever since William the Conqueror, the **Norman kings** had been chipping away at that idea. Their logic: *I conquered this country from Normandy. My word is the law.*
+But ever since William the Conqueror, the **Norman kings** had been chipping away at that idea. Their logic: I conquered this country from Normandy. My word is the law.
 
 By 1215, the tension had been building for 150 years.
 
@@ -139,14 +139,14 @@ But he was utterly unprepared. **None of his four brothers had ever raised him t
 
 Five years in, he lost **the most important French territory the English crown had held since 1066** — **Normandy**.
 
-Here's how. He stole a French nobleman **Hugh of Lusignan**'s 12-year-old fiancée **Isabella of Angoulême** (because she was beautiful) and made her his second wife. Hugh appealed to the French king **Philip II**, who pounced on the excuse: *John is my feudal vassal — if he won't appear in court, I confiscate his lands.* In 1204 the French army rolled into Normandy and took the whole duchy.
+Here's how. He stole a French nobleman **Hugh of Lusignan**'s 12-year-old fiancée **Isabella of Angoulême** (because she was beautiful) and made her his second wife. Hugh appealed to the French king **Philip II**, who pounced on the excuse: John is my feudal vassal — if he won't appear in court, I confiscate his lands. In 1204 the French army rolled into Normandy and took the whole duchy.
 
 John was 38. **In five years he had erased 138 years of English royal foothold in France** — a foothold dating back to William the Conqueror in 1066.
 
 The streets gave him a second nickname:
 > **"John Softsword"**
 
-— possibly the most devastating insult you can throw at a medieval king. *Your sword is soft.*
+— possibly the most devastating insult you can throw at a medieval king. Your sword is soft.
 
 #### Failure #2: The Pope Pinned Him to the Floor (1208-1213)
 
@@ -156,13 +156,13 @@ The Pope's response (1208): an **interdict** on all of England. **For six years*
 
 Medieval people believed unbaptized babies went to hell. They believed unburied bodies went to hell. **For six straight years.**
 
-In 1209 the Pope went one level further: he personally **excommunicated John**. Translation: *you, John, are going to hell.*
+In 1209 the Pope went one level further: he personally **excommunicated John**. Translation: you, John, are going to hell.
 
 By 1213 John couldn't take it anymore. He did something **the English nobility would never forget or forgive**:
 
 > He formally **gave England to the Pope as a fief**, becoming the Pope's **vassal**, and agreed to send **1,000 silver marks to Rome every year**.
 
-That day the English barons went cold inside. **This wasn't failure — this was disgrace**. *Your king just turned you and your country into someone else's vassal.*
+That day the English barons went cold inside. **This wasn't failure — this was disgrace**. Your king just turned you and your country into someone else's vassal.
 
 #### Failure #3: Bouvines (1214)
 
@@ -288,7 +288,7 @@ In early May he handed the barons a 49-clause draft called the **Articles of the
 - They **expanded 49 articles into 63 clauses**
 - They **translated raw baronial demands into enforceable legal language**
 - They added **procedural details** (how to levy scutage, how to appoint judges, how to collect taxes)
-- **Langton personally insisted on Clause 39** — *no free man shall be imprisoned without lawful judgment.* That clause was not in the original baronial complaints. **He put it in.**
+- **Langton personally insisted on Clause 39** — no free man shall be imprisoned without lawful judgment. That clause was not in the original baronial complaints. **He put it in.**
 
 — That clause, 800 years later, would become the **Fifth Amendment of the U.S. Constitution**. A 65-year-old English bishop, on some afternoon during five days in June 1215, wrote down the words **Thomas Jefferson would copy in 1791**.
 
@@ -330,8 +330,8 @@ The greatest knight in English history. That isn't a posthumous title — that's
 
 **At Runnymede he was 69.** He was the other mediator alongside Stephen Langton — but his position was strange:
 
-- He was loyal to John ("*I do not betray a king to whom I have sworn homage.*")
-- But he understood the barons' anger ("*The king has clearly gone too far.*")
+- He was loyal to John ("I do not betray a king to whom I have sworn homage.")
+- But he understood the barons' anger ("The king has clearly gone too far.")
 - So he **leaned on both sides** — pushing John to compromise, pushing barons to hold back
 - His name does **not** appear among the 25 baron signatories. **He wasn't on the rebel side.**
 
@@ -426,11 +426,11 @@ Clause 61 in detail:
 > The irony of history: they signed because their tax bills were too high.
 > 561 years later, that signature became the legal core of America's revolution.
 
-#### Who Was *Not* on the List — That Matters Too
+#### Who Was Not on the List — That Matters Too
 
 The 25 barons did **not** include:
 
-- **Any serf or free peasant representative** — 90% of England had no voice
+- **Any serf or free peasant representative** — villeins (~40–50% of England) and all women had no voice
 - **Any merchant or town representative** — London helped, but no Londoners made the 25
 - **Any lower clergy** (only Stephen Langton represented the church) — parish priests had no voice
 - **Any women** — feudal society granted zero public rights to women
@@ -450,7 +450,7 @@ But he knew a few concrete things:
 
 Over the next 800 years, Tom's descendants — slowly, in fits and starts — got pulled inside the meaning of "free man" in Clause 39: the 1832 Reform Act (some men got the vote), 1867 (more men), 1918 (some women), 1928 (all women). **Each expansion took generations to win. Magna Carta did not protect Tom automatically.**
 
-> ⚠️ Tom's story isn't in any history book — he was illiterate, no one wrote his biography. But on that day in 1215, **90% of England was Tom**. If you only watch King John and the 25 barons, you're seeing the story of 10% of the country.
+> ⚠️ Tom's story isn't in any history book — he was illiterate, no one wrote his biography. But on that day in 1215, **most of England was Tom** — roughly 40–50% were villeins like his father, plus women and others excluded in writing. If you only watch King John and the 25 barons, you're seeing the story of a small minority.
 >
 > **Put yourself in Tom's place**: you're 13. You hear the king and the barons signed a thing. Your dad says, "*that's rich men's business.*" You're still going to be cutting hay for the lord next month. **What do you think about it?**
 
@@ -518,7 +518,7 @@ They did four concrete things:
 
 1. **Expanded 49 to 63** — added procedural detail not in the original demands
 2. **Legalized the language** — turned rough demands into an enforceable charter
-3. **Personally added Clause 39** — *no free man shall be imprisoned without lawful judgment* — **this clause was not in the barons' original list**
+3. **Personally added Clause 39** — no free man shall be imprisoned without lawful judgment — **this clause was not in the barons' original list**
 4. **Added Clause 61** — the 25-baron committee. The barons had not asked for this. It was **Stephen Langton's enforcement mechanism.**
 
 For five days they wrote with **goose-feather quills, on parchment, by candlelight** — slowly, but every word reviewed.
@@ -551,7 +551,7 @@ The day after sealing, John was already at Windsor writing an urgent letter and 
 
 Recipient: **Pope Innocent III** — yes, the very same Pope who had put England under interdict for six years starting in 1208.
 
-The letter said roughly: "*Holiness, look at this — the document those barons forced me to seal — it limits you too — because since 1213 I am your vassal, so limiting your vassal limits your authority. Will you do something about it?*"
+The letter said roughly: "Holiness, look at this — the document those barons forced me to seal — it limits you too — because since 1213 I am your vassal, so limiting your vassal limits your authority. Will you do something about it?"
 
 **John's gambit was sharp**: he knew Innocent III could not tolerate having a vassal constrained by outsiders. **Feudal logic ran upward**: the Pope was the lord of all kings. Constraining the vassal = constraining the suzerain.
 
@@ -582,7 +582,7 @@ The harshest blow: **Stephen Langton, the Archbishop of Canterbury and chief dra
 
 When the bull reached England, **the barons exploded**:
 
-> "*The Pope betrayed us! We will not let John return to tyranny — we will replace him.*"
+> "The Pope betrayed us! We will not let John return to tyranny — we will replace him."
 
 They did something **wild**: they invited **Prince Louis of France** (later Louis VIII) to come over and be the King of England.
 
@@ -639,7 +639,7 @@ The concrete things he did:
 1. **Reissued Magna Carta in Henry III's name (the 1216 version)**
 2. **Cut Clause 61** (the 25-baron committee — too radical, gave the wavering barons a face-saving way back)
 3. **Cut Clauses 12 and 14** (taxation by "common counsel" — gave the new king tax flexibility)
-4. **Kept Clause 39** ("*no free man shall be imprisoned without lawful judgment*") — saved **the most important clause for the next 800 years**
+4. **Kept Clause 39** ("no free man shall be imprisoned without lawful judgment") — saved **the most important clause for the next 800 years**
 
 #### The Pope Also Died
 
@@ -726,9 +726,9 @@ Most of the 63 clauses are highly specific feudal detail — "widows may keep th
 #### Original Text + Physical Detail
 
 > **Latin original**:
-> "*Nullus liber homo capiatur vel imprisonetur aut disseisietur aut utlagetur
+> "Nullus liber homo capiatur vel imprisonetur aut disseisietur aut utlagetur
 > aut exuletur aut aliquo modo destruatur, nec super eum ibimus nec super
-> eum mittemus, **nisi per legale judicium parium suorum vel per legem terrae**.*"
+> eum mittemus, **nisi per legale judicium parium suorum vel per legem terrae**."
 
 **Plain English** (Lexile-1000 level):
 > "**No free person shall be** arrested, imprisoned, stripped of property, banished, exiled, or harmed in any way; **nor will the king himself attack him or send anyone to attack him — except by lawful judgment of his peers or by the law of the land.**"
@@ -748,7 +748,7 @@ In 1215, "his peers" meant **a baron must be tried by other barons**. Over the n
 - **1670** — Bushel's Case established that **a jury can refuse to follow the judge's verdict**
 - **1791** — Sixth Amendment: every person has the **right to trial by jury**
 
-**This principle is now called *trial by jury*** — inherited by the US, UK, Canada, Australia, India, Hong Kong, and beyond.
+**This principle is now called trial by jury** — inherited by the US, UK, Canada, Australia, India, Hong Kong, and beyond.
 
 **② "Per legem terrae" (by the law of the land)**
 
@@ -763,9 +763,9 @@ In the 17th century, Edward Coke translated this phrase as "**by the law of the 
 
 #### The Boundary of "Free Man"
 
-⚠️ **Important warning**: in 1215, *liber homo* — "free man" — covered **only about 10% of the English population**:
-- 90% were **serfs** — **not protected by Clause 39**
-- A lord could do whatever he wanted to a serf — Clause 39 **didn't protect them**
+⚠️ **Important warning**: in 1215, liber homo — "free man" — covered **fewer than half the English population**:
+- Roughly **40–50% were villeins** (bonded farmers) — **not protected by Clause 39**
+- A lord could do whatever he wanted to a villein — Clause 39 **didn't protect them**
 
 **The "universalization" of Clause 39 took 800 years**:
 - 1832 Reform Act — some men got the vote
@@ -856,9 +856,9 @@ But the idea didn't die.
 
 When Jefferson drafted the Declaration of Independence, he wrote:
 
-> "*Whenever any Form of Government becomes destructive of these ends,
+> "Whenever any Form of Government becomes destructive of these ends,
 > **it is the Right of the People to alter or to abolish it**, and to
-> institute new Government...*"
+> institute new Government..."
 
 — **This is the modern translation of Clause 61.** From "barons monitoring the king" to "the people monitoring the government." **A 561-year leap.**
 
@@ -874,7 +874,7 @@ But its **spiritual ancestor**: **Clause 61's 1215 right of armed resistance aga
 
 | ❌ Did NOT say | Reality |
 |---|---|
-| Everyone is equal | Only protects "free men" — about 90% of the population (serfs) totally outside |
+| Everyone is equal | Only protects "free men" — roughly 40–50% of the population (villeins/bonded farmers) and all women were excluded |
 | Democracy | The 25-baron committee was all great lords. No town representatives. |
 | Religious freedom | Only protected the English **church's** "freedom" (privileges, really). Did not protect individual religious choice. |
 | Free speech | The concept didn't exist in 1215 |
@@ -941,8 +941,8 @@ L4 Events: 1066 Conquest → 1170 Becket → 1199 John crowned → 1204 lose Nor
 | Continuity | Change |
 |---|---|
 | Still a king | First written constraint (oral tradition becomes text) |
-| Still feudal | Established the *possibility* that "the king is also under the law" |
-| 90% serf life unchanged | The 25-committee idea → the seed of Parliament |
+| Still feudal | Established the possibility that "the king is also under the law" |
+| Villein and serf life unchanged | The 25-committee idea → the seed of Parliament |
 | Church still spiritual boss | "Power can be legally limited" becomes a written proposition |
 
 **Remember when writing AP**: real historical change is rarely 0/1. It's usually **partial change in some dimensions, continuity in others**. **Magna Carta is a textbook case of "partial change."** Recognizing this is what gets a 5 in AP World.
@@ -962,7 +962,7 @@ Place 1215 England side by side with Southern Song (about 1127-1279):
 | City sizes | London ~20,000; biggest English cities ~50-100K | Hangzhou (capital): 1+ million; Kaifeng (former capital): 1+ million |
 | Literacy rate | ~5% | ~20% (movable-type printing invented in 1040, 175 years earlier) |
 | Who can tax the king/emperor | No one; Magna Carta gives barons a check | No one; but **remonstrance officials could "block and return" imperial edicts** |
-| Ordinary peasant's life | 90% serfs, bound to lord's land, **no personal freedom** | 90% small farmers or tenants; **personal freedom** but heavy taxes; in theory their sons could take the exam (in practice, very high barrier) |
+| Ordinary peasant's life | ~40–50% villeins, bound to lord's land, **no personal freedom**; plus all women excluded | ~90% small farmers or tenants; **personal freedom** but heavy taxes; in theory their sons could take the exam (in practice, very high barrier) |
 | Mechanism for constraining power | Aristocracy + Church + written charter | Civil servant class + remonstrance officials + legal tradition + Mandate of Heaven doctrine |
 
 **Two different answers to the same question — "how do you constrain power?"**
@@ -996,9 +996,9 @@ Historian William Stubbs (1825-1901) and others portrayed Magna Carta as "the fo
 
 **② Revisionist Reading (mid-late 20th century)**
 
-Historian J.C. Holt (1922-2014), in *Magna Carta* (1965), argued:
+Historian J.C. Holt (1922-2014), in Magna Carta (1965), argued:
 - The 1215 barons were not "freedom fighters" — they were a **lobby group** protecting their feudal privileges
-- Clause 39's "*liber homo*" only covered about 10% of the population
+- Clause 39's "liber homo" only covered fewer than half the population — roughly 40–50% were villeins (bonded farmers)
 - The idea that "Magna Carta = foundation of modern democracy" was a **retroactive reading** by 17th-century lawyers like Edward Coke — not the 1215 original meaning
 
 **③ Post-Revisionist / Contemporary**
@@ -1028,7 +1028,7 @@ The three views often produce different answers. **That's exactly the core value
 | Magna Carta = foundation of democracy | The concept of "democracy" didn't exist in 1215. The document protected baronial privilege. It didn't protect serfs or women. |
 | The whole population cheered when it was signed | Most ordinary people didn't even know it existed. Life went on identically the next day. |
 | King John was a uniquely evil monster | He was bad, but not even close to the most brutal medieval king. He's been demonized partly because later generations needed a "villain" to elevate Magna Carta's status. |
-| Clause 39 = everyone is equal | "Free man" excluded ~90% of the population (serfs). |
+| Clause 39 = everyone is equal | "Free man" excluded roughly 40–50% of the population (villeins/bonded farmers), plus all women. |
 | The document took effect immediately | Sealed in June, declared void by the Pope in August. It didn't stabilize until the 1216 / 1225 reissues. |
 | England was unique in having a charter like this | At the same time, similar "baronial demand" documents appeared across Europe (Spain, Holy Roman Empire). England's path is distinctive only because of its later evolution. |
 | The full original is still law today | The 1215 version was never fully in force. What's still law today is just three clauses (1, 9, 29) of the 1297 version. |
@@ -1040,10 +1040,10 @@ The three views often produce different answers. **That's exactly the core value
 These are AP DBQ-style training prompts. **No "right answer"**. Each is suitable for a nuanced essay.
 
 1. If Pope Innocent III had not declared Magna Carta void (counter-factual), how would post-1215 history have evolved?
-2. In 1628, Edward Coke used Clause 39 to oppose Charles I. But in 1215, Clause 39 only protected free men ("*liber homo*"). Was Coke's "reuse" a discovery of meaning that was already there — or an injection of new meaning that 1215 had never imagined?
+2. In 1628, Edward Coke used Clause 39 to oppose Charles I. But in 1215, Clause 39 only protected free men ("liber homo"). Was Coke's "reuse" a discovery of meaning that was already there — or an injection of new meaning that 1215 had never imagined?
 3. China's "exam + remonstrance" mechanism and England's "aristocracy + written charter" both tried to constrain power, but ended up on completely different paths. If you were designing a modern institution to constrain power, which side would you borrow more from? Why?
 4. The 25 barons of 1215 thought they were protecting their own privileges. Later generations called them "founders of liberty." Is that historical reinterpretation legitimate?
-5. In 1215, Clause 39 protected "free men" (about 10% of the population). By 2025, it protects almost everyone. If you could pull Stephen Langton into the present and tell him this — would he say "*Yes, that was always my intention*", or "*The freedom you describe is not what I had in mind at all*"?
+5. In 1215, Clause 39 protected "free men" — fewer than half the population. By 2025, it protects almost everyone. If you could pull Stephen Langton into the present and tell him this — would he say "Yes, that was always my intention", or "The freedom you describe is not what I had in mind at all"?
 
 ---
 
@@ -1089,7 +1089,7 @@ These are AP DBQ-style training prompts. **No "right answer"**. Each is suitable
 | habeas corpus | "Produce the body" — detention must have a lawful reason |
 | jury | A group of peers who judge a defendant |
 | writ | A formal court order in writing |
-| serf | A peasant bound to a lord's land, with no personal freedom (about 90% of 1215 England) |
+| serf / villein | A peasant bound to a lord's land, with no personal freedom (roughly 40–50% of 1215 England were villeins) |
 
 ## Appendix C: Character Cheat Sheet
 
@@ -1104,7 +1104,7 @@ These are AP DBQ-style training prompts. **No "right answer"**. Each is suitable
 | Edward I | The king who wrote Magna Carta into statute in 1297 |
 | Edward Coke | 17th-century Chief Justice who rediscovered Clause 39 to fight Charles I — "modernized" Magna Carta |
 | Thomas Jefferson | Key Founding Father, drafter of the U.S. Declaration of Independence — directly drew on Magna Carta |
-| Tom (fictional serf boy) | The 1215 view of 90% of England — the seal didn't change his life |
+| Tom (fictional serf boy) | Represents the majority excluded by Magna Carta — villeins, women, and others; the seal didn't change his life |
 
 ## Appendix D: Visualization Hints (for atlas / quiz / reading modules)
 

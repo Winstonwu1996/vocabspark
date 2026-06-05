@@ -271,7 +271,7 @@ a 33-year-old monk picked up a hammer and nails** —
 1536       Calvin at 27 — publishes Institutes of the Christian Religion
 1541       Calvin at 32 — returns to Geneva to take charge of the theocratic city
 1545-1563  Council of Trent — Catholic Counter-Reformation council
-1546       Luther dies at 63
+1546       Luther dies at 62
 1547       Henry VIII dies — 9-year-old Edward VI succeeds (Protestantism intensifies)
 1553       Edward VI dies — Mary I succeeds ("Bloody Mary" burns 300 Protestants in 5 years)
 1553       Servetus burned in Geneva by Calvin (Protestant kills heretic)
@@ -785,7 +785,7 @@ because he demanded what I could not do — he gave me **impossible standards** 
 **Paving the way for Lutheran / Calvinist / Anglican pastors to marry** —
 **The fact that Protestant pastors have families today began with Luther + Katharina in 1525**.
 
-##### February 18, 1546 — Death at 63
+##### February 18, 1546 — Death at 62
 
 **Luther's body had always been wrecked (monastic asceticism + later obesity + high blood pressure)** —
 **In February 1546 — he traveled back to his birthplace Eisleben to mediate a family dispute** —
@@ -1033,7 +1033,7 @@ he **asked**: **«The fire is too cruel — change the sentence to beheading.»*
 **He used **Catholic tools to fight Catholic content**** —
 **This is the Reformation's deepest internal contradiction expressed in its rawest form**.
 
-##### May 27, 1564 — Death at 55
+##### May 27, 1564 — Death at 54
 
 **Calvin's body was wrecked his whole life** —
 **Headaches + ulcers + lung disease + gout** —
@@ -2733,7 +2733,7 @@ he **asked**: **«The fire is too cruel — change the sentence to beheading.»*
 1540        Pope Paul III approves the Society of Jesus (Jesuits)
 1541        Calvin at 32 returns to Geneva
 1545-1563   Council of Trent — Catholic Counter-Reformation council
-1546.2.18   Luther dies at 63
+1546.2.18   Luther dies at 62
 1547        Henry VIII dies — Edward VI succeeds (Protestantism intensifies)
 1553        Edward VI dies — Mary I succeeds ("Bloody Mary")
 1553        Servetus burned in Geneva by Calvin
@@ -2742,7 +2742,7 @@ he **asked**: **«The fire is too cruel — change the sentence to beheading.»*
 1556        Ignatius of Loyola dies at 65
 1558        Mary dies — Elizabeth I succeeds (45 stable Protestant years)
 1559        Elizabethan Settlement — foundation of Anglican Church
-1564.5.27   Calvin dies at 55
+1564.5.27   Calvin dies at 54
 1572.8.24   Saint Bartholomew's Day Massacre (5,000-30,000 French Protestants dead)
 1583        Matteo Ricci enters China at Zhaoqing, Guangdong
 1588        Spanish Armada defeated — Protestantism secure in England

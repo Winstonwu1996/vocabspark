@@ -290,7 +290,7 @@ He saw with his own eyes:
 >
 > The dead could not be buried. A body left in the street — only piled at the doorstep for the corpse-collectors. **They came each day with two hundred bodies.** The church graveyards were full. **They dug enormous pits. Ten bodies, a thin layer of earth, ten more bodies.** Like making a layered cake of the dead.
 >
-> In those six months, Florence lost more than 100,000 people — more than 30 years of births. **Whole families wiped out. Entire streets emptied. On country estates, no one was left — pigs walked into the master's bedroom.**"
+> In those six months, Florence lost more than 100,000 people — more than 30 years of births. **Whole families wiped out. Entire streets emptied. On country estates, no one was left — pigs walked into the master's bedroom.**" [Scholarly note: Boccaccio's "100,000" is literary exaggeration; modern historians estimate Florence's actual death toll at roughly 40,000-60,000, or 40-50% of the pre-plague population, based on tax records and demographic data.]
 
 ##### The five layers of value in this passage
 
@@ -418,7 +418,7 @@ He recorded only one sentence in the *Cronaca* — the most razor-sharp single l
 
 ##### Author file
 
-**'Umar ibn al-Wardi.** **A Quran scholar in his late 50s in Aleppo, Syria.** **One of the most respected scholars in the entire Islamic world at the time.** **He was the *sheikh-ul-Islam* of the Mamluk Sultanate** — its highest religious authority.
+**'Umar ibn al-Wardi.** **A Quran scholar in his late 50s in Aleppo, Syria.** **One of the most respected scholars in the entire Islamic world at the time.** **He served as qadi (Islamic religious judge) in Aleppo** — a senior scholar of Islamic law in the city.
 
 **Plague entered Aleppo in 1348.** **Ibn al-Wardi was 58.** **He did something extraordinarily unusual:**
 
@@ -841,7 +841,7 @@ The body of the *Decameron* is 100 stories. **But what historians return to, aga
 >
 > **The dead got no proper funeral.** **Bodies left in the streets — the neighbors too afraid to move them.** **The corpse-collectors arrived, threw the bodies into the great pit beside Santa Maria Novella.** **No priest, no family, no prayer.** **The dead were thrown like garbage.**
 >
-> **In those six months — Florence lost more than 100,000 people.** When the plague finally faded, we walked the Florence streets again — **the empty houses were like an unpeopled forest.** **Pigs in the master's bedroom of the country estate.** **Whole families eradicated.** **Florence's soul was gone — only the stones remained.**"
+> **In those six months — Florence lost more than 100,000 people** [literary exaggeration; scholars estimate ~40,000-60,000 actual deaths]. When the plague finally faded, we walked the Florence streets again — **the empty houses were like an unpeopled forest.** **Pigs in the master's bedroom of the country estate.** **Whole families eradicated.** **Florence's soul was gone — only the stones remained.**"
 
 #### Five layers of analysis
 

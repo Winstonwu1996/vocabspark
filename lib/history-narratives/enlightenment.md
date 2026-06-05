@@ -67,7 +67,7 @@
 
 > John Locke (1632-1704) published two foundational texts in 1689, returning from Dutch exile after the Glorious Revolution. *Two Treatises of Government*: government exists to protect natural rights — **life, liberty, and property** — and loses legitimacy if it violates them. *An Essay Concerning Human Understanding* (1690): the mind begins as a **tabula rasa** (blank slate); all knowledge comes from sense experience. Together, these gave the philosophes two weapons: a political language of rights, and an epistemological license to test everything — including Church authority — against experience.
 
-**Spinoza + Leibniz: 이성주의 vs 경험주의 분기**
+**Spinoza + Leibniz: 理性主义 vs 经验主义的分歧**
 
 荷兰犹太哲学家 Baruch Spinoza (斯宾诺莎, 1632-1677) 的《伦理学》(Ethica, 1677, 死后出版) 是 17 世纪最激进的文本之一: 上帝即自然 (Deus sive Natura), 没有独立于自然的人格神, 没有奇迹, 没有灵魂不朽。Spinoza 被阿姆斯特丹犹太社区逐出 (cherem, 驱逐令), 被基督教圈子视为无神论者。德国哲学家 Gottfried Wilhelm Leibniz (莱布尼茨, 1646-1716) 1714 年的《单子论》(Monadologie) 走另一条路: 宇宙由无数不可分的精神单元「单子 (Monad)」构成, 上帝是最高单子, 这是一个理性主义 (rationalism) 体系 — 从第一原则用逻辑推导整个宇宙。Jonathan Israel 在《激进启蒙》(Radical Enlightenment, 2001) 里做了一个重要区分: **激进启蒙 (Radical Enlightenment)** — 以 Spinoza/Bayle 为代表, 拒绝上帝、奇迹、等级制; **温和启蒙 (Moderate Enlightenment)** — 以 Locke/Newton 为代表, 保留上帝 (理神论形式) + 现有政治秩序。这个区分重要, 因为 18 世纪 philosophes 大多属于温和派 — 包括 Voltaire — 而激进派往往在地下流通。
 
@@ -79,7 +79,7 @@
 
 > Newton's *Principia* (1687) inspired a religious position called **Deism**: God set up the universe with natural laws, then stepped back. The universe runs like a clockwork mechanism; God is the clockmaker who built it but does not rewind it. This ruled out miracles, prayer, and revelation — no God-spoke-directly-to-prophet moments. English Deists included John Toland and Matthew Tindal. Voltaire was a lifelong Deist: he believed the regularity of the universe proved a creator, but he despised organised religion. His famous battle cry — **"Écrasez l'infâme!"** ("Crush the infamous thing!") — was aimed at the Church, not at God. The distinction matters.
 
-**Pierre Bayle: 회의주의의 무기 창고**
+**Pierre Bayle: 怀疑主义的武器库**
 
 法国 Protestant 学者 Pierre Bayle (皮埃尔·贝勒, 1647-1706) 1685 年 Edict of Fontainebleau 撤销 Edict of Nantes 后流亡荷兰 (Louis XIV 撤销了胡格诺教徒的宗教保护)。1697 年出版《历史与批判词典》(Dictionnaire historique et critique) — 这本书是 18 世纪 philosophes 的标准工具书。Bayle 的方法是: 在词条里先引用传统权威的说法, 然后在注脚里用逻辑把它拆解。圣经人物、历史奇迹、神学教条, 一一用同一把理性刀切开。这本词典直接启发了 Diderot + d'Alembert 1751 年的《百科全书》(Encyclopédie) — 启蒙运动最重要的集体项目 (Part 2 详写)。Bayle 的核心立场: 一个无神论者 (athée) 可以是道德上良好的人 — 这在 1690s 是极端危险的主张, 因为它断掉了「没有地狱就没有道德」这条锁链。
 
@@ -215,7 +215,7 @@ Voltaire 1738 年出版《牛顿哲学原理》(Éléments de la philosophie de 
 
 ---
 
-*Part 1 写作备注*
+Part 1 写作备注
 
 **史料引用索引**:
 - Ian Davidson, *Voltaire: A Life* (2010): Voltaire 个人传记事实核查主参考, 涵盖出生、改名、Bastille、英国行程、du Châtelet 关系
@@ -290,7 +290,7 @@ Diderot 的回应是: 秘密继续印。他在当局默许的灰色地带操作�
 
 Voltaire 的通信口号是「**Écrasez l'infâme!**」(消灭卑劣之物！), 缩写 Écr. l'inf., 他在信件末尾重复它成百上千次。
 
-*infâme* (卑劣之物) 到底指什么？Voltaire 给了很多版本, 但核心是三件事叠在一起: 天主教迷信 (他认为是对理性的最大伤害), 宗教不宽容 (不同信仰的人被追杀、处死), 和专制王权 (法院不需要证据就能以宗教罪名处决人)。
+infâme (卑劣之物) 到底指什么？Voltaire 给了很多版本, 但核心是三件事叠在一起: 天主教迷信 (他认为是对理性的最大伤害), 宗教不宽容 (不同信仰的人被追杀、处死), 和专制王权 (法院不需要证据就能以宗教罪名处决人)。
 
 > Voltaire's letters close with a battle cry: **"Écrasez l'infâme!"** — "Crush the infamous thing!" — repeated hundreds or thousands of times across his correspondence.
 >
@@ -718,17 +718,17 @@ Scott 的核心论点: 女性权利倡导者在 18 世纪面临的不是「等�
 
 ---
 
-*总行数: 约 390 行*
+总行数: 约 390 行
 
-*史料来源标注:*
-- *Frank Kafker, The Encyclopédists as a Group (1994) — Voltaire 条目数量考证*
-- *David Bien, The Calas Affair (1960) — Calas 案史学分析*
-- *Nicholas Cronk, The Cambridge Companion to Voltaire (2009) — Voltaire 财务记录*
-- *Laurent Dubois, Avengers of the New World (2004) — 奴隶制 + Candide 引用*
-- *Arthur Hertzberg, The French Enlightenment and the Jews (1968) — 反犹辞典考证*
-- *T.D. Kendrick, The Lisbon Earthquake (1956) — 里斯本地震死亡人数*
-- *Olivier Blanc, Olympe de Gouges (2003) — Gouges 生平考证*
-- *Joan Scott, Only Paradoxes to Offer (1996) — 《女性宣言》历史命运*
+史料来源标注:
+- Frank Kafker, The Encyclopédists as a Group (1994) — Voltaire 条目数量考证
+- David Bien, The Calas Affair (1960) — Calas 案史学分析
+- Nicholas Cronk, The Cambridge Companion to Voltaire (2009) — Voltaire 财务记录
+- Laurent Dubois, Avengers of the New World (2004) — 奴隶制 + Candide 引用
+- Arthur Hertzberg, The French Enlightenment and the Jews (1968) — 反犹辞典考证
+- T.D. Kendrick, The Lisbon Earthquake (1956) — 里斯本地震死亡人数
+- Olivier Blanc, Olympe de Gouges (2003) — Gouges 生平考证
+- Joan Scott, Only Paradoxes to Offer (1996) — 《女性宣言》历史命运
 # T7 Enlightenment 1689-1789 — Narrative Part 3
 # 启蒙运动 1689-1789 · 第三部
 
@@ -737,7 +737,7 @@ Scott 的核心论点: 女性权利倡导者在 18 世纪面临的不是「等�
 **3 lens 主角 in this part**:
 - **Voltaire (perpetrator-actor)** — 写过《Candide》，知道奴隶制，不行动
 - **Olympe de Gouges (lonely-mediator)** — 跨 Part 背景人物
-- **Toussaint Louverture (receiving-end / defaultLens)** ⭐⭐⭐ Part 3 主角 — 47-55 岁
+- **Toussaint Louverture (receiving-end / defaultLens)** Part 3 主角 — 47-55 岁
 
 ---
 
@@ -1179,9 +1179,9 @@ Raynal 的那句话——「那个伟大的人在哪里？」
 
 ---
 
-*Part 3 完 / 下接 Part 4: 1798-1804 Toussaint 的宪法、Napoleon 的背叛、海地独立*
+Part 3 完 / 下接 Part 4: 1798-1804 Toussaint 的宪法、Napoleon 的背叛、海地独立
 
-*史学来源: C.L.R. James《The Black Jacobins》1938; Laurent Dubois《Avengers of the New World》2004; Robin Blackburn《The Overthrow of Colonial Slavery》1988; 法国国民公会 1794.2.4 废奴议事记录 (Journal des débats et des décrets)*
+史学来源: C.L.R. James《The Black Jacobins》1938; Laurent Dubois《Avengers of the New World》2004; Robin Blackburn《The Overthrow of Colonial Slavery》1988; 法国国民公会 1794.2.4 废奴议事记录 (Journal des débats et des décrets)
 
 ---
 
@@ -1194,7 +1194,7 @@ Raynal 的那句话——「那个伟大的人在哪里？」
 **3 lens 主角**:
 - **perpetrator-actor**: Voltaire (1694-1778)
 - **lonely-mediator**: Olympe de Gouges (1748-1793)
-- **receiving-end (defaultLens ⭐)**: Toussaint Louverture (1743-1803)
+- **receiving-end (defaultLens)**: Toussaint Louverture (1743-1803)
 
 ---
 

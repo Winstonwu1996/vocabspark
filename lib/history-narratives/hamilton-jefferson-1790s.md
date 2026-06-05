@@ -97,7 +97,7 @@ authorNotes: |
 
 ### 配角（不展开，仅链接用）
 
-- **George Washington**（首任总统）——签了 Hamilton 的国家银行，1794 年亲自骑马领 13,000 民兵出征镇压威士忌暴动（美国史上唯一一次在任总统亲自带兵）。
+- **George Washington**（首任总统）——签了 Hamilton 的国家银行，1794 年以总统身份亲自随军出征至 Bedford，随后将指挥权交给 Henry Lee 将军（史上唯一一次在任总统亲临前线随军出征，但未亲自指挥作战）。
 - **Thomas Jefferson**（国务卿）——《独立宣言》执笔人，「人人生而平等」六字的作者；strict construction（严格解释宪法）的代表；蓄奴约 600 人；在《Notes on the State of Virginia》里写过黑人天生低劣论；收到 Banneker 信后回信客气却绕开真问题，私下怀疑年历是白人代算。
 - **James Madison**——Jefferson 的盟友，从《联邦党人文集》合著者转向反 Hamilton 阵营。
 
@@ -131,7 +131,7 @@ Washington 犹豫，让两人各写意见书，最后签了 Hamilton 这边。**
 
 三年和平抗议无效后，1794 年 7 月一个税官来抓欠税者，动枪死人，整片山炸了。约 7,000 酒农聚 Braddock's Field——内部混乱（有人要打东边、有人只想吓税官、有人要西部独立）。他们大多数十几年前刚为「反抗不公的税」跟英国打过，以为自己是新的「自由之子」。
 
-1794 年秋，Washington 与 Hamilton 征召约 13,000 民兵（比独立战争好几场仗的兵都多），Washington 亲自骑马领队。大军压来时 7,000 人散了，没有交战。联邦军搜村抓人，押约 20 人去费城受审，2 人判叛国罪，后被 Washington 赦免。**真正目的不是抓人，是立威给所有人（尤其有钱债主）看：这个政府收不上税时会派军队来。**
+1794 年秋，Washington 与 Hamilton 征召约 13,000 民兵（比独立战争好几场仗的兵都多），Washington 亲自骑马随军出征至 Bedford，随后将指挥权交给 Henry Lee 将军，自己返回费城。大军压来时 7,000 人散了，没有交战。联邦军搜村抓人，押约 20 人去费城受审，2 人判叛国罪，后被 Washington 赦免。**真正目的不是抓人，是立威给所有人（尤其有钱债主）看：这个政府收不上税时会派军队来。**
 
 ### Beat 5 — 1800 政党轮替
 
@@ -281,7 +281,7 @@ Hamilton 赢了银行、赢了承债、赢了那场镇压。但 1800 年大选 J
 | Alexander Hamilton | perpetrator-actor | 1755/57-1804 | 私生子移民→首任财长，造金融骨架又把权力焊向富人 |
 | Benjamin Banneker | lonely-mediator | 1731-1806 | 自由黑人天文学家，用 Jefferson 自己的话质问蓄奴 |
 | 威士忌酒农（composite） | receiving-end | c.1760-1820 | 边疆酒农，酿酒当钱使，被 13,000 大军镇压 |
-| George Washington | 配角 | 1732-1799 | 首任总统，亲自带兵镇压威士忌暴动 |
+| George Washington | 配角 | 1732-1799 | 首任总统，亲自随军出征至 Bedford 后交 Henry Lee 指挥镇压威士忌暴动 |
 | Thomas Jefferson | 配角 | 1743-1826 | 《独立宣言》执笔人，strict construction，蓄奴约 600 人 |
 
 ---

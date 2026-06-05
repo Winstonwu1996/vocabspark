@@ -32,7 +32,7 @@ authorNotes: |
 > **Lock status**: narrative kernel v0 — pending Winston review
 >
 > **HSS Standard**: HSS-7.8 (Renaissance + Humanism + prelude to Scientific Revolution)
-> **Textbook anchor**: Houghton Mifflin *Medieval & Early Modern Times* Ch.11 The Renaissance and Reformation
+> **Textbook anchor**: Houghton Mifflin Medieval & Early Modern Times Ch.11 The Renaissance and Reformation
 >
 > **Through-line**: tech-disruption (printing press + perspective + scientific method) + who-rules-whom (Medici bankers vs. popes vs. nobility)
 > **Difficulty**: 4/5 (art + politics + technology running on parallel tracks)
@@ -42,7 +42,7 @@ authorNotes: |
 
 ## 0. Open Your Textbook First (Textbook Anchor)
 
-> Your 7th-grade Houghton Mifflin *Medieval & Early Modern Times* —
+> Your 7th-grade Houghton Mifflin Medieval & Early Modern Times —
 > **Ch.11 The Renaissance and Reformation** —
 > **Lesson 1 The Italian Renaissance** — **p.308-313**.
 >
@@ -68,7 +68,7 @@ authorNotes: |
 >   **the Renaissance got attacked from inside its own capital** —
 >   **most textbooks skip this**
 > - **Contemporary China was Ming Dynasty at its peak** — under Yongle in **1405-1433, Zheng He led seven voyages to the western seas** —
->   **reaching the East African coast 87 years before Columbus** —
+>   **reaching the East African coast about 70 years before Columbus** —
 >   **but** Ming China abruptly stopped the voyages in 1433 — **why didn't a "Chinese Renaissance" happen**?
 >   **This is the famous Joseph Needham Question — one of history's biggest puzzles**
 >
@@ -183,16 +183,16 @@ returned to Florence after 1500 → in 1517 invited by King Francis I → died i
 1450s      Gutenberg invents printing (Mainz, Germany)
 1453       Constantinople falls → Greek scholars carry Plato/Aristotle originals to Italy
 1469-1492  Lorenzo il Magnifico — Florence Renaissance golden age
-1485       Botticelli's *Birth of Venus*
+1485       Botticelli's Birth of Venus
 1492       Columbus reaches the Americas (Renaissance global-history backdrop)
 1494-1498  Savonarola's theocracy in Florence — burns Vanities — Renaissance briefly halted
-1495-1498  Da Vinci paints *The Last Supper* in Milan
-1503-1506  Michelangelo's *David*
+1495-1498  Da Vinci paints The Last Supper in Milan
+1503-1506  Michelangelo's David
 1508-1512  Michelangelo paints the Sistine Chapel ceiling
-1513       Machiavelli writes *The Prince*
+1513       Machiavelli writes The Prince
 1517       Luther's 95 Theses — Northern Reformation begins
 1527       Sack of Rome (Holy Roman Imperial troops loot Rome) — Italian Renaissance political endpoint
-1543       Vesalius's *De Humani Corporis Fabrica* — anatomy founded
+1543       Vesalius's De Humani Corporis Fabrica — anatomy founded
 1564       Michelangelo dies (age 88 — he lived to see the Renaissance's end)
 ```
 
@@ -242,7 +242,7 @@ returned to Florence after 1500 → in 1517 invited by King Francis I → died i
 - **Toward opponents**: he was gentle — no killing — but **he could make you bankrupt** —
 - **Publicly** he lived simply — **he wore plain merchant clothing** — unlike the lavish nobility of other city-states — he **deliberately cultivated a "people's representative" image**
 
-— This style of **"hidden hegemony" rule** — was later **studied by Machiavelli in *The Prince*** —
+— This style of **"hidden hegemony" rule** — was later **studied by Machiavelli in The Prince** —
 **The Medici were Machiavelli's living textbook**.
 
 ##### What He Actually Did to Change History — Funding the Renaissance
@@ -320,10 +320,10 @@ returned to Florence after 1500 → in 1517 invited by King Francis I → died i
 
 **The Lorenzo era of Florence was **the most luminous center of the Renaissance**** —
 **Artists + scholars he brought to Florence:**
-- **Botticelli** — painted *Birth of Venus* and *Spring*
+- **Botticelli** — painted Birth of Venus and Spring
 - **Verrocchio** — whose workshop included a 14-year-old apprentice named Leonardo da Vinci
 - **The young Michelangelo** — entered the Lorenzo court at 14 as a sculpture apprentice
-- **Pico della Mirandola** — at 23 wrote *Oration on the Dignity of Man* (the manifesto of Renaissance humanism)
+- **Pico della Mirandola** — at 23 wrote Oration on the Dignity of Man (the manifesto of Renaissance humanism)
 - **Marsilio Ficino** — translated Plato + founded the Florentine Academy
 
 **Lorenzo's patronage style was unusual:**
@@ -366,7 +366,7 @@ returned to Florence after 1500 → in 1517 invited by King Francis I → died i
 
 **2. July 1492 — Spain Expels the Jews**
 **January 1492 — the Reconquista (the 700-year Christian re-taking of the Iberian Peninsula) is complete** —
-**Same year, March — Ferdinand and Isabella issue the *Alhambra Decree* expelling Spanish Jews** —
+**Same year, March — Ferdinand and Isabella issue the Alhambra Decree expelling Spanish Jews** —
 **July — roughly 150,000 to 200,000 Jews are forced to leave Spain** —
 **They carried capital + rabbinic books + knowledge of the printing trade — and fled to Florence / Venice / Antwerp / the Ottoman Empire** —
 — This refugee wave **indirectly fed the Renaissance printing boom** —
@@ -388,7 +388,7 @@ the wealth center starts shifting west to Spain / Portugal / northern Europe**.
 **5. August 1494 — King Charles VIII of France, age 24, invades Italy with 25,000 troops**
 **The French king came to claim the throne of Naples (a dynastic lawsuit)** —
 **Charles brought cannons + infantry — Europe's first army that **rewrote warfare with gunpowder**** —
-**Italian city-states' old defenses + mercenary *condottieri* (mercenary captains) could not hold against artillery** —
+**Italian city-states' old defenses + mercenary condottieri (mercenary captains) could not hold against artillery** —
 **Charles marched south — through Milan + Florence + Rome + Naples —
 city after city surrendered**.
 
@@ -408,9 +408,9 @@ he simply ceded Pisa and several border fortresses to the French king in exchang
 **He didn't fall from the sky — he filled **the vacuum created by 23 months of: lost Medici + French invasion + city-wide panic**.
 
 **Botticelli's spiritual life swung inside these 23 months** —
-**In Lorenzo's era he painted *Birth of Venus* (1485) — pagan Venus + classical myth + graceful humanism** —
+**In Lorenzo's era he painted Birth of Venus (1485) — pagan Venus + classical myth + graceful humanism** —
 **After Lorenzo's death he drifted toward Savonarola —
-in 1500 he painted *Mystical Nativity* — the style turned solemn, mystical, and anti-humanist** —
+in 1500 he painted Mystical Nativity — the style turned solemn, mystical, and anti-humanist** —
 — **A painter's whole language rewrote itself —
 inside this same 23-month window where **Florence's soul switched tracks**.
 
@@ -434,7 +434,7 @@ inside this same 23-month window where **Florence's soul switched tracks**.
 **The family expected Savonarola to become a doctor too**.
 
 **But he was a rebel from childhood** —
-**At 18 he wrote a poem, *On the Ruin of the World*** —
+**At 18 he wrote a poem, On the Ruin of the World** —
 **Furiously attacking Renaissance luxury + Church corruption** —
 **His family didn't understand him**.
 
@@ -486,12 +486,12 @@ inside this same 23-month window where **Florence's soul switched tracks**.
 **What were the Vanities**?
 - **Cosmetics + mirrors + perfume**
 - **Musical instruments + chess sets + costumes**
-- **Classical literature (Petrarch / Boccaccio's *Decameron*)**
+- **Classical literature (Petrarch / Boccaccio's Decameron)**
 - **Ancient Roman + Greek sculptures**
 - **Even artists themselves burning their own paintings** —
   **Botticelli reportedly burned several of his own works** —
   **Lorenzo-era Botticelli vs. Savonarola-era Botticelli are practically different people** —
-  **Late Botticelli painted *Mystical Nativity* (1500)** — the style turned **somber + mystical + anti-humanist**
+  **Late Botticelli painted Mystical Nativity (1500)** — the style turned **somber + mystical + anti-humanist**
 
 **A wood pile hundreds of meters wide burned** —
 **It burned for 6 hours** —
@@ -520,7 +520,7 @@ inside this same 23-month window where **Florence's soul switched tracks**.
 **A few months later he himself was burned** —
 **This is the most dramatic karma in history**.
 
-> ⚠️ **Teaching point**: Savonarola was NOT "an anti-Renaissance lunatic" —
+>  **Teaching point**: Savonarola was NOT "an anti-Renaissance lunatic" —
 > **He exposed the real ethical contradiction in the Renaissance**:
 > Renaissance "elegance + classics + humanism" coexisted with **Church corruption + popular poverty + moral looseness** —
 > **Savonarola seized that contradiction — but his solution was extreme** —
@@ -541,7 +541,7 @@ inside this same 23-month window where **Florence's soul switched tracks**.
 
 **In 1401 at age 24 — he entered the Florence Baptistery doors competition** —
 **The goal**: design the bronze relief panels for the Baptistery's north doors —
-**He carved a *Sacrifice of Isaac* relief vs. Ghiberti who did one too** —
+**He carved a Sacrifice of Isaac relief vs. Ghiberti who did one too** —
 **Ghiberti won — Brunelleschi was crushed**.
 
 **This failure changed Brunelleschi's life** —
@@ -611,7 +611,7 @@ inside this same 23-month window where **Florence's soul switched tracks**.
 
 It **reinvented the technology for "building large-span domes"** —
 **For the next 100 years**:
-- 1452 Alberti's *De re aedificatoria* — systematic architectural theory
+- 1452 Alberti's De re aedificatoria — systematic architectural theory
 - 1505-1626 Bramante + Michelangelo + Maderno build St. Peter's Basilica dome —
   **directly imitating Brunelleschi's double-shell design** —
 - **Even the 1798 U.S. Capitol dome + the 1814 National Gallery dome in London** —
@@ -710,7 +710,7 @@ It **reinvented the technology for "building large-span domes"** —
 **Lorenzo de' Medici noticed him quickly** —
 **The Medici became his main patron**.
 
-##### 1485 — *Birth of Venus*
+##### 1485 — Birth of Venus
 
 **Painted around 1485 — commissioned by a Medici cousin** —
 **Today in the Uffizi Gallery in Florence** —
@@ -721,7 +721,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **The classical nude female body** becomes the subject —
 **This is the strongest peak of the Renaissance "back to ancient Greece" aesthetic**.
 
-##### 1485 — *Spring (Primavera)*
+##### 1485 — Spring (Primavera)
 
 **Painted around the same time** —
 **Venus in the center surrounded by classical mythological figures** —
@@ -729,7 +729,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **A complex allegory of love, marriage, spring, and Neoplatonic philosophy** —
 **Possibly painted as a wedding gift for a Medici cousin's marriage**.
 
-**Together, *Birth of Venus* + *Spring* are **the high-water mark of Florence Renaissance secular painting**** —
+**Together, Birth of Venus + Spring are **the high-water mark of Florence Renaissance secular painting**** —
 **No one painted classical mythology this seriously this beautifully before**.
 
 ##### 1494 Onwards — The Savonarola Turn
@@ -739,14 +739,14 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **When Savonarola started preaching repentance, Botticelli took it personally**:
 - **Burned several of his own paintings in the Bonfire of the Vanities** (according to Vasari)
 - **Stopped painting classical mythology** — entirely
-- **Late paintings became increasingly somber + religious** — *Mystical Nativity* (1500), *Mystical Crucifixion* (c. 1500)
+- **Late paintings became increasingly somber + religious** — Mystical Nativity (1500), Mystical Crucifixion (c. 1500)
 - **His style became **deliberately archaic** — almost medieval-looking**
 
 ##### The Botticelli Paradox
 
 **Same painter** — same hands —
-**1485 *Birth of Venus*** = celebration of the human body, classical revival, joy —
-**1500 *Mystical Nativity*** = somber, mystical, anti-humanist, almost medieval —
+**1485 Birth of Venus** = celebration of the human body, classical revival, joy —
+**1500 Mystical Nativity** = somber, mystical, anti-humanist, almost medieval —
 
 **Same person can shift completely under historical pressure** —
 **This is Botticelli's "two halves"** —
@@ -760,7 +760,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **Botticelli was rediscovered only in the late 19th century by the Pre-Raphaelites in England** —
 **Today his reputation is sky-high again** — but he died in obscurity.
 
-> ⚠️ **Teaching point**: Botticelli shows that **artists are not constants** —
+>  **Teaching point**: Botticelli shows that **artists are not constants** —
 > **The same painter can be "Renaissance peak" + "anti-Renaissance" in one career** —
 > **Don't fix an artist into a single label** — **see the whole arc**.
 
@@ -818,7 +818,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 ##### 1473-1475 — He Surpassed His Master
 
 **Around age 20 Leonardo painted an angel** —
-**This angel was a figure in **Verrocchio's large painting *Baptism of Christ*** —
+**This angel was a figure in **Verrocchio's large painting Baptism of Christ** —
 **Leonardo's angel was **more lifelike + more refined** than Verrocchio's own figures** —
 **When Verrocchio saw that angel** —
 **He said on the spot**: "**I will never paint again** — **Leonardo has already surpassed me**." —
@@ -879,7 +879,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 
 **Leonardo lived in Amboise for 3 years** — he stopped making big new works (his hand was failing) —
 **He **organized his notebooks + taught his young pupil Salaì** —
-**The 3 paintings he brought to France**: *Mona Lisa + Saint Anne + Saint John the Baptist* —
+**The 3 paintings he brought to France**: Mona Lisa + Saint Anne + Saint John the Baptist —
 **That is why the Mona Lisa is in the Louvre today** —
 **France did not steal it from Italy** — **Leonardo brought it himself**.
 
@@ -908,7 +908,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **Today we call it **"Renaissance Man" (the polymath)** —
 **That phrase comes from Leonardo** — **he is the man who defined it**.
 
-> ⚠️ **AP thinking**: Modern education **specializes too early** —
+>  **AP thinking**: Modern education **specializes too early** —
 > 7th-grade students get sorted into "humanities" or "STEM" tracks —
 > **This is the **opposite** of Renaissance thinking** —
 > **Da Vinci at 12 entered Verrocchio's workshop and learned everything** —
@@ -945,7 +945,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **In 1511 he formed the Holy League to attack France** —
 
 — **This "pope on the battlefield" behavior **disgusted** Northern reformers (Erasmus / Luther)** —
-**Erasmus wrote a satirical essay in 1514, *Julius Excluded from Heaven*** —
+**Erasmus wrote a satirical essay in 1514, Julius Excluded from Heaven** —
 **Imagining Julius arriving at Heaven after death — but St. Peter refusing him entry** —
 **This is the **emotional temperature** of the eve of the Reformation**.
 
@@ -964,7 +964,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **Julius **forced** him** —
 **Michelangelo painted for 4 years (1508-1512)** —
 **He produced the greatest ceiling fresco in Western art history** —
-**Including *Creation of Adam* (the famous "two fingers nearly touching" image)**
+**Including Creation of Adam (the famous "two fingers nearly touching" image)**
 
 ##### February 21, 1513 — Dies
 
@@ -978,7 +978,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 - **Art patron** — left St. Peter's + the Sistine Chapel for posterity
 - **Reformation catalyst** — his luxury + war **directly fueled the Reformation**
 
-> ⚠️ **Teaching point**: Julius II is **as complex as Pope Clement VI** (the Black Death pope) —
+>  **Teaching point**: Julius II is **as complex as Pope Clement VI** (the Black Death pope) —
 > **Personal morality is shaky** — but **undeniable contributions** also exist —
 > **History is not "judging this person good or bad" — it is seeing the complexity**.
 
@@ -1023,7 +1023,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **Then to Rome to work** —
 **His first independent period**.
 
-##### 1498-1499 — *Pietà*
+##### 1498-1499 — Pietà
 
 **Michelangelo at 23** — produced his **first major work** in Rome: ***Pietà*** —
 **The Virgin Mary holding the dead Jesus** —
@@ -1031,18 +1031,18 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **The Virgin's robe **has real folds** — Jesus's muscles **slack with death** —
 **The two share **a triangular composition** — stable + sorrowful —
 
-**Today the *Pietà* is in St. Peter's Basilica in the Vatican** —
+**Today the Pietà is in St. Peter's Basilica in the Vatican** —
 **In 1972 a Hungarian madman attacked it with a hammer** (the Virgin's nose was damaged) —
 **Restored + now behind bulletproof glass** —
 **But still **one of the most-viewed sculptures in the world**.
 
-##### 1501-1504 — *David*
+##### 1501-1504 — David
 
 **Michelangelo at 26 returned to Florence** — took on a **block of marble that no one dared touch** —
 **That block had been **chiseled and damaged 40 years earlier** by another sculptor** —
 **The Florence government wanted to use it for a sculpture — but everyone said "scrap it" — only Michelangelo said**: "**Give it to me**" —
 
-**He chiseled for 3 years (1501-1504) and produced *David*** —
+**He chiseled for 3 years (1501-1504) and produced David** —
 **5.17 m tall — 5 tons** —
 **The most famous sculpture in Western art history** —
 
@@ -1101,7 +1101,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 
 ##### 1538 — Meeting Vittoria Colonna, Michelangelo's Only Spiritual Companion
 
-**In 1538 Michelangelo was 63** — **he had just finished the Sistine Chapel *Last Judgment* (1536-41)** —
+**In 1538 Michelangelo was 63** — **he had just finished the Sistine Chapel Last Judgment (1536-41)** —
 **By this point he was already living as a fossil of the Renaissance** — **friends kept dying + popes kept changing** —
 **At a public lecture in Rome he met **Vittoria Colonna** (46) —
 **Neither had a living spouse + both had passed mid-life + both were attuned to the climate of church reform** —
@@ -1110,8 +1110,8 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 - **Born into the great Roman Colonna family**, one of the oldest Italian noble houses of the late Middle Ages
 - **Married at 19 to the Marquis of Pescara** — her husband died in battle in 1525 — she became a widow at 26 —
 - **She never remarried** — she spent the rest of her life **writing poetry + studying theology + corresponding with reform circles**
-- **She was the first woman of the Renaissance to **publish her own collection of poetry**** — *Rime* (Poems, first edition 1538)
-- **She belonged to the *spirituali***, the Italian "internal reform" circle —
+- **She was the first woman of the Renaissance to **publish her own collection of poetry**** — Rime (Poems, first edition 1538)
+- **She belonged to the spirituali**, the Italian "internal reform" circle —
   this group **opposed Luther's split** but **shared his criticism of church corruption** — they wanted **reform from inside the Catholic Church**
 
 — **Vittoria was not the ordinary kind of female patron** —
@@ -1125,20 +1125,20 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **He **hated socializing + didn't shave + wore dirty clothes + fought with everyone** —
 **But after meeting Vittoria** — **he started writing poetry** —
 
-**He wrote her over 100 sonnets (*sonnetti*)** —
+**He wrote her over 100 sonnets (sonnetti)** —
 **The themes included**:
 - **Her role as his **spiritual guide** — like Beatrice was to Dante, but here as a real correspondence rather than a literary fantasy
 - **The anxiety of old age and a longing for salvation**
 - **Plato-style "soul vs. body" — very Renaissance**: speaking of Christian salvation in classical philosophical language**
 
-**Vittoria wrote poems back** — **her *Rime* contains several pieces directed at Michelangelo** —
+**Vittoria wrote poems back** — **her Rime contains several pieces directed at Michelangelo** —
 **This kind of "poetic dialogue" between them is one of the very rare archives of a Renaissance man and woman as **equal intellectual peers** —
 **These poems were systematically edited and published only in the 18th century** —
 **Today the manuscripts live in the Bodleian Library at Oxford + the Vatican Library**.
 
-> 💡 **This lens lets you hear Michelangelo's late-life inner shift** —
+>  **This lens lets you hear Michelangelo's late-life inner shift** —
 > **Not the "sudden softening" that the Sarah Chen audit speculated about** —
-> **but a 60-something *artigiano* (craftsman) who finally found someone he could speak to as an equal at the spiritual level** —
+> **but a 60-something artigiano (craftsman) who finally found someone he could speak to as an equal at the spiritual level** —
 > **The line he wrote — "my soul stands naked before you" — is language he never used with popes, friends, or students** —
 > **only with Vittoria**.
 
@@ -1149,7 +1149,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **He missed his last chance to see her** —
 
 **A few years later in a letter to his friend Condivi, one Italian phrase has come down to us**:
-> *"a gran dolore mi rimase, di non aver baciata la fronte"*
+> "a gran dolore mi rimase, di non aver baciata la fronte"
 > (It left me with great sorrow that I never kissed her forehead)
 
 — **This is the rarest piece of "soft" language Michelangelo ever recorded** —
@@ -1159,7 +1159,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **Late Michelangelo withdrew from society more and more + grew lonelier + leaned harder on religion** —
 **All of that is structurally tied to **the 1547 loss of Vittoria**.
 
-> ⚠️ **Teaching point**: Vittoria Colonna changes how we read the Renaissance gender story —
+>  **Teaching point**: Vittoria Colonna changes how we read the Renaissance gender story —
 > **It is not only the Isabella d'Este case of an exceptional "powerful female patron"** —
 > **There is also Vittoria's case of a "female intellectual as a true peer"** —
 > **She did not rely on a husband + or a son + or her beauty** —
@@ -1180,8 +1180,8 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **He is the Renaissance's living fossil** —
 
 **His life summary**:
-- **23 — *Pietà*** — entry to the Renaissance sculpture golden age
-- **29 — *David*** — Renaissance peak
+- **23 — Pietà** — entry to the Renaissance sculpture golden age
+- **29 — David** — Renaissance peak
 - **37 — Sistine Chapel** — Renaissance painting peak
 - **70 — design for St. Peter's dome** — late Renaissance architecture
 - **88 — dies** — symbol of the Renaissance era's closure
@@ -1212,7 +1212,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 ##### Age 22 — Comes to Florence, Stands on the Shoulders of Two Giants
 
 **1505 — at 22, Raphael came to Florence** —
-**At that moment Florence was housing **Da Vinci (53, just finishing the Mona Lisa drafts) + Michelangelo (30, just done sculpting *David*)** at the same time** —
+**At that moment Florence was housing **Da Vinci (53, just finishing the Mona Lisa drafts) + Michelangelo (30, just done sculpting David)** at the same time** —
 **This is one of the rarest "three geniuses one city" moments in human history** —
 
 **What Raphael did was**: **look carefully + learn** —
@@ -1228,20 +1228,20 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 
 **1508 — at 25, Pope Julius II summoned Raphael to Rome** —
 **Same year — Michelangelo also began painting the Sistine Chapel ceiling in Rome** —
-**Julius gave Raphael a different set of rooms in the Vatican — the *Stanze* (the Pope's living suite, four rooms)** —
+**Julius gave Raphael a different set of rooms in the Vatican — the Stanze (the Pope's living suite, four rooms)** —
 **The two men worked for Julius **at the same time, just a few corridors apart** —
 
 **Raphael painted the Stanza della Segnatura** (the "signing room" where the Pope reviewed and signed documents) —
 **The walls of that room hold four large frescoes**:
-- **East wall: Philosophy (*The School of Athens*)**
-- **West wall: Theology (*Disputa*)**
+- **East wall: Philosophy (The School of Athens)**
+- **West wall: Theology (Disputa)**
 - **South wall: Poetry (Mount Parnassus)**
 - **North wall: Law / Justice**
 
 — **This is the visual encyclopedia of the Renaissance's four pillars: classical thought + Christian theology + the arts + law** —
 **Raphael used four walls to map out **the entire knowledge structure of humanism**.
 
-##### *The School of Athens* (1509-1511) — One Painting That Tells the Whole Renaissance
+##### The School of Athens (1509-1511) — One Painting That Tells the Whole Renaissance
 
 **Raphael painted this fresco at age 26** —
 **On the wall**: **50+ Greek and Roman philosophers + mathematicians** gathered under **a vaulted hall modeled on the Roman Pantheon** —
@@ -1280,7 +1280,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **He died on Good Friday, April 6** —
 
 **His contemporaries said he "burned out from being too beautiful a young man"** —
-**Vasari later wrote in his *Lives*** that Raphael "indulged too much in love" until his body collapsed —
+**Vasari later wrote in his Lives** that Raphael "indulged too much in love" until his body collapsed —
 **Modern medicine guesses **acute typhoid or another fever-syndrome** —
 
 — **His funeral drew all of Rome** —
@@ -1294,7 +1294,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **If Raphael had lived 30 more years, he might have eclipsed Michelangelo** —
 **But he was gone at 37 — this is the biggest "what if" of the Renaissance**.
 
-> ⚠️ **Teaching point**: Raphael, Da Vinci, and Michelangelo were **three completely different personalities**:
+>  **Teaching point**: Raphael, Da Vinci, and Michelangelo were **three completely different personalities**:
 > - **Da Vinci**: a wild self-taught genius, chasing everything, leaving many works unfinished
 > - **Michelangelo**: a tortured craftsman who fought with himself + with patrons his whole life
 > - **Raphael**: a **warm synthesizer**, who **knew how to make patrons happy + keep himself comfortable**
@@ -1330,13 +1330,13 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 | **Core interests** | Classical literature + art + politics | Church reform + religious purification + morality |
 | **Use of Latin** | Classical elegance | A tool for moral + religious study |
 | **Attitude** | Revive ancient Greece + Rome | Return to original Christianity |
-| **Major works** | Boccaccio's *Decameron* / Pico's *Oration on Dignity* | Erasmus's *Praise of Folly* / More's *Utopia* |
+| **Major works** | Boccaccio's Decameron / Pico's Oration on Dignity | Erasmus's Praise of Folly / More's Utopia |
 
 — **Renaissance north of the Alps turned into **reform passion**** —
 **Not the Italian "art + pleasure"** —
 **This **Northern version** ultimately ignited Luther's 1517 Reformation**.
 
-##### 1509 — *Praise of Folly*
+##### 1509 — Praise of Folly
 
 **Erasmus's satire at age 43** —
 **He uses "Folly" (the goddess of foolishness) to mock every social class**:
@@ -1358,8 +1358,8 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **He **feared** that the Reformation would devolve into **violence + war** —
 
 **The two broke apart in the 1520s** —
-**1524 Erasmus wrote *On Free Will* against Luther** —
-**1525 Luther fired back with *On the Bondage of Will*** —
+**1524 Erasmus wrote On Free Will against Luther** —
+**1525 Luther fired back with On the Bondage of Will** —
 **The two were **permanently estranged**.
 
 — **Erasmus is a classic "moderate reformer"** — he didn't want to overthrow the Church — he wanted to **improve it** —
@@ -1368,7 +1368,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **Catholics saw him as **the godfather of Luther**** —
 **Protestants saw him as **timid + half-hearted**** —
 
-> ⚠️ **Teaching point**: Erasmus is the classic **"forerunner who doesn't join the revolution"** —
+>  **Teaching point**: Erasmus is the classic **"forerunner who doesn't join the revolution"** —
 > He **lit the fire** — but **doesn't enter the fire** —
 > **History is full of this character type**:
 > - **Voltaire** the Enlightenment forerunner doesn't join the French Revolution
@@ -1451,7 +1451,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **He **didn't deliver a painting in 17 years**** —
 **Even Isabella, with all her power — could not push him**.
 
-> ⚠️ **Teaching point**: Da Vinci was **the hardest artist to manage** in any working relationship —
+>  **Teaching point**: Da Vinci was **the hardest artist to manage** in any working relationship —
 > **Even **the most powerful woman** of the Renaissance could not make him deliver** —
 > **This shows the Renaissance tension between **artist vs. patron**:
 > **patron pays + sets the brief — but the artist ultimately controls the schedule** —
@@ -1481,7 +1481,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 ##### Origins: The Pope's Daughter
 
 **Born in 1480 in Rome** — daughter of Cardinal Rodrigo Borgia (later **Pope Alexander VI**) and his mistress Vannozza dei Cattanei —
-**Her brother was **Cesare Borgia** — the model for Machiavelli's *The Prince*** —
+**Her brother was **Cesare Borgia** — the model for Machiavelli's The Prince** —
 
 **Popular legend says she was a poisoner who killed husbands at her family's command** —
 **This is **Renaissance gossip + 19th-century novelist invention** — almost none of it survives serious historical scrutiny** —
@@ -1509,7 +1509,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **Three reasons:**
 1. **Her brother Cesare really did kill people** — Renaissance Romans confused brother and sister
 2. **Her father Pope Alexander VI was hated by reformers** — they smeared the whole family
-3. **19th-century French novels** (especially Victor Hugo's *Lucrèce Borgia*, 1833) painted her as a femme fatale — that image stuck in pop culture
+3. **19th-century French novels** (especially Victor Hugo's Lucrèce Borgia, 1833) painted her as a femme fatale — that image stuck in pop culture
 
 **Modern historians (since the 1990s) have rehabilitated her** —
 **Documents from Ferrara show a literate, pious, hard-working duchess** — **not a serial killer**.
@@ -1520,7 +1520,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **Her funeral was attended by all of Ferrara** —
 **Pietro Bembo wrote a sad sonnet for her** —
 
-> ⚠️ **Teaching point**: Lucrezia Borgia is **the classic case of a woman whose history was rewritten by male storytellers** —
+>  **Teaching point**: Lucrezia Borgia is **the classic case of a woman whose history was rewritten by male storytellers** —
 > **Pop culture: poisoner, seductress, femme fatale** —
 > **Real archives: politically savvy survivor, capable ruler, literary patron** —
 > **Studying history means **always asking who wrote the source** — and **whose narrative interests are being served**.
@@ -1564,7 +1564,7 @@ This is **the first time** in 800 years of Western art that **Christianity is fi
 **Without workers like him — Renaissance ideas don't travel** —
 **He is the **silent majority** — but functionally the most important**.
 
-> ⚠️ **Teaching point**: Every "cultural revolution" depends on **silent workers** —
+>  **Teaching point**: Every "cultural revolution" depends on **silent workers** —
 > **The Renaissance is not just Da Vinci — it is also Antonio the print worker** —
 > **Reform & opening-up is not just Deng Xiaoping — it is also the first generation of Shenzhen factory workers** —
 > **The internet age is not just Steve Jobs — it is also the Foxconn workers** —
@@ -1607,7 +1607,7 @@ who is making the decisions? What is true?"**
 **is one of the deepest Renaissance experiences** —
 **Also the experience of ordinary people during the Reformation + Counter-Reformation + religious wars that followed**.
 
-> ⚠️ **Teaching point**: Every "big historical event" **means something different to ordinary people** —
+>  **Teaching point**: Every "big historical event" **means something different to ordinary people** —
 > **For the historian Savonarola's bonfire is "the symbol of the Renaissance's self-reversal"** —
 > **For Lucia it is "the mirror my grandmother gave me was burned"** —
 > **Both perspectives are valid** — but **only the historian's view loses **the real pain of real people**** —
@@ -1633,7 +1633,7 @@ who is making the decisions? What is true?"**
 ### 1450s — Gutenberg's Printing Press
 
 > In Mainz, Germany, **Johannes Gutenberg invents movable-type printing in the 1450s** —
-> **The first printed book is the *Gutenberg Bible* (around 1455)** —
+> **The first printed book is the Gutenberg Bible (around 1455)** —
 > **Over the next 50 years** — printing spread across Europe — **by 1500 Europe had 1000+ print shops** —
 > **The press changed the Renaissance**:
 > - **Classical originals** could be **mass-distributed** for the first time —
@@ -1659,7 +1659,7 @@ who is making the decisions? What is true?"**
 > **Botticelli + Verrocchio + Pico + Ficino + Da Vinci's apprentice years + young Michelangelo** —
 > **23 years compressing the most concentrated stretch of Western art history**.
 
-### 1485 — Botticelli's *Birth of Venus*
+### 1485 — Botticelli's Birth of Venus
 
 > The most famous painting in the Florence Uffizi today —
 > **Venus stands on a shell born from the sea** — left, the wind god Zephyr blows; right, a Hora goddess of seasons greets her —
@@ -1669,7 +1669,7 @@ who is making the decisions? What is true?"**
 > **This is the strongest peak of the Renaissance "back to ancient Greece" aesthetic**.
 >
 > — But **late Botticelli changes style** (under Savonarola's influence) —
-> 1500 paints *Mystical Nativity* — **back to a medieval religious style** —
+> 1500 paints Mystical Nativity — **back to a medieval religious style** —
 > **Botticelli's personal style shift** **mirrors the Renaissance's internal tensions**.
 
 ### 1492 — Columbus Reaches the Americas (Renaissance Global-History Backdrop)
@@ -1692,7 +1692,7 @@ who is making the decisions? What is true?"**
 > **4 years of theocracy** — until Savonarola himself was burned —
 > **The Renaissance is NOT a "rising arc" story — it has dark hours**.
 
-### 1495-1498 — Da Vinci's *Last Supper* (see §3)
+### 1495-1498 — Da Vinci's Last Supper (see §3)
 
 > Milan's Santa Maria delle Grazie monastery — Da Vinci's signature work —
 > **He **didn't use traditional fresco** (which requires painting on wet plaster the same day)** —
@@ -1703,12 +1703,12 @@ who is making the decisions? What is true?"**
 > **Who the betrayer Judas is — communicated through body language** (clutching the money pouch + leaning back) —
 > **This is the peak of Renaissance "compositional psychology"**.
 
-### 1503-1506 — Michelangelo's *David* (see §3)
+### 1503-1506 — Michelangelo's David (see §3)
 
 > Florence Republic's symbol — **5.17 m tall marble** —
 > **Still **the icon of Western sculpture**.
 
-### 1503-1519 — Da Vinci Paints the *Mona Lisa*
+### 1503-1519 — Da Vinci Paints the Mona Lisa
 
 > Da Vinci painted it **for 16 years** between Florence + Milan + France —
 > **Mona Lisa is **Lisa Gherardini, wife of Florence merchant Francesco del Giocondo**** —
@@ -1726,12 +1726,12 @@ who is making the decisions? What is true?"**
 ### 1508-1512 — Sistine Chapel Ceiling (see §3)
 
 > Michelangelo's 4-year-on-his-back epic —
-> ***Creation of Adam* (two fingers nearly touching)** is one of **the most-copied images** in Western art.
+> **Creation of Adam (two fingers nearly touching)** is one of **the most-copied images** in Western art.
 
-### 1513 — Machiavelli's *The Prince*
+### 1513 — Machiavelli's The Prince
 
 > Niccolò Machiavelli, **44 — kicked out and exiled** when the Medici returned to power (1512) —
-> Wrote ***The Prince* in the countryside, dedicated it to Lorenzo II Medici** — hoping for reinstatement —
+> Wrote **The Prince in the countryside, dedicated it to Lorenzo II Medici** — hoping for reinstatement —
 >
 > **The book's core arguments**:
 > - **Politics is not morality** — **politics is effectiveness**
@@ -1778,7 +1778,7 @@ who is making the decisions? What is true?"**
 > **Over the next 100 years Europe's center moves north** — Paris / London / Antwerp / Amsterdam rise —
 > **Italy becomes "the place to visit"** — **not "the place that creates"**.
 
-### 1543 — Vesalius's *De Humani Corporis Fabrica*
+### 1543 — Vesalius's De Humani Corporis Fabrica
 
 > **Andreas Vesalius at 28 publishes the foundation of Western anatomy** —
 > **The first complete + systematic** description of the human body —
@@ -1807,26 +1807,26 @@ who is making the decisions? What is true?"**
 
 > **Teaching principle**: The Renaissance is not only art — it is **simultaneously literature + political theory + art criticism** —
 > This section reads **3 documents**:
-> **Pico della Mirandola's *Oration on the Dignity of Man* (1486 — humanist manifesto) +
-> Vasari's *Lives of the Artists* (1550 — birth of art history) +
-> Machiavelli's *The Prince* (1513 — birth of modern political science)** —
+> **Pico della Mirandola's Oration on the Dignity of Man (1486 — humanist manifesto) +
+> Vasari's Lives of the Artists (1550 — birth of art history) +
+> Machiavelli's The Prince (1513 — birth of modern political science)** —
 > Each represents **a distinct cultural breakthrough** of the Renaissance.
 
 ---
 
-### Document 1: Pico della Mirandola's *Oration on the Dignity of Man* (1486)
+### Document 1: Pico della Mirandola's Oration on the Dignity of Man (1486)
 
 #### The special place of this document
 
 **Giovanni Pico della Mirandola** (1463-1494) was a young aristocrat-philosopher in Lorenzo's Florence circle —
-**At 23 he wrote the *Oration on the Dignity of Man*** — intended as the opening speech for a planned Rome debate (later canceled by Pope Innocent VIII) —
+**At 23 he wrote the Oration on the Dignity of Man** — intended as the opening speech for a planned Rome debate (later canceled by Pope Innocent VIII) —
 **It is the **single clearest statement of Renaissance humanism**** —
 **Not a long book** — about 30 pages — but **every line is loaded**.
 
 **At 31 Pico died young** — **possibly poisoned by arsenic** (a 2007 forensic study suggests this) —
-**He didn't live to see his ideas spread** — but the *Oration* circulated widely after his death and became **the manifesto of Renaissance humanism**.
+**He didn't live to see his ideas spread** — but the Oration circulated widely after his death and became **the manifesto of Renaissance humanism**.
 
-##### Excerpt from the *Oration on the Dignity of Man* (edited to Lexile-1000)
+##### Excerpt from the Oration on the Dignity of Man (edited to Lexile-1000)
 
 > "**God created humans last** —
 >
@@ -1863,7 +1863,7 @@ who is making the decisions? What is true?"**
 **Dignity is **action** — not **status**.
 
 **This idea is the **root** of modern human-rights philosophy** —
-**Kant's 1785 *Groundwork of the Metaphysics of Morals*** says human dignity comes from autonomous reason — directly downstream of Pico —
+**Kant's 1785 Groundwork of the Metaphysics of Morals** says human dignity comes from autonomous reason — directly downstream of Pico —
 **The 1948 Universal Declaration of Human Rights** Article 1: "All human beings are born free and equal in **dignity** and **rights**" — directly downstream of Pico.
 
 **Layer 2: "No fixed nature" = first modern statement of self-creation**
@@ -1876,7 +1876,7 @@ who is making the decisions? What is true?"**
 
 **Layer 3: Christianity is preserved, but God's role shifts**
 
-**Pico is **still a Christian**** — the speaker in the *Oration* is **God speaking to Adam** —
+**Pico is **still a Christian**** — the speaker in the Oration is **God speaking to Adam** —
 **But God in this oration **gives humans freedom**** rather than **dictating** to them —
 **This is a "compatible humanism + Christianity" version** — different from later Enlightenment atheism —
 **Renaissance humanism is not atheistic** — it is **a new Christianity that gives humans more agency**.
@@ -1884,7 +1884,7 @@ who is making the decisions? What is true?"**
 **Layer 4: Education = becoming whatever you want to be
 
 **If humans have **no fixed nature**, then education becomes **the most important thing in life**** —
-**Pico's *Oration* is the **philosophical basis of Renaissance education**** —
+**Pico's Oration is the **philosophical basis of Renaissance education**** —
 **The Verrocchio workshop teaching young Leonardo "everything"** —
 **The Medici palace raising young Michelangelo as a son** —
 **These are practical applications of Pico's idea**: **shape the human into whatever they choose to become**.
@@ -1904,7 +1904,7 @@ who is making the decisions? What is true?"**
 
 ---
 
-### Document 2: Vasari's *Lives of the Most Excellent Painters, Sculptors, and Architects* (1550 / 1568)
+### Document 2: Vasari's Lives of the Most Excellent Painters, Sculptors, and Architects (1550 / 1568)
 
 #### Author profile
 
@@ -1912,14 +1912,14 @@ who is making the decisions? What is true?"**
 **Florence artist + architect** (he designed the Uffizi Gallery building) —
 **He **was also a painter himself** — but **his real influence is the book he wrote**.
 
-**In 1550 at 39 — he published *Lives of the Most Excellent Painters, Sculptors, and Architects*** —
+**In 1550 at 39 — he published Lives of the Most Excellent Painters, Sculptors, and Architects** —
 **This is **the first systematic art history in Western art history**** —
 **Before, "art history" was not a field** — **artists were craftsmen, not subjects of study** —
 **Vasari is the first to **make artists biographical heroes**.
 
 ##### Whom Vasari Wrote About
 
-**The *Lives* contains 200+ biographies** — from the 13th century to the 16th — including:
+**The Lives contains 200+ biographies** — from the 13th century to the 16th — including:
 - **Cimabue** (early Renaissance precursor)
 - **Giotto** (medieval-to-Renaissance transition)
 - **Brunelleschi** (detailed bio — Vasari sets a standard)
@@ -1958,7 +1958,7 @@ who is making the decisions? What is true?"**
 
 **Influence 3: Defining the "Renaissance" concept**
 
-**Vasari first uses the Italian word "Rinascita" (rebirth / Renaissance) in *Lives*** —
+**Vasari first uses the Italian word "Rinascita" (rebirth / Renaissance) in Lives** —
 **He **frames 1300-1550 as the "rebirth from the medieval grave"** —
 **This **narrative** shapes 700 years of Western art history**:
 - **Medieval = darkness / Gothic / uncivilized**
@@ -1978,7 +1978,7 @@ who is making the decisions? What is true?"**
 
 **Influence 5: Creating the Michelangelo myth**
 
-**Vasari's 1550 *Lives* lists Michelangelo as the "summit of the entire Renaissance"** —
+**Vasari's 1550 Lives lists Michelangelo as the "summit of the entire Renaissance"** —
 **The 1568 second edition (4 years after Michelangelo's death)** — **adds a detailed Michelangelo biography** —
 **Vasari interviewed Michelangelo directly several times** — he knew the inside story — but he also mythologized —
 **80% of what we "know" about Michelangelo today comes from Vasari** —
@@ -2028,7 +2028,7 @@ who is making the decisions? What is true?"**
 >
 > Modern equivalents:
 > - **Walter Isaacson** writes Steve Jobs / Einstein / Da Vinci biographies — directly Vasari-template
-> - **Adam Lashinsky's *Inside Apple*** — contemporary writing the company myth — Vasari's child
+> - **Adam Lashinsky's Inside Apple** — contemporary writing the company myth — Vasari's child
 > - **Benjamin Franklin's Autobiography** — artist's-self-bio genre — Vasari style
 >
 > **Vasari** didn't just write a book — **he defined the genre of "biographical art history"** —
@@ -2036,7 +2036,7 @@ who is making the decisions? What is true?"**
 
 ---
 
-### Document 3: Machiavelli's *The Prince* (written 1513, published 1532)
+### Document 3: Machiavelli's The Prince (written 1513, published 1532)
 
 #### Author profile
 
@@ -2056,10 +2056,10 @@ who is making the decisions? What is true?"**
 **But Lorenzo II was unimpressed** — he was **never reinstated** —
 **He died at 58 in 1527, still in exile**.
 
-***The Prince* was published in 1532** (5 years after his death) — instantly controversial — soon banned —
+**The Prince was published in 1532** (5 years after his death) — instantly controversial — soon banned —
 **But too late** — **through printing + translation, all of Europe read it**.
 
-#### *The Prince*'s core arguments
+#### The Prince's core arguments
 
 **26 chapters — but 5 core arguments**:
 
@@ -2093,7 +2093,7 @@ who is making the decisions? What is true?"**
 **One of the most ruthless politicians of the Renaissance** —
 **He used murder + intrigue + war to unify central Italy** —
 **Machiavelli met him several times — he **admired Cesare Borgia**** —
-**He explicitly states in *The Prince* that Borgia is the **model Prince**** —
+**He explicitly states in The Prince that Borgia is the **model Prince**** —
 
 — This **anti-traditional hero** — making "ruthless and effective" a **virtue** —
 **was bold in 1500** — but Machiavelli **said it openly**.
@@ -2116,23 +2116,23 @@ who is making the decisions? What is true?"**
 **Layer 1: The origin of modern political science**
 
 **Machiavelli 1513 = the moment political science breaks free of theology** —
-- **17th-century Hobbes's *Leviathan*** — human nature + social contract — directly Machiavellian
-- **18th-century Rousseau's *Social Contract*** — but opposed to Machiavelli's view of human nature
-- **19th-century Carl von Clausewitz's *On War*** — strategic thought — Machiavelli's child
-- **20th-century Hans Morgenthau's *Politics Among Nations*** — realist international relations — directly Machiavellian
-- **21st-century Henry Kissinger's *World Order*** — realist politics — Machiavelli's great-grandchild
+- **17th-century Hobbes's Leviathan** — human nature + social contract — directly Machiavellian
+- **18th-century Rousseau's Social Contract** — but opposed to Machiavelli's view of human nature
+- **19th-century Carl von Clausewitz's On War** — strategic thought — Machiavelli's child
+- **20th-century Hans Morgenthau's Politics Among Nations** — realist international relations — directly Machiavellian
+- **21st-century Henry Kissinger's World Order** — realist politics — Machiavelli's great-grandchild
 
 **Layer 2: Business strategy**
 
-- **Sun Tzu's *Art of War*** + **Machiavelli's *The Prince*** = **21st-century MBA required reading** —
-- **2010 Robert Greene's *48 Laws of Power*** — directly a modern Machiavelli —
+- **Sun Tzu's Art of War** + **Machiavelli's The Prince** = **21st-century MBA required reading** —
+- **2010 Robert Greene's 48 Laws of Power** — directly a modern Machiavelli —
 - **Apple / Microsoft / Amazon corporate strategy** — much of it has Machiavellian shadow
 
 **Layer 3: Film + TV culture**
 
-- ***House of Cards* Frank Underwood** — directly Machiavelli reincarnated
-- ***Game of Thrones* Tyrion Lannister + Petyr Baelish** — Machiavellian characters
-- ***The Godfather* Vito + Michael Corleone** — Machiavelli's family version
+- **House of Cards Frank Underwood** — directly Machiavelli reincarnated
+- **Game of Thrones Tyrion Lannister + Petyr Baelish** — Machiavellian characters
+- **The Godfather Vito + Michael Corleone** — Machiavelli's family version
 
 **Layer 4: "Machiavellian" as a personality type**
 
@@ -2160,9 +2160,9 @@ who is making the decisions? What is true?"**
 
 | Document | Theme | Rebirth | Modern impact |
 |---|---|---|---|
-| **Pico's *Oration on the Dignity of Man*** | Human freedom + self-shaping | Humans choose what to become | Modern human rights + education + existentialism |
-| **Vasari's *Lives*** | Artists + art history | Artists go from craftsman to genius | Biographical genre + mythologization |
-| **Machiavelli's *The Prince*** | Politics + morality | Politics breaks from theology | Modern political science |
+| **Pico's Oration on the Dignity of Man** | Human freedom + self-shaping | Humans choose what to become | Modern human rights + education + existentialism |
+| **Vasari's Lives** | Artists + art history | Artists go from craftsman to genius | Biographical genre + mythologization |
+| **Machiavelli's The Prince** | Politics + morality | Politics breaks from theology | Modern political science |
 
 — **3 unrelated dimensions** — but **all expressions of the Renaissance "rebirth" spirit**:
 **Humans are no longer slaves of Christian doctrine — humans are **active subjects**** —
@@ -2191,7 +2191,7 @@ who is making the decisions? What is true?"**
 #### Scientific Revolution preparation
 
 - **1543 Vesalius's anatomy** — built directly on Da Vinci's anatomical-drawing tradition
-- **1543 Copernicus's *On the Revolutions of the Heavenly Spheres*** — heliocentrism — built on Renaissance astronomers' work
+- **1543 Copernicus's On the Revolutions of the Heavenly Spheres** — heliocentrism — built on Renaissance astronomers' work
 - **1551-1602 Tycho Brahe + Kepler** — precise observation + elliptical orbits
 - **1610 Galileo's telescope observations** — Renaissance scientific method matures
 
@@ -2209,7 +2209,7 @@ who is making the decisions? What is true?"**
 
 - **17th-century Descartes' "I think, therefore I am"** — direct logical extension of Petrarch's "I as knowing subject"
 - **18th-century Voltaire / Rousseau / Diderot** — systematized humanism into political philosophy
-- **18th-century Adam Smith's *Wealth of Nations*** — theorization of Renaissance banking + commerce
+- **18th-century Adam Smith's Wealth of Nations** — theorization of Renaissance banking + commerce
 - **1776 American Declaration of Independence** — built on Locke's "natural rights" — built on Renaissance humanism
 
 #### Classicism → Romanticism backlash
@@ -2235,7 +2235,7 @@ who is making the decisions? What is true?"**
 - **Elon Musk crossing electric cars + rockets + tunnels + AI** — same template
 - **Modern STEM + humanities cross-disciplinary education** — essentially returns to the Verrocchio workshop model (teach everything)
 
-> ⚠️ **AP thinking**: The **Renaissance's 500-year echo** —
+>  **AP thinking**: The **Renaissance's 500-year echo** —
 > **Unlike other eras** — it **hasn't fully passed** —
 > **It became the **default operating system of Western culture**:**
 > - "Genius worship" — still in Hollywood / Silicon Valley
@@ -2326,7 +2326,7 @@ who is making the decisions? What is true?"**
 | **1492** | Lorenzo dies + Columbus reaches Americas | Hongzhi 5th year — Wang Yangming at 20 begins traveling famous mountains |
 | **1503-1512** | Michelangelo's David + Sistine | Wang Yangming exiled to Longchang in Guizhou — begins "Longchang enlightenment" |
 | **1517** | Luther's 95 Theses | Wang Yangming at 45 — "unity of knowledge and action" philosophy mature |
-| **1543** | Vesalius's *On the Fabric of the Human Body* | Wang Yangming dead 15 years — mid-Ming ending |
+| **1543** | Vesalius's On the Fabric of the Human Body | Wang Yangming dead 15 years — mid-Ming ending |
 | **1564** | Michelangelo dies | Jiajing 43rd year — Ming cultural peak but already declining |
 | **1600** | Renaissance end — Baroque rises | Late Ming — Donglin Party struggles + Manchu rise |
 
@@ -2383,7 +2383,7 @@ who is making the decisions? What is true?"**
 
 **Hypothesis 5: Printing-press structural difference**
 - Europe had **alphabetic writing** — once printing was invented, **any** new work could be printed —
-- China had **tens of thousands of Chinese characters** — printing existed for 400 years but **was used mostly for classics** — slow new-knowledge spread
+- China had **tens of thousands of character molds** — casting costs were enormous — the advantage of movable type over woodblock was offset, constraining new-knowledge spread
 
 ##### Modern relevance of the Needham Question
 
@@ -2398,7 +2398,7 @@ who is making the decisions? What is true?"**
 
 ### Wang Yangming vs. Da Vinci — same era, completely different paths
 
-**1472-1529 Wang Yangming** (founder of "School of Mind" — *xinxue* in pinyin) —
+**1472-1529 Wang Yangming** (founder of "School of Mind" — xinxue in pinyin) —
 **1452-1519 Da Vinci** —
 **Almost exactly contemporaries** — but **completely different intellectual paths**:
 
@@ -2432,7 +2432,7 @@ who is making the decisions? What is true?"**
 - **In China** — Wang's "look inward" tradition runs through 500 years of Chinese ethics
 - **He is to East Asian philosophy what Da Vinci is to Western practical genius** — different problems, different methods, **both essential**
 
-> ⚠️ **AP thinking**: **Is Da Vinci "more modern" than Wang Yangming**?
+>  **AP thinking**: **Is Da Vinci "more modern" than Wang Yangming**?
 > **No** — that comparison is **misleading** —
 > **Wang Yangming's "unity of knowledge and action" is profound in ethics still today** —
 > **Da Vinci is profound in science and engineering still today** —
@@ -2448,7 +2448,7 @@ who is making the decisions? What is true?"**
 
 #### A. "Renaissance is the start of Western modernity" (Burckhardt classic)
 
-**Representative**: **Jacob Burckhardt**, *The Civilization of the Renaissance in Italy* (1860).
+**Representative**: **Jacob Burckhardt**, The Civilization of the Renaissance in Italy (1860).
 
 **Core claim**:
 - **Renaissance = birth of the modern world**
@@ -2462,7 +2462,7 @@ who is making the decisions? What is true?"**
 
 #### B. "Renaissance is medieval continuation" (revisionist)
 
-**Representative**: **Charles Homer Haskins**, *The Renaissance of the 12th Century* (1927).
+**Representative**: **Charles Homer Haskins**, The Renaissance of the 12th Century (1927).
 
 **Core claim**:
 - **Renaissance is not a sudden "rebirth"** —
@@ -2476,7 +2476,7 @@ who is making the decisions? What is true?"**
 
 #### C. "Renaissance is European bias" (Eurocentric critique)
 
-**Representative**: **Stephen Greenblatt**, *The Swerve* (2011) + **Joseph Needham** on Chinese science.
+**Representative**: **Stephen Greenblatt**, The Swerve (2011) + **Joseph Needham** on Chinese science.
 
 **Core claim**:
 - **"Renaissance" as a concept is a Eurocentric narrative** —
@@ -2490,7 +2490,7 @@ who is making the decisions? What is true?"**
 
 #### D. "Renaissance is material + economic phenomenon" (Marxist + economic history)
 
-**Representative**: **Fernand Braudel**, *Civilization and Capitalism, 15th-18th Century* (1979).
+**Representative**: **Fernand Braudel**, Civilization and Capitalism, 15th-18th Century (1979).
 
 **Core claim**:
 - **Renaissance is not "thought" + "art"** —
@@ -2521,7 +2521,7 @@ who is making the decisions? What is true?"**
 - **Don't treat "the dark side" as "denial of achievement"** —
 - **Studying history is not picking a team — it is seeing complexity**
 
-> ⚠️ **Teaching hard rule (Rule 0)**:
+>  **Teaching hard rule (Rule 0)**:
 > "**As a Chinese person — I acknowledge the Renaissance pushed many Western structural changes — art + science + individual subjectivity** —
 > **But I also acknowledge the Renaissance was the spiritual basis of colonization + anti-Semitism + gender oppression** —
 > **Same-era Ming China had its own height — Wang Yangming + Zheng He + Forbidden City — not "behind"** —
@@ -2548,7 +2548,7 @@ who is making the decisions? What is true?"**
 ### Myth 3: "Renaissance = no longer believing in religion"
 
 **Wrong** — **Europe in the Renaissance is still 100% Christian** —
-**Late Botticelli's *Mystical Nativity* is **more religious** than his early work**
+**Late Botticelli's Mystical Nativity is **more religious** than his early work**
 **Michelangelo's Sistine Chapel is entirely Christian subject matter** —
 **The Renaissance is not "non-religious" — it is "using classical aesthetics to serve Christianity"** —
 **"Complete secularization" is an 18th-19th-century post-Enlightenment phenomenon**.
@@ -2687,29 +2687,29 @@ who is making the decisions? What is true?"**
 1469-1492   Lorenzo il Magnifico — Florence Renaissance golden age
 1473-1475   Da Vinci at 20 — surpasses his teacher Verrocchio
 1475        Michelangelo born in Caprese
-1485        Botticelli's *Birth of Venus*
-1486        Pico della Mirandola writes *Oration on the Dignity of Man*
+1485        Botticelli's Birth of Venus
+1486        Pico della Mirandola writes Oration on the Dignity of Man
 1488        Michelangelo at 13 enters Ghirlandaio's workshop
 1492        Lorenzo dies + Columbus reaches Americas + Reconquista completed
 1494        Medici expelled from Florence — Savonarola theocracy begins
-1495-1498   Da Vinci paints *The Last Supper* in Milan
+1495-1498   Da Vinci paints The Last Supper in Milan
 1497.2.7    Bonfire of the Vanities — Florence burns classical literature + art
 1498.5.23   Savonarola himself is burned
-1498-1499   Michelangelo's *Pietà*
-1503-1506   Michelangelo's *David*
-1503-1519   Da Vinci paints the *Mona Lisa* (16 years, never finished delivery)
+1498-1499   Michelangelo's Pietà
+1503-1506   Michelangelo's David
+1503-1519   Da Vinci paints the Mona Lisa (16 years, never finished delivery)
 1505        Pope Julius II commissions Bramante to rebuild St. Peter's
 1508-1512   Michelangelo Sistine Chapel ceiling
-1509        Erasmus's *Praise of Folly*
-1513        Machiavelli writes *The Prince* (published 1532)
+1509        Erasmus's Praise of Folly
+1513        Machiavelli writes The Prince (published 1532)
 1517.10.31  Luther's 95 Theses — Reformation begins
 1519.5.2    Da Vinci dies at 67 in Amboise, France
 1527.5.6    Sack of Rome — Italian Renaissance political endpoint
-1532        Machiavelli's *The Prince* published
-1543        Vesalius's *De Humani Corporis Fabrica*
-1550        Vasari's *Lives of the Artists* first edition
+1532        Machiavelli's The Prince published
+1543        Vesalius's De Humani Corporis Fabrica
+1550        Vasari's Lives of the Artists first edition
 1564.2.18   Michelangelo dies at 88
-1568        Vasari's *Lives* second edition (with detailed Michelangelo bio)
+1568        Vasari's Lives second edition (with detailed Michelangelo bio)
 post-1600   Renaissance → Baroque transition
 ```
 
@@ -2717,7 +2717,7 @@ post-1600   Renaissance → Baroque transition
 
 | Word | Definition | Renaissance usage |
 |---|---|---|
-| **Renaissance** | "Rebirth" — Italian *rinascita* — the 1400-1600 cultural movement | "Florentine Renaissance was the first phase, beginning around 1400." |
+| **Renaissance** | "Rebirth" — Italian rinascita — the 1400-1600 cultural movement | "Florentine Renaissance was the first phase, beginning around 1400." |
 | **humanism** | Human-centered philosophy/education — studying classical literature | "Petrarch is the father of humanism." |
 | **patron** | Funder — commissions and pays artists | "Lorenzo was Michelangelo's patron." |
 | **patronage** | The funding system — patron-client relationship | "Renaissance art relied on patronage." |
@@ -2727,7 +2727,7 @@ post-1600   Renaissance → Baroque transition
 | **sfumato** | "Smoke-like" — Da Vinci's soft-gradient technique | "Mona Lisa's smile is achieved through sfumato." |
 | **chiaroscuro** | Light-dark contrast — using light and shadow for 3D effect | "Caravaggio later perfected chiaroscuro." |
 | **printing press** | Gutenberg's 1450 movable-type printing | "Printing press allowed Erasmus and Luther to reach all of Europe." |
-| **vernacular** | Native language — non-Latin writing | "Boccaccio wrote *Decameron* in Italian vernacular." |
+| **vernacular** | Native language — non-Latin writing | "Boccaccio wrote Decameron in Italian vernacular." |
 | **classical revival** | Returning to + imitating Greco-Roman antiquity | "Petrarch started the classical revival movement." |
 | **Medici** | Florence banking family — biggest Renaissance patron | "Cosimo, Lorenzo, and the Medici Popes shaped 200 years of Renaissance art." |
 | **Reformation** | 1517 Luther onward — Northern branch of the Renaissance | "Reformation grew out of Northern Renaissance humanism." |
@@ -2742,21 +2742,21 @@ post-1600   Renaissance → Baroque transition
 | **Cosimo de' Medici** | Florence banker, 1389-1464 | Father of the Country — founder of Medici hegemony — funded huge volumes of Renaissance art |
 | **Brunelleschi** | Architect, 1377-1446 | Florence Cathedral dome — engineering miracle |
 | **Donatello** | Sculptor, c. 1386-1466 | First free-standing bronze David — origin point of Renaissance sculpture |
-| **Botticelli** | Painter, c. 1445-1510 | *Birth of Venus* / *Spring* — but turned back to religious painting under Savonarola |
+| **Botticelli** | Painter, c. 1445-1510 | Birth of Venus / Spring — but turned back to religious painting under Savonarola |
 | **Lorenzo il Magnifico** | Florence's de facto ruler, 1449-1492 | Renaissance golden-age patron — discovered the 14-year-old Michelangelo |
-| **Pico della Mirandola** | Philosopher, 1463-1494 | *Oration on the Dignity of Man* — manifesto of Renaissance humanism |
+| **Pico della Mirandola** | Philosopher, 1463-1494 | Oration on the Dignity of Man — manifesto of Renaissance humanism |
 | **Leonardo da Vinci** | Polymath, 1452-1519 | Bastard — 12,000 pages of notebooks — the prototypical Renaissance Man |
-| **Michelangelo** | Sculptor + painter + architect, 1475-1564 | *Pietà* / *David* / Sistine Chapel — lived to 88, bridging the entire Renaissance arc |
+| **Michelangelo** | Sculptor + painter + architect, 1475-1564 | Pietà / David / Sistine Chapel — lived to 88, bridging the entire Renaissance arc |
 | **Savonarola** | Friar dictator, 1452-1498 | 1494-1498 theocracy — burned Vanities — was himself burned |
 | **Pope Julius II** | Warrior pope, 1443-1513 | Commissioned Bramante for St. Peter's + forced Michelangelo to paint Sistine |
-| **Erasmus** | Northern humanist, 1466-1536 | *Praise of Folly* — moderate reformer — Reformation precursor who didn't join |
+| **Erasmus** | Northern humanist, 1466-1536 | Praise of Folly — moderate reformer — Reformation precursor who didn't join |
 | **Isabella d'Este** | Mantua noblewoman, 1474-1539 | The most powerful woman of the Renaissance — Studiolo private study |
 | **Lucrezia Borgia** | Pope's daughter, 1480-1519 | Politically savvy survivor — NOT the poisoner of pop legend |
-| **Vasari** | Art historian, 1511-1574 | *Lives of the Artists* — invented "art history" + mythologized Michelangelo |
-| **Machiavelli** | Political theorist, 1469-1527 | *The Prince* — origin of modern political science — politics breaks from religious morality |
-| **Vesalius** | Anatomist, 1514-1564 | *De Humani Corporis Fabrica* — Western anatomy founded |
+| **Vasari** | Art historian, 1511-1574 | Lives of the Artists — invented "art history" + mythologized Michelangelo |
+| **Machiavelli** | Political theorist, 1469-1527 | The Prince — origin of modern political science — politics breaks from religious morality |
+| **Vesalius** | Anatomist, 1514-1564 | De Humani Corporis Fabrica — Western anatomy founded |
 | **Wang Yangming 王阳明** | Chinese contemporary philosopher, 1472-1529 | "Mind is principle + unity of knowledge and action" — Eastern "rebirth" alternative — Da Vinci's Chinese counterpart |
-| **Zheng He** | Ming Dynasty admiral, 1371-1433 | 7 voyages to the western seas — 87 years before Columbus — but Ming stopped after 1433 |
+| **Zheng He** | Ming Dynasty admiral, 1371-1433 | 7 voyages to the western seas — about 70 years before Columbus — but Ming stopped after 1433 |
 
 ## Appendix D: Visualization Hints (maps / timeline)
 

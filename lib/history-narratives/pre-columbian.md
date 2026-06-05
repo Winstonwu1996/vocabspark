@@ -27,9 +27,9 @@
 
 **EN**: Around 750 to 900 CE, the southern lowland Maya cities one by one stopped carving new royal monuments. Population shifted south and north. This is called the Classic Maya Collapse. But careful framing matters here — it was not a mysterious disappearance, and not from one single cause.
 
-**CN**: 学界目前的综合解释 (Marina Frangos《The Maya Collapse》2010 综述) 是多因素叠加: (1) 8 世纪到 9 世纪的多次长期干旱, 湖泊沉积层化学分析能直接读出来; (2) 城邦之间长期高强度战争 — Tikal 跟 Calakmul 几代人打了上百年; (3) 内部权力斗争, 王室无法继续维系超大规模公共工程的合法性; (4) 农业承载力到顶 — 雨林土壤经几百年密集耕作后流失。这 4 个因素哪一个单拎出来都不致命, 但叠在一起就压垮了南部低地的城邦体制。
+**CN**: 学界目前的综合解释 (Richardson Gill 2000《The Great Maya Droughts》+ David Webster 2002《The Fall of the Ancient Maya》) 是多因素叠加: (1) 8 世纪到 9 世纪的多次长期干旱, 湖泊沉积层化学分析能直接读出来; (2) 城邦之间长期高强度战争 — Tikal 跟 Calakmul 几代人打了上百年; (3) 内部权力斗争, 王室无法继续维系超大规模公共工程的合法性; (4) 农业承载力到顶 — 雨林土壤经几百年密集耕作后流失。这 4 个因素哪一个单拎出来都不致命, 但叠在一起就压垮了南部低地的城邦体制。
 
-**EN**: The current academic synthesis (Marina Frangos, *The Maya Collapse*, 2010) is multi-causal: (1) repeated severe droughts in the 8th and 9th centuries, readable directly from lake sediment chemistry; (2) long high-intensity warfare between city-states — Tikal and Calakmul fought for over a century; (3) internal political struggle, where royal lineages could no longer justify giant public projects; (4) agricultural carrying capacity peaking — rainforest soils degraded after centuries of intensive use. No single factor alone was fatal. Together they broke the southern lowland system.
+**EN**: The current academic synthesis (Richardson Gill, The Great Maya Droughts, University of New Mexico Press 2000; David Webster, The Fall of the Ancient Maya, Thames & Hudson 2002) is multi-causal: (1) repeated severe droughts in the 8th and 9th centuries, readable directly from lake sediment chemistry; (2) long high-intensity warfare between city-states — Tikal and Calakmul fought for over a century; (3) internal political struggle, where royal lineages could no longer justify giant public projects; (4) agricultural carrying capacity peaking — rainforest soils degraded after centuries of intensive use. No single factor alone was fatal. Together they broke the southern lowland system.
 
 **CN**: 重要的是: 北部低地 (Yucatán 半岛) 的玛雅 没有崩溃。Chichen Itzá 这时候才刚开始崛起。所以 玛雅文明 没有「灭亡」, 只是政治重心从南部低地转移到北部 — 这是 Postclassic Maya 的开端, 也是 Lens 3 主角 Ix Mutal 几百年后出生的世界。
 
@@ -73,7 +73,7 @@
 
 **CN**: 我们怎么知道这些事? Postclassic Maya 没有像古典期那样在石头上刻很多王室纪事。但他们有口传 + 后来在 16 世纪用拉丁字母记下来的本地语言文本, 统称 Chilam Balam (奇兰巴兰之书, 「美洲豹祭司之书」)。Munro Edmonson 1986 年在 University of Texas 出版的《Heaven Born Merida and Its Destiny: The Book of Chilam Balam of Chumayel》是这套文本的权威英译之一, 里面保留了 Postclassic 玛雅人对自己几百年历史的口述记忆。
 
-**EN**: How do we know all this? Postclassic Maya did not carve as many royal records in stone as the Classic period did. But they had oral traditions, later written down in Mayan languages using Latin letters in the 16th century. These texts are collectively called Chilam Balam, "The Books of the Jaguar Priest." Munro Edmonson's 1986 *Heaven Born Merida and Its Destiny: The Book of Chilam Balam of Chumayel* (University of Texas Press) is one authoritative English translation. It preserves how Postclassic Maya remembered their own centuries of history.
+**EN**: How do we know all this? Postclassic Maya did not carve as many royal records in stone as the Classic period did. But they had oral traditions, later written down in Mayan languages using Latin letters in the 16th century. These texts are collectively called Chilam Balam, "The Books of the Jaguar Priest." Munro Edmonson's 1986 Heaven Born Merida and Its Destiny: The Book of Chilam Balam of Chumayel (University of Texas Press) is one authoritative English translation. It preserves how Postclassic Maya remembered their own centuries of history.
 
 ### 2.3 Yucatán 农业村落 + 妇女 weaving — Lens 3 背景
 
@@ -127,7 +127,7 @@
 
 **CN**: 这个鹰啄蛇仙人掌的图像 至今还在墨西哥国旗中央 — Mexica 起源神话直接成了现代墨西哥国家认同的核心符号。但要 careful framing: Mendoza Codex 是 1540 年代由墨西哥总督 Antonio de Mendoza 委托制作的, 写作时 Tenochtitlán 已经被西班牙人征服 20 年了。所以 1325 年的「神兆」 究竟是历史事件还是后人追溯神话, 学界 (Inga Clendinnen 1991《Aztecs: An Interpretation》Cambridge) 倾向于认为它是 Mexica 帝国期 (15 世纪后半) 的政治神话建构, 用来给后来的统治合法性背书。
 
-**EN**: This eagle-snake-cactus image is still at the center of Mexico's flag today. The Mexica origin myth became the core symbol of modern Mexican national identity. But careful framing: the Mendoza Codex was commissioned in the 1540s by Viceroy Antonio de Mendoza, twenty years after the Spanish conquest of Tenochtitlán. So whether the 1325 omen was a real event or a later mythical retelling is debated. Scholars like Inga Clendinnen (*Aztecs: An Interpretation*, Cambridge 1991) lean toward seeing it as a political myth constructed during the imperial era (late 15th century) to legitimize later Mexica rule.
+**EN**: This eagle-snake-cactus image is still at the center of Mexico's flag today. The Mexica origin myth became the core symbol of modern Mexican national identity. But careful framing: the Mendoza Codex was commissioned in the 1540s by Viceroy Antonio de Mendoza, twenty years after the Spanish conquest of Tenochtitlán. So whether the 1325 omen was a real event or a later mythical retelling is debated. Scholars like Inga Clendinnen (Aztecs: An Interpretation, Cambridge 1991) lean toward seeing it as a political myth constructed during the imperial era (late 15th century) to legitimize later Mexica rule.
 
 ### 3.4 Aztec 联盟早期 + Triple Alliance 1428
 
@@ -175,7 +175,7 @@
 
 **CN**: 流行媒体 (好莱坞电影、19 世纪欧洲历史书) 经常把 Aztec 描述成「除了血祭什么都没有的恐怖文明」。这是非常严重的扭曲。Inga Clendinnen 1991 年在 Cambridge 出版的《Aztecs: An Interpretation》是这方面的权威 careful framing: Aztec 确实有人祭, 但 (1) 数字被严重夸大 — popular 文献常说一年 8 万人, 学界 estimate 1-2 万 / 年 (Clendinnen 1991), 仍然多, 但是城邦帝国规模相当; (2) 人祭在 Aztec 宇宙观里 不是「残忍」, 而是宇宙能量循环的必要部分 — 太阳每天升起需要血来「喂养」; (3) 即使按学界数字, 1 万 / 年 在一个 500 万人口的帝国里, 比例相当于同期欧洲宗教裁判所 + 战争 + 公开处刑的合计致死率, 不是异常高。
 
-**EN**: Popular media (Hollywood films, 19th-century European history books) often describes the Aztecs as "a horror civilization with nothing but blood sacrifice." This is a serious distortion. Inga Clendinnen's 1991 Cambridge book *Aztecs: An Interpretation* is the authoritative careful framing on this. The Aztecs did practice human sacrifice, but: (1) the numbers are heavily exaggerated — popular sources often claim 80,000 per year, while academic estimates are 10,000-20,000 per year (Clendinnen 1991), still many, but on the scale of a city-state empire; (2) human sacrifice in Aztec cosmology was not "cruelty" but a necessary part of cosmic energy cycling — the sun required blood to rise each day; (3) even at the academic figure of ~10,000 per year, in an empire of 5 million, the rate was comparable to contemporary European deaths from inquisitions, wars, and public executions combined. It was not abnormally high.
+**EN**: Popular media (Hollywood films, 19th-century European history books) often describes the Aztecs as "a horror civilization with nothing but blood sacrifice." This is a serious distortion. Inga Clendinnen's 1991 Cambridge book Aztecs: An Interpretation is the authoritative careful framing on this. The Aztecs did practice human sacrifice, but: (1) the numbers are heavily exaggerated — popular sources often claim 80,000 per year, while academic estimates are 10,000-20,000 per year (Clendinnen 1991), still many, but on the scale of a city-state empire; (2) human sacrifice in Aztec cosmology was not "cruelty" but a necessary part of cosmic energy cycling — the sun required blood to rise each day; (3) even at the academic figure of ~10,000 per year, in an empire of 5 million, the rate was comparable to contemporary European deaths from inquisitions, wars, and public executions combined. It was not abnormally high.
 
 **CN**: 更重要的是: Aztec 文明 还有非常发达的非血祭面向 — chinampa (奇南帕, 漂浮园) 农业系统在 Lake Texcoco 上养活 Tenochtitlán 20 万人口; Pochteca 商人体系把帝国经济连成一片; Nahuatl 诗歌哲学体系达到很高水平; Tenochtitlán 的城市规划 (双重水道、棋盘街道) 让 16 世纪初到达的西班牙人 Hernán Cortés 在他的信件里写「这是世界上最美丽的城市, 比威尼斯还壮观」。
 
@@ -235,7 +235,7 @@ The 8th, Viracocha Inca, was Pachacuti's father, the reigning Sapa Inca in 1438.
 
 **CN**: 据后来的 Inca 神话 (16 世纪殖民期史料 Sarmiento de Gamboa 1572 + Garcilaso de la Vega《Comentarios Reales》1609 记载), Cusi Yupanqui 在战斗中得到了创世神 Viracocha (跟他父亲同名的神, 不是父亲本人) 的显圣, 神告诉他石头会变成战士帮他打仗。结果 Cusi Yupanqui 不仅守住了 Cusco, 还反攻把 Chanca 联军彻底击溃。
 
-**EN**: According to later Inca mythology (recorded in the 16th-century colonial sources Sarmiento de Gamboa 1572 and Garcilaso de la Vega's *Comentarios Reales* 1609), Cusi Yupanqui received a divine vision during the battle from the creator god Viracocha (the deity sharing his father's name, not his father himself). The god told him stones would turn into warriors to fight for him. Cusi Yupanqui not only held Cusco but counterattacked and shattered the Chanca coalition.
+**EN**: According to later Inca mythology (recorded in the 16th-century colonial sources Sarmiento de Gamboa 1572 and Garcilaso de la Vega's Comentarios Reales 1609), Cusi Yupanqui received a divine vision during the battle from the creator god Viracocha (the deity sharing his father's name, not his father himself). The god told him stones would turn into warriors to fight for him. Cusi Yupanqui not only held Cusco but counterattacked and shattered the Chanca coalition.
 
 ### 4.5 改名 Pachacuti — 「时间转折者」
 
@@ -254,9 +254,9 @@ The 8th, Viracocha Inca, was Pachacuti's father, the reigning Sapa Inca in 1438.
 - (2) 我们今天能看到的 pre-Pachacuti 叙事 全部来自 16 世纪殖民期史料: Sarmiento de Gamboa《Historia de los Incas》(1572), Garcilaso de la Vega《Comentarios Reales》(1609), Pedro Cieza de León《Crónica del Perú》(1553)。这些都是西班牙征服后 30-80 年, 由西班牙人 + 西班牙化 Inca 贵族 编写的。
 - (3) Pachacuti 即位后做了一件帝国创始人很常见的事: 系统重写自己家族的历史, 把自己的王朝追溯成神圣起源。
 
-**EN**: Very careful framing required here. For the pre-Pachacuti Inca period (1200-1438), scholars such as Catherine Julien (*Reading Inca History*, University of Iowa Press 2000) estimate that about 90% of this "history" was reconstructed by Inca court historians after Pachacuti took power in 1438, as a legitimacy narrative. Three reasons:
+**EN**: Very careful framing required here. For the pre-Pachacuti Inca period (1200-1438), scholars such as Catherine Julien (Reading Inca History, University of Iowa Press 2000) estimate that about 90% of this "history" was reconstructed by Inca court historians after Pachacuti took power in 1438, as a legitimacy narrative. Three reasons:
 - (1) The Inca had no writing. Quipu (knotted cord, 绳结) could record numbers and administrative data, but scholars today agree quipu could not record full narrative history. Only accounts.
-- (2) All the pre-Pachacuti narratives we have today come from 16th-century colonial sources: Sarmiento de Gamboa's *Historia de los Incas* (1572), Garcilaso de la Vega's *Comentarios Reales* (1609), and Pedro Cieza de León's *Crónica del Perú* (1553). All written 30-80 years after the Spanish conquest, by Spaniards or Hispanized Inca nobles.
+- (2) All the pre-Pachacuti narratives we have today come from 16th-century colonial sources: Sarmiento de Gamboa's Historia de los Incas (1572), Garcilaso de la Vega's Comentarios Reales (1609), and Pedro Cieza de León's Crónica del Perú (1553). All written 30-80 years after the Spanish conquest, by Spaniards or Hispanized Inca nobles.
 - (3) After taking power, Pachacuti did what imperial founders commonly do — he systematically rewrote his family history, tracing his dynasty back to a sacred origin.
 
 **CN**: 所以当我们说「Manco Cápac 1200 年建立 Cusco」「7 任 Sapa Inca 之间发生了什么」时, 实际是说「这是 Pachacuti 帝国宫廷在 1450 年代左右编出来的官方历史」, 不一定是字面发生过的事。这跟同期欧洲 Charlemagne 帝国之后法兰克王朝重写自己家族追溯到罗马的做法, 在性质上一样。
@@ -406,11 +406,11 @@ Cusi Yupanqui did not flee. He rallied the surrounding city-states — the Quech
 
 后来的 Inca 王朝叙事说: 战斗到一半, Cusi Yupanqui 祈祷, 平原上的石头变成了战士加入战斗 — 「pururaucas」, 石头战士。Chanca 大败, 撤退。Cusi Yupanqui 自立为第 9 任 Sapa Inca, 改名 **Pachacuti** — Quechua 语「pacha」= 时间 / 大地, 「kuti」= 翻转, 合起来「时间转折者 / 大地震荡者」。
 
-Later Inca dynastic narrative said: mid-battle, Cusi Yupanqui prayed, and stones on the plain turned into warriors who joined the fight — *pururaucas*, stone warriors. The Chanca broke and retreated. Cusi Yupanqui declared himself 9th Sapa Inca, taking the name **Pachacuti** — Quechua *pacha* (time / earth) + *kuti* (turn / overturn), "Time-Turner" or "Earth-Shaker."
+Later Inca dynastic narrative said: mid-battle, Cusi Yupanqui prayed, and stones on the plain turned into warriors who joined the fight — pururaucas, stone warriors. The Chanca broke and retreated. Cusi Yupanqui declared himself 9th Sapa Inca, taking the name **Pachacuti** — Quechua pacha (time / earth) + kuti (turn / overturn), "Time-Turner" or "Earth-Shaker."
 
 **careful framing**: 这一段 1438 大战, 史料是 16 世纪西班牙人到了之后才写下的 — Pedro Sarmiento de Gamboa 1572《Historia índica》, Inca Garcilaso de la Vega 1609《Comentarios reales》。学者 Catherine Julien 2000《Reading Inca History》认为, 1438 反败为胜 + Pachacuti 改朝换代 是历史核心事实, 但「石头变战士」这种细节是后世王朝把开国神话化了。读这段时, 把握「框架真, 细节疑」: Pachacuti 是真人, 1438 节点是真节点, 但戏剧化叙事是 Inca 王朝 PR。
 
-**careful framing**: This 1438 episode comes from sources written after the Spanish arrival — Pedro Sarmiento de Gamboa's 1572 *Historia índica*, Inca Garcilaso de la Vega's 1609 *Comentarios reales*. Scholar Catherine Julien (*Reading Inca History*, 2000) argues the historical core — 1438 reversal + Pachacuti dynasty change — is solid, but the "stones turning to warriors" is later dynastic mythologizing. Reading rule: frame is real, details are PR.
+**careful framing**: This 1438 episode comes from sources written after the Spanish arrival — Pedro Sarmiento de Gamboa's 1572 Historia índica, Inca Garcilaso de la Vega's 1609 Comentarios reales. Scholar Catherine Julien (Reading Inca History, 2000) argues the historical core — 1438 reversal + Pachacuti dynasty change — is solid, but the "stones turning to warriors" is later dynastic mythologizing. Reading rule: frame is real, details are PR.
 
 ---
 
@@ -430,7 +430,7 @@ After the Chanca victory, Pachacuti did not rest. In the 12 years from 1438 to 1
 - **Cuntisuyu** 西 (太平洋海岸)
 - **Collasuyu** 南 (今玻利维亚 / 阿根廷 / 智利北)
 
-**Tawantinsuyu**: Pachacuti named the empire **Tawantinsuyu** — Quechua *tawa* (four) + *-ntin* (together) + *suyu* (region), "Four Regions Together." Four quarters radiating from Cusco: Chinchaysuyu (north, today's Ecuador / southern Colombia), Antisuyu (east, Amazon edge), Cuntisuyu (west, Pacific coast), Collasuyu (south, today's Bolivia / Argentina / northern Chile).
+**Tawantinsuyu**: Pachacuti named the empire **Tawantinsuyu** — Quechua tawa (four) + -ntin (together) + suyu (region), "Four Regions Together." Four quarters radiating from Cusco: Chinchaysuyu (north, today's Ecuador / southern Colombia), Antisuyu (east, Amazon edge), Cuntisuyu (west, Pacific coast), Collasuyu (south, today's Bolivia / Argentina / northern Chile).
 
 **mit'a 劳役制**: 帝国基层制度。每个成年男性臣民每年欠帝国 ~90 天劳役 — 不交税 (没货币), 而是出工。修路, 种国家粮田, 矿里挖银, 当兵戍边。**mit'a** Quechua 词, 「轮班」的意思 — 强调是「轮」, 大家都摊。
 
@@ -438,15 +438,15 @@ After the Chanca victory, Pachacuti did not rest. In the 12 years from 1438 to 1
 
 **ayllu 亲属社区**: mit'a 是怎么组织的? 通过 **ayllu** — 扩展亲属社区, 几十到几百户共享土地 + 共同祖先 + 互助义务。ayllu 是 Andean 社会的基础单位, Pachacuti 没发明它 (Andean 社会几千年都在), 但他把 ayllu 嵌进了帝国行政结构: 10 户 → 50 户 → 100 户 → 500 户 → 1000 户 → 1 万户, 每级有 kuraka (头人) 管。
 
-**ayllu kin community**: How was mit'a organized? Through **ayllu** — extended kin communities of dozens to hundreds of households, sharing land + common ancestors + mutual obligations. The ayllu was the bedrock of Andean society for millennia (Pachacuti did not invent it), but he embedded ayllu into imperial administration: 10 households → 50 → 100 → 500 → 1,000 → 10,000, each tier headed by a *kuraka* (chief).
+**ayllu kin community**: How was mit'a organized? Through **ayllu** — extended kin communities of dozens to hundreds of households, sharing land + common ancestors + mutual obligations. The ayllu was the bedrock of Andean society for millennia (Pachacuti did not invent it), but he embedded ayllu into imperial administration: 10 households → 50 → 100 → 500 → 1,000 → 10,000, each tier headed by a kuraka (chief).
 
 **太阳崇拜国教化**: Pachacuti 自封「Inti 太阳之子」(Intip Churin) — 太阳神 Inti 是 Inca 王室祖先, Sapa Inca 是 Inti 在地上的代理。这一招 是国家工程的核心: 你反 Sapa Inca = 反神。
 
-**Sun cult as state religion**: Pachacuti styled himself "Son of the Sun" (*Intip Churin*) — the sun god Inti as royal ancestor, the Sapa Inca as Inti's earthly viceroy. This was core state engineering: opposing the Sapa Inca = opposing god.
+**Sun cult as state religion**: Pachacuti styled himself "Son of the Sun" (Intip Churin) — the sun god Inti as royal ancestor, the Sapa Inca as Inti's earthly viceroy. This was core state engineering: opposing the Sapa Inca = opposing god.
 
 **careful framing 跨 Topic**: Pachacuti 1438 立国 + Yasa 式法律 + 国教 — 跟 Mongol Genghis Khan 1206 立 Yasa 法 + 萨满 Tengri 天命, 是同种「游牧/小邦 → 大帝国」的国家工程。两个都不是孤例 — 13-15 世纪欧亚美三大洲都有这种类型的快速扩张体。Catherine Julien 2000 + Mary Doyle 1988《The Ancestor Cult and Burial Ritual》指出, Pachacuti 的国教化在他死后 3 代 (Topa Inca + Huayna Capac) 才完成全帝国渗透。
 
-**Cross-topic careful framing**: Pachacuti's 1438 founding + Yasa-like law + state religion parallels Mongol Genghis Khan's 1206 Yasa law + shaman-Tengri mandate — both are the "small polity → vast empire" engineering pattern of the 13-15c. Two of three continents (Eurasia, Americas) ran this play. Julien 2000 + Mary Doyle 1988 (*The Ancestor Cult and Burial Ritual at Inka Cuzco*) argue Pachacuti's religious centralization took 3 generations (through Topa Inca + Huayna Capac) to fully permeate the empire.
+**Cross-topic careful framing**: Pachacuti's 1438 founding + Yasa-like law + state religion parallels Mongol Genghis Khan's 1206 Yasa law + shaman-Tengri mandate — both are the "small polity → vast empire" engineering pattern of the 13-15c. Two of three continents (Eurasia, Americas) ran this play. Julien 2000 + Mary Doyle 1988 (The Ancestor Cult and Burial Ritual at Inka Cuzco) argue Pachacuti's religious centralization took 3 generations (through Topa Inca + Huayna Capac) to fully permeate the empire.
 
 ---
 
@@ -454,7 +454,7 @@ After the Chanca victory, Pachacuti did not rest. In the 12 years from 1438 to 1
 
 帝国铺开了, Pachacuti 面对一个问题: 怎么管? Inca 没有文字 — 没字母, 没字符, 没象形。但他们有 **quipu** (Quechua「khipu」= 结)。
 
-Empire spread, Pachacuti faced a problem: how to administer? The Inca had no writing — no alphabet, no glyphs, no pictographs. But they had **quipu** (Quechua *khipu* = knot).
+Empire spread, Pachacuti faced a problem: how to administer? The Inca had no writing — no alphabet, no glyphs, no pictographs. But they had **quipu** (Quechua khipu = knot).
 
 **quipu 绳结记账**: 一根主绳, 下面挂几十到几百根支绳, 每根支绳上打不同位置 + 不同种类的结。位置编码十进位数字 (个位 / 十位 / 百位 / 千位), 颜色和结型编码类别 (玉米 / 土豆 / 战士 / 户)。一个 quipu 能记: 某村今年产玉米 4,532 蒲式耳, 户数 87, 适龄男 23, 欠 mit'a 工 18 人。
 
@@ -462,7 +462,7 @@ Empire spread, Pachacuti faced a problem: how to administer? The Inca had no wri
 
 **careful framing**: quipu 不是「文字的替代」, 是不同范式 — 它擅长记数字 + 行政记录, 但能不能记叙事 (故事 / 历史) 是学术争论。Gary Urton 2003《Signs of the Inka Khipu》论证某些 quipu 可能有叙事编码, 但没破译。
 
-**careful framing**: quipu is not a "writing substitute" — it is a different paradigm. Excellent at numbers + administrative records; whether it could encode narrative (stories / history) is debated. Gary Urton (*Signs of the Inka Khipu*, 2003) argues some quipus may carry narrative coding, but it remains undeciphered.
+**careful framing**: quipu is not a "writing substitute" — it is a different paradigm. Excellent at numbers + administrative records; whether it could encode narrative (stories / history) is debated. Gary Urton (Signs of the Inka Khipu, 2003) argues some quipus may carry narrative coding, but it remains undeciphered.
 
 **跨 Topic cross-ref**: 同期 Mali Empire 商人女儿 Aisha (Topic: West African Empires 600-1591) 在 Timbuktu 用阿拉伯字母 + 商业账簿记交易 — 用的是字母系统。同时间, Andean 帝国用绳结管理 — 不同信息技术路径, 都管理了百万级人口。这不是「谁高级」, 是「问题不同, 工具不同」。
 
@@ -470,15 +470,15 @@ Empire spread, Pachacuti faced a problem: how to administer? The Inca had no wri
 
 **Qhapaq Ñan 路网**: Pachacuti + Topa Inca 修了 ~40,000 公里的 Inca 路网 — Quechua 「Qhapaq Ñan」= 王道。从厄瓜多尔 / 哥伦比亚边界, 一路到阿根廷 / 智利北部 — 跨过 Andes 山脉 (海拔 4,000-5,000 米), 跨过沙漠 (Atacama, 世界最干), 跨过雨林边缘 (Amazon 西缘)。
 
-**Qhapaq Ñan road network**: Pachacuti + Topa Inca built ~40,000 km of Inca roads — Quechua *Qhapaq Ñan* = Royal Road. From the Ecuador / Colombia border south to northern Argentina / Chile — across the Andes (4,000-5,000 m elevation), across the Atacama desert (driest on Earth), along the Amazon's western edge.
+**Qhapaq Ñan road network**: Pachacuti + Topa Inca built ~40,000 km of Inca roads — Quechua Qhapaq Ñan = Royal Road. From the Ecuador / Colombia border south to northern Argentina / Chile — across the Andes (4,000-5,000 m elevation), across the Atacama desert (driest on Earth), along the Amazon's western edge.
 
 **chasqui 跑信使**: 路网上每 1.5-3 公里设一个 tambo (驿站), 站着 chasqui — 训练有素的跑步信使, 接力传消息。一个 chasqui 跑 ~2 公里, 把 quipu 或口信交给下一个。接力下来, 消息一天传 250-400 公里。
 
-**chasqui runners**: Every 1.5-3 km along the road, a *tambo* (way station) housed *chasqui* — trained running messengers, relaying messages. One chasqui ran ~2 km, passed the quipu or verbal message to the next. Relay total: 250-400 km per day.
+**chasqui runners**: Every 1.5-3 km along the road, a tambo (way station) housed chasqui — trained running messengers, relaying messages. One chasqui ran ~2 km, passed the quipu or verbal message to the next. Relay total: 250-400 km per day.
 
 **跨 Topic cross-ref Mongol Yam**: Mongol 帝国 (Topic: Mongol Empire 1206-1368) 的 Yam 驿站 25-50 公里一站, 骑马接力, 一天可传 ~300 公里。两个体系到达类似速度 — 但 Inca 全靠人腿 + 海拔 4,000 米山路 + 没马。这一对照让你看到: 美洲没有马 / 牛 / 驴 (大型驯化哺乳动物) — 这不是「Inca 落后」, 是大陆生物地理决定的 (Diamond 1997《Guns, Germs, and Steel》框架, 但谨慎: Diamond 框架是大尺度叙事, 具体决策仍是人做的)。
 
-**Mongol Yam cross-ref**: The Mongol Empire's (Topic: Mongol Empire 1206-1368) Yam relay stations sat 25-50 km apart, horse-relay, ~300 km/day. Both systems hit similar speeds — but the Inca did it on human legs, on 4,000-m mountain trails, with no horses. This contrast highlights: the Americas had no horses / cattle / donkeys (large domesticable mammals) — not "Inca were behind," but continental biogeography (Diamond 1997 *Guns, Germs, and Steel* framework, used carefully: Diamond is a macro-narrative, specific decisions still belong to humans).
+**Mongol Yam cross-ref**: The Mongol Empire's (Topic: Mongol Empire 1206-1368) Yam relay stations sat 25-50 km apart, horse-relay, ~300 km/day. Both systems hit similar speeds — but the Inca did it on human legs, on 4,000-m mountain trails, with no horses. This contrast highlights: the Americas had no horses / cattle / donkeys (large domesticable mammals) — not "Inca were behind," but continental biogeography (Diamond 1997 Guns, Germs, and Steel framework, used carefully: Diamond is a macro-narrative, specific decisions still belong to humans).
 
 **careful framing**: Qhapaq Ñan 在 21 世纪被 UNESCO 列为世界文化遗产 (2014, 涉及 6 国 — 阿根廷 / 玻利维亚 / 智利 / 哥伦比亚 / 厄瓜多尔 / 秘鲁)。现在很多段你还能走 — Cusco 到 Machu Picchu 的「Inca Trail」是其中最有名的小段。
 
@@ -494,7 +494,7 @@ The imperial machine turned, but machines are not made of air — they are made 
 
 **mit'a 90 天**: 名义上「轮班」, 实际上对受指派的人很沉重。如果你是矿工 mit'a (Potosí 银矿之后的事, 西班牙时代延续, 但 Inca 时也有矿 mit'a), 一年里 90 天在地下挖矿, 死亡率高。如果你是远征军 mit'a, 跟着 Topa Inca 北征厄瓜多尔, 走半年。一些人不见了 — 死矿里, 死战场, 死路上。
 
-**mit'a 90 days**: Nominally "rotation," in practice heavy on those assigned to the worst tasks. Mine *mit'a* (silver mining; the system continued and worsened under the Spanish at Potosí, but it existed under the Inca too) meant 90 days underground per year, with high mortality. Military *mit'a* meant marching with Topa Inca to Ecuador, away half a year. Some did not return — dying in mines, on battlefields, on the road.
+**mit'a 90 days**: Nominally "rotation," in practice heavy on those assigned to the worst tasks. Mine mit'a (silver mining; the system continued and worsened under the Spanish at Potosí, but it existed under the Inca too) meant 90 days underground per year, with high mortality. Military mit'a meant marching with Topa Inca to Ecuador, away half a year. Some did not return — dying in mines, on battlefields, on the road.
 
 **mitmaq 移民**: 整族迁徙制度。Pachacuti 征服一个区域之后, 把那里 不老实 的部落整族搬迁到帝国另一头, 同时把 老实的 ayllu 搬过去填空。这做政治稳定: 反叛部落被打散, 新迁来的 ayllu 没有当地根基, 只能靠帝国。
 
@@ -502,15 +502,15 @@ The imperial machine turned, but machines are not made of air — they are made 
 
 但被迁徙的 ayllu — 离开了祖坟 (Andean 文化里祖先 huaca / 圣物 在土地里), 离开了熟悉的山, 到了不会种当地作物的新地。Mary Doyle 1988 + Carolyn Dean 2010《Inka Bodies and the Body of Christ》: 这种地理 + 精神双重切断 是 mitmaq 的真实代价。
 
-But the relocated ayllu — cut from ancestral graves (Andean *huaca* / sacred sites in the land), cut from familiar mountains, dropped into terrain whose crops they did not know. Mary Doyle 1988 + Carolyn Dean 2010 (*Inka Bodies and the Body of Christ*): the dual geographic + spiritual severance was the real cost of mitmaq.
+But the relocated ayllu — cut from ancestral graves (Andean huaca / sacred sites in the land), cut from familiar mountains, dropped into terrain whose crops they did not know. Mary Doyle 1988 + Carolyn Dean 2010 (Inka Bodies and the Body of Christ): the dual geographic + spiritual severance was the real cost of mitmaq.
 
 **yanakuna 永久仆**: 战俘 + 边缘部落 → 永久 Inca 王室 + 贵族家仆。脱离 ayllu, 不再有亲属社区保护, 终身服务一个王室家族 (panaca)。儿子继承父辈 yanakuna 身份。
 
-**yanakuna permanent servants**: Captives + marginal peoples → lifelong servants of the Inca royal family + nobles. Severed from ayllu, no kin community to protect them, bound to one royal household (*panaca*) for life. Sons inherited yanakuna status.
+**yanakuna permanent servants**: Captives + marginal peoples → lifelong servants of the Inca royal family + nobles. Severed from ayllu, no kin community to protect them, bound to one royal household (panaca) for life. Sons inherited yanakuna status.
 
 **反 Whig 警告**: popular media (David Macaulay 类儿童书 / Disney 类) 把 Inca 浪漫化成「福利国家」— 国家管理粮仓, 没人挨饿, 没人无家可归。学术看法 (D'Altroy 2002《The Incas》/ Catherine Julien 2000): Inca 帝国确实有粮仓 (qollqa) 救灾 + 老弱病残保障 — 这部分是真。但 mit'a 死矿 / mitmaq 切根 / yanakuna 永奴 也是真。两面都是真, 不是「Inca 好 vs Inca 坏」的二选一。
 
-**Anti-Whig caution**: Popular media (David Macaulay-style children's books / Disney) romanticizes the Inca as a "welfare state" — state-managed granaries, nobody starving, nobody homeless. Scholarship (D'Altroy 2002 *The Incas*; Julien 2000): the Inca did maintain *qollqa* (granaries) for famine relief + provisions for the elderly / sick / disabled — this part is real. But mit'a mining deaths / mitmaq uprooting / yanakuna lifelong servitude are also real. Both are true; not a "good Inca vs bad Inca" binary.
+**Anti-Whig caution**: Popular media (David Macaulay-style children's books / Disney) romanticizes the Inca as a "welfare state" — state-managed granaries, nobody starving, nobody homeless. Scholarship (D'Altroy 2002 The Incas; Julien 2000): the Inca did maintain qollqa (granaries) for famine relief + provisions for the elderly / sick / disabled — this part is real. But mit'a mining deaths / mitmaq uprooting / yanakuna lifelong servitude are also real. Both are true; not a "good Inca vs bad Inca" binary.
 
 **Lens 3 setup anchor**: Lens 3 主角 Ix Mutal 是 Yucatán Postclassic Maya 平民, 不是 Inca 子民 — 但 「平民被国家工程的 receiving end 是什么感觉」这个问题, 在 Andean mit'a 系统里跟在 Aztec flower-war 边境 + Maya 农民 cargo 里, 是同一类问题。Part 3 在 Ix Mutal 视角的时候, 这一段 setup 可调用。
 
@@ -530,11 +530,11 @@ His chosen successor was son **Topa Inca Yupanqui** (reigned 1471-1493; co-ruled
 
 **panaca 木乃伊王室**: 这里有个 反 Whig 必讲的细节。Pachacuti 死后, 他的尸体被 木乃伊化 — 不是埋进墓里, 是 保存在 Cusco 城里, 由他生前的家族 (panaca) 持续供奉。木乃伊有自己的房子, 自己的田地 (生前的封地继续是「他」的), 自己的仆人 (yanakuna 继续服务)。重大节日, 木乃伊被抬出来参加仪式, 「跟」其他活着的王坐一起。
 
-**panaca royal mummy**: Here is an anti-Whig essential. After death, Pachacuti's body was *mummified* — not buried, but kept in Cusco, perpetually venerated by his lineage household (*panaca*). The mummy had its own house, its own estates (his living-era lands remained "his"), its own servants (yanakuna continued service). On major festivals, the mummy was carried out to participate, "sitting" alongside living kings.
+**panaca royal mummy**: Here is an anti-Whig essential. After death, Pachacuti's body was mummified — not buried, but kept in Cusco, perpetually venerated by his lineage household (panaca). The mummy had its own house, its own estates (his living-era lands remained "his"), its own servants (yanakuna continued service). On major festivals, the mummy was carried out to participate, "sitting" alongside living kings.
 
 这不是 superstition / 迷信 — 是宪政结构。每一任 Sapa Inca 死后木乃伊化 + 自己的 panaca 永久占有自己生前的财产 → 新任 Sapa Inca 上台时, 前任的财产他不能动 (前任「还在」) → 新任只能 重新征服新土地 凑自己的财产。这是 Inca 帝国为什么 不停扩张 的制度动因 (Maria Rostworowski 1999《History of the Inca Realm》指出这一点)。
 
-This was not superstition — it was constitutional structure. Each Sapa Inca, on death, was mummified + their panaca permanently retained their living-era estates → the new Sapa Inca could not touch the predecessor's wealth (predecessor was "still there") → the new ruler had to *conquer fresh territory* to build his own estate. This was a structural driver of Inca *perpetual expansion* (Maria Rostworowski 1999 *History of the Inca Realm* makes this point).
+This was not superstition — it was constitutional structure. Each Sapa Inca, on death, was mummified + their panaca permanently retained their living-era estates → the new Sapa Inca could not touch the predecessor's wealth (predecessor was "still there") → the new ruler had to conquer fresh territory to build his own estate. This was a structural driver of Inca perpetual expansion (Maria Rostworowski 1999 History of the Inca Realm makes this point).
 
 careful framing: 这个制度 1532 西班牙人到 Cusco 时 还在运作 — 11 任 Sapa Inca 的木乃伊都还在 (Pizarro 后来下令毁掉 1559)。Catherine Julien 2000 + Carolyn Dean 2010 都强调: Inca 帝国对欧洲人来说 不是「死的过去」, 而是「死人还在治国的现在」— 这是认知冲击。
 
@@ -556,15 +556,15 @@ In 1428, the Mexica (residents of Tenochtitlán; "Aztec" is a later term, they c
 
 第一任联盟统治者是 **Itzcoatl** (1427-1440) — Tenochtitlán 第 4 任 tlatoani (「说话者」, 城邦统治者称号)。Itzcoatl 做了一件影响深远的事: 烧了旧历史书, 重写 Mexica 起源神话 — 把 Mexica 从「Tepanec 附庸」改写成「太阳神 Huitzilopochtli 选民, 注定征服世界」。
 
-The first alliance ruler was **Itzcoatl** (1427-1440) — Tenochtitlán's 4th *tlatoani* ("speaker," ruler title). Itzcoatl did something with long shadow: he burned the old history books and rewrote Mexica origins — recasting the Mexica from "Tepanec vassals" to "chosen people of the sun god Huitzilopochtli, destined to conquer the world."
+The first alliance ruler was **Itzcoatl** (1427-1440) — Tenochtitlán's 4th tlatoani ("speaker," ruler title). Itzcoatl did something with long shadow: he burned the old history books and rewrote Mexica origins — recasting the Mexica from "Tepanec vassals" to "chosen people of the sun god Huitzilopochtli, destined to conquer the world."
 
 **careful framing 跨 Inca cross-ref**: Itzcoatl 1428 烧史 + Pachacuti 1438 自封 Inti 之子 — 都是新兴帝国的「合法性工程」, 同种范式不同大陆。Inga Clendinnen 1991《Aztecs: An Interpretation》: 这种「新创建的古老」是国家工程典型动作。
 
-**Cross-Inca framing**: Itzcoatl's 1428 history-burn + Pachacuti's 1438 Son-of-the-Sun claim — both are emerging-empire "legitimacy engineering," same paradigm, different continents. Inga Clendinnen 1991 (*Aztecs: An Interpretation*): this "newly invented antiquity" is a hallmark state move.
+**Cross-Inca framing**: Itzcoatl's 1428 history-burn + Pachacuti's 1438 Son-of-the-Sun claim — both are emerging-empire "legitimacy engineering," same paradigm, different continents. Inga Clendinnen 1991 (Aztecs: An Interpretation): this "newly invented antiquity" is a hallmark state move.
 
 跟 Inca 不同点: Aztec Triple Alliance 不是单一帝国 — 是城邦联盟, 三个 tlatoani 并存 (虽然 Tenochtitlán 越来越独大)。Inca 是 单一 Sapa Inca。
 
-Difference from Inca: the Aztec Triple Alliance was *not* a unitary empire — it was a city-state coalition, three tlatoani coexisting (though Tenochtitlán grew increasingly dominant). The Inca had a single Sapa Inca.
+Difference from Inca: the Aztec Triple Alliance was not a unitary empire — it was a city-state coalition, three tlatoani coexisting (though Tenochtitlán grew increasingly dominant). The Inca had a single Sapa Inca.
 
 ---
 
@@ -580,7 +580,7 @@ But one area resisted: the Tlaxcala confederation (4 city-states) in the eastern
 
 **Xochiyaoyotl 花战 / flower wars**: 征服不了, 怎么办? Moctezuma I 跟 Tlaxcala 立了一个奇怪的协议 — 仪式化战争。约定时间 + 约定地点, 双方军队在中间空地打, 主要目的不是占领土地, 是 抓俘虏 — 双方都需要俘虏作血祭。Nahuatl 称这种为 **Xochiyaoyotl**, 「花战」(xochitl = 花, yaoyotl = 战) — 「花」隐喻战士的鲜血与生命。
 
-**Xochiyaoyotl flower wars**: Cannot conquer? Moctezuma I and Tlaxcala struck an odd compact — *ritualized warfare*. Set time, set place, armies met on neutral ground; primary goal was not territory but *capturing prisoners* — both sides needed captives for blood sacrifice. Nahuatl called it **Xochiyaoyotl**, "flower war" (*xochitl* = flower, *yaoyotl* = war) — "flower" a metaphor for the blood and life of warriors.
+**Xochiyaoyotl flower wars**: Cannot conquer? Moctezuma I and Tlaxcala struck an odd compact — ritualized warfare. Set time, set place, armies met on neutral ground; primary goal was not territory but capturing prisoners — both sides needed captives for blood sacrifice. Nahuatl called it **Xochiyaoyotl**, "flower war" (xochitl = flower, yaoyotl = war) — "flower" a metaphor for the blood and life of warriors.
 
 **careful framing**: popular media 把 flower wars 简化成「Aztec 嗜血」。学术 (Ross Hassig 1988《Aztec Warfare: Imperial Expansion and Political Control》) 看法是 flower wars 是 多功能制度:
 1. 政治威慑: Tlaxcala 包在 Aztec 领土里, 长期消耗 Tlaxcala 人口
@@ -588,11 +588,11 @@ But one area resisted: the Tlaxcala confederation (4 city-states) in the eastern
 3. 仪式经济: 持续供应俘虏维持血祭体系
 4. 外交平衡: 不全灭 Tlaxcala (省得边界失控), 也不放弃压力
 
-**careful framing**: popular media reduces flower wars to "bloodthirsty Aztecs." Scholarship (Ross Hassig 1988 *Aztec Warfare: Imperial Expansion and Political Control*) reads flower wars as a *multipurpose institution*: (1) political attrition — Tlaxcala enclosed in Aztec territory, long-term population drain; (2) military training — young Aztec warriors gained combat experience in flower wars; (3) ritual economy — sustained captive supply for sacrifice; (4) diplomatic balance — not annihilating Tlaxcala (avoid frontier collapse) while maintaining pressure.
+**careful framing**: popular media reduces flower wars to "bloodthirsty Aztecs." Scholarship (Ross Hassig 1988 Aztec Warfare: Imperial Expansion and Political Control) reads flower wars as a multipurpose institution: (1) political attrition — Tlaxcala enclosed in Aztec territory, long-term population drain; (2) military training — young Aztec warriors gained combat experience in flower wars; (3) ritual economy — sustained captive supply for sacrifice; (4) diplomatic balance — not annihilating Tlaxcala (avoid frontier collapse) while maintaining pressure.
 
 这个 flower-war 协议在 1519 Cortés 来到 Veracruz 时还在运作 — Tlaxcala 80 年屈居 Aztec 包围中, 这是为什么 Tlaxcala 1519 年立刻跟 Cortés 结盟反 Aztec 的 真正原因 (后续 Lens 2 Malintzin 视角 Part 3 会详写)。
 
-This flower-war compact was *still operating* in 1519 when Cortés arrived at Veracruz — Tlaxcala spent 80 years encircled by Aztecs, which is the *real reason* Tlaxcala allied with Cortés against the Aztec in 1519 (Part 3, Lens 2 Malintzin will detail this).
+This flower-war compact was still operating in 1519 when Cortés arrived at Veracruz — Tlaxcala spent 80 years encircled by Aztecs, which is the real reason Tlaxcala allied with Cortés against the Aztec in 1519 (Part 3, Lens 2 Malintzin will detail this).
 
 ---
 
@@ -604,11 +604,11 @@ This section requires careful framing — popular knowledge is most distorted he
 
 **popular media 数字**: 1487 年, Tenochtitlán **Templo Mayor** (大神殿) 落成扩建仪式, 据说 4 天里屠 80,000 战俘。这个数字来自 16 世纪西班牙人记录 — Bernal Díaz del Castillo 1568《Historia verdadera de la conquista de la Nueva España》和 Diego Durán 1581《Historia de las Indias de Nueva España》。
 
-**Popular media figure**: In 1487, Tenochtitlán's **Templo Mayor** dedication allegedly involved sacrificing 80,000 captives over 4 days. This number comes from 16c Spanish accounts — Bernal Díaz del Castillo 1568 (*Historia verdadera de la conquista de la Nueva España*) and Diego Durán 1581 (*Historia de las Indias de Nueva España*).
+**Popular media figure**: In 1487, Tenochtitlán's **Templo Mayor** dedication allegedly involved sacrificing 80,000 captives over 4 days. This number comes from 16c Spanish accounts — Bernal Díaz del Castillo 1568 (Historia verdadera de la conquista de la Nueva España) and Diego Durán 1581 (Historia de las Indias de Nueva España).
 
 **学术估计**: Inga Clendinnen 1991《Aztecs》+ Ross Hassig 1988 + Michael Harner 1977 之间的学术辩论得出的合理范围是: Aztec 帝国全境 一年总血祭量 ~10,000-20,000 人, 不是单一仪式 4 天 80,000。1487 Templo Mayor 仪式可能有几千人 (大事件), 但「80,000」是 16c 西班牙人为了证明征服正当性 而放大的数字 (类比: 任何征服文献都倾向放大被征服文化的「野蛮」)。
 
-**Scholarly estimate**: The debate among Inga Clendinnen 1991 (*Aztecs*), Ross Hassig 1988, and Michael Harner 1977 yields a reasonable range: empire-wide total ~10,000-20,000 sacrifices per year, not 80,000 in a single 4-day rite. The 1487 Templo Mayor event likely involved a few thousand (a major occasion), but "80,000" is a 16c Spanish figure inflated to justify conquest (as conquest literature universally inflates the conquered's "savagery").
+**Scholarly estimate**: The debate among Inga Clendinnen 1991 (Aztecs), Ross Hassig 1988, and Michael Harner 1977 yields a reasonable range: empire-wide total ~10,000-20,000 sacrifices per year, not 80,000 in a single 4-day rite. The 1487 Templo Mayor event likely involved a few thousand (a major occasion), but "80,000" is a 16c Spanish figure inflated to justify conquest (as conquest literature universally inflates the conquered's "savagery").
 
 **careful framing 不是「不血祭」**: 是「数字 popular vs 学术 差 4-5 倍」+ 「血祭是国家工程的一部分, 不是单纯的宗教狂热」。
 
@@ -620,7 +620,7 @@ The state logic of sacrifice (Clendinnen 1991): Aztec cosmology held the sun ros
 
 **反 Whig 跨 Topic cross-ref Spanish Inquisition**: 同期 (Topic: Renaissance and Reformation 1300-1648), 西班牙 Tomás de Torquemada 1483 年成立宗教裁判所, 1483-1498 烧死 ~2,000 异端 (历史学家 Henry Kamen 1997《The Spanish Inquisition》估计), 加上 1492 年驱赶 ~80,000 犹太人 (Sephardim)。Iberian 国家工程也以大量人命为代价。这不是 「whataboutism / 你也是」 — 是 让 1480-1500 年代每个国家工程都被同等审视 — 反 Whig 的核心要求。
 
-**Anti-Whig cross-Topic Spanish Inquisition**: Contemporaneously (Topic: Renaissance and Reformation 1300-1648), Spain's Tomás de Torquemada founded the Inquisition in 1483; 1483-1498 ~2,000 heretics burned (Henry Kamen 1997 *The Spanish Inquisition* estimate), plus the 1492 expulsion of ~80,000 Sephardic Jews. Iberian state engineering also extracted massive human cost. This is *not* whataboutism — it is *equal scrutiny of every 1480-1500 state project*, which is the core anti-Whig demand.
+**Anti-Whig cross-Topic Spanish Inquisition**: Contemporaneously (Topic: Renaissance and Reformation 1300-1648), Spain's Tomás de Torquemada founded the Inquisition in 1483; 1483-1498 ~2,000 heretics burned (Henry Kamen 1997 The Spanish Inquisition estimate), plus the 1492 expulsion of ~80,000 Sephardic Jews. Iberian state engineering also extracted massive human cost. This is not whataboutism — it is equal scrutiny of every 1480-1500 state project, which is the core anti-Whig demand.
 
 ---
 
@@ -640,11 +640,11 @@ How feed 250,000 on a lake island? Answer: **chinampa** — floating gardens.
 
 **Pochteca 商人阶层**: Aztec 跟 Inca 不同 — 有 跨 Mesoamerica 长程商人。**Pochteca** Nahuatl 词, 来自「pochtli」(一种树) — 商人公会自封名称。Pochteca 不是普通商人, 是 半官方 — 既做生意 (运 obsidian 黑曜石 / jade 翡翠 / quetzal 鸟羽毛 / cacao 可可豆), 也兼任间谍 (帝国扩张前先派 pochteca 探察)。
 
-**Pochteca merchant class**: Unlike the Inca, the Aztec had *long-distance merchants spanning Mesoamerica*. **Pochteca**, a Nahuatl word from *pochtli* (a tree), was the merchants' guild name. Pochteca were not ordinary traders — they were semi-official, doing business (obsidian / jade / quetzal feathers / cacao beans) and doubling as intelligence agents (sent ahead to scout before imperial expansion).
+**Pochteca merchant class**: Unlike the Inca, the Aztec had long-distance merchants spanning Mesoamerica. **Pochteca**, a Nahuatl word from pochtli (a tree), was the merchants' guild name. Pochteca were not ordinary traders — they were semi-official, doing business (obsidian / jade / quetzal feathers / cacao beans) and doubling as intelligence agents (sent ahead to scout before imperial expansion).
 
 **货币**: Aztec 有商品货币 — cacao 豆 (做巧克力的可可) 是小额货币 ("一只兔子 = 100 cacao 豆"), cotton mantle (cotton 毛布大件) 是大额货币 ("一个奴隶 = 100 mantles")。Inca 没有货币 — 一切是国家分配 + ayllu 互惠。这是两个文明的根本经济结构差。
 
-**Currency**: Aztec used commodity currency — cacao beans (the chocolate cacao) for small purchases ("one rabbit = 100 cacao beans"), cotton mantles (large cloth) for large ("one slave = 100 mantles"). The Inca had *no* currency — everything was state distribution + ayllu reciprocity. A fundamental structural divergence between the two civilizations.
+**Currency**: Aztec used commodity currency — cacao beans (the chocolate cacao) for small purchases ("one rabbit = 100 cacao beans"), cotton mantles (large cloth) for large ("one slave = 100 mantles"). The Inca had no currency — everything was state distribution + ayllu reciprocity. A fundamental structural divergence between the two civilizations.
 
 **careful framing 跨 Topic Mali**: Aztec Pochteca + cacao-bean 货币 跟 Mali 帝国 (Topic: West African Empires) Mansa Musa 时代 trans-Saharan 商人 + cowrie-shell 货币是同期 (15c) 同类型经济。三大洲都跑「长程商人 + 商品货币」体系。
 
@@ -674,7 +674,7 @@ In 1450, Mayapán erupted in internal power struggle. Two great houses — **Coc
 
 Mayapán 被废弃。Yucatán 没有出现下一个统一中心 — 而是分裂为 ~16 个区域城邦 (kuchkabal), 每个由本地 batab (城邦头) 治理。这个分散状态一直持续到 1517 西班牙人 Hernández de Córdoba 第一次到 Yucatán 海岸。
 
-Mayapán was abandoned. No successor unified Yucatán — instead, it fragmented into ~16 regional polities (*kuchkabal*), each ruled by a local *batab* (city-state head). This dispersed configuration persisted until 1517, when the Spanish Hernández de Córdoba first reached the Yucatán coast.
+Mayapán was abandoned. No successor unified Yucatán — instead, it fragmented into ~16 regional polities (kuchkabal), each ruled by a local batab (city-state head). This dispersed configuration persisted until 1517, when the Spanish Hernández de Córdoba first reached the Yucatán coast.
 
 ---
 
@@ -682,7 +682,7 @@ Mayapán was abandoned. No successor unified Yucatán — instead, it fragmented
 
 **反 Whig 必讲**: popular media 把 Postclassic Maya 描绘为「衰落」— 不再有 Classic 时代的金字塔大城, 不再有长字符碑文, 所以「文明在等待终结」。学术看法 (Susan Kepecs 2003《Postclassic Maya Economy and Society》/ Marilyn Masson 2002《In the Realm of Nachan Kan》): Postclassic Maya 是 不同形态的稳定 — 政治分散 + 农业稳定 + 区域贸易网仍密集 + 文化连续 (Maya 语言 / 历法 / 神话 / 织布技术全部传承到 16c 西班牙人来时, 一直传到 21c 现存 600 万 Maya 后裔)。
 
-**Anti-Whig essential**: popular media depicts Postclassic Maya as "in decline" — no more Classic-era pyramid metropolises, no more long-form glyph stelae, so "civilization awaiting its end." Scholarship (Susan Kepecs 2003 *Postclassic Maya Economy and Society*; Marilyn Masson 2002 *In the Realm of Nachan Kan*): Postclassic Maya was a *different stable form* — politically dispersed + agriculturally stable + regional trade networks dense + culturally continuous (Maya language / calendar / mythology / weaving all transmitted to 16c Spanish arrival, and on to today's 6 million Maya descendants).
+**Anti-Whig essential**: popular media depicts Postclassic Maya as "in decline" — no more Classic-era pyramid metropolises, no more long-form glyph stelae, so "civilization awaiting its end." Scholarship (Susan Kepecs 2003 Postclassic Maya Economy and Society; Marilyn Masson 2002 In the Realm of Nachan Kan): Postclassic Maya was a different stable form — politically dispersed + agriculturally stable + regional trade networks dense + culturally continuous (Maya language / calendar / mythology / weaving all transmitted to 16c Spanish arrival, and on to today's 6 million Maya descendants).
 
 **Yucatán 农村日常** (Lens 3 主角 Ix Mutal 1500 年 ~20 岁的世界):
 
@@ -690,15 +690,15 @@ Mayapán was abandoned. No successor unified Yucatán — instead, it fragmented
 
 **milpa 三姐妹**: Maya 平民种 milpa — 「milli」(田) + 「-pan」(在...上) Nahuatl + Maya 混词。一块 milpa 种 三姐妹: 玉米 + 豆 + 南瓜。玉米杆给豆藤攀, 豆固氮养玉米, 南瓜叶覆盖地面保湿压草。一块 milpa 种 2-3 年, 然后 swidden (休耕) 8-10 年, 让地恢复。
 
-**milpa three sisters**: Maya commoners farmed *milpa* — Nahuatl-Maya hybrid term, *milli* (field) + *-pan* (on). One milpa held the *three sisters*: maize + beans + squash. Maize stalks supported bean vines; beans fixed nitrogen feeding maize; squash leaves blanketed soil retaining moisture and suppressing weeds. A milpa was cultivated 2-3 years, then *swiddened* (fallowed) 8-10 years for recovery.
+**milpa three sisters**: Maya commoners farmed milpa — Nahuatl-Maya hybrid term, milli (field) + -pan (on). One milpa held the three sisters: maize + beans + squash. Maize stalks supported bean vines; beans fixed nitrogen feeding maize; squash leaves blanketed soil retaining moisture and suppressing weeds. A milpa was cultivated 2-3 years, then swiddened (fallowed) 8-10 years for recovery.
 
 **huipil 妇女织布**: 妇女从童年学 back-strap loom (背带织机) — 一头绑在树, 一头绑在腰, 用身体张力织布。织 **huipil** (上衣, 长方形布对折开领) + skirt + manta (披巾)。每件 huipil 的 神话纹样 — 玉米神 / 雨神 Chaac / 双头蛇 — 编进图案, 不是装饰是 史册。
 
-**huipil women's weaving**: Women learned the *back-strap loom* from childhood — one end tied to a tree, the other to the waist, using body tension to weave. They wove the **huipil** (tunic, rectangular cloth folded with neck slit) + skirt + *manta* (shawl). Each huipil's *mythological motifs* — maize god, rain god Chaac, two-headed serpent — were woven in as pattern, not decoration but *chronicle*.
+**huipil women's weaving**: Women learned the back-strap loom from childhood — one end tied to a tree, the other to the waist, using body tension to weave. They wove the **huipil** (tunic, rectangular cloth folded with neck slit) + skirt + manta (shawl). Each huipil's mythological motifs — maize god, rain god Chaac, two-headed serpent — were woven in as pattern, not decoration but chronicle.
 
 **careful framing**: huipil 织布技术从 Classic Maya (1c-9c) 一直传到今天 21c — Yucatán 农村 abuela (祖母) 还在教 nieta (孙女) 织 huipil。这是 Lens 3 Ix Mutal anchor 之一: 她织的 huipil 跟 21c 学生看到的 huipil 是 直接同根的同一项技艺。这给 Grade 7 「Maya 文明没消失, 在你身边」的 anchor。
 
-**careful framing**: The huipil weaving technique transmitted from Classic Maya (1c-9c) to today's 21c — Yucatán village *abuelas* still teach *nietas* huipil weaving. This is a Lens 3 Ix Mutal anchor: the huipil she weaves is *the same continuous craft* a 21c student sees. Anchor for Grade 7 "Maya civilization did not vanish, it is next to you."
+**careful framing**: The huipil weaving technique transmitted from Classic Maya (1c-9c) to today's 21c — Yucatán village abuelas still teach nietas huipil weaving. This is a Lens 3 Ix Mutal anchor: the huipil she weaves is the same continuous craft a 21c student sees. Anchor for Grade 7 "Maya civilization did not vanish, it is next to you."
 
 ---
 
@@ -706,7 +706,7 @@ Mayapán was abandoned. No successor unified Yucatán — instead, it fragmented
 
 1500 年 1 月 1 日, 美洲三大文明 都不知道 一个东西即将到来。
 
-January 1, 1500. The Americas' three great civilizations did *not know* something was coming.
+January 1, 1500. The Americas' three great civilizations did not know something was coming.
 
 ### §9.1 三大文明 1500 状态
 
@@ -740,7 +740,7 @@ January 1, 1500. The Americas' three great civilizations did *not know* somethin
 
 **Lens 2 Malintzin**: 1500 年 0 岁, 即将出生 (Veracruz 边境 Coatzacoalcos 区, Aztec 帝国南端 + Maya 影响北端的 中间地带, 双语 Nahuatl + Yucatec Maya 边界)。1500-1505 之间出生, 历史学家 Camilla Townsend 2006《Malintzin's Choices》估计 1500-1502 出生概率最高。
 
-**Lens 2 Malintzin**: in 1500, age 0, about to be born (Veracruz border, Coatzacoalcos region — between Aztec southern frontier and Maya northern reach, bilingual zone of Nahuatl + Yucatec Maya). Born 1500-1505; historian Camilla Townsend (*Malintzin's Choices*, 2006) estimates 1500-1502 most likely.
+**Lens 2 Malintzin**: in 1500, age 0, about to be born (Veracruz border, Coatzacoalcos region — between Aztec southern frontier and Maya northern reach, bilingual zone of Nahuatl + Yucatec Maya). Born 1500-1505; historian Camilla Townsend (Malintzin's Choices, 2006) estimates 1500-1502 most likely.
 
 **Lens 3 Ix Mutal**: 1500 年 ~20 岁, Yucatán 西部一个 kuchkabal 农村。已结婚, 有一个孩子, 织 huipil, 种 milpa, 拜 Chaac 雨神。她不知道有「Aztec」存在 (太远), 不知道有「Inca」存在 (再远), 当然不知道「Spaniards」存在。
 
@@ -762,13 +762,13 @@ In 1500 Europe, several figures directly bearing on Part 3 protagonists:
 - **Christopher Columbus** reached Hispaniola in 1492 (today's Dominican Republic / Haiti); by 1500 his third voyage had ended; his fourth (1502-1504, brushing the Honduras coast without realizing it was a mainland) lay ahead.
 - **Hernán Cortés** in 1500 was 15, studying at Salamanca in Spain (never graduated; left Spain for Hispaniola in 1504).
 - **Francisco Pizarro** in 1500 was 22, soldiering in Extremadura, Spain (sailed for Hispaniola in 1502).
-- **Bartolomé de las Casas** in 1500 was 16; his father had returned from Columbus's second voyage (1493-1496); Bartolomé himself went to Hispaniola in 1502 — later in 1542 he wrote *Brevísima relación de la destrucción de las Indias* (the humanitarian indictment of Spanish conquest, a core AP World primary source).
+- **Bartolomé de las Casas** in 1500 was 16; his father had returned from Columbus's second voyage (1493-1496); Bartolomé himself went to Hispaniola in 1502 — later in 1542 he wrote Brevísima relación de la destrucción de las Indias (the humanitarian indictment of Spanish conquest, a core AP World primary source).
 
 ### §9.4 Grade 7 anchor — 「无 warning」
 
 1500 年, 美洲三大文明全盛, 总人口估计 ~5,000-7,000 万 (Henry Dobyns 1966 高估 1 亿; William Denevan 1992《The Native Population of the Americas in 1492》中位数 ~5,400 万 — 比同期欧洲 ~7,800 万, 同级)。
 
-In 1500, the Americas' three civilizations were at peak; total population estimated ~50-70 million (Henry Dobyns 1966 high estimate 100 million; William Denevan 1992 *The Native Population of the Americas in 1492* median ~54 million — comparable to contemporary Europe ~78 million).
+In 1500, the Americas' three civilizations were at peak; total population estimated ~50-70 million (Henry Dobyns 1966 high estimate 100 million; William Denevan 1992 The Native Population of the Americas in 1492 median ~54 million — comparable to contemporary Europe ~78 million).
 
 Pachacuti 木乃伊在 Cusco「办公」, Moctezuma II 即将即位 Tenochtitlán, Ix Mutal 织 huipil, Malintzin 即将出生。没人知道, 32 年内 Aztec 都城被夷平 (1521 Tenochtitlán 陷), 53 年内 Inca 帝国被劫 (1533 Atahualpa 死), 75 年内 Yucatán 大部 Maya 沦陷 (1546 chichimeca 起义被压, 但 Itzá Maya 在 Lake Petén 一直坚持到 1697)。
 
@@ -776,11 +776,11 @@ Pachacuti's mummy "presided" in Cusco; Moctezuma II was about to take Tenochtitl
 
 **Grade 7 anchor**: 「文明 + 终结」之间没有 warning。1500 年的 Pachacuti 木乃伊不知道孙子的孙子 (Atahualpa) 33 年后会被陌生白人勒死。1500 年的 Ix Mutal 不知道她会活到见证西班牙船第一次出现 (1517 Hernández de Córdoba 到 Yucatán 海岸时她 ~37 岁)。
 
-**Grade 7 anchor**: between "civilization peak" and "ending" there is *no warning*. In 1500, Pachacuti's mummy did not know that his grandson's grandson (Atahualpa) would be garroted by strange white men 33 years later. In 1500, Ix Mutal did not know she would live to see Spanish ships first appear (in 1517, when Hernández de Córdoba reached the Yucatán coast, she would be ~37).
+**Grade 7 anchor**: between "civilization peak" and "ending" there is no warning. In 1500, Pachacuti's mummy did not know that his grandson's grandson (Atahualpa) would be garroted by strange white men 33 years later. In 1500, Ix Mutal did not know she would live to see Spanish ships first appear (in 1517, when Hernández de Córdoba reached the Yucatán coast, she would be ~37).
 
 历史不是「在它发生前可以预料的」— 是从结果倒推才看到 trajectory。读这段时, 把 1500 年的 三大文明 当作真实当下 — 不是「快被殖民了的过去」, 是「百万人口活在自己的中年」。
 
-History is not "foreseeable before it happens" — trajectories are visible only working backward from outcomes. Read this section with the three civilizations of 1500 as a *real present* — not "the soon-to-be-colonized past," but "millions living their own middle age."
+History is not "foreseeable before it happens" — trajectories are visible only working backward from outcomes. Read this section with the three civilizations of 1500 as a real present — not "the soon-to-be-colonized past," but "millions living their own middle age."
 
 Part 3 (1500-1532) 从这里接: Malintzin 出生, Cortés 跨海, Atahualpa vs Huáscar 内战, Cajamarca 1532。
 
@@ -813,13 +813,13 @@ Part 3 (1500-1532) picks up here: Malintzin's birth, Cortés's crossing, the Ata
 This land was the language border between Nahuatl (Aztec) and Maya. Villages to the north spoke Nahuatl, those to the south spoke Yucatec Maya or Chontal Maya. Malintzin's mother tongue was Nahuatl, but she heard Maya from a young age.
 
 **父亲 cacique, 早死.** 据 Bernal Díaz del Castillo《Historia verdadera de la conquista de la Nueva España》(1568), 她父亲是当地 cacique (酋长) — 也就是说她出生贵族, 不是奴。
-**Father a cacique, died early.** According to Bernal Díaz del Castillo's *Historia verdadera de la conquista de la Nueva España* (1568), her father was a local cacique (chief) — meaning she was born noble, not enslaved.
+**Father a cacique, died early.** According to Bernal Díaz del Castillo's Historia verdadera de la conquista de la Nueva España (1568), her father was a local cacique (chief) — meaning she was born noble, not enslaved.
 
 但父亲早死。母亲改嫁, 与新夫又生了一个儿子。Bernal Díaz 写: 母亲为了让新生儿继承家产, 把 Malintzin 卖给了过路商人, 对外宣称女儿死了。
 But her father died early. Her mother remarried and had a son with the new husband. Bernal Díaz wrote: to make the newborn boy inherit the family estate, the mother sold Malintzin to passing merchants, telling everyone outside that the daughter had died.
 
 **Careful framing — 不一定是「卖」.** Camilla Townsend《Malintzin's Choices》(University of New Mexico Press 2006) 提醒: Bernal Díaz 1568 年回忆这件事时离事件 49 年, 而且他写的是给西班牙读者看的「悲惨女主角」叙事 — 也可能 Malintzin 是被战争 captured 走的, 不是被母亲卖的。Townsend 倾向 captured 说。
-**Careful framing — not necessarily "sold".** Camilla Townsend's *Malintzin's Choices* (University of New Mexico Press 2006) reminds us: Bernal Díaz wrote 49 years after the event, and he was crafting a "tragic heroine" narrative for Spanish readers — Malintzin may instead have been captured in war, not sold by her mother. Townsend leans toward captured.
+**Careful framing — not necessarily "sold".** Camilla Townsend's Malintzin's Choices (University of New Mexico Press 2006) reminds us: Bernal Díaz wrote 49 years after the event, and he was crafting a "tragic heroine" narrative for Spanish readers — Malintzin may instead have been captured in war, not sold by her mother. Townsend leans toward captured.
 
 总之, 8-10 岁的某一天, Malintzin 离开了 Coatzacoalcos, 进入奴隶网络。
 Either way, on some day around age 8-10, Malintzin left Coatzacoalcos and entered the slave network.
@@ -880,13 +880,13 @@ Her father farmed milpa — maize, beans, squash. Her mother wove huipil (Maya w
 Her village had an old chilam (priest) — who remembered the time before Mayapan fell, and who carried generations of oral prophecy.
 
 Maya《Chilam Balam》文本 (16-17 世纪 Yucatán Maya 用拉丁字母写下来的口传记录, 不是 Pre-Columbian 文物本身, 是被 Spanish 征服后 Maya 自己用新字母记录下的旧口传) 里有大量预言式段落: 哪一个 katun (20 年周期) 会有饥荒, 哪一个会有外来人, 哪一个会有疾病。
-The *Chilam Balam* texts (16-17 century records written by Yucatec Maya in Latin script, not pre-Columbian artifacts but old oral material recorded with the new alphabet after Spanish conquest) contain extensive prophetic passages: which katun (20-year cycle) brings famine, which brings foreigners, which brings disease.
+The Chilam Balam texts (16-17 century records written by Yucatec Maya in Latin script, not pre-Columbian artifacts but old oral material recorded with the new alphabet after Spanish conquest) contain extensive prophetic passages: which katun (20-year cycle) brings famine, which brings foreigners, which brings disease.
 
 Ix Mutal 小时候听老 chilam 念过这些。她不全懂, 但她记得「外来 bearded 人」(foreign bearded ones) 这个意象。
 Ix Mutal heard the old chilam recite these as a child. She didn't understand it all, but she remembered the image of "foreign bearded ones."
 
 **Careful framing.** Restall《Seven Myths of the Spanish Conquest》(Oxford 2003) 警告: 不要把 Maya 预言读成「他们预知西班牙人来」 — 预言文本是 1540-1600 间写的, 含有 retrospective rationalization (事后合理化)。但 Maya 确实有 katun 周期论传统, 这是真的。
-**Careful framing.** Restall's *Seven Myths of the Spanish Conquest* (Oxford 2003) warns: don't read Maya prophecy as "they foresaw the Spanish coming" — the prophetic texts were written 1540-1600 and contain retrospective rationalization. But the Maya did have a real katun-cycle tradition.
+**Careful framing.** Restall's Seven Myths of the Spanish Conquest (Oxford 2003) warns: don't read Maya prophecy as "they foresaw the Spanish coming" — the prophetic texts were written 1540-1600 and contain retrospective rationalization. But the Maya did have a real katun-cycle tradition.
 
 ### 11.3 1517 第一批船 / 1517, the first ships
 
@@ -911,10 +911,10 @@ After contact, disease began to spread. From 1518 smallpox was already raging in
 **Ix Mutal witnessed.** Around 1519-1520, age 39-40, she saw two of her own children die, saw a neighboring village half-emptied. She didn't understand germs or immunity, but she saw: this sickness only kills us, not the bearded ones.
 
 **死亡数字 careful framing.** Noble David Cook《Born to Die: Disease and New World Conquest, 1492-1650》(Cambridge 1998) 估计: 1518-1600 期间美洲原住民因天花/麻疹/流感/伤寒等欧亚病原体死亡 80-95%。这是 estimate range, 因为 Pre-Columbian 总人口本身就有 800 万到 1 亿不等的估计 (Cook 偏中高), 但 80-95% 死亡率是学界中位共识。
-**Mortality figures, careful framing.** Noble David Cook's *Born to Die: Disease and New World Conquest, 1492-1650* (Cambridge 1998) estimates 1518-1600 indigenous American mortality from smallpox/measles/influenza/typhus at 80-95%. This is an estimate range — Pre-Columbian total population is itself estimated from 8 million to 100 million (Cook leans middle-high) — but the 80-95% mortality rate is the scholarly median consensus.
+**Mortality figures, careful framing.** Noble David Cook's Born to Die: Disease and New World Conquest, 1492-1650 (Cambridge 1998) estimates 1518-1600 indigenous American mortality from smallpox/measles/influenza/typhus at 80-95%. This is an estimate range — Pre-Columbian total population is itself estimated from 8 million to 100 million (Cook leans middle-high) — but the 80-95% mortality rate is the scholarly median consensus.
 
 **跨 Topic cross-ref ⭐.** William McNeill《Plagues and Peoples》(1976) 比较了 1346-1353 Black Death 与 1518-1600 New World epidemic — 结论: 同样 pattern (新病原 + 无免疫人群 + 高接触), 同样 25-50% (Black Death) 到 80-95% (New World) 死亡率。差异是 Black Death 后欧洲人活下来的人有部分免疫, 而美洲原住民有几十种新病原同时来, 没有时间形成免疫。
-**Cross-Topic cross-ref ⭐.** William McNeill's *Plagues and Peoples* (1976) compared 1346-1353 Black Death and 1518-1600 New World epidemic — same pattern (new pathogen + non-immune population + high contact), same 25-50% (Black Death) to 80-95% (New World) mortality. Difference: Black Death survivors had partial immunity left in Europe; the Americas saw dozens of new pathogens arrive at once, with no time to build immunity. (See Black Death Topic Lens 3 for the European receiving-end side.)
+**Cross-Topic cross-ref ⭐.** William McNeill's Plagues and Peoples (1976) compared 1346-1353 Black Death and 1518-1600 New World epidemic — same pattern (new pathogen + non-immune population + high contact), same 25-50% (Black Death) to 80-95% (New World) mortality. Difference: Black Death survivors had partial immunity left in Europe; the Americas saw dozens of new pathogens arrive at once, with no time to build immunity. (See Black Death Topic Lens 3 for the European receiving-end side.)
 
 ### 11.5 Lens 3 voice setup / Lens 3 voice anchor
 
@@ -976,7 +976,7 @@ By late 1519, Malintzin had learned Spanish, and the chain shortened to: Cortés
 **1519.7-8, the ships scuttled.** Cortés's own second letter (Carta de relación, sent to Charles V on 1520.10.30) states clearly: he ordered the ships sunk or dismantled — not the "heroic burn the ships, no retreat" myth, but a practical political move (so his men couldn't sneak back to Cuba and side with Velázquez).
 
 **反 Whig.** 这件事在浪漫历史叙事里被讲成「Cortés 像项羽破釜沉舟, 决心征服墨西哥」。实际是: 防止 desertion + 防止 Velázquez 派人来抓他。Hugh Thomas《Conquest》(Simon &amp; Schuster 1993) 详细论述这是 routine 西班牙征服法律操作, 不是个人英雄。
-**Anti-Whig.** Romantic historical narrative tells this as "Cortés like Xiang Yu broke the cooking pots and sank the boats, resolved to conquer Mexico." Reality: prevent desertion + prevent Velázquez agents from arresting him. Hugh Thomas's *Conquest* (Simon & Schuster 1993) details this as routine Spanish conquest legal procedure, not personal heroism.
+**Anti-Whig.** Romantic historical narrative tells this as "Cortés like Xiang Yu broke the cooking pots and sank the boats, resolved to conquer Mexico." Reality: prevent desertion + prevent Velázquez agents from arresting him. Hugh Thomas's Conquest (Simon & Schuster 1993) details this as routine Spanish conquest legal procedure, not personal heroism.
 
 #### 12.1.4 1519.8-9 Tlaxcala 同盟 / August-September 1519, the Tlaxcala alliance
 
@@ -1016,7 +1016,7 @@ Townsend《Malintzin's Choices》2006 careful framing: 不要把 Malintzin 写�
 - The Spanish narrative used Malintzin to justify the massacre as self-defense ("we were forced to strike first")
 - How much real decision power Malintzin had is unclear. She was 19, enslaved; even if she passed the intel, the kill order was Cortés's.
 
-Townsend's *Malintzin's Choices* 2006 careful framing: don't write Malintzin as the planner of the massacre — she may have passed intel, but the decision was Spanish. Don't write her as wholly innocent either — she was a real link in the chain. Her "choice" was: in that situation, she chose loyalty to her master (because resistance meant death).
+Townsend's Malintzin's Choices 2006 careful framing: don't write Malintzin as the planner of the massacre — she may have passed intel, but the decision was Spanish. Don't write her as wholly innocent either — she was a real link in the chain. Her "choice" was: in that situation, she chose loyalty to her master (because resistance meant death).
 
 **Cholula 屠杀效果.** Aztec 帝国震动 — 一个西班牙 vs Aztec-allied 城的屠杀, 让其他 Aztec 城邦看到「西班牙不是商人是军队」。Moctezuma II 在 Tenochtitlán 收到消息, 派使者带礼物给 Cortés, 试图劝退 — 没用。
 **Effect of the Cholula massacre.** It shook the Aztec empire — a single Spanish-led massacre of an Aztec-allied city showed other Aztec cities that "the Spanish are not merchants but an army." Moctezuma II in Tenochtitlán received the news and sent envoys with gifts to Cortés, trying to persuade him to turn back. It didn't work.
@@ -1049,7 +1049,7 @@ Moctezuma gave Cortés gifts (gold, feathered cloaks, jade), and lodged them in 
 Later Spanish narrative claimed: Moctezuma mistook Cortés for the returning Quetzalcoatl (Feathered Serpent) — myth said Quetzalcoatl would come from the eastern sea, and Cortés came from the eastern sea, so Moctezuma hesitated to kill.
 
 **反 Whig — 这是 post-conquest myth.** Matthew Restall《Seven Myths of the Spanish Conquest》(Oxford 2003) 第三章详细论证: Quetzalcoatl-Cortés identification 在 1519 年 Moctezuma 当时的实际想法里没有证据 — 这个故事最早出现在 1540s-1550s 的 Florentine Codex (Sahagún 编), 是被殖民后的 Aztec 长辈用来给 Moctezuma 的失败找一个「神意」解释 (这样 Moctezuma 不是软弱, 是被神话困住)。
-**Anti-Whig — this is a post-conquest myth.** Matthew Restall's *Seven Myths of the Spanish Conquest* (Oxford 2003) chapter 3 argues in detail: the Quetzalcoatl-Cortés identification has no evidence in Moctezuma's actual 1519 thinking — the story first appears in the 1540s-1550s Florentine Codex (Sahagún), used by post-conquest Aztec elders to give Moctezuma's failure a "divine" explanation (so Moctezuma wasn't weak, just trapped by prophecy).
+**Anti-Whig — this is a post-conquest myth.** Matthew Restall's Seven Myths of the Spanish Conquest (Oxford 2003) chapter 3 argues in detail: the Quetzalcoatl-Cortés identification has no evidence in Moctezuma's actual 1519 thinking — the story first appears in the 1540s-1550s Florentine Codex (Sahagún), used by post-conquest Aztec elders to give Moctezuma's failure a "divine" explanation (so Moctezuma wasn't weak, just trapped by prophecy).
 
 实际更可能: Moctezuma 是政治家, 他在评估 — Cortés 是敌人但兵力不大, Tlaxcala 同盟是真正的威胁。Moctezuma 选择拖延和谈判, 不是因为神话, 而是因为他在看局势。
 More likely actual reason: Moctezuma was a politician, assessing — Cortés was an enemy but not large in force; Tlaxcala alliance was the real threat. Moctezuma chose delay and negotiation not from myth but from reading the situation.
@@ -1291,13 +1291,13 @@ Across her 29 years:
 
 ## Anti-fab citations 用到的核心 5 本 / Core 5 anti-fab citations used
 
-1. Camilla Townsend, *Malintzin's Choices: An Indian Woman in the Conquest of Mexico*, University of New Mexico Press, 2006.
-2. Matthew Restall, *Seven Myths of the Spanish Conquest*, Oxford University Press, 2003.
-3. Bernal Díaz del Castillo, *Historia verdadera de la conquista de la Nueva España*, written ~1568 (first published 1632).
-4. Hugh Thomas, *Conquest: Montezuma, Cortés, and the Fall of Old Mexico*, Simon & Schuster, 1993.
-5. Noble David Cook, *Born to Die: Disease and New World Conquest, 1492-1650*, Cambridge University Press, 1998.
+1. Camilla Townsend, Malintzin's Choices: An Indian Woman in the Conquest of Mexico, University of New Mexico Press, 2006.
+2. Matthew Restall, Seven Myths of the Spanish Conquest, Oxford University Press, 2003.
+3. Bernal Díaz del Castillo, Historia verdadera de la conquista de la Nueva España, written ~1568 (first published 1632).
+4. Hugh Thomas, Conquest: Montezuma, Cortés, and the Fall of Old Mexico, Simon & Schuster, 1993.
+5. Noble David Cook, Born to Die: Disease and New World Conquest, 1492-1650, Cambridge University Press, 1998.
 
-(Plus cross-ref: William McNeill, *Plagues and Peoples*, Anchor/Doubleday, 1976 — for Black Death + New World epidemic comparison.)
+(Plus cross-ref: William McNeill, Plagues and Peoples, Anchor/Doubleday, 1976 — for Black Death + New World epidemic comparison.)
 
 ---
 
@@ -1323,7 +1323,7 @@ EN: In 1493, Topa Inca Yupanqui died and his son Huayna Capac ("the young king",
 
 CN: 1525 年前后, Huayna Capac 在 Quito 北部前线遇到一场陌生的瘟疫。学界 (Noble David Cook《Born to Die: Disease and New World Conquest, 1492–1650》Cambridge 1998) careful framing: 这很可能是天花——从 Mexico 1520 Tenochtitlán 流行后, 沿巴拿马陆桥 + 沿海贸易网南传, 比 Pizarro 本人早到 Inca 6 年。注意: Cook 自己强调「probable, not certain」——因为 Inca 没有文字病例记录, 我们靠的是西班牙人后来 1550s 的口述采访 (Cieza de León, Sarmiento de Gamboa)。
 
-EN: Around 1525, Huayna Capac was on the northern frontier in Quito when a strange plague hit. The careful scholarly framing (Noble David Cook, *Born to Die: Disease and New World Conquest, 1492–1650*, Cambridge 1998) is: probably smallpox, traveling south from the 1520 Tenochtitlán outbreak through the Panama land-bridge and coastal trade networks—arriving in the Inca heartland six years before Pizarro himself. Note: Cook stresses "probable, not certain"—because the Inca had no writing for medical records, we rely on Spanish oral interviews from the 1550s (Cieza de León, Sarmiento de Gamboa).
+EN: Around 1525, Huayna Capac was on the northern frontier in Quito when a strange plague hit. The careful scholarly framing (Noble David Cook, Born to Die: Disease and New World Conquest, 1492–1650, Cambridge 1998) is: probably smallpox, traveling south from the 1520 Tenochtitlán outbreak through the Panama land-bridge and coastal trade networks—arriving in the Inca heartland six years before Pizarro himself. Note: Cook stresses "probable, not certain"—because the Inca had no writing for medical records, we rely on Spanish oral interviews from the 1550s (Cieza de León, Sarmiento de Gamboa).
 
 ### 13.3 1527 Huayna Capac 突死 + 继承危机 / The succession crisis
 
@@ -1349,7 +1349,7 @@ Five years of civil war, 1527–1532. In April 1532, Atahualpa's generals Quizqu
 
 CN: 这是关键的 careful framing: Atahualpa 在 1532 年 11 月 16 日走进 Cajamarca 广场时, 内战刚结束 6 个月——他还没正式加冕, 帝国还在战后疲惫, 天花刚扫过 5 年, 行政骨架松散。Pizarro 168 个西班牙人就是在这个时间点出现的。如果晚 2 年, Atahualpa 已稳坐 Cusco, 8 万常备军 fully mobilized——结果可能完全不同。Matthew Restall《Seven Myths of the Spanish Conquest》(Oxford 2003) 反复强调: conquest 不是西班牙「天命」, 是 timeline 的偶然交错。
 
-EN: Here is the critical careful framing: when Atahualpa walked into the plaza of Cajamarca on November 16, 1532, the civil war had ended only six months earlier. He had not yet been formally crowned. The empire was war-weary, smallpox had swept through five years before, the administrative skeleton was loose. Pizarro's 168 Spaniards arrived at exactly this moment. Two years later, with Atahualpa secure in Cusco and 80,000 standing troops fully mobilized, the outcome might have been totally different. Matthew Restall (*Seven Myths of the Spanish Conquest*, Oxford 2003) hammers this point: conquest was not Spanish "destiny"—it was a contingent overlap of timelines.
+EN: Here is the critical careful framing: when Atahualpa walked into the plaza of Cajamarca on November 16, 1532, the civil war had ended only six months earlier. He had not yet been formally crowned. The empire was war-weary, smallpox had swept through five years before, the administrative skeleton was loose. Pizarro's 168 Spaniards arrived at exactly this moment. Two years later, with Atahualpa secure in Cusco and 80,000 standing troops fully mobilized, the outcome might have been totally different. Matthew Restall (Seven Myths of the Spanish Conquest, Oxford 2003) hammers this point: conquest was not Spanish "destiny"—it was a contingent overlap of timelines.
 
 ---
 
@@ -1359,21 +1359,21 @@ EN: Here is the critical careful framing: when Atahualpa walked into the plaza o
 
 CN: Francisco Pizarro (c. 1471–1541) 不是新手。他 1502 年 31 岁到 Hispaniola, 1513 年跟 Balboa 越过 Panama 看到太平洋, 1524–1528 三次南下勘察秘鲁海岸——他听说南方有「黄金帝国」。1528 年他回西班牙见 Charles V, 拿到 capitulación (征服许可状)。1532 年初他从 Panama 出发时, 带着一个明确的模板: **Cortés 1519–1521 怎么征服 Aztec, 我就怎么征服 Inca**——抓首领、利用内战、找盟友、打心理战。
 
-EN: Francisco Pizarro (c. 1471–1541) was not a novice. He arrived in Hispaniola in 1502 at age 31, crossed Panama with Balboa in 1513 to see the Pacific, and made three southern voyages 1524–1528 scouting the Peruvian coast—he had heard of a "golden empire" to the south. In 1528 he returned to Spain to meet Charles V and obtained a *capitulación* (royal contract of conquest). When he sailed from Panama in early 1532, he carried a clear template: **whatever Cortés did to the Aztec 1519–1521, I will do to the Inca**—seize the ruler, exploit civil war, find allies, wage psychological warfare.
+EN: Francisco Pizarro (c. 1471–1541) was not a novice. He arrived in Hispaniola in 1502 at age 31, crossed Panama with Balboa in 1513 to see the Pacific, and made three southern voyages 1524–1528 scouting the Peruvian coast—he had heard of a "golden empire" to the south. In 1528 he returned to Spain to meet Charles V and obtained a capitulación (royal contract of conquest). When he sailed from Panama in early 1532, he carried a clear template: **whatever Cortés did to the Aztec 1519–1521, I will do to the Inca**—seize the ruler, exploit civil war, find allies, wage psychological warfare.
 
 ### 14.2 1532.11.16 Cajamarca 广场设伏 / The ambush in the plaza
 
 CN: Pizarro 168 人 (62 骑兵 + 106 步兵 + 几门小炮 + 火枪 + 战马 + 战犬)。Atahualpa 同意在 Cajamarca 广场会面, 带 ~6,000 仪仗队 (没披甲, 因为是仪式)——大部队 ~8 万扎营在城外 5 公里。
 
-11 月 16 日下午, 多明我会修士 Vicente de Valverde 走上前, 通过 Felipillo (一个被绑架的沿海少年翻译, 西班牙语半通) 给 Atahualpa 念 *Requerimiento* (西班牙王室的归顺通牒), 递给他一本拉丁文圣经。Atahualpa 翻了几页, 听不懂, 把书扔在地上。这就是 Pizarro 等的开战借口。
+11 月 16 日下午, 多明我会修士 Vicente de Valverde 走上前, 通过 Felipillo (一个被绑架的沿海少年翻译, 西班牙语半通) 给 Atahualpa 念 Requerimiento (西班牙王室的归顺通牒), 递给他一本拉丁文圣经。Atahualpa 翻了几页, 听不懂, 把书扔在地上。这就是 Pizarro 等的开战借口。
 
 史料: Pedro Pizarro (Francisco 的远房表弟, 当时 16 岁在场)《Relación del descubrimiento y conquista de los reinos del Perú》1571 + Miguel de Estete《Noticia del Perú》1535 + Francisco de Xerez《Verdadera relación de la conquista del Perú》1534 (Pizarro 自己秘书的官方报告)。
 
 EN: Pizarro had 168 men: 62 cavalry, 106 infantry, a few small cannons, harquebuses, war horses, and war dogs. Atahualpa agreed to meet in the plaza of Cajamarca with about 6,000 retainers (unarmored, since it was a ceremony)—the main army of ~80,000 was camped 5 km outside town.
 
-On the afternoon of November 16, the Dominican friar Vicente de Valverde stepped forward and—through Felipillo, a coastal teenager kidnapped years earlier as an interpreter, with shaky Spanish—read the *Requerimiento* (the Spanish crown's ultimatum demanding submission) and handed Atahualpa a Latin Bible. Atahualpa flipped a few pages, couldn't read it, threw the book on the ground. That was Pizarro's signal.
+On the afternoon of November 16, the Dominican friar Vicente de Valverde stepped forward and—through Felipillo, a coastal teenager kidnapped years earlier as an interpreter, with shaky Spanish—read the Requerimiento (the Spanish crown's ultimatum demanding submission) and handed Atahualpa a Latin Bible. Atahualpa flipped a few pages, couldn't read it, threw the book on the ground. That was Pizarro's signal.
 
-Sources: Pedro Pizarro (Francisco's distant cousin, age 16 and present), *Relación del descubrimiento y conquista de los reinos del Perú* 1571 + Miguel de Estete, *Noticia del Perú* 1535 + Francisco de Xerez, *Verdadera relación de la conquista del Perú* 1534 (Pizarro's own secretary's official report).
+Sources: Pedro Pizarro (Francisco's distant cousin, age 16 and present), Relación del descubrimiento y conquista de los reinos del Perú 1571 + Miguel de Estete, Noticia del Perú 1535 + Francisco de Xerez, Verdadera relación de la conquista del Perú 1534 (Pizarro's own secretary's official report).
 
 ### 14.3 屠杀与俘虏 / The massacre and capture
 
@@ -1383,23 +1383,23 @@ EN: At the signal, Spanish cavalry burst from the buildings around the plaza, ca
 
 ### 14.4 黄金赎金 1532.11–1533.6 / The gold ransom
 
-CN: Atahualpa 被关在 Cajamarca 一座小房间里 (今天还在, 叫 *El Cuarto del Rescate*——「赎金房」)。他向 Pizarro 提出: 我装满这间房一房黄金 + 两房白银, 你放我。Pizarro 答应。
+CN: Atahualpa 被关在 Cajamarca 一座小房间里 (今天还在, 叫 El Cuarto del Rescate——「赎金房」)。他向 Pizarro 提出: 我装满这间房一房黄金 + 两房白银, 你放我。Pizarro 答应。
 
 接下来 7 个月, Inca 信使 (chasqui) 从 Cusco、Pachacamac、Quito 各地神庙剥黄金运来——估计最终 ~1.3 吨黄金 + 2.6 吨白银 (Pedro Pizarro 1571 + Estete 1535)。这是人类史上单次最大的勒索。
 
 但 Pizarro 不打算放。1533 年 7 月 26 日, 以「Atahualpa 密谋反叛 + 杀害 Huáscar」为由 (Huáscar 是在 Atahualpa 被俘期间被秘密处死的, 由谁下令至今争议), 西班牙人审判 Atahualpa——绞刑 (原本判火刑, Atahualpa 临刑前同意洗礼成基督徒, 改绞刑——因为 Inca 信仰认为身体被烧就无法在死后世界重生)。
 
-EN: Atahualpa was held in a small chamber in Cajamarca (still standing today, called *El Cuarto del Rescate*—"the Ransom Room"). He offered Pizarro: fill this room once with gold and twice with silver, and let me go. Pizarro agreed.
+EN: Atahualpa was held in a small chamber in Cajamarca (still standing today, called El Cuarto del Rescate—"the Ransom Room"). He offered Pizarro: fill this room once with gold and twice with silver, and let me go. Pizarro agreed.
 
-Over the next seven months, Inca runners (*chasqui*) brought gold stripped from temples in Cusco, Pachacamac, and Quito—an estimated 1.3 tons of gold and 2.6 tons of silver in the end (Pedro Pizarro 1571 + Estete 1535). It was the single largest ransom in human history.
+Over the next seven months, Inca runners (chasqui) brought gold stripped from temples in Cusco, Pachacamac, and Quito—an estimated 1.3 tons of gold and 2.6 tons of silver in the end (Pedro Pizarro 1571 + Estete 1535). It was the single largest ransom in human history.
 
 But Pizarro never intended to release him. On July 26, 1533, accusing Atahualpa of "plotting rebellion and ordering the murder of Huáscar" (Huáscar had been secretly killed during Atahualpa's captivity—who ordered it remains disputed), the Spaniards tried Atahualpa and sentenced him to burning at the stake. At the last moment Atahualpa agreed to be baptized a Christian, and the sentence was commuted to garroting—because Inca belief held that a burned body could not be reborn in the afterlife.
 
 ### 14.5 1533.11 Pizarro 进 Cusco — Inca 帝国正式终结 / Pizarro enters Cusco — formal end of the Inca empire
 
-CN: Atahualpa 死后 Pizarro 立 Manco Inca Yupanqui (Huáscar 的弟弟) 为傀儡 Sapa Inca, 11 月进 Cusco——Inca 帝国名义上终结。三年后 1536 年 Manco Inca 反叛, 围攻 Cusco 10 个月, 最后退入 Vilcabamba 山区, 那个 *neo-Inca state* 一直撑到 1572 年才被西班牙剿灭。
+CN: Atahualpa 死后 Pizarro 立 Manco Inca Yupanqui (Huáscar 的弟弟) 为傀儡 Sapa Inca, 11 月进 Cusco——Inca 帝国名义上终结。三年后 1536 年 Manco Inca 反叛, 围攻 Cusco 10 个月, 最后退入 Vilcabamba 山区, 那个 neo-Inca state 一直撑到 1572 年才被西班牙剿灭。
 
-EN: After Atahualpa's death, Pizarro installed Manco Inca Yupanqui (Huáscar's younger brother) as a puppet *Sapa Inca*, and in November 1533 entered Cusco—the formal end of the Inca empire. Three years later, in 1536, Manco Inca rebelled, besieged Cusco for ten months, then retreated into the Vilcabamba mountains, where the *neo-Inca state* held out until 1572.
+EN: After Atahualpa's death, Pizarro installed Manco Inca Yupanqui (Huáscar's younger brother) as a puppet Sapa Inca, and in November 1533 entered Cusco—the formal end of the Inca empire. Three years later, in 1536, Manco Inca rebelled, besieged Cusco for ten months, then retreated into the Vilcabamba mountains, where the neo-Inca state held out until 1572.
 
 ### 14.6 careful framing — 不是「168 vs 8 万」/ Not "168 versus 80,000"
 
@@ -1412,7 +1412,7 @@ CN: 中学教科书爱讲「168 西班牙人征服 8 万 Inca」, 这是 myth。
 
 168 人本身没意义——意义是 168 人踩在以上 4 个倍增器上。
 
-EN: Middle-school textbooks love "168 Spaniards conquered 80,000 Inca." That's a myth. John Hemming (*The Conquest of the Incas*, Macmillan 1970) and Restall 2003 both dismantle it. The real collapse was multi-causal:
+EN: Middle-school textbooks love "168 Spaniards conquered 80,000 Inca." That's a myth. John Hemming (The Conquest of the Incas, Macmillan 1970) and Restall 2003 both dismantle it. The real collapse was multi-causal:
 1. **Smallpox 1525–1527** had already killed Huayna Capac, Ninan Cuyochi, and large numbers of nobles and administrators
 2. **Civil war 1527–1532** drained the army and administration for five years
 3. **Tactical asymmetry**: harquebuses, cavalry, steel swords, war dogs vs. wooden clubs and slings
@@ -1435,17 +1435,17 @@ EN: In 1517, Francisco Hernández de Córdoba sailed from Cuba and landed on the
 
 CN: 1527 年 Francisco de Montejo el Adelantado (「先锋蒙特霍」) 拿到 Yucatán 征服许可, 第一次远征——失败。Yucatán 不像 Aztec 或 Inca 有一个中心首都可以一击拿下: 它是 16 个独立 Maya 城邦 (Roys 1957)——你打下一个, 还有 15 个, 而且没有黄金诱惑、没有水、热带病肆虐。Montejo 1535 年彻底放弃。
 
-EN: In 1527, Francisco de Montejo *el Adelantado* ("the Pioneer") obtained the *capitulación* for Yucatán and led his first expedition—it failed. Yucatán was not like the Aztec or Inca: there was no single capital you could decapitate. It was sixteen independent Maya city-states (Roys 1957)—you conquered one, fifteen more remained, and there was no gold to motivate, no water in the dry season, and tropical disease everywhere. Montejo gave up entirely in 1535.
+EN: In 1527, Francisco de Montejo el Adelantado ("the Pioneer") obtained the capitulación for Yucatán and led his first expedition—it failed. Yucatán was not like the Aztec or Inca: there was no single capital you could decapitate. It was sixteen independent Maya city-states (Roys 1957)—you conquered one, fifteen more remained, and there was no gold to motivate, no water in the dry season, and tropical disease everywhere. Montejo gave up entirely in 1535.
 
 ### 15.3 1542 Mérida 立基 — 北 Yucatán 入西班牙手 / Mérida founded — northern Yucatán falls
 
-CN: 1542 年 Francisco de Montejo el Mozo (「小蒙特霍」, Adelantado 的儿子) 第二次成功, 在 Maya Tihó 城旧址建立 Mérida (今 Yucatán 州首府)。北部 Yucatán Maya 人口被纳入 *encomienda* 体系 (西班牙强制劳役 + 贡赋制)。
+CN: 1542 年 Francisco de Montejo el Mozo (「小蒙特霍」, Adelantado 的儿子) 第二次成功, 在 Maya Tihó 城旧址建立 Mérida (今 Yucatán 州首府)。北部 Yucatán Maya 人口被纳入 encomienda 体系 (西班牙强制劳役 + 贡赋制)。
 
-但: 这只是 *北部*。中部 Petén 雨林地带的 Itzá Maya 城邦 (在 Lake Petén 中央岛屿 Tayasal/Nojpetén), 西班牙人 *根本进不去*——太远、太湿、没路、没经济回报。
+但: 这只是 北部。中部 Petén 雨林地带的 Itzá Maya 城邦 (在 Lake Petén 中央岛屿 Tayasal/Nojpetén), 西班牙人 根本进不去——太远、太湿、没路、没经济回报。
 
-EN: In 1542, Francisco de Montejo *el Mozo* ("the Younger", the Adelantado's son) succeeded on the second try, founding Mérida (today the capital of Yucatán state) on the ruins of the Maya city of Tihó. Northern Yucatán Maya were absorbed into the *encomienda* system (Spanish forced-labor and tribute regime).
+EN: In 1542, Francisco de Montejo el Mozo ("the Younger", the Adelantado's son) succeeded on the second try, founding Mérida (today the capital of Yucatán state) on the ruins of the Maya city of Tihó. Northern Yucatán Maya were absorbed into the encomienda system (Spanish forced-labor and tribute regime).
 
-But: this was only the *north*. The central Petén rainforest, where the Itzá Maya city-state sat on the island of Tayasal/Nojpetén in Lake Petén, was simply *unreachable* for the Spanish—too far, too wet, no roads, no economic payoff.
+But: this was only the north. The central Petén rainforest, where the Itzá Maya city-state sat on the island of Tayasal/Nojpetén in Lake Petén, was simply unreachable for the Spanish—too far, too wet, no roads, no economic payoff.
 
 ### 15.4 1697.3.13 Tayasal 陷落 — 美洲最后一个独立原住民国家 / Tayasal falls — the last independent Indigenous state
 
@@ -1455,7 +1455,7 @@ CN: Itzá 抵抗到 **1697 年 3 月 13 日**——Martín de Ursúa 率西班�
 
 EN: The Itzá held out until **March 13, 1697**, when Martín de Ursúa led a combined Spanish land-and-water force across Lake Petén and stormed Tayasal.
 
-Timeline check: Aztec fall 1521, Inca fall 1533, Itzá fall 1697—the Maya city-states held out **176 years longer** than the Aztec. What was 1697? Newton had published the *Principia* ten years earlier; the Kangxi Emperor was on the throne in China; the 13 colonies in North America were mature. The Maya were not the first to decline. They were the last to resist.
+Timeline check: Aztec fall 1521, Inca fall 1533, Itzá fall 1697—the Maya city-states held out **176 years longer** than the Aztec. What was 1697? Newton had published the Principia ten years earlier; the Kangxi Emperor was on the throne in China; the 13 colonies in North America were mature. The Maya were not the first to decline. They were the last to resist.
 
 ### 15.5 Lens 3 anchor — Ix Mutal 的时间感 / Ix Mutal's timeline
 
@@ -1471,27 +1471,27 @@ EN: "I am Ix Mutal. I was born in 1480 in a small Postclassic village in Yucatá
 
 CN: 1521 年 8 月, Tenochtitlán 陷落。三个月后, 消息通过沿海贸易商沿 Yucatán 海岸传到 Ix Mutal 的村落 (假设在今 Campeche 内陆)。商人说: 「Mexica 王 (他们不知道叫 Cuauhtémoc) 被白胡须海上来的人抓了, 大城烧了, 湖水变红了。」村里长老听完, 沉默了很久, 然后说: 「准备粮食, 男人去森林里挖洞藏火药——不, 我们没有火药——藏粮食。」Ix Mutal 那年 41 岁, 三个孩子, 丈夫是 Maya 商人, 那年也在沿海——回来时说: 「白胡须的人会再来, 不是会不会, 是什么时候。」
 
-EN: August 1521: Tenochtitlán fell. Three months later, the news traveled along the Yucatán coast through trading networks to Ix Mutal's village (let's place it in inland Campeche). Traders said: "The Mexica king [they did not know his name was Cuauhtémoc] was captured by bearded men from the sea, the great city is burned, the lake water has turned red." The village elders listened in silence, then said: "Store food. Men, dig pits in the forest to hide the gunpowder—no, we have no gunpowder—hide the food." Ix Mutal was 41 that year, with three children. Her husband was a Maya trader who had been on the coast that month. When he came back he said: "The bearded ones will come back. Not *if*. *When*."
+EN: August 1521: Tenochtitlán fell. Three months later, the news traveled along the Yucatán coast through trading networks to Ix Mutal's village (let's place it in inland Campeche). Traders said: "The Mexica king [they did not know his name was Cuauhtémoc] was captured by bearded men from the sea, the great city is burned, the lake water has turned red." The village elders listened in silence, then said: "Store food. Men, dig pits in the forest to hide the gunpowder—no, we have no gunpowder—hide the food." Ix Mutal was 41 that year, with three children. Her husband was a Maya trader who had been on the coast that month. When he came back he said: "The bearded ones will come back. Not if. When."
 
 ### 16.2 1527 — 47 岁, Montejo 第一次到 Yucatán / Age 47, Montejo's first wave
 
-CN: 1527 年 Montejo 远征队登陆 Yucatán 北岸。Ix Mutal 村离海岸 80 公里, 没直接打到——但难民开始从北边涌来, 带着伤、带着病。村里多收了 30 个人, 粮食立刻紧张。Ix Mutal 那年开始织 *huipil* (Maya 女性传统绣花长袍) 给难民——不是怜悯, 是因为她爷爷教过她: 「衣服上的图案是文字。我们没纸, 但我们有布。布会被穿、被传、被记住。」Ix Mutal 织进 huipil 的图案是村里 Postclassic Maya 的星历记号——后来这种 huipil 在 17–20 世纪 Maya 抵抗运动里反复出现, 到今天 Yucatán 妇女还在织。
+CN: 1527 年 Montejo 远征队登陆 Yucatán 北岸。Ix Mutal 村离海岸 80 公里, 没直接打到——但难民开始从北边涌来, 带着伤、带着病。村里多收了 30 个人, 粮食立刻紧张。Ix Mutal 那年开始织 huipil (Maya 女性传统绣花长袍) 给难民——不是怜悯, 是因为她爷爷教过她: 「衣服上的图案是文字。我们没纸, 但我们有布。布会被穿、被传、被记住。」Ix Mutal 织进 huipil 的图案是村里 Postclassic Maya 的星历记号——后来这种 huipil 在 17–20 世纪 Maya 抵抗运动里反复出现, 到今天 Yucatán 妇女还在织。
 
-EN: In 1527 Montejo's expedition landed on the north Yucatán coast. Ix Mutal's village was 80 km inland and was not directly attacked—but refugees began streaming south, wounded and sick. The village absorbed 30 extra people; food got tight immediately. That year Ix Mutal started weaving *huipil* (the Maya woman's traditional embroidered tunic) for the refugees—not out of pity, but because her grandfather had taught her: "The patterns on the cloth are writing. We have no paper, but we have cloth. Cloth gets worn, gets passed down, gets remembered." The patterns Ix Mutal wove into the *huipil* were the Postclassic Maya star-calendar marks of her village—and these *huipil* would reappear across 17th-to-20th century Maya resistance movements, and Yucatán women still weave them today.
+EN: In 1527 Montejo's expedition landed on the north Yucatán coast. Ix Mutal's village was 80 km inland and was not directly attacked—but refugees began streaming south, wounded and sick. The village absorbed 30 extra people; food got tight immediately. That year Ix Mutal started weaving huipil (the Maya woman's traditional embroidered tunic) for the refugees—not out of pity, but because her grandfather had taught her: "The patterns on the cloth are writing. We have no paper, but we have cloth. Cloth gets worn, gets passed down, gets remembered." The patterns Ix Mutal wove into the huipil were the Postclassic Maya star-calendar marks of her village—and these huipil would reappear across 17th-to-20th century Maya resistance movements, and Yucatán women still weave them today.
 
 ### 16.3 1530s — 50 岁, 第二波天花 + 麻疹 / Age 50, second epidemic wave
 
 CN: 1530 年代 Yucatán 第二波瘟疫——这一次是天花 + 麻疹叠加 (Cook 1998)。Ix Mutal 村 1500 年左右大约 800 人, 1540 年估计剩 150 人——80% 死亡率。Ix Mutal 自己活下来了 (后来发现部分人有部分免疫力), 但她三个孩子里只剩一个女儿。她丈夫死于 1533 年的麻疹。村里老人几乎全没了——而老人是 Maya 口述知识的载体: 历法、星象、家族系谱、Chilam Balam 文本的口头版本。一代人记忆, 在 10 年里断了链。
 
-EN: In the 1530s, a second epidemic swept Yucatán—smallpox and measles together (Cook 1998). Ix Mutal's village had perhaps 800 people around 1500; by 1540 maybe 150 remained—roughly 80% mortality. Ix Mutal herself survived (some people, we now know, carried partial immunity), but of her three children only one daughter lived. Her husband died of measles in 1533. Almost all the village elders died—and the elders were the carriers of Maya oral knowledge: the calendar, the stars, family genealogies, the oral versions of what would later become the *Chilam Balam* texts. A generation's memory broke its chain in ten years.
+EN: In the 1530s, a second epidemic swept Yucatán—smallpox and measles together (Cook 1998). Ix Mutal's village had perhaps 800 people around 1500; by 1540 maybe 150 remained—roughly 80% mortality. Ix Mutal herself survived (some people, we now know, carried partial immunity), but of her three children only one daughter lived. Her husband died of measles in 1533. Almost all the village elders died—and the elders were the carriers of Maya oral knowledge: the calendar, the stars, family genealogies, the oral versions of what would later become the Chilam Balam texts. A generation's memory broke its chain in ten years.
 
 ### 16.4 1542 — 62 岁, Mérida 立基 / Age 62, Mérida is founded
 
-CN: 1542 年 Mérida 立基。Ix Mutal 村被划入北 Yucatán *encomienda* 系统——一个西班牙 *encomendero* (领主) 远在 Mérida, 每年派人来收贡赋: 玉米、棉布、蜂蜜、火鸡。Ix Mutal 那年 62 岁——按 Postclassic Maya 平民女性平均寿命算, 她已经超长寿了。她学了几个 Spanish 词 ("señor", "tributo", "Dios"), 但她在自己女儿和孙女面前从来只说 Yucatec Maya, 织 huipil 时讲老故事。
+CN: 1542 年 Mérida 立基。Ix Mutal 村被划入北 Yucatán encomienda 系统——一个西班牙 encomendero (领主) 远在 Mérida, 每年派人来收贡赋: 玉米、棉布、蜂蜜、火鸡。Ix Mutal 那年 62 岁——按 Postclassic Maya 平民女性平均寿命算, 她已经超长寿了。她学了几个 Spanish 词 ("señor", "tributo", "Dios"), 但她在自己女儿和孙女面前从来只说 Yucatec Maya, 织 huipil 时讲老故事。
 
 她 1545 年死, 65 岁。村里没有人写下她的名字。Mérida 教区档案 1545 年的记录里, 只有「印第安女性, 老, 死于咳嗽」一行。
 
-EN: In 1542 Mérida was founded. Ix Mutal's village was assigned to the northern Yucatán *encomienda* system—a Spanish *encomendero* (lord) lived far away in Mérida and sent men each year to collect tribute: maize, cotton cloth, honey, turkeys. Ix Mutal was 62 that year—well past the average life expectancy for a Postclassic Maya commoner woman. She picked up a few Spanish words ("*señor*", "*tributo*", "*Dios*"), but with her daughter and granddaughter she only ever spoke Yucatec Maya, telling the old stories as she wove *huipil*.
+EN: In 1542 Mérida was founded. Ix Mutal's village was assigned to the northern Yucatán encomienda system—a Spanish encomendero (lord) lived far away in Mérida and sent men each year to collect tribute: maize, cotton cloth, honey, turkeys. Ix Mutal was 62 that year—well past the average life expectancy for a Postclassic Maya commoner woman. She picked up a few Spanish words ("señor", "tributo", "Dios"), but with her daughter and granddaughter she only ever spoke Yucatec Maya, telling the old stories as she wove huipil.
 
 She died in 1545 at 65. No one in the village wrote down her name. The Mérida parish registry for 1545 contains only one line: "Indian woman, old, died of cough."
 
@@ -1503,9 +1503,9 @@ CN: Ix Mutal 这个名字和故事是虚构 composite, 不是真人——但她�
 
 你 21 世纪的 7 年级学生, 通过 Edmonson 1986 的英译, 还能听到 Ix Mutal 这一代人的语调。
 
-EN: The name Ix Mutal and her story are a fictional composite, not a single person—but the population she represents is real: roughly 1 million Yucatán Maya commoner women in the 16th century (Cook 1998 + Roys 1957), perhaps 800,000 in 1500 falling to ~300,000 by 1600. Every concrete detail in her story—*huipil* weaving methods, village size, epidemic mortality rates, *encomienda* tribute, Maya oral transmission through elders—comes from the sources. Her name was not preserved, not because she did not matter, but because the colonial archive did not record her.
+EN: The name Ix Mutal and her story are a fictional composite, not a single person—but the population she represents is real: roughly 1 million Yucatán Maya commoner women in the 16th century (Cook 1998 + Roys 1957), perhaps 800,000 in 1500 falling to ~300,000 by 1600. Every concrete detail in her story—huipil weaving methods, village size, epidemic mortality rates, encomienda tribute, Maya oral transmission through elders—comes from the sources. Her name was not preserved, not because she did not matter, but because the colonial archive did not record her.
 
-But: Munro Edmonson's *Heaven Born Merida and Its Destiny: The Book of Chilam Balam of Chumayel* (University of Texas Press 1986) translates *Chilam Balam* texts—oral Maya knowledge that 16th-to-18th-century Yucatec Maya wrote down in their own language using the Latin alphabet—and those texts are full of echoes of women like Ix Mutal. Edmonson's 1986 introduction says: "These texts are not the epics of a Maya elite; they are the collective memory of villages—we do not know which old woman spoke which line, but their sentences are in the text."
+But: Munro Edmonson's Heaven Born Merida and Its Destiny: The Book of Chilam Balam of Chumayel (University of Texas Press 1986) translates Chilam Balam texts—oral Maya knowledge that 16th-to-18th-century Yucatec Maya wrote down in their own language using the Latin alphabet—and those texts are full of echoes of women like Ix Mutal. Edmonson's 1986 introduction says: "These texts are not the epics of a Maya elite; they are the collective memory of villages—we do not know which old woman spoke which line, but their sentences are in the text."
 
 You, a 21st-century 7th grader, can still hear the cadence of Ix Mutal's generation through Edmonson's 1986 English translation.
 
@@ -1513,17 +1513,17 @@ You, a 21st-century 7th grader, can still hear the cadence of Ix Mutal's generat
 
 CN: 「我活到 65 岁。我的名字没进任何档案。Mérida 教区只写了『印第安女性, 老, 死于咳嗽』。但我教我的女儿织 huipil, 她教她的女儿, 她又教她的女儿——5 个世纪后, 21 世纪的 Yucatán 妇女在市场卖 huipil 时, 上面的星历图案还是我那一代织进去的。
 
-我也教我女儿讲故事——口头的, 不写。后来 17 世纪有人用拉丁字母把我们村的故事抄进 *Chilam Balam* 文本——他们没写我的名字, 但他们写下了我讲过的句子。Edmonson 1986 把那些句子翻译成英文。
+我也教我女儿讲故事——口头的, 不写。后来 17 世纪有人用拉丁字母把我们村的故事抄进 Chilam Balam 文本——他们没写我的名字, 但他们写下了我讲过的句子。Edmonson 1986 把那些句子翻译成英文。
 
 你 7 年级在课堂上读 Edmonson 翻译的句子时, 你听到的不是『一个文明』, 是一个 65 岁老妇女在 1540 年代某个夜里, 一边织 huipil 一边告诉孙女的话。
 
 我没有名字。但我有声音。」
 
-EN: "I lived to 65. My name went into no archive. The Mérida parish only wrote 'Indian woman, old, died of cough.' But I taught my daughter to weave *huipil*, she taught hers, and hers taught hers—five centuries later, when 21st-century Yucatán women sell *huipil* in the market, the star-calendar patterns on them are the ones my generation wove in.
+EN: "I lived to 65. My name went into no archive. The Mérida parish only wrote 'Indian woman, old, died of cough.' But I taught my daughter to weave huipil, she taught hers, and hers taught hers—five centuries later, when 21st-century Yucatán women sell huipil in the market, the star-calendar patterns on them are the ones my generation wove in.
 
-I also taught my daughter to tell stories—oral, not written. Later, in the 17th century, someone wrote our village's stories into the *Chilam Balam* texts using the Latin alphabet—they did not write my name, but they wrote down sentences I had spoken. Edmonson 1986 translates those sentences into English.
+I also taught my daughter to tell stories—oral, not written. Later, in the 17th century, someone wrote our village's stories into the Chilam Balam texts using the Latin alphabet—they did not write my name, but they wrote down sentences I had spoken. Edmonson 1986 translates those sentences into English.
 
-When you, in 7th grade, read an Edmonson sentence in class, you are not hearing 'a civilization.' You are hearing what a 65-year-old woman said to her granddaughter on some night in the 1540s while weaving a *huipil*.
+When you, in 7th grade, read an Edmonson sentence in class, you are not hearing 'a civilization.' You are hearing what a 65-year-old woman said to her granddaughter on some night in the 1540s while weaving a huipil.
 
 I have no name. But I have a voice."
 
@@ -1535,31 +1535,31 @@ I have no name. But I have a voice."
 
 #### (1) Mongol 1206 Genghis vs Inca 1438 Pachacuti — 同 perpetrator-actor pattern
 CN: Genghis Khan 1206 起兵, 25 年扩张到中亚 + 中国北方; Pachacuti 1438 即位, 30 年扩张 Inca 从 Cusco 一城到 Tawantinsuyu 帝国。两者都是 perpetrator-actor 视角的 Lens 1: 暴力的扩张者, 但同时是建制者 (蒙古驿站 yam ↔ Inca 驿站 chasqui + 大路 Qhapaq Ñan)。
-EN: Genghis Khan rose in 1206 and expanded across Central Asia and northern China within 25 years; Pachacuti took the throne in 1438 and expanded the Inca from a single city to the Tawantinsuyu empire in 30 years. Both are perpetrator-actor Lens 1: violent expansionists who were also institution-builders (Mongol *yam* postal relay ↔ Inca *chasqui* runners and the *Qhapaq Ñan* royal road).
+EN: Genghis Khan rose in 1206 and expanded across Central Asia and northern China within 25 years; Pachacuti took the throne in 1438 and expanded the Inca from a single city to the Tawantinsuyu empire in 30 years. Both are perpetrator-actor Lens 1: violent expansionists who were also institution-builders (Mongol yam postal relay ↔ Inca chasqui runners and the Qhapaq Ñan royal road).
 
 #### (2) Mali 1413 Aisha 商人记账 vs Inca quipu — 非文字行政同 pattern
 CN: Mali Topic Lens 2 Aisha 用阿拉伯字母 + Mande 口语混合记账; Inca 用 quipu (打结的彩绳) 做行政记录——都是「非纸面文字」状态下的复杂帝国会计系统。
-EN: In the Mali Topic, Lens 2 Aisha keeps trade accounts mixing Arabic script with spoken Mande; the Inca used *quipu* (knotted, color-coded cords) for administrative record-keeping—both are complex imperial accounting systems operating in "not-paper" states.
+EN: In the Mali Topic, Lens 2 Aisha keeps trade accounts mixing Arabic script with spoken Mande; the Inca used quipu (knotted, color-coded cords) for administrative record-keeping—both are complex imperial accounting systems operating in "not-paper" states.
 
 #### (3) Black Death 1346 鼠疫 vs Pre-Columbian 1518 天花 — McNeill 1976 同 pattern
 CN: William McNeill《Plagues and Peoples》(Anchor 1976) 把这两件事放在同一个 frame: 大型流行病改写权力地图。1346–1353 黑死病杀死 1/3 欧洲人, 西欧农奴制崩溃; 1518–1600 美洲传染病杀死 80–95% 原住民, 殖民帝国奠基。生物事件 → 政治结构。
-EN: William McNeill (*Plagues and Peoples*, Anchor 1976) placed both events in a single frame: large-scale epidemics rewrite political maps. The 1346–1353 Black Death killed a third of Europe and broke serfdom in Western Europe; 1518–1600 epidemics in the Americas killed 80–95% of the Indigenous population and laid the foundations of colonial empire. Biological event → political structure.
+EN: William McNeill (Plagues and Peoples, Anchor 1976) placed both events in a single frame: large-scale epidemics rewrite political maps. The 1346–1353 Black Death killed a third of Europe and broke serfdom in Western Europe; 1518–1600 epidemics in the Americas killed 80–95% of the Indigenous population and laid the foundations of colonial empire. Biological event → political structure.
 
 #### (4) Renaissance 1455 Gutenberg 印刷 vs Cortés 1522《Cartas de relación》 — 印刷决定 conquest narrative
-CN: Gutenberg 1455 印《42 行圣经》, 70 年后 Cortés 1522 寄回西班牙的 5 封信《Cartas de relación》立刻被印刷传遍欧洲——印刷术决定了 *谁的版本* 成为欧洲对 conquest 的认知。Bernal Díaz 的版本 (士兵视角) 1568 写成, 但 1632 才出版——晚了 110 年。Restall 2003 一再说: conquest 的 myth 不是来自事件本身, 来自 *谁先印*。
-EN: Gutenberg printed the 42-line Bible in 1455. Seventy years later, Cortés's five *Cartas de relación* (1519–1526) were printed and circulated across Europe immediately—the press decided *whose version* became Europe's understanding of conquest. Bernal Díaz's soldier's-eye account was written in 1568 but only published in 1632—110 years late. Restall 2003 repeats: the myths of conquest do not come from the event; they come from *who prints first*.
+CN: Gutenberg 1455 印《42 行圣经》, 70 年后 Cortés 1522 寄回西班牙的 5 封信《Cartas de relación》立刻被印刷传遍欧洲——印刷术决定了 谁的版本 成为欧洲对 conquest 的认知。Bernal Díaz 的版本 (士兵视角) 1568 写成, 但 1632 才出版——晚了 110 年。Restall 2003 一再说: conquest 的 myth 不是来自事件本身, 来自 谁先印。
+EN: Gutenberg printed the 42-line Bible in 1455. Seventy years later, Cortés's five Cartas de relación (1519–1526) were printed and circulated across Europe immediately—the press decided whose version became Europe's understanding of conquest. Bernal Díaz's soldier's-eye account was written in 1568 but only published in 1632—110 years late. Restall 2003 repeats: the myths of conquest do not come from the event; they come from who prints first.
 
 #### (5) Constantinople 1453 陷落 vs Tenochtitlán 1521.8.13 陷落 — 文明终结 pattern + 68 年之差
-CN: 1453.5.29 Constantinople 被奥斯曼攻陷, 拜占庭帝国终结; 1521.8.13 Tenochtitlán 被 Cortés + Tlaxcala 攻陷, Aztec 帝国终结。两件事相隔 68 年, 都是 8 月、都是围城最后一天皇帝/王战死或被俘 (Constantine XI 战死 ↔ Cuauhtémoc 被俘)。两件事都被欧洲叙事处理成 「文明的终结」, 但两件事的 *延续性* 都被低估——拜占庭文化进入俄罗斯 + 奥斯曼; Aztec/Mexica 文化进入 mestizo 墨西哥 (Townsend 2006)。
-EN: On May 29, 1453, Constantinople fell to the Ottomans, ending the Byzantine empire; on August 13, 1521, Tenochtitlán fell to Cortés and Tlaxcala, ending the Aztec empire. The two events are 68 years apart, both in late summer, and in both the emperor/ruler was killed or captured on the final day of the siege (Constantine XI died fighting ↔ Cuauhtémoc captured). Both were narrated in European writing as "the end of a civilization," but in both cases the *continuity* is underrated—Byzantine culture flowed into Russia and the Ottomans; Aztec/Mexica culture flowed into mestizo Mexico (Townsend 2006).
+CN: 1453.5.29 Constantinople 被奥斯曼攻陷, 拜占庭帝国终结; 1521.8.13 Tenochtitlán 被 Cortés + Tlaxcala 攻陷, Aztec 帝国终结。两件事相隔 68 年, 都是 8 月、都是围城最后一天皇帝/王战死或被俘 (Constantine XI 战死 ↔ Cuauhtémoc 被俘)。两件事都被欧洲叙事处理成 「文明的终结」, 但两件事的 延续性 都被低估——拜占庭文化进入俄罗斯 + 奥斯曼; Aztec/Mexica 文化进入 mestizo 墨西哥 (Townsend 2006)。
+EN: On May 29, 1453, Constantinople fell to the Ottomans, ending the Byzantine empire; on August 13, 1521, Tenochtitlán fell to Cortés and Tlaxcala, ending the Aztec empire. The two events are 68 years apart, both in late summer, and in both the emperor/ruler was killed or captured on the final day of the siege (Constantine XI died fighting ↔ Cuauhtémoc captured). Both were narrated in European writing as "the end of a civilization," but in both cases the continuity is underrated—Byzantine culture flowed into Russia and the Ottomans; Aztec/Mexica culture flowed into mestizo Mexico (Townsend 2006).
 
 #### (6) Crusades 1099 内部 alliance shifts vs 1521 Tlaxcala 反 Aztec — 同 pattern
-CN: 1099 第一次十字军攻陷耶路撒冷, 关键不是「西方 vs 东方」, 是十字军内部 + 与 Fatimid Egypt + Byzantine 之间不断换 alliance。1521 Tenochtitlán 陷落, 关键不是「西班牙 vs Aztec」, 是 Tlaxcala + Texcoco + Cholula 中央 Mexico 内部 200 年的旧怨被 Cortés 利用。Lens 1 视角: 谁是 perpetrator, 不是「外人」, 是 *本地敌人 + 外来工具*。
-EN: The First Crusade taking Jerusalem in 1099 is not really "West vs East"—it is shifting alliances among the Crusaders, the Fatimids of Egypt, and Byzantium. The fall of Tenochtitlán in 1521 is not really "Spain vs the Aztec"—it is 200 years of resentment among Tlaxcala, Texcoco, Cholula, and other central Mexican peoples, exploited by Cortés. Lens 1 perspective: the perpetrator is rarely the "outsider"; it is *local enemies plus foreign tools*.
+CN: 1099 第一次十字军攻陷耶路撒冷, 关键不是「西方 vs 东方」, 是十字军内部 + 与 Fatimid Egypt + Byzantine 之间不断换 alliance。1521 Tenochtitlán 陷落, 关键不是「西班牙 vs Aztec」, 是 Tlaxcala + Texcoco + Cholula 中央 Mexico 内部 200 年的旧怨被 Cortés 利用。Lens 1 视角: 谁是 perpetrator, 不是「外人」, 是 本地敌人 + 外来工具。
+EN: The First Crusade taking Jerusalem in 1099 is not really "West vs East"—it is shifting alliances among the Crusaders, the Fatimids of Egypt, and Byzantium. The fall of Tenochtitlán in 1521 is not really "Spain vs the Aztec"—it is 200 years of resentment among Tlaxcala, Texcoco, Cholula, and other central Mexican peoples, exploited by Cortés. Lens 1 perspective: the perpetrator is rarely the "outsider"; it is local enemies plus foreign tools.
 
 #### (7) Reformation 1517 Erasmus vs Malintzin 1500–1529 — 同代 lonely-mediator
-CN: Erasmus 1517 站在天主教改革 + Luther 之间, 翻译希腊文圣经, 双方都骂他; Malintzin 1519–1521 站在 Cortés + Aztec 之间, 翻译, 双方都骂她 (西班牙人不信任 *india*, Mexica 骂她叛徒)。两人同代, 同 archetype: lonely mediator across worlds, 谁都不归属, 谁都骂。
-EN: In 1517 Erasmus stood between Catholic reform and Luther, translating the Greek New Testament; both sides attacked him. In 1519–1521 Malintzin stood between Cortés and the Aztec, interpreting; both sides attacked her (the Spanish distrusted her as an *india*; the Mexica called her a traitor). They were contemporaries, the same archetype: the lonely mediator between worlds, belonging to neither, attacked by both.
+CN: Erasmus 1517 站在天主教改革 + Luther 之间, 翻译希腊文圣经, 双方都骂他; Malintzin 1519–1521 站在 Cortés + Aztec 之间, 翻译, 双方都骂她 (西班牙人不信任 india, Mexica 骂她叛徒)。两人同代, 同 archetype: lonely mediator across worlds, 谁都不归属, 谁都骂。
+EN: In 1517 Erasmus stood between Catholic reform and Luther, translating the Greek New Testament; both sides attacked him. In 1519–1521 Malintzin stood between Cortés and the Aztec, interpreting; both sides attacked her (the Spanish distrusted her as an india; the Mexica called her a traitor). They were contemporaries, the same archetype: the lonely mediator between worlds, belonging to neither, attacked by both.
 
 #### (8) AoE 1492 Columbus vs Pre-Columbian Topic 直接前置
 CN: AoE Topic Lens 1 Columbus 1492; Pre-Columbian Topic Lens 1 Pachacuti 1438–1472 早 Columbus 几十年, Lens 2 Malintzin 1500–1529 直接接 Columbus 后果, Lens 3 Ix Mutal 1480–1545 见证整个 conquest 全过程。这两个 Topic 不是分离的——是同一个 1450–1550 全球化时刻的两面: 欧洲行动者 + 美洲承受者。
@@ -1581,11 +1581,11 @@ EN: Malintzin was both a broker and an enslaved person; both vilified as traitor
 
 #### (4) Find the silenced / 找到被沉默的
 CN: Postclassic Maya 平民女性 (Ix Mutal) 没有名字——殖民档案没记。但 Chilam Balam 文本是她们的回声, huipil 织法是她们的指纹。「找不到史料」不等于「不存在」, 等于「档案是谁建的、为谁建的」。
-EN: Postclassic Maya commoner women (Ix Mutal) have no names in the archive—the colonial registry did not record them. But the *Chilam Balam* texts are their echo, and *huipil* weaving is their fingerprint. "No source" does not mean "did not exist." It means "who built the archive, and for whom."
+EN: Postclassic Maya commoner women (Ix Mutal) have no names in the archive—the colonial registry did not record them. But the Chilam Balam texts are their echo, and huipil weaving is their fingerprint. "No source" does not mean "did not exist." It means "who built the archive, and for whom."
 
 #### (5) Reframe what counts as "discovery" / 重新框架「发现」
-CN: 1492 是「Columbus discovery of America」吗? 还是 「美洲 ~6,000 万原住民 (Mann 2005《1491》) 第一次被欧洲卷入全球化」? 后者更准确。Discovery 是 *谁站在岸上的视角*——站在 Hispaniola 沙滩上, 看到 Columbus 三艘船的 Taíno 人, 也是 discoverer——他们发现了欧洲。
-EN: Was 1492 "Columbus's discovery of America"? Or was it "America's ~60 million Indigenous peoples (Mann 2005, *1491*) being pulled into globalization for the first time by Europeans"? The second is more accurate. "Discovery" is *whoever stands on the beach watching*—the Taíno standing on the Hispaniola sand watching three Spanish ships were also discoverers. They discovered Europe.
+CN: 1492 是「Columbus discovery of America」吗? 还是 「美洲 ~6,000 万原住民 (Mann 2005《1491》) 第一次被欧洲卷入全球化」? 后者更准确。Discovery 是 谁站在岸上的视角——站在 Hispaniola 沙滩上, 看到 Columbus 三艘船的 Taíno 人, 也是 discoverer——他们发现了欧洲。
+EN: Was 1492 "Columbus's discovery of America"? Or was it "America's ~60 million Indigenous peoples (Mann 2005, 1491) being pulled into globalization for the first time by Europeans"? The second is more accurate. "Discovery" is whoever stands on the beach watching—the Taíno standing on the Hispaniola sand watching three Spanish ships were also discoverers. They discovered Europe.
 
 ---
 
@@ -1606,7 +1606,7 @@ CN: 三个 lens, 三个时代:
 EN: Three lenses, three eras:
 - **Lens 1 Pachacuti (1438–1472)**: perpetrator-actor — a man who expanded the Inca empire over 30 years, also an institution-builder
 - **Lens 2 Malintzin (1500–1529)**: lonely mediator — a 19-year-old interpreter dragged across worlds, also enslaved + broker + mother
-- **Lens 3 Ix Mutal (1480–1545) ⭐ defaultLens**: receiving-end witness — a nameless 65-year-old Postclassic Maya commoner woman, also a *huipil* weaver and a carrier of the oral *Chilam Balam*
+- **Lens 3 Ix Mutal (1480–1545) ⭐ defaultLens**: receiving-end witness — a nameless 65-year-old Postclassic Maya commoner woman, also a huipil weaver and a carrier of the oral Chilam Balam
 
 The three lenses together cover one hundred years, 1438–1545: from the Inca expansion, through the twin falls of Aztec and Inca, into the slow strangling of Postclassic Maya. These are the last hundred years of Pre-Columbian America, and the most distorted hundred years in popular memory.
 
@@ -1619,21 +1619,21 @@ You are in 7th grade meeting this history for the first time. Remember three thi
 
 ## Anti-fab citations / 主要史料 (full Topic)
 
-1. **John Hemming**, *The Conquest of the Incas* (Macmillan 1970) — Inca conquest 标准学术叙事
-2. **Matthew Restall**, *Seven Myths of the Spanish Conquest* (Oxford University Press 2003) — 拆解 conquest 神话
-3. **Pedro Pizarro**, *Relación del descubrimiento y conquista de los reinos del Perú* (1571) — Cajamarca 在场目击
-4. **Camilla Townsend**, *Malintzin's Choices: An Indian Woman in the Conquest of Mexico* (University of New Mexico Press 2006) — Malintzin 学术权威传记
-5. **Noble David Cook**, *Born to Die: Disease and New World Conquest, 1492–1650* (Cambridge University Press 1998) — 美洲流行病学
-6. **Munro Edmonson**, *Heaven Born Merida and Its Destiny: The Book of Chilam Balam of Chumayel* (University of Texas Press 1986) — Chilam Balam Yucatec Maya 文本英译
-7. **Ralph Roys**, *The Political Geography of the Yucatan Maya* (Carnegie Institution of Washington 1957) — Postclassic Yucatán 16 城邦地理与社会
+1. **John Hemming**, The Conquest of the Incas (Macmillan 1970) — Inca conquest 标准学术叙事
+2. **Matthew Restall**, Seven Myths of the Spanish Conquest (Oxford University Press 2003) — 拆解 conquest 神话
+3. **Pedro Pizarro**, Relación del descubrimiento y conquista de los reinos del Perú (1571) — Cajamarca 在场目击
+4. **Camilla Townsend**, Malintzin's Choices: An Indian Woman in the Conquest of Mexico (University of New Mexico Press 2006) — Malintzin 学术权威传记
+5. **Noble David Cook**, Born to Die: Disease and New World Conquest, 1492–1650 (Cambridge University Press 1998) — 美洲流行病学
+6. **Munro Edmonson**, Heaven Born Merida and Its Destiny: The Book of Chilam Balam of Chumayel (University of Texas Press 1986) — Chilam Balam Yucatec Maya 文本英译
+7. **Ralph Roys**, The Political Geography of the Yucatan Maya (Carnegie Institution of Washington 1957) — Postclassic Yucatán 16 城邦地理与社会
 
 补充 / Supplementary:
-- William McNeill, *Plagues and Peoples* (Anchor 1976)
-- Charles C. Mann, *1491: New Revelations of the Americas Before Columbus* (Knopf 2005)
-- Francisco de Xerez, *Verdadera relación de la conquista del Perú* (1534)
-- Miguel de Estete, *Noticia del Perú* (1535)
-- Bernal Díaz del Castillo, *Historia verdadera de la conquista de la Nueva España* (written 1568, published 1632)
+- William McNeill, Plagues and Peoples (Anchor 1976)
+- Charles C. Mann, 1491: New Revelations of the Americas Before Columbus (Knopf 2005)
+- Francisco de Xerez, Verdadera relación de la conquista del Perú (1534)
+- Miguel de Estete, Noticia del Perú (1535)
+- Bernal Díaz del Castillo, Historia verdadera de la conquista de la Nueva España (written 1568, published 1632)
 
 ---
 
-*Topic 完 / End of Topic — Pre-Columbian Americas 1000–1532 · Part 4 of 4*
+Topic 完 / End of Topic — Pre-Columbian Americas 1000–1532 · Part 4 of 4

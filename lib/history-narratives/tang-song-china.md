@@ -401,7 +401,7 @@ Across the 23 years of Li Shimin's reign (626-649), the *Zhenguan* era saw:
 李渊次子，关陇贵族世家，母窦氏。少年随父征战，17 岁起兵随李渊从太原出发，参与建立唐朝。
 
 **关键事件**
-- 626 年 7 月 2 日玄武门之变：李世民在长安宫城北门玄武门设伏，射杀长兄太子李建成、四弟齐王李元吉。同年 9 月 4 日继位，27 岁。
+- 626 年 7 月 2 日玄武门之变：李世民在长安宫城北门玄武门设伏，射杀长兄太子李建成、四弟齐王李元吉。同年 9 月 4 日继位，28 岁。
 - 627-649 年贞观之治：在位 23 年，重用房玄龄、杜如晦、魏徵。魏徵直谏 200 余次，太宗多次采纳。
 - 641 年文成公主入藏：嫁吐蕃赞普松赞干布，带工匠、佛经、医书，开启唐蕃通婚交流。
 - 645-649 年三征高句丽：晚年战事消耗国力，未能克东北。
@@ -605,7 +605,7 @@ Across the 23 years of Li Shimin's reign (626-649), the *Zhenguan* era saw:
 
 **当天细节**
 
-626 年 7 月 2 日清晨（武德九年六月初四），唐高祖李渊三个儿子的内斗到达顶点。太子李建成 38 岁，秦王李世民 27 岁，齐王李元吉 24 岁。李世民事先已被告知建成、元吉计划在出征突厥的饯行宴上加害自己。
+626 年 7 月 2 日清晨（武德九年六月初四），唐高祖李渊三个儿子的内斗到达顶点。太子李建成 38 岁，秦王李世民 28 岁，齐王李元吉 24 岁。李世民事先已被告知建成、元吉计划在出征突厥的饯行宴上加害自己。
 
 按《资治通鉴》卷 191 记载：李世民率长孙无忌、尉迟敬德、房玄龄、杜如晦、侯君集等 10 余人，在长安宫城北门玄武门内伏兵。建成、元吉骑马入朝至临湖殿，察觉变化欲返。世民呼，元吉张弓三发不中（因紧张未拉满弦），世民射建成毙之。元吉逃，被尉迟敬德追射坠马杀之。
 
@@ -763,7 +763,7 @@ Across the 23 years of Li Shimin's reign (626-649), the *Zhenguan* era saw:
 Second son of Li Yuan, from the aristocratic Guanlong clan. Joined his father's military campaigns at 17 when Li Yuan rebelled against Sui from Taiyuan and helped found the Tang dynasty.
 
 **Key events**
-- July 2, 626 Xuanwu Gate Incident: Li Shimin ambushed and killed his elder brother Crown Prince Li Jiancheng and younger brother Li Yuanji at the northern gate of Chang'an's palace. Took the throne September 4 at age 27.
+- July 2, 626 Xuanwu Gate Incident: Li Shimin ambushed and killed his elder brother Crown Prince Li Jiancheng and younger brother Li Yuanji at the northern gate of Chang'an's palace. Took the throne September 4 at age 28.
 - 627-649 Zhenguan era: 23-year reign with chief ministers Fang Xuanling, Du Ruhui, and the famous remonstrating official Wei Zheng (who memorialized over 200 direct criticisms of the emperor).
 - 641 Princess Wencheng's marriage to Tibetan king Songtsen Gampo, bringing artisans, Buddhist scriptures, and medical texts.
 - 645-649 Three failed campaigns against Goguryeo drained the treasury in his late years.
@@ -967,7 +967,7 @@ An individual's final commitment to a collective fate — knowing it cannot succ
 
 **The day**
 
-On the morning of July 2, 626 (4th day of the 6th month, 9th year of Wude), the rivalry among Emperor Gaozu Li Yuan's three sons reached its climax. Crown Prince Li Jiancheng was 38, Prince of Qin Li Shimin 27, Prince of Qi Li Yuanji 24. Li Shimin had been informed in advance that Jiancheng and Yuanji planned to harm him at a farewell banquet for a campaign against the Turks.
+On the morning of July 2, 626 (4th day of the 6th month, 9th year of Wude), the rivalry among Emperor Gaozu Li Yuan's three sons reached its climax. Crown Prince Li Jiancheng was 38, Prince of Qin Li Shimin 28, Prince of Qi Li Yuanji 24. Li Shimin had been informed in advance that Jiancheng and Yuanji planned to harm him at a farewell banquet for a campaign against the Turks.
 
 According to *Zizhi Tongjian* volume 191: Li Shimin led Zhangsun Wuji, Yuchi Jingde, Fang Xuanling, Du Ruhui, Hou Junji, and others, more than ten men, in setting an ambush inside the northern gate (Xuanwu Gate) of the Chang'an palace city. Jiancheng and Yuanji rode in to court and reached the Linhu Hall, but sensing trouble turned to leave. Shimin called out; Yuanji drew his bow three times but missed (under stress, unable to fully draw). Shimin shot Jiancheng dead. Yuanji fled; Yuchi Jingde rode him down and killed him.
 

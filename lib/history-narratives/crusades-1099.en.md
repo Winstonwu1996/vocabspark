@@ -34,7 +34,7 @@ authorNotes: |
 
 ## 0. Open Your Textbook First (Textbook Anchor)
 
-**Houghton Mifflin *Medieval & Early Modern Times* · Ch. 10 Lesson 4 The Crusades + Ch. 11 Lesson 1 Muslim Civilization · p.275**
+**Houghton Mifflin Medieval & Early Modern Times · Ch. 10 Lesson 4 The Crusades + Ch. 11 Lesson 1 Muslim Civilization · p.275**
 
 Your textbook will tell you:
 - In **1095**, **Pope Urban II** preached at **Clermont** and shouted **"Deus vult"** ("God wills it"), calling for a march east
@@ -127,7 +127,7 @@ Just **18 years before** Clermont, in 1077, the **Investiture Controversy** had 
 
 **② Byzantine Orthodoxy: caesaropapism — church and state are one**
 
-The emperor (the *Caesar*) **was** the highest church authority. He appointed the patriarch. He ran the great church councils. **There was no "pope vs. emperor" tension because they were the same person.**
+The emperor (the Caesar) **was** the highest church authority. He appointed the patriarch. He ran the great church councils. **There was no "pope vs. emperor" tension because they were the same person.**
 
 **③ The Islamic world: caliph + sultan**
 
@@ -361,7 +361,7 @@ He immediately **lifted the siege he was in the middle of** and called every Nor
 
 #### Autumn 1096 — Constantinople
 
-Imagine Alexios I's face when Bohemond appeared outside the city walls. *This is the man who almost destroyed me in 1081 — and now he's here to "help"?*
+Imagine Alexios I's face when Bohemond appeared outside the city walls. This is the man who almost destroyed me in 1081 — and now he's here to "help"?
 
 But Alexios was **shrewd**. He did three things:
 
@@ -487,7 +487,7 @@ His reason became one of the most famous lines in medieval Christian history:
 He agreed to lead the kingdom — but insisted his title be **"Advocate of the Holy Sepulchre"** ("Defender of the Holy Sepulchre"), **not "King."**
 
 That refusal defined his historical image:
-- **300 years later**, Dante placed Godfrey **in Paradise** in *The Divine Comedy*
+- **300 years later**, Dante placed Godfrey **in Paradise** in The Divine Comedy
 - **400 years later**, Michelangelo painted his portrait
 - **800 years later**, when Belgium became independent in 1830, Godfrey was claimed as a national forefather
 - **Today, a statue of Godfrey stands in central Brussels**
@@ -658,7 +658,7 @@ Holding the newborn, **Alexios announced**: "**This is my heir.**" He betrothed 
 - Greek, Latin, classical philosophy (Aristotle, Plato)
 - Medicine, astronomy, geometry
 - Byzantine law and administration
-- At 9, she could recite the entire *Iliad* from memory
+- At 9, she could recite the entire Iliad from memory
 
 **She was one of the most educated women in 11th-12th century Europe** — better educated than most contemporary European kings.
 
@@ -692,7 +692,7 @@ It was **after his death + during the final 17 years of her confinement (1136-11
 
 > **The *Alexiad*** — a 15-book Greek history, roughly **400,000 words**.
 
-#### What the *Alexiad* is
+#### What the Alexiad is
 
 The book records **the 37-year reign of her father Alexios (1081-1118)** — every event, including the **First Crusade — from the Byzantine perspective, first-hand**.
 
@@ -712,7 +712,7 @@ The book records **the 37-year reign of her father Alexios (1081-1118)** — eve
 
 The truth in 1095: **Byzantium was a hundred years more civilized than the West.** Anna's perspective is the contemporary fact.
 
-**To read the *Alexiad* today is to invert the modern Hollywood lens** and see 1095 as it actually was.
+**To read the Alexiad today is to invert the modern Hollywood lens** and see 1095 as it actually was.
 
 #### The fun irony — a woman wrote a classic of historiography while locked up
 
@@ -721,7 +721,7 @@ The truth in 1095: **Byzantium was a hundred years more civilized than the West.
 > In 1118, Anna at 35 lost her coup and was confined.
 > **For 30 years she went nowhere.** Just the Kecharitomene monastery, books, and letters with scholars.
 >
-> But it was **those 30 years of "deprivation"** that produced the 400,000 words of the *Alexiad* — **Europe's first national history written by a woman, and the first first-hand Crusade account.**
+> But it was **those 30 years of "deprivation"** that produced the 400,000 words of the Alexiad — **Europe's first national history written by a woman, and the first first-hand Crusade account.**
 >
 > If she had won the coup of 1118 and become empress, she would have spent her life on court politics, war, and administration. **She would never have had time to write this book.**
 >
@@ -737,14 +737,14 @@ Her brother John II had been dead for 10 years. The reigning emperor was her nep
 
 #### Posthumous reception
 
-The *Alexiad* circulated in the 13th century. The Latin world began translating it in the 14th. **It was truly rediscovered in the 19th century.**
+The Alexiad circulated in the 13th century. The Latin world began translating it in the 14th. **It was truly rediscovered in the 19th century.**
 
-Today the *Alexiad* is:
+Today the Alexiad is:
 - **Required reading for university world history courses** ("If you want the truth about the Crusades, read Anna Komnene")
 - **A feminist classic** ("the highest scholarly achievement open to a medieval woman")
 - **The Bible of Byzantine studies** (without it, our knowledge of 11th-12th century Byzantium would be cut in half)
 
-**Did Anna know all this in her lifetime?** In the last book of the *Alexiad* she wrote: "**I hope someone, someday, reads this book and understands my father.**"
+**Did Anna know all this in her lifetime?** In the last book of the Alexiad she wrote: "**I hope someone, someday, reads this book and understands my father.**"
 
 She did not know — that 900 years later, **people still read it**.
 She did not know — that she would be remembered **even more deeply than her father.**
@@ -785,7 +785,7 @@ In 1169 his uncle Shirkuh died suddenly.
 Egypt was nominally under the **Fatimid dynasty** (Shi'a Islam). But **Saladin was Sunni.**
 
 In 1171 the **last Fatimid caliph died**. Saladin **did not let a successor take the throne**. At Friday prayer in Cairo, he simply **announced**:
-> "From today, Egypt's *khutbah* (sermon) names the **Sunni Abbasid Caliph**."
+> "From today, Egypt's khutbah (sermon) names the **Sunni Abbasid Caliph**."
 
 — **Two hundred years of Shi'a rule in Egypt ended in one Friday.** Saladin reunified Egypt with the Sunni mainstream **without drawing a sword.**
 
@@ -898,9 +898,9 @@ The funeral was simple. He was **buried in a plain stone sarcophagus in Damascus
 **Saladin's image in Europe took a strange arc**:
 
 - **1187-1300**: Europeans called him "infidel" — used negatively
-- **1300-1500**: Italian writers, including **Boccaccio** in *The Decameron*, began to **idealize** him
+- **1300-1500**: Italian writers, including **Boccaccio** in The Decameron, began to **idealize** him
 - **1500-1700**: the European Enlightenment **further romanticized** him — Saladin became "the ideal non-Christian"
-- **1825**: **Walter Scott** wrote *The Talisman* — staging "noble Saladin" against "barbaric Crusaders." **This novel created the Saladin of modern popular imagination.**
+- **1825**: **Walter Scott** wrote The Talisman — staging "noble Saladin" against "barbaric Crusaders." **This novel created the Saladin of modern popular imagination.**
 - **Dante's *Divine Comedy*** (1320): placed Saladin in **Limbo (the first circle of Hell)** alongside **Plato, Aristotle, Homer, and Caesar.** This is the **highest praise a Christian could give a non-Christian** — Dante could not place him in Heaven (Saladin was not Christian), but **he gave Saladin the "noble pagan" position.**
 
 > ⚠️ **Do NOT be taken in by the "noble Saladin" narrative**:
@@ -1030,7 +1030,7 @@ He says: "Because **you are a man with a conscience**. **Men without conscience 
 The day you die at 65, your grandson asks: "Grandfather, what is the proudest thing you ever did?"
 You think for a while and say: "**I came back from Jerusalem alive.**"
 
-— Not pride. Not regret. Just *I came back alive*. That is all.
+— Not pride. Not regret. Just I came back alive. That is all.
 
 > **Walking in Guillaume's shoes**: at 25, three things — atonement, land, an exit — pulled you out the door. **You came back at 30 with a 60-year-old's interior.** You will never be light again.
 >
@@ -1651,7 +1651,7 @@ The interesting moment came in the **third generation (1150s-80s)**.
 The **Italian merchant city-states** (Venice, Genoa, Pisa) traded through the Levant with the Arab world. They brought back to Europe:
 
 - **The number 0** — Arabic numerals (originally Indian, transmitted through Arabic), widely adopted in Europe by about 1200
-- **Algebra** — *al-jabr* is an Arabic word (Al-Khwarizmi's 9th-century algebra textbook was translated into Latin in 1145)
+- **Algebra** — al-jabr is an Arabic word (Al-Khwarizmi's 9th-century algebra textbook was translated into Latin in 1145)
 - **Aristotle** — after the fall of Rome, Europe lost most Greek philosophy. The Islamic world preserved and translated it. In the 12th century it returned to Latin via Arabic.
 - **Sugar, cotton, glass-making, windmills, the compass**
 - **University structure** (Paris 1150, Oxford 1167) — partly modeled on Arab **madrasa** (Islamic colleges)
@@ -1828,19 +1828,19 @@ This single fact is itself a lesson in **how source material gets constructed**.
 
 > **Fulcher version (simplest)**:
 > "Anyone who dies on this road will have all his sins forgiven."
-> (*Whoever, for devotion alone, sets out for Jerusalem to liberate the church of God, may substitute this journey for all penance.*)
+> (Whoever, for devotion alone, sets out for Jerusalem to liberate the church of God, may substitute this journey for all penance.)
 
 > **Robert version (added drama)**:
 > "Let those who used to fight each other now fight against the unbelievers — let those who were robbers now become soldiers of Christ — let those who fought for petty wages now fight for an eternal reward!"
-> (*Let those who fought against their brethren and relatives now fight in a proper way against the barbarians.*)
+> (Let those who fought against their brethren and relatives now fight in a proper way against the barbarians.)
 
 > **Baldric version (high rhetoric)**:
 > "Blood — the very air you breathe is soaked with it — this is the blood of your brothers — their tears, the tears of their wives, the tears of their orphan children — rising up to heaven to the Father!"
-> (*The blood of your brethren cries out to heaven... their wives, their mothers, their orphan children weep!*)
+> (The blood of your brethren cries out to heaven... their wives, their mothers, their orphan children weep!)
 
 > **Guibert version (theological)**:
 > "This is not a mortal war — this is for the glory of Christ — anyone who dies will receive heaven, more directly than any monk's fasting and penance."
-> (*Those who have to die there will not need to suffer in penance back in their own land.*)
+> (Those who have to die there will not need to suffer in penance back in their own land.)
 
 **Notice the differences**:
 - **Fulcher (present)** says simply: **sins forgiven** — a clean clause
@@ -1904,14 +1904,14 @@ All four versions report: after the speech the crowd **spontaneously chanted "De
 >
 > 1095 vs. modern:
 > - **1914**: Europe's three great empires used "for civilization" to motivate young men to enlist in WWI
-> - **2001**: George W. Bush used "this crusade, this war on terrorism" to mobilize the U.S. for Afghanistan (using the word *crusade* directly)
+> - **2001**: George W. Bush used "this crusade, this war on terrorism" to mobilize the U.S. for Afghanistan (using the word crusade directly)
 > - **2022**: Putin used "de-Nazify" to frame the war in Ukraine (the same "moral just war" rhetorical machine)
 >
 > — **The rhetorical structure of 1095 has not changed in 928 years.** **Whether the AI age changes it remains to be seen — but it hasn't yet.**
 
 ---
 
-### Document 2: Ibn al-Athir's *al-Kamil fi al-Tarikh* — the Arab "standard history"
+### Document 2: Ibn al-Athir's al-Kamil fi al-Tarikh — the Arab "standard history"
 
 #### Author profile
 
@@ -1924,7 +1924,7 @@ Born in **Mosul** (today northern Iraq) into a family of scholars. Received comp
 
 His major work: **al-Kamil fi al-Tarikh** ("**The Complete History**") — **13 volumes** — **from the creation of the world to 1231** — **the standard universal history of the 13th-century Islamic world** — **comparable to China's *Zizhi Tongjian*** but with broader scope (from myth through contemporary).
 
-> ⚠️ **Teaching point**: *al-Kamil* is not a diary or eyewitness report. **It is a "universal narrative" written generations after the events.** **Like Sima Qian or Sima Guang**, the author **uses literary craft to make events "read coherently," but the specific details are filtered through selection and rhetoric.**
+> ⚠️ **Teaching point**: al-Kamil is not a diary or eyewitness report. **It is a "universal narrative" written generations after the events.** **Like Sima Qian or Sima Guang**, the author **uses literary craft to make events "read coherently," but the specific details are filtered through selection and rhetoric.**
 >
 > **Scholarly consensus**: Ibn al-Athir's record of the Jerusalem fall is **moderately reliable**:
 > - **The numbers (70,000 dead) are likely exaggerated**
@@ -1942,7 +1942,7 @@ His major work: **al-Kamil fi al-Tarikh** ("**The Complete History**") — **13 
 > > They killed **more than 70,000 people** —
 > > Including **many imams and scholars** —
 > > **men who had left their homelands to retire and worship in this holy place** —
-> > and they died at the *mihrab* (the prayer niche facing Mecca).
+> > and they died at the mihrab (the prayer niche facing Mecca).
 >
 > > The Franks looted from the Mosque —
 > > **More than 40 silver lamps — each worth 3,600 dirhams** (one dirham then ≈ half a silver coin) —
@@ -1981,7 +1981,7 @@ His major work: **al-Kamil fi al-Tarikh** ("**The Complete History**") — **13 
 
 "**Imams dying at the mihrab**" — **this captures the deepest pain point of the massacre.** **Scholars dying at the place of prayer.** **The greatest profanation of sacred space by secular violence.**
 
-— This **vivid scene** is why this passage of *al-Kamil* has been **copied across the Arab world for 800 years.** **Today's ISIS recruitment propaganda** still **cites this passage as proof of "eternal crusader barbarism."**
+— This **vivid scene** is why this passage of al-Kamil has been **copied across the Arab world for 800 years.** **Today's ISIS recruitment propaganda** still **cites this passage as proof of "eternal crusader barbarism."**
 
 **Layer 4: "The Caliph said nothing" — a politically loaded line**
 
@@ -1997,7 +1997,7 @@ Ibn al-Athir **wrote this in the 1230s.** **Saladin had been dead 36 years (died
 
 — **He wrote this section not as a neutral record.** **It was meant to give contemporary Muslims a "collective memory"** — to make them remember the wound of 1099 — to **mobilize 13th-century anti-Crusader / anti-Mongol resistance.**
 
-**This is similar to Sima Guang writing the *Zizhi Tongjian* for the Song emperor to read.** **All major historical books are not pure records.** **They are also political documents.**
+**This is similar to Sima Guang writing the Zizhi Tongjian for the Song emperor to read.** **All major historical books are not pure records.** **They are also political documents.**
 
 #### Ibn al-Athir vs. Fulcher: same event, side by side
 
@@ -2032,7 +2032,7 @@ Ibn al-Athir **wrote this in the 1230s.** **Saladin had been dead 36 years (died
 
 ---
 
-### Document 3: Anna Komnene's *Alexiad* — a Byzantine princess remembers
+### Document 3: Anna Komnene's Alexiad — a Byzantine princess remembers
 
 #### Author profile: a deposed princess starts writing in a monastery at 65
 
@@ -2068,7 +2068,7 @@ Anna **and her mother Irene plot together**: assassinate John II at the funeral,
 
 **1148. Anna is 65.** Her husband Nikephoros has been dead 11 years. John II has been dead 5 years. The new emperor is her nephew Manuel I (she is no longer a threat).
 
-**She begins to write the *Alexiad*.** **Three goals**:
+**She begins to write the Alexiad.** **Three goals**:
 1. **Finish her husband Nikephoros's unfinished biography of her father**
 2. **On the surface, write about her father Alexios I — but in fact, write her ideal of an emperor — implying her brother John II was unworthy**
 3. **Vent 30 years of monastic resentment**
@@ -2077,11 +2077,11 @@ Anna **and her mother Irene plot together**: assassinate John II at the funeral,
 
 The manuscript was secretly copied. **Not allowed to circulate publicly.** **Not until 200 years later** was it **rediscovered by Byzantine scholars.** **In the 16th century it was printed in Venice.**
 
-**The *Alexiad* we read today** is **a deposed princess's revenge + grief + historical magnum opus, written in the 30th year of her monastic exile.**
+**The Alexiad we read today** is **a deposed princess's revenge + grief + historical magnum opus, written in the 30th year of her monastic exile.**
 
-> ⚠️ **Teaching point**: **Without Anna's *Alexiad*, the Byzantine perspective on the First Crusade would be invisible today.** **Almost every Western chronicler is Latin-side.** **The Arab side is mostly the Ibn al-Athir line.** **The Byzantine side is held up by Anna alone.** **She wrote in Greek, not Latin, not Arabic.** **Reading three languages of sources is the only way to the full truth.**
+> ⚠️ **Teaching point**: **Without Anna's Alexiad, the Byzantine perspective on the First Crusade would be invisible today.** **Almost every Western chronicler is Latin-side.** **The Arab side is mostly the Ibn al-Athir line.** **The Byzantine side is held up by Anna alone.** **She wrote in Greek, not Latin, not Arabic.** **Reading three languages of sources is the only way to the full truth.**
 
-#### Full excerpt (*Alexiad* Books 10-11, on the First Crusade)
+#### Full excerpt (Alexiad Books 10-11, on the First Crusade)
 
 **Anna's account (edited to Lexile 1000)**:
 
@@ -2124,7 +2124,7 @@ Anna says directly: "**They said it was for faith — but they behaved as robber
 
 **Value 3: Key witness to Bohemond's personal story**
 
-Anna **knew Bohemond.** **She met him when she was 13.** In the *Alexiad* she writes (this is Anna's real wording, not something later writers imagined for her):
+Anna **knew Bohemond.** **She met him when she was 13.** In the Alexiad she writes (this is Anna's real wording, not something later writers imagined for her):
 > "He stood taller than the tallest by nearly a cubit — **his hair light and cropped short**, his beard clean-shaven — **a pair of blue eyes that conveyed his spirit and his dignity** — the sight of him **stirred admiration**, the name of him **stirred dread.**"
 
 — **This kind of personal observation + psychological judgment** — **only someone who met him at close range could write it.** **Fulcher and Ibn al-Athir never met Bohemond.** **Only Anna did.**
@@ -2142,7 +2142,7 @@ Anna **says openly**: "**My father's goal was to let the Latins and the Turks bl
 > - **2022 Ukraine aid** — Poland / Romania as aid channels
 > - **Cold War Austria** — caught between West and Soviet, balancing diplomatically
 >
-> Anna's *Alexiad* reads like **a fragment of diplomatic archives** — **recording how the leader of a small state navigated a great-power game with precision.** **This perspective is least read today** — but **has the most current applicability.**
+> Anna's Alexiad reads like **a fragment of diplomatic archives** — **recording how the leader of a small state navigated a great-power game with precision.** **This perspective is least read today** — but **has the most current applicability.**
 
 #### Three-way comparison — the same event, three "truths"
 
@@ -2318,15 +2318,15 @@ The Crusaders are God's warriors. Urban II is a hero. The 1099 massacre is recor
 
 **② Enlightenment critique (Voltaire, Gibbon, 18th-19th c.)**
 
-Edward Gibbon's *Decline and Fall of the Roman Empire* framed the Crusades as "religious fanaticism + barbarism + self-destruction." Voltaire called them "an outburst of stupidity." **This reading dominated 19th-20th century Western academia.**
+Edward Gibbon's Decline and Fall of the Roman Empire framed the Crusades as "religious fanaticism + barbarism + self-destruction." Voltaire called them "an outburst of stupidity." **This reading dominated 19th-20th century Western academia.**
 
 **③ Walter Scott romanticization (19th-century popular culture)**
 
-The novelist Walter Scott in *The Talisman* (1825) created the "noble Saladin vs. zealous Crusader" binary. **This is pure literary projection, not history** — but the image lives on in Hollywood films.
+The novelist Walter Scott in The Talisman (1825) created the "noble Saladin vs. zealous Crusader" binary. **This is pure literary projection, not history** — but the image lives on in Hollywood films.
 
 **④ Riley-Smith revisionism (1980s-)**
 
-Jonathan Riley-Smith (1938-2016) in *The First Crusaders* (1997) reconstructed the **actual motivations** of Crusade participants by studying wills, church archives, and noble genealogies:
+Jonathan Riley-Smith (1938-2016) in The First Crusaders (1997) reconstructed the **actual motivations** of Crusade participants by studying wills, church archives, and noble genealogies:
 - Most nobles **truly believed in indulgence**, not opportunism
 - Setting out was **economically irrational** (sold estates to outfit + 70% death rate)
 - The "religious zeal vs. economic self-interest" binary is wrong — **for medieval people, the two were one thing**
@@ -2335,7 +2335,7 @@ Jonathan Riley-Smith (1938-2016) in *The First Crusaders* (1997) reconstructed t
 
 **⑤ Contemporary de-mythologization (2000s-)**
 
-Christopher Tyerman's *God's War* (2006) and similar works. They acknowledge:
+Christopher Tyerman's God's War (2006) and similar works. They acknowledge:
 - The Crusaders were neither heroes nor demons
 - They were the joint product of medieval European institutions + mentality + economic pressure + international structure
 - **Any modern political symbolic use of them (West / ISIS / Arab nationalism) is misuse**
@@ -2376,7 +2376,7 @@ Unlike Magna Carta, which is mostly an English-American story, the Crusades invo
 These are AP DBQ-style training prompts. **None has a "correct answer."**
 
 1. If Urban II had had a stroke days before the Clermont sermon and never delivered it, would the four structural conditions in §2 (population pressure / Byzantine appeal / pope-vs-emperor tension / Islamic fragmentation) have led some other figure to ignite the war? Or would the Crusades have been delayed 20 years — or never happened? **There is no standard answer. Your reasoning matters more than your conclusion.**
-2. Anna Komnene in the *Alexiad* describes the Latins as "barbaric and untrustworthy." Latin chroniclers of the same era applied similar labels to Muslims and Byzantines. **When all three sides label each other "barbarians," how should historians handle it?**
+2. Anna Komnene in the Alexiad describes the Latins as "barbaric and untrustworthy." Latin chroniclers of the same era applied similar labels to Muslims and Byzantines. **When all three sides label each other "barbarians," how should historians handle it?**
 3. Saladin in 1187 did not massacre Jerusalem the way the Crusaders did in 1099. Was that "moral high ground" — or political calculation? How can both readings coexist?
 4. The Jerusalem 1099 massacre death toll is academically estimated 3,000-10,000. **Does the precise number really matter? Or is 3,000 / 10,000 / 70,000 morally equivalent?**
 5. Why did China never have a Crusade-style religious war? Is it institutional, cultural, or **purely contingent**? Which explanation do you find most convincing?
@@ -2405,7 +2405,7 @@ These are AP DBQ-style training prompts. **None has a "correct answer."**
 1187/10  Saladin retakes Jerusalem (no massacre)
 1189-92  Third Crusade (Richard vs. Saladin)
 1204  Fourth Crusade sacks Constantinople
-1212  The so-called "Children's Crusade" (the *pueri* movement; modern historians view participants as mostly young paupers, "sold into slavery" largely later embellishment)
+1212  The so-called "Children's Crusade" (the pueri movement; modern historians view participants as mostly young paupers, "sold into slavery" largely later embellishment)
 1228  Frederick II recovers Jerusalem by negotiation, not by force
 1244  Jerusalem lost again
 1291/05  Acre falls — 200-year campaign ends
@@ -2440,7 +2440,7 @@ These are AP DBQ-style training prompts. **None has a "correct answer."**
 |---|---|
 | Pope Urban II | 1095 Clermont sermon ignited the Crusades / died 14 days too soon to know Jerusalem fell |
 | Alexios I Komnenos | Byzantine emperor / wrote asking for a few thousand soldiers / 100,000 came / was horrified |
-| Anna Komnene | Byzantine princess + first female historian / wrote the *Alexiad* / completed the masterpiece in confinement |
+| Anna Komnene | Byzantine princess + first female historian / wrote the Alexiad / completed the masterpiece in confinement |
 | Bohemond of Taranto | Norman opportunist / self-titled "Prince of Antioch" / "land matters more than faith" archetype |
 | Godfrey of Bouillon | True believer / refused the gold crown "where Christ wore thorns" / first leader of the Kingdom of Jerusalem |
 | Saladin | Kurdish Muslim / 1187 retook Jerusalem / no massacre / later romanticized — be wary of the romance |
