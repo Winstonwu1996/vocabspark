@@ -1052,12 +1052,13 @@ var buildContextChoicePrompt = (word, wordType) => {
 // 比传统填空更快、更紧张，是经典间隔强化技巧（active recall + retrieval pressure）
 var buildReviewPrompt = (words) => {
   return "刚学完 5 个词：" + words.join(", ") +
-    "\n\n设计【Speed Match 速配】复习关卡。给每个词配一个【极简精准的中文含义】（≤8 字，画像化更佳）。" +
+    "\n\n设计【Speed Match 速配】复习关卡。给每个词配一个【标准、通用的核心中文释义】，用于限时配对——学生必须一眼就能把它和单词对上。" +
     "\n\n【铁律】" +
+    "\n- 用词典级的标准常用释义，绝不生造词组或拼凑别扭说法。反例：egotistical 写「自负的 / 自大的」，不要写成「自恋自我」这类怪词；matching 游戏里看不懂的释义会让学生误以为系统判错。" +
     "\n- meaning 必须 ≤8 字，能让学生 1 秒识别匹配" +
-    "\n- 5 个 meaning 之间不能有歧义重叠（每个 meaning 只能对应唯一的 word）" +
-    "\n- 含义要抓【核心义】，不要泛泛用'重要的/特别的'之类模糊形容" +
-    "\n- 画像融入：能用学生熟悉的场景就用（例：'网球训练' 比 '体育锻炼' 好）" +
+    "\n- 词性自然：形容词带「的」，动词用动词，名词用名词，保持和英文词性一致" +
+    "\n- 5 个 meaning 之间不能有歧义重叠（每个 meaning 只能对应唯一的 word），也别彼此太像导致混淆" +
+    "\n- 抓【核心义】，不要泛泛用'重要的/特别的'之类模糊形容，也不要为了花哨而偏离标准词义" +
     "\n\n【参考示例】" +
     "\n{\"type\":\"speed_match\",\"title\":\"⚡ 速配挑战\",\"intro\":\"30 秒内把英文词和中文含义配对！\",\"pairs\":[{\"word\":\"ecstatic\",\"meaning\":\"狂喜的\"},{\"word\":\"nimble\",\"meaning\":\"敏捷的\"},{\"word\":\"oblique\",\"meaning\":\"斜的/拐弯的\"},{\"word\":\"perpetual\",\"meaning\":\"永久不停\"},{\"word\":\"subtle\",\"meaning\":\"微妙细致\"}]}" +
     "\n\n直接输出 JSON：" +
