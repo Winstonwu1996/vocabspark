@@ -3699,6 +3699,18 @@ function LensSelector(props) {
     'babylon-conqueror-actor': '🦁',
     'prophet-mediator': '📜',
     'exile-generation-receiving-end': '🕯️',
+    'aryabhata-actor': '🔭',
+    'copyist-mediator': '🍃',
+    'village-cultivator-receiving-end': '🌾',
+    'cyrus-actor': '👑',
+    'satrap-mediator': '⚖️',
+    'conquered-subject-receiving-end': '🕯️',
+    'bolivar-actor': '🗡️',
+    'sanmartin-mediator': '♟️',
+    'casta-bottom-receiving-end': '⛓️',
+    'strongman-actor': '📢',
+    'democrat-mediator': '⚖️',
+    'ordinary-citizen-who-said-yes': '🕯️',
   };
 
   // 第一次建议哪个 lens（每 Topic 不同——按戏剧强度 / 入门难度）
@@ -3721,6 +3733,10 @@ function LensSelector(props) {
     'indus-valley-2600bce': { id: 'ordinary-citizen-no-king', reason: '下城里没名字的孩子 = 一个没有国王的文明最反直觉的入口' },
     'early-humans-10000bce': { id: 'first-generation-farmer-receiving-end', reason: '第一代村庄的农家少女 = 农业「进步」代价的承受者' },
     'ancient-israel-1000bce': { id: 'exile-generation-receiving-end', reason: '巴比伦河边的被掳者 = 在废墟与流放中锻造信仰的当事人' },
+    'gupta-india-320': { id: 'village-cultivator-receiving-end', reason: '黄金时代里没名字的农人 = 挑战「黄金时代谁的金」的先验' },
+    'persian-empire-550bce': { id: 'conquered-subject-receiving-end', reason: '被波斯征服的子民 = 从被统治者眼里看「宽容统治术」' },
+    'latin-american-independence-1810': { id: 'casta-bottom-receiving-end', reason: '种族等级底层 = 独立换没换命运的当事人 + Rule-0 受影响方先发声' },
+    'interwar-totalitarianism-1919': { id: 'ordinary-citizen-who-said-yes', reason: '说了「是」的普通人 = 极权不是坏人上台而是普通人选择, 最有力入口' },
   };
   var firstHint = firstChoiceHint[props.topicId];
   var firstLens = firstHint && lenses.find(function(l) { return l.id === firstHint.id; });
