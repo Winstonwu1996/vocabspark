@@ -17,7 +17,8 @@ const HARD = 550;
 
 // 旧长格式老课 — 大返工 (审计: avg 450-1091, max 至 1904 CN/节点)
 const GRANDFATHERED_MAJOR = new Set([
-  'scientific-revolution', 'black-death-1347', 'byzantine-rise', 'crusades-1099', 'pre-columbian',
+  // 已返工毕业 (2026-06): byzantine-rise / black-death-1347 / scientific-revolution → 全部节点已 ≤550, 移出豁免
+  'crusades-1099', 'pre-columbian',
   'age-of-exploration-1492', 'reformation-1517', 'mongol-empire', 'renaissance-1500', 'enlightenment',
   'medieval-japan', 'islamic-rise', 'tang-song-china', 'magna-carta-1215', 'mali-empire-1235',
 ]);
