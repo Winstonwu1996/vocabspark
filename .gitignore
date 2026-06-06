@@ -5,6 +5,7 @@ node_modules/
 .vercel
 .env*.local
 .env.production
+.codegraph/
 
 # Lens staging drafts (source files, content already merged into production storyboard .js files)
 *.staging.js

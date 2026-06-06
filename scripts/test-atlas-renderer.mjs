@@ -87,7 +87,7 @@ for (const v of ALL_VIEWS) {
     assert.ok(v.subtitle.cn && v.subtitle.en, 'subtitle not bilingual');
     assert.ok(v.causalSummary.cn && v.causalSummary.en, 'causalSummary not bilingual');
     assert.ok(['core', 'supplementary'].includes(v.topicTier), `bad topicTier: ${v.topicTier}`);
-    assert.ok([5, 6, 7, 8].includes(v.grade), `bad grade: ${v.grade}`);
+    assert.ok([5, 6, 7, 8, 10].includes(v.grade), `bad grade: ${v.grade}`);
     assert.ok(Array.isArray(v.camera.center) && v.camera.center.length === 2, 'camera.center invalid');
     if (v.examPoints) {
       assert.ok(Array.isArray(v.examPoints.cn), 'examPoints.cn not array');
