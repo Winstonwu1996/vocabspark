@@ -28,9 +28,9 @@ export const VIEW = {
   layers: {
     L0: { show: true },
     L3: {
-      yearSnapshot: 'world_neolithic',
+      yearSnapshot: 'world_bc2000',   // 无新石器底图；同代古代课(mesopotamia/indus/egypt)统一用 bc2000 最接近的快照
     },
-    C:  { civs: 'neolithic-origins' },
+    // C (civs overlay) 略 — 新石器时代无对应 civs 图层 key
   },
 
   causalSummary: {
