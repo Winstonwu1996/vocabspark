@@ -318,6 +318,10 @@ export function CompletionScreen(props) {
           {/* 考点卡 */}
           {nbSection === 'concepts' && notebookData.mainConcepts && notebookData.mainConcepts.map(function(card, i) {
             var isStory = card.storyAnchor && card.storyAnchor.covered;
+            // 兼容两种 schema: mini-lesson 卡的 standaloneText/xiaoweiNote 可能在顶层
+            // (老课约定) 或嵌在 storyAnchor 下 (4 门新课的写法)。两者都读, 防 undefined 崩屏。
+            var miniText = card.standaloneText || (card.storyAnchor && card.storyAnchor.standaloneText) || {};
+            var miniNote = card.xiaoweiNote || (card.storyAnchor && card.storyAnchor.xiaoweiNote);
             var freqColors = {
               highest: {bg: '#ffe0e0', color: '#c00'},
               high:    {bg: '#fff3d6', color: '#a06800'},
@@ -368,12 +372,12 @@ export function CompletionScreen(props) {
                 <div style={{fontSize: 13.5, color: HC.text, lineHeight: 1.65, whiteSpace: 'pre-wrap'}}>
                   {isStory
                     ? (isEnglish ? card.storyAnchor.xiaoweiNote.en : card.storyAnchor.xiaoweiNote.cn)
-                    : (isEnglish ? card.standaloneText.en : card.standaloneText.cn)}
+                    : (isEnglish ? miniText.en : miniText.cn)}
                 </div>
                 {/* 5-26 (用户反馈 #3): 暂移除「看小 U 读到的原文节选」—— notebook nodeIds */}
                 {/* (huizong-N4) 跟 storyboard 节点 id (hz-n4) 命名格式不一致 + 字段名错, */}
                 {/* 51 课 dead-since-day-one, schema 统一是 P1 backlog。 */}
-                {!isStory && card.xiaoweiNote && (
+                {!isStory && miniNote && (
                   <div style={{
                     background: '#fffbe8', borderLeft: '3px solid #f0c040',
                     padding: '10px 14px', marginTop: 10, borderRadius: '0 8px 8px 0',
@@ -382,7 +386,7 @@ export function CompletionScreen(props) {
                     <div style={{fontSize: 10.5, fontWeight: 700, opacity: 0.7, marginBottom: 4}}>
                       {isEnglish ? '📝 Xiao U\'s note:' : '📝 小 U 的批注：'}
                     </div>
-                    {isEnglish ? card.xiaoweiNote.en : card.xiaoweiNote.cn}
+                    {isEnglish ? miniNote.en : miniNote.cn}
                   </div>
                 )}
               </div>
