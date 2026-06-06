@@ -3681,6 +3681,24 @@ function LensSelector(props) {
     'restructuring-winner-actor': '📈',
     'veteran-mediator': '🎖️',
     'rustbelt-family-receiving-end': '🏭',
+    'mansa-musa-actor': '👑',
+    'ibn-battuta-mediator': '🧭',
+    'carrier-on-the-route': '🐫',
+    'british-actor': '🇬🇧',
+    'linzexu-mediator': '🖋️',
+    'receiving-end-canton-india': '🍂',
+    'temple-scribe-actor': '🖋️',
+    'lugal-mediator': '♟️',
+    'temple-laborer-receiving-end': '🌾',
+    'organizer-actor': '📐',
+    'meluhha-merchant-mediator': '⚓',
+    'ordinary-citizen-no-king': '🏺',
+    'hunter-gatherer-actor': '🏹',
+    'gobekli-builder-mediator': '⛰️',
+    'first-generation-farmer-receiving-end': '🌾',
+    'babylon-conqueror-actor': '🦁',
+    'prophet-mediator': '📜',
+    'exile-generation-receiving-end': '🕯️',
   };
 
   // 第一次建议哪个 lens（每 Topic 不同——按戏剧强度 / 入门难度）
@@ -3697,6 +3715,12 @@ function LensSelector(props) {
     'meiji-restoration-1868': { id: 'farm-daughter-receiving-end', reason: '农家女儿承受自上而下的现代化 + 同龄锚点 + 哥哥被征兵情感入口' },
     'russian-revolution-1917': { id: 'textile-worker-receiving-end', reason: '纺织女工面包罢工点燃二月革命 = 受害者变火种 + 最强情感入口' },
     'contemporary-us-1980': { id: 'rustbelt-family-receiving-end', reason: '留下来付账的人家 = 国内课纲最缺的视角 + 工厂灯一班班灭最强情感锚' },
+    'trade-networks-1200': { id: 'carrier-on-the-route', reason: '用身体撑起整张网却没留名的脚夫/水手 = 看见连通性的代价' },
+    'asian-imperialism-1839': { id: 'receiving-end-canton-india', reason: '机器两头的受害者 = 华裔近代史切身入口 + Rule-0 受害方先发声' },
+    'mesopotamia-3500bce': { id: 'temple-laborer-receiving-end', reason: '账上只有数目没有名字的劳工 = 挑战「文明=伟大」的先验' },
+    'indus-valley-2600bce': { id: 'ordinary-citizen-no-king', reason: '下城里没名字的孩子 = 一个没有国王的文明最反直觉的入口' },
+    'early-humans-10000bce': { id: 'first-generation-farmer-receiving-end', reason: '第一代村庄的农家少女 = 农业「进步」代价的承受者' },
+    'ancient-israel-1000bce': { id: 'exile-generation-receiving-end', reason: '巴比伦河边的被掳者 = 在废墟与流放中锻造信仰的当事人' },
   };
   var firstHint = firstChoiceHint[props.topicId];
   var firstLens = firstHint && lenses.find(function(l) { return l.id === firstHint.id; });
