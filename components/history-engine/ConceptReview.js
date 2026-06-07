@@ -12,6 +12,7 @@ import React from 'react';
 import { FONT_DISPLAY } from '../../lib/theme';
 import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/notebooks';
 import { ExamBankSection } from './ExamBankSection';
+import { renderInlineMd } from './inlineMd';
 // loadStoryboard 暂时不需要 (用户反馈 #3: 折叠区暂移, 见下方注释)
 // import { loadStoryboard } from '../../lib/history-storyboards';
 import { HC } from './theme';
@@ -215,9 +216,9 @@ export function ConceptReview(props) {
               )}
             </div>
             <div style={{fontSize: 13.5, color: HC.text, lineHeight: 1.65, whiteSpace: 'pre-wrap'}}>
-              {isStory
+              {renderInlineMd(isStory
                 ? (isEnglish ? card.storyAnchor.xiaoweiNote.en : card.storyAnchor.xiaoweiNote.cn)
-                : (isEnglish ? miniText.en : miniText.cn)}
+                : (isEnglish ? miniText.en : miniText.cn))}
             </div>
             {/* 5-26 (用户反馈 #3): 暂移除「看小 U 读到的原文节选」折叠区 —— */}
             {/* notebook storyAnchor.nodeIds 用「huizong-N4」全名格式, storyboard 节点 id 是 */}
@@ -232,7 +233,7 @@ export function ConceptReview(props) {
                 <div style={{fontSize: 10.5, fontWeight: 700, opacity: 0.7, marginBottom: 4}}>
                   {isEnglish ? '📝 Xiao U\'s note:' : '📝 小 U 的批注：'}
                 </div>
-                {isEnglish ? miniNote.en : miniNote.cn}
+                {renderInlineMd(isEnglish ? miniNote.en : miniNote.cn)}
               </div>
             )}
           </div>

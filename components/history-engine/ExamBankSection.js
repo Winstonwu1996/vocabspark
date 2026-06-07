@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { HC } from './theme';
 import { hasExamBank, loadExamBank } from '../../lib/history-exam-bank';
+import { renderInlineMd } from './inlineMd';
 
 // College Board 官方历年真题页 (稳定 URL; 学生按年份/题型找官方原题)
 var AP_CENTRAL = {
@@ -29,7 +30,7 @@ function PracticeCard(props) {
         <span style={{fontSize: 10.5, color: HC.textSec, fontWeight: 600}}>{q.type}</span>
         {q.apSkill && <span style={{fontSize: 10, color: HC.textSec, opacity: 0.8}}>· {q.apSkill}</span>}
       </div>
-      <div style={{fontSize: 13.5, color: HC.text, lineHeight: 1.6, whiteSpace: 'pre-wrap'}}>{q.stem}</div>
+      <div style={{fontSize: 13.5, color: HC.text, lineHeight: 1.6, whiteSpace: 'pre-wrap'}}>{renderInlineMd(q.stem)}</div>
       {q.modelAnswerPoints && q.modelAnswerPoints.length > 0 && (
         <div style={{marginTop: 8}}>
           <button onClick={function() { setOpen(!open); }} style={{
@@ -38,7 +39,7 @@ function PracticeCard(props) {
           }}>{open ? (isEn ? '▾ Hide model points' : '▾ 收起参考答案要点') : (isEn ? '▸ Show model points' : '▸ 看参考答案要点')}</button>
           {open && (
             <ul style={{margin: '6px 0 0', paddingLeft: 18, fontSize: 12.5, color: HC.text, lineHeight: 1.6}}>
-              {q.modelAnswerPoints.map(function(p, i) { return <li key={i} style={{marginBottom: 3}}>{p}</li>; })}
+              {q.modelAnswerPoints.map(function(p, i) { return <li key={i} style={{marginBottom: 3}}>{renderInlineMd(p)}</li>; })}
             </ul>
           )}
         </div>
@@ -96,7 +97,7 @@ export function ExamBankSection(props) {
                     <span style={{fontSize: 10, color: HC.textSec, opacity: 0.7}}>{isEn ? '· related' : '· 相关'}</span>
                   )}
                 </div>
-                <div style={{fontSize: 13, color: HC.text, lineHeight: 1.6}}>{r.theme}</div>
+                <div style={{fontSize: 13, color: HC.text, lineHeight: 1.6}}>{renderInlineMd(r.theme)}</div>
                 {url && (
                   <a href={url} target="_blank" rel="noopener noreferrer" style={{
                     display: 'inline-block', marginTop: 5, fontSize: 11.5, color: HC.accent, fontWeight: 600, textDecoration: 'none',

@@ -14,6 +14,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { HC } from './theme';
 import { renderBilingualText } from './bilingual';
+import { renderInlineMd } from './inlineMd';
 import { FONT_DISPLAY } from '../../lib/theme';
 import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/notebooks/index.js';
 import { loadStoryboard } from '../../lib/history-storyboards/index.js';
@@ -370,9 +371,9 @@ export function CompletionScreen(props) {
                   )}
                 </div>
                 <div style={{fontSize: 13.5, color: HC.text, lineHeight: 1.65, whiteSpace: 'pre-wrap'}}>
-                  {isStory
+                  {renderInlineMd(isStory
                     ? (isEnglish ? card.storyAnchor.xiaoweiNote.en : card.storyAnchor.xiaoweiNote.cn)
-                    : (isEnglish ? miniText.en : miniText.cn)}
+                    : (isEnglish ? miniText.en : miniText.cn))}
                 </div>
                 {/* 5-26 (用户反馈 #3): 暂移除「看小 U 读到的原文节选」—— notebook nodeIds */}
                 {/* (huizong-N4) 跟 storyboard 节点 id (hz-n4) 命名格式不一致 + 字段名错, */}
@@ -386,7 +387,7 @@ export function CompletionScreen(props) {
                     <div style={{fontSize: 10.5, fontWeight: 700, opacity: 0.7, marginBottom: 4}}>
                       {isEnglish ? '📝 Xiao U\'s note:' : '📝 小 U 的批注：'}
                     </div>
-                    {isEnglish ? miniNote.en : miniNote.cn}
+                    {renderInlineMd(isEnglish ? miniNote.en : miniNote.cn)}
                   </div>
                 )}
               </div>
