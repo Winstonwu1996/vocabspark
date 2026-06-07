@@ -15,13 +15,11 @@ import { STORYBOARDS, listStoryboards, hasLenses } from '../lib/history-storyboa
 
 const HARD = 550;
 
-// 旧长格式老课 — 大返工 (审计: avg 450-1091, max 至 1904 CN/节点)
-const GRANDFATHERED_MAJOR = new Set([
-  // 已返工毕业 (2026-06): byzantine-rise / black-death-1347 / scientific-revolution → 全部节点已 ≤550, 移出豁免
-  'crusades-1099', 'pre-columbian',
-  'age-of-exploration-1492', 'reformation-1517', 'mongol-empire', 'renaissance-1500', 'enlightenment',
-  'medieval-japan', 'islamic-rise', 'tang-song-china', 'magna-carta-1215', 'mali-empire-1235',
-]);
+// 旧长格式老课 backlog — 2026-06 已全部返工毕业, 名单清空。
+// (原 15 门 avg 450-1091/max 1904 CN/节点; 分三批压到 ≤550: byzantine/black-death/sci-rev +
+//  crusades/pre-columbian/age-of-exploration/reformation/mongol/renaissance/enlightenment/
+//  medieval-japan/islamic-rise/tang-song/magna-carta/mali。backlog 清零, 全站新老课统一 ≤550 强制。)
+const GRANDFATHERED_MAJOR = new Set([]);
 // 边缘超标 — 小修 (空: 已全部修到 ≤550; 保留集合以便将来标注)
 const GRANDFATHERED_MINOR = new Set([]);
 
