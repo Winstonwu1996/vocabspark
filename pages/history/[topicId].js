@@ -1943,7 +1943,7 @@ export default function HistoryPage() {
           }}>检查学习权限中…</div>
         )}
         {/* 同步状态提示: 让用户看见 history 进度有没有上云 (原来 history 页没有任何同步提示) */}
-        {!embedded && user && historySyncState && (
+        {!embedded && user && historySyncState && !showUserCenter && (
           <div style={{
             // top:60 放在 BrandNavBar 下方, 不挡右上角头像/账号菜单; pointerEvents:none 即便重叠也不拦点击 (Codex P2)
             position: "fixed", top: 60, right: 12, zIndex: 2200, pointerEvents: "none",
@@ -1970,7 +1970,7 @@ export default function HistoryPage() {
             conversation 阶段隐藏 (底部输入条); mastery 阶段隐藏 (.mastery-overlay 满屏弹窗, 本按钮会盖住
             Submit/Skip); showUpgradeGate 打开时隐藏 (弹窗打开时不让用户同时操作底层悬浮按钮, 专注弹窗);
             samplePreview 试看阶段隐藏 (样章不存进度, 不该触发同步)。Codex P2 + workflow review。 */}
-        {!embedded && user && phase !== 'conversation' && phase !== 'mastery' && !showUpgradeGate && !samplePreview && (
+        {!embedded && user && phase !== 'conversation' && phase !== 'mastery' && !showUpgradeGate && !samplePreview && !showUserCenter && (
           <button
             onClick={saveHistoryToCloud}
             disabled={historySyncState === 'syncing'}
@@ -1988,7 +1988,7 @@ export default function HistoryPage() {
             {historySyncState === 'syncing' ? '☁️ 同步中…' : '☁️ 记住进度'}
           </button>
         )}
-        {historySaveMsg && !showUpgradeGate && (
+        {historySaveMsg && !showUpgradeGate && !showUserCenter && (
           <div role="status" style={{
             position: "fixed", bottom: 64, right: 16, zIndex: 2200, maxWidth: 280,
             padding: "10px 14px", borderRadius: 12, background: "rgba(44,36,32,0.95)",
