@@ -5,6 +5,8 @@ import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { BrandNavBar } from '../../components/BrandNavBar';
+import UserCenter from '../../components/UserCenter';
+import { supabase } from '../../lib/supabase';
 import { FONT, FONT_DISPLAY, globalCSS } from '../../lib/theme';
 import { HC } from '../../components/history-engine/theme';
 import { CourseBrowser } from '../../components/history-engine/CourseBrowser';
@@ -93,6 +95,19 @@ var HERO_COPY = {
 
 export default function HistoryHome() {
   var router = useRouter();
+  // 账户登录态 (跟 /home 同款轻量挂载: 只读 auth + 共享 UserCenter, 实际登录交给 /vocab?login=1)
+  var [user, setUser] = useState(null);
+  var [showUserCenter, setShowUserCenter] = useState(false);
+  useEffect(function() {
+    supabase.auth.getSession().then(function(result) {
+      var s = result && result.data && result.data.session;
+      if (s && s.user) setUser(s.user);
+    }).catch(function() {});
+    var sub = supabase.auth.onAuthStateChange(function(event, session) {
+      setUser(session && session.user ? session.user : null);
+    });
+    return function() { try { sub.data.subscription.unsubscribe(); } catch (e) {} };
+  }, []);
   // 全局 englishLevel 跟单课页共享 (lib/history-storage.js)，方便切换状态延续
   var [englishLevel, setEnglishLevelState] = useState('balanced');
   useEffect(function() { setEnglishLevelState(loadEnglishLevel()); }, []);
@@ -146,8 +161,8 @@ export default function HistoryHome() {
         <BrandNavBar
           activeTab="history"
           stats={{ xp: 0, total: 0, correct: 0 }}
-          user={null}
-          onUserCenterClick={function() {}}
+          user={user}
+          onUserCenterClick={function() { setShowUserCenter(true); }}
         />
 
         <div className="h-container">
@@ -263,6 +278,15 @@ export default function HistoryHome() {
           <CourseBrowser onSwitch={goTopic} />
         </div>
       </div>
+
+      {/* 账户中心 (登录态显示账户管理; 未登录走 /vocab?login=1 的统一登录流, 不在此重复 OTP 逻辑) */}
+      <UserCenter
+        open={showUserCenter}
+        onClose={function() { setShowUserCenter(false); }}
+        user={user}
+        onLogin={function() { window.location.href = "/vocab?login=1"; }}
+        onLogout={async function() { try { await supabase.auth.signOut(); } catch (e) {} setUser(null); setShowUserCenter(false); }}
+      />
     </>
   );
 }

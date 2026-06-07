@@ -25,6 +25,7 @@ import { VoiceInputButton } from '../../components/VoiceInputButton';
 import { C, FONT, FONT_DISPLAY, S, NUM, globalCSS } from '../../lib/theme';
 import { callAPIStream, callAPIFast, tryJSON } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
+import UserCenter from '../../components/UserCenter';
 import { useSimplifiedMode } from '../../lib/hooks/use-simplified-mode';
 import { shouldShowHistoryWalkthrough } from '../../lib/onboarding-state';
 
@@ -2002,6 +2003,17 @@ export default function HistoryPage() {
             stats={{ xp: xp, total: 0, correct: 0 }}
             user={user}
             onUserCenterClick={function() { setShowUserCenter(true); }}
+          />
+        )}
+
+        {/* 账户中心 (登录态显示账户管理; 未登录走 /vocab?login=1 统一登录流。embedded 模式父 atlas 已有 nav, 不重复) */}
+        {!embedded && (
+          <UserCenter
+            open={showUserCenter}
+            onClose={function() { setShowUserCenter(false); }}
+            user={user}
+            onLogin={function() { window.location.href = "/vocab?login=1"; }}
+            onLogout={async function() { try { await supabase.auth.signOut(); } catch (e) {} setUser(null); setShowUserCenter(false); }}
           />
         )}
 
