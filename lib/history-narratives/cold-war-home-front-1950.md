@@ -7,7 +7,7 @@ textbookAnchor:
   series: AP U.S. History (APUSH) / CA HSS & 各州 U.S. History
   chapter: APUSH Period 8 (1945-1980 · Cold War) · HS U.S. History 冷战与战后美国单元
   lesson: The Cold War at Home — McCarthyism, the Second Red Scare & Suburbanization
-  pages: APUSH CED Topic 8.4-8.6（containment 的国内维度）· CA HSS 11.8-11.9
+  pages: APUSH CED Topic 8.3（Red Scare / McCarthyism）+ 8.4（郊区化 / 战后社会）· CA HSS 11.8-11.9
 gradeBand: "7-12"
 qaTemplate: multi-faction
 defaultLens: blacklisted-target-receiving-end
