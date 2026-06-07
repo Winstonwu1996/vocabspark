@@ -11,6 +11,7 @@
 import React from 'react';
 import { FONT_DISPLAY } from '../../lib/theme';
 import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/notebooks';
+import { ExamBankSection } from './ExamBankSection';
 // loadStoryboard 暂时不需要 (用户反馈 #3: 折叠区暂移, 见下方注释)
 // import { loadStoryboard } from '../../lib/history-storyboards';
 import { HC } from './theme';
@@ -237,6 +238,9 @@ export function ConceptReview(props) {
           </div>
         );
       })}
+
+      {/* AP 真题对照 + 仿真练习 (有 exam-bank 的课才显示) */}
+      <ExamBankSection topicId={topicId} isEnglish={isEnglish} />
 
       {/* 底部 CTA */}
       <div style={{
