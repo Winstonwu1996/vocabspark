@@ -3418,9 +3418,11 @@ function IntroScreen(props) {
                           color: fig.mustKnow ? '#7a3a0a' : '#555',
                         }}>
                           {fig.mustKnow && <span style={{fontSize: 9, color: '#c46b30', fontWeight: 700}}>★</span>}
-                          <span>{isEnglish ? fig.nameEn : fig.nameCn}</span>
-                          {/* 旧版直接显示 IPA 音标 (/ˈeɪbrəhæm/) 对 12 岁 ESL 是"外星文" (创始人/学生反馈)。
-                              改成 🔊 设备朗读英文名 (Web Speech API), 把无用音标变成有用的发音按钮; ipa 字段保留备用。 */}
+                          <span style={{fontWeight: fig.mustKnow ? 700 : 400}}>{isEnglish ? fig.nameEn : fig.nameCn}</span>
+                          {/* 创始人: 中国孩子需要音标 → IPA 保留; 同时给 🔊 设备朗读英文名 (Web Speech API)。 */}
+                          {fig.mustKnow && fig.ipa && (
+                            <span style={{fontSize: 10, opacity: 0.6, fontFamily: 'monospace'}}>{fig.ipa}</span>
+                          )}
                           {fig.mustKnow && fig.nameEn && (
                             <button
                               onClick={function(e) {
