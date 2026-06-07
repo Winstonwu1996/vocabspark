@@ -12,7 +12,7 @@ import { FONT_DISPLAY } from '../../lib/theme';
 import { THROUGH_LINES, TOPIC_REGISTRY, getTopic } from '../../lib/history-topics';
 import {
   COURSE_GRADE_MAP, GRADE_META, AP_WORLD_META, APUSH_META,
-  getGradeTags,
+  getGradeTags, EXAM_STARS_META,
 } from '../../lib/history-grade-map';
 import { HC } from './theme';
 // Step 4a: paywall flag。⚠️ P0-1 (Codex): 这里**绝不** import membership / useUserTier /
@@ -117,6 +117,7 @@ function CourseCard(opts) {
           title={hasMap ? '点开先看主题地图，再进入这一课' : '点开直接开始学这一课'}>
           {hasMap ? '🗺 含地图' : '📖 直接学'}
         </span>
+        <ExamStarChip stars={tags.examStars} />
         {tags.grade && <span style={chipStyle(HC.teal)}>{tags.grade}</span>}
         {tags.apWorld && <span style={chipStyle(HC.accent)}>AP World {tags.apWorld}</span>}
         {tags.apush && <span style={chipStyle(HC.accent)}>APUSH {tags.apush}</span>}
@@ -146,6 +147,27 @@ function chipStyle(color) {
     color: color, borderRadius: 4, fontWeight: 600,
     border: '1px solid ' + color + '33',
   };
+}
+
+// 考试重要性星标配色: 5★ 暖橙(最显眼/主推) → 1-2★ 灰(弱化), 让"该优先学哪些"一眼可辨。
+function starColor(n) {
+  if (n >= 5) return HC.accent;   // 暖橙 — 必学核心
+  if (n === 4) return '#c98a2b';  // 琥珀 — 核心骨干
+  if (n === 3) return HC.teal;    // 青 — 标准课
+  return '#9aa0a6';               // 1-2★ 灰 — 地基/边缘
+}
+
+// 课卡上的考试星标 chip。用实心★显示星数(不显示 "2/5" 分数感, 避免被读成"别学"),
+// hover 出该档释义。examStars 缺失(理论上不会)则不渲染。
+function ExamStarChip(props) {
+  var n = props.stars;
+  if (!n) return null;
+  var meta = EXAM_STARS_META[n] || {};
+  return (
+    <span style={chipStyle(starColor(n))} title={meta.hint || ''}>
+      {'★'.repeat(n)} {meta.cn || ''}
+    </span>
+  );
 }
 
 function tierName(tier) {
@@ -240,6 +262,7 @@ function ApView(props) {
   var registry = TOPIC_REGISTRY || [];
   var topicProgress = props.topicProgress;
   var [examType, setExamType] = useState('apworld'); // apworld | apush
+  var [onlyHighYield, setOnlyHighYield] = useState(false); // 只看 4★+ (备考冲刺聚焦)
 
   var meta = examType === 'apworld' ? AP_WORLD_META : APUSH_META;
   var unitKeys = Object.keys(meta);
@@ -251,9 +274,21 @@ function ApView(props) {
     var tags = getGradeTags(reg.id);
     var unit = examType === 'apworld' ? tags.apWorld : tags.apush;
     if (!unit) return;
+    if (onlyHighYield && (tags.examStars || 0) < 4) return; // 只看 4★+ 时过滤
     byUnit[unit] = byUnit[unit] || [];
     var t = getTopic(reg.id);
     if (t) byUnit[unit].push({ topic: t, registry: reg });
+  });
+  // 组内按考试星标降序 (高星浮顶), 同星按年代 —— 让"该优先学的"自动排在前面
+  Object.keys(byUnit).forEach(function(u) {
+    byUnit[u].sort(function(a, b) {
+      var sa = getGradeTags(a.registry.id).examStars || 0;
+      var sb = getGradeTags(b.registry.id).examStars || 0;
+      if (sb !== sa) return sb - sa;
+      var ya = parseInt((a.topic.year || '').toString().replace(/[^-\d]/g, '')) || 0;
+      var yb = parseInt((b.topic.year || '').toString().replace(/[^-\d]/g, '')) || 0;
+      return ya - yb;
+    });
   });
 
   return (
@@ -276,6 +311,24 @@ function ApView(props) {
             }}>{opt.label} <span style={{opacity: 0.78, fontSize: 11}}>({opt.count})</span></button>
           );
         })}
+      </div>
+
+      {/* 先学 5★ 引导 banner + 只看 4★+ 筛选 */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8,
+        marginBottom: 12, padding: '8px 12px', borderRadius: 10,
+        background: 'rgba(196,107,48,0.07)', border: '1px solid ' + HC.accent + '33',
+      }}>
+        <span style={{fontSize: 12, color: HC.text, lineHeight: 1.5}}>
+          ⭐ 时间有限？先学 <b style={{color: HC.accent}}>★★★★★</b> 的课 —— AP 反复出题、不会就直接丢分的核心考点。
+        </span>
+        <button onClick={function() { setOnlyHighYield(!onlyHighYield); }} style={{
+          padding: '5px 12px', borderRadius: 999, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+          fontFamily: 'inherit', whiteSpace: 'nowrap',
+          background: onlyHighYield ? HC.accent : HC.card,
+          color: onlyHighYield ? '#fff8e8' : HC.text,
+          border: '1px solid ' + (onlyHighYield ? HC.accent : HC.border),
+        }}>{onlyHighYield ? '✓ 只看 4★+' : '只看 4★+'}</button>
       </div>
 
       {/* 按 unit 分组渲染 */}
