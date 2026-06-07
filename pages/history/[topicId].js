@@ -3419,8 +3419,25 @@ function IntroScreen(props) {
                         }}>
                           {fig.mustKnow && <span style={{fontSize: 9, color: '#c46b30', fontWeight: 700}}>★</span>}
                           <span>{isEnglish ? fig.nameEn : fig.nameCn}</span>
-                          {fig.mustKnow && fig.ipa && (
-                            <span style={{fontSize: 10, opacity: 0.6, fontFamily: 'monospace'}}>{fig.ipa}</span>
+                          {/* 旧版直接显示 IPA 音标 (/ˈeɪbrəhæm/) 对 12 岁 ESL 是"外星文" (创始人/学生反馈)。
+                              改成 🔊 设备朗读英文名 (Web Speech API), 把无用音标变成有用的发音按钮; ipa 字段保留备用。 */}
+                          {fig.mustKnow && fig.nameEn && (
+                            <button
+                              onClick={function(e) {
+                                e.stopPropagation();
+                                try {
+                                  if (typeof window !== 'undefined' && window.speechSynthesis) {
+                                    window.speechSynthesis.cancel();
+                                    var u = new SpeechSynthesisUtterance(fig.nameEn);
+                                    u.lang = 'en-US';
+                                    window.speechSynthesis.speak(u);
+                                  }
+                                } catch (_) {}
+                              }}
+                              title={'读：' + fig.nameEn}
+                              aria-label={'朗读 ' + fig.nameEn}
+                              style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 11, padding: 0, lineHeight: 1, opacity: 0.65 }}
+                            >🔊</button>
                           )}
                         </div>
                       );
