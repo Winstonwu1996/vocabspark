@@ -3711,6 +3711,24 @@ function LensSelector(props) {
     'strongman-actor': '📢',
     'democrat-mediator': '⚖️',
     'ordinary-citizen-who-said-yes': '🕯️',
+    'policymaker-actor': '🗺️',
+    'drafted-soldier-mediator': '✉️',
+    'villager-and-draftee-receiving-end': '🌾',
+    'investigator-actor': '🎙️',
+    'welch-mediator': '⚖️',
+    'blacklisted-target-receiving-end': '📋',
+    'roosevelt-actor': '🦅',
+    'twain-mediator': '🖋️',
+    'filipino-on-receiving-end': '🏝️',
+    'grenville-actor': '🧾',
+    'john-adams-mediator': '⚖️',
+    'ohio-valley-native-receiving-end': '🌲',
+    'merchant-actor': '⚖️',
+    'minister-mediator': '🕯️',
+    'enslaved-on-the-receiving-end': '🥁',
+    'jefferson-actor': '🪶',
+    'tecumseh-mediator': '🪶',
+    'removed-nation-and-the-enslaved': '🌽',
   };
 
   // 第一次建议哪个 lens（每 Topic 不同——按戏剧强度 / 入门难度）
@@ -3737,6 +3755,12 @@ function LensSelector(props) {
     'persian-empire-550bce': { id: 'conquered-subject-receiving-end', reason: '被波斯征服的子民 = 从被统治者眼里看「宽容统治术」' },
     'latin-american-independence-1810': { id: 'casta-bottom-receiving-end', reason: '种族等级底层 = 独立换没换命运的当事人 + Rule-0 受影响方先发声' },
     'interwar-totalitarianism-1919': { id: 'ordinary-citizen-who-said-yes', reason: '说了「是」的普通人 = 极权不是坏人上台而是普通人选择, 最有力入口' },
+    'vietnam-war-1965': { id: 'villager-and-draftee-receiving-end', reason: '越南村民+被征召的兵 = 战争两头的承受者, Rule-0 受影响方先发声' },
+    'cold-war-home-front-1950': { id: 'blacklisted-target-receiving-end', reason: '被列入黑名单的人 = 从受害者眼里看恐惧如何吃掉自由' },
+    'spanish-american-war-1898': { id: 'filipino-on-receiving-end', reason: '菲律宾人 = 被「解放」却被殖民的一方, 揭开帝国的另一面' },
+    'road-to-revolution-1763': { id: 'ohio-valley-native-receiving-end', reason: '俄亥俄河谷原住民 = 革命叙事里几乎从不出现的第三方' },
+    'colonial-america-1650': { id: 'enslaved-on-the-receiving-end', reason: '被奴役者 = 殖民地繁荣真正的代价承受者' },
+    'early-republic-1800': { id: 'removed-nation-and-the-enslaved', reason: '被迁走的部族与被带走的奴隶 = 西扩光环下的代价' },
   };
   var firstHint = firstChoiceHint[props.topicId];
   var firstLens = firstHint && lenses.find(function(l) { return l.id === firstHint.id; });
