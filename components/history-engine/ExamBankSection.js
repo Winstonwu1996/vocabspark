@@ -8,7 +8,7 @@ import { hasExamBank, loadExamBank } from '../../lib/history-exam-bank';
 
 // College Board 官方历年真题页 (稳定 URL; 学生按年份/题型找官方原题)
 var AP_CENTRAL = {
-  'AP World History': 'https://apcentral.collegeboard.org/courses/ap-world-history-modern/exam/past-exam-questions',
+  'AP World History': 'https://apcentral.collegeboard.org/courses/ap-world-history/exam/past-exam-questions',
   'APUSH': 'https://apcentral.collegeboard.org/courses/ap-united-states-history/exam/past-exam-questions',
 };
 
