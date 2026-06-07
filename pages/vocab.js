@@ -3293,9 +3293,9 @@ export default function App() {
   // 默认初始化的宠物
   // 全系统 AI 助手 / 宠物统一叫「小 U」(创始人 2026-06-02)。LEGACY_PET_NAME = 旧默认名,
   // 读到时归一为「小 U」(仅显示层归一, 不强制回写云端 —— 见上面 chompcloud 默认宠物不 doSave 的修复)。
-  var LEGACY_PET_NAME = "小毛球";
+  var LEGACY_PET_NAMES = ["小毛球", "小小"]; // 旧默认名, 读到时归一为「小 U」(2026-06-02 起统一)
   var normalizePet = function(p) {
-    if (p && p.name === LEGACY_PET_NAME) return Object.assign({}, p, { name: "小 U" });
+    if (p && LEGACY_PET_NAMES.indexOf(p.name) !== -1) return Object.assign({}, p, { name: "小 U" });
     return p;
   };
   var defaultPet = function() {

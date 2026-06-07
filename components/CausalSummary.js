@@ -79,7 +79,7 @@ function getPetName() {
     const raw = localStorage.getItem('vocabspark_v1');
     const d = raw ? JSON.parse(raw) : null;
     const n = (d && d.pet && d.pet.name) || '小 U';
-    return n === '小毛球' ? '小 U' : n;
+    return (n === '小毛球' || n === '小小') ? '小 U' : n;
   } catch (_) { return '小 U'; }
 }
 
