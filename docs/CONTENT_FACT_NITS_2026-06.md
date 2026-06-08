@@ -2,6 +2,27 @@
 
 > 这些是**原内容就有**的史实瑕疵, 非本次可读性改写引入。与可读性正交, 单独修。
 
+## ✅ 处理结果 (2026-06-07, commit 09a631a)
+
+经逐条三轨核查 (Opus workflow: 逐课 fix + 独立一致性核查 + 人工 diff 复核), 把清单分两类:
+
+**已修 5 处 (硬错 / 内部矛盾 — narrative 唯一来源 + notebook 全部出现处统一改对):**
+| 课程 | 错 → 正 |
+|---|---|
+| age-of-exploration-1492 | 圣玛利亚号 caravel → carrack/nao (只有 Niña/Pinta 是 caravel) |
+| decolonization-1960 | Du Bois「被奴役者」→「被奴役者的后裔(生于自由州)」; 补印度 8/15 vs 巴基斯坦 8/14 |
+| renaissance-1500 | narrative 内部矛盾 David 1503-1506 → 1501-1504 (CN+EN 6 处, 与正文统一) |
+| islamic-rise | 智慧宫「建立/founded」→「扩建/expanded」(前身 Harun al-Rashid); 黄金稿酬标为 Gutas 1998 已否定的传说; 含 narrative:1218 + staging + notebook tq1 三处漏网补修 |
+| great-depression-1933 | Hayek IPA /ˈhaɪɛk/ → /ˈhaɪək/ |
+
+门禁: 全量 parse OK · `validate:narratives` 0 errors · `npm run build` 通过 · 已上生产。
+
+**判定为可接受近似 / 已对冲 / 已被批量改写顺带修正 (不再动)**: 其余条目 —
+constitutional「all men」(批量已删)、enlightenment Diderot/第三版 (史实成立, 仅归属措辞)、womens 1870「通过」(指批准生效年, 年份对)、magna「签字/不到三个月」(口语近似)、jackson「首份原住民报纸」(史实属实)、great-depression 65%/200万 (原文已带"一项研究/估计"对冲)、scientific-revolution 哥白尼献词 (方向正确, 非硬错)、各课 EN/CN 细节口径差 (covenant、cotton 等, 非史实错) 等。下方逐条记录保留为审计留痕。
+
+---
+
+
 ## age-of-exploration-1492
 - 位置: mainConcepts[maritime-technology].standaloneText 与 storyAnch
 - 问题: 『哥伦布的旗舰圣玛利亚号是 caravel / Columbus's flagship the Santa María was a caravel』史实有误 — 圣玛利亚号是 carrack/nao(克拉克帆船),只有 Niña 和 Pinta 是 caravel。此错在 HEAD 提交版已存在,本次改写未引入(仅做了换行合并)。
