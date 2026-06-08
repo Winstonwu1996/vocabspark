@@ -187,7 +187,7 @@ returned to Florence after 1500 → in 1517 invited by King Francis I → died i
 1492       Columbus reaches the Americas (Renaissance global-history backdrop)
 1494-1498  Savonarola's theocracy in Florence — burns Vanities — Renaissance briefly halted
 1495-1498  Da Vinci paints The Last Supper in Milan
-1503-1506  Michelangelo's David
+1501-1504  Michelangelo's David
 1508-1512  Michelangelo paints the Sistine Chapel ceiling
 1513       Machiavelli writes The Prince
 1517       Luther's 95 Theses — Northern Reformation begins
@@ -1703,7 +1703,7 @@ who is making the decisions? What is true?"**
 > **Who the betrayer Judas is — communicated through body language** (clutching the money pouch + leaning back) —
 > **This is the peak of Renaissance "compositional psychology"**.
 
-### 1503-1506 — Michelangelo's David (see §3)
+### 1501-1504 — Michelangelo's David (see §3)
 
 > Florence Republic's symbol — **5.17 m tall marble** —
 > **Still **the icon of Western sculpture**.
@@ -2696,7 +2696,7 @@ who is making the decisions? What is true?"**
 1497.2.7    Bonfire of the Vanities — Florence burns classical literature + art
 1498.5.23   Savonarola himself is burned
 1498-1499   Michelangelo's Pietà
-1503-1506   Michelangelo's David
+1501-1504   Michelangelo's David
 1503-1519   Da Vinci paints the Mona Lisa (16 years, never finished delivery)
 1505        Pope Julius II commissions Bramante to rebuild St. Peter's
 1508-1512   Michelangelo Sistine Chapel ceiling

@@ -183,7 +183,7 @@ authorNotes: |
 1492       哥伦布到美洲（Renaissance 全球史背景）
 1494-1498  Savonarola Florence 神权——烧 Vanity——Renaissance 短暂中断
 1495-1498  Da Vinci 米兰画《Last Supper》
-1503-1506  Michelangelo《David》
+1501-1504  Michelangelo《David》
 1508-1512  Michelangelo Sistine Chapel 天顶画
 1513       Machiavelli 写《The Prince》
 1517       Luther 95 条论纲 — 北方 Reformation 起点
@@ -1546,7 +1546,7 @@ authorNotes: |
 > **谁是叛徒 Judas 通过身体语言暗示**（手抓钱袋 + 身体后仰）——
 > **这是 Renaissance "构图心理学"的巅峰**。
 
-### 1503-1506 — Michelangelo《David》（详见 §3）
+### 1501-1504 — Michelangelo《David》（详见 §3）
 
 > Florence 共和的象征——**5.17 米高大理石雕塑**——
 > 至今仍是**西方雕塑代表作**。
@@ -2536,7 +2536,7 @@ authorNotes: |
 1497.2.7    Bonfire of the Vanities — Florence 烧古典文学 + 艺术
 1498.5.23   Savonarola 自己被烧死
 1498-1499   Michelangelo Pietà（圣母怜子像）
-1503-1506   Michelangelo《David》
+1501-1504   Michelangelo《David》
 1503-1519   Da Vinci 画《Mona Lisa》（17 年没完成）
 1505        Pope Julius II 委托 Bramante 重建 St. Peter's
 1508-1512   Michelangelo Sistine Chapel 天顶画
