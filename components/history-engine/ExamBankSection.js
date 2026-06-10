@@ -2,7 +2,7 @@
 // 创始人需求: 真题是中国学生家长心里的闪光点。但 AP 真题是 College Board 版权——
 // 本组件只做「真题事实映射」(年份/题型/主题概括 + 指向官方原题), 零原文复制;
 // 仿真练习是我们自研, 与真题严格分层标注, 绝不混淆。
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HC } from './theme';
 import { hasExamBank, loadExamBank } from '../../lib/history-exam-bank';
 import { renderInlineMd } from './inlineMd';
@@ -11,6 +11,8 @@ import { renderInlineMd } from './inlineMd';
 var AP_CENTRAL = {
   'AP World History': 'https://apcentral.collegeboard.org/courses/ap-world-history/exam/past-exam-questions',
   'APUSH': 'https://apcentral.collegeboard.org/courses/ap-united-states-history/exam/past-exam-questions',
+  'AP European History': 'https://apcentral.collegeboard.org/courses/ap-european-history/exam/past-exam-questions',
+  'AP US Government and Politics': 'https://apcentral.collegeboard.org/courses/ap-united-states-government-and-politics/exam/past-exam-questions',
 };
 
 function PracticeCard(props) {
@@ -51,9 +53,19 @@ function PracticeCard(props) {
 export function ExamBankSection(props) {
   var topicId = props.topicId;
   var isEn = !!props.isEnglish;
+  // 懒加载: 选中某门时才按需 import 该门数据。loaded={id,bank} 防止 topicId 切换时闪旧数据。
+  var [loaded, setLoaded] = useState(null);
+  useEffect(function() {
+    var alive = true;
+    if (topicId && hasExamBank(topicId)) {
+      loadExamBank(topicId).then(function(b) { if (alive) setLoaded({ id: topicId, bank: b }); });
+    }
+    return function() { alive = false; };
+  }, [topicId]);
+
   if (!topicId || !hasExamBank(topicId)) return null;
-  var bank = loadExamBank(topicId);
-  if (!bank) return null;
+  if (!loaded || loaded.id !== topicId || !loaded.bank) return null;
+  var bank = loaded.bank;
   var refs = bank.realExamRefs || [];
   var pqs = bank.practiceQuestions || [];
   if (refs.length === 0 && pqs.length === 0) return null;
