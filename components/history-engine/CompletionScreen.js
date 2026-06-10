@@ -366,9 +366,6 @@ export function CompletionScreen(props) {
                   {isStory
                     ? (isEnglish ? '📖 Covered in story' : '📖 故事已覆盖')
                     : (isEnglish ? '📚 Mini-lesson' : '📚 独立讲解')}
-                  {isStory && card.storyAnchor.lens && (
-                    <span style={{opacity: 0.8, fontWeight: 400}}>· {card.storyAnchor.lens}</span>
-                  )}
                 </div>
                 <div style={{fontSize: 13.5, color: HC.text, lineHeight: 1.65, whiteSpace: 'pre-wrap'}}>
                   {renderInlineMd(isStory
