@@ -4210,11 +4210,21 @@ export default function App() {
     var attempt = _attempt || 0;
     try {
       var r = await fetch('/api/stripe/check-subscription?userId=' + userId);
+      // 非 200（如 503 transient = 服务端暂时查不了，部署抖动/DB 抽风）→ 当作"未知"，
+      // 重试几次仍不行就保持缓存、不降级、不标记 loaded（_tierUnknown 兜底放行付费用户）。
+      // 绝不把"查不了"误当成"无订阅"去锁付费用户（chompcloud Pro 被锁根因）。
+      if (!r.ok) {
+        if (attempt < 2) {
+          await new Promise(function(res) { setTimeout(res, 1500); });
+          return _loadTier(userId, attempt + 1);
+        }
+        console.warn('[tier] check unavailable (HTTP ' + r.status + '), keeping cached tier, no downgrade');
+        return; // 不 setTierLoaded、不改 userTier
+      }
       var j = await r.json();
       if (j && typeof j.tier === "string") {
-        // isActive:false 有两种含义：(a) 确实没有有效订阅；(b) 服务端暂时异常。
-        // 用最多 2 次重试区分：连续 3 次都是 false → 才写 "free" 到缓存并标记 loaded。
-        // 只要有一次 isActive:true → 立刻确认付费 tier，不等。
+        // 200 且 isActive:false = 服务端已确认无有效订阅（真 free）。短暂异常现在走 503 分支，
+        // 不会再到这里，所以这里的 false 可信。仍保留 1 次轻重试容忍极端边界。
         if (!j.isActive && attempt < 2) {
           console.warn('[tier] isActive=false (attempt ' + attempt + '), retrying in 1.5s');
           await new Promise(function(res) { setTimeout(res, 1500); });
@@ -4222,12 +4232,11 @@ export default function App() {
         }
         var t = j.isActive ? j.tier : "free";
         setUserTier(t);
-        // 写入缓存：确认 free 时才覆盖（3 次全部 false 才算真 free）
         try { localStorage.setItem("vocabspark_tier", t); } catch(e) {}
       }
       setTierLoaded(true);
     } catch(e) {
-      // 网络失败：不改状态，但也不标记 loaded（让保护层继续放行）
+      // 网络失败：不改状态，也不标记 loaded（让保护层继续放行，不误锁付费用户）
       console.warn('[tier] load failed, keeping cached value:', e.message);
     }
   };
