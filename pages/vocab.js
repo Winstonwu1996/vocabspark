@@ -6502,7 +6502,8 @@ export default function App() {
         // 重点攻克可标准化(创始人拍板)：用【通用画像 prompt + 按词缓存】跨用户共享讲解，命中 <1s。
         // 新词学习仍保持个性化(走 sysP，不动)。cacheKey 只按 word(learned 在 prompt 未被使用，
         // reviewCount 仅措辞微差，按词缓存命中率最高、跨用户安全)。
-        var _drCacheKey = 'dr-v1:' + String(word).toLowerCase().replace(/[^a-z0-9-]/g, '');
+        // encodeURIComponent 而非剥字符：避免 "can't"/"cant"、"brush off"/"brushoff" 撞同一 key 串错词内容 (Codex)
+        var _drCacheKey = 'dr-v1:' + encodeURIComponent(String(word).toLowerCase().trim());
         // P0 跨用户安全：用真·通用 system(不带 studyGoal/custom)——custom 可能含姓名/学校，
         // 若进 system 而 cacheKey 只按 word，会把首个用户的自定义内容缓存给所有人。
         var _drSys = buildSysGenericTeach(null, null);
