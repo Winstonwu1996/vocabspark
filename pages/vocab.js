@@ -1127,7 +1127,7 @@ var buildClozePrompt = (words) => {
 
 var buildReviewTeachPrompt = (word, learned, reviewCount) => {
   return "单词复习：" + word +
-    "\n这是第 " + reviewCount + " 次复习这个词。" +
+    "\n" + (reviewCount ? "这是第 " + reviewCount + " 次复习这个词。" : "正在复习这个词。") +
     "\n之前学过但记忆模糊，需要巩固。" +
     "\n\n请用一个全新的生活场景帮助记忆（不要重复之前例子），要求：" +
     "\n1) 2-3句生动场景（结合学习画像）" +
@@ -6503,10 +6503,14 @@ export default function App() {
         // 新词学习仍保持个性化(走 sysP，不动)。cacheKey 只按 word(learned 在 prompt 未被使用，
         // reviewCount 仅措辞微差，按词缓存命中率最高、跨用户安全)。
         var _drCacheKey = 'dr-v1:' + String(word).toLowerCase().replace(/[^a-z0-9-]/g, '');
-        var _drSys = buildSysGenericTeach(studyGoal, studyGoalCustom);
+        // P0 跨用户安全：用真·通用 system(不带 studyGoal/custom)——custom 可能含姓名/学校，
+        // 若进 system 而 cacheKey 只按 word，会把首个用户的自定义内容缓存给所有人。
+        var _drSys = buildSysGenericTeach(null, null);
         var raw;
         try {
-          raw = await callAPIStream(_drSys, buildReviewTeachPrompt(word, learned, reviewCount), { jsonMode: false, cacheKey: _drCacheKey }, function(){});
+          // reviewCount 传 null → prompt 用中性措辞，缓存内容跨用户稳定 (Codex P2)；
+          // maxTokens 显式 2500 → 流式及其内部 callAPI 回退都不被默认 900 截断长讲解 (Codex P1)。
+          raw = await callAPIStream(_drSys, buildReviewTeachPrompt(word, learned, null), { jsonMode: false, cacheKey: _drCacheKey, maxTokens: 2500 }, function(){});
         } catch (streamErr) {
           // 流式/缓存路径失败 → 回退非缓存个性化路径，保证仍能出内容
           console.warn('[fetchDeepReview] stream/cache path failed, fallback to callAPIFast:', streamErr && streamErr.message);

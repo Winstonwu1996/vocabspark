@@ -325,7 +325,10 @@ export default async function handler(req) {
                       console.warn(`[chat-stream] cache skip - invalid JSON for ${cacheKey}: ${e.message}`);
                     }
                   } else {
-                    valid = true;
+                    // 非 JSON（如重点攻克讲解纯文本）：完整讲解 ~800-1500 字，截断/坏内容多 <300。
+                    // 提高门槛到 300，避免把半截/坏的内容缓存 30 天后跨用户复用 (Codex P2)。
+                    if (fullText.length > 300) valid = true;
+                    else console.warn(`[chat-stream] cache skip - non-JSON too short (${fullText.length}) for ${cacheKey}`);
                   }
                 }
                 if (valid) {
