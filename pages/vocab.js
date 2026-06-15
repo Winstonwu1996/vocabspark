@@ -4895,7 +4895,10 @@ export default function App() {
             // 牺牲：teach 例句不再喊用户姓名，改用通用学习场景
             // 收益：90%+ 缓存命中、500 用户可承载、LLM 成本省 60-70%
             // 用户的 study goal 还在 sys 里影响输出（cacheKey 也含 goal）
-            var _useCache = true; // 全量启用缓存路径
+            // 新词学习的 teach 必须【个性化】(走 sysP 画像)，不走跨用户通用缓存——
+            // 创始人定调："新词要个性化，只有复习/攻克可标准化"。代价是新词讲解不跨用户缓存
+            // (慢一点/LLM 负载高一点)，但"每个单词都是你的故事"是产品核心，值得。
+            var _useCache = false;
             var _sys = _useCache ? buildSysGenericTeach(studyGoal, studyGoalCustom) : sysP;
             var _prompt = _useCache ? buildTeachCachePrompt(word, cls) : buildTeachPrompt(word, learned, cls);
             var _cacheKey = _useCache ? getTeachCacheKey(word, cls, studyGoal) : undefined;
@@ -5286,7 +5289,12 @@ export default function App() {
     }
 
     if (guessAdvanceRef.current) clearTimeout(guessAdvanceRef.current);
-    guessAdvanceRef.current = setTimeout(function() { guessAdvanceRef.current = null; setPhaseDir(1); setPhase("teach"); }, 800);
+    if (correct) {
+      // 答对：快速进 teach
+      guessAdvanceRef.current = setTimeout(function() { guessAdvanceRef.current = null; setPhaseDir(1); setPhase("teach"); }, 800);
+    }
+    // 答错：不自动跳——留时间看正确答案，由用户手动点"看讲解 →"(结果横幅里)。
+    // 原先错了也 800ms 自动跳，反馈一闪而过没法学(创始人反馈)。
   };
 
   var skipGuess = function() {
@@ -8849,6 +8857,26 @@ export default function App() {
         <button style={S.settingsBtn} onClick={() => setShowSettings(true)} title="设置" aria-label="打开设置">⚙️</button>
       </div>
 
+      {/* 学习页常驻"今日新词"进度条：会话内的 1/30 是本组位置，孩子易误读成"今天进度"；
+          这条钉死"今日新词 X/N 必做"，学着也忘不了今天硬任务还差几个 */}
+      {user && (() => {
+        var _q = getNewWordQuotaState();
+        var _tCap = (userTier === "basic" || userTier === "pro" || (userRef.current && !tierLoaded)) ? Infinity : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
+        var _target = Math.min(_q.quota || dailyNewWords || 10, _tCap);
+        if (!_target || _target === Infinity) _target = _q.quota || dailyNewWords || 10;
+        var _done = Math.min(_q.quota || 0, _q.consumed || 0);
+        var _pct = _target > 0 ? Math.min(100, Math.round(_done / _target * 100)) : 0;
+        var _met = _done >= _target;
+        return (
+          <div style={{ display:"flex", alignItems:"center", gap:8, padding:"6px 10px", margin:"2px 0 8px", background:_met?C.greenLight:C.accentLight, border:"1px solid "+(_met?C.green:C.accent)+"33", borderRadius:8, fontFamily:FONT }}>
+            <span style={{ fontSize:12, fontWeight:700, color:_met?C.green:C.accent, whiteSpace:"nowrap" }}>📖 今日新词 {_done}/{_target}{_met?" ✓":" · 必做"}</span>
+            <div style={{ flex:1, height:6, background:"rgba(0,0,0,0.06)", borderRadius:3, overflow:"hidden" }}>
+              <div style={{ width:_pct+"%", height:"100%", background:_met?C.green:C.accent, transition:"width 0.3s" }} />
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── SETTINGS MODAL ── */}
       {showSettings && (
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",zIndex:999,display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"60px 16px 16px",overflowY:"auto"}}>
@@ -9283,7 +9311,9 @@ export default function App() {
                 {others.length > 0 && <div style={{fontSize:13, marginTop:6, color:C.textSec, paddingTop:6, borderTop:"1px dashed "+C.border}}>
                   💡 顺便：{currentWord} 还有{others.map(function(s){ return s.definitionZh || s.definitionEn; }).join(" / ")}的意思
                 </div>}
-                <div style={{fontSize:13, marginTop:4, color:C.textSec}}>✨ 即将进入学习...</div>
+                {correct
+                  ? <div style={{fontSize:13, marginTop:4, color:C.textSec}}>✨ 即将进入学习...</div>
+                  : <button style={{...S.primaryBtn, marginTop:10, width:"100%", justifyContent:"center"}} onClick={function(){ if (guessAdvanceRef.current) { clearTimeout(guessAdvanceRef.current); guessAdvanceRef.current = null; } setPhaseDir(1); setPhase("teach"); }}>📖 看懂了，看讲解 →</button>}
               </div>;
             })()}
             {!guessSubmitted && <div style={S.btnRow}>
