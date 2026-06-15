@@ -5940,6 +5940,30 @@ export default function App() {
 
     var newLearnedToday = Math.min(quotaState.quota || 0, quotaState.consumed || 0);
 
+    // 本档"今日新词目标"= min(用户选的值, 会员档上限, 今日词库可达量)。
+    // 否则免费用户选了 30 但墙在 10 → newDone 永远够不到、"必做"天天红(掌控感崩)。
+    var _tierCap = (userTier === "basic" || userTier === "pro")
+      ? Infinity
+      : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
+    var _selectedTarget = quotaState.quota || dailyNewWords || 10;
+    var _wordsReachable = (quotaState.consumed || 0) + unlearned.length; // 今日已学 + 还能学
+    var effectiveDailyTarget = Math.min(_selectedTarget, _tierCap, _wordsReachable);
+    var capReason = _wordsReachable <= 0 ? "noWords"
+      : (_selectedTarget > _tierCap ? "tierCap"
+      : (_selectedTarget > _wordsReachable ? "fewWords" : null));
+
+    // 真实当日 quick 复习去重词数(修原 quickReviewedToday 死字段)
+    var quickReviewedToday = (function () {
+      var seen = {};
+      Object.keys(reviewWordData || {}).forEach(function (w) {
+        var item = reviewWordData[w];
+        ((item && item.reviewHistory) || []).forEach(function (r) {
+          if (r.mode === "quick" && String(r.date || "").slice(0, 10) === todayKey) seen[w] = 1;
+        });
+      });
+      return Object.keys(seen).length;
+    })();
+
     var quickMin = Math.ceil((toReview.length * 5) / 60);
     var deepMin = deepToday.length * 2;
     var newMin = Math.ceil(newWordsToday.length * 1.5);
@@ -5947,7 +5971,9 @@ export default function App() {
     var quickDone = quickDoneToday || toReview.length === 0;
     var deepLocked = !quickDone;
     var deepDone = !deepLocked && (deepToday.length === 0 || deepUsedToday >= deepLimit);
-    var newDone = newLearnedToday >= (quotaState.quota || dailyNewWords || 20);
+    // 唯一真理源：今日是否完成 = 仅看新词是否达标(复习/攻克永远是 bonus，绝不冒充完成)
+    var newDone = effectiveDailyTarget > 0 && newLearnedToday >= effectiveDailyTarget;
+    var dayComplete = newDone;
 
     return {
       toReview: toReview,
@@ -5956,12 +5982,17 @@ export default function App() {
       quickDone: quickDone,
       deepDone: deepDone,
       newDone: newDone,
+      dayComplete: dayComplete,
+      effectiveDailyTarget: effectiveDailyTarget,
+      capReason: capReason,
+      quickReviewedToday: quickReviewedToday,
+      deepPoolSize: deepPool.length,
       deepDoneCountToday: deepDoneCountToday,
       deepUsedToday: deepUsedToday,
       deepCap: deepLimit,
       newLearnedToday: newLearnedToday,
       newWordsToday: newWordsToday,
-      newQuota: quotaState.quota || dailyNewWords || 20,
+      newQuota: quotaState.quota || dailyNewWords || 10,
       newRemainingQuota: remainingNewQuota,
       quickMin: quickMin,
       deepMin: deepMin,
@@ -7101,35 +7132,44 @@ export default function App() {
         }
 
         // 计算"当前应该做哪一步"
+        // 新词=今日唯一必做，永远第一优先；复习/攻克是 bonus。完成判定只看 newDone(dayComplete)。
+        var _newRemain = Math.max(0, (dailyPlan.effectiveDailyTarget || 0) - (dailyPlan.newLearnedToday || 0));
         var stepDef;
-        if (!dailyPlan.quickDone && dailyPlan.toReview.length > 0) {
+        if (dailyPlan.capReason === "noWords" && !dailyPlan.newDone) {
+          stepDef = {
+            id:"nowords", icon:"📖", title:"本词库已学完", color:C.accent,
+            sub: "去添加 / 更换词表，继续每天学新词",
+            cta: "去设置词表 →",
+            onClick: function(){ setScreen("setup"); },
+            allDone: true,
+          };
+        } else if (!dailyPlan.newDone) {
+          stepDef = {
+            id:"new", icon:"📖", title:"学新词 · 今日必做", color:C.accent,
+            sub: "今天唯一必做项 · 还差 " + _newRemain + " 个 · 约 " + dailyPlan.newMin + " 分钟",
+            cta: (dailyPlan.newLearnedToday > 0 ? "▶ 继续学新词 · 还差 " + _newRemain + " 词" : "▶ 开始学新词 · " + _newRemain + " 词"),
+            onClick: function(){ startLearning(0); },
+          };
+        } else if (!dailyPlan.quickDone && dailyPlan.toReview.length > 0) {
           stepDef = {
             id:"review", icon:"✍️", title:"默写复习", color:C.teal,
-            sub: "默写释义、检验真记住 · " + dailyPlan.toReview.length + " 词 · 约 " + dailyPlan.quickMin + " 分钟",
+            sub: "新词已达标👍 顺手默写到期词、巩固记忆 · " + dailyPlan.toReview.length + " 词",
             cta: "▶ 开始默写 · " + dailyPlan.toReview.length + " 词",
             onClick: function(){ startQuickReview("due"); },
           };
-        } else if (dailyPlan.quickDone && !dailyPlan.deepDone && !dailyPlan.deepLocked) {
+        } else if (!dailyPlan.deepLocked && dailyPlan.deepPoolSize > 0 && !dailyPlan.deepDone) {
           stepDef = {
-            id:"deep", icon:"🎯", title:"重点攻克", color:C.red,
-            sub: "易错词强化 · 约 " + dailyPlan.deepMin + " 分钟",
-            cta: "▶ 开始攻克",
+            id:"deep", icon:"🎯", title:"清攻克欠账", color:C.red,
+            sub: "新词已达标👍 有空就清易错欠账 · 还剩 " + dailyPlan.deepPoolSize + " 个",
+            cta: "▶ 清欠账 · 剩 " + dailyPlan.deepPoolSize + " 个",
             onClick: startDeepReview,
           };
-        } else if ((dailyPlan.quickDone || dailyPlan.toReview.length === 0) && (dailyPlan.deepDone || dailyPlan.deepLocked) && !dailyPlan.newDone) {
-          var remain = Math.max(0, dailyPlan.newQuota - (dailyPlan.newLearnedToday || 0));
-          stepDef = {
-            id:"new", icon:"📖", title:"学习新词", color:C.accent,
-            sub: remain + " 个词待学 · 约 " + dailyPlan.newMin + " 分钟",
-            cta: "▶ 开始学习 · 剩 " + remain + " 词",
-            onClick: function(){ startLearning(0); },
-          };
         } else {
-          // 全部完成
+          // 今日唯一必做(新词)已完成
           stepDef = {
-            id:"done", icon:"🎉", title:"今日任务完成！", color:C.green,
-            sub: "保持节奏，明天见～ 还想学的话可以再复习一遍",
-            cta: "🔄 再复习一遍",
+            id:"done", icon:"🎉", title:"今日新词完成！", color:C.green,
+            sub: "硬任务搞定～复习/攻克想加练随你，不练也行，明天见",
+            cta: "🔄 再练一会（复习）",
             onClick: function(){ startQuickReview("all"); },
             allDone: true,
           };
@@ -7143,14 +7183,12 @@ export default function App() {
         else if (dailyPlan.deepLocked && stepDef.id !== "deep" && !dailyPlan.deepDone) doneItems.push("攻克未解锁");
         if (dailyPlan.newDone && stepDef.id !== "new") doneItems.push("新学 " + (dailyPlan.newLearnedToday || 0) + " 词");
 
-        // 三步整体进度（用于全局 stepper）
-        var totalSteps = 3;
-        var doneSteps = (dailyPlan.quickDone ? 1 : 0) + (dailyPlan.deepDone || dailyPlan.deepLocked ? 1 : 0) + (dailyPlan.newDone ? 1 : 0);
-        // 三步定义（含状态判断），用于 stepper 渲染
+        // 三段状态条：新词(必做)在最前，复习/攻克(bonus)在后；
+        // 攻克"锁住"绝不再显示为"已完成✓"(原 done:deepDone||deepLocked 是把锁当完成的反语义)。
         var stepDefs = [
-          { id:"review", icon:"🔄", label:"复习", done:dailyPlan.quickDone, current:stepDef.id === "review", locked:false },
-          { id:"deep",   icon:"🎯", label:"攻克", done:dailyPlan.deepDone || dailyPlan.deepLocked, current:stepDef.id === "deep", locked:dailyPlan.deepLocked && !dailyPlan.deepDone },
           { id:"new",    icon:"📖", label:"新词", done:dailyPlan.newDone, current:stepDef.id === "new", locked:false },
+          { id:"review", icon:"🔄", label:"复习", done:dailyPlan.quickDone, current:stepDef.id === "review", locked:false },
+          { id:"deep",   icon:"🎯", label:"攻克", done:dailyPlan.deepDone, current:stepDef.id === "deep", locked:dailyPlan.deepLocked && !dailyPlan.deepDone },
         ];
 
         return (
@@ -7172,8 +7210,9 @@ export default function App() {
             )}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
               <div style={{fontSize:14,fontWeight:800,color:C.text,letterSpacing:"-0.01em",fontFamily:FONT_DISPLAY}}>📚 今日任务</div>
+              {/* headline 钉死在"新词进度"——这是唯一必做项，不再用"X/3步"诱导凑步数 */}
               <div style={{fontSize:11,fontWeight:600,color:C.textSec}}>
-                <span style={{color:C.text,fontWeight:800,fontFamily:FONT_DISPLAY,fontSize:13}}>{doneSteps}</span>/{totalSteps} 步 · 约 {dailyPlan.totalMin} 分钟
+                新词 <span style={{color:dailyPlan.newDone?C.green:C.accent,fontWeight:800,fontFamily:FONT_DISPLAY,fontSize:13}}>{dailyPlan.newLearnedToday}</span>/{dailyPlan.effectiveDailyTarget} {dailyPlan.newDone ? "✓ 必做已完成" : "· 今日必做"}
               </div>
             </div>
             {/* 三段 stepper：恢复"今天 3 件事"的全局感，每段标注状态 */}
@@ -9784,8 +9823,8 @@ export default function App() {
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:C.overlay,backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)",zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",padding:20,animation:"fadeIn 0.2s ease-out"}} onClick={()=>{setShowLimitModal(false);window.scrollTo(0,0);}}>
           <div style={{background:C.card,borderRadius:20,padding:"32px 24px",maxWidth:360,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.25)",fontFamily:FONT,textAlign:"center",animation:"modalPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) backwards"}} onClick={e=>e.stopPropagation()}>
             <div style={{fontSize:48,marginBottom:8,animation:"bounce 1.2s ease-in-out infinite"}}>🎓</div>
-            <h3 style={{fontSize:19,fontWeight:700,margin:"0 0 8px"}}>{user ? "今日学习完成！" : "今天的体验课结束了"}</h3>
-            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 16px"}}>{user ? "免费用户每天可学 "+DAILY_LIMIT_REGISTERED+" 词。想学更多？看看 AI 私教课方案" : "你刚才体验了 AI 一对一私教的效果："}</p>
+            <h3 style={{fontSize:19,fontWeight:700,margin:"0 0 8px"}}>{user ? "今日免费额度已用完 🎉" : "今天的体验课结束了"}</h3>
+            <p style={{fontSize:14,color:C.textSec,lineHeight:1.7,margin:"0 0 16px"}}>{user ? "免费用户每天可学 "+DAILY_LIMIT_REGISTERED+" 个新词，今天的额度已达成。明天继续免费学，或升级会员每天学更多。" : "你刚才体验了 AI 一对一私教的效果："}</p>
             {!user && <div style={{background:C.bg,borderRadius:10,padding:"12px 14px",marginBottom:12,fontSize:13,lineHeight:1.7,textAlign:"left"}}>
               {"🎯 AI 根据你的兴趣和生活定制了讲解"}<br/>
               {"🧠 这种个性化教学，传统私教每小时 $100+"}<br/>
