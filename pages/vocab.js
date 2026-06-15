@@ -6499,7 +6499,19 @@ export default function App() {
       try {
         var d = reviewWordData[word] || {};
         var reviewCount = (d.reviewHistory || []).length + 1;
-        var raw = await callAPIFast(sysP, buildReviewTeachPrompt(word, learned, reviewCount));
+        // 重点攻克可标准化(创始人拍板)：用【通用画像 prompt + 按词缓存】跨用户共享讲解，命中 <1s。
+        // 新词学习仍保持个性化(走 sysP，不动)。cacheKey 只按 word(learned 在 prompt 未被使用，
+        // reviewCount 仅措辞微差，按词缓存命中率最高、跨用户安全)。
+        var _drCacheKey = 'dr-v1:' + String(word).toLowerCase().replace(/[^a-z0-9-]/g, '');
+        var _drSys = buildSysGenericTeach(studyGoal, studyGoalCustom);
+        var raw;
+        try {
+          raw = await callAPIStream(_drSys, buildReviewTeachPrompt(word, learned, reviewCount), { jsonMode: false, cacheKey: _drCacheKey }, function(){});
+        } catch (streamErr) {
+          // 流式/缓存路径失败 → 回退非缓存个性化路径，保证仍能出内容
+          console.warn('[fetchDeepReview] stream/cache path failed, fallback to callAPIFast:', streamErr && streamErr.message);
+          raw = await callAPIFast(sysP, buildReviewTeachPrompt(word, learned, reviewCount));
+        }
         var text = raw || "生成失败，请重试";
         var parts = splitDeepReviewParts(text, word);
         // 小测验踩到目标词时只丢那道题(parts.quiz 已为 null)，【讲解照常立即上屏】——
