@@ -4891,13 +4891,10 @@ export default function App() {
         // 关键：task 函数本身不 await classify，进 slot 后立即 callAPIStream，不浪费 slot 时间
         classifyByWord[word].then(function(cls) {
           tasks.push(function() {
-            // A1.4: 优先用 generic + cache 路径（同 word/classify/goal 跨用户共享）
-            // 牺牲：teach 例句不再喊用户姓名，改用通用学习场景
-            // 收益：90%+ 缓存命中、500 用户可承载、LLM 成本省 60-70%
-            // 用户的 study goal 还在 sys 里影响输出（cacheKey 也含 goal）
             // 新词学习的 teach 必须【个性化】(走 sysP 画像)，不走跨用户通用缓存——
             // 创始人定调："新词要个性化，只有复习/攻克可标准化"。代价是新词讲解不跨用户缓存
             // (慢一点/LLM 负载高一点)，但"每个单词都是你的故事"是产品核心，值得。
+            // (历史：曾用 generic+cache 跨用户共享省成本，因牺牲新词个性化已回退)
             var _useCache = false;
             var _sys = _useCache ? buildSysGenericTeach(studyGoal, studyGoalCustom) : sysP;
             var _prompt = _useCache ? buildTeachCachePrompt(word, cls) : buildTeachPrompt(word, learned, cls);
@@ -8864,7 +8861,7 @@ export default function App() {
         var _tCap = (userTier === "basic" || userTier === "pro" || (userRef.current && !tierLoaded)) ? Infinity : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
         var _target = Math.min(_q.quota || dailyNewWords || 10, _tCap);
         if (!_target || _target === Infinity) _target = _q.quota || dailyNewWords || 10;
-        var _done = Math.min(_q.quota || 0, _q.consumed || 0);
+        var _done = Math.min(_target, _q.consumed || 0); // 按展示目标截断，避免 consumed>tierCap 时显示 12/10
         var _pct = _target > 0 ? Math.min(100, Math.round(_done / _target * 100)) : 0;
         var _met = _done >= _target;
         return (
