@@ -5942,7 +5942,10 @@ export default function App() {
 
     // 本档"今日新词目标"= min(用户选的值, 会员档上限, 今日词库可达量)。
     // 否则免费用户选了 30 但墙在 10 → newDone 永远够不到、"必做"天天红(掌控感崩)。
-    var _tierCap = (userTier === "basic" || userTier === "pro")
+    // tierLoaded 守卫(对齐 goNextWord/startLearning 的免费墙)：已登录但 tier 未网络确认时按 Infinity，
+    // 避免付费用户在新设备/清缓存的确认窗口里被当 free 档(10)→过早"完成"、主CTA 跳走。
+    var _tierUnknown = userRef.current && !tierLoaded;
+    var _tierCap = (userTier === "basic" || userTier === "pro" || _tierUnknown)
       ? Infinity
       : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
     var _selectedTarget = quotaState.quota || dailyNewWords || 10;
@@ -7158,10 +7161,12 @@ export default function App() {
             onClick: function(){ startQuickReview("due"); },
           };
         } else if (!dailyPlan.deepLocked && dailyPlan.deepPoolSize > 0 && !dailyPlan.deepDone) {
+          // 报"今日可清数"(受日上限截断)，与 startDeepReview 实际入队一致，不虚高承诺
+          var _deepNow = dailyPlan.deepToday.length;
           stepDef = {
             id:"deep", icon:"🎯", title:"清攻克欠账", color:C.red,
-            sub: "新词已达标👍 有空就清易错欠账 · 还剩 " + dailyPlan.deepPoolSize + " 个",
-            cta: "▶ 清欠账 · 剩 " + dailyPlan.deepPoolSize + " 个",
+            sub: "新词已达标👍 有空就清易错欠账 · 今天可清 " + _deepNow + " 个",
+            cta: "▶ 清欠账 · " + _deepNow + " 个",
             onClick: startDeepReview,
           };
         } else {
@@ -7177,8 +7182,8 @@ export default function App() {
 
         // 已完成步骤的小战绩
         var doneItems = [];
-        if (dailyPlan.quickDone && stepDef.id !== "review") doneItems.push("复习 " + (dailyPlan.toReview.length + (dailyPlan.quickReviewedToday || 0)) + " 词");
-        else if (!dailyPlan.quickDone && dailyPlan.toReview.length === 0 && stepDef.id !== "review") doneItems.push("无到期复习");
+        if (dailyPlan.quickReviewedToday > 0 && stepDef.id !== "review") doneItems.push("复习 " + dailyPlan.quickReviewedToday + " 词");
+        else if (dailyPlan.toReview.length === 0 && stepDef.id !== "review") doneItems.push("无到期复习");
         if (dailyPlan.deepDone && stepDef.id !== "deep") doneItems.push("攻克 " + (dailyPlan.deepUsedToday || 0) + " 词");
         else if (dailyPlan.deepLocked && stepDef.id !== "deep" && !dailyPlan.deepDone) doneItems.push("攻克未解锁");
         if (dailyPlan.newDone && stepDef.id !== "new") doneItems.push("新学 " + (dailyPlan.newLearnedToday || 0) + " 词");
