@@ -143,15 +143,13 @@ async function callWithRetry(provider, system, message, maxTokens, timeoutMs) {
       recordCircuitSuccess(provider.name);
       return result;
     } catch (err) {
-      const isRetryable = err.status === 429 || err.name === "AbortError";
       // 429 / timeout 计入熔断失败计数
       if (err.status === 429 || err.name === "AbortError" || err.name === "TimeoutError") {
         recordCircuitFailure(provider.name);
       }
-      if (isRetryable && attempt < 2) {
-        await sleep(1000 * Math.pow(2, attempt));
-        continue;
-      }
+      // 不在同一 key 上退避重试：429=该 key 本分钟配额已满(等 1-2s 不会恢复)，超时=这家慢——
+      // 两种都立即抛出，由外层 provider 循环换下一个 DeepSeek key / 兜底 Gemini(多 key 轮转本身即冗余)。
+      // 这避免了"在限流的 key 上白等 1-2s × 多次"叠加成可观延迟。
       throw err;
     }
   }
@@ -242,12 +240,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "No provider API keys configured" });
   }
 
-  // Calculate per-provider timeout: leave 5s buffer for Vercel, divide remaining among providers
+  // 每 provider 超时：不再按 provider 数瓜分(旧 min(20s,55s/N) 在 N=3 时每家仅 18s，
+  // 跨境高峰一次正常长生成就被自己掐断当失败)。改为固定上限，再用"剩余总预算"夹住，
+  // 让首选(健康的 DeepSeek)拿到足额时间，同时整体不超 55s(Vercel maxDuration 60s 留 5s buffer)。
   const totalBudgetMs = 55000;
-  const timeoutMs = Math.min(
-    Number(process.env.CHAT_PROVIDER_TIMEOUT_MS || 20000),
-    Math.floor(totalBudgetMs / providers.length)
-  );
+  const perProviderCap = Number(process.env.CHAT_PROVIDER_TIMEOUT_MS || 24000);
+  const loopStartMs = Date.now();
 
   const deepseekProviders = providers.filter((p) => p.family === "deepseek");
   const fallbackProviders = providers.filter((p) => p.family !== "deepseek");
@@ -291,6 +289,10 @@ export default async function handler(req, res) {
       errors.push(`${provider.name}: circuit_open`);
       continue;
     }
+    // 用剩余预算夹住每家超时：首家拿满 perProviderCap，后续串行兜底按剩余时间收窄
+    const remainingMs = totalBudgetMs - (Date.now() - loopStartMs);
+    if (remainingMs < 4000) { errors.push(`${provider.name}: budget_exhausted`); continue; }
+    const timeoutMs = Math.max(4000, Math.min(perProviderCap, remainingMs));
     try {
       const t0 = Date.now();
       const text = await callWithRetry(provider, system, message, tokens, timeoutMs);

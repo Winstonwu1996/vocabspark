@@ -6499,18 +6499,13 @@ export default function App() {
       try {
         var d = reviewWordData[word] || {};
         var reviewCount = (d.reviewHistory || []).length + 1;
-        var doFetchAttempt = async function(attemptsLeft) {
-          var raw = await callAPIFast(sysP, buildReviewTeachPrompt(word, learned, reviewCount));
-          var text = raw || "生成失败，请重试";
-          var parts = splitDeepReviewParts(text, word);
-          if (parts.quizBlocked && attemptsLeft > 0) {
-            console.warn('[fetchDeepReview] quiz blocked for "' + word + '", retrying (' + attemptsLeft + ' left)');
-            await new Promise(function(r){ setTimeout(r, 800); });
-            return doFetchAttempt(attemptsLeft - 1);
-          }
-          return { teach: parts.teach || text, quiz: parts.quiz || null };
-        };
-        var payload = await doFetchAttempt(2);
+        var raw = await callAPIFast(sysP, buildReviewTeachPrompt(word, learned, reviewCount));
+        var text = raw || "生成失败，请重试";
+        var parts = splitDeepReviewParts(text, word);
+        // 小测验踩到目标词时只丢那道题(parts.quiz 已为 null)，【讲解照常立即上屏】——
+        // 不再为一道送分题把整篇 teach+quiz 重做最多 3 次(abode 等词 16s+ 白屏元凶)。
+        if (parts.quizBlocked) console.warn('[fetchDeepReview] quiz blocked for "' + word + '", 丢测验保讲解(不整篇重试)');
+        var payload = { teach: parts.teach || text, quiz: parts.quiz || null };
         deepReviewCacheRef.current[word] = payload;
         return payload;
       } catch (e) {
