@@ -800,18 +800,17 @@ var HARD_DISTRACTOR_RULE =
 // 其他词型（Round 2-4 逐步实现）：暂时走 legacy gradient 保证不回归
 var buildSpectrumPrompt = (word, classifyResult) => {
   var wordType = classifyResult?.wordType || null;
-  var p;
+  // 难度铁律只追加给"4 选项"题型(A-F)；legacy 是 3 词光谱排序、无"4 选项/干扰项"概念，
+  // 套通用规则会冲突(让模型生成 4 个 spectrum_words → 3 slot 渲染坏)，故排除 (Codex P1)。
   switch (wordType) {
-    case "A": p = buildBehaviorMatchPrompt(word); break;
-    case "B": p = buildCollocationFillPrompt(word); break;
-    case "C": p = buildMorphFillPrompt(word); break;
-    case "D": p = buildMnemonicFillPrompt(word); break;
+    case "A": return buildBehaviorMatchPrompt(word) + HARD_DISTRACTOR_RULE;
+    case "B": return buildCollocationFillPrompt(word) + HARD_DISTRACTOR_RULE;
+    case "C": return buildMorphFillPrompt(word) + HARD_DISTRACTOR_RULE;
+    case "D": return buildMnemonicFillPrompt(word) + HARD_DISTRACTOR_RULE;
     case "E":
-    case "F": p = buildContextChoicePrompt(word, wordType); break;
-    default: p = buildLegacyGradientPrompt(word); break;
+    case "F": return buildContextChoicePrompt(word, wordType) + HARD_DISTRACTOR_RULE;
+    default: return buildLegacyGradientPrompt(word);
   }
-  // 统一追加难度铁律(真实干扰项 + 似是而非 + 禁送分)，作为最后一条强约束
-  return p + HARD_DISTRACTOR_RULE;
 };
 
 // Legacy 光谱排序（保留：A 类替换后，其他词型暂时用，Round 2-4 逐步替换）
@@ -837,7 +836,7 @@ var buildBehaviorMatchPrompt = (word) => {
     "🚫 **禁止**是同义词（如 glad/delighted/thrilled/ecstatic）— 那测的是认词不是理解\n" +
     "✅ 必须是**具体的行为、动作、表情、语言**\n" +
     "- 1 个正解：精准符合 " + word + " 的强度和语义\n" +
-    "- 3 个干扰：强度不够 / 方向偏离 / 完全无关 — 都是合理但不贴切的行为\n" +
+    "- 3 个干扰：强度不够 / 方向偏离 / 似是而非 — 都是【合理但不贴切】的真实行为，严禁明显荒谬一眼排除\n" +
     "每个选项 ≤ 15 英文词，尽量画像化（王者/Taylor/AI 项目等）\n\n" +
     "【参考示例】（学风格，不是学 ecstatic 内容）\n" +
     "{\n" +
@@ -896,9 +895,9 @@ var buildCollocationFillPrompt = (word) => {
     "{\n" +
     '  "scenario": "Willow finally finished a long React project after weeks of debugging.",\n' +
     '  "sentence": "She refused to abandon her ___ even when the bugs seemed endless.",\n' +
-    '  "options": {"A":"happiness","B":"hope","C":"breakfast","D":"hairstyle"},\n' +
+    '  "options": {"A":"patience","B":"hope","C":"confidence","D":"temper"},\n' +
     '  "answer": "B",\n' +
-    '  "explanation": "abandon hope/dream/plan 是常见高频搭配（放弃希望/梦想/计划）；其他词与 abandon 搭起来不自然"\n' +
+    '  "explanation": "abandon hope/dream/plan 是高频固定搭配；patience/confidence/temper 多与 lose 搭配，与 abandon 搭起来不地道（似是而非，逼真正辨析）"\n' +
     "}\n\n" +
     "【输出严格 JSON】\n" +
     '{\n' +
@@ -917,7 +916,8 @@ var buildCollocationFillPrompt = (word) => {
 // 4 个选项都是同根词的不同词形，迫使学生理解词根+词缀含义
 var buildMorphFillPrompt = (word) => {
   return "为 \"" + word + "\" 设计【词根拆解 + 词形辨析】题。\n\n" +
-    "【任务】给一个场景 + 一句空格句，4 个选项都是【" + word + " 的同根词不同词形】（动词/形容词/名词/副词）。\n" +
+    "【任务】给一个场景 + 一句空格句，4 个选项优先用【" + word + " 的同根词不同词形】（动词/形容词/名词/副词）；\n" +
+    "若该词没有 ≥3 个真实同根词形，则改用【真实的形近词/易混词】，4 个选项务必都是词典里真有的词。\n" +
     "morph 拆解和 explanation 在【学生答题之后】才展示——做题时只看场景+句子。\n\n" +
     "❗❗ 严禁泄答案（线上实测过这个坑）❗❗\n" +
     "1. scenario 严禁包含目标词 \"" + word + "\" 的英文 verbatim（包括大小写变体）。\n" +
@@ -952,7 +952,7 @@ var buildMorphFillPrompt = (word) => {
     '  "morph": "前缀 + 词根 + 后缀 → 含义推导",\n' +
     '  "scenario": "1 句画像化场景（不含目标词及其中文翻译）",\n' +
     '  "sentence": "1 句含 ___ 的英文",\n' +
-    '  "options": {"A":"同根词形 1","B":"同根词形 2","C":"同根词形 3","D":"同根词形 4"},\n' +
+    '  "options": {"A":"真实词形/形近词1","B":"真实词形/形近词2","C":"真实词形/形近词3","D":"真实词形/形近词4"},\n' +
     '  "answer": "正确词形的字母",\n' +
     '  "explanation": "为什么这个词形对（含语法位置 + 干扰为何不对，≤50 字，中文）"\n' +
     "}\n\n" +
