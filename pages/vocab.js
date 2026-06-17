@@ -1063,21 +1063,34 @@ var buildContextChoicePrompt = (word, wordType) => {
     "直接输出 JSON，不要 markdown 代码块标记。";
 };
 
-// Round 4：5 词关卡改为 Speed Match —— 限时词↔含义快速配对
-// 比传统填空更快、更紧张，是经典间隔强化技巧（active recall + retrieval pressure）
+// Round 5：5 词关卡升级为【闯关检验】—— 交错出现的应用判断题 + 错了必须改对才能过关
+// 间隔了几个词后再考，工作记忆已清空，逼真正的 retrieval；按词性出对应题型，干扰项真实易混
 var buildReviewPrompt = (words) => {
-  return "刚学完 5 个词：" + words.join(", ") +
-    "\n\n设计【Speed Match 速配】复习关卡。给每个词配一个【标准、通用的核心中文释义】，用于限时配对——学生必须一眼就能把它和单词对上。" +
-    "\n\n【铁律】" +
-    "\n- 用词典级的标准常用释义，绝不生造词组或拼凑别扭说法。反例：egotistical 写「自负的 / 自大的」，不要写成「自恋自我」这类怪词；matching 游戏里看不懂的释义会让学生误以为系统判错。" +
-    "\n- meaning 必须 ≤8 字，能让学生 1 秒识别匹配" +
-    "\n- 词性自然：形容词带「的」，动词用动词，名词用名词，保持和英文词性一致" +
-    "\n- 5 个 meaning 之间不能有歧义重叠（每个 meaning 只能对应唯一的 word），也别彼此太像导致混淆" +
-    "\n- 抓【核心义】，不要泛泛用'重要的/特别的'之类模糊形容，也不要为了花哨而偏离标准词义" +
-    "\n\n【参考示例】" +
-    "\n{\"type\":\"speed_match\",\"title\":\"⚡ 速配挑战\",\"intro\":\"30 秒内把英文词和中文含义配对！\",\"pairs\":[{\"word\":\"ecstatic\",\"meaning\":\"狂喜的\"},{\"word\":\"nimble\",\"meaning\":\"敏捷的\"},{\"word\":\"oblique\",\"meaning\":\"斜的/拐弯的\"},{\"word\":\"perpetual\",\"meaning\":\"永久不停\"},{\"word\":\"subtle\",\"meaning\":\"微妙细致\"}]}" +
-    "\n\n直接输出 JSON：" +
-    '{"type":"speed_match","title":"⚡ 速配挑战","intro":"30 秒内把英文词和中文含义配对！","pairs":[{"word":"...","meaning":"≤8 字精准含义"},{"word":"...","meaning":"..."},{"word":"...","meaning":"..."},{"word":"...","meaning":"..."},{"word":"...","meaning":"..."}]}';
+  return "刚学完这 5 个词：" + words.join(", ") +
+    "\n\n设计【🎯 闯关检验】：每个词出 1 道【应用判断选择题】(共 5 道，每个词恰好一道)。目的：检验学生是否【真懂】，而不是认词或默写——把词丢进一段【新材料】里，逼她用词义去推理。" +
+    "\n\n【每道题按词性出对应形式】" +
+    "\n- 动词 / 形容词 / 副词 → 用法或搭配判断：给一个【新句子/新情境】，4 选 1（哪个搭配地道、哪句用得对、或这个语境该用哪个形态）" +
+    "\n- 具体名词 → 实例 / 辨析：给 4 个【新例子或新情境】选哪个才是它，或在它与近义名词之间选" +
+    "\n- 抽象名词 / 多义词 → 新情境体现：4 个新场景里哪个最贴它的核心义 / 选目标义项" +
+    "\n\n【铁律——这关决定她过不过脑子】" +
+    "\n- 题干必须是【新材料】，绝不照搬讲解里出现过的例句" +
+    "\n- 题干和选项里【绝不能直接出现该词的中文释义】，否则就成了送分题" +
+    "\n- 4 个选项必须【全是真实存在】的词 / 搭配 / 情境；3 个干扰似是而非、同难度、真实，严禁生造、严禁明显无关的一眼排除项" +
+    "\n- 必须真懂词义才能选对，【绝不能靠排除法闭眼选】" +
+    "\n- answer 为正解选项的字母；正解位置要在 A-D 间随机分布，别都堆在某个字母" +
+    "\n- explanation：≤40 字中文，说清正解为何对 + 一句点干扰为何错" +
+    "\n\n【严格输出 JSON，不要 markdown 代码块标记】" +
+    '\n{"type":"checkpoint_quiz","title":"🎯 闯关检验","intro":"每个词一道应用题，答错要改对才能过关","questions":[' +
+    '{"word":"目标词","stem":"新材料题干（英文情境或句子；可空着让学生填，但绝不含中文释义）","options":{"A":"选项","B":"选项","C":"选项","D":"选项"},"answer":"正解字母","explanation":"≤40字中文：为何对+为何其他错"}' +
+    ',{...第 2 个词...},{...},{...},{...第 5 个词...}]}';
+};
+
+// checkpoint_quiz 单题有效性：题干+选项+答案齐备，≥2 个非空选项，且答案在选项里
+// 渲染门(isValidReview)和组件归一化(CheckpointQuizGame)共用，保证门槛和实际渲染一致
+var cqQuestionValid = function(q){
+  if (!q || !q.stem || !q.options || !q.answer) return false;
+  var keys = Object.keys(q.options).filter(function(k){ return q.options[k] != null && String(q.options[k]).trim(); });
+  return keys.length >= 2 && keys.indexOf(q.answer) !== -1;
 };
 
 // 校验 cloze 题目：passage 里不能出现任何答案词（送分题检测）
@@ -2612,6 +2625,169 @@ var SpeedMatchGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
           </div>
           <button style={{...S.primaryBtn, marginTop:16}} onClick={onNext} disabled={loading}>
             {nextLabel || "→ 下一个词"}
+          </button>
+        </div>
+      )}
+    </>
+  );
+};
+
+// Round 5：闯关检验 —— 5 个词的应用判断题交错出现，答错必须看正解、改对，才能过关
+// 间隔了几个词后再考(retrieval 而非工作记忆)；按词性出题(prompt 端)；错题重排到队尾，全清才出关
+var CheckpointQuizGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
+  var normRef = useRef(null);
+  if (normRef.current === null && data && Array.isArray(data.questions)) {
+    var seen = {}; var qs = [];
+    data.questions.forEach(function(q){
+      if (!cqQuestionValid(q)) return;
+      var keys = Object.keys(q.options).filter(function(k){ return q.options[k] != null && String(q.options[k]).trim(); });
+      var w = String(q.word || "").trim();
+      if (w && seen[w.toLowerCase()]) return;
+      if (w) seen[w.toLowerCase()] = true;
+      qs.push({ id: "q" + qs.length, word: w, stem: String(q.stem).trim(), options: q.options, keys: keys, answer: q.answer, explanation: String(q.explanation || "").trim() });
+    });
+    normRef.current = qs;
+  }
+  var questions = normRef.current || [];
+  var total = questions.length;
+
+  // 一次性：打乱出题顺序(交错) + 每题打乱选项展示顺序
+  var orderRef = useRef(null);
+  if (orderRef.current === null && total) {
+    var idxs = questions.map(function(_, i){ return i; });
+    for (var a = idxs.length - 1; a > 0; a--) { var b = Math.floor(Math.random() * (a + 1)); var t = idxs[a]; idxs[a] = idxs[b]; idxs[b] = t; }
+    var optOrders = {};
+    questions.forEach(function(q, i){
+      var ks = q.keys.slice();
+      for (var x = ks.length - 1; x > 0; x--) { var y = Math.floor(Math.random() * (x + 1)); var tt = ks[x]; ks[x] = ks[y]; ks[y] = tt; }
+      optOrders[i] = ks;
+    });
+    orderRef.current = { idxs: idxs, opt: optOrders };
+  }
+
+  var [remaining, setRemaining] = useState([]);
+  var [picked, setPicked] = useState("");
+  var [revealed, setRevealed] = useState(false);
+  var [cleared, setCleared] = useState({});
+  var [done, setDone] = useState(false);
+  var [xp, setXp] = useState(0);
+  var missedRef = useRef({});
+  var initRef = useRef(false);
+
+  useEffect(function(){
+    if (initRef.current || !total) return;
+    initRef.current = true;
+    setRemaining(orderRef.current.idxs.slice());
+  }, [total]);
+
+  // 安全网：归一化后一道有效题都没有(脏数据)→ 不卡死，直接进下一词
+  useEffect(function(){
+    if (total === 0 && onNext) onNext();
+  }, [total]);
+
+  // 全部清空 → 过关
+  useEffect(function(){
+    if (!initRef.current || done || !total) return;
+    if (remaining.length === 0 && Object.keys(cleared).length >= total) {
+      setDone(true);
+      var earned = 0;
+      questions.forEach(function(q){ earned += missedRef.current[q.id] ? 5 : 10; });
+      setXp(earned);
+      if (sfx?.correct) sfx.correct();
+      if (onCorrect) onCorrect(earned);
+    }
+  }, [remaining, cleared, done, total]);
+
+  if (!data) return null;
+  var curIdx = remaining.length ? remaining[0] : null;
+  var curQ = (curIdx != null) ? questions[curIdx] : null;
+  var clearedCount = Object.keys(cleared).length;
+  var pct = total ? Math.round(clearedCount / total * 100) : 0;
+  var optKeys = (curIdx != null && orderRef.current) ? orderRef.current.opt[curIdx] : [];
+
+  var confirmPick = function(){
+    if (!curQ || !picked || revealed) return;
+    if (picked === curQ.answer) {
+      if (sfx?.correct) sfx.correct();
+      setCleared(function(prev){ var n = { ...prev }; n[curQ.id] = true; return n; });
+      setPicked(""); setRevealed(false);
+      setRemaining(function(r){ return r.slice(1); });
+    } else {
+      if (sfx?.wrong) sfx.wrong();
+      missedRef.current[curQ.id] = true;
+      setRevealed(true);
+    }
+  };
+  var continueAfterMiss = function(){
+    setPicked(""); setRevealed(false);
+    setRemaining(function(r){ return r.slice(1).concat([curIdx]); });
+  };
+
+  return (
+    <>
+      <div style={{...S.tag, background:C.purpleLight, color:C.purple, marginBottom:8}}>{data.title || "🎯 闯关检验"}</div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, fontSize:13, color:C.textSec }}>
+        <div>{data.intro || "每个词一道应用题，答错要改对才能过关"}</div>
+        <span>已过 <strong style={{color:C.green}}>{clearedCount}</strong>/{total}</span>
+      </div>
+      <div style={{ height:6, background:C.border, borderRadius:3, overflow:"hidden", marginBottom:14 }}>
+        <div style={{ height:"100%", width:pct+"%", background:"linear-gradient(90deg,"+C.teal+","+C.green+")", transition:"width 0.3s" }} />
+      </div>
+
+      {!done && curQ && (
+        <div style={{ animation:"phaseSlide 0.35s cubic-bezier(0.34,1.56,0.64,1)" }}>
+          {curQ.word && (
+            <div style={{ fontSize:13, color:C.textSec, marginBottom:6 }}>
+              考点 <strong style={{ color:C.accent, fontFamily:"'Inter',"+FONT, fontSize:15 }}>{curQ.word}</strong>
+            </div>
+          )}
+          <div style={{ fontSize:16, fontWeight:600, color:C.text, lineHeight:1.55, marginBottom:14 }}>{curQ.stem}</div>
+          <div style={{ display:"flex", flexDirection:"column", gap:9, marginBottom:14 }}>
+            {optKeys.map(function(k){
+              var isPicked = picked === k;
+              var isAnswer = k === curQ.answer;
+              var bg = C.bg, bdr = C.border, clr = C.text;
+              if (revealed) {
+                if (isAnswer) { bg = C.greenLight; bdr = C.green; clr = C.green; }
+                else if (isPicked) { bg = C.redLight; bdr = C.red; clr = C.red; }
+              } else if (isPicked) { bg = C.accentLight; bdr = C.accent; clr = C.accent; }
+              return (
+                <button key={k} disabled={revealed} onClick={function(){ if (!revealed) setPicked(k); }} style={{
+                  padding:"13px 16px", background:bg, border:"2px solid "+bdr, borderRadius:12,
+                  cursor: revealed?"default":"pointer", color:clr, fontWeight:600, fontSize:15,
+                  fontFamily:FONT, textAlign:"left", transition:"all 0.15s", lineHeight:1.45,
+                  boxShadow: (!revealed && isPicked)?"0 0 0 2px "+C.accent+"33":"none"
+                }}>
+                  {revealed && isAnswer && "✓ "}{revealed && isPicked && !isAnswer && "✗ "}{String(curQ.options[k])}
+                </button>
+              );
+            })}
+          </div>
+
+          {revealed ? (
+            <div style={{ animation:"fadeUp 0.25s ease-out" }}>
+              {curQ.explanation && (
+                <div style={{ padding:"11px 14px", background:C.gold+"14", border:"1px solid "+C.gold+"44", borderRadius:10, fontSize:14, color:C.text, lineHeight:1.55, marginBottom:12 }}>
+                  💡 {curQ.explanation}
+                </div>
+              )}
+              <button style={S.primaryBtn} onClick={continueAfterMiss}>知道了，再做一遍 →</button>
+            </div>
+          ) : (
+            <button style={{ ...S.primaryBtn, opacity: picked?1:0.5 }} disabled={!picked} onClick={confirmPick}>确认</button>
+          )}
+        </div>
+      )}
+
+      {done && (
+        <div style={{ ...S.reviewScore, animation:"fadeUp 0.3s ease-out", marginTop:8 }}>
+          <div style={{ fontSize:32, marginBottom:6 }}>{Object.keys(missedRef.current).length === 0 ? "🌟" : "💪"}</div>
+          <div style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>
+            {Object.keys(missedRef.current).length === 0 ? "全部一次过关！" : "全部过关 — 错过的已经改对"}
+          </div>
+          <div style={{ fontSize:14, color:C.textSec }}>+{xp} XP</div>
+          <button style={{...S.primaryBtn, marginTop:16}} onClick={onNext} disabled={loading}>
+            {nextLabel || "→ 继续"}
           </button>
         </div>
       )}
@@ -5736,6 +5912,9 @@ export default function App() {
       // - fill_blank（旧）: { questions:[{...}] }
       var isValidReview = function(d) {
         if (!d) return false;
+        // 用和组件归一化相同的判定，且要求至少 4 道有效题(5 词关卡容忍 1 道脏数据)，
+        // 否则判无效 → 走内联重生成，避免门槛被悄悄缩小或出空关卡
+        if (d.type === "checkpoint_quiz" && Array.isArray(d.questions)) return d.questions.filter(cqQuestionValid).length >= 4;
         if (d.type === "speed_match" && Array.isArray(d.pairs) && d.pairs.length > 0) return true;
         if (Array.isArray(d.questions) && d.questions.length > 0 && d.questions.every(function(q){ return q.answer && q.options; })) return true;
         return false;
@@ -9462,7 +9641,21 @@ export default function App() {
         </div>}
       </div>}
 
-      {/* Round 4: speed_match 类型走新组件，旧 fill_blank 类型继续走下方传统填空 UI（兼容旧 cache） */}
+      {/* Round 5: checkpoint_quiz 走闯关检验；speed_match（旧 cache）走速配；旧 fill_blank 走下方传统填空 UI */}
+      {phase === "review" && reviewData?.type === "checkpoint_quiz" && (
+        <div style={{...S.card, animation:"phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)"}}>
+          <CheckpointQuizGame
+            key={"cq-" + ((reviewData.questions || []).map(function(q){ return q && q.word; }).join("|"))}
+            data={reviewData}
+            sfx={sfx}
+            loading={loading}
+            onCorrect={function(score){ save({ ...stats, xp: stats.xp + (score || 50) }); triggerPetCelebrate(2500); }}
+            onNext={afterReview}
+            nextLabel={idx+1>=wordList.length?"🎉 完成！":"→ "+wordList[idx+1]}
+          />
+        </div>
+      )}
+
       {phase === "review" && reviewData?.type === "speed_match" && (
         <div style={{...S.card, animation:"phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)"}}>
           <SpeedMatchGame
@@ -9477,7 +9670,7 @@ export default function App() {
         </div>
       )}
 
-      {phase === "review" && reviewData?.type !== "speed_match" && <div style={{...S.card, animation:"phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)"}}>
+      {phase === "review" && reviewData?.type !== "speed_match" && reviewData?.type !== "checkpoint_quiz" && <div style={{...S.card, animation:"phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)"}}>
         <div style={{...S.tag,background:C.purpleLight,color:C.purple}}>🏆 复习关卡</div>
         {!reviewData?.questions ? <div style={{padding:"8px 0"}}>
           <div style={{background:C.border,borderRadius:8,height:18,width:"55%",marginBottom:10,animation:"skeletonPulse 1.2s ease-in-out infinite"}}/>
