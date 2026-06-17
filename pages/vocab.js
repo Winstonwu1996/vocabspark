@@ -2820,6 +2820,8 @@ export default function App() {
   var [wordList, setWordList] = useState([]);
   var [fileLabel, setFileLabel] = useState("");
   var [wordStatusMap, setWordStatusMap] = useState({});
+  // 始终镜像最新 wordStatusMap，供快速连发写入（快筛）读取真实最新值，避免陈旧闭包覆盖
+  var wordStatusMapRef = useRef({});
   var [reviewWordData, setReviewWordData] = useState({});
   var [wordStatusFilter, setWordStatusFilter] = useState("all");
   var [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
@@ -3224,6 +3226,24 @@ export default function App() {
     return function() { clearInterval(id); };
   }, [phase]);
   useEffect(function() { if (topRef.current) topRef.current.scrollIntoView({ behavior:"smooth", block:"start" }); }, [phase, idx]);
+
+  // 保持 wordStatusMapRef 与 state 同步（外部来源 load/cloud/reset 设置 state 后兜底刷新 ref）
+  useEffect(function() { wordStatusMapRef.current = wordStatusMap; }, [wordStatusMap]);
+
+  // 统一写入口：以 ref 为真实最新基准，避免快速连发（快筛）时陈旧闭包互相覆盖
+  // updates: { [word]: status }，status 为 falsy 时删除该词
+  var writeWordStatus = function(updates) {
+    var next = { ...(wordStatusMapRef.current || {}) };
+    Object.keys(updates).forEach(function(w) {
+      if (!updates[w] || updates[w] === "unlearned") delete next[w];
+      else next[w] = updates[w];
+    });
+    wordStatusMapRef.current = next; // 同步更新 ref，下一次连发立即读到
+    setWordStatusMap(next);
+    doSave({ wordStatusMap: next });
+    if (userRef.current) syncToCloud();
+    return next;
+  };
 
   // A: 进入 guess phase 且 guessData 已就绪时记录开始时间（不包括加载等待）
   useEffect(function() {
@@ -4809,12 +4829,8 @@ export default function App() {
   };
 
   var updateManualWordStatus = function(word, nextStatus) {
-    var next = { ...(wordStatusMap || {}) };
-    if (!nextStatus) delete next[word];
-    else next[word] = nextStatus;
-    setWordStatusMap(next);
-    doSave({ wordStatusMap: next });
-    if (userRef.current) syncToCloud();
+    var u = {}; u[word] = nextStatus;
+    writeWordStatus(u);
   };
 
   // 从 dataCache 提取 meaning fallback：teach 的 definition.zh 优先，其次 guess answer 选项
@@ -5687,9 +5703,9 @@ export default function App() {
   var screeningMarkWord = function(known) {
     var word = screeningWords[screeningIdx];
     if (known) {
-      var next = { ...(wordStatusMap || {}), [word]: "skipped" };
-      setWordStatusMap(next);
-      doSave({ wordStatusMap: next });
+      // 标"认识"=skipped，走统一写入口（ref 基准），快速连筛不丢标记
+      var u = {}; u[word] = "skipped";
+      writeWordStatus(u);
     }
     var newUnknown = known ? screeningStats.unknown : screeningStats.unknown + 1;
     var quota = dailyNewWords || 20;
@@ -6358,15 +6374,12 @@ export default function App() {
     var words = parseWordsFromInput(wordInput);
     var learnedSet = new Set((learned || []).concat(words.slice(0, Math.max(0, idx + 1))));
 
-    var next = { ...(wordStatusMap || {}) };
+    var updates = {};
     selected.forEach(function(w) {
       if (!learnedSet.has(w)) return; // keep parity with single-word guard: only learned words can be manually marked
-      if (!nextStatus || nextStatus === "unlearned") delete next[w];
-      else next[w] = nextStatus;
+      updates[w] = (!nextStatus || nextStatus === "unlearned") ? null : nextStatus;
     });
-    setWordStatusMap(next);
-    doSave({ wordStatusMap: next });
-    if (userRef.current) syncToCloud();
+    writeWordStatus(updates);
     setSelectedWords({});
   };
 
