@@ -12,7 +12,7 @@ import { mergeStates, validateMerged } from '../lib/syncMerge';
 import { getSyncClient } from '../lib/sync-client-singleton'; // 方案1: vocab+history 共用单一同步实例
 import { backupOnBoot, clearBackups } from '../lib/local-backup'; // sync 重构兜底: sync 前快照 blob + 登出清备份
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
-import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, ACTIVE_RECALL_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
+import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
 import { checkMorphFill } from '../lib/morphFillSanitize';
 import { hasTypedAnswer, hasUsableMeaning } from '../lib/typedRecall';
@@ -785,20 +785,33 @@ var getTeachCacheKey = (word, classifyResult, goal) => {
   return parts.join(":");
 };
 
+// 难度铁律 — 注入所有 spectrum 题型，杜绝"闭眼选/应付"(创始人 2026-06 反馈：实测 ~14s/词，
+// 干扰项是生造假词或明显无关项 → 一眼排除、不用真思考)。
+var HARD_DISTRACTOR_RULE =
+  "\n\n❗❗【难度铁律 — 适用全部选项，违反则题作废】❗❗\n" +
+  "1. 4 个选项必须【全是词典里真实存在的英文词/搭配】，严禁生造、臆造词形、拼错词\n" +
+  "   (反例：给 apparatus 编 apparate/apparitive/apparation 这类不存在的词 = 送分，禁止)。\n" +
+  "2. 3 个干扰必须【似是而非 + 同难度 + 真实】：真实但放在此处不准确/不地道，逼学生真的辨析；\n" +
+  "   严禁混入明显无关 / 明显荒谬的送分项(如 breakfast / hairstyle 这种一眼排除的)。\n" +
+  "3. 目标：学生【必须真正理解或辨析才能选对】，绝不能靠排除法闭眼选。\n";
+
 // Phase 2 Round 1.5：spectrum phase 按词型路由不同玩法
 // A 程度词 → 行为一致性判断（behavior_match）— 真正测使用感
 // 其他词型（Round 2-4 逐步实现）：暂时走 legacy gradient 保证不回归
 var buildSpectrumPrompt = (word, classifyResult) => {
   var wordType = classifyResult?.wordType || null;
+  var p;
   switch (wordType) {
-    case "A": return buildBehaviorMatchPrompt(word);
-    case "B": return buildCollocationFillPrompt(word);
-    case "C": return buildMorphFillPrompt(word);
-    case "D": return buildMnemonicFillPrompt(word);
+    case "A": p = buildBehaviorMatchPrompt(word); break;
+    case "B": p = buildCollocationFillPrompt(word); break;
+    case "C": p = buildMorphFillPrompt(word); break;
+    case "D": p = buildMnemonicFillPrompt(word); break;
     case "E":
-    case "F": return buildContextChoicePrompt(word, wordType);
-    default: return buildLegacyGradientPrompt(word);
+    case "F": p = buildContextChoicePrompt(word, wordType); break;
+    default: p = buildLegacyGradientPrompt(word); break;
   }
+  // 统一追加难度铁律(真实干扰项 + 似是而非 + 禁送分)，作为最后一条强约束
+  return p + HARD_DISTRACTOR_RULE;
 };
 
 // Legacy 光谱排序（保留：A 类替换后，其他词型暂时用，Round 2-4 逐步替换）
@@ -918,9 +931,11 @@ var buildMorphFillPrompt = (word) => {
     "【句子】1 句完整英文，留 ___ 给目标词形\n" +
     "句子的【语法位置】决定要哪种词形（need a noun / need a verb / need an adj 等）\n\n" +
     "【4 个选项 — 关键】\n" +
-    "✅ 都是 \"" + word + "\" 的同根词形（不同词性或不同前缀）\n" +
     "✅ 1 个正解：词性 + 含义都对\n" +
-    "✅ 3 个干扰：词形对但词性错（语法位置不对），或词形对但语义偏移\n\n" +
+    "✅ 3 个干扰：" + word + " 的【真实存在的】同根词形（不同词性/前缀），词性错或语义偏移，逼学生靠语法位置+词义辨析\n" +
+    "❗ 真实性铁律：4 个选项必须都是【词典里真有的英文词】。若 \"" + word + "\" 没有 ≥3 个真实同根词形\n" +
+    "   （如 apparatus 并没有 apparate/apparitive/apparation 这种真实词），【绝不要硬编同根词】，\n" +
+    "   改用 3 个【真实的形近词 / 易混词】当干扰（仍要真实、似是而非、同难度）。宁可换策略也不出生造词。\n\n" +
     "【参考示例】（学风格，不是学 comprehend 内容）\n" +
     "{\n" +
     '  "morph": "com- (一起) + -prehend (抓住) → 全部抓住 = 理解",\n' +
@@ -2805,10 +2820,7 @@ export default function App() {
   var [feedbackToast, setFeedbackToast] = useState(null); // 反馈提交后的 toast 文字
   var [rateLimitToast, setRateLimitToast] = useState(null); // 服务繁忙（429）提示，自动消失
   var feedbackToastTimerRef = useRef(null);
-  var [recallChoice, setRecallChoice] = useState(null); // active recall 自测：null / "easy" / "fuzzy" / "hard"
-  // B: teach 页面深度奖励 — 「能」按钮 10 秒倒计时禁用（强制读完才有资格说"会"）
-  var [teachReadSec, setTeachReadSec] = useState(10);
-  var teachReadIntervalRef = useRef(null);
+  // (1秒自测已移除：recallChoice / teachReadSec / teachReadIntervalRef 一并删除)
   // D: 中文释义折叠 state（默认收起，让用户先用英文 gloss 思考）
   var [showDefZh, setShowDefZh] = useState(false);
   var [showMyDict, setShowMyDict] = useState(false); // "我的词典"模态
@@ -2955,7 +2967,6 @@ export default function App() {
       if (streakToastTimerRef.current) clearTimeout(streakToastTimerRef.current);
       if (guessAdvanceRef.current) clearTimeout(guessAdvanceRef.current);
       if (loginToastTimerRef.current) clearTimeout(loginToastTimerRef.current);
-      if (teachReadIntervalRef.current) clearInterval(teachReadIntervalRef.current);
     };
   }, []);
   var speedWaitAbortRef = useRef(false);
@@ -3045,24 +3056,7 @@ export default function App() {
     }
   }, [phase, currentWord, guessData?.context, guessSubmitted]);
 
-  // B: 进入 teach phase 且内容就绪时启动 10 秒倒计时（强制阅读时长）
-  useEffect(function() {
-    if (phase !== "teach" || !teachData || teachStreaming) {
-      setTeachReadSec(0);
-      if (teachReadIntervalRef.current) { clearInterval(teachReadIntervalRef.current); teachReadIntervalRef.current = null; }
-      return;
-    }
-    if (recallChoice) { setTeachReadSec(0); return; } // 已自评过不再计时
-    setTeachReadSec(10);
-    if (teachReadIntervalRef.current) clearInterval(teachReadIntervalRef.current);
-    teachReadIntervalRef.current = setInterval(function() {
-      setTeachReadSec(function(s) {
-        if (s <= 1) { clearInterval(teachReadIntervalRef.current); teachReadIntervalRef.current = null; return 0; }
-        return s - 1;
-      });
-    }, 1000);
-    return function() { if (teachReadIntervalRef.current) { clearInterval(teachReadIntervalRef.current); teachReadIntervalRef.current = null; } };
-  }, [phase, currentWord, teachStreaming, recallChoice, !!teachData]);
+  // (1秒自测已移除：原 teach 阅读计时器一并删除)
   useEffect(function() { if (guessSubmitted || reviewSubmitted || clozeSubmitted) setTimeout(function() { if (contentEndRef.current) contentEndRef.current.scrollIntoView({ behavior:"smooth", block:"end" }); }, 200); }, [guessSubmitted, reviewSubmitted, clozeSubmitted]);
 
   useEffect(function() {
@@ -5103,7 +5097,6 @@ export default function App() {
     setReviewData(null); setReviewAnswers({}); setReviewSubmitted(false); setPhonetic("");
     setClozeData(null); setClozeAnswers({}); setClozeSubmitted(false);
     setShakeWrong(false); setBounceCorrect(false);
-    setRecallChoice(null); // 新词进入 teach 时清掉旧的自测结果
     setShowDefZh(false); // 新词重置中文折叠（强制先看英文 gloss）
     setWordStart(Date.now());
 
@@ -9329,94 +9322,8 @@ export default function App() {
             <TeachJSON data={teachData} streaming={teachStreaming} />
           </div>
           {/* Active Recall 自测钩子（Phase A 核心）—— 把"被动阅读"变"主动判断"，留存率从 5% → 75% */}
-          {!teachStreaming && (
-            <div style={{
-              marginBottom: 16,
-              padding: "14px 16px",
-              background: "linear-gradient(135deg, " + C.tealLight + " 0%, #fff 100%)",
-              border: "1.5px dashed " + C.teal + "88",
-              borderRadius: 12,
-            }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: C.teal, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                🤔 1 秒自测 <span style={{ fontSize: 10, color: C.textSec, fontWeight: 500, marginLeft: "auto" }}>诚实自评 +8 XP / 已掌握 +3 XP</span>
-              </div>
-              <div style={{ fontSize: 13, color: C.text, marginBottom: 10, lineHeight: 1.5 }}>
-                看一眼上方单词，<strong>不假思索</strong>能说出意思吗？
-              </div>
-              {!recallChoice ? (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                  {[
-                    {
-                      key: "easy",
-                      label: teachReadSec > 0 ? ("⏳ " + teachReadSec + " s") : "✅ 能",
-                      sub: teachReadSec > 0 ? "再读一会儿" : "+3 XP",
-                      clr: C.green,
-                      lockedByTimer: teachReadSec > 0,
-                      cb: function(){
-                        if (currentWord && (!wordStatusMap[currentWord] || wordStatusMap[currentWord]==="unlearned" || wordStatusMap[currentWord]==="learning")) updateManualWordStatus(currentWord, ACTIVE_RECALL_STATUS.easy);
-                        save({ ...stats, xp: (stats.xp || 0) + 3 });
-                      }
-                    },
-                    {
-                      key: "fuzzy",
-                      label: "🤔 模糊",
-                      sub: "+8 XP · 诚实",
-                      clr: C.gold,
-                      lockedByTimer: false,
-                      cb: function(){
-                        updateManualWordStatus(currentWord, ACTIVE_RECALL_STATUS.fuzzy);
-                        save({ ...stats, xp: (stats.xp || 0) + 8 });
-                      }
-                    },
-                    {
-                      key: "hard",
-                      label: "❌ 想不起",
-                      sub: "+8 XP · 诚实",
-                      clr: C.red,
-                      lockedByTimer: false,
-                      cb: function(){
-                        // ★ 新词阶段"想不起"→ uncertain（聚焦复习），绝不写 error。
-                        // error 只来自复习 forgot；写 error 会让新词被回收重学（Codex P1）。
-                        updateManualWordStatus(currentWord, ACTIVE_RECALL_STATUS.hard);
-                        save({ ...stats, xp: (stats.xp || 0) + 8 });
-                      }
-                    },
-                  ].map(function(b){
-                    var locked = b.lockedByTimer;
-                    return (
-                      <button
-                        key={b.key}
-                        onClick={function(){ if (locked) return; b.cb(); setRecallChoice(b.key); }}
-                        disabled={locked}
-                        style={{
-                          padding: "10px 6px",
-                          background: locked ? C.bg : "#fff",
-                          border: "2px solid " + C.border,
-                          borderRadius: 10,
-                          cursor: locked ? "not-allowed" : "pointer",
-                          opacity: locked ? 0.55 : 1,
-                          fontSize: 13,
-                          fontWeight: 700,
-                          color: b.clr,
-                          fontFamily: FONT,
-                          transition: "all 0.15s",
-                          textAlign: "center",
-                        }}>
-                        <div style={{ marginBottom: 2 }}>{b.label}</div>
-                        <div style={{ fontSize: 10, fontWeight: 500, color: C.textSec, letterSpacing: "0.03em" }}>{b.sub}</div>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.textSec, padding: "4px 0" }}>
-                  {recallChoice === "easy" && <><span style={{color:C.green, fontWeight:700}}>✅ 已掌握</span> · 📅 <strong style={{...NUM, color:C.teal}}>3 天</strong>后再考</>}
-                  {recallChoice === "fuzzy" && <><span style={{color:C.gold, fontWeight:700}}>🤔 不确定</span> · 📅 <strong style={{...NUM, color:C.teal}}>1 天</strong>后再考</>}
-                  {recallChoice === "hard" && <><span style={{color:C.red, fontWeight:700}}>❌ 想不起</span> · 📅 <strong style={{...NUM, color:C.teal}}>明天</strong>重点巩固</>}
-                </div>
-              )}
-            </div>
-          )}
+          {/* 1秒自测已移除(创始人 2026-06)：在学习页本身易被反射性点"能"或跳过、价值低且助长"应付"；
+              改靠更难的光谱测试(真实干扰项)+ 复习排期来真正检验掌握 */}
           <button style={{...S.primaryBtn, opacity: teachStreaming ? 0.6 : 1, cursor: teachStreaming ? "progress" : "pointer"}} onClick={teachToSpectrum} disabled={loading || teachStreaming}>{teachStreaming ? "✨ 正在生成...": (spectrumData?"🎮 词义光谱挑战 →":"→ 下一个词")}</button>
           {!teachStreaming && teachContent && teachContent !== "__FAILED__" && (
             <div style={{textAlign:"right",marginTop:8}}>
