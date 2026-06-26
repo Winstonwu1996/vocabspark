@@ -873,6 +873,7 @@ var buildCollocationFillPrompt = (word) => {
     "2. sentence 必须**明确包含 \"" + word + "\" 原形**，且 ___ 空格在另一个位置\n" +
     "3. 用户要选的是【与 " + word + " 搭配的另一半词】，不是 " + word + " 本身\n" +
     "🚫 错误示范：'Willow had to ___ the project' + options[abandon, pursue, embrace, review] —— 这就是把目标词放选项里，闭眼可选\n" +
+    "🚫🚫 真实翻车案例(collar)：sentence='keep your ___ collar up' + options[shirt, jacket, collar, sleeve] + answer=collar —— 目标词进了选项、答案就是它本身、句里还重复出现 collar，学生不动脑直接选 collar。【绝对禁止这样】\n" +
     "✅ 正确做法：'Willow had to abandon ___ the project' + options[in, on, of, at] 或类似搭配介词/补语\n" +
     "或：'Willow refused to ___ abandon her plan' + options[completely, suddenly, totally, instantly] 选副词搭配\n\n" +
     "【任务】场景 + 一句带空格的英文 + 4 个搭配候选，测学生是否掌握 \"" + word + "\" 的典型搭配（动词搭配/介词搭配/副词搭配/常见宾语等）。\n\n" +
@@ -1073,6 +1074,8 @@ var buildReviewPrompt = (words) => {
     "\n- 具体名词 → 实例 / 辨析：给 4 个【新例子或新情境】选哪个才是它，或在它与近义名词之间选" +
     "\n- 抽象名词 / 多义词 → 新情境体现：4 个新场景里哪个最贴它的核心义 / 选目标义项" +
     "\n\n【铁律——这关决定她过不过脑子】" +
+    "\n- ❗题干必须【自足】：学生看不到目标词是哪个，只凭题干+选项就能作答。绝不出『下面哪个词是 X』『X 怎么拼』这类纯认词/拼写题——那等于把答案写脸上。" +
+    "\n- ❗题干里【绝不能出现目标词本身】(原形/任何词形)。若正解选项就是目标词，题干必须是一段不含该词的语境，让她靠『理解这段话→该用哪个词』推出来(像完形)。" +
     "\n- 题干必须是【新材料】，绝不照搬讲解里出现过的例句" +
     "\n- 题干和选项里【绝不能直接出现该词的中文释义】，否则就成了送分题" +
     "\n- 4 个选项必须【全是真实存在】的词 / 搭配 / 情境；3 个干扰似是而非、同难度、真实，严禁生造、严禁明显无关的一眼排除项" +
@@ -2166,10 +2169,24 @@ var BehaviorMatchGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) =
 
 // B 搭配型 → 固定搭配填空
 // scenario + sentence (含 ___) + 4 个搭配候选
-var CollocationFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
+var CollocationFillGame = ({ data, word, onCorrect, onNext, sfx, loading, nextLabel }) => {
   var [selected, setSelected] = useState(null);
   var [submitted, setSubmitted] = useState(false);
-  if (!data) return null;
+  // 防泄漏：LLM 偶尔把目标词放进选项/当答案(如 collar → answer=collar)，那就是闭眼选。
+  // 检测到就跳过这道(即时槽只是轻编码，真检验在 5 词关卡)，不给孩子送分题。
+  var _leaks = (function(){
+    if (!data || !data.options || !word) return false;
+    var norm = function(s){ return String(s || "").toLowerCase().replace(/[^a-z]/g, ""); };
+    var w = norm(word);
+    if (!w) return false;
+    var forms = [w, w + "s", w + "es", w + "ed", w + "ing", w + "d"];
+    return Object.keys(data.options).some(function(k){ return forms.indexOf(norm(data.options[k])) !== -1; });
+  })();
+  var leakSkippedRef = useRef(false);
+  useEffect(function(){
+    if (_leaks && !leakSkippedRef.current && onNext) { leakSkippedRef.current = true; onNext(); }
+  }, [_leaks]);
+  if (!data || _leaks) return null;
   var isCorrect = submitted && selected === data.answer;
   var optKeys = ["A","B","C","D"];
   // 把 ___ 替换为高亮的填空标记，让所选选项动态嵌入
@@ -2736,11 +2753,7 @@ var CheckpointQuizGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) 
 
       {!done && curQ && (
         <div style={{ animation:"phaseSlide 0.35s cubic-bezier(0.34,1.56,0.64,1)" }}>
-          {curQ.word && (
-            <div style={{ fontSize:13, color:C.textSec, marginBottom:6 }}>
-              考点 <strong style={{ color:C.accent, fontFamily:"'Inter',"+FONT, fontSize:15 }}>{curQ.word}</strong>
-            </div>
-          )}
+          {/* 不显示考点词：显示了她就能拿标签去匹配同名选项，闭眼选。靠题干推理，答完(reveal)才点出是哪个词 */}
           <div style={{ fontSize:16, fontWeight:600, color:C.text, lineHeight:1.55, marginBottom:14 }}>{curQ.stem}</div>
           <div style={{ display:"flex", flexDirection:"column", gap:9, marginBottom:14 }}>
             {optKeys.map(function(k){
@@ -2766,11 +2779,10 @@ var CheckpointQuizGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) 
 
           {revealed ? (
             <div style={{ animation:"fadeUp 0.25s ease-out" }}>
-              {curQ.explanation && (
-                <div style={{ padding:"11px 14px", background:C.gold+"14", border:"1px solid "+C.gold+"44", borderRadius:10, fontSize:14, color:C.text, lineHeight:1.55, marginBottom:12 }}>
-                  💡 {curQ.explanation}
-                </div>
-              )}
+              <div style={{ padding:"11px 14px", background:C.gold+"14", border:"1px solid "+C.gold+"44", borderRadius:10, fontSize:14, color:C.text, lineHeight:1.55, marginBottom:12 }}>
+                {curQ.word && <span style={{ fontWeight:700, color:C.accent, fontFamily:"'Inter',"+FONT }}>{curQ.word}</span>}
+                {curQ.explanation ? <span> — {curQ.explanation}</span> : <span> 是这道题的考点。</span>}
+              </div>
               <button style={S.primaryBtn} onClick={continueAfterMiss}>知道了，再做一遍 →</button>
             </div>
           ) : (
@@ -9578,6 +9590,7 @@ export default function App() {
         <div style={{...S.specCard, animation: phaseDir===1 ? "phaseSlide 0.42s cubic-bezier(0.34, 1.56, 0.64, 1)" : "fadeUp 0.3s ease-out"}}>
           <CollocationFillGame
             data={spectrumData}
+            word={currentWord}
             sfx={sfx}
             loading={loading}
             onCorrect={function(){ var got = triggerReward(10); save({ ...stats, xp: stats.xp + got }); triggerPetCelebrate(1500); }}
