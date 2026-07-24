@@ -61,7 +61,7 @@ export default async function handler(req, res) {
 
   // LLM 出释义
   try {
-    const { text } = await callLLM({
+    const { text, provider } = await callLLM({
       system: "你是精准的英中词典。只输出该英文单词最核心的中文释义，不超过 8 个汉字，可用「/」分隔并列义。不要拼音、不要英文、不要例句、不要任何解释或多余标点。",
       message: word,
       maxTokens: 32,
@@ -69,9 +69,11 @@ export default async function handler(req, res) {
       temperature: 0,
     });
     const zh = sanitizeGloss(text);
+    console.warn("[quick-def][DIAG]", word, "provider=" + provider, "rawLen=" + String(text || "").length, "raw=" + JSON.stringify(String(text || "").slice(0, 50)), "zh=" + JSON.stringify(zh));
     if (zh) { setCached(cacheKey, zh, CACHE_TTL_SEC).catch(() => {}); } // 只缓存有效释义
     res.status(200).json({ zh });
   } catch (err) {
+    console.warn("[quick-def][DIAG] FAIL", word, (err && err.message ? err.message : String(err)).slice(0, 200));
     try { Sentry.captureException(err, { tags: { route: "/api/quick-def" } }); } catch (e) {}
     res.status(200).json({ zh: "" });
   }
