@@ -7,7 +7,7 @@ import { getCached, setCached } from "../../lib/teachCache";
 import { callLLM } from "../../lib/llm-providers";
 import * as Sentry from "@sentry/nextjs";
 
-export const config = { maxDuration: 15 };
+export const config = { maxDuration: 30 };
 
 const CACHE_PREFIX = "qd-v1:";
 const CACHE_TTL_SEC = 90 * 24 * 60 * 60; // 90 天
@@ -64,8 +64,8 @@ export default async function handler(req, res) {
     const { text } = await callLLM({
       system: "你是精准的英中词典。只输出该英文单词最核心的中文释义，不超过 8 个汉字，可用「/」分隔并列义。不要拼音、不要英文、不要例句、不要任何解释或多余标点。",
       message: word,
-      maxTokens: 24,
-      timeoutMs: 8000,
+      maxTokens: 32,
+      timeoutMs: 15000, // DeepSeek 在 US→CN 跨境下常 >8s，给足时间；否则总落到失效的 Gemini fallback → 返空
       temperature: 0,
     });
     const zh = sanitizeGloss(text);
