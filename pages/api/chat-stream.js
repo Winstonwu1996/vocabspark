@@ -65,7 +65,7 @@ const buildProviders = (userApiKeys) => {
         family: "deepseek",
         url: "https://api.deepseek.com/v1/chat/completions",
         apiKey: userApiKeys.deepseek,
-        model: "deepseek-chat",
+        model: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
       });
     }
     if (userApiKeys.gemini) {
@@ -86,7 +86,7 @@ const buildProviders = (userApiKeys) => {
       family: "deepseek",
       url: "https://api.deepseek.com/v1/chat/completions",
       apiKey: process.env[k.env],
-      model: "deepseek-chat",
+      model: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
     });
   }
 
@@ -262,7 +262,10 @@ export default async function handler(req) {
               { role: "system", content: system },
               { role: "user", content: message },
             ],
-          }, jsonMode ? { response_format: { type: "json_object" } } : {})),
+          },
+          // V4-flash 默认可能开思考模式，显式关闭：否则 stream 会先吐推理串，污染 teach 内容 + token 暴涨
+          provider.family === "deepseek" ? { thinking: { type: "disabled" } } : {},
+          jsonMode ? { response_format: { type: "json_object" } } : {})),
           signal: AbortSignal.timeout(perProviderTimeoutMs),
         });
 

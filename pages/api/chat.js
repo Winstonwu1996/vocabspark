@@ -31,7 +31,7 @@ const buildProviders = () => {
       family: "deepseek",
       url: "https://api.deepseek.com/v1/chat/completions",
       apiKey: ((envName) => () => process.env[envName])(k.env),
-      model: "deepseek-chat",
+      model: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
     });
   }
 
@@ -100,20 +100,24 @@ function recordCircuitSuccess(providerName) {
 }
 
 async function callProvider(provider, system, message, maxTokens, timeoutMs) {
+  const reqBody = {
+    model: provider.model,
+    max_tokens: maxTokens,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: message },
+    ],
+  };
+  // V4-flash 默认可能开思考模式，显式关闭以保持旧 deepseek-chat 行为
+  // （否则响应被推理串污染 → teach/guess 的 JSON 解析全崩 + output token 暴涨）
+  if (provider.family === "deepseek") reqBody.thinking = { type: "disabled" };
   const response = await fetch(provider.url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${provider.apiKey()}`,
     },
-    body: JSON.stringify({
-      model: provider.model,
-      max_tokens: maxTokens,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: message },
-      ],
-    }),
+    body: JSON.stringify(reqBody),
     signal: AbortSignal.timeout(timeoutMs),
   });
 
@@ -221,7 +225,7 @@ export default async function handler(req, res) {
         family: "deepseek",
         url: "https://api.deepseek.com/v1/chat/completions",
         apiKey: () => userApiKeys.deepseek,
-        model: "deepseek-chat",
+        model: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
       });
     }
     if (userApiKeys.gemini) {
