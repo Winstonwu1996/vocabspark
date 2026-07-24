@@ -5577,7 +5577,8 @@ export default function App() {
     if (startIdx === 0) {
       // 新词学习只挑"从没学过"的词。error（复习忘记）/mastered/learning/uncertain/skipped
       // 全排除，各有归宿（复习 / 深度复习），不再混进新词学习重教（用户实测痛点）。
-      var unlearned = selectUnlearnedWords(rawWords, wordStatusMap);
+      // 用 ref 取最新 wordStatusMap：快筛刚标的 skip 可能还没落到 state 闭包，用 ref 防边界竞态漏筛。
+      var unlearned = selectUnlearnedWords(rawWords, wordStatusMapRef.current || wordStatusMap);
       // ★ 没有未学新词时绝不回退到 rawWords（那会把 error/已掌握的词当新词重学 —— 正是 bug 本身）。
       //   改为引导用户去复习 / 重点攻克。
       if (unlearned.length === 0) {
@@ -5658,6 +5659,20 @@ export default function App() {
   };
 
   // ── Quick Screening Mode ──
+  // MyMemory 免费翻译在大列表快筛下极不可靠（配额耗尽 / 错误的翻译记忆匹配），
+  // 会回垃圾：dislease（非中文回显）、吡吡[hua1]（张冠李戴）。这里把明显垃圾滤成"无释义"，
+  // 不给孩子看错的。彻底修需换可靠词源（DeepSeek+缓存），待定。
+  var sanitizeScreeningZh = function(zh, word, data) {
+    var t = String(zh || "").trim();
+    if (!t) return "";
+    if (data && data.responseStatus != null && Number(data.responseStatus) !== 200) return ""; // 配额/错误
+    if (/MYMEMORY|QUOTA|INVALID|NO QUERY|WARNING|USAGE LIMIT/i.test(t)) return "";
+    if (!/[一-鿿]/.test(t)) return "";  // 无中日韩表意字 → 英文回显/乱码(如 dislease)
+    if (t.toLowerCase() === String(word || "").toLowerCase()) return ""; // 回显原词
+    if (t.length > 20) return "";                              // 过长基本是整句/乱码，非词义
+    return t;
+  };
+
   var fetchScreeningDef = function(word) {
     if (screeningDefCache.current[word]) {
       setScreeningDef(screeningDefCache.current[word]);
@@ -5669,7 +5684,7 @@ export default function App() {
       .then(function(r) { return r.json(); })
       .then(function(data) {
         var zh = data?.responseData?.translatedText || "";
-        var cleanZh = (zh && zh.toLowerCase() !== word.toLowerCase()) ? zh : "";
+        var cleanZh = sanitizeScreeningZh(zh, word, data);
         var result = { zh: cleanZh, loading: false };
         screeningDefCache.current[word] = result;
         setScreeningDef(result);
@@ -5691,7 +5706,7 @@ export default function App() {
             .then(function(r) { return r.json(); })
             .then(function(d) {
               var zh = d?.responseData?.translatedText || "";
-              screeningDefCache.current[word] = { zh: (zh && zh.toLowerCase() !== word.toLowerCase()) ? zh : "", loading: false };
+              screeningDefCache.current[word] = { zh: sanitizeScreeningZh(zh, word, d), loading: false };
             })
             .catch(function() { screeningDefCache.current[word] = { zh: "", loading: false }; });
         })(w);
