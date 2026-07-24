@@ -20,13 +20,16 @@ function normalizeWord(raw) {
   return w;
 }
 
-// 收敛 LLM 输出为干净短释义；无中文/过长/带英文一律判废（返 ""）
+// 收敛 LLM 输出为干净短释义。
+// 模型常在括号里回显英文/拼音（如「共识 (consensus)」），要【剥掉】而不是【判废】——
+// 否则 consensus/benevolent 这类词会被整条丢掉返空。剥完仍无中文才判废。
 function sanitizeGloss(text) {
   if (!text) return "";
   let t = String(text).trim().split(/\r?\n/)[0].trim();
-  t = t.replace(/^[\s"'「『（(]+/, "").replace(/[\s"'」』）).。;；,，]+$/, "").trim();
-  if (!/[一-鿿]/.test(t)) return "";        // 必须含中日韩表意字，否则是英文回显/乱码
-  if (/[a-zA-Z]{2,}/.test(t)) return "";     // 混入英文单词 → 不是纯释义
+  t = t.replace(/[（(][^）)]*[）)]/g, "");            // 去括号及其内容（多是英文回显/拼音）
+  t = t.replace(/[a-zA-Z]{2,}/g, "");                // 去残留英文串
+  t = t.replace(/^[\s"'「『·,，、;；:：\-]+/, "").replace(/[\s"'」』.。,，、;；:：\-]+$/, "").trim();
+  if (!/[一-鿿]/.test(t)) return "";                 // 剥完仍无中日韩表意字 → 判废
   if (t.length > 14) t = t.slice(0, 14);
   return t;
 }
