@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { supabase } from '../lib/supabase';
 import { C, FONT, FONT_DISPLAY, NUM, globalCSS, S, getWordTheme } from '../lib/theme';
-import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON, parsePartialJSON, callClassify, METHOD_SCHEMAS, METHOD_EXAMPLES, VISUAL_ANCHOR_FORMATS } from '../lib/api';
+import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON, parsePartialJSON, callClassify, fetchQuickDef, METHOD_SCHEMAS, METHOD_EXAMPLES, VISUAL_ANCHOR_FORMATS } from '../lib/api';
 import { trackFunnel } from '../lib/analytics';
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
@@ -2865,6 +2865,7 @@ export default function App() {
   var [screeningFlipped, setScreeningFlipped] = useState(false);
   var [screeningDef, setScreeningDef] = useState(null); // { meaning, phonetic, loading }
   var screeningDefCache = useRef({});
+  var screeningDefReqRef = useRef(null); // 防陈旧响应：LLM 释义比 MyMemory 慢，翻页后旧词的返回不能覆盖新词
   var [quickReviewQueue, setQuickReviewQueue] = useState([]);
   var [quickReviewIdx, setQuickReviewIdx] = useState(0);
   var [quickReviewFlipped, setQuickReviewFlipped] = useState(false);
@@ -5662,37 +5663,24 @@ export default function App() {
   // MyMemory 免费翻译在大列表快筛下极不可靠（配额耗尽 / 错误的翻译记忆匹配），
   // 会回垃圾：dislease（非中文回显）、吡吡[hua1]（张冠李戴）。这里把明显垃圾滤成"无释义"，
   // 不给孩子看错的。彻底修需换可靠词源（DeepSeek+缓存），待定。
-  var sanitizeScreeningZh = function(zh, word, data) {
-    var t = String(zh || "").trim();
-    if (!t) return "";
-    if (data && data.responseStatus != null && Number(data.responseStatus) !== 200) return ""; // 配额/错误
-    if (/MYMEMORY|QUOTA|INVALID|NO QUERY|WARNING|USAGE LIMIT/i.test(t)) return "";
-    if (!/[一-鿿]/.test(t)) return "";  // 无中日韩表意字 → 英文回显/乱码(如 dislease)
-    if (t.toLowerCase() === String(word || "").toLowerCase()) return ""; // 回显原词
-    if (t.length > 20) return "";                              // 过长基本是整句/乱码，非词义
-    return t;
-  };
-
   var fetchScreeningDef = function(word) {
     if (screeningDefCache.current[word]) {
       setScreeningDef(screeningDefCache.current[word]);
       return;
     }
     setScreeningDef({ zh: "", loading: true });
-    // Chinese translation only (faster for screening)
-    fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(word) + "&langpair=en|zh-CN")
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        var zh = data?.responseData?.translatedText || "";
-        var cleanZh = sanitizeScreeningZh(zh, word, data);
-        var result = { zh: cleanZh, loading: false };
+    screeningDefReqRef.current = word;
+    // DeepSeek 词典级释义 + 服务端缓存（替代不可靠的 MyMemory 机翻）
+    fetchQuickDef(word)
+      .then(function(zh) {
+        var result = { zh: zh || "", loading: false };
         screeningDefCache.current[word] = result;
-        setScreeningDef(result);
+        if (screeningDefReqRef.current === word) setScreeningDef(result); // 陈旧响应不覆盖新词
       })
       .catch(function() {
         var result = { zh: "", loading: false };
         screeningDefCache.current[word] = result;
-        setScreeningDef(result);
+        if (screeningDefReqRef.current === word) setScreeningDef(result);
       });
   };
 
@@ -5702,12 +5690,8 @@ export default function App() {
       var w = words[i];
       if (!screeningDefCache.current[w]) {
         (function(word) {
-          fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(word) + "&langpair=en|zh-CN")
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-              var zh = d?.responseData?.translatedText || "";
-              screeningDefCache.current[word] = { zh: sanitizeScreeningZh(zh, word, d), loading: false };
-            })
+          fetchQuickDef(word)
+            .then(function(zh) { screeningDefCache.current[word] = { zh: zh || "", loading: false }; })
             .catch(function() { screeningDefCache.current[word] = { zh: "", loading: false }; });
         })(w);
       }
@@ -6525,16 +6509,11 @@ export default function App() {
     var meaning = "";
     var failReason = "";
     try {
-      // 路径 1: 免费 mymemory API（无 rate limit，速度快，质量足够）
+      // 路径 1: /api/quick-def（DeepSeek 词典级 + 服务端缓存）
+      // 原用免费 MyMemory 机翻，会把"吡吡[hua1]"这类张冠李戴的错译当成功写进复习数据，已弃用。
       try {
-        var resp = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(word) + "&langpair=en|zh-CN", { signal: AbortSignal.timeout(5000) });
-        var data = await resp.json();
-        var t = data?.responseData?.translatedText || "";
-        // 简单清洗 + 校验：mymemory 偶尔返回原英文（无翻译），过滤掉
-        t = t.trim();
-        if (t && t.toLowerCase() !== word.toLowerCase() && /[一-鿿]/.test(t)) {
-          meaning = t.slice(0, 60);
-        }
+        var qd = await fetchQuickDef(word);
+        if (qd && /[一-鿿]/.test(qd)) meaning = qd.slice(0, 60);
       } catch(e) { failReason = "dict timeout"; }
       // 路径 2: 兜底用 LLM（仅 path1 失败时）
       if (!meaning) {
