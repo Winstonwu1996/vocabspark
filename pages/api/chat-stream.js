@@ -90,6 +90,18 @@ const buildProviders = (userApiKeys) => {
     });
   }
 
+  // OpenAI 兜底：DeepSeek(跨境)失败时的独立退路。美国节点、OpenAI 原生兼容、中文够用。
+  // 排在 Gemini 前(Gemini 免费额度限流严)。key 未配则跳过。
+  if (process.env.OPENAI_API_KEY) {
+    providers.push({
+      name: "openai",
+      family: "openai",
+      url: "https://api.openai.com/v1/chat/completions",
+      apiKey: process.env.OPENAI_API_KEY,
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+    });
+  }
+
   if (process.env.GOOGLE_AI_API_KEY) {
     providers.push({
       name: "gemini",
