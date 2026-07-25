@@ -337,6 +337,25 @@ ok("pet default + stats.total>50 → 不再误拦 (不玩宠物的用户)", !det
 ok("pet 正常 → 不拦", !detectSyncGate({ pet: { totalFed: 9, unlocked: ["x"] }, stats: { total: 100 } }).blocked);
 ok("null → 不拦", !detectSyncGate(null).blocked);
 
+console.log("\n── screenedUnknownAt stub 不得清洗真实 SRS (2026-07-24 快筛留痕回归) ──");
+// 场景：设备B 快筛标"不认识"生成 stub(仅 screenedUnknownAt, 无任何 SRS 字段)，
+// 其顶层 updatedAt(fallback recency) 比设备A 的真实复习还新 → stub 绝不能赢。
+(function () {
+  var stub = { word: "abate", screenedUnknownAt: "2026-07-01T00:00:00Z", updatedAt: "2026-07-24T00:00:00Z" };
+  var real = { word: "abate", reviewLevel: 3, nextReviewDate: "2026-07-30T00:00:00Z", srsUpdatedAt: "2026-07-20T00:00:00Z", reviewHistory: [{ date: "2026-07-20T00:00:00Z", mode: "quick", result: "remembered" }] };
+  var newerFallback = Date.parse("2026-07-24T00:00:00Z");
+  var a = mergeReviewEntry(stub, real, { localFallback: newerFallback, serverFallback: 0 });
+  var b = mergeReviewEntry(real, stub, { localFallback: 0, serverFallback: newerFallback });
+  eq("stub(local新fallback) vs real → level 保 3", a.reviewLevel, 3);
+  eq("real vs stub(server新fallback) → level 保 3", b.reviewLevel, 3);
+  eq("srsUpdatedAt 不被 stub 抹掉", a.srsUpdatedAt, "2026-07-20T00:00:00Z");
+  eq("screenedUnknownAt 合并后保留(最早为准)", a.screenedUnknownAt, "2026-07-01T00:00:00Z");
+  var bothStub = mergeReviewEntry(
+    { word: "x", screenedUnknownAt: "2026-07-02T00:00:00Z" },
+    { word: "x", screenedUnknownAt: "2026-07-01T00:00:00Z" }, {});
+  eq("双 stub 合并取最早留痕", bothStub.screenedUnknownAt, "2026-07-01T00:00:00Z");
+})();
+
 console.log("\n──────────────────────────────");
 console.log("通过 " + pass + " / " + (pass + fail));
 if (fail > 0) { console.log("❌ 有失败用例"); process.exit(1); }

@@ -1098,9 +1098,34 @@ var cqQuestionValid = function(q){
 
 // 校验 cloze 题目：passage 里不能出现任何答案词（送分题检测）
 // 返回 null 如果有效；返回错误原因字符串如果无效
-var validateCloze = function(parsed) {
+var validateCloze = function(parsed, targetWords) {
   if (!parsed || !parsed.passage || !Array.isArray(parsed.questions)) return "缺少必要字段";
   if (parsed.questions.length === 0) return "题目为空";
+  // 结构校验(必对门前提)：answer 不在 options 里 = 永远选不对 = 卡死；id 重复 = 提交按钮永久禁用。
+  // 容错：answer 与某选项仅差大小写/空格时，回写为选项原文而不判废。
+  var seenIds = {};
+  var targetSet = null;
+  if (Array.isArray(targetWords) && targetWords.length) {
+    targetSet = {};
+    targetWords.forEach(function(w){ targetSet[String(w || "").trim().toLowerCase()] = true; });
+  }
+  for (var qi = 0; qi < parsed.questions.length; qi++) {
+    var q = parsed.questions[qi];
+    if (!q) return "题目缺失(第" + (qi + 1) + "题)";
+    var qid = String(q.id != null ? q.id : "");
+    if (!qid) return "题目缺 id(第" + (qi + 1) + "题)";
+    if (seenIds[qid]) return "题目 id 重复: " + qid;
+    seenIds[qid] = true;
+    if (!Array.isArray(q.options)) return "选项缺失(题" + qid + ")";
+    var opts = q.options.filter(function(o){ return o != null && String(o).trim(); });
+    if (opts.length < 2) return "有效选项不足(题" + qid + ")";
+    var ansNorm = String(q.answer || "").trim().toLowerCase();
+    if (!ansNorm) return "答案缺失(题" + qid + ")";
+    var matched = q.options.find(function(o){ return String(o).trim().toLowerCase() === ansNorm; });
+    if (matched == null) return "答案不在选项中(题" + qid + ": " + q.answer + ")";
+    q.answer = matched; // 回写为选项原文，保证严格相等判定可达
+    if (targetSet && !targetSet[ansNorm]) return "答案不是本组目标词(题" + qid + ": " + q.answer + ")";
+  }
   var passage = String(parsed.passage || "");
   // 去除占位符本身，只检查"非占位符"的部分
   var cleaned = passage.replace(/_{2,}\s*\(\d+\)/g, ""); // 去除 _____(N) 形式
@@ -2651,7 +2676,7 @@ var SpeedMatchGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
 
 // Round 5：闯关检验 —— 5 个词的应用判断题交错出现，答错必须看正解、改对，才能过关
 // 间隔了几个词后再考(retrieval 而非工作记忆)；按词性出题(prompt 端)；错题重排到队尾，全清才出关
-var CheckpointQuizGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
+var CheckpointQuizGame = ({ data, onCorrect, onMissed, onNext, sfx, loading, nextLabel }) => {
   var normRef = useRef(null);
   if (normRef.current === null && data && Array.isArray(data.questions)) {
     var seen = {}; var qs = [];
@@ -2712,6 +2737,11 @@ var CheckpointQuizGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) 
       setXp(earned);
       if (sfx?.correct) sfx.correct();
       if (onCorrect) onCorrect(earned);
+      // 把关卡里错过的词报给上层降级(uncertain+明天到期)——检验成绩不能考完就丢
+      if (onMissed) {
+        var _mw = questions.filter(function(q){ return missedRef.current[q.id] && q.word; }).map(function(q){ return q.word; });
+        if (_mw.length) onMissed(_mw);
+      }
     }
   }, [remaining, cleared, done, total]);
 
@@ -3053,6 +3083,11 @@ export default function App() {
   var [clozeData, setClozeData] = useState(null);
   var [clozeAnswers, setClozeAnswers] = useState({});
   var [clozeSubmitted, setClozeSubmitted] = useState(false);
+  var [clozeLocked, setClozeLocked] = useState({});   // 必对门：已答对的题锁定，重试只改错题
+  var clozeFirstMissRef = useRef(null);               // 首次提交的错词(null=还没首提)；XP/降级只按首提算
+  var clozeXpGrantedRef = useRef(0);
+  var assessBatchRef = useRef([]);                    // 当前检验批次(本组5词,小写)——降级白名单,防 LLM 幻觉词撞库误伤老词
+  var resetClozeGate = function() { setClozeLocked({}); clozeFirstMissRef.current = null; clozeXpGrantedRef.current = 0; };
 
   var [loadingTip, setLoadingTip] = useState("");
   var [phaseDir, setPhaseDir] = useState(1);
@@ -3451,7 +3486,7 @@ export default function App() {
     var next = {
       date: s.date,
       quota: s.quota,
-      consumed: Math.min(s.quota, (s.consumed || 0) + amount),
+      consumed: (s.consumed || 0) + amount,
     };
     saveNewWordQuotaState(next);
     return next;
@@ -4948,9 +4983,9 @@ export default function App() {
         .catch(function(err) { console.warn("[loadBatch] review pre-fetch failed:", err.message); });
     }
     if (willCloze && !dataCache.current["_cloze_" + endMilestone]) {
-      // cloze 需要前 5 词作上下文 — 用 wl.slice(startIdx-5, startIdx) 取前一组的词
-      var prevBatchWords = startIdx >= 5 ? wl.slice(startIdx - 5, startIdx) : [];
-      callAPIFast(sysP, buildClozePrompt([...prevBatchWords, ...batchWords]))
+      // cloze 只考本组(第6-10词)：上一组(1-5)已被闯关检验必对门考过。
+      // 5 词 5 空=每词恰好一空，不再有"一半词没被考到"的豁免。
+      callAPIFast(sysP, buildClozePrompt(batchWords))
         .then(function(raw) { dataCache.current["_cloze_" + endMilestone] = tryJSON(raw) || null; })
         .catch(function(err) { console.warn("[loadBatch] cloze pre-fetch failed:", err.message); });
     }
@@ -5300,7 +5335,7 @@ export default function App() {
     setShowHint(false); setTeachContent(""); setTeachData(null); setSpectrumData(null);
     setSpecSlots([null,null,null]); setSpecPool([]); setSpecStatus("idle");
     setReviewData(null); setReviewAnswers({}); setReviewSubmitted(false); setPhonetic("");
-    setClozeData(null); setClozeAnswers({}); setClozeSubmitted(false);
+    setClozeData(null); setClozeAnswers({}); setClozeSubmitted(false); resetClozeGate();
     setShakeWrong(false); setBounceCorrect(false);
     setShowDefZh(false); // 新词重置中文折叠（强制先看英文 gloss）
     setWordStart(Date.now());
@@ -5580,6 +5615,12 @@ export default function App() {
       // 全排除，各有归宿（复习 / 深度复习），不再混进新词学习重教（用户实测痛点）。
       // 用 ref 取最新 wordStatusMap：快筛刚标的 skip 可能还没落到 state 闭包，用 ref 防边界竞态漏筛。
       var unlearned = selectUnlearnedWords(rawWords, wordStatusMapRef.current || wordStatusMap);
+      // 快筛里她亲口标过"不认识"的词优先学（稳定排序：组内保持词表原顺序）
+      unlearned = unlearned.slice().sort(function(a, b) {
+        var av = reviewWordData[a] && reviewWordData[a].screenedUnknownAt ? 0 : 1;
+        var bv = reviewWordData[b] && reviewWordData[b].screenedUnknownAt ? 0 : 1;
+        return av - bv;
+      });
       // ★ 没有未学新词时绝不回退到 rawWords（那会把 error/已掌握的词当新词重学 —— 正是 bug 本身）。
       //   改为引导用户去复习 / 重点攻克。
       if (unlearned.length === 0) {
@@ -5713,10 +5754,16 @@ export default function App() {
 
   var screeningMarkWord = function(known) {
     var word = screeningWords[screeningIdx];
+    // 统一小写 key：存储层/选词层(startLearning 的 rawWords)全是小写，混大小写词表不规范会写歪
+    var wkey = String(word || "").trim().toLowerCase();
     if (known) {
       // 标"认识"=skipped，走统一写入口（ref 基准），快速连筛不丢标记
-      var u = {}; u[word] = "skipped";
+      var u = {}; u[wkey] = "skipped";
       writeWordStatus(u);
+    } else {
+      // 标"不认识"留痕（不动 status，词仍是 unlearned 进新词池）：
+      // "她自己承认不认识"的词比"从没见过"的词更该优先学，startLearning 按此排序。
+      upsertReviewWordData(wkey, { screenedUnknownAt: new Date().toISOString() });
     }
     var newUnknown = known ? screeningStats.unknown : screeningStats.unknown + 1;
     var quota = dailyNewWords || 20;
@@ -5884,13 +5931,14 @@ export default function App() {
     saveSession(wordList, nextIdx, newLearned);
 
     if (newLearned.length > 0 && newLearned.length % 10 === 0) {
+      assessBatchRef.current = newLearned.slice(-5).map(function(w){ return String(w).trim().toLowerCase(); });
       // Phase B: instant if pre-fetched during batch loading
       var cachedCloze = dataCache.current["_cloze_" + newLearned.length];
       if (cachedCloze?.questions) {
         // 即使是缓存也要校验（预取时可能没校验）
-        var cacheErr = validateCloze(cachedCloze);
+        var cacheErr = validateCloze(cachedCloze, newLearned.slice(-5));
         if (!cacheErr) {
-          setClozeData(cachedCloze); setClozeAnswers({}); setClozeSubmitted(false); setPhase("cloze"); return;
+          setClozeData(cachedCloze); setClozeAnswers({}); setClozeSubmitted(false); resetClozeGate(); setPhase("cloze"); return;
         } else {
           console.warn('[cloze] cached invalid:', cacheErr);
           dataCache.current["_cloze_" + newLearned.length] = null; // 清缓存
@@ -5903,7 +5951,7 @@ export default function App() {
         var parsed = null;
         var validationErr = null;
         for (var attempt = 0; attempt < 2; attempt++) {
-          var raw = await callAPIFast(sysP, buildClozePrompt(newLearned.slice(-10)));
+          var raw = await callAPIFast(sysP, buildClozePrompt(newLearned.slice(-5)));
           parsed = tryJSON(raw);
           if (!parsed?.questions || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
             validationErr = "解析失败";
@@ -5913,12 +5961,12 @@ export default function App() {
             validationErr = "题目字段缺失";
             continue;
           }
-          validationErr = validateCloze(parsed);
+          validationErr = validateCloze(parsed, newLearned.slice(-5));
           if (!validationErr) break; // 通过校验
           console.warn('[cloze] attempt ' + (attempt+1) + ' rejected:', validationErr);
         }
         if (!validationErr) {
-          setClozeData(parsed); setClozeAnswers({}); setClozeSubmitted(false);
+          setClozeData(parsed); setClozeAnswers({}); setClozeSubmitted(false); resetClozeGate();
         } else {
           // 校验始终失败 → 跳过阅读挑战，继续学下个词（用户友好）
           console.warn('[cloze] skipped after retries:', validationErr);
@@ -5934,6 +5982,7 @@ export default function App() {
     }
 
     if (newLearned.length > 0 && newLearned.length % 5 === 0) {
+      assessBatchRef.current = newLearned.slice(-5).map(function(w){ return String(w).trim().toLowerCase(); });
       // Round 4：复习数据有两种合法格式
       // - speed_match: { type:"speed_match", pairs:[{word,meaning}] }
       // - fill_blank（旧）: { questions:[{...}] }
@@ -6003,10 +6052,29 @@ export default function App() {
 
   var submitCloze = () => {
     setClozeSubmitted(true);
-    var c = 0;
-    clozeData?.questions?.forEach(q => { if (clozeAnswers[q.id] === q.answer) c++; });
+    var qs = clozeData?.questions || [];
+    var wrongQs = qs.filter(q => clozeAnswers[q.id] !== q.answer);
+    var c = qs.length - wrongQs.length;
     if (c >= 4) sfx.correct(); else if (c >= 2) sfx.click(); else sfx.wrong();
-    save({ ...stats, xp: stats.xp + c * 15 });
+    // XP 和"没掌握"降级都只按【首次提交】算——重试改对是学习，不重复给分也不重复罚
+    if (clozeFirstMissRef.current === null) {
+      clozeFirstMissRef.current = wrongQs.map(q => q.answer).filter(Boolean);
+      clozeXpGrantedRef.current = c * 15;
+      save({ ...stats, xp: stats.xp + c * 15 });
+      if (clozeFirstMissRef.current.length) demoteMissedWords(clozeFirstMissRef.current);
+    }
+  };
+
+  // 必对门：锁定已答对的题，清掉错题答案让她改，全对才放行 afterCloze
+  var retryClozeWrong = function() {
+    var qs = clozeData?.questions || [];
+    var locked = {}; var nextAns = {};
+    qs.forEach(function(q) {
+      if (clozeAnswers[q.id] === q.answer) { locked[q.id] = true; nextAns[q.id] = q.answer; }
+    });
+    setClozeLocked(locked);
+    setClozeAnswers(nextAns);
+    setClozeSubmitted(false);
   };
 
   var afterCloze = async function() {
@@ -6115,6 +6183,14 @@ export default function App() {
       var s = getWordStatus(w, i, words);
       var d = reviewWordData[w] || {};
       return s === "error" || s === "uncertain" || (d.consecutiveForgot || 0) >= 2;
+    }).sort(function(a, b) {
+      // 每日名额只有 deepLimit 个：真忘(error) > 连续忘多的 > 模糊(uncertain)，别让该攻克的排不进今天
+      var score = function(w) {
+        var s = getWordStatus(w, 0, words);
+        var d = reviewWordData[w] || {};
+        return (s === "error" ? 100 : 0) + Math.min(Number(d.consecutiveForgot) || 0, 5) * 10;
+      };
+      return score(b) - score(a);
     });
 
     var deepLimit = deepReviewDailyCap || 8;
@@ -6210,10 +6286,12 @@ export default function App() {
 
   var rankPriority = function(status, reviewData) {
     var dueBoost = reviewData?.nextReviewDate && isDueDate(reviewData.nextReviewDate) ? 10 : 0;
-    if (status === "error") return 100 + dueBoost;
-    if (status === "uncertain") return 80 + dueBoost;
-    if (status === "learning") return 60 + dueBoost;
-    if (status === "mastered") return 30 + dueBoost;
+    // 连续忘加成(≤5)：同档内顽固词靠前；加成+dueBoost≤15 < 档差20，不会跨档
+    var cfBoost = Math.min(Number(reviewData?.consecutiveForgot) || 0, 5);
+    if (status === "error") return 100 + dueBoost + cfBoost;
+    if (status === "uncertain") return 80 + dueBoost + cfBoost;
+    if (status === "learning") return 60 + dueBoost + cfBoost;
+    if (status === "mastered") return 30 + dueBoost + cfBoost;
     return 0 + dueBoost;
   };
 
@@ -6558,6 +6636,21 @@ export default function App() {
     if (!hasUsableMeaning(item.meaning)) ensureQuickReviewMeaning(quickReviewIdx);
   }, [screen, quickReviewIdx]);
 
+  // 闯关检验/阅读填空里答错过的词：这是"没掌握"的最强信号，不能考完就丢。
+  // 降为 uncertain + 复习等级归零 + 明天到期 → 进重点攻克/次日必复习。
+  // 只降级她词库里真实存在状态的词（防 LLM 幻觉词污染数据）。
+  var demoteMissedWords = function(wordsMissed) {
+    (wordsMissed || []).forEach(function(w) {
+      if (!w || typeof w !== "string") return;
+      var key = w.trim().toLowerCase();
+      if (!key || !(wordStatusMapRef.current || {})[key]) return;
+      // 白名单：只降本组正在检验的词，防 LLM 返回的词恰好撞上词库里早已掌握的老词被误降
+      if ((assessBatchRef.current || []).indexOf(key) === -1) return;
+      updateManualWordStatus(key, "uncertain");
+      upsertReviewWordData(key, { reviewLevel: 0, nextReviewDate: addDaysISO(REVIEW_INTERVAL_DAYS[0]) });
+    });
+  };
+
   var markQuickReview = function(result) {
     var item = quickReviewQueue[quickReviewIdx];
     if (!item) return;
@@ -6570,11 +6663,16 @@ export default function App() {
     var prevLevel = Number.isFinite(oldItem.reviewLevel) ? oldItem.reviewLevel : 0;
     var nextLevel = prevLevel;
     if (result === "remembered") nextLevel = Math.min(REVIEW_INTERVAL_DAYS.length - 1, prevLevel + 1);
+    if (result === "fuzzy") nextLevel = Math.max(0, prevLevel - 1); // 模糊降一级：30天档的模糊不能再等30天
     if (result === "forgot") nextLevel = 0;
     var nextReviewDate = addDaysISO(REVIEW_INTERVAL_DAYS[nextLevel]);
 
+    // 连续忘计数：攻克池"连续忘≥2"通道的数据源（此前只读不写=死通道）
+    var _cf = Number(oldItem.consecutiveForgot) || 0;
+    var nextCF = result === "forgot" ? _cf + 1 : (result === "remembered" ? 0 : _cf);
+
     var hist = [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "quick", result: result }];
-    upsertReviewWordData(item.word, { reviewHistory: hist, reviewLevel: nextLevel, nextReviewDate: nextReviewDate });
+    upsertReviewWordData(item.word, { reviewHistory: hist, reviewLevel: nextLevel, nextReviewDate: nextReviewDate, consecutiveForgot: nextCF });
 
     var _intervalDays = REVIEW_INTERVAL_DAYS[nextLevel];
     var _fbText = result === "remembered" ? "✅ 下次复习在 " + _intervalDays + " 天后" : result === "forgot" ? "🔄 明天再复习" : "📝 " + _intervalDays + " 天后复习";
@@ -6606,7 +6704,9 @@ export default function App() {
     var queue = dedupeByWord(words
       .filter(function(w, i) {
         var s = getWordStatus(w, i, words);
-        return s === "uncertain" || s === "error";
+        var d = reviewWordData[w] || {};
+        // 与 getDailyPlan.deepPool 同口径：连续忘≥2 的顽固词也入攻克，防止两处池子对不上
+        return s === "uncertain" || s === "error" || (Number(d.consecutiveForgot) || 0) >= 2;
       })
       .map(function(w, i) {
         var d = reviewWordData[w] || {};
@@ -7093,9 +7193,12 @@ export default function App() {
       var prevLevel = Number.isFinite(oldItem.reviewLevel) ? oldItem.reviewLevel : 0;
       var nextLevel = prevLevel;
       if (result === "remembered") nextLevel = Math.min(REVIEW_INTERVAL_DAYS.length - 1, prevLevel + 1);
+      if (result === "fuzzy") nextLevel = Math.max(0, prevLevel - 1); // 模糊降一级，与快速复习同规则
       if (result === "forgot") nextLevel = 0;
+      var _dcf = Number(oldItem.consecutiveForgot) || 0;
+      var nextDCF = result === "forgot" ? _dcf + 1 : (result === "remembered" ? 0 : _dcf);
       var hist = [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "deep", result: result }];
-      upsertReviewWordData(dw, { reviewHistory: hist, reviewLevel: nextLevel, nextReviewDate: addDaysISO(REVIEW_INTERVAL_DAYS[nextLevel]) });
+      upsertReviewWordData(dw, { reviewHistory: hist, reviewLevel: nextLevel, nextReviewDate: addDaysISO(REVIEW_INTERVAL_DAYS[nextLevel]), consecutiveForgot: nextDCF });
       var _dIntervalDays = REVIEW_INTERVAL_DAYS[nextLevel];
       var _dFbText = result === "remembered" ? "✅ 下次复习在 " + _dIntervalDays + " 天后" : result === "forgot" ? "🔄 明天再复习" : "📝 " + _dIntervalDays + " 天后复习";
       setReviewFeedback({ text: _dFbText, color: result === "remembered" ? C.green : result === "forgot" ? C.red : C.gold });
@@ -8076,13 +8179,13 @@ export default function App() {
                       <div style={{minWidth:0}}>
                         {wordDensity === "compact" ? (
                           <div style={{fontWeight:700,fontSize:13,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:220,color:m.color}}>
-                            {w} · {m.text}{Number.isFinite(d.reviewLevel) && d.reviewLevel > 0 ? " L"+d.reviewLevel : ""}{overdue ? " ⚠️" : ""}
+                            {w} · {s === "mastered" && !(Number(d.reviewLevel) > 0) ? "已掌握·初记" : m.text}{Number.isFinite(d.reviewLevel) && d.reviewLevel > 0 ? " L"+d.reviewLevel : ""}{overdue ? " ⚠️" : ""}
                           </div>
                         ) : (
                           <>
                             <div style={{fontWeight:700,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:180}}>{w}</div>
                             <div style={{fontSize:11,color:m.color,fontWeight:700}}>
-                              {m.text}
+                              {s === "mastered" && !(Number(d.reviewLevel) > 0) ? "已掌握·初记" : m.text}
                               {Number.isFinite(d.reviewLevel) && d.reviewLevel > 0 && <span style={{marginLeft:4,fontSize:10,color:C.textSec}}>{"▪".repeat(Math.min(d.reviewLevel, 5))}</span>}
                               {" · "}{reviewAgeText(d.lastReviewDate)} {overdue ? "⚠️" : ""}
                               {d.nextReviewDate && !overdue && s !== "unlearned" && <span style={{fontSize:10,color:C.textSec,marginLeft:4}}>{"→ " + Math.max(0, Math.ceil((new Date(d.nextReviewDate).getTime() - new Date().setHours(0,0,0,0)) / 86400000)) + "天后"}</span>}
@@ -9670,6 +9773,7 @@ export default function App() {
             sfx={sfx}
             loading={loading}
             onCorrect={function(score){ save({ ...stats, xp: stats.xp + (score || 50) }); triggerPetCelebrate(2500); }}
+            onMissed={demoteMissedWords}
             onNext={afterReview}
             nextLabel={idx+1>=wordList.length?"🎉 完成！":"→ "+wordList[idx+1]}
           />
@@ -9742,7 +9846,7 @@ export default function App() {
               <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:4}}>{q.options.map(opt => {
                 var s=ans===opt, o=clozeSubmitted&&opt===q.answer, b=clozeSubmitted&&s&&opt!==q.answer;
                 var bg=C.bg,bd=C.border,cl=C.text; if(o){bg=C.greenLight;bd=C.green;cl=C.green;}else if(b){bg=C.redLight;bd=C.red;cl=C.red;}else if(s){bg=C.accentLight;bd=C.accent;cl=C.accent;}
-                return <button key={opt} disabled={clozeSubmitted} style={{...S.reviewOpt,background:bg,borderColor:bd,color:cl}} onClick={()=>setClozeAnswers(a=>({...a,[q.id]:opt}))}>{opt}{o?" ✓":""}{b?" ✗":""}</button>;
+                return <button key={opt} disabled={clozeSubmitted || !!clozeLocked[q.id]} style={{...S.reviewOpt,background:bg,borderColor:bd,color:cl}} onClick={()=>setClozeAnswers(a=>({...a,[q.id]:opt}))}>{opt}{o?" ✓":""}{b?" ✗":""}{!clozeSubmitted&&clozeLocked[q.id]&&s?" ✓":""}</button>;
               })}</div>
               {clozeSubmitted&&bad&&<div style={{fontSize:13,color:C.teal,marginTop:4}}>{"✅ "+q.answer+" — "+q.explanation}</div>}
               {clozeSubmitted&&ok&&<div style={{fontSize:13,color:C.green,marginTop:4}}>{"✓ "+q.explanation}</div>}
@@ -9751,10 +9855,15 @@ export default function App() {
           {!clozeSubmitted ? <button style={S.primaryBtn} onClick={submitCloze} disabled={Object.keys(clozeAnswers).length<clozeData.questions.length}>✓ 提交</button>
           : (() => { var cc=clozeData.questions.filter(q=>clozeAnswers[q.id]===q.answer).length, ct=clozeData.questions.length, cpct=Math.round(cc/ct*100); return <div>
             <div style={{...S.reviewScore,animation:"fadeUp 0.3s ease-out"}}>
-              <div style={{fontSize:28,marginBottom:4}}>{cpct>=80?"🌟":cpct>=50?"👍":"💪"}</div>
-              {"得分："+cc+"/"+ct+" ("+cpct+"%) · +"+cc*15+" XP"}
+              <div style={{fontSize:28,marginBottom:4}}>{cc===ct?(clozeFirstMissRef.current&&clozeFirstMissRef.current.length?"💪":"🌟"):cpct>=50?"👍":"💪"}</div>
+              {cc===ct
+                ? (clozeFirstMissRef.current&&clozeFirstMissRef.current.length?"全部改对了！错过的词会安排明天复习 · +"+clozeXpGrantedRef.current+" XP":"全对！+"+clozeXpGrantedRef.current+" XP")
+                : "得分："+cc+"/"+ct+" ("+cpct+"%) · 看解析，把错的改对才能过关"}
             </div>
-            <button style={S.primaryBtn} onClick={afterCloze}>{idx+1>=wordList.length?"🎉 完成！":"→ 继续学习"}</button></div>; })()}
+            {cc===ct
+              ? <button style={S.primaryBtn} onClick={afterCloze}>{idx+1>=wordList.length?"🎉 完成！":"→ 继续学习"}</button>
+              : <button style={S.primaryBtn} onClick={retryClozeWrong}>✏️ 改正错题 →</button>}
+          </div>; })()}
         </>}
       </div>}
 
