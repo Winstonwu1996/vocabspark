@@ -28,6 +28,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { checkRateLimit } from "../../lib/ratelimit";
+import { verifyAuth } from "../../lib/auth-server";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -51,7 +52,13 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: "反馈过于频繁，请稍后再试" });
   }
 
-  const { userId, word, contentType, contentSnapshot, reasonCategory, reasonDetail } = req.body || {};
+  const { word, contentType, contentSnapshot, reasonCategory, reasonDetail } = req.body || {};
+
+  // user_id 只认 token，不信 body：此端点允许游客反馈(user_id 可空)，但不能让任何人
+  // 用别人的 user_id 往 content_feedback 写记录(伪造他人反馈/污染归因)。
+  // 有有效 token → 用 token 的 uid；无 token(游客) → null，与原设计一致。
+  const { userId: verifiedUserId } = await verifyAuth(req);
+  const userId = verifiedUserId || null;
 
   // 基本校验（仅必填字段，避免脏数据进库）
   if (!word || typeof word !== "string" || word.length > 100) {

@@ -1,6 +1,36 @@
+import { checkRateLimit } from "../../lib/ratelimit";
+
+// 允许的来源：本站页面。tts 是 GET（<audio>/fetch 直连），不能要求自定义 header 鉴权，
+// 因此用「同源 + IP 限流」而不是 token —— 既堵住被当免费 TTS 代理白嫖，又不改任何调用方。
+function isAllowedOrigin(req) {
+  var host = req.headers.host || "";
+  var ref = req.headers.referer || req.headers.origin || "";
+  if (!ref) return true; // 同源 <audio src> 常常不带 referer，放行（限流仍生效）
+  try {
+    var refHost = new URL(ref).host;
+    return refHost === host;
+  } catch (e) {
+    return false; // referer 存在但畸形 → 拒绝
+  }
+}
+
 export default async function handler(req, res) {
   var { text } = req.query;
   if (!text || !text.trim()) return res.status(400).json({ error: "text required" });
+
+  // ─── 滥用防护（原先此端点完全无鉴权无限流，是个开放的外发 fetch 代理）───
+  if (!isAllowedOrigin(req)) {
+    return res.status(403).json({ error: "forbidden" });
+  }
+  var ip =
+    (req.headers["x-forwarded-for"] || "").split(",")[0].trim() ||
+    req.headers["x-real-ip"] ||
+    "unknown";
+  // 正常朗读：一个词一次、整句分块也就几次；240/小时对真人绰绰有余，脚本刷则挡住。
+  var rl = await checkRateLimit("tts:" + ip, 240, 60 * 60 * 1000);
+  if (!rl.allowed) {
+    return res.status(429).json({ error: "语音请求过于频繁，请稍后再试" });
+  }
 
   /* 单段上限：客户端会对长句分块；此处防止异常长 URL / 滥用 */
   var clean = text.slice(0, 450).trim();

@@ -4328,7 +4328,7 @@ export default function App() {
         mimeOut = file.type && file.type.startsWith("image/") ? file.type : "image/jpeg";
       }
       var resp = await fetch('/api/describe-photo', {
-        method: 'POST', headers: { "Content-Type": "application/json" },
+        method: 'POST', headers: await getAuthHeaders(true),
         body: JSON.stringify({ imageBase64: base64, mimeType: mimeOut }),
       });
       var data;
@@ -4442,7 +4442,9 @@ export default function App() {
   var _loadTier = async function(userId, _attempt) {
     var attempt = _attempt || 0;
     try {
-      var r = await fetch('/api/stripe/check-subscription?userId=' + userId);
+      var r = await fetch('/api/stripe/check-subscription?userId=' + userId, {
+        headers: await getAuthHeaders(false),
+      });
       // 非 200（如 503 transient = 服务端暂时查不了，部署抖动/DB 抽风）→ 当作"未知"，
       // 重试几次仍不行就保持缓存、不降级、不标记 loaded（_tierUnknown 兜底放行付费用户）。
       // 绝不把"查不了"误当成"无订阅"去锁付费用户（chompcloud Pro 被锁根因）。
@@ -10044,7 +10046,7 @@ export default function App() {
                   };
                   setFeedbackModal(null);
                   try {
-                    await fetch("/api/feedback", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
+                    await fetch("/api/feedback", { method:"POST", headers: await getAuthHeaders(true), body: JSON.stringify(payload) });
                     setFeedbackToast("感谢反馈！我们会审核改进 ❤️");
                   } catch (e) {
                     setFeedbackToast("提交失败，请稍后再试");

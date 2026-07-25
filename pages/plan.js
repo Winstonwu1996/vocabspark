@@ -4,7 +4,7 @@ import Link from "next/link";
 import { C, FONT, globalCSS, S } from '../lib/theme';
 import { BrandNavBar, BrandSparkIcon } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
-import { supabase } from '../lib/supabase';
+import { supabase, getAuthHeader } from '../lib/supabase';
 
 /* Plan & Pricing */
 
@@ -122,7 +122,9 @@ export default function PlanPage() {
 
   var checkSub = async function(userId) {
     try {
-      var r = await fetch('/api/stripe/check-subscription?userId=' + userId);
+      var r = await fetch('/api/stripe/check-subscription?userId=' + userId, {
+        headers: await getAuthHeader(),
+      });
       var data = await r.json();
       if (data.isActive) setCurrentSub(data);
     } catch(e) {}
