@@ -17,8 +17,17 @@ export default async function handler(req, res) {
   // ─── 鉴权 + 限流 ───
   // 原先此端点完全无鉴权无限流 + 15mb body：任何人可无门槛烧站方的 Gemini Vision 付费额度。
   // 前端调用点(vocab.js 照片日记)本就要求登录才能上传，这里补上服务端校验，对正常用户零影响。
-  var { userId, error: authErr } = await verifyAuth(req);
-  if (authErr) return res.status(authErr.status).json({ error: authErr.message });
+  // 注意：不能把 authErr.message 原样返回 —— 那是英文内部串
+  // ('missing auth token (Authorization header or body._authToken)')，
+  // 前端会直接 alert 给中国 K12 用户。这里统一换成中文可操作提示。
+  var auth = await verifyAuth(req);
+  if (!auth.userId) {
+    if (auth.transient) {
+      return res.status(503).json({ error: '服务暂时不可用，请稍后重试' });
+    }
+    return res.status(401).json({ error: '请先登录后再上传照片' });
+  }
+  var userId = auth.userId;
 
   // 单用户每日上限：照片日记是低频功能(画像里最多几张)，30/天足够真实使用，挡住批量刷。
   var rl = await checkRateLimit('photo:' + userId, 30, 24 * 60 * 60 * 1000);

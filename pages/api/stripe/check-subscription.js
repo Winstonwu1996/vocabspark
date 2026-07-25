@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { verifyAuth } from '../../../lib/auth-server';
+import { decideSubscriptionAccess } from '../../../lib/subscriptionAuth';
 
 var supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -12,25 +13,16 @@ export default async function handler(req, res) {
   var userId = req.query.userId;
   if (!userId) return res.status(400).json({ error: 'Missing userId' });
 
-  // ─── IDOR 防护 ───
-  // 原先此端点零鉴权 + service_role key(绕 RLS)：任何人带任意 userId 即可读到
-  // 他人的订阅档位/账期/到期日。这里要求 token 用户与 query userId 一致。
-  //
-  // 两种失败必须分开，否则会踩 chompcloud「付费用户被锁」的老坑：
-  //   ① 没 token —— 可能是付费用户会话尚未刷新/竞态，绝不能判成 free。
-  //      走既有的 503 transient 语义：调用方会保持缓存、重试、不降级。
-  //   ② token 与 query userId 不符 —— 明确越权，返回 200 + 无订阅（不泄漏他人数据）。
-  //      这里不返 401 是因为三个调用方会把非 200 记为查询失败，401 与真故障混淆无益。
-  var { userId: verifiedUserId } = await verifyAuth(req);
-  if (!verifiedUserId) {
-    // 无有效 token：不确认任何订阅状态，也不误判为 free
-    return res.status(503).json({ error: 'tier check unavailable', transient: true });
-  }
-  if (verifiedUserId !== userId) {
-    console.warn('[check-subscription] IDOR blocked: token uid ≠ query userId', {
-      claimed: String(userId).slice(0, 8) + '…',
-    });
-    return res.status(200).json({ tier: 'free', isActive: false });
+  // ─── IDOR 防护 ───（决策逻辑在 lib/subscriptionAuth.js，被 test 直接 import）
+  var auth = await verifyAuth(req);
+  var gate = decideSubscriptionAccess({ verifiedUserId: auth.userId, queryUserId: userId });
+  if (!gate.allow) {
+    if (gate.reason === 'idor') {
+      console.warn('[check-subscription] IDOR blocked: token uid ≠ query userId', {
+        claimed: String(userId).slice(0, 8) + '…',
+      });
+    }
+    return res.status(gate.status).json(gate.body);
   }
 
   try {

@@ -5,7 +5,10 @@ import { checkRateLimit } from "../../lib/ratelimit";
 function isAllowedOrigin(req) {
   var host = req.headers.host || "";
   var ref = req.headers.referer || req.headers.origin || "";
-  if (!ref) return true; // 同源 <audio src> 常常不带 referer，放行（限流仍生效）
+  // 无 Referer 仍放行：同源 <audio src> / 部分浏览器隐私设置本来就不发 Referer，
+  // 拒绝会误伤真实用户。⚠️ 但这也意味着同源检查只能挡「浏览器里的跨站盗链」，
+  // 挡不住 curl/脚本（不发 Referer 即可绕过）——脚本白嫖靠下面的 IP 限流兜底。
+  if (!ref) return true;
   try {
     var refHost = new URL(ref).host;
     return refHost === host;

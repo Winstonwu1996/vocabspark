@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { requireUser } from '../../lib/auth-server';
 import { planSyncOutcome } from '../../lib/progressMergePolicy';
+import { performVersionedWrite, makeSupabaseAdapter } from '../../lib/syncWrite';
 
 var supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -147,61 +148,27 @@ export default async function handler(req, res) {
 
     // 接受写入（用 plan.safe，已过字段守卫）
     //
-    // ⚠️ 必须是「版本条件写」而不是无条件 upsert（TOCTOU 修复）：
-    // 上面的 select 与这里的写之间没有原子性，两个并发请求会同时读到 version=V、
-    // 同时通过 cv 检查、同时写 V+1 —— 后落库的整体覆盖先落库的，而先写方收到
-    // ok:true 且版本号一致，永远不会触发 409 合并 → 静默丢进度（手机+iPad 同时学）。
-    // 加 .eq('version', serverVersion) 后，抢输的一方影响 0 行 → 转 409，
-    // 复用客户端既有的 mergeStates 重推路径，不需要客户端改任何代码。
-    var writeErr = null;
-    if (current) {
-      // 已有行：条件更新，版本被人抢改则 0 行
-      var upd = await supabase
-        .from('user_progress')
-        .update({
-          progress_data: plan.safe,
-          version: plan.newVersion,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId)
-        .eq('version', plan.serverVersion)
-        .select('version');
+    // 写入逻辑在 lib/syncWrite.js（版本条件写 / TOCTOU 防护），handler 只做 IO 编排。
+    // 抽出去的原因：内联时测试只能手抄一份副本，删掉生产守卫测试仍全绿（变异测试实证）。
+    var writeOutcome = await performVersionedWrite(makeSupabaseAdapter(supabase), {
+      userId: userId,
+      current: current,
+      plan: plan,
+    });
 
-      writeErr = upd.error;
-      if (!writeErr && (!upd.data || upd.data.length === 0)) {
-        // 0 行 = 读到写之间被另一设备/tab 抢先写入 → 让客户端合并后重推
-        var { data: fresh } = await supabase
-          .from('user_progress').select('version, progress_data')
-          .eq('user_id', userId).single();
-        console.warn('[sync][toctou] lost race for user ' + userId +
-          ' (expected v' + plan.serverVersion + ', now v' + (fresh && fresh.version) + ') → 409');
-        return res.status(409).json({
-          error: 'version_conflict',
-          serverVersion: fresh ? fresh.version : plan.serverVersion,
-          serverData: fresh ? fresh.progress_data : null,
-        });
-      }
-    } else {
-      // 新用户首行：并发插入由主键兜底，冲突同样转 409
-      var ins = await supabase.from('user_progress').insert({
-        user_id: userId,
-        progress_data: plan.safe,
-        version: plan.newVersion,
-        updated_at: new Date().toISOString(),
+    if (writeOutcome.status === 409) {
+      console.warn('[sync][toctou] lost race for user ' + userId +
+        ' (expected v' + plan.serverVersion + ', now v' + writeOutcome.serverVersion + ') → 409');
+      return res.status(409).json({
+        error: 'version_conflict',
+        serverVersion: writeOutcome.serverVersion,
+        serverData: writeOutcome.serverData,
       });
-      writeErr = ins.error;
-      if (writeErr && (writeErr.code === '23505' || /duplicate key|unique/i.test(writeErr.message || ''))) {
-        var { data: raced } = await supabase
-          .from('user_progress').select('version, progress_data')
-          .eq('user_id', userId).single();
-        return res.status(409).json({
-          error: 'version_conflict',
-          serverVersion: raced ? raced.version : 0,
-          serverData: raced ? raced.progress_data : null,
-        });
-      }
     }
-    if (writeErr) return res.status(500).json({ error: writeErr.message });
+    if (writeOutcome.status === 500) {
+      console.warn('[sync] write failed for ' + userId + ': ' + writeOutcome.error);
+      return res.status(500).json({ error: writeOutcome.error });
+    }
 
     // ── L2：历史快照（异步，不阻塞响应）──
     writeHistorySnapshot(userId, plan.newVersion, plan.safe, 'sync').catch(function () {});

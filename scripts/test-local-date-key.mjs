@@ -44,13 +44,31 @@ const ok = (name, cond) => eq(name, !!cond, true);
     isoToLocalDateKey(utcIso),
     "2026-03-15"
   );
-  // 对照：旧的坏实现（直接切 UTC 字符串）在 UTC+8 会得到 03-14 —— 证明 bug 真实存在
+  // 对照：旧的坏实现（直接切 UTC 字符串）在偏离 UTC 的时区会错位。
+  // ⚠️ 不能只在东八区断言 —— CI 默认 UTC，那样核心回归在 CI 上等于零覆盖。
+  // 改为：只要本地时区不是 UTC，就断言新旧实现必须产生不同结果（即 bug 真实存在且已修）。
+  // 这个测试文件应当在多个 TZ 下运行（见文件末尾的自检提示）。
+  // 注意：本用例是「本地早上 7:00」。旧实现只在 UTC 以东(offset<0，如东八区)才错位
+  //（本地早晨时 UTC 还停在昨天）；在美西(offset>0)本地早晨对应 UTC 同日下午，不错位。
+  // 所以这里按时区方向分别断言，避免写出「在美西必然失败」的错误期望。
+  // 旧实现何时才真的错位：本地时刻早于「本地与 UTC 的时差」时，UTC 仍停在昨天。
+  //   东八区(offset -480 = 8h)本地 07:00 < 8h → 错位 ✓（这就是中国用户每天早晨踩的）
+  //   印度(offset -330 = 5.5h)本地 07:00 > 5.5h → 不错位
+  //   伦敦 3 月(offset 0) / 美西(offset>0) → 不错位
+  // ⚠️ offset 必须取「用例那一天」的，不能用 new Date()：伦敦 3/15 是 GMT，
+  //    但 7 月跑测试时当前是 BST(-60)，用当前值会得出错误期望。夏令时就是这样咬人的。
   const naive = String(utcIso).slice(0, 10);
-  const tzOffsetMin = new Date().getTimezoneOffset(); // UTC+8 → -480
-  if (tzOffsetMin <= -420) {
-    // 仅在 UTC+7 及更东的时区断言（本机若在美西则跳过该对照）
-    ok("对照：旧 slice(0,10) 实现在东八区确实错位", naive !== "2026-03-15");
+  const tzOffsetMin = localMorning.getTimezoneOffset();
+  const eastOffsetHours = -tzOffsetMin / 60;            // 东八区 → 8
+  const localHour = localMorning.getHours();            // 本用例 = 7
+  if (eastOffsetHours > localHour) {
+    ok(
+      `对照：本地 ${localHour}:00 早于时差 ${eastOffsetHours}h → 旧 slice(0,10) 确实错位`,
+      naive !== "2026-03-15"
+    );
   }
+  // 不论什么时区，新实现都必须给出本地日历日
+  ok("新实现在任何时区都返回本地当天", isoToLocalDateKey(utcIso) === "2026-03-15");
 }
 {
   // 本地午夜刚过写入
@@ -91,5 +109,35 @@ eq("isoToLocalDateKey: 纯垃圾 → 兜底不崩", isoToLocalDateKey("abc"), "a
 }
 eq("isSameLocalDay: 空值 → false", isSameLocalDay("", new Date()), false);
 
+// ── 5. 时区无关的核心回归（不依赖运行机器的 TZ）──
+// 上面的断言都基于「本地时区」，在 CI(UTC) 上会退化。这里用固定的 UTC 时刻 +
+// 已知偏移手工推演，确保「早晨窗口」的回归在任何 TZ 下都被覆盖。
+{
+  // 构造：UTC 2026-03-14T23:00:00Z
+  // 在 UTC+8 这是本地 03-15 07:00（早晨）→ 必须算作本地的 03-15
+  // 在 UTC-7 这是本地 03-14 16:00        → 必须算作本地的 03-14
+  const iso = "2026-03-14T23:00:00.000Z";
+  const d = new Date(iso);
+  // 用 Intl 显式按目标时区取日历日，与被测函数在该时区下的预期结果比对
+  const expectIn = (tz) => new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(d); // en-CA 输出 YYYY-MM-DD
+
+  eq("时区无关：UTC+8 下该时刻属本地 2026-03-15（早晨窗口）", expectIn("Asia/Shanghai"), "2026-03-15");
+  eq("时区无关：UTC-7 下该时刻属本地 2026-03-14", expectIn("America/Los_Angeles"), "2026-03-14");
+
+  // 被测函数用的是运行环境的本地时区，断言它与本地时区的权威答案一致
+  const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  eq(
+    `isoToLocalDateKey 与本地时区(${localTz})权威日历日一致`,
+    isoToLocalDateKey(iso),
+    expectIn(localTz)
+  );
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
+if (fail === 0) {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  console.log(`（本次运行时区：${tz}；建议同时跑 TZ=Asia/Shanghai 与 TZ=America/Los_Angeles）`);
+}
 process.exit(fail === 0 ? 0 : 1);

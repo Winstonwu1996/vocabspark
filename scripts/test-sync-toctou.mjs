@@ -9,9 +9,12 @@
    修复：改成版本条件写 update ... where user_id=? and version=:serverVersion。
    抢输的一方影响 0 行 → 转 409，复用客户端既有 mergeStates 重推路径。
 
-   这里不连真实 DB，用一个「带版本检查的内存表」mock Supabase 的链式 API，
-   验证 handler 在并发下的分支走向（200 / 409）与最终数据是否丢失。
+   ⚠️ 本测试 import 生产代码 lib/syncWrite.js 的 performVersionedWrite —— 不是手抄副本。
+   早期版本抄了一份 handler 逻辑，结果把生产守卫整段删掉测试仍全绿（变异测试实证），
+   那是假保护。现在改坏生产逻辑，这里必挂。
 */
+
+import { performVersionedWrite, isDuplicateKeyError } from "../lib/syncWrite.js";
 
 // ── 内存表：模拟 Postgres 行 + 条件更新语义 ──
 function makeDb(initialRow) {
@@ -22,97 +25,35 @@ function makeDb(initialRow) {
   };
 }
 
-// ── Supabase client mock：只实现 handler 用到的链式调用 ──
-function makeSupabase(db) {
+// ── db 适配器：把内存表包成 lib/syncWrite.js 约定的接口 ──
+function makeMemAdapter(db) {
   return {
-    from() {
-      const ctx = { op: null, payload: null, filters: {}, selectCols: null };
-      const api = {
-        select(cols) {
-          if (!ctx.op) ctx.op = "select";
-          ctx.selectCols = cols;
-          // update().select() 场景：返回受影响行
-          if (ctx.op === "update") return finishUpdate();
-          return api;
-        },
-        update(payload) { ctx.op = "update"; ctx.payload = payload; return api; },
-        insert(payload) { ctx.op = "insert"; ctx.payload = payload; return finishInsert(); },
-        eq(col, val) { ctx.filters[col] = val; return api; },
-        single() { return finishSelect(); },
-        then(resolve) { return Promise.resolve(finishSelect()).then(resolve); },
-      };
-
-      function finishSelect() {
-        if (!db.row) return { data: null, error: { code: "PGRST116", message: "no rows" } };
-        if (ctx.filters.user_id && db.row.user_id !== ctx.filters.user_id) {
-          return { data: null, error: { code: "PGRST116", message: "no rows" } };
-        }
-        return { data: { ...db.row }, error: null };
+    async updateIfVersion({ userId, data, newVersion, expectedVersion }) {
+      if (!db.row) return { rows: 0, error: null };
+      if (db.row.user_id !== userId) return { rows: 0, error: null };
+      if (db.row.version !== expectedVersion) return { rows: 0, error: null };   // 抢输
+      db.row = { ...db.row, progress_data: data, version: newVersion };
+      db.writes.push({ kind: "update", version: newVersion, data });
+      return { rows: 1, error: null };
+    },
+    async insertFirst({ userId, data, newVersion }) {
+      if (db.row) return { error: { code: "23505", message: "duplicate key value violates unique constraint" } };
+      db.row = { user_id: userId, progress_data: data, version: newVersion };
+      db.writes.push({ kind: "insert", version: newVersion, data });
+      return { error: null };
+    },
+    async refetch(userId) {
+      if (!db.row || db.row.user_id !== userId) {
+        return { data: null, error: { code: "PGRST116", message: "no rows" } };
       }
-
-      function finishUpdate() {
-        // 条件写核心：version 过滤不匹配 → 0 行
-        const wantVersion = ctx.filters.version;
-        if (!db.row) return { data: [], error: null };
-        if (wantVersion !== undefined && db.row.version !== wantVersion) {
-          return { data: [], error: null }; // 抢输
-        }
-        db.row = { ...db.row, ...ctx.payload };
-        db.writes.push({ kind: "update", version: db.row.version, data: db.row.progress_data });
-        return { data: [{ version: db.row.version }], error: null };
-      }
-
-      function finishInsert() {
-        if (db.row) {
-          return { data: null, error: { code: "23505", message: "duplicate key value violates unique constraint" } };
-        }
-        db.row = { ...ctx.payload };
-        db.writes.push({ kind: "insert", version: db.row.version, data: db.row.progress_data });
-        return { data: [db.row], error: null };
-      }
-
-      return api;
+      return { data: { ...db.row }, error: null };
     },
   };
 }
 
-// ── 被测逻辑：复刻 handler 的写入分支（与 pages/api/sync.js 保持同构）──
-async function performWrite(supabase, { userId, current, plan }) {
-  let writeErr = null;
-  if (current) {
-    const upd = await supabase
-      .from("user_progress")
-      .update({
-        progress_data: plan.safe,
-        version: plan.newVersion,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId)
-      .eq("version", plan.serverVersion)
-      .select("version");
-
-    writeErr = upd.error;
-    if (!writeErr && (!upd.data || upd.data.length === 0)) {
-      const { data: fresh } = await supabase
-        .from("user_progress").select("version, progress_data").eq("user_id", userId).single();
-      return { status: 409, serverVersion: fresh ? fresh.version : plan.serverVersion, serverData: fresh ? fresh.progress_data : null };
-    }
-  } else {
-    const ins = await supabase.from("user_progress").insert({
-      user_id: userId,
-      progress_data: plan.safe,
-      version: plan.newVersion,
-      updated_at: new Date().toISOString(),
-    });
-    writeErr = ins.error;
-    if (writeErr && (writeErr.code === "23505" || /duplicate key|unique/i.test(writeErr.message || ""))) {
-      const { data: raced } = await supabase
-        .from("user_progress").select("version, progress_data").eq("user_id", userId).single();
-      return { status: 409, serverVersion: raced ? raced.version : 0, serverData: raced ? raced.progress_data : null };
-    }
-  }
-  if (writeErr) return { status: 500, error: writeErr.message };
-  return { status: 200, version: plan.newVersion };
+// 调用生产函数（而非副本）
+async function performWrite(sbOrDb, args) {
+  return performVersionedWrite(sbOrDb, args);
 }
 
 let pass = 0, fail = 0;
@@ -128,7 +69,7 @@ const UID = "u1";
 console.log("\n── 正常路径：无并发 ──");
 {
   const db = makeDb({ user_id: UID, version: 5, progress_data: { xp: 100 } });
-  const sb = makeSupabase(db);
+  const sb = makeMemAdapter(db);
   const r = await performWrite(sb, {
     userId: UID,
     current: { version: 5, progress_data: { xp: 100 } },
@@ -143,7 +84,7 @@ console.log("\n── TOCTOU 核心回归：读到写之间被抢改 ──");
 {
   // 手机和 iPad 都读到 version=5
   const db = makeDb({ user_id: UID, version: 5, progress_data: { xp: 100 } });
-  const sb = makeSupabase(db);
+  const sb = makeMemAdapter(db);
 
   // iPad 先落库：version 变成 6
   const ipad = await performWrite(sb, {
@@ -170,7 +111,7 @@ console.log("\n── TOCTOU 核心回归：读到写之间被抢改 ──");
 console.log("\n── 新用户首行：并发插入 ──");
 {
   const db = makeDb(null); // 表里还没有这个用户
-  const sb = makeSupabase(db);
+  const sb = makeMemAdapter(db);
 
   const first = await performWrite(sb, {
     userId: UID, current: null,
@@ -191,7 +132,7 @@ console.log("\n── 新用户首行：并发插入 ──");
 console.log("\n── 连续正常写入（版本链不断）──");
 {
   const db = makeDb({ user_id: UID, version: 1, progress_data: { n: 1 } });
-  const sb = makeSupabase(db);
+  const sb = makeMemAdapter(db);
   let v = 1;
   for (let i = 2; i <= 5; i++) {
     const r = await performWrite(sb, {
