@@ -5540,7 +5540,12 @@ export default function App() {
     writeWordStatus(u);
     sfx.click();
     var nextIdx = idx + 1;
-    if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); saveSession(wordList, nextIdx, learned); return; }
+    if (nextIdx >= wordList.length) {
+      saveSession(wordList, nextIdx, learned);
+      // 一个都没真学(全程"我认识"跳完)：没有可庆祝/可复习的东西，回主页，不发 streak
+      if (!learned.length) { setScreen("setup"); return; }
+      sfx.complete(); setPhase("done"); return;
+    }
     await waitAndEnterNextWord(nextIdx, learned);
   };
 
@@ -5640,9 +5645,13 @@ export default function App() {
           return reviewWordData[w] && reviewWordData[w].screenedUnknownAt;
         });
         var _dailyTarget = dailyNewWords || 20;
+        var _unscreenedLeft = unlearned.filter(function(w) {
+          return !(reviewWordData[w] && reviewWordData[w].screenedUnknownAt);
+        }).length;
         if (_screenedUnknown.length >= _dailyTarget) {
           unlearned = _screenedUnknown;
-        } else {
+        } else if (_unscreenedLeft > 0) {
+          // 还有没筛过的词才提供"继续快筛"，否则会陷入 筛完→不够→再筛 的死循环 (Codex P1)
           var _goScreen = await confirmAsync({
             title: "标过“不认识”的词只有 " + _screenedUnknown.length + " 个",
             body: "今日目标 " + _dailyTarget + " 个。\n\n继续快筛补够？还是直接开始学（不够的部分会用还没筛到的词补上）？",
@@ -5652,6 +5661,7 @@ export default function App() {
           if (_goScreen) { startScreening(); return; }
           // 直接学：保持完整池（标过"不认识"的已排在最前）
         }
+        // 全部筛完但仍不够目标：不弹窗，直接学(池=全部标过"不认识"的+无可补,自然到哪算哪)
       }
       // ★ 没有未学新词时绝不回退到 rawWords（那会把 error/已掌握的词当新词重学 —— 正是 bug 本身）。
       //   改为引导用户去复习 / 重点攻克。
@@ -5773,7 +5783,12 @@ export default function App() {
 
   var startScreening = function() {
     var allWords = parseWordsFromInput(wordInput);
-    var toScreen = allWords.filter(function(w) { return !wordStatusMap[w] || wordStatusMap[w] === "unlearned"; });
+    var toScreen = allWords.filter(function(w) {
+      if (wordStatusMap[w] && wordStatusMap[w] !== "unlearned") return false;
+      // 已标过"不认识"的不再重复筛——快筛只管没见过的词(修 Codex P1: 继续快筛从头重问一遍)
+      var lw = String(w).trim().toLowerCase();
+      return !(reviewWordData[lw] && reviewWordData[lw].screenedUnknownAt);
+    });
     if (toScreen.length === 0) { setError("没有未学习的词需要筛选"); return; }
     setScreeningWords(toScreen);
     setScreeningIdx(0);
@@ -6027,9 +6042,21 @@ export default function App() {
         if (Array.isArray(d.questions) && d.questions.length > 0 && d.questions.every(function(q){ return q.answer && q.options; })) return true;
         return false;
       };
+      // 预取缓存按"位置"生成(第1-5词)，但「我认识」跳过会让实际学过的批次错位——
+      // 缓存里的词必须全部属于本批(newLearned 最后5个)，否则会考到被跳过的词、漏掉真学的词。
+      var _batchSet = {};
+      newLearned.slice(-5).forEach(function(w){ _batchSet[String(w).trim().toLowerCase()] = true; });
+      var reviewMatchesBatch = function(d) {
+        if (!d) return false;
+        var ws = d.type === "checkpoint_quiz" ? (d.questions || []).map(function(q){ return q && q.word; })
+               : d.type === "speed_match" ? (d.pairs || []).map(function(p){ return p && p.word; })
+               : null;
+        if (!ws) return true; // 旧 fill_blank 缓存无词字段，无法校验，放行兼容
+        return ws.filter(Boolean).every(function(w){ return _batchSet[String(w).trim().toLowerCase()]; });
+      };
       // Phase B: instant if pre-fetched during batch loading
       var cachedReview = dataCache.current["_review_" + newLearned.length];
-      if (isValidReview(cachedReview)) {
+      if (isValidReview(cachedReview) && reviewMatchesBatch(cachedReview)) {
         setReviewData(cachedReview); setReviewAnswers({}); setReviewSubmitted(false); setPhase("review"); return;
       }
       // Phase A: switch phase immediately so spinner shows, then fetch
@@ -9922,13 +9949,15 @@ export default function App() {
         var ts = getTimingStats();
         var accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
         var encourageMsg = accuracy >= 80 ? "太棒了，正确率超高！" : accuracy >= 50 ? "不错的开始，继续加油！" : "没关系，多练几次就好了！";
-        // Mark daily streak on completion
-        var _streakInfo = markStudyStreakToday();
+        // 完成数按真实学过的算："我认识"跳过的词不算学了、不进记忆地图 (Codex P1)
+        var _doneWords = learned.length ? learned : wordList;
+        // Mark daily streak on completion — 只有真学了词才累计连续天数
+        var _streakInfo = learned.length ? markStudyStreakToday() : getStudyStreak();
         var _streakDisp = getStreakDisplay(_streakInfo.streak);
         return <div style={{...S.card,textAlign:"center",padding:"40px 22px"}}>
           <div style={{fontSize:56,marginBottom:12,animation:"bounce 0.6s ease-out"}}>🎉</div>
           <h2 style={{fontSize:24,fontWeight:700,margin:"0 0 4px"}}>全部学完！</h2>
-          <p style={{color:C.textSec,marginBottom:4}}>{"今天学了 "+wordList.length+" 个词 · "+stats.xp+" XP"}</p>
+          <p style={{color:C.textSec,marginBottom:4}}>{"今天学了 "+_doneWords.length+" 个词 · "+stats.xp+" XP"}</p>
           <p style={{color:C.accent,fontSize:13,fontWeight:600,marginBottom:_streakDisp ? 8 : 16}}>{encourageMsg}</p>
           {_streakDisp && (
             <div style={{background:"linear-gradient(135deg, "+C.goldLight+" 0%, "+C.accentLight+" 100%)",borderRadius:12,padding:"12px 16px",marginBottom:16,border:"1px solid "+C.gold+"44"}}>
@@ -9954,7 +9983,7 @@ export default function App() {
             </div>}
           </div>
 
-          <div style={S.doneWords}>{wordList.map(w => <span key={w} style={S.doneTag} onClick={()=>speak(w)}>{w+" 🔊"}</span>)}</div>
+          <div style={S.doneWords}>{_doneWords.map(w => <span key={w} style={S.doneTag} onClick={()=>speak(w)}>{w+" 🔊"}</span>)}</div>
 
           {/* 📅 记忆地图 — 让用户感知 SRS 系统在持续追踪这些词 */}
           <div style={{marginTop:18, padding:"14px 16px", background:C.tealLight+"99", border:"1px solid "+C.teal+"44", borderRadius:12, textAlign:"left"}}>
@@ -9962,7 +9991,7 @@ export default function App() {
               📅 你的记忆地图
             </div>
             <div style={{fontSize:12, color:C.text, lineHeight:1.6, marginBottom:10}}>
-              这 <strong style={{...NUM, color:C.teal}}>{wordList.length}</strong> 个词将分别在以下时间回来找你：
+              这 <strong style={{...NUM, color:C.teal}}>{_doneWords.length}</strong> 个词将分别在以下时间回来找你：
             </div>
             {/* 5 个时间点 mini 时间轴 */}
             <div style={{display:"grid", gridTemplateColumns:"repeat(5, 1fr)", gap:6, marginBottom:8}}>
