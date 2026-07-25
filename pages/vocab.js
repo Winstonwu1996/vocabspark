@@ -12,7 +12,7 @@ import { mergeStates, validateMerged } from '../lib/syncMerge';
 import { getSyncClient } from '../lib/sync-client-singleton'; // 方案1: vocab+history 共用单一同步实例
 import { backupOnBoot, clearBackups } from '../lib/local-backup'; // sync 重构兜底: sync 前快照 blob + 登出清备份
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
-import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, sanitizeResumeSession } from '../lib/learnStatus';
+import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, sanitizeResumeSession, getLocalDateKey, isoToLocalDateKey } from '../lib/learnStatus';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
 import { checkMorphFill } from '../lib/morphFillSanitize';
 import { hasTypedAnswer, hasUsableMeaning } from '../lib/typedRecall';
@@ -3388,13 +3388,8 @@ export default function App() {
   }, [wordInput]);
 
   // ── Daily count helpers ──
-  var getLocalDateKey = function() {
-    var d = new Date();
-    var y = d.getFullYear();
-    var m = String(d.getMonth() + 1).padStart(2, '0');
-    var day = String(d.getDate()).padStart(2, '0');
-    return y + '-' + m + '-' + day;
-  };
+  // 日期口径统一到 lib/learnStatus.js（getLocalDateKey / isoToLocalDateKey），
+  // 杜绝 UTC 写入 vs 本地读取的混比 —— 见该文件「日期口径」段的 bug 说明。
 
   var getDailyState = function() {
     try {
@@ -6207,13 +6202,13 @@ export default function App() {
 
     var quickDoneToday = Object.values(reviewWordData || {}).some(function(item) {
       return (item.reviewHistory || []).some(function(r) {
-        return r.mode === "quick" && String(r.date || "").slice(0,10) === todayKey;
+        return r.mode === "quick" && isoToLocalDateKey(r.date) === todayKey;
       });
     });
 
     var deepDoneCountToday = Object.values(reviewWordData || {}).reduce(function(acc, item) {
       var c = (item.reviewHistory || []).filter(function(r) {
-        return r.mode === "deep" && String(r.date || "").slice(0,10) === todayKey;
+        return r.mode === "deep" && isoToLocalDateKey(r.date) === todayKey;
       }).length;
       return acc + c;
     }, 0);
@@ -6241,7 +6236,7 @@ export default function App() {
       Object.keys(reviewWordData || {}).forEach(function (w) {
         var item = reviewWordData[w];
         ((item && item.reviewHistory) || []).forEach(function (r) {
-          if (r.mode === "quick" && String(r.date || "").slice(0, 10) === todayKey) seen[w] = 1;
+          if (r.mode === "quick" && isoToLocalDateKey(r.date) === todayKey) seen[w] = 1;
         });
       });
       return Object.keys(seen).length;

@@ -19,7 +19,9 @@
     "kb:search": "node scripts/wikidata-search.mjs",
     "kb:fact-check": "node scripts/fact-check-topic.mjs",
     "kb:fact-check:all": "node scripts/fact-check-topic.mjs --all",
-    "check:hygiene": "node scripts/check-content-hygiene.mjs"
+    "check:hygiene": "node scripts/check-content-hygiene.mjs",
+    "test": "node scripts/run-all-tests.mjs",
+    "test:all": "node scripts/run-all-tests.mjs --all"
   },
   "dependencies": {
     "@sentry/nextjs": "^8.55.1",
