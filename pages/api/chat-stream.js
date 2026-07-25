@@ -15,6 +15,25 @@ export const config = {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// FNV-1a 32-bit 字符串指纹（同步、Edge 可用）— 把 prompt 绑进缓存 key，防跨用户投毒。
+function fnv1a(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+  }
+  return h.toString(36);
+}
+
+// 有效缓存 key = 客户端 cacheKey + prompt 指纹。
+// 客户端 cacheKey 完全可控，若直接用作 key，攻击者可对 'dr-v1:abandon' 写任意内容投毒所有孩子。
+// 绑上 hash(system+message)：合法用户同词同 prompt → 同 key → 缓存照命中；
+// 攻击者换 prompt → 不同 key → 投毒写到无人读的 key，命中链断开。
+function deriveCacheKey(cacheKey, system, message) {
+  if (!cacheKey) return cacheKey;
+  return cacheKey + ":p" + fnv1a((system || "") + " " + (message || ""));
+}
+
 // ─── Circuit Breaker（per-instance，Edge Runtime instance 共享内存）───
 const providerCircuit = {};
 const CIRCUIT_THRESHOLD = 5;
@@ -140,11 +159,14 @@ export default async function handler(req) {
   // BYO 检测（用户用自带 key 时跳过缓存 + 跳过 rate limit）
   const isBYO = userApiKeys && (userApiKeys.deepseek || userApiKeys.gemini);
 
+  // prompt 指纹绑进缓存 key（防跨用户投毒，见 deriveCacheKey）
+  const effectiveCacheKey = deriveCacheKey(cacheKey, system, message);
+
   // ─── Teach Cache Hit ───
   // 客户端可传 cacheKey（如 "teach-core-v1:abandon:L2"）请求服务端缓存命中。
   // 命中则秒回（封装为 SSE 流，客户端无感知）。
   if (cacheKey && !isBYO) {
-    const cached = await getCached(cacheKey);
+    const cached = await getCached(effectiveCacheKey);
     // 命中也要校验：jsonMode 下，旧 bundle 仍可能带 v2 cacheKey 命中历史污染条目
     // （可解析但缺字段）。不完整则当未命中，落到下方 LLM 重新生成，绝不回污染内容 (Codex P2)。
     let cachedOk = !!cached;
@@ -209,7 +231,8 @@ export default async function handler(req) {
     }
   }
 
-  const tokens = maxTokens || 900;
+  // clamp 上限 4000：客户端曾可传任意值（DeepSeek 可到 8192）→ 成本放大。默认仍 900。
+  const tokens = Math.min(Number(maxTokens) || 900, 4000);
   const providers = buildProviders(userApiKeys);
   if (!providers.length) {
     return new Response(JSON.stringify({ error: "No provider API keys configured" }), {
@@ -347,7 +370,7 @@ export default async function handler(req) {
                   }
                 }
                 if (valid) {
-                  setCached(cacheKey, fullText).catch(() => {});
+                  setCached(effectiveCacheKey, fullText).catch(() => {});
                 }
                 controller.close();
                 return;

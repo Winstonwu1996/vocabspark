@@ -224,7 +224,8 @@ export default async function handler(req, res) {
     }
   }
 
-  const tokens = maxTokens || 2000;
+  // clamp 上限 4000：客户端曾可传任意值（DeepSeek 可到 8192）→ 成本放大攻击。默认仍 2000。
+  const tokens = Math.min(Number(maxTokens) || 2000, 4000);
   const errors = [];
 
   // BYO API Key: 如果用户提供了自己的 key，优先使用
