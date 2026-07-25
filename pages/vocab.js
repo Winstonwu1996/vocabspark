@@ -5530,6 +5530,20 @@ export default function App() {
     setPhaseDir(1); setPhase("teach");
   };
 
+  // 逃生门：学习中发现漏网的简单词(如 door)，一键标"认识"(=快筛跳过)直接下一词。
+  // 不吃当日额度、不进 learned(不触发里程碑)、不给 XP —— 语义与快筛"认识"完全一致。
+  var markKnownDuringLearning = async function() {
+    var word = currentWord;
+    if (!word || loading) return;
+    trackFunnel('word_known_skip', { word: word, idx: idx });
+    var u = {}; u[String(word).trim().toLowerCase()] = "skipped";
+    writeWordStatus(u);
+    sfx.click();
+    var nextIdx = idx + 1;
+    if (nextIdx >= wordList.length) { sfx.complete(); setPhase("done"); saveSession(wordList, nextIdx, learned); return; }
+    await waitAndEnterNextWord(nextIdx, learned);
+  };
+
   var handleFile = async (e) => {
     var file = e.target.files?.[0]; if (!file) return;
     setFileLabel("⏳ 正在解析 " + file.name + " ...");
@@ -5589,7 +5603,7 @@ export default function App() {
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  var startLearning = async function(resumeIdx) {
+  var startLearning = async function(resumeIdx, opts) {
     var rawWords = wordInput.trim().split(/[\n,，、]+/).map(function(w) { return w.trim().toLowerCase(); }).filter(Boolean);
     if (!rawWords.length) { setError("请输入至少一个单词"); return; }
     trackFunnel('learning_start', { word_count: rawWords.length, has_profile: !!(profile||'').trim(), is_resume: typeof resumeIdx === 'number', tier: userTier });
@@ -5618,6 +5632,27 @@ export default function App() {
         var bv = reviewWordData[b] && reviewWordData[b].screenedUnknownAt ? 0 : 1;
         return av - bv;
       });
+      // 从快筛进入时兑现按钮承诺「学习不认识的词」：只学她明确标过"不认识"的。
+      // 不够今日目标才问：继续筛补够,还是把没筛到的也加进来(旧行为)。
+      // 修 door 事件：筛到一半开始学习,没筛到的简单词被默默当"不认识"塞进学习。
+      if (opts && opts.fromScreening) {
+        var _screenedUnknown = unlearned.filter(function(w) {
+          return reviewWordData[w] && reviewWordData[w].screenedUnknownAt;
+        });
+        var _dailyTarget = dailyNewWords || 20;
+        if (_screenedUnknown.length >= _dailyTarget) {
+          unlearned = _screenedUnknown;
+        } else {
+          var _goScreen = await confirmAsync({
+            title: "标过“不认识”的词只有 " + _screenedUnknown.length + " 个",
+            body: "今日目标 " + _dailyTarget + " 个。\n\n继续快筛补够？还是直接开始学（不够的部分会用还没筛到的词补上）？",
+            confirmText: "🔍 继续快筛",
+            cancelText: "直接开始学",
+          });
+          if (_goScreen) { startScreening(); return; }
+          // 直接学：保持完整池（标过"不认识"的已排在最前）
+        }
+      }
       // ★ 没有未学新词时绝不回退到 rawWords（那会把 error/已掌握的词当新词重学 —— 正是 bug 本身）。
       //   改为引导用户去复习 / 重点攻克。
       if (unlearned.length === 0) {
@@ -7015,7 +7050,7 @@ export default function App() {
             📋 未筛选 <strong>{_sqRemaining}</strong> 个（下次继续）
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0); }}>✨ 开始 AI 精读（{_sqQuota} 个词）</button>
+            <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0, { fromScreening: true }); }}>✨ 开始 AI 精读（{_sqQuota} 个词）</button>
             <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={function(){
               setScreeningIdx(screeningIdx + 1);
               setScreeningFlipped(false);
@@ -7065,7 +7100,7 @@ export default function App() {
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
             {unlearnedNow > 0 && (
-              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0); }}>✨ 开始学习不认识的词</button>
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0, { fromScreening: true }); }}>✨ 开始学习不认识的词</button>
             )}
             {scRemaining > 0 && (
               <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={function(){ startScreening(); }}>🔄 继续筛选剩余 {scRemaining} 个词</button>
@@ -9607,6 +9642,7 @@ export default function App() {
             {!guessSubmitted && <div style={S.btnRow}>
               {guessData.options && <button style={S.primaryBtn} onClick={submitGuess} disabled={!selectedOption||loading}>提交 →</button>}
               <button style={guessData.options?S.ghostBtn:S.primaryBtn} onClick={skipGuess} disabled={loading}>{guessData.options?"跳过":"→ 直接学习"}</button>
+              <button style={S.ghostBtn} onClick={markKnownDuringLearning} disabled={loading} title="标为认识，不占今日新词名额">😎 我认识</button>
             </div>}
           </>}
         </div>
