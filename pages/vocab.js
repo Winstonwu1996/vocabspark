@@ -407,7 +407,14 @@ var buildGuessPrompt = (word, learned) => {
     "    \"Please _____ the audience.\"  ← 这句 deal with / speak to 都通\n\n" +
 
     "─── 3. options（4 选项，易混区分而非近义替代）───\n" +
-    "正确答案：1-3 个英文词最贴近 selectedSense（求精准，不强求最高频替代）。\n\n" +
+    "正确答案：用**最简单的常用词/短语**表达 selectedSense —— 宁可用 3 个简单词的短语\n" +
+    "（如 'give up'），也绝不用 1 个精准但生僻的词（如 'relinquish'）。\n\n" +
+    "  ❗【选项难度铁律】4 个选项**全部**必须是初中生一眼认识的高频词\n" +
+    "    （Oxford 3000 / NGSL 级别）。这是 priming 题：学生还没学目标词，\n" +
+    "    如果连选项都要猜，题就废了。难度只允许来自**词义的区分**，\n" +
+    "    严禁来自选项词本身的生僻度或罕见搭配。\n" +
+    "    ✅ 好：give up / dislike / keep / absorb（全是常见词，靠意思区分）\n" +
+    "    ❌ 坏：relinquish / repudiate / forsake（词本身就是生词，考的是读选项不是想词义）\n\n" +
     "  ❌ 旧设计错位：用 'give up / leave behind / discard' 三个都接近的近义短语\n" +
     "    作选项 — 这是 paraphrase 题，不是 vocabulary 题，会结构性制造\"两答案\n" +
     "    都对\"。\n\n" +
