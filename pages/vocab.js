@@ -1320,24 +1320,44 @@ var speak = async (text) => {
   }
 };
 
+/* 验证式播放：真开始出声(onplaying)才算成功；播放失败/3s 没动静都算失败。
+ * 修中国大陆无声 bug：词典音频多托管在被墙域名(gstatic 等)，play() 的失败是【异步】的，
+ * 旧代码同步 try/catch 接不住就 return —— 降级链路从未触发，点小喇叭永远无声。 */
+var tryPlayAudio = function(audio) {
+  return new Promise(function(resolve) {
+    var done = false;
+    var ok = function() { if (!done) { done = true; resolve(true); } };
+    var bad = function() { if (!done) { done = true; resolve(false); } };
+    try {
+      audio.onplaying = ok;
+      audio.onerror = bad;
+      audio.currentTime = 0;
+      var p = audio.play();
+      if (p && p.catch) p.catch(bad);
+      setTimeout(bad, 3000); // 3s 没出声 = 失败(被墙域名常见是无限挂起而非报错)
+    } catch (e) { bad(); }
+  });
+};
+
 var speakWord = async (word) => {
   if (typeof window === "undefined") return;
   var w = word.replace(/[🔊\[\]]/g, "").trim().toLowerCase();
   if (!w) return;
-  if (dictAudioCache[w]) { try { dictAudioCache[w].currentTime = 0; dictAudioCache[w].play(); return; } catch(e) {} }
+  if (dictAudioCache[w]) {
+    if (await tryPlayAudio(dictAudioCache[w])) return;
+    delete dictAudioCache[w]; // 缓存的音频播不出(被墙) → 清掉，别再撞
+  }
   try {
-    var r = await fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(w));
+    var r = await fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(w), { signal: AbortSignal.timeout(2500) });
     var data = await r.json();
     var audioUrl = data?.[0]?.phonetics?.find(p => p.audio)?.audio;
     if (audioUrl) {
       if (audioUrl.startsWith("//")) audioUrl = "https:" + audioUrl;
       var audio = new Audio(audioUrl);
-      dictAudioCache[w] = audio;
-      audio.play();
-      return;
+      if (await tryPlayAudio(audio)) { dictAudioCache[w] = audio; return; }
     }
   } catch(e) {}
-  await speak(w);
+  await speak(w); // 自家 /api/tts(同域,大陆可达) → speechSynthesis 双兜底
 };
 
 var SpeakBtn = ({ text, size }) => {
@@ -5122,10 +5142,11 @@ export default function App() {
     }
 
     // ── Word audio pre-fetch: Free Dictionary API (fire and forget) ──
+    // 4s 超时：该域名在中国大陆常整体挂起，不设超时会积压僵尸连接
     batchWords.forEach(function(word) {
       var w = word.toLowerCase();
       if (dictAudioCache[w]) return;
-      fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(w))
+      fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(w), { signal: AbortSignal.timeout(4000) })
         .then(function(r) { return r.json(); })
         .then(function(data) {
           var audioUrl = data?.[0]?.phonetics?.find(function(p) { return p.audio; })?.audio;
