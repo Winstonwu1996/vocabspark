@@ -413,7 +413,11 @@ var buildGuessPrompt = (word, learned) => {
 
     "─── 3. options（4 选项，易混区分而非近义替代）───\n" +
     "正确答案：用**最简单的常用词/短语**表达 selectedSense —— 宁可用 3 个简单词的短语\n" +
-    "（如 'give up'），也绝不用 1 个精准但生僻的词（如 'relinquish'）。\n\n" +
+    "（如 'give up'），也绝不用 1 个精准但生僻的词（如 'relinquish'）。\n" +
+    "正解必须是【把它替换进 context 后句意不变】的释义/同义表达。\n" +
+    "  ❌ 严禁把目标词的【并列坐标词】当选项（用户实测 herd 翻车案例）：\n" +
+    "    herd 配 pack/flock/school/crowd —— 四个全是'某种群'的并列词，谁都不是 herd 的释义，\n" +
+    "    题目退化成搭配冷知识抢答且无唯一正解。herd 的正解应是 'a large group of animals' 这类释义短语。\n\n" +
     "  ❗【选项难度铁律】4 个选项**全部**必须是初中生一眼认识的高频词\n" +
     "    （Oxford 3000 / NGSL 级别）。这是 priming 题：学生还没学目标词，\n" +
     "    如果连选项都要猜，题就废了。难度只允许来自**词义的区分**，\n" +
@@ -1037,6 +1041,9 @@ var buildContextChoicePrompt = (word, wordType) => {
   return "为 \"" + word + "\" 设计【语境契合度选择】题。\n\n" +
     "【任务】" + typeNote + "\n\n" +
     "【唯一正解铁律 — 违反则整题作废】\n" +
+    "❗核心义 = 该词【最常用】的义项（词典第一义项，也是教学页展示给学生的那个）。\n" +
+    "  绝不许把生僻/文学义当核心义（用户实测 hereafter 翻车案例：教学页教的是副词'此后/今后'，\n" +
+    "  题目却按名词'死后/来生'判对错 —— 学生按刚学的释义作答反被判错，是最伤信任的错误）。\n" +
     "先在心里写下本词的核心义(教学释义)，然后逐个干扰项自检：\n" +
     "「把核心义代入这个句子，说得通吗？」——说得通就必须重写。\n" +
     "🚫 严禁『四个都是本词的正确用法，选最典型的一个』这种排序题(真实翻车案例 haul：\n" +
@@ -5406,7 +5413,13 @@ export default function App() {
             if (finalParsed && finalParsed.type && dataCache.current[capturedWord] && !dataCache.current[capturedWord]._auditScheduledSpec) {
               dataCache.current[capturedWord]._auditScheduledSpec = true;
               auditQuizInBackground("spectrum", capturedWord, 15000,
-                function() { var d = dataCache.current[capturedWord]; return (d && d.spectrum && d.spectrum.type && currentWordRef.current !== capturedWord) ? d.spectrum : null; },
+                function() {
+                  var d = dataCache.current[capturedWord];
+                  if (!(d && d.spectrum && d.spectrum.type && currentWordRef.current !== capturedWord)) return null;
+                  // 注入教学释义作判定权威(hereafter 教训: 题目内部自洽但和教学页释义打架, 审核必须拿页面上教的那个当基准)
+                  var _def = (d.teachJSON && d.teachJSON.definition) || (d.teach && d.teach.definition) || null;
+                  return _def ? Object.assign({}, d.spectrum, { _taughtDefinition: _def }) : d.spectrum;
+                },
                 function(problems) { return doSpectrumAttempt(0, auditRetrySuffix(problems)).then(function(p) { return (p && p.type) ? p : null; }).catch(function() { return null; }); },
                 function(fresh) {
                   if (currentWordRef.current === capturedWord) return;
