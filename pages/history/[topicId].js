@@ -105,7 +105,7 @@ import { ProfileSetup } from '../../components/history-engine/ProfileSetup';
 // ThroughLineMap 不再在单课页用 (首页是 51 门主选课入口, 课内"换一课"重复入口已移除)
 import { findViewIdByTopicId } from '../../lib/atlas-views';
 import { parseTopicYear, getChinaDynastyForYear, isChinaTopic } from '../../lib/china-dynasty-map';
-import { hasNotebook, loadNotebook } from '../../lib/history-storyboards/notebooks/index.js';
+import { hasNotebook, loadNotebook, preloadNotebook } from '../../lib/history-storyboards/notebooks/index.js';
 // Step 4b-1: 进课 tier gate (flag off 时 CourseGateMount 不渲染 → 不调 useUserTier)。
 // ⚠️ 不在此静态 import membership/useUserTier — 隔离在 CourseGate.js (经 CourseGateMount 懒加载)。
 import { ENABLE_HISTORY_PAYWALL } from '../../lib/history-paywall-flag';
@@ -638,7 +638,13 @@ export default function HistoryPage() {
         // 否则渲染体里的 getEffectiveTurns 会撞上"未预加载"。
         // 只等当前这一门（约 100KB），不是以前那样等全部 71 门（7.4MB）。
         var resolved = t;
-        preloadTopicStoryboard(resolved)
+        // notebook 同样按需（考点卡/mastery 门要用），和 storyboard 一起并行拉
+        Promise.all([
+          preloadTopicStoryboard(resolved),
+          preloadNotebook(resolved).catch(function(e) {
+            console.error("[history] notebook chunk 加载失败:", resolved, e && e.message);
+          }),
+        ])
           .catch(function(e) {
             // 单门课 chunk 加载失败（网络抖动/部署换版）→ 不能白屏卡死。
             // 放行让页面继续：hasStoryboard 仍为 true 但同步 API 会抛，

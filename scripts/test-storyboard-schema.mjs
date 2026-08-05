@@ -142,9 +142,11 @@ console.log("\n── ③ 考点卡渲染取值不得因 schema 差异抛错（�
   const crashers = [];
   let totalCards = 0, storyCards = 0, nested = 0, topLevel = 0;
 
+  // notebook 与 storyboard 一样改成了按需加载（2026-08-05 瘦身），同步 API 读缓存 →
+  // 测试要覆盖全部课程就得先全部载入。生产环境只在进课时加载当前一门。
   for (const tid of NB.listNotebookTopics()) {
     let nb;
-    try { nb = NB.loadNotebook(tid); } catch (e) { continue; }
+    try { await NB.preloadNotebook(tid); nb = NB.loadNotebook(tid); } catch (e) { continue; }
     for (const card of (nb && nb.mainConcepts) || []) {
       totalCards++;
       const isStory = !!(card.storyAnchor && card.storyAnchor.covered);
