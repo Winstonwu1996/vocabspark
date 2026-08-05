@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { supabase } from '../lib/supabase';
 import { C, FONT, FONT_DISPLAY, NUM, globalCSS, S, getWordTheme } from '../lib/theme';
-import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON, parsePartialJSON, callClassify, fetchQuickDef, METHOD_SCHEMAS, METHOD_EXAMPLES, VISUAL_ANCHOR_FORMATS } from '../lib/api';
+import { FETCH_TIMEOUT_MS, FETCH_TIMEOUT_LONG_MS, fetchWithTimeout, callWithClientRetry, callAPI, callAPIFast, callAPIStream, tryJSON, parsePartialJSON, callClassify, fetchQuickDef, METHOD_SCHEMAS, METHOD_EXAMPLES, VISUAL_ANCHOR_FORMATS, buildQuizAuditSys, buildQuizAuditPrompt } from '../lib/api';
 import { trackFunnel } from '../lib/analytics';
 import { BrandUIcon, BrandSparkIcon, BrandNavBar, AppHeroHeader } from '../components/BrandNavBar';
 import UserCenter from '../components/UserCenter';
@@ -405,9 +405,25 @@ var buildGuessPrompt = (word, learned) => {
     "    \"He decided to _____ his old plan.\"\n\n" +
     "  ❌ 反例 3（义项允许多解 — address 锁\"处理\"义但 context 同时允许\"谈论\"）：\n" +
     "    \"Please _____ the audience.\"  ← 这句 deal with / speak to 都通\n\n" +
+    "  ❌ 反例 4（线索不足 = 纯抽奖，用户实测 haute 翻车案例）：\n" +
+    "    \"the new Dior dress is very _____.\"  ← expensive / stylish / colorful 全都能自然填入，\n" +
+    "    句子没给任何指向词义的线索，学生只能瞎蒙，挫伤积极性\n\n" +
+    "  【出题后必做自检】把 4 个选项逐一代入 _____ 读一遍：只要有第 2 个选项读起来也自然，\n" +
+    "    就是 context 线索不足 —— 必须重写 context 增加指向正解的线索（是改句子，不是换选项）。\n\n" +
 
     "─── 3. options（4 选项，易混区分而非近义替代）───\n" +
-    "正确答案：1-3 个英文词最贴近 selectedSense（求精准，不强求最高频替代）。\n\n" +
+    "正确答案：用**最简单的常用词/短语**表达 selectedSense —— 宁可用 3 个简单词的短语\n" +
+    "（如 'give up'），也绝不用 1 个精准但生僻的词（如 'relinquish'）。\n" +
+    "正解必须是【把它替换进 context 后句意不变】的释义/同义表达。\n" +
+    "  ❌ 严禁把目标词的【并列坐标词】当选项（用户实测 herd 翻车案例）：\n" +
+    "    herd 配 pack/flock/school/crowd —— 四个全是'某种群'的并列词，谁都不是 herd 的释义，\n" +
+    "    题目退化成搭配冷知识抢答且无唯一正解。herd 的正解应是 'a large group of animals' 这类释义短语。\n\n" +
+    "  ❗【选项难度铁律】4 个选项**全部**必须是初中生一眼认识的高频词\n" +
+    "    （Oxford 3000 / NGSL 级别）。这是 priming 题：学生还没学目标词，\n" +
+    "    如果连选项都要猜，题就废了。难度只允许来自**词义的区分**，\n" +
+    "    严禁来自选项词本身的生僻度或罕见搭配。\n" +
+    "    ✅ 好：give up / dislike / keep / absorb（全是常见词，靠意思区分）\n" +
+    "    ❌ 坏：relinquish / repudiate / forsake（词本身就是生词，考的是读选项不是想词义）\n\n" +
     "  ❌ 旧设计错位：用 'give up / leave behind / discard' 三个都接近的近义短语\n" +
     "    作选项 — 这是 paraphrase 题，不是 vocabulary 题，会结构性制造\"两答案\n" +
     "    都对\"。\n\n" +
@@ -1021,12 +1037,27 @@ var buildContextChoicePrompt = (word, wordType) => {
   var isF = wordType === "F";
   var typeNote = isF
     ? "F 类多义词 — 4 个场景里 word 都是真实的英文用法，但只有 1 个用的是【目标义项】（最常用的核心义），另 3 个是其他义项（不算错但不是这次学的核心）。"
-    : "E 类抽象词 — 4 个场景都涉及 word 的语义场，但只有 1 个真正契合 word 的【核心定义】，另 3 个偏离或近义而不准。";
+    : "E 类抽象词 — 4 个场景都涉及 word 的语义场，但只有 1 个真正契合 word 的【核心定义】，另 3 个把核心定义代入后【明显不通】（相邻概念、真实误用），不是“也对但不够准”。";
   return "为 \"" + word + "\" 设计【语境契合度选择】题。\n\n" +
     "【任务】" + typeNote + "\n\n" +
+    "【唯一正解铁律 — 违反则整题作废】\n" +
+    "❗核心义 = 该词【最常用】的义项（词典第一义项，也是教学页展示给学生的那个）。\n" +
+    "  绝不许把生僻/文学义当核心义（用户实测 hereafter 翻车案例：教学页教的是副词'此后/今后'，\n" +
+    "  题目却按名词'死后/来生'判对错 —— 学生按刚学的释义作答反被判错，是最伤信任的错误）。\n" +
+    "❗❗更严禁【自造精细区分】把本来正确的场景判错（用户实测 hereditary 翻车案例）：\n" +
+    "  hereditary 核心义就是'遗传的'，'蓝眼睛遗传自祖父母'、'反应快遗传自妈妈'都是标准正确用法，\n" +
+    "  但题目选了'城堡世袭诅咒'当唯一正解、理由是'更侧重家族传承' —— 这是编造的标准，\n" +
+    "  且三个选项同时成立。**如果一个选项用初中生标准看就是该词的正确用法，它就不能当干扰项。**\n" +
+    "  凑不出 3 个明显错的场景，就换用【真实误用/张冠李戴】做干扰，绝不靠'细微更贴切'分胜负。\n" +
+    "先在心里写下本词的核心义(教学释义)，然后逐个干扰项自检：\n" +
+    "「把核心义代入这个句子，说得通吗？」——说得通就必须重写。\n" +
+    "🚫 严禁『四个都是本词的正确用法，选最典型的一个』这种排序题(真实翻车案例 haul：\n" +
+    "  拉器材车/收渔网/攀岩引体/卡车拖挂全是 haul 的合法用法，逼学生猜出题人心思，判错挫伤积极性)。\n" +
+    "  多义项差异不够大、凑不出 3 个『代入核心义明显不通』的场景时，就用【错误用法】当干扰\n" +
+    "  (语义或搭配上真错的句子)，绝不硬凑同义场景。\n\n" +
     "【场景设计】4 个英文场景句（每句 1-2 句，画像化，可融入学生兴趣）\n" +
-    "✅ 1 个正解：完美契合 " + word + " 的核心义\n" +
-    "✅ 3 个干扰：合理但不贴 — 偏义、近义而非精准、或他义混淆\n" +
+    "✅ 1 个正解：核心义代入完全成立，且是【唯一】成立的一项\n" +
+    "✅ 3 个干扰：核心义代入【明显不通】— 其他义项、真实误用、或语义/搭配错误\n" +
     "🚫 不要给明显不相关的句子（那是送分题，无价值）\n\n" +
     "【参考示例 — E 类抽象 democracy】（学风格）\n" +
     "{\n" +
@@ -1301,24 +1332,44 @@ var speak = async (text) => {
   }
 };
 
+/* 验证式播放：真开始出声(onplaying)才算成功；播放失败/3s 没动静都算失败。
+ * 修中国大陆无声 bug：词典音频多托管在被墙域名(gstatic 等)，play() 的失败是【异步】的，
+ * 旧代码同步 try/catch 接不住就 return —— 降级链路从未触发，点小喇叭永远无声。 */
+var tryPlayAudio = function(audio) {
+  return new Promise(function(resolve) {
+    var done = false;
+    var ok = function() { if (!done) { done = true; resolve(true); } };
+    var bad = function() { if (!done) { done = true; resolve(false); } };
+    try {
+      audio.onplaying = ok;
+      audio.onerror = bad;
+      audio.currentTime = 0;
+      var p = audio.play();
+      if (p && p.catch) p.catch(bad);
+      setTimeout(bad, 3000); // 3s 没出声 = 失败(被墙域名常见是无限挂起而非报错)
+    } catch (e) { bad(); }
+  });
+};
+
 var speakWord = async (word) => {
   if (typeof window === "undefined") return;
   var w = word.replace(/[🔊\[\]]/g, "").trim().toLowerCase();
   if (!w) return;
-  if (dictAudioCache[w]) { try { dictAudioCache[w].currentTime = 0; dictAudioCache[w].play(); return; } catch(e) {} }
+  if (dictAudioCache[w]) {
+    if (await tryPlayAudio(dictAudioCache[w])) return;
+    delete dictAudioCache[w]; // 缓存的音频播不出(被墙) → 清掉，别再撞
+  }
   try {
-    var r = await fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(w));
+    var r = await fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(w), { signal: AbortSignal.timeout(2500) });
     var data = await r.json();
     var audioUrl = data?.[0]?.phonetics?.find(p => p.audio)?.audio;
     if (audioUrl) {
       if (audioUrl.startsWith("//")) audioUrl = "https:" + audioUrl;
       var audio = new Audio(audioUrl);
-      dictAudioCache[w] = audio;
-      audio.play();
-      return;
+      if (await tryPlayAudio(audio)) { dictAudioCache[w] = audio; return; }
     }
   } catch(e) {}
-  await speak(w);
+  await speak(w); // 自家 /api/tts(同域,大陆可达) → speechSynthesis 双兜底
 };
 
 var SpeakBtn = ({ text, size }) => {
@@ -3013,6 +3064,7 @@ export default function App() {
   // 多设备/多tab 防回退：异步回调（sync 409 合并 / BroadcastChannel / 切回 tab 拉云）里读
   // screen/idx/wordList 必须用 ref，否则拿到的是陈旧闭包值。useEffect 每次提交刷新。
   var screenRef = useRef(screen);
+  var currentWordRef = useRef(""); // 审题员换题守卫：正在学的词绝不后台替换题目
   var activeSessionRef = useRef({ wordList: [], idx: 0 });
   useEffect(function () {
     screenRef.current = screen;
@@ -3183,6 +3235,7 @@ export default function App() {
       if (teachTimeoutRef.current) clearTimeout(teachTimeoutRef.current);
       if (teachPollRef.current) clearInterval(teachPollRef.current);
       if (spectrumPollRef.current) clearInterval(spectrumPollRef.current);
+      cancelPendingAudits(); // 审题员定时器：离开页面全部作废
       if (guessPollRef.current) clearInterval(guessPollRef.current);
       if (guessTimeoutRef.current) clearTimeout(guessTimeoutRef.current);
       if (petCelebrateTimerRef.current) clearTimeout(petCelebrateTimerRef.current);
@@ -4822,6 +4875,96 @@ export default function App() {
   };
 
   var currentWord = wordList[idx] || "";
+  useEffect(function() { currentWordRef.current = currentWord; }, [currentWord]);
+
+  // ─── 审题员：预取内容的后台语义审核（创始人拍板 2026-07-26）───
+  // 程序校验管结构；审核员抓语义缺陷（双正解/纯抽奖/判定漂移/选项生僻）。
+  // 铁律：全程后台错峰跑（不抢 guess/teach 关键路径——morph 重试拖慢加载的教训）、
+  // fail-open（审核出错=放行原题，绝不让学生等）、fatal 才重出一次、重出版也过审才替换。
+  // 三态判决(Codex P1)：pass / fail / error。
+  // 首审用 fail-open(error 当 pass=保留原题)；二审必须【明确 pass】才允许替换——
+  // 二审 429/超时/非JSON 若被当 pass，会把没过审的重出版顶掉原题，违反契约。
+  var auditQuizItem = async function(kind, item) {
+    try {
+      var raw = await callAPIFast(buildQuizAuditSys(), buildQuizAuditPrompt(kind, JSON.stringify(item)), { maxTokens: 300, silent429: true });
+      var v = tryJSON(raw);
+      var failed = v && (v.pass === false || v.pass === "false" || v.pass === 0);
+      if (failed) {
+        var probs = Array.isArray(v.problems) ? v.problems : (v.problems ? [String(v.problems)] : []);
+        return { verdict: "fail", problems: probs.slice(0, 3) };
+      }
+      if (v && v.pass === true) return { verdict: "pass", problems: [] };
+      return { verdict: "error", problems: [] }; // 无法解析/缺 pass 字段
+    } catch (e) { return { verdict: "error", problems: [] }; }
+  };
+  // 重出时统一的反馈后缀：结尾重申只输出 JSON（追加在原 prompt 的 schema 之后，必须把 JSON-only 约束抢回来）
+  var auditRetrySuffix = function(problems) {
+    return "\n\n【上一版被审核员打回，问题：" + (problems || []).join("；") + "。重新出题，必须避免这些问题。仍然只输出上述格式的 JSON，不要任何解释或前导文字】";
+  };
+  // ── 流畅度硬保险（创始人红线：绝不因审核产生卡顿感）──
+  // ① 单飞队列：任意时刻最多 1 个审核请求在飞，杜绝 10 个审核同刻并发抢 RPM/限流额度
+  // ② 批量加载让路：loadBatch 进行中审核一律推迟，绝不跟 guess/teach 关键路径抢资源
+  // ③ 过期丢弃：120s 内轮不上就放弃该次审核（原题照用），不无限排队
+  var _auditChainRef = useRef(Promise.resolve());
+  var _batchActiveCountRef = useRef(0); // 计数器而非布尔(Codex P1): 并行批(streaming早启动+silent预取)互不清旗
+  var _auditBusy = function() { return _batchActiveCountRef.current > 0; };
+  var enqueueAudit = function(fn) {
+    var expiresAt = Date.now() + 120000;
+    _auditChainRef.current = _auditChainRef.current.then(function() {
+      if (Date.now() > expiresAt) return;
+      var run = function() {
+        // 45s 硬闸(Codex P2): 防 response body 卡死导致整条审核链永久挂起——链必须始终前进
+        return Promise.race([
+          Promise.resolve().then(fn),
+          new Promise(function(r) { setTimeout(r, 45000); })
+        ]);
+      };
+      if (_auditBusy()) {
+        return new Promise(function(r) { setTimeout(r, 8000); }).then(function() {
+          if (Date.now() > expiresAt || _auditBusy()) return; // 还在加载就本次放弃
+          return run();
+        });
+      }
+      return run();
+    }).catch(function() {});
+  };
+  // getItem: 取当前缓存里的题(可能已被换/清) / regen(problems): 带反馈重出一次 / apply(fresh): 过审后写回
+  var _auditTimersRef = useRef([]);
+  var cancelPendingAudits = function() {
+    (_auditTimersRef.current || []).forEach(function(t) { clearTimeout(t); });
+    _auditTimersRef.current = [];
+  };
+  // validateFresh: 重出版的【结构】校验(Codex P1: 语义过审≠结构合法,坏结构会顶掉好缓存造成前台等待/空白)
+  var auditQuizInBackground = function(kind, label, delayMs, getItem, regen, apply, validateFresh) {
+    // generation token：会话重开时 dataCache.current 会换成新对象——旧审核链一律作废，
+    // 杜绝"上一会话的重出题写进新会话缓存"(审查确认的跨会话竞态)
+    var gen = dataCache.current;
+    var alive = function() { return dataCache.current === gen && !_auditBusy(); }; // 每步复查:换会话/批加载中都停手
+    var timer = setTimeout(function() {
+      enqueueAudit(function() {
+        try {
+          if (!alive()) return;
+          var item = getItem();
+          if (!item) return;
+          return auditQuizItem(kind, item).then(function(v) {
+            if (v.verdict !== "fail") return; // pass 或 error(fail-open) → 保留原题
+            trackFunnel('quiz_audit_fail', { kind: kind, word: label, problems: (v.problems || []).join(";").slice(0, 120) });
+            if (!alive()) return; // 首审期间批加载/换会话了 → 不再继续占资源
+            return Promise.resolve(regen(v.problems)).then(function(fresh) {
+              if (!fresh) return;
+              if (validateFresh && !validateFresh(fresh)) return; // 结构不合格的重出版直接弃
+              if (!alive()) return;
+              return auditQuizItem(kind, fresh).then(function(v2) {
+                // 二审必须【明确 pass】(error 不算!)才替换——保证换上去的一定是过审的
+                if (v2.verdict === "pass" && alive()) { apply(fresh); trackFunnel('quiz_audit_fixed', { kind: kind, word: label }); }
+              });
+            });
+          }).catch(function() {});
+        } catch (e) { /* 审核任何异常都不影响主流程 */ }
+      });
+    }, delayMs);
+    _auditTimersRef.current.push(timer);
+  };
 
   var getProfileKeywords = function() {
     if (!profile) return [];
@@ -4976,22 +5119,46 @@ export default function App() {
     var willReview = endMilestone % 5 === 0 && !willCloze;
     if (willReview && !dataCache.current["_review_" + endMilestone]) {
       callAPIFast(sysP, buildReviewPrompt(batchWords))
-        .then(function(raw) { dataCache.current["_review_" + endMilestone] = tryJSON(raw) || null; })
+        .then(function(raw) {
+          dataCache.current["_review_" + endMilestone] = tryJSON(raw) || null;
+          // 审题员（预取完成后 6s 错峰；里程碑到达前有充足后台时间）
+          auditQuizInBackground("checkpoint", batchWords.join(","), 6000,
+            function() { return dataCache.current["_review_" + endMilestone]; },
+            function(problems) {
+              return callAPIFast(sysP, buildReviewPrompt(batchWords) + auditRetrySuffix(problems))
+                .then(function(r) { return tryJSON(r) || null; }).catch(function() { return null; });
+            },
+            function(fresh) { dataCache.current["_review_" + endMilestone] = fresh; },
+            // 结构校验: 重出版必须过消费端同款门槛，坏结构不许顶掉好缓存 (Codex P1)
+            function(fresh) { return !!(fresh && fresh.type === "checkpoint_quiz" && Array.isArray(fresh.questions) && fresh.questions.filter(cqQuestionValid).length >= 4); });
+        })
         .catch(function(err) { console.warn("[loadBatch] review pre-fetch failed:", err.message); });
     }
     if (willCloze && !dataCache.current["_cloze_" + endMilestone]) {
       // cloze 只考本组(第6-10词)：上一组(1-5)已被闯关检验必对门考过。
       // 5 词 5 空=每词恰好一空，不再有"一半词没被考到"的豁免。
       callAPIFast(sysP, buildClozePrompt(batchWords))
-        .then(function(raw) { dataCache.current["_cloze_" + endMilestone] = tryJSON(raw) || null; })
+        .then(function(raw) {
+          dataCache.current["_cloze_" + endMilestone] = tryJSON(raw) || null;
+          auditQuizInBackground("cloze", batchWords.join(","), 8000,
+            function() { return dataCache.current["_cloze_" + endMilestone]; },
+            function(problems) {
+              return callAPIFast(sysP, buildClozePrompt(batchWords) + auditRetrySuffix(problems))
+                .then(function(r) { return tryJSON(r) || null; }).catch(function() { return null; });
+            },
+            function(fresh) { dataCache.current["_cloze_" + endMilestone] = fresh; },
+            // 结构校验: 复用消费端 validateCloze(含答案在选项/目标词/占位符全套) (Codex P1)
+            function(fresh) { return !!fresh && !validateCloze(fresh, batchWords); });
+        })
         .catch(function(err) { console.warn("[loadBatch] cloze pre-fetch failed:", err.message); });
     }
 
     // ── Word audio pre-fetch: Free Dictionary API (fire and forget) ──
+    // 4s 超时：该域名在中国大陆常整体挂起，不设超时会积压僵尸连接
     batchWords.forEach(function(word) {
       var w = word.toLowerCase();
       if (dictAudioCache[w]) return;
-      fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(w))
+      fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(w), { signal: AbortSignal.timeout(4000) })
         .then(function(r) { return r.json(); })
         .then(function(data) {
           var audioUrl = data?.[0]?.phonetics?.find(function(p) { return p.audio; })?.audio;
@@ -5102,6 +5269,21 @@ export default function App() {
               }
               dataCache.current[word].guess = parsed;
               dataCache.current[word].guessRaw = raw;
+              // 审题员（后台错峰 12s，避开本批关键路径；正在学的词不换题；每个缓存条目只审一次）
+              if (parsed && parsed.options && !parsed._invalidOptions && !dataCache.current[word]._auditScheduledGuess) {
+                dataCache.current[word]._auditScheduledGuess = true;
+                auditQuizInBackground("guess", word, 12000,
+                  function() { var d = dataCache.current[word]; return (d && d.guess && currentWordRef.current !== word) ? d.guess : null; },
+                  function(problems) {
+                    return callAPIFast(sysP, buildGuessPrompt(word, learned) + auditRetrySuffix(problems))
+                      .then(function(r) { var p = normalizeGuessData(tryJSON(r), word); return (p && p.context && p.options && !p._invalidOptions) ? p : null; })
+                      .catch(function() { return null; });
+                  },
+                  function(fresh) {
+                    if (currentWordRef.current === word) return;
+                    if (dataCache.current[word]) dataCache.current[word].guess = fresh;
+                  });
+              }
               if ((dataCache.current[word].teach || dataCache.current[word].teachJSON) && (dataCache.current[word].guess || dataCache.current[word].guessRaw || dataCache.current[word].guessFailed)) {
                 readyWordSet.add(word);
                 tryResolveEarlyStart();
@@ -5207,10 +5389,10 @@ export default function App() {
         //   · options 结构残缺 = 偶发畸形 → 给 1 次即时重试（无 sleep）恢复；再坏就跳过。
         //   prompt 约束 + hideTargetWord + 卡片后置已是主防线，重试收益小于它对吞吐的压力。
         (function (capturedWord) {
-          var doSpectrumAttempt = function (attemptsLeft) {
+          var doSpectrumAttempt = function (attemptsLeft, feedbackSuffix) {
             return classifyByWord[capturedWord].then(function (cls) {
               return callWithClientRetry(function () {
-                return callAPIFast(sysP, buildSpectrumPrompt(capturedWord, cls), { preferredProviders: preferred });
+                return callAPIFast(sysP, buildSpectrumPrompt(capturedWord, cls) + (feedbackSuffix || ""), { preferredProviders: preferred });
               });
             }).then(function (raw) {
               var parsed = raw ? tryJSON(raw) : null;
@@ -5232,6 +5414,25 @@ export default function App() {
           };
           doSpectrumAttempt(1).then(function (finalParsed) { // 最多 1 次重试（仅结构畸形用得到）
             dataCache.current[capturedWord].spectrum = finalParsed;
+            // 审题员（后台错峰 15s；legacy 3词排序题型无固定选项结构，不审；每条目只审一次）
+            if (finalParsed && finalParsed.type && dataCache.current[capturedWord] && !dataCache.current[capturedWord]._auditScheduledSpec) {
+              dataCache.current[capturedWord]._auditScheduledSpec = true;
+              auditQuizInBackground("spectrum", capturedWord, 15000,
+                function() {
+                  var d = dataCache.current[capturedWord];
+                  if (!(d && d.spectrum && d.spectrum.type && currentWordRef.current !== capturedWord)) return null;
+                  // 注入教学释义作判定权威(hereafter 教训: 题目内部自洽但和教学页释义打架, 审核必须拿页面上教的那个当基准)
+                  var _def = (d.teachJSON && d.teachJSON.definition) || (d.teach && d.teach.definition) || null;
+                  return _def ? Object.assign({}, d.spectrum, { _taughtDefinition: _def }) : d.spectrum;
+                },
+                function(problems) { return doSpectrumAttempt(0, auditRetrySuffix(problems)).then(function(p) { return (p && p.type) ? p : null; }).catch(function() { return null; }); },
+                function(fresh) {
+                  if (currentWordRef.current === capturedWord) return;
+                  if (dataCache.current[capturedWord]) dataCache.current[capturedWord].spectrum = fresh;
+                },
+                // 结构校验: 重出版必须与原题同类型(渲染器只认识固定类型,换型可能空白卡死 — Codex P1)
+                function(fresh) { return !!(fresh && fresh.type === finalParsed.type && fresh.options && fresh.answer != null); });
+            }
           }).catch(function (err) {
             console.warn("[loadBatch] spectrum failed for " + capturedWord + ":", err.message);
           });
@@ -5248,8 +5449,14 @@ export default function App() {
 
     var running = 0;
     var taskIdx = 0;
+    var _batchAudIncremented = false; // 增减必须配对: no-op 批(全缓存秒完)没加过就不许减
     var runAllPromise = new Promise(function(resolve) {
       if (totalTasks <= completed) { resolve(); return; }
+      // 流畅度硬保险②：本批 guess/teach 生成期间，审题员一律让路
+      // （streaming 早启动后后台仍在生成，所以以任务全跑完为准，不以 loadBatch 返回为准；
+      //   计数器支持并行批——早启动批+静默预取批同时活跃时谁都不许放行审核）
+      _batchActiveCountRef.current++;
+      _batchAudIncremented = true;
       function next() {
         while (running < dynamicCap && taskIdx < tasks.length) {
           running++;
@@ -5279,6 +5486,14 @@ export default function App() {
       pokeQueue = next; // 暴露给 classify.then 回调：新 teach task 入队后唤醒 runner
       next();
     });
+    // 流畅度硬保险②的释放：任务全跑完才减计数（streaming 早启动路径也靠这个释放，
+    // 因为早启动 return 后后台任务仍在跑，不能以 loadBatch 返回为准）
+    var _releaseBatchActive = function() {
+      if (!_batchAudIncremented) return;
+      _batchAudIncremented = false;
+      _batchActiveCountRef.current = Math.max(0, _batchActiveCountRef.current - 1);
+    };
+    runAllPromise.then(_releaseBatchActive, _releaseBatchActive);
 
     var finalizeBatch = function() {
       if (!silent) {
@@ -5321,6 +5536,7 @@ export default function App() {
   };
 
   var applyWordData = function(word) {
+    currentWordRef.current = word; // 同步更新(useEffect 有一帧延迟)：审题员换题守卫必须即时生效
     var d = dataCache.current[word];
     if (teachPollRef.current) clearInterval(teachPollRef.current);
     if (teachTimeoutRef.current) clearTimeout(teachTimeoutRef.current);
@@ -5530,6 +5746,25 @@ export default function App() {
     setPhaseDir(1); setPhase("teach");
   };
 
+  // 逃生门：学习中发现漏网的简单词(如 door)，一键标"认识"(=快筛跳过)直接下一词。
+  // 不吃当日额度、不进 learned(不触发里程碑)、不给 XP —— 语义与快筛"认识"完全一致。
+  var markKnownDuringLearning = async function() {
+    var word = currentWord;
+    if (!word || loading) return;
+    trackFunnel('word_known_skip', { word: word, idx: idx });
+    var u = {}; u[String(word).trim().toLowerCase()] = "skipped";
+    writeWordStatus(u);
+    sfx.click();
+    var nextIdx = idx + 1;
+    if (nextIdx >= wordList.length) {
+      saveSession(wordList, nextIdx, learned);
+      // 一个都没真学(全程"我认识"跳完)：没有可庆祝/可复习的东西，回主页，不发 streak
+      if (!learned.length) { setScreen("setup"); return; }
+      sfx.complete(); setPhase("done"); return;
+    }
+    await waitAndEnterNextWord(nextIdx, learned);
+  };
+
   var handleFile = async (e) => {
     var file = e.target.files?.[0]; if (!file) return;
     setFileLabel("⏳ 正在解析 " + file.name + " ...");
@@ -5589,7 +5824,7 @@ export default function App() {
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  var startLearning = async function(resumeIdx) {
+  var startLearning = async function(resumeIdx, opts) {
     var rawWords = wordInput.trim().split(/[\n,，、]+/).map(function(w) { return w.trim().toLowerCase(); }).filter(Boolean);
     if (!rawWords.length) { setError("请输入至少一个单词"); return; }
     trackFunnel('learning_start', { word_count: rawWords.length, has_profile: !!(profile||'').trim(), is_resume: typeof resumeIdx === 'number', tier: userTier });
@@ -5618,6 +5853,32 @@ export default function App() {
         var bv = reviewWordData[b] && reviewWordData[b].screenedUnknownAt ? 0 : 1;
         return av - bv;
       });
+      // 从快筛进入时兑现按钮承诺「学习不认识的词」：只学她明确标过"不认识"的。
+      // 不够今日目标才问：继续筛补够,还是把没筛到的也加进来(旧行为)。
+      // 修 door 事件：筛到一半开始学习,没筛到的简单词被默默当"不认识"塞进学习。
+      if (opts && opts.fromScreening) {
+        var _screenedUnknown = unlearned.filter(function(w) {
+          return reviewWordData[w] && reviewWordData[w].screenedUnknownAt;
+        });
+        var _dailyTarget = dailyNewWords || 20;
+        var _unscreenedLeft = unlearned.filter(function(w) {
+          return !(reviewWordData[w] && reviewWordData[w].screenedUnknownAt);
+        }).length;
+        if (_screenedUnknown.length >= _dailyTarget) {
+          unlearned = _screenedUnknown;
+        } else if (_unscreenedLeft > 0) {
+          // 还有没筛过的词才提供"继续快筛"，否则会陷入 筛完→不够→再筛 的死循环 (Codex P1)
+          var _goScreen = await confirmAsync({
+            title: "标过“不认识”的词只有 " + _screenedUnknown.length + " 个",
+            body: "今日目标 " + _dailyTarget + " 个。\n\n继续快筛补够？还是直接开始学（不够的部分会用还没筛到的词补上）？",
+            confirmText: "🔍 继续快筛",
+            cancelText: "直接开始学",
+          });
+          if (_goScreen) { startScreening(); return; }
+          // 直接学：保持完整池（标过"不认识"的已排在最前）
+        }
+        // 全部筛完但仍不够目标：不弹窗，直接学(池=全部标过"不认识"的+无可补,自然到哪算哪)
+      }
       // ★ 没有未学新词时绝不回退到 rawWords（那会把 error/已掌握的词当新词重学 —— 正是 bug 本身）。
       //   改为引导用户去复习 / 重点攻克。
       if (unlearned.length === 0) {
@@ -5690,6 +5951,7 @@ export default function App() {
 
     var startLearned = startIdx > 0 ? words.slice(0, startIdx) : [];
     setWordList(words); setIdx(startIdx); setLearned(startLearned); setError("");
+    cancelPendingAudits(); // 新会话：上一会话的审核链全部作废(配合 generation token 双保险)
     dataCache.current = {};
     setScreen("learning");
     saveSession(words, startIdx, startLearned);
@@ -5738,7 +6000,12 @@ export default function App() {
 
   var startScreening = function() {
     var allWords = parseWordsFromInput(wordInput);
-    var toScreen = allWords.filter(function(w) { return !wordStatusMap[w] || wordStatusMap[w] === "unlearned"; });
+    var toScreen = allWords.filter(function(w) {
+      if (wordStatusMap[w] && wordStatusMap[w] !== "unlearned") return false;
+      // 已标过"不认识"的不再重复筛——快筛只管没见过的词(修 Codex P1: 继续快筛从头重问一遍)
+      var lw = String(w).trim().toLowerCase();
+      return !(reviewWordData[lw] && reviewWordData[lw].screenedUnknownAt);
+    });
     if (toScreen.length === 0) { setError("没有未学习的词需要筛选"); return; }
     setScreeningWords(toScreen);
     setScreeningIdx(0);
@@ -5992,9 +6259,21 @@ export default function App() {
         if (Array.isArray(d.questions) && d.questions.length > 0 && d.questions.every(function(q){ return q.answer && q.options; })) return true;
         return false;
       };
+      // 预取缓存按"位置"生成(第1-5词)，但「我认识」跳过会让实际学过的批次错位——
+      // 缓存里的词必须全部属于本批(newLearned 最后5个)，否则会考到被跳过的词、漏掉真学的词。
+      var _batchSet = {};
+      newLearned.slice(-5).forEach(function(w){ _batchSet[String(w).trim().toLowerCase()] = true; });
+      var reviewMatchesBatch = function(d) {
+        if (!d) return false;
+        var ws = d.type === "checkpoint_quiz" ? (d.questions || []).map(function(q){ return q && q.word; })
+               : d.type === "speed_match" ? (d.pairs || []).map(function(p){ return p && p.word; })
+               : null;
+        if (!ws) return true; // 旧 fill_blank 缓存无词字段，无法校验，放行兼容
+        return ws.filter(Boolean).every(function(w){ return _batchSet[String(w).trim().toLowerCase()]; });
+      };
       // Phase B: instant if pre-fetched during batch loading
       var cachedReview = dataCache.current["_review_" + newLearned.length];
-      if (isValidReview(cachedReview)) {
+      if (isValidReview(cachedReview) && reviewMatchesBatch(cachedReview)) {
         setReviewData(cachedReview); setReviewAnswers({}); setReviewSubmitted(false); setPhase("review"); return;
       }
       // Phase A: switch phase immediately so spinner shows, then fetch
@@ -7015,7 +7294,7 @@ export default function App() {
             📋 未筛选 <strong>{_sqRemaining}</strong> 个（下次继续）
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0); }}>✨ 开始 AI 精读（{_sqQuota} 个词）</button>
+            <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0, { fromScreening: true }); }}>✨ 开始 AI 精读（{_sqQuota} 个词）</button>
             <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={function(){
               setScreeningIdx(screeningIdx + 1);
               setScreeningFlipped(false);
@@ -7065,7 +7344,7 @@ export default function App() {
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
             {unlearnedNow > 0 && (
-              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0); }}>✨ 开始学习不认识的词</button>
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",fontSize:16,padding:"14px 24px"}} onClick={function(){ startLearning(0, { fromScreening: true }); }}>✨ 开始学习不认识的词</button>
             )}
             {scRemaining > 0 && (
               <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.teal}} onClick={function(){ startScreening(); }}>🔄 继续筛选剩余 {scRemaining} 个词</button>
@@ -9607,6 +9886,7 @@ export default function App() {
             {!guessSubmitted && <div style={S.btnRow}>
               {guessData.options && <button style={S.primaryBtn} onClick={submitGuess} disabled={!selectedOption||loading}>提交 →</button>}
               <button style={guessData.options?S.ghostBtn:S.primaryBtn} onClick={skipGuess} disabled={loading}>{guessData.options?"跳过":"→ 直接学习"}</button>
+              <button style={S.ghostBtn} onClick={markKnownDuringLearning} disabled={loading} title="标为认识，不占今日新词名额">😎 我认识</button>
             </div>}
           </>}
         </div>
@@ -9886,13 +10166,15 @@ export default function App() {
         var ts = getTimingStats();
         var accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
         var encourageMsg = accuracy >= 80 ? "太棒了，正确率超高！" : accuracy >= 50 ? "不错的开始，继续加油！" : "没关系，多练几次就好了！";
-        // Mark daily streak on completion
-        var _streakInfo = markStudyStreakToday();
+        // 完成数按真实学过的算："我认识"跳过的词不算学了、不进记忆地图 (Codex P1)
+        var _doneWords = learned.length ? learned : wordList;
+        // Mark daily streak on completion — 只有真学了词才累计连续天数
+        var _streakInfo = learned.length ? markStudyStreakToday() : getStudyStreak();
         var _streakDisp = getStreakDisplay(_streakInfo.streak);
         return <div style={{...S.card,textAlign:"center",padding:"40px 22px"}}>
           <div style={{fontSize:56,marginBottom:12,animation:"bounce 0.6s ease-out"}}>🎉</div>
           <h2 style={{fontSize:24,fontWeight:700,margin:"0 0 4px"}}>全部学完！</h2>
-          <p style={{color:C.textSec,marginBottom:4}}>{"今天学了 "+wordList.length+" 个词 · "+stats.xp+" XP"}</p>
+          <p style={{color:C.textSec,marginBottom:4}}>{"今天学了 "+_doneWords.length+" 个词 · "+stats.xp+" XP"}</p>
           <p style={{color:C.accent,fontSize:13,fontWeight:600,marginBottom:_streakDisp ? 8 : 16}}>{encourageMsg}</p>
           {_streakDisp && (
             <div style={{background:"linear-gradient(135deg, "+C.goldLight+" 0%, "+C.accentLight+" 100%)",borderRadius:12,padding:"12px 16px",marginBottom:16,border:"1px solid "+C.gold+"44"}}>
@@ -9918,7 +10200,7 @@ export default function App() {
             </div>}
           </div>
 
-          <div style={S.doneWords}>{wordList.map(w => <span key={w} style={S.doneTag} onClick={()=>speak(w)}>{w+" 🔊"}</span>)}</div>
+          <div style={S.doneWords}>{_doneWords.map(w => <span key={w} style={S.doneTag} onClick={()=>speak(w)}>{w+" 🔊"}</span>)}</div>
 
           {/* 📅 记忆地图 — 让用户感知 SRS 系统在持续追踪这些词 */}
           <div style={{marginTop:18, padding:"14px 16px", background:C.tealLight+"99", border:"1px solid "+C.teal+"44", borderRadius:12, textAlign:"left"}}>
@@ -9926,7 +10208,7 @@ export default function App() {
               📅 你的记忆地图
             </div>
             <div style={{fontSize:12, color:C.text, lineHeight:1.6, marginBottom:10}}>
-              这 <strong style={{...NUM, color:C.teal}}>{wordList.length}</strong> 个词将分别在以下时间回来找你：
+              这 <strong style={{...NUM, color:C.teal}}>{_doneWords.length}</strong> 个词将分别在以下时间回来找你：
             </div>
             {/* 5 个时间点 mini 时间轴 */}
             <div style={{display:"grid", gridTemplateColumns:"repeat(5, 1fr)", gap:6, marginBottom:8}}>
