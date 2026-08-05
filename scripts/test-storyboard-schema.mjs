@@ -32,7 +32,31 @@ const ok = (name, cond) => {
 
 const topicIds = T.TOPIC_REGISTRY.map((r) => r.id);
 
+// storyboard 已改为按需加载（2026-08-05 瘦身：71 门静态引入 7.4MB → 按门加载）。
+// 同步 API 读的是已加载缓存，所以这里要先把全部课程载入 —— 生产环境页面只预加载当前
+// 这一门（见 pages/history/[topicId].js 的 urlResolved 闸），测试要覆盖全部所以全载。
+// 顺带也验了 preloadStoryboard 本身：71 门都能加载成功。
+let preloadFail = [];
+for (const id of topicIds) {
+  try {
+    const mod = await SB.preloadStoryboard(id);
+    if (!mod && SB.hasStoryboard(id)) preloadFail.push(id + '(返回空)');
+  } catch (e) { preloadFail.push(id + '(' + (e && e.message || 'throw') + ')'); }
+}
+
 // ─────────────────────────────────────────────────────────────────
+console.log("\n── ⓪ 按需加载：全部课程都能成功载入 ──");
+{
+  ok(`71 门课 preloadStoryboard 全部成功${preloadFail.length ? " ← 失败: " + preloadFail.slice(0,5).join(", ") : ""}`,
+     preloadFail.length === 0);
+  // 未预加载时同步 API 必须抛出「可定位」的错，而不是静默返回空数组骗过下游
+  ok("未注册的 topic hasStoryboard 为 false", SB.hasStoryboard("__not_a_topic__") === false);
+  // 降级契约：加载失败/未加载时 getEffectiveTurns 不能抛（会在渲染体里炸成整页白屏）
+  let threw = false;
+  try { RT.getEffectiveTurns("__not_a_topic__", null, null); } catch (e) { threw = true; }
+  ok("getEffectiveTurns 对未知 topic 不抛错（抛了会整页白屏）", !threw);
+}
+
 console.log("\n── ① 每个 lens 的每个节点都必须有可用的去重键（turn.n）──");
 {
   const broken = [];

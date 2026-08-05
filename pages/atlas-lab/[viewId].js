@@ -4,7 +4,7 @@
 // 切换 Topic 通过 Next.js Link 路由跳转，prefetch 自动启动。
 
 import { ALL_VIEWS, findView, lightMetaList, getEffectiveKeyFiguresSync } from '../../lib/atlas-views';
-import { STORYBOARDS } from '../../lib/history-storyboards/index.js';
+import { preloadStoryboard } from '../../lib/history-storyboards/index.js';
 import { renderView, renderWorldOverview, projectViewToWorld } from '../../lib/atlas-renderer';
 import AtlasLabPage from '../../components/AtlasLabPage';
 
@@ -36,7 +36,7 @@ export async function getStaticProps({ params }) {
   if (view.deepLearnEnabled && view.deepLearnUrl) {
     const m = view.deepLearnUrl.match(/\/history\/([^/?&]+)/) || view.deepLearnUrl.match(/topicId=([^&]+)/);
     const histId = m ? m[1] : null;
-    storyboardModule = histId ? STORYBOARDS[histId] : null;
+    storyboardModule = histId ? await preloadStoryboard(histId) : null;
   }
   const effectiveKeyFigures = getEffectiveKeyFiguresSync(view, storyboardModule);
 

@@ -54,6 +54,7 @@ import {
   hasTopicLenses,
   getTopicLenses,
   getTopicLensMeta,
+  preloadTopicStoryboard,
 } from '../../lib/history-runtime';
 import {
   loadProfile,
@@ -633,8 +634,21 @@ export default function HistoryPage() {
         }
       }
       if (t && getTopic(t)) {
-        setTopicId(t);
-        setUrlResolved(true);
+        // storyboard 现在按需加载 —— 必须在放行 shell 闸之前载入这门课，
+        // 否则渲染体里的 getEffectiveTurns 会撞上"未预加载"。
+        // 只等当前这一门（约 100KB），不是以前那样等全部 71 门（7.4MB）。
+        var resolved = t;
+        preloadTopicStoryboard(resolved)
+          .catch(function(e) {
+            // 单门课 chunk 加载失败（网络抖动/部署换版）→ 不能白屏卡死。
+            // 放行让页面继续：hasStoryboard 仍为 true 但同步 API 会抛，
+            // 下游 getEffectiveTurns 的 try/catch 会退回 topic.conversationTurns。
+            console.error("[history] storyboard chunk 加载失败:", resolved, e && e.message);
+          })
+          .then(function() {
+            setTopicId(resolved);
+            setUrlResolved(true);
+          });
         return;
       }
       // 路径里有 id 但不是有效课程（/history/not-a-real-topic）→ 回首页(目录)，
