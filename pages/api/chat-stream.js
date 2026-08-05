@@ -1,9 +1,10 @@
 // Edge Runtime SSE 流式端点 — 只用于 teach 等纯文本任务
 // 与 /api/chat 并存：/api/chat 走 Node Runtime（非流式），本端点走 Edge Runtime（流式透传）。
 // 客户端任何失败都会 fallback 到 /api/chat，不会影响生产稳定性。
-import { checkPerIpLimit, checkPerUserLimit } from "../../lib/ratelimit";
+import { checkPerIpLimit, checkPerUserLimit, checkGlobalIpCeiling } from "../../lib/ratelimit";
 import { getCached, setCached, cachedTextToSSEStream } from "../../lib/teachCache";
 import { isCompleteTeachJSON } from "../../lib/teachValidate";
+import { getBearerToken, checkTopicAccess } from "../../lib/entitlement-server";
 import * as Sentry from "@sentry/nextjs";
 
 export const config = {
@@ -73,7 +74,14 @@ const collectDeepSeekKeys = () => {
   return keys;
 };
 
-const buildProviders = (userApiKeys) => {
+// history 的问答/课堂对话走 Pro（教学对话质量优先）；vocab 的内容生成继续用 Flash
+// （实测 Pro 首字仅 +0.1s，但 token 价 +211% —— 只给真正需要的那条路，别全局涨价）。
+// 两者都可用 env 覆盖，回滚不必改代码。
+const DS_FLASH = () => process.env.DEEPSEEK_MODEL || "deepseek-v4-flash";
+const DS_PRO = () => process.env.DEEPSEEK_MODEL_PRO || "deepseek-v4-pro";
+
+const buildProviders = (userApiKeys, useProModel) => {
+  const dsModel = useProModel ? DS_PRO() : DS_FLASH();
   const providers = [];
 
   // BYO key 优先
@@ -84,7 +92,7 @@ const buildProviders = (userApiKeys) => {
         family: "deepseek",
         url: "https://api.deepseek.com/v1/chat/completions",
         apiKey: userApiKeys.deepseek,
-        model: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
+        model: dsModel,
       });
     }
     if (userApiKeys.gemini) {
@@ -105,7 +113,7 @@ const buildProviders = (userApiKeys) => {
       family: "deepseek",
       url: "https://api.deepseek.com/v1/chat/completions",
       apiKey: process.env[k.env],
-      model: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
+      model: dsModel,
     });
   }
 
@@ -148,7 +156,7 @@ export default async function handler(req) {
       headers: { "Content-Type": "application/json" },
     });
   }
-  const { system, message, maxTokens, preferredProviders, userApiKeys, jsonMode, cacheKey } = body || {};
+  const { system, message, maxTokens, preferredProviders, userApiKeys, jsonMode, cacheKey, topicId } = body || {};
   if (!system || !message) {
     return new Response(JSON.stringify({ error: "Missing system or message" }), {
       status: 400,
@@ -158,6 +166,27 @@ export default async function handler(req) {
 
   // BYO 检测（用户用自带 key 时跳过缓存 + 跳过 rate limit）
   const isBYO = userApiKeys && (userApiKeys.deepseek || userApiKeys.gemini);
+
+  // ─── history 请求：服务端付费闸 + Pro 模型 ───
+  // 带 topicId ⇒ 这是 history 课堂对话/追问。此前服务端完全不看 tier，
+  // 客户端 gate 一改就能白嫖整门付费课。
+  // transient（Supabase 抽风）→ 放行但降级 Flash：付费孩子的课绝不被验证服务打断。
+  let useProModel = false;
+  let entUserId = null;
+  if (topicId && !isBYO) {
+    const gate = await checkTopicAccess(getBearerToken(req), String(topicId));
+    entUserId = gate.verified ? gate.userId : null;
+    if (!gate.allow) {
+      return new Response(
+        JSON.stringify({ error: "upgrade required", topicId, tier: gate.tier }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    // 只有验明正身且确实有资格才给 Pro —— transient 时降级 Flash，避免
+    // 「验不了」被当成免费拿贵模型的口子。
+    useProModel = !gate.transient && gate.verified;
+    if (gate.transient) console.warn("[chat-stream] entitlement transient → fail-open + flash", topicId);
+  }
 
   // prompt 指纹绑进缓存 key（防跨用户投毒，见 deriveCacheKey）
   const effectiveCacheKey = deriveCacheKey(cacheKey, system, message);
@@ -191,17 +220,37 @@ export default async function handler(req) {
   // BYO → 登录用户 user-level → 游客 IP-level
   // admin bypass 已移除（Codex 复审：X-User-Id 软认证下白名单不安全）
   if (!isBYO) {
-    const userId = req.headers.get("x-user-id");
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       req.headers.get("x-real-ip") ||
       "unknown";
+    // 身份优先级：token 验过的 userId > 未验证的 X-User-Id 头。
+    // 头是可伪造的，只能当"配额分组提示"，不能当安全边界 —— 真正的安全边界是
+    // 下面那道恒定生效的 IP 天花板（堵轮换 UID 拿无限桶）。
+    const headerUid = req.headers.get("x-user-id");
+    const bucketUid = entUserId || headerUid;
+
+    const ceiling = await checkGlobalIpCeiling(ip);
+    if (!ceiling.allowed) {
+      console.warn("[chat-stream][429-ipmax]", JSON.stringify({ ip, ts: new Date().toISOString() }));
+      try {
+        Sentry.captureMessage("rate_limited:ip_ceiling:/api/chat-stream", {
+          level: "warning", tags: { route: "/api/chat-stream" }, extra: { ip },
+        });
+      } catch (e) {}
+      return new Response(JSON.stringify({ error: "Too many requests" }), {
+        status: 429,
+        headers: { "Content-Type": "application/json", "Retry-After": "600" },
+      });
+    }
+
     let rl;
-    if (userId && userId.length > 0) {
-      rl = await checkPerUserLimit(userId);
+    if (bucketUid && bucketUid.length > 0) {
+      rl = await checkPerUserLimit(bucketUid);
     } else {
       rl = await checkPerIpLimit(ip);
     }
+    const userId = bucketUid;
     if (!rl.allowed) {
       // 诊断 + Sentry 告警（P0-2）
       const meta = {
@@ -233,7 +282,7 @@ export default async function handler(req) {
 
   // clamp 上限 4000：客户端曾可传任意值（DeepSeek 可到 8192）→ 成本放大。默认仍 900。
   const tokens = Math.min(Number(maxTokens) || 900, 4000);
-  const providers = buildProviders(userApiKeys);
+  const providers = buildProviders(userApiKeys, useProModel);
   if (!providers.length) {
     return new Response(JSON.stringify({ error: "No provider API keys configured" }), {
       status: 500,
@@ -331,6 +380,8 @@ export default async function handler(req) {
           "Connection": "keep-alive",
           "X-Provider": provider.name,
           "X-Provider-Family": provider.family || provider.name,
+          // 实际用了哪个模型 —— 线上排查「这条到底走没走 Pro」用，无需翻日志
+          "X-Model": provider.model || "",
           "X-Cache": cacheKey ? "MISS" : "BYPASS",
         };
 

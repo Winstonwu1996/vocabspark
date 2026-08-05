@@ -213,8 +213,13 @@ export function ConceptReview(props) {
                 : (isEnglish ? '📚 Mini-lesson' : '📚 独立讲解')}
             </div>
             <div style={{fontSize: 13.5, color: HC.text, lineHeight: 1.65, whiteSpace: 'pre-wrap'}}>
+              {/* 老 schema 的 42 张卡把 xiaoweiNote 放在顶层而非 storyAnchor 下（7 门上线课：
+                  工业革命/二战/早期人类/古以色列/拉美独立/通往革命之路/瓜分非洲）。
+                  此前这里直接读嵌套路径 → TypeError → 冒到 app 级 ErrorBoundary 整页白屏，
+                  学生交完学习回执就再也进不了 mastery 关。上面第 170 行的 miniNote 早就
+                  两处都读了，这个分支漏用。 */}
               {renderInlineMd(isStory
-                ? (isEnglish ? card.storyAnchor.xiaoweiNote.en : card.storyAnchor.xiaoweiNote.cn)
+                ? (isEnglish ? (miniNote && miniNote.en) : (miniNote && miniNote.cn))
                 : (isEnglish ? miniText.en : miniText.cn))}
             </div>
             {/* 5-26 (用户反馈 #3): 暂移除「看小 U 读到的原文节选」折叠区 —— */}

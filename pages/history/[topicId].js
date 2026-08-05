@@ -23,7 +23,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { BrandNavBar } from '../../components/BrandNavBar';
 import { VoiceInputButton } from '../../components/VoiceInputButton';
 import { C, FONT, FONT_DISPLAY, S, NUM, globalCSS } from '../../lib/theme';
-import { callAPIStream, callAPIFast, tryJSON } from '../../lib/api';
+import { callAPIStream, callAPIFast, tryJSON, authHeaders } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import UserCenter from '../../components/UserCenter';
 import { useSimplifiedMode } from '../../lib/hooks/use-simplified-mode';
@@ -96,7 +96,7 @@ import { detectSyncGate } from '../../lib/progressMergePolicy';
 import { HC } from '../../components/history-engine/theme';
 import { renderBilingualText } from '../../components/history-engine/bilingual';
 import { MustMemorizePopup, TermPopup } from '../../components/history-engine/popups';
-import { ConversationStream } from '../../components/history-engine/ConversationStream';
+import { ConversationStream, autoGrow, autoGrowAndScroll } from '../../components/history-engine/ConversationStream';
 import { MasteryGateOverlay } from '../../components/history-engine/MasteryGate';
 import { CompletionScreen } from '../../components/history-engine/CompletionScreen';
 import { ConceptReview } from '../../components/history-engine/ConceptReview';
@@ -379,7 +379,7 @@ export default function HistoryPage() {
       var userPrompt = "侧边追问历史:\n" + historyContext + "\n\n回复她最新的追问，简短（50-150 字）。";
 
       var fullText = "";
-      var raw = await callAPIStream(sys, userPrompt, { jsonMode: false }, function(partial) {
+      var raw = await callAPIStream(sys, userPrompt, { jsonMode: false, topicId: topicId }, function(partial) {
         fullText = partial;
         setSidekickStreaming(partial);
       });
@@ -415,6 +415,13 @@ export default function HistoryPage() {
       setSidekickThinking(false);
       setSidekickStreaming("");
       sidekickBusyRef.current = false;
+      // 服务端付费闸拒绝 ≠ 网络不稳：说"再试一次"是骗人的(重试永远失败)。弹升级引导。
+      if (e && e.isUpgradeRequired) {
+        setSidekickOpen(false);
+        setGateModalReason('locked-course');
+        setShowUpgradeGate(true);
+        return;
+      }
       // Codex round4 P2-g: 不退还配额 (union 合并下 refund 不可靠) — 见入口 reserve 处说明。
       setSidekickLog(function(prev) {
         var updated = prev.concat([{ role: "ai", content: "（网络不稳，再试一次？）", timestamp: new Date().toISOString(), isFallback: true }]);
@@ -448,7 +455,7 @@ export default function HistoryPage() {
       var userPrompt = "对话历史:\n" + historyContext + "\n\n请回复她最新的消息。";
 
       var fullText = "";
-      var raw = await callAPIStream(sys, userPrompt, { jsonMode: false }, function(partial) {
+      var raw = await callAPIStream(sys, userPrompt, { jsonMode: false, topicId: topicId }, function(partial) {
         fullText = partial;
         setFreeChatStreaming(partial);
       });
@@ -463,6 +470,11 @@ export default function HistoryPage() {
       console.error("[freeChat] failed:", e);
       setFreeChatThinking(false);
       setFreeChatStreaming("");
+      if (e && e.isUpgradeRequired) {
+        setGateModalReason('locked-course');
+        setShowUpgradeGate(true);
+        return;
+      }
       setFreeChatLog(function(prev) {
         return prev.concat([{ role: "ai", content: "（网络不稳，再试一次？）", timestamp: new Date().toISOString(), isFallback: true }]);
       });
@@ -540,7 +552,12 @@ export default function HistoryPage() {
     if (!topicId) return;
     setNarrativeLoading(true);
     setNarrativeData(null);
-    fetch("/api/narrative?topicId=" + encodeURIComponent(topicId))
+    // 必须带 token：/api/narrative 现在有服务端付费闸，不带身份 = 付费用户被自己买的课挡住。
+    // authHeaders() 是 async —— 缓存未命中时会等 session 落定，避开首帧 token 未就绪的竞态。
+    authHeaders()
+      .then(function(h) {
+        return fetch("/api/narrative?topicId=" + encodeURIComponent(topicId), { headers: h });
+      })
       .then(function(r) { return r.ok ? r.json() : null; })
       .then(function(d) {
         if (d && d.body) setNarrativeData({ metadata: d.metadata || {}, body: d.body });
@@ -901,7 +918,7 @@ export default function HistoryPage() {
       userPrompt = injectPlaceholders(userPrompt, profileFields);
 
       var fullText = "";
-      var raw = await callAPIStream(sys, userPrompt, { jsonMode: false }, function(partial) {
+      var raw = await callAPIStream(sys, userPrompt, { jsonMode: false, topicId: topicId }, function(partial) {
         fullText = partial;
         setAiStreaming(partial);
         if (partial) clearTimeout(slowWarnTimer);  // U1: 首字到了清掉 timeout warn
@@ -939,6 +956,14 @@ export default function HistoryPage() {
     } catch (e) {
       clearTimeout(slowWarnTimer);
       console.error("[history] AI fetch failed:", e);
+      // 付费闸拒绝：别塞兜底文案假装课还能上（那会让没权限的人以为在学），直接弹升级引导。
+      if (e && e.isUpgradeRequired) {
+        setAiStreaming("");
+        setAiThinking(false);
+        setGateModalReason('locked-course');
+        setShowUpgradeGate(true);
+        return;
+      }
       setError("网络不稳，AI 回应没出来 — 用兜底文案给你看一下");
       // Fallback: 用 ai_seed 简单展示（截短到 200 字以内）
       var fallback = "[兜底] " + (turn.ai_seed || "").substring(0, 200) + "...";
@@ -994,7 +1019,12 @@ export default function HistoryPage() {
     if (!turn) return;
     if (turn.role === "ai" || turn.role === "ai-eval") {
       // 如已经有这轮的 log（避免重复 fetch）
-      var already = conversationLog.find(function(e) { return e.turn === turn.n; });
+      // turn.n 为空时绝不能用它去重：undefined === undefined 会让第 2 节起每节都
+      // 命中第 1 节的记录 → 整课卡在第一屏（Schema B 三个 lens 踩过）。
+      // runtime 已兜底 node.id||node.nodeId，这里再加一道，防将来新写的课再犯。
+      var already = (turn.n === undefined || turn.n === null)
+        ? conversationLog.find(function(e) { return e.role === "ai" && e._idx === turn._idx; })
+        : conversationLog.find(function(e) { return e.turn === turn.n; });
       if (already) return;
       // 找上一条用户回答（如有）
       var lastUser = null;
@@ -1724,9 +1754,12 @@ export default function HistoryPage() {
           background: #fff;
           font-family: inherit;
           font-size: 14.5px;
+          /* 高度由 autoGrow 接管（上限 200px）——原来死锁在 120px 且禁 resize，
+             语音口述一长段直接顶到天花板，孩子看不到自己说了什么 */
           resize: none;
           min-height: 48px;
-          max-height: 120px;
+          max-height: 200px;
+          overflow-y: hidden;
           line-height: 1.5;
         }
         .input-bar textarea:focus { outline: none; border-color: ${HC.accent}; box-shadow: 0 0 0 2px ${HC.accentLight}; }
@@ -4029,6 +4062,7 @@ function Walkthrough(props) {
 // ─── Sidekick FAB — 学习时浮动追问助手（与主上下文隔离） ─────────
 function SidekickFAB(props) {
   var endRef = useRef(null);
+  var sidekickInputRef = useRef(null);
   var isOpen = props.isOpen;
 
   useEffect(function() {
@@ -4036,6 +4070,11 @@ function SidekickFAB(props) {
       try { endRef.current.scrollIntoView({ behavior: "smooth", block: "end" }); } catch (e) {}
     }
   }, [props.log && props.log.length, props.streaming, props.thinking]);
+
+  // 发送后输入被清空 → 高度复位（否则空框还占着多行）
+  useEffect(function() {
+    if (sidekickInputRef.current && !props.input) autoGrow(sidekickInputRef.current, 120);
+  }, [props.input]);
 
   return (
     <>
@@ -4223,24 +4262,41 @@ function SidekickFAB(props) {
             gap: 6,
             alignItems: "center"
           }}>
-            <input
+            <textarea
+              ref={sidekickInputRef}
               value={props.input}
-              onChange={function(e) { props.onInput(e.target.value); }}
-              onKeyDown={function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); props.onSend(); } }}
+              onChange={function(e) { props.onInput(e.target.value); autoGrow(sidekickInputRef.current, 120); }}
+              onKeyDown={function(e) {
+                // isComposing 守卫：中文输入法下回车是确认候选词，不是发送（详见 ConversationStream 同款注释）
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && e.keyCode !== 229) {
+                  e.preventDefault();
+                  props.onSend();
+                }
+              }}
               placeholder="问我点什么..."
+              rows={1}
               style={{
                 flex: 1,
                 padding: "8px 12px",
                 border: "1px solid " + HC.border,
-                borderRadius: 999,
+                borderRadius: 16,
                 fontFamily: "inherit",
                 fontSize: 13,
+                lineHeight: 1.5,
                 outline: "none",
+                resize: "none",
+                minHeight: 34,
+                maxHeight: 120,
+                overflowY: "hidden",
+                boxSizing: "border-box",
               }}
             />
             <VoiceInputButton
               size={32}
-              onTranscript={function(text) { props.onInput(text); }}
+              onTranscript={function(text) {
+                props.onInput(text);
+                autoGrowAndScroll(sidekickInputRef.current, 120);
+              }}
             />
             <button
               onClick={props.onSend}

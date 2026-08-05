@@ -144,7 +144,7 @@ export function DefinitionTest(props) {
     try {
       var sysPrompt = "You are a friendly history tutor evaluating a 13-year-old ESL student's understanding.";
       var userPrompt = buildDefinitionEvalPrompt(concept, input.trim());
-      var raw = await callAPIFast(sysPrompt, userPrompt);
+      var raw = await callAPIFast(sysPrompt, userPrompt, { topicId: props.topicId });
       var parsed = tryJSON(raw) || { pass: true, feedback: "答得不错！" };
       setFeedback(parsed);
       var newScore = parsed.pass ? score + 1 : score;
@@ -234,7 +234,7 @@ export function ApplicationTest(props) {
     try {
       var sysPrompt = "You are a friendly history tutor evaluating a 13-year-old ESL student.";
       var userPrompt = buildApplicationEvalPrompt(item, input.trim());
-      var raw = await callAPIFast(sysPrompt, userPrompt);
+      var raw = await callAPIFast(sysPrompt, userPrompt, { topicId: props.topicId });
       var parsed = tryJSON(raw) || { pass: true, feedback: "想得很有道理。" };
       setFeedback(parsed);
       setTimeout(function() {
@@ -323,8 +323,8 @@ export function MasteryGateOverlay(props) {
         <h2>{stepNames[gateStep]}</h2>
 
         {gateStep === 0 && <SpellingTest check={currentCheck} onDone={handleStepDone} />}
-        {gateStep === 1 && <DefinitionTest check={currentCheck} concepts={topic.mustMemorize.concepts} onDone={handleStepDone} />}
-        {gateStep === 2 && <ApplicationTest check={currentCheck} onDone={handleStepDone} />}
+        {gateStep === 1 && <DefinitionTest check={currentCheck} concepts={topic.mustMemorize.concepts} topicId={topic.id} onDone={handleStepDone} />}
+        {gateStep === 2 && <ApplicationTest check={currentCheck} topicId={topic.id} onDone={handleStepDone} />}
 
         <div style={{marginTop: 14, fontSize: 11.5, color: HC.textSec, textAlign: "center", opacity: 0.7}}>
           答错和跳过的会进复习单，下次再考 — 不强求一遍过。
