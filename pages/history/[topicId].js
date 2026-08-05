@@ -1019,7 +1019,12 @@ export default function HistoryPage() {
     if (!turn) return;
     if (turn.role === "ai" || turn.role === "ai-eval") {
       // 如已经有这轮的 log（避免重复 fetch）
-      var already = conversationLog.find(function(e) { return e.turn === turn.n; });
+      // turn.n 为空时绝不能用它去重：undefined === undefined 会让第 2 节起每节都
+      // 命中第 1 节的记录 → 整课卡在第一屏（Schema B 三个 lens 踩过）。
+      // runtime 已兜底 node.id||node.nodeId，这里再加一道，防将来新写的课再犯。
+      var already = (turn.n === undefined || turn.n === null)
+        ? conversationLog.find(function(e) { return e.role === "ai" && e._idx === turn._idx; })
+        : conversationLog.find(function(e) { return e.turn === turn.n; });
       if (already) return;
       // 找上一条用户回答（如有）
       var lastUser = null;

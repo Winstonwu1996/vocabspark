@@ -368,8 +368,9 @@ export function CompletionScreen(props) {
                     : (isEnglish ? '📚 Mini-lesson' : '📚 独立讲解')}
                 </div>
                 <div style={{fontSize: 13.5, color: HC.text, lineHeight: 1.65, whiteSpace: 'pre-wrap'}}>
+                  {/* 同 ConceptReview：老 schema 的卡把 xiaoweiNote 放顶层，直读嵌套路径会白屏 */}
                   {renderInlineMd(isStory
-                    ? (isEnglish ? card.storyAnchor.xiaoweiNote.en : card.storyAnchor.xiaoweiNote.cn)
+                    ? (isEnglish ? (miniNote && miniNote.en) : (miniNote && miniNote.cn))
                     : (isEnglish ? miniText.en : miniText.cn))}
                 </div>
                 {/* 5-26 (用户反馈 #3): 暂移除「看小 U 读到的原文节选」—— notebook nodeIds */}
