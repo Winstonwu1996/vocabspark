@@ -1,4 +1,5 @@
-import { checkPerIpLimit, checkPerUserLimit } from "../../lib/ratelimit";
+import { checkPerIpLimit, checkPerUserLimit, checkGlobalIpCeiling } from "../../lib/ratelimit";
+import { getBearerToken, checkTopicAccess } from "../../lib/entitlement-server";
 import * as Sentry from "@sentry/nextjs";
 
 export const config = {
@@ -22,8 +23,13 @@ const collectDeepSeekKeys = () => {
   return keys;
 };
 
-const buildProviders = () => {
+// 与 chat-stream 同口径：history 对话走 Pro，vocab 内容生成继续 Flash
+const DS_FLASH = () => process.env.DEEPSEEK_MODEL || "deepseek-v4-flash";
+const DS_PRO = () => process.env.DEEPSEEK_MODEL_PRO || "deepseek-v4-pro";
+
+const buildProviders = (useProModel) => {
   const providers = [];
+  const dsModel = useProModel ? DS_PRO() : DS_FLASH();
 
   for (const k of collectDeepSeekKeys()) {
     providers.push({
@@ -31,7 +37,7 @@ const buildProviders = () => {
       family: "deepseek",
       url: "https://api.deepseek.com/v1/chat/completions",
       apiKey: ((envName) => () => process.env[envName])(k.env),
-      model: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
+      model: dsModel,
     });
   }
 
@@ -176,24 +182,52 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { system, message, maxTokens, preferredProviders, userApiKeys } = req.body;
+  const { system, message, maxTokens, preferredProviders, userApiKeys, topicId } = req.body;
 
   if (!system || !message) {
     return res.status(400).json({ error: "Missing system or message" });
   }
 
+  const isBYO = userApiKeys && (userApiKeys.deepseek || userApiKeys.gemini);
+
+  // ─── history 付费闸 + Pro 模型 ───
+  // 必须和 /api/chat-stream 同口径：本端点是流式失败后的降级退路，
+  // 少一道闸就等于给了一条「先让流式失败再白嫖」的绕行路。
+  // transient → 放行 + 降级 Flash（付费孩子的课不被验证服务抖动打断）。
+  let useProModel = false;
+  let entUserId = null;
+  if (topicId && !isBYO) {
+    const gate = await checkTopicAccess(getBearerToken(req), String(topicId));
+    entUserId = gate.verified ? gate.userId : null;
+    if (!gate.allow) {
+      return res.status(403).json({ error: "upgrade required", topicId, tier: gate.tier });
+    }
+    useProModel = !gate.transient && gate.verified;
+    if (gate.transient) console.warn("[chat] entitlement transient → fail-open + flash", topicId);
+  }
+
   // ─── Rate Limit ───
   // 优先级：BYO 跳过 → 登录用户 user-level（300/分）→ 游客 IP-level（300/小时）
-  // admin bypass 已移除（Codex 复审：X-User-Id 软认证下白名单不安全）；高频需求走 BYO key。
-  const isBYO = userApiKeys && (userApiKeys.deepseek || userApiKeys.gemini);
+  // 外加一道恒定生效的 IP 天花板：X-User-Id 未验证，轮换随机值可拿无限桶。
   if (!isBYO) {
-    const userId = req.headers["x-user-id"];
+    const headerUid = req.headers["x-user-id"];
+    const userId = entUserId || (typeof headerUid === "string" ? headerUid : null);
     const ip =
       req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
       req.headers["x-real-ip"] ||
       "unknown";
+    const ceiling = await checkGlobalIpCeiling(ip);
+    if (!ceiling.allowed) {
+      console.warn("[chat][429-ipmax]", JSON.stringify({ ip, ts: new Date().toISOString() }));
+      try {
+        Sentry.captureMessage("rate_limited:ip_ceiling:/api/chat", {
+          level: "warning", tags: { route: "/api/chat" }, extra: { ip },
+        });
+      } catch (e) {}
+      return res.status(429).json({ error: "Too many requests" });
+    }
     let rl;
-    if (userId && typeof userId === "string" && userId.length > 0) {
+    if (userId && userId.length > 0) {
       rl = await checkPerUserLimit(userId);
     } else {
       rl = await checkPerIpLimit(ip);
@@ -251,7 +285,7 @@ export default async function handler(req, res) {
       });
     }
   } else {
-    providers = buildProviders();
+    providers = buildProviders(useProModel);
   }
   if (!providers.length) {
     return res.status(500).json({ error: "No provider API keys configured" });

@@ -20,6 +20,25 @@ import { HC } from './theme';
 import { renderBilingualText } from './bilingual';
 import { VoiceInputButton } from '../VoiceInputButton';
 
+// ─── 输入框自适应高度 ───────────────────────────────────────────────
+// 语音输入常是一长段，固定高度的框只露开头几行，孩子看不到自己刚说了什么。
+// autoGrow: 随内容长高到上限（超出才内部滚动）
+// autoGrowAndScroll: 程序赋值（语音）后还要滚到底 —— 浏览器只在用户手打时
+//   自动跟随光标，setState 写入不会滚动，这正是「说多了看不见」的根因。
+export function autoGrow(el, maxPx) {
+  if (!el) return;
+  var cap = maxPx || 200;
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, cap) + "px";
+  el.style.overflowY = el.scrollHeight > cap ? "auto" : "hidden";
+}
+
+export function autoGrowAndScroll(el, maxPx) {
+  if (!el) return;
+  autoGrow(el, maxPx);
+  el.scrollTop = el.scrollHeight;
+}
+
 // ─── Audio Player — VibeVoice TTS 一键朗读（5-4 加） ─────────────────
 // 仅 EN mode + entry 是 prewritten + 对应音频文件存在时显示
 // 路径：/audio/{topicId}/{lensId}/n{N}.wav（build-time 预生成）
@@ -673,7 +692,13 @@ export function ConversationStream(props) {
   var turnIndex = props.turnIndex;
   var log = props.conversationLog;
   var endRef = useRef(null);
+  var mainInputRef = useRef(null);
   var [receiptSubmitted, setReceiptSubmitted] = useState(false);
+
+  // 输入被外部清空（提交后）→ 高度跟着复位，否则空框还占着 5 行
+  useEffect(function() {
+    if (mainInputRef.current && !props.userInput) autoGrow(mainInputRef.current);
+  }, [props.userInput]);
 
   // 强制 auto-scroll — 双保险：scrollIntoView + window.scrollTo 兜底
   useEffect(function() {
@@ -887,11 +912,19 @@ export function ConversationStream(props) {
 
           <div className="row" style={{alignItems: "flex-end"}}>
             <textarea
+              ref={mainInputRef}
               value={props.userInput}
-              onChange={function(e) { props.onInputChange(e.target.value); }}
+              onChange={function(e) { props.onInputChange(e.target.value); autoGrow(mainInputRef.current); }}
               placeholder="试试 P (观点) + E (因为...): I think... because..."
               onKeyDown={function(e) {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) props.onSubmit();
+                // 回车发送 / Shift+回车换行 —— 与追问浮窗一致（此前是 Cmd+Enter，
+                // 和浮窗相反，且手机上根本没有 Cmd 键）。
+                // ⚠️ isComposing 守卫必须有：中文/日文/韩文输入法下，回车是「确认候选词」，
+                // 不是「发送」。漏掉就会在孩子选词时把半截话提交出去 —— 本产品用户基本都在打中文。
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && e.keyCode !== 229) {
+                  e.preventDefault();
+                  props.onSubmit();
+                }
               }}
             />
             <VoiceInputButton
@@ -899,6 +932,8 @@ export function ConversationStream(props) {
               style={{margin: "0 2px"}}
               onTranscript={function(text) {
                 props.onInputChange(text);
+                // 语音是程序赋值，浏览器不会自动滚到光标 → 长段口述看不见后半截
+                autoGrowAndScroll(mainInputRef.current);
               }}
             />
             <button
@@ -915,8 +950,9 @@ export function ConversationStream(props) {
               🔒 这段聊天爸妈看不到
             </span>
             <span>
-              <kbd style={{padding: "1px 4px", background: HC.tealLight, borderRadius: 3, fontSize: 10}}>Cmd</kbd>+
-              <kbd style={{padding: "1px 4px", background: HC.tealLight, borderRadius: 3, fontSize: 10}}>Enter</kbd> 发送
+              <kbd style={{padding: "1px 4px", background: HC.tealLight, borderRadius: 3, fontSize: 10}}>Enter</kbd> 发送 ·{" "}
+              <kbd style={{padding: "1px 4px", background: HC.tealLight, borderRadius: 3, fontSize: 10}}>Shift</kbd>+
+              <kbd style={{padding: "1px 4px", background: HC.tealLight, borderRadius: 3, fontSize: 10}}>Enter</kbd> 换行
             </span>
           </div>
         </div>
