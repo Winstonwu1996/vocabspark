@@ -293,7 +293,34 @@ export function MasteryGateOverlay(props) {
   if (gateStep >= 3) return null;
 
   var stepNames = ["拼写测试", "概念定义", "应用题"];
-  var checks = topic.masteryChecks.required;
+  // 63 门 base-content 课的 masteryChecks 由 notebook 派生（buildPreviewTopic）。
+  // notebook 改按需加载后，chunk 加载失败会让它变 undefined —— 这里裸读会 TypeError
+  // → app 级 ErrorBoundary 吃掉整页。宁可跳过考核也不能白屏。
+  var checks = (topic && topic.masteryChecks && topic.masteryChecks.required) || null;
+  if (!checks || !checks.length) {
+    if (typeof console !== 'undefined') {
+      console.error('[MasteryGate] 缺 masteryChecks（notebook 未加载？）→ 跳过考核:', topic && topic.id);
+    }
+    // 只给「返回」——绝不调 onPass：那会在没做任何考核的情况下判通过并发 XP，
+    // 比卡住更糟（假的通过记录会污染学习档案）。刷新即可重新拉 chunk。
+    return (
+      <div style={{maxWidth: 640, margin: "24px auto", padding: "24px 20px", textAlign: "center"}}>
+        <div style={{fontSize: 14, color: HC.textSec, marginBottom: 16, lineHeight: 1.6}}>
+          （考核题没加载出来 —— 刷新页面再试一次就好。）
+        </div>
+        <div style={{display: "flex", gap: 10, justifyContent: "center"}}>
+          <button onClick={function() { if (typeof window !== "undefined") window.location.reload(); }} style={{
+            background: HC.accent, color: "#fff", border: "none", borderRadius: 10,
+            padding: "11px 26px", fontSize: 14, fontWeight: 600, fontFamily: "inherit", cursor: "pointer",
+          }}>刷新重试</button>
+          <button onClick={props.onCancel} style={{
+            background: "transparent", color: HC.textSec, border: "1px solid " + HC.border,
+            borderRadius: 10, padding: "11px 22px", fontSize: 14, fontFamily: "inherit", cursor: "pointer",
+          }}>返回课程</button>
+        </div>
+      </div>
+    );
+  }
   var currentCheck = checks[gateStep];
 
   var handleStepDone = function(score, results) {

@@ -11,8 +11,11 @@
 // 用法: node scripts/check-cn-lens-leak.mjs   (exit 1 = 有泄漏)
 // 加入时间: 2026-05-25 (SOP 审计 wave 7 发现系统性泄漏后固化)。
 // ───────────────────────────────────────────────────────────────────────────
-import { STORYBOARDS, listStoryboards, hasLenses } from '../lib/history-storyboards/index.js';
-import { NOTEBOOKS } from '../lib/history-storyboards/notebooks/index.js';
+import { listStoryboards, hasLenses, loadAllStoryboards } from '../lib/history-storyboards/index.js';
+// storyboard 已改按需加载 —— 审计脚本要遍历全部课程, 显式全量载入
+const STORYBOARDS = await loadAllStoryboards();
+import { loadAllNotebooks } from '../lib/history-storyboards/notebooks/index.js';
+const NOTEBOOKS = await loadAllNotebooks();
 
 // 旧长格式老课 — 与 check-node-length.mjs 同一 backlog 集 (创始人选 B: 老课待返工, 新课守住)。
 // 这些 topic 的 storyboard content.cn 仍带架构「Lens N」泄漏, 留待整体返工时一并清理, 不阻断 CI。

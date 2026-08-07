@@ -11,7 +11,9 @@
 // 豁免名单 = 上线前定格的内容, 列为「待返工 backlog」, 不阻断 CI; 但新 topic 必须达标。
 // 加入时间: 2026-05-25 (创始人选 B: 固化标准 + 新课守住 + 老课待返工)。
 // ───────────────────────────────────────────────────────────────────────────
-import { STORYBOARDS, listStoryboards, hasLenses } from '../lib/history-storyboards/index.js';
+import { listStoryboards, hasLenses, loadAllStoryboards } from '../lib/history-storyboards/index.js';
+// storyboard 已改按需加载 —— 审计脚本要遍历全部课程, 显式全量载入
+const STORYBOARDS = await loadAllStoryboards();
 
 const HARD = 550;
 
