@@ -11,7 +11,9 @@
 //   ④ 过长 (>120 CN char): 不是问题就是密度过大
 //
 // 输出: 标记每条可疑的 hook,人/Agent 看后判断 within-topic 化。
-import { STORYBOARDS, listStoryboards, hasLenses } from '../lib/history-storyboards/index.js';
+import { listStoryboards, hasLenses, loadAllStoryboards } from '../lib/history-storyboards/index.js';
+// storyboard 已改按需加载 —— 审计脚本要遍历全部课程, 显式全量载入
+const STORYBOARDS = await loadAllStoryboards();
 
 // 跨 topic 关键词. keyword 用 \b word-boundary regex, 避免 "princip" 误中 "Principia"
 var CROSS_TOPIC_KEYWORDS = {
