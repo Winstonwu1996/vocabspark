@@ -997,8 +997,11 @@ var buildMnemonicFillPrompt = (word) => {
     "- 这种情况应该改用画面联想：\"金字塔尖 = 完美典型的 epitome\"\n\n" +
     "【任务】给中文意思 + 谐音/画面线索 + 画面线索，4 个发音相近的英文词，让学生从拼写中辨认 \"" + word + "\"。\n\n" +
     "【中文 hint】1 行核心中文意思（≤10 字）\n" +
-    "【谐音 hint】1 行【自然好记 + 关联含义】的中文谐音（如 \"陪 pet 永远\" 对 perpetual）\n" +
-    "  如果该词谐音难做或会变成强行/不雅，**就把这一行写成画面联想**（如 \"金字塔尖=典型缩影\" 对 epitome），并保留 imageHint\n" +
+    "【谐音 hint】1 行【自然好记 + 关联含义】的中文谐音（如 \"陪 pet 永远\" 对 perpetual），**≤12 字、只给成品**\n" +
+    "  ❗只输出最终结论，绝不写思考过程/比较/自我怀疑。真实翻车案例(hospice)：\n" +
+    "    \"好像护士陪着（HOS-pis 读着像'好死必死'? 不如'花丝饼'——但更贴近 'hospital 的简版'），画面联想…\"\n" +
+    "    —— 这种把纠结摊开写的输出，学生记它比记单词还累，是纯认知负担。\n" +
+    "  ❗谐音编不出好的（会强行/不雅/绕），就把 soundHint 直接留【空字符串 \"\"】，靠 imageHint 做线索 —— 少一条烂线索比硬凑好。\n" +
     "【画面 hint】1 行场景化画面（≤20 字，结合学生世界）\n\n" +
     "【4 个选项 — 关键】\n" +
     "✅ 1 个正解：" + word + " 本身\n" +
@@ -1637,12 +1640,14 @@ var MethodBody = ({ m, accent }) => {
         {m.anchor && <div style={{ marginTop:6, fontSize:13, color:C.textSec, fontStyle:"italic" }}>💡 {m.anchor}</div>}
       </>;
     case "mnemonic":
-      // 谐音：大字突出
+      // 谐音：大字突出。牵强/自我纠结的谐音不给大字位(甚至整条不显示)——见 isUsableSoundHint
       return <>
-        <div style={{ fontSize:20, fontWeight:700, color:c, margin:"4px 0 6px", lineHeight:1.3, fontFamily:FONT_DISPLAY }}>
-          "{m.soundAlike}"
-        </div>
-        <div style={{ fontSize:14, color:C.text, margin:"3px 0" }}>→ {m.interpretation}</div>
+        {isUsableSoundHint(m.soundAlike) && (
+          <div style={{ fontSize:20, fontWeight:700, color:c, margin:"4px 0 6px", lineHeight:1.3, fontFamily:FONT_DISPLAY }}>
+            "{m.soundAlike}"
+          </div>
+        )}
+        {m.interpretation && <div style={{ fontSize:14, color:C.text, margin:"3px 0" }}>{isUsableSoundHint(m.soundAlike) ? "→ " : ""}{m.interpretation}</div>}
         {m.anchor && <div style={{ marginTop:6, fontSize:13, color:C.textSec, fontStyle:"italic" }}>💡 {m.anchor}</div>}
       </>;
     case "image":
@@ -2400,6 +2405,21 @@ var MorphFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
 
 // D 难记型 → 谐音 + 画面 → 拼写辨识
 // meaningZh + soundHint + imageHint + 4 个相似拼写候选
+/* 牵强/自我纠结的谐音直接不显示——记它比记单词还费劲，是纯认知负担(创始人 2026-08-02)。
+ * 真实翻车案例(hospice)：「好像护士陪着（HOS-pis 读着像'好死必死'? 不如'花丝饼'——但更贴近
+ * 'hospital 的简版'），画面联想…」= 模型把自己的纠结过程摊给孩子看。
+ * 画面线索(imageHint)照常显示，靠它照样能选对，少一条烂线索反而更清爽。 */
+var isUsableSoundHint = function(s) {
+  var t = String(s || "").trim();
+  if (!t) return false;
+  if (t.length > 24) return false;                       // 好谐音都短("陪 pet 永远")；长的必是绕来绕去
+  if (/[?？]/.test(t)) return false;                     // 自问自答 = 没想好
+  if (/不如|更贴近|不太|勉强|其实|应该说|或者说|可以理解为|读着像|听起来像|谐音难|不好谐/.test(t)) return false; // 纠结/元叙述
+  if ((t.match(/[（(]/g) || []).length > 1) return false; // 多层括号 = 层层解释
+  if (/[，,。;；].*[，,。;；]/.test(t)) return false;      // ≥3 个短句 = 一段话不是线索
+  return true;
+};
+
 var MnemonicFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
   var [selected, setSelected] = useState(null);
   var [submitted, setSubmitted] = useState(false);
@@ -2417,7 +2437,7 @@ var MnemonicFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) =>
             <span style={{ fontWeight:700, color:C.accent, marginRight:6 }}>含义</span>{data.meaningZh}
           </div>
         )}
-        {data.soundHint && (
+        {isUsableSoundHint(data.soundHint) && (
           <div style={{ padding:"10px 12px", background:C.purpleLight, border:"1px solid "+C.purple+"44", borderRadius:10, fontSize:14, color:C.text, fontFamily:"'Inter',"+FONT }}>
             <span style={{ fontWeight:700, color:C.purple, marginRight:6 }}>谐音</span>{data.soundHint}
           </div>
