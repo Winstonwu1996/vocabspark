@@ -1,6 +1,6 @@
 // morph_fill 题校验回归测试 — 线上 bug：scenario 含目标词 verbatim 导致闭眼选
 // 运行：node scripts/test-morph-fill-sanitize.mjs
-import { sceneContainsWord, checkMorphFill } from '../lib/morphFillSanitize.js';
+import { sceneContainsWord, checkMorphFill, checkDuplicateOptions } from '../lib/morphFillSanitize.js';
 
 var pass = 0, fail = 0;
 var eq = function (name, got, want) {
@@ -97,6 +97,17 @@ eq("type != morph_fill → 不 leaked (这套校验只管 morph)",
 // 边界
 eq("null data 安全", checkMorphFill(null, "comprehend"), { leaked: false, reason: null });
 eq("非对象 data 安全", checkMorphFill("string", "comprehend"), { leaked: false, reason: null });
+
+// ── 选项重复检查（2026-08-02 hummock 实测回归）──
+// 线上 bug：A/C/D 三个选项都是 "hummock"，学生选 C 与正解 A 同词却被判错。
+console.log("\n── checkDuplicateOptions（选项重复 = 选对也判错）──");
+eq("hummock 真实案例 A/C/D 同词 → 拦下", checkDuplicateOptions({A:"hummock",B:"hammock",C:"hummock",D:"hummock"}).bad, true);
+eq("正常 4 选项 → 放行", checkDuplicateOptions({A:"hummock",B:"hammock",C:"hemlock",D:"haddock"}).bad, false);
+eq("大小写不同视为重复", checkDuplicateOptions({A:"Hummock",B:"b",C:"hummock",D:"d"}).bad, true);
+eq("首尾空格视为重复", checkDuplicateOptions({A:"hummock ",B:"b",C:" hummock",D:"d"}).bad, true);
+eq("有效选项不足 2 个 → 拦下", checkDuplicateOptions({A:"hummock",B:"",C:null,D:"  "}).bad, true);
+eq("options 缺失 → 拦下", checkDuplicateOptions(null).bad, true);
+eq("3 个不重复选项 → 放行", checkDuplicateOptions({A:"a",B:"b",C:"c"}).bad, false);
 
 console.log("\n──────────────────────────────");
 console.log("通过 " + pass + " / " + (pass + fail));

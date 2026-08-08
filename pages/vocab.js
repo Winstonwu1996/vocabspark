@@ -14,7 +14,7 @@ import { backupOnBoot, clearBackups } from '../lib/local-backup'; // sync 重构
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, sanitizeResumeSession, getLocalDateKey, isoToLocalDateKey } from '../lib/learnStatus';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
-import { checkMorphFill } from '../lib/morphFillSanitize';
+import { checkMorphFill, checkDuplicateOptions } from '../lib/morphFillSanitize';
 import { hasTypedAnswer, hasUsableMeaning } from '../lib/typedRecall';
 import { isCompleteTeachJSON } from '../lib/teachValidate';
 
@@ -501,6 +501,8 @@ var normalizeGuessData = (raw, targetWord) => {
     var _gs = sanitizeGuessOptions(raw.options);
     raw.options = _gs.options;
     if (_gs.leaked) raw._invalidOptions = true;
+    // 选项重复 = 学生选了"另一个正解"却被判错(实测 hummock)，整题作废走重试
+    if (checkDuplicateOptions(raw.options).bad) raw._invalidOptions = true;
   }
 
   // 兜底校验：选项不能包含目标词本身或同根词形
@@ -1127,7 +1129,15 @@ var buildReviewPrompt = (words) => {
 var cqQuestionValid = function(q){
   if (!q || !q.stem || !q.options || !q.answer) return false;
   var keys = Object.keys(q.options).filter(function(k){ return q.options[k] != null && String(q.options[k]).trim(); });
-  return keys.length >= 2 && keys.indexOf(q.answer) !== -1;
+  if (keys.length < 2 || keys.indexOf(q.answer) === -1) return false;
+  // 选项重复 → 学生选中"和正解一样的另一项"会被判错(实测 hummock)，判无效
+  var seen = {};
+  for (var i = 0; i < keys.length; i++) {
+    var v = String(q.options[keys[i]]).trim().toLowerCase();
+    if (seen[v]) return false;
+    seen[v] = true;
+  }
+  return true;
 };
 
 // 校验 cloze 题目：passage 里不能出现任何答案词（送分题检测）
@@ -1153,6 +1163,13 @@ var validateCloze = function(parsed, targetWords) {
     if (!Array.isArray(q.options)) return "选项缺失(题" + qid + ")";
     var opts = q.options.filter(function(o){ return o != null && String(o).trim(); });
     if (opts.length < 2) return "有效选项不足(题" + qid + ")";
+    // 选项重复 → 选中"和正解相同的另一项"会被判错(实测 hummock)
+    var seenOpt = {};
+    for (var oi = 0; oi < opts.length; oi++) {
+      var ov = String(opts[oi]).trim().toLowerCase();
+      if (seenOpt[ov]) return "选项重复(题" + qid + ": " + opts[oi] + ")";
+      seenOpt[ov] = true;
+    }
     var ansNorm = String(q.answer || "").trim().toLowerCase();
     if (!ansNorm) return "答案缺失(题" + qid + ")";
     var matched = q.options.find(function(o){ return String(o).trim().toLowerCase() === ansNorm; });
@@ -5426,6 +5443,19 @@ export default function App() {
                   }
                   // scenario 泄题 → 直接跳过；结构畸形重试耗尽 → 也跳过。给学生看泄题题/坏题更糟。
                   console.warn("[loadBatch] morph_fill " + check.reason + " for '" + capturedWord + "', skip spectrum");
+                  return null;
+                }
+              }
+              // 选项重复检查（所有 4 选项题型通用）——实测 hummock: A/C/D 同词，
+              // 学生选 C 与正解 A 是同一个词却被判错。重出一次，仍坏就跳过该题。
+              if (parsed && parsed.options) {
+                var dup = checkDuplicateOptions(parsed.options);
+                if (dup.bad) {
+                  if (attemptsLeft > 0) {
+                    console.warn("[loadBatch] spectrum " + dup.reason + " for '" + capturedWord + "', 1 即时重试");
+                    return doSpectrumAttempt(attemptsLeft - 1);
+                  }
+                  console.warn("[loadBatch] spectrum " + dup.reason + " for '" + capturedWord + "', skip spectrum");
                   return null;
                 }
               }
