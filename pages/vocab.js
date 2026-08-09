@@ -982,31 +982,20 @@ var buildMorphFillPrompt = (word) => {
 // 测的是：谐音和画面记忆是否真正建立 → 能否从相似拼写的"难记词"里锁定目标词
 // 4 个选项是发音相近的难记英文词（不告诉是哪个），只给中文/谐音/画面线索
 var buildMnemonicFillPrompt = (word) => {
-  return "为 \"" + word + "\" 设计【谐音 + 画面 → 拼写辨识】题。\n\n" +
-    "❗❗【谐音 hint 质量铁律】❗❗\n" +
-    "1. 必须真的【发音相近】 — 把谐音读出来，听感要和英文实际发音类似（不是字面拼字母）\n" +
-    "2. 必须【自然好记】 — 像顺口溜或日常短语，不是拗口生造\n" +
-    "3. 必须【关联含义】 — 谐音的中文场景应该能联想到词的含义\n" +
-    "4. 🚫 严禁不雅、低俗、令人困惑的谐音（如 \"屁头没\"、\"大爷的\" 之类）\n" +
-    "5. 🚫 严禁谐音和含义完全脱节（如 epitome 含义 \"典型/缩影\"，谐音 \"爱屁头没\" 既不雅也无关）\n" +
-    "6. 如果实在编不出好谐音，宁可改用【画面联想】或【词根拆解】当主线索\n\n" +
-    "好谐音示例：\n" +
-    "- perpetual: \"陪 pet 永远\" — 发音 pər-PET-chu-əl 接近，宠物陪伴 → 永远\n" +
-    "- ambulance: \"俺不能死\" — 发音 AM-byə-ləns 接近，救护车送医 → 不能死\n" +
-    "- ephemeral: \"易腐没了\" — ee-FEM-er-əl 接近，易腐 → 短暂的\n\n" +
-    "差谐音反例（绝不模仿）：\n" +
-    "- epitome: \"爱屁头没\" — 又脏又拗口，和\"典型/缩影\"无任何关联\n" +
-    "- 这种情况应该改用画面联想：\"金字塔尖 = 完美典型的 epitome\"\n\n" +
-    "【任务】给中文意思 + 谐音/画面线索 + 画面线索，4 个发音相近的英文词，让学生从拼写中辨认 \"" + word + "\"。\n\n" +
+  return "为 \"" + word + "\" 设计【画面 → 拼写辨识】题。\n\n" +
+    "❗❗【画面 hint 质量铁律】❗❗（中文谐音已停用，画面是唯一线索，必须做扎实）\n" +
+    "1. 必须【直指词义】 — 读完画面就能猜到这个词在说什么\n" +
+    "2. 必须【具体可视】 — 有场景、有动作、有细节，不是抽象定义的复述\n" +
+    "3. 结合学生的世界（兴趣/朋友/日常场景）更好记\n" +
+    "4. 🚫 严禁血腥、死亡、低俗、令人不适的画面（面向初中生）\n\n" +
+    "好画面示例：\n" +
+    "- hypnotism（催眠术）: \"悠悠球晃来晃去，眼皮越来越沉\"\n" +
+    "- perpetual（永久的）: \"刻着爪印的老时钟，永不停摆\"\n" +
+    "- ephemeral（短暂的）: \"樱花刚开满枝，一阵风就落光\"\n\n" +
+    "【任务】给中文意思 + 画面线索，4 个拼写相近的英文词，让学生从拼写中辨认 \"" + word + "\"。\n\n" +
     "【中文 hint】1 行核心中文意思（≤10 字）\n" +
-    "【谐音 hint】1 行【自然好记 + 关联含义】的中文谐音（如 \"陪 pet 永远\" 对 perpetual），**≤12 字、只给成品**\n" +
-    "  ❗只输出最终结论，绝不写思考过程/比较/自我怀疑。真实翻车案例(hospice)：\n" +
-    "    \"好像护士陪着（HOS-pis 读着像'好死必死'? 不如'花丝饼'——但更贴近 'hospital 的简版'），画面联想…\"\n" +
-    "    —— 这种把纠结摊开写的输出，学生记它比记单词还累，是纯认知负担。\n" +
-    "  ❗❗【必须同时满足音近 + 意通】：谐音的中文本身要指向该词含义。只音像、意思无关 = 废线索。\n" +
-    "    真实翻车案例(hybrid，含义'混合的')：\"还不赖的（hy-brid 近似）\" —— '还不赖'和'混合'毫无关系，\n" +
-    "    学生记了也用不上，还得额外背这句废话。绝不允许用『X 近似 / 谐音 / 音近』之类的话给自己开脱。\n" +
-    "  ❗谐音编不出好的（会强行/不雅/绕/意思接不上），就把 soundHint 直接留【空字符串 \"\"】，靠 imageHint 做线索 —— 少一条烂线索比硬凑好。\n" +
+    "【soundHint】❗中文谐音已停用（实测多为无意义凑音，如 hypnotism 配「嗨皮 no 提死我」、\n" +
+    "  hybrid 配「还不赖的」，是纯认知负担）。**soundHint 一律输出空字符串 \"\"**，把线索力气全放在 imageHint。\n" +
     "【画面 hint】1 行场景化画面（≤20 字，结合学生世界）\n\n" +
     "【4 个选项 — 关键】\n" +
     "✅ 1 个正解：" + word + " 本身\n" +
@@ -2094,6 +2083,14 @@ var ClosingNote = ({ text }) => {
   );
 };
 
+/* 谐音方法总开关（创始人 2026-08-09 拍板停用）。
+ * 三次实测连续翻车：hospice「读着像'好死必死'? 不如'花丝饼'…」、hybrid「还不赖的（近似）」、
+ * hypnotism「嗨皮 no 提死我」/ hypnosis「治好你死」——凑音、无意义、还沾"死"。
+ * 根因：「这句中文有没有意义、跟词义搭不搭」是语义判断，文字规则拦不住（连补三轮仍漏）。
+ * 同批数据里画面线索质量一直很好（"悠悠球晃来晃去，眼皮越来越沉"），故停谐音、力气全放画面。
+ * 要恢复：这里置 true + classifier 方法池放回 mnemonic + buildMnemonicFillPrompt 恢复谐音要求。 */
+var SHOW_SOUND_HINT = false;
+
 var TeachJSON = ({ data, streaming }) => {
   if (!data) return null;
   // 按 wordType 取主题（A/B/C/D/E/F），影响 visualAnchor 和 method 卡的色彩
@@ -2138,7 +2135,10 @@ var TeachJSON = ({ data, streaming }) => {
           </div>
         </div>
       )}
-      {Array.isArray(data.teach?.methods) && data.teach.methods.map((m, i) => (
+      {Array.isArray(data.teach?.methods) && data.teach.methods.filter(function(m){
+        // 谐音方法已停用(见 SHOW_SOUND_HINT)：旧缓存里的谐音卡整张不渲染，避免露出烂谐音
+        return !(m && m.type === "mnemonic" && !SHOW_SOUND_HINT);
+      }).map((m, i) => (
         <MethodCard key={i} method={m} theme={theme} />
       ))}
       {data.teach?.visualAnchor && <VisualAnchorBlock anchor={data.teach.visualAnchor} theme={theme} />}
@@ -2430,6 +2430,7 @@ var MorphFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) => {
  * 'hospital 的简版'），画面联想…」= 模型把自己的纠结过程摊给孩子看。
  * 画面线索(imageHint)照常显示，靠它照样能选对，少一条烂线索反而更清爽。 */
 var isUsableSoundHint = function(s) {
+  if (!SHOW_SOUND_HINT) return false;
   var t = String(s || "").trim();
   if (!t) return false;
   if (t.length > 24) return false;                       // 好谐音都短("陪 pet 永远")；长的必是绕来绕去
@@ -2452,7 +2453,7 @@ var MnemonicFillGame = ({ data, onCorrect, onNext, sfx, loading, nextLabel }) =>
   var optKeys = ["A","B","C","D"];
   return (
     <>
-      <div style={S.specTag}>🧠 谐音辨认</div>
+      <div style={S.specTag}>{SHOW_SOUND_HINT ? "🧠 谐音辨认" : "🧠 拼写辨认"}</div>
       <div style={{ fontSize:13, color:C.textSec, marginBottom:10 }}>看线索，从 4 个相似拼写中找到目标词</div>
       {/* 三条线索卡 */}
       <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:14 }}>
