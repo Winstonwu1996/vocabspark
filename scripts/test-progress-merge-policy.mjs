@@ -356,6 +356,21 @@ console.log("\n── screenedUnknownAt stub 不得清洗真实 SRS (2026-07-24 
   eq("双 stub 合并取最早留痕", bothStub.screenedUnknownAt, "2026-07-01T00:00:00Z");
 })();
 
+console.log("\n── 宠物改名不被喂食数覆盖 (2026-08-14 Willow 实测回归) ──");
+// 实测: 改名后第二天变回「小 U」——旧逻辑 name 跟着 totalFed 大的那包整体走。
+(function () {
+  var renamed = { pet: { name: "皮皮", nameUpdatedAt: "2026-08-14T10:00:00Z", totalFed: 331, unlocked: ["crown"] } };
+  var staleMoreFed = { pet: { name: "小 U", totalFed: 340, unlocked: ["fire"] } };
+  eq("改过名的一方赢(即使对方喂食更多)", mergeProgress(staleMoreFed, renamed, {}).pet.name, "皮皮");
+  eq("喂食数仍取 max", mergeProgress(staleMoreFed, renamed, {}).pet.totalFed, 340);
+  eq("服务端守卫同规则", applyProgressGuards(staleMoreFed, renamed, {}).safe.pet.name, "皮皮");
+  var early = { pet: { name: "早", nameUpdatedAt: "2026-08-10T00:00:00Z", totalFed: 400 } };
+  var late = { pet: { name: "晚", nameUpdatedAt: "2026-08-14T00:00:00Z", totalFed: 100 } };
+  eq("两边都改过 → 改得晚的赢", mergeProgress(early, late, {}).pet.name, "晚");
+  eq("两边都改过(反向) → 仍是晚的赢", mergeProgress(late, early, {}).pet.name, "晚");
+  eq("都没改名时间戳 → 保持旧行为", mergeProgress({ pet: { name: "小 U", totalFed: 400 } }, { pet: { name: "小 U", totalFed: 100 } }, {}).pet.name, "小 U");
+})();
+
 console.log("\n──────────────────────────────");
 console.log("通过 " + pass + " / " + (pass + fail));
 if (fail > 0) { console.log("❌ 有失败用例"); process.exit(1); }

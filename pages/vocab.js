@@ -3765,7 +3765,9 @@ export default function App() {
   var renamePet = function(newName) {
     if (!pet || !newName || !newName.trim()) return;
     var clean = newName.trim().slice(0, 12);
-    savePet(Object.assign({}, pet, { name: clean }));
+    // nameUpdatedAt：让合并按"谁改得更晚"定名字，不再被另一台设备的喂食数覆盖
+    // （用户实测：改名后第二天变回「小 U」——旧逻辑名字跟着 totalFed 大的那包走）
+    savePet(Object.assign({}, pet, { name: clean, nameUpdatedAt: new Date().toISOString() }));
   };
 
   var STREAK_MILESTONES = {
