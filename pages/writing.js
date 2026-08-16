@@ -822,7 +822,7 @@ export default function WritingApp() {
       <Head>
         <title>AI 写作私教 — Know U. Learning</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        {/* 字体已自托管，见 pages/_document.js 的 FONT_FACE_CSS（原 Google Fonts 外链在大陆不可达且阻塞渲染）*/}
       </Head>
       <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
 

@@ -65,7 +65,6 @@ import {
   saveWorldview,
   saveTopicCompletion,
   saveTranscript,
-  addXp,
   getXp,
   loadTopicProgress,
   loadHistoryProfile,
@@ -1461,8 +1460,12 @@ export default function HistoryPage() {
     setTopicXpEarned(total);
 
     // 持久化
-    addXp(total);
-    setXp(getXp());
+    // ⚠️ 这里**不要**再调 addXp(total)。下面的 saveTopicCompletion({xpEarned: total})
+    // 内部已经把 total 加进 stats.xp（见 lib/history-storage.js saveTopicCompletion）。
+    // 两处都加 = 每完成一门课发双倍 XP。而 XP 是**货币**（vocab 里喂宠物/买配饰要花），
+    // 不是纯展示数字。保留 saveTopicCompletion 那一次的理由：它与完课记录原子写入，
+    // 且 historyData.completedTopics[*].xpEarned 是重算 XP 的唯一真源。
+    // XP 显示在 saveTopicCompletion 之后统一刷新。
 
     // 收集错题进 review pool（Winston review #9：错的会进 vocab 复习池下次再考）
     var reviewWords = [];
@@ -1499,6 +1502,7 @@ export default function HistoryPage() {
       reviewPool: { words: reviewWords, concepts: reviewConcepts },
       transcript: conversationLog,
     });
+    setXp(getXp());   // 唯一的 XP 落账在上面这次，写完再刷新显示
 
     // 触发 worldview 后处理（α 阶段做完整的 — MVP 这里用简化版）
     if (worldview) {
