@@ -3009,6 +3009,7 @@ export default function App() {
   var screeningDefCache = useRef({});
   var screeningDefReqRef = useRef(null); // 防陈旧响应：LLM 释义比 MyMemory 慢，翻页后旧词的返回不能覆盖新词
   var [quickReviewQueue, setQuickReviewQueue] = useState([]);
+  var [quickReviewMode, setQuickReviewMode] = useState("due"); // due(今日到期·手写默写) | triage(清欠账·快速重测) | all | focus
   var [quickReviewIdx, setQuickReviewIdx] = useState(0);
   var [quickReviewFlipped, setQuickReviewFlipped] = useState(false);
   var [quickReviewTyped, setQuickReviewTyped] = useState(""); // 手填中文回忆测试的输入
@@ -6574,6 +6575,49 @@ export default function App() {
     } catch (e) { return Math.max(1, Math.ceil(overdueNow / BACKLOG_CATCHUP_DAYS)); }
   };
 
+  /* 最近 7 天学习记录(创始人 2026-08-16：家长需要能定期回看，现在完全看不到)。
+   * 只用已有数据聚合，不新增任何存储结构。措辞用【投入与进步】口径，不用"欠账/追责"
+   * (Codex 复核：羞耻感会反噬)。孩子也看得到 —— 是共同看板，不是监控报告。 */
+  var getLast7DaysSummary = function() {
+    var days = [];
+    var rwd = reviewWordData || {};
+    var byDayNew = {}, byDayReview = {};
+    Object.keys(rwd).forEach(function (w) {
+      var item = rwd[w] || {};
+      if (item.firstLearnedAt) {
+        var dk = isoToLocalDateKey(item.firstLearnedAt);
+        if (dk) byDayNew[dk] = (byDayNew[dk] || 0) + 1;
+      }
+      var seenDay = {};
+      ((item.reviewHistory) || []).forEach(function (r) {
+        var dk2 = isoToLocalDateKey(r && r.date);
+        if (!dk2) return;
+        if (seenDay[dk2]) return;      // 同一个词同一天算 1 次(当场重练不虚增)
+        seenDay[dk2] = 1;
+        byDayReview[dk2] = (byDayReview[dk2] || 0) + 1;
+      });
+    });
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+      var key = getLocalDateKey(d);
+      days.push({
+        key: key,
+        label: (d.getMonth() + 1) + "/" + d.getDate(),
+        weekday: ["日", "一", "二", "三", "四", "五", "六"][d.getDay()],
+        newWords: byDayNew[key] || 0,
+        reviews: byDayReview[key] || 0,
+        isToday: i === 0,
+      });
+    }
+    var activeDays = days.filter(function (x) { return x.newWords > 0 || x.reviews > 0; }).length;
+    return {
+      days: days,
+      totalNew: days.reduce(function (a, x) { return a + x.newWords; }, 0),
+      totalReview: days.reduce(function (a, x) { return a + x.reviews; }, 0),
+      activeDays: activeDays,
+    };
+  };
+
   var getDailyPlan = function() {
     var words = parseWordsFromInput(wordInput);
     var todayKey = getLocalDateKey();
@@ -6618,12 +6662,6 @@ export default function App() {
     });
     var remainingNewQuota = Math.max(0, (quotaState.quota || 0) - (quotaState.consumed || 0));
     var newWordsToday = unlearned.slice(0, remainingNewQuota);
-
-    var quickDoneToday = Object.values(reviewWordData || {}).some(function(item) {
-      return (item.reviewHistory || []).some(function(r) {
-        return r.mode === "quick" && isoToLocalDateKey(r.date) === todayKey;
-      });
-    });
 
     var deepDoneCountToday = Object.values(reviewWordData || {}).reduce(function(acc, item) {
       var c = (item.reviewHistory || []).filter(function(r) {
@@ -6671,19 +6709,40 @@ export default function App() {
     // 份额 = 今天刚到期的(当天清掉，不许滚成新欠账) + 固定日还款额(欠账 ÷ 30)。
     // ★ 日还款额必须【锚定】：若每天现算 欠账/30，除数不变而欠账递减 → 拖到 45 天才清完。
     //   所以首次见到欠账时锚定 ceil(初始欠账/30)，之后每天还这么多，正好 30 天清零。
-    var catchupSlice = getReviewCatchupSlice(overdueCount);
-    var reviewTarget = Math.min(
-      toReview.length,
-      dueTodayCount + Math.min(catchupSlice, overdueCount)
-    );
+    // ★ 拆成两种货币(Codex 复核后定稿)：全用手写默写清 1201 欠账 = 每天 58 个/20+ 分钟，
+    //   疲劳会让她乱猜、记忆质量反而崩。所以：
+    //   · 今日刚到期 → 手写默写(质量不降，约 31 个)
+    //   · 历史欠账   → 快速重测(认识/模糊/不认识，3 秒一个，她本人判断而非算法猜)
+    var reviewTarget = dueTodayCount;
     var reviewDone = reviewTarget === 0 || quickReviewedToday >= reviewTarget;
 
-    var quickDone = quickDoneToday || toReview.length === 0;
+    var catchupSlice = getReviewCatchupSlice(overdueCount);
+    var triageTarget = Math.min(overdueCount, catchupSlice);
+    var triagedToday = (function () {
+      var seen = {};
+      Object.keys(reviewWordData || {}).forEach(function (w) {
+        var item = reviewWordData[w];
+        ((item && item.reviewHistory) || []).forEach(function (r) {
+          if (r.mode === "triage" && isoToLocalDateKey(r.date) === todayKey) seen[w] = 1;
+        });
+      });
+      return Object.keys(seen).length;
+    })();
+    var triageDone = triageTarget === 0 || triagedToday >= triageTarget;
+
+    // 攻克(bonus)的解锁条件改为"两个复习必做项都完成"。
+    // 旧写法 quickDone 只认 mode==="quick"：若某天没有新到期词(reviewTarget=0)但仍有积压，
+    // 她全程做 triage 也永远不算 quickDone → 攻克被永久锁死(Codex 复核指出的串账)。
+    var quickDone = reviewDone && triageDone;
     var deepLocked = !quickDone;
     var deepDone = !deepLocked && (deepToday.length === 0 || deepUsedToday >= deepLimit);
-    // 完成 = 新词达标 **且** 复习达标(攻克仍是 bonus)
+    // 完成 = 新词 + 今日到期复习 + 清欠账 三项都达标(攻克仍是 bonus)
     var newDone = effectiveDailyTarget > 0 && newLearnedToday >= effectiveDailyTarget;
-    var dayComplete = newDone && reviewDone;
+    var dayComplete = newDone && reviewDone && triageDone;
+    // streak 保底(Codex 复核)：全或无的惩罚会让"断了就摆烂"。做到最低量(复习过半)就保住连续天数，
+    // 全做完另给"全勤"标记 —— 用加法奖励，不用减法惩罚。
+    var streakMinMet = (reviewTarget === 0 || quickReviewedToday >= Math.ceil(reviewTarget / 2)) &&
+                       (effectiveDailyTarget === 0 || newLearnedToday >= Math.ceil(effectiveDailyTarget / 2));
 
     return {
       toReview: toReview,
@@ -6697,6 +6756,10 @@ export default function App() {
       reviewBacklog: toReview.length,
       overdueCount: overdueCount,
       dueTodayCount: dueTodayCount,
+      triageTarget: triageTarget,
+      triageDone: triageDone,
+      triagedToday: triagedToday,
+      streakMinMet: streakMinMet,
       dayComplete: dayComplete,
       effectiveDailyTarget: effectiveDailyTarget,
       capReason: capReason,
@@ -6966,15 +7029,26 @@ export default function App() {
   };
 
   var startQuickReview = function(mode) {
-    mode = mode || "all"; // all | due | focus
+    mode = mode || "all"; // all | due(今日到期·默写) | triage(清欠账·快速重测) | focus
     var words = parseWordsFromInput(wordInput);
+    var _todayStartMs = (function(){ var n = new Date(); n.setHours(0,0,0,0); return n.getTime(); })();
     var queue = dedupeByWord(words
       .filter(function(w, i) {
         var s = getWordStatus(w, i, words);
         if (s === "unlearned" || s === "skipped") return false;
         var d = reviewWordData[w] || {};
         // skipped words already filtered above by status check
-        if (mode === "due") return isDueDate(d.nextReviewDate);
+        if (mode === "due") {
+          // 今日到期 = 只取"今天才到期"的(不含历史欠账，欠账走 triage 快速重测)
+          if (!isDueDate(d.nextReviewDate)) return false;
+          var t0 = d.nextReviewDate ? new Date(d.nextReviewDate).getTime() : NaN;
+          return !Number.isFinite(t0) || t0 >= _todayStartMs;
+        }
+        if (mode === "triage") {
+          if (!isDueDate(d.nextReviewDate)) return false;
+          var t1 = d.nextReviewDate ? new Date(d.nextReviewDate).getTime() : NaN;
+          return Number.isFinite(t1) && t1 < _todayStartMs; // 只取逾期欠账
+        }
         if (mode === "focus") return s === "uncertain" || s === "error";
         return true;
       })
@@ -6997,14 +7071,17 @@ export default function App() {
       return;
     }
 
-    // 按今日份额截断("due"=每日必做那条路径)：欠账 1200+ 时不截断会显示 1/1222，
-    // 看不到头 = 直接放弃。只给今天该做的那批，做完就是完成。
-    if (mode === "due") {
+    // 按今日份额截断：看不到头 = 直接放弃，所以只给今天该做的那批，做完就是完成。
+    if (mode === "due" || mode === "triage") {
       var _plan = getDailyPlan();
-      var _todayQuota = Math.max(0, (_plan.reviewTarget || 0) - (_plan.quickReviewedToday || 0));
+      var _todayQuota = mode === "triage"
+        ? Math.max(0, (_plan.triageTarget || 0) - (_plan.triagedToday || 0))
+        : Math.max(0, (_plan.reviewTarget || 0) - (_plan.quickReviewedToday || 0));
       if (_todayQuota > 0 && queue.length > _todayQuota) queue = queue.slice(0, _todayQuota);
     }
+    setQuickReviewMode(mode);
 
+    _relearnCountRef.current = {}; // 新一轮：重置"当场再练"计数
     _meaningStatusRef.current = {}; // 新一轮复习：清释义取数状态，让上轮临时失败的词本轮可重试 (Codex P3)
     setQuickReviewQueue(queue);
     setQuickReviewIdx(0);
@@ -7110,6 +7187,54 @@ export default function App() {
     });
   };
 
+  /* 当场巩固(创始人 2026-08-16)：复习时发现不会的词，【同一次学习里】再练一遍，不拖到下次。
+   * 原逻辑 forgot 只是把 nextReviewDate 排到明天 —— 等于"这次没记住就算了"，
+   * 下次它还带着更长的遗忘期回来，结构更复杂。改为排到本次队尾当场再见(每词最多 2 次，防死循环)。
+   * 注：当日计数按 distinct 词去重，重练不会虚增完成量。 */
+  var _relearnCountRef = useRef({});
+  var maybeRelearnSameSession = function(item, result) {
+    if (!item || !item.word) return false;
+    if (result !== "forgot" && result !== "fuzzy") return false;
+    var maxRepeat = result === "forgot" ? 2 : 1;
+    var n = Number(_relearnCountRef.current[item.word]) || 0;
+    if (n >= maxRepeat) return false;
+    _relearnCountRef.current[item.word] = n + 1;
+    setQuickReviewQueue(function(q){ return q.concat([item]); });
+    return true;
+  };
+
+  /* 快速重测(triage)：清历史欠账用。
+   * 为什么不用手写默写清欠账：1201 个欠账 × 默写 = 每天 58 个、20 分钟以上，疲劳会让她乱猜，
+   * 记忆质量反而崩(Codex 复核指出)。改成 3 秒一个的识别式自评，由她本人判断而非算法猜：
+   *   认识 → 按 remembered 升档(跳出欠账)；模糊 → uncertain 明天再见；不认识 → 归零重学。
+   * 今天刚到期的词仍走手写默写(质量不降)，两种货币各司其职。 */
+  var markTriage = function(result) {
+    var item = quickReviewQueue[quickReviewIdx];
+    if (!item) return;
+    var oldItem = reviewWordData[item.word] || { reviewHistory: [] };
+    var prevLevel = Number.isFinite(oldItem.reviewLevel) ? oldItem.reviewLevel : 0;
+    var nextLevel = prevLevel;
+    if (result === "remembered") nextLevel = Math.min(REVIEW_INTERVAL_DAYS.length - 1, prevLevel + 1);
+    if (result === "fuzzy") nextLevel = Math.max(0, prevLevel - 1);
+    if (result === "forgot") nextLevel = 0;
+    var _cf = Number(oldItem.consecutiveForgot) || 0;
+    var nextCF = result === "forgot" ? _cf + 1 : (result === "remembered" ? 0 : _cf);
+    updateManualWordStatus(item.word, REVIEW_RESULT_STATUS[result] || "uncertain");
+    upsertReviewWordData(item.word, {
+      reviewHistory: [...(oldItem.reviewHistory || []), { date: new Date().toISOString(), mode: "triage", result: result }],
+      reviewLevel: nextLevel,
+      nextReviewDate: addDaysISO(REVIEW_INTERVAL_DAYS[nextLevel]),
+      consecutiveForgot: nextCF,
+    });
+    setQuickReviewStats(function(prev){ return { ...prev, [result]: (prev[result] || 0) + 1 }; });
+    var _requeued = maybeRelearnSameSession(item, result);
+    var nIdx = quickReviewIdx + 1;
+    if (!_requeued && nIdx >= quickReviewQueue.length) { setScreen("quick_review_done"); return; }
+    setQuickReviewIdx(nIdx);
+    setQuickReviewFlipped(false);
+    setQuickReviewTyped("");
+  };
+
   var markQuickReview = function(result) {
     var item = quickReviewQueue[quickReviewIdx];
     if (!item) return;
@@ -7140,8 +7265,10 @@ export default function App() {
 
     setQuickReviewStats(function(prev){ return { ...prev, [result]: (prev[result] || 0) + 1 }; });
 
+    // 不会的当场再练一遍，不拖到下次(创始人 2026-08-16)
+    var _requeuedQ = maybeRelearnSameSession(item, result);
     var nextIdx = quickReviewIdx + 1;
-    if (nextIdx >= quickReviewQueue.length) {
+    if (!_requeuedQ && nextIdx >= quickReviewQueue.length) {
       setScreen("quick_review_done");
       return;
     }
@@ -7571,11 +7698,36 @@ export default function App() {
       <div style={S.root}><div className="vs-desktop-container" style={S.container}>
         <div style={S.topBar}><button style={S.backBtn} aria-label="退出返回 Vocab 主页" onClick={() => setScreen("setup")}>← 退出</button><div style={{fontSize:13,color:C.textSec}}>快速复习 {quickReviewIdx+1}/{quickReviewQueue.length}</div></div>
         <div style={{...S.card, textAlign:"center", padding:"30px 20px"}}>
-          <div style={S.tag}>✍️ 默写复习</div>
+          <div style={S.tag}>{quickReviewMode === "triage" ? "⚡ 快速重测（清积压）" : "✍️ 默写复习"}</div>
           <h2 style={{fontSize:34,margin:"8px 0 4px"}}>{qr?.word}</h2>
           {!!qr?.phonetic && <div style={{fontSize:14,color:C.textSec,marginBottom:16}}>{qr.phonetic}</div>}
 
-          {!quickReviewFlipped ? (
+          {quickReviewMode === "triage" ? (
+            /* 清积压：识别式自评(3 秒一个)。不要求默写——1200 个全默写会疲劳到乱猜，
+               反而毁掉记忆质量(Codex 复核)。她自己判断认不认识，认识的直接升档跳出积压。 */
+            <>
+              {!quickReviewFlipped ? (
+                <>
+                  <div style={{fontSize:13,color:C.textSec,marginBottom:14}}>这个词你还认识吗？先想一下意思，再翻开对答案</div>
+                  <button style={{...S.primaryBtn,width:"100%",justifyContent:"center"}}
+                    onClick={() => { setQuickReviewFlipped(true); ensureQuickReviewMeaning(quickReviewIdx); }}>🔄 翻开看意思</button>
+                </>
+              ) : (
+                <>
+                  <div style={{padding:"14px 16px",background:C.bg,borderRadius:12,marginBottom:14,fontSize:16,color:C.text,minHeight:24}}>
+                    {quickReviewMeaningLoadingWord === qr?.word ? "查询中…" : (qr?.meaning || "（暂无释义）")}
+                  </div>
+                  <div style={{fontSize:13,color:C.textSec,marginBottom:10}}>刚才想的对上了吗？</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                    <button style={{...S.primaryBtn,background:C.green,borderColor:C.green,justifyContent:"center",padding:"12px 6px"}} onClick={() => markTriage("remembered")}>🟢 认识</button>
+                    <button style={{...S.primaryBtn,background:C.gold,borderColor:C.gold,justifyContent:"center",padding:"12px 6px"}} onClick={() => markTriage("fuzzy")}>🟡 模糊</button>
+                    <button style={{...S.primaryBtn,background:C.red,borderColor:C.red,justifyContent:"center",padding:"12px 6px"}} onClick={() => markTriage("forgot")}>🔴 不认识</button>
+                  </div>
+                  <div style={{marginTop:10,fontSize:12,color:C.textSec}}>🟡🔴 会当场再练一遍，不拖到下次</div>
+                </>
+              )}
+            </>
+          ) : !quickReviewFlipped ? (
             /* 手填回忆：先打中文（空框逼出真实回忆，没法排除法），再对答案 */
             <>
               <div style={{fontSize:13,color:C.textSec,marginBottom:10}}>这个词中文什么意思？先自己默写出来 👇</div>
@@ -7915,13 +8067,22 @@ export default function App() {
           // 复习=第二个必做项(创始人 2026-08-16)：只要今天份额没做完就一直摆在这里
           var _revRemain = Math.max(0, (dailyPlan.reviewTarget || 0) - (dailyPlan.quickReviewedToday || 0));
           var _backlogNote = dailyPlan.overdueCount > 0
-            ? "（欠账 " + dailyPlan.overdueCount + " 个，分批还清，今天这份 " + dailyPlan.reviewTarget + " 个）"
+            ? "（另有 " + dailyPlan.overdueCount + " 个积压，下一步用快速重测清）"
             : "";
           stepDef = {
             id:"review", icon:"✍️", title:"默写复习 · 今日必做", color:C.teal,
             sub: "学过的词不复习会忘光 · 还差 " + _revRemain + " 个" + _backlogNote,
             cta: (dailyPlan.quickReviewedToday > 0 ? "▶ 继续默写 · 还差 " + _revRemain + " 词" : "▶ 开始默写 · " + _revRemain + " 词"),
             onClick: function(){ startQuickReview("due"); },
+          };
+        } else if (!dailyPlan.triageDone) {
+          // 清欠账 = 第三个必做项：快速重测(3 秒一个)，不是手写默写，压力小得多
+          var _tgRemain = Math.max(0, (dailyPlan.triageTarget || 0) - (dailyPlan.triagedToday || 0));
+          stepDef = {
+            id:"triage", icon:"⚡", title:"清积压 · 今日必做", color:C.gold,
+            sub: "快速过一遍(认识就点认识，3 秒一个) · 还差 " + _tgRemain + " 个 · 共积压 " + dailyPlan.overdueCount + " 个",
+            cta: "▶ 快速重测 · " + _tgRemain + " 词",
+            onClick: function(){ startQuickReview("triage"); },
           };
         } else if (!dailyPlan.deepLocked && dailyPlan.deepPoolSize > 0 && !dailyPlan.deepDone) {
           // 报"今日可清数"(受日上限截断)，与 startDeepReview 实际入队一致，不虚高承诺
@@ -7957,7 +8118,8 @@ export default function App() {
         // 攻克"锁住"绝不再显示为"已完成✓"(原 done:deepDone||deepLocked 是把锁当完成的反语义)。
         var stepDefs = [
           { id:"new",    icon:"📖", label:"新词", done:dailyPlan.newDone, current:stepDef.id === "new", locked:false },
-          { id:"review", icon:"🔄", label:"复习", done:dailyPlan.quickDone, current:stepDef.id === "review", locked:false },
+          { id:"review", icon:"✍️", label:"复习", done:dailyPlan.reviewDone, current:stepDef.id === "review", locked:false },
+          { id:"triage", icon:"⚡", label:"清积压", done:dailyPlan.triageDone, current:stepDef.id === "triage", locked:false },
           { id:"deep",   icon:"🎯", label:"攻克", done:dailyPlan.deepDone, current:stepDef.id === "deep", locked:dailyPlan.deepLocked && !dailyPlan.deepDone },
         ];
 
@@ -8678,6 +8840,7 @@ export default function App() {
         var planView = getStudyPlanPrediction();
         var phaseView = getPhaseExecutionSnapshot();
         var streakInfo = getStudyStreak();
+        var last7 = getLast7DaysSummary();
         // 统一 section header 样式
         var sectionHeader = function(text) {
           return <div style={{
@@ -8687,6 +8850,35 @@ export default function App() {
           }}>{text}</div>;
         };
         return <div style={S.setupCard}>
+
+          {/* ───── 📅 最近 7 天（家长可回看的完成记录）───── */}
+          {sectionHeader("📅 最近 7 天")}
+          <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:14,padding:"14px 16px",marginBottom:8}}>
+            <div style={{display:"flex",gap:14,marginBottom:12,fontSize:13,color:C.textSec,flexWrap:"wrap"}}>
+              <span>学习 <strong style={{...NUM,color:C.accent,fontSize:16}}>{last7.activeDays}</strong>/7 天</span>
+              <span>新词 <strong style={{...NUM,color:C.accent,fontSize:16}}>{last7.totalNew}</strong> 个</span>
+              <span>复习 <strong style={{...NUM,color:C.teal,fontSize:16}}>{last7.totalReview}</strong> 个</span>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {last7.days.map(function(d){
+                var hasActivity = d.newWords > 0 || d.reviews > 0;
+                return (
+                  <div key={d.key} style={{display:"flex",alignItems:"center",gap:10,fontSize:13,
+                    padding:"6px 10px",borderRadius:8,
+                    background: d.isToday ? C.accentLight : (hasActivity ? C.bg : "transparent"),
+                    opacity: hasActivity ? 1 : 0.55}}>
+                    <span style={{width:52,color:C.textSec,flexShrink:0}}>{d.label} 周{d.weekday}</span>
+                    <span style={{width:70,flexShrink:0}}>新词 <strong style={{...NUM,color:d.newWords>0?C.accent:C.textSec}}>{d.newWords}</strong></span>
+                    <span style={{width:70,flexShrink:0}}>复习 <strong style={{...NUM,color:d.reviews>0?C.teal:C.textSec}}>{d.reviews}</strong></span>
+                    <span style={{flex:1,textAlign:"right"}}>{hasActivity ? "✅" : "—"}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{marginTop:10,fontSize:11,color:C.textSec,lineHeight:1.6}}>
+              给家长看的：每天投入了多少。只记数量，不记谁错了哪个词。
+            </div>
+          </div>
 
           {/* ───── 📊 这周表现（数据展示）───── */}
           {sectionHeader("📊 这周表现")}
