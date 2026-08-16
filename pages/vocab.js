@@ -13,6 +13,7 @@ import { getSyncClient } from '../lib/sync-client-singleton'; // 方案1: vocab+
 import { backupOnBoot, clearBackups } from '../lib/local-backup'; // sync 重构兜底: sync 前快照 blob + 登出清备份
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, sanitizeResumeSession, getLocalDateKey, isoToLocalDateKey } from '../lib/learnStatus';
+import { shuffleClozeOptions } from '../lib/clozeOptions';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
 import { checkMorphFill, checkDuplicateOptions } from '../lib/morphFillSanitize';
 import { hasTypedAnswer, hasUsableMeaning } from '../lib/typedRecall';
@@ -1222,6 +1223,10 @@ var buildClozePrompt = (words) => {
     "\n   - 1 个【近义但语境不贴】（测精准理解）" +
     "\n   - 1 个【完全无关的高频词】（送分项，给基础分）" +
     "\n7. passage 必须有上下文线索（前后句暗示空格的语义），不是纯孤立填空" +
+    "\n8. 🎲【答案位置必须分散】正确答案在 options 数组里的位置要随机散开，" +
+    "\n   不要每题都放第 1 个。5 道题的答案下标应尽量覆盖 0/1/2/3 不同位置" +
+    "\n   （例如依次是第 3、第 1、第 4、第 2、第 4 个）。" +
+    "\n   ❌ 反面：5 题答案全在 options[0] —— 学生不读短文、每题选 A 就能全对，阅读理解失去意义。" +
     "\n" +
     "\n【叙事质感】不要写'Willow learned X today'流水账。要写：" +
     "\n- 一个完整的小故事（去打球/参加活动/朋友冲突/项目挑战等）" +
@@ -1232,7 +1237,7 @@ var buildClozePrompt = (words) => {
     "\n（_____(1) 暗示某种性格/打法，前文 'predictable' 给线索）" +
     "\n" +
     "\nIMPORTANT: 直接输出 JSON：\n" +
-    '{"title":"短文标题（≤20 字英文，吸引人）","passage":"150-180 词叙事性英文短文，含 _____(1) 到 _____(5)","questions":[{"id":1,"blank":"_____(1)","options":["选项1","选项2","选项3","选项4"],"answer":"正确词","explanation":"为什么选这个词 + 干扰项各自偏在哪"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
+    '{"title":"短文标题（≤20 字英文，吸引人）","passage":"150-180 词叙事性英文短文，含 _____(1) 到 _____(5)","questions":[{"id":1,"blank":"_____(1)","options":["干扰项","干扰项","正确词","干扰项"],"answer":"正确词","explanation":"为什么选这个词 + 干扰项各自偏在哪"},{"id":2,"blank":"_____(2)","options":["..."],"answer":"...","explanation":"..."},{"id":3,"blank":"_____(3)","options":["..."],"answer":"...","explanation":"..."},{"id":4,"blank":"_____(4)","options":["..."],"answer":"...","explanation":"..."},{"id":5,"blank":"_____(5)","options":["..."],"answer":"...","explanation":"..."}]}';
 };
 
 var buildReviewTeachPrompt = (word, learned, reviewCount) => {
@@ -6296,6 +6301,9 @@ export default function App() {
         // 即使是缓存也要校验（预取时可能没校验）
         var cacheErr = validateCloze(cachedCloze, newLearned.slice(-5));
         if (!cacheErr) {
+          // 打乱选项顺序（LLM 惯性把正解放第一个 → 闭眼选 A 就能过关）。
+          // 必须在 validateCloze 之后：它会把 q.answer 回写成选项原文。
+          shuffleClozeOptions(cachedCloze);
           setClozeData(cachedCloze); setClozeAnswers({}); setClozeSubmitted(false); resetClozeGate(); setPhase("cloze"); return;
         } else {
           console.warn('[cloze] cached invalid:', cacheErr);
@@ -6324,6 +6332,7 @@ export default function App() {
           console.warn('[cloze] attempt ' + (attempt+1) + ' rejected:', validationErr);
         }
         if (!validationErr) {
+          shuffleClozeOptions(parsed); // 同上：打乱选项，杜绝「答案总在第一个」
           setClozeData(parsed); setClozeAnswers({}); setClozeSubmitted(false); resetClozeGate();
         } else {
           // 校验始终失败 → 跳过阅读挑战，继续学下个词（用户友好）
