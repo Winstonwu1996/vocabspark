@@ -7905,9 +7905,7 @@ export default function App() {
         <meta property="og:type" content="website" />
         <meta property="og:image" content="https://knowulearning.com/og-cover.png" />
         <meta name="twitter:card" content="summary_large_image" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+        {/* 字体已自托管，见 pages/_document.js 的 FONT_FACE_CSS（原 Google Fonts 外链在大陆不可达且阻塞渲染）*/}
       </Head>
       <div className="vs-desktop-container" style={S.container}>
 
@@ -9722,9 +9720,7 @@ export default function App() {
       <Head>
         <title>Vocab by Know U. — {currentWord || "学习中"}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+        {/* 字体已自托管，见 pages/_document.js 的 FONT_FACE_CSS（原 Google Fonts 外链在大陆不可达且阻塞渲染）*/}
       </Head>
       <div className="vs-desktop-container" style={S.container}>
       <div ref={topRef} />
