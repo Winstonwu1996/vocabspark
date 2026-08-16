@@ -3557,9 +3557,13 @@ export default function App() {
         try { stored = JSON.parse(localStorage.getItem(DAILY_NEW_QUOTA_KEY) || '{}'); } catch(e) { stored = {}; }
       }
       if (stored.date === today) {
+        // quota 始终跟随【当前设置】，不用当天快照值：
+        // 修实测 bug —— dailyNewWords 的 React 初始值是 10、真实设置(30)是异步读出来的，
+        // 若当天首次快照抢在设置加载之前，这一天的额度就被冻结成 10，读到 30 也没用
+        // (Willow 设置 30 却出现 quota:10 的日子)。改为每次现算，设置到位后自动自愈。
         return {
           date: today,
-          quota: Number.isFinite(stored.quota) ? stored.quota : (dailyNewWords || 20),
+          quota: dailyNewWords || 20,
           consumed: Number.isFinite(stored.consumed) ? stored.consumed : 0,
         };
       }
