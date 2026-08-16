@@ -27,6 +27,21 @@ const nextConfig = {
       { source: '/atlas-lab', destination: '/atlas-lab/byzantine-rise', permanent: false },
     ];
   },
+  async headers() {
+    return [
+      {
+        // 自托管字体永久缓存。Next 对 public/ 的默认头是 max-age=0, must-revalidate ——
+        // 那会让**每次打开页面**都为 4 个字体文件各发一次条件请求去问"变了没"。
+        // 对大陆用户（要跨太平洋问美国服务器）这 4 个来回是实打实的延迟，
+        // 会把自托管省下来的时间又还回去。
+        // 文件名带 Google 的内容哈希，内容变了文件名一定变，所以 immutable 是安全的。
+        source: '/fonts/:file*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+    ];
+  },
   // Atlas 模块的 historical-basemaps GeoJSON（32MB / 23 文件）只在 build 时被
   // lib/atlas-renderer.js 读取，运行时不需要。从所有 Vercel function bundle 排除，
   // 避免逼近 50MB unzipped 上限。
