@@ -3239,6 +3239,7 @@ export default function App() {
   var [otpError, setOtpError] = useState('');
   var [todayCount, setTodayCount] = useState(0);
   var [showLimitModal, setShowLimitModal] = useState(false);
+  var _reviewNagShownRef = useRef(""); // 每天最多提醒一次(按日期去重)，避免反复弹
 
   // A11y：ESC 关闭最常用的两个 modal（键盘用户）
   useEffect(function() {
@@ -5903,6 +5904,24 @@ export default function App() {
     var rawWords = wordInput.trim().split(/[\n,，、]+/).map(function(w) { return w.trim().toLowerCase(); }).filter(Boolean);
     if (!rawWords.length) { setError("请输入至少一个单词"); return; }
     trackFunnel('learning_start', { word_count: rawWords.length, has_profile: !!(profile||'').trim(), is_resume: typeof resumeIdx === 'number', tier: userTier });
+
+    // 复习是每日必做：直接开学新词时先提醒(创始人 2026-08-16)。不强堵，但必须让她看见。
+    // 只在从头开始时问(resume 继续学不打断)。
+    if (typeof resumeIdx !== "number" || resumeIdx === 0) {
+      var _rp = getDailyPlan();
+      if (!_rp.reviewDone && (_rp.reviewTarget || 0) > 0) {
+        var _rRemain = Math.max(0, (_rp.reviewTarget || 0) - (_rp.quickReviewedToday || 0));
+        var _goReview = await confirmAsync({
+          title: "⏰ 今天的复习还没做完",
+          body: "还差 " + _rRemain + " 个到期词没复习" +
+                (_rp.reviewBacklog > _rp.reviewTarget ? "（一共积压 " + _rp.reviewBacklog + " 个）" : "") +
+                "。\n\n学过的词不复习会忘光——先花几分钟复习，再学新词效果最好。",
+          confirmText: "先去复习",
+          cancelText: "还是先学新词",
+        });
+        if (_goReview) { startQuickReview("due"); return; }
+      }
+    }
     if (!profile.trim()) {
       var continueAnyway = await confirmAsync({
         title: "还没填学习画像",
@@ -6519,6 +6538,33 @@ export default function App() {
     });
   }, [screen, userTier, idx, phase]); // 加 phase：从 batch_loading 切到 guess 时重跑，启动 silent chain
 
+  /* 复习欠账的"日还款额"：首次见到欠账时锚定 = ceil(初始欠账 / BACKLOG_CATCHUP_DAYS)，
+   * 之后保持不变，正好在这个天数内还清（每天现算 欠账/N 会因除数不变而拖长约 50%）。
+   * 欠账清零 → 计划作废，下次再有欠账重新锚定。只存本地：这是节奏辅助、不是学习数据，
+   * 丢了最多重新锚定一次（略微延长 horizon），不影响任何进度。
+   * ★ 还款周期（创始人 2026-08-16 定 45 天：30 天=71/天太重，45 天≈58/天更能天天完成）。
+   *   想调快/调慢只改这一个数。 */
+  var BACKLOG_CATCHUP_DAYS = 45;
+  var REVIEW_CATCHUP_KEY = "vocabspark_review_catchup_v1";
+  var getReviewCatchupSlice = function(overdueNow) {
+    if (!overdueNow || overdueNow <= 0) {
+      try { if (typeof window !== "undefined") localStorage.removeItem(REVIEW_CATCHUP_KEY); } catch (e) {}
+      return 0;
+    }
+    try {
+      if (typeof window === "undefined") return Math.ceil(overdueNow / BACKLOG_CATCHUP_DAYS);
+      var raw = localStorage.getItem(REVIEW_CATCHUP_KEY);
+      var plan = raw ? JSON.parse(raw) : null;
+      // 欠账比锚定时更多(又攒了新欠账) → 重新锚定，保证仍是 30 天内清完
+      if (plan && Number.isFinite(plan.slice) && plan.slice > 0 && Number.isFinite(plan.anchorOverdue) && overdueNow <= plan.anchorOverdue) {
+        return plan.slice;
+      }
+      var slice = Math.max(1, Math.ceil(overdueNow / BACKLOG_CATCHUP_DAYS));
+      localStorage.setItem(REVIEW_CATCHUP_KEY, JSON.stringify({ anchorOverdue: overdueNow, slice: slice, anchoredAt: new Date().toISOString() }));
+      return slice;
+    } catch (e) { return Math.max(1, Math.ceil(overdueNow / BACKLOG_CATCHUP_DAYS)); }
+  };
+
   var getDailyPlan = function() {
     var words = parseWordsFromInput(wordInput);
     var todayKey = getLocalDateKey();
@@ -6529,6 +6575,14 @@ export default function App() {
       var d = reviewWordData[w] || {};
       return isDueDate(d.nextReviewDate);
     });
+    // 区分"今天刚到期"和"历史欠账"：欠账按 30 天摊平还清(创始人 2026-08-16)
+    var _todayStart = (function(){ var n = new Date(); n.setHours(0,0,0,0); return n.getTime(); })();
+    var overdueCount = toReview.filter(function(w) {
+      var d = reviewWordData[w] || {};
+      var t = d.nextReviewDate ? new Date(d.nextReviewDate).getTime() : NaN;
+      return Number.isFinite(t) && t < _todayStart;
+    }).length;
+    var dueTodayCount = toReview.length - overdueCount;
 
     var deepPool = words.filter(function(w, i) {
       var s = getWordStatus(w, i, words);
@@ -6602,12 +6656,25 @@ export default function App() {
     var deepMin = deepToday.length * 2;
     var newMin = Math.ceil(newWordsToday.length * 1.5);
 
+    // ── 复习升级为【每日必做】+ 欠账 30 天还清(创始人 2026-08-16)──
+    // 背景：实测积压 1222 个到期词(最早逾期近 2 个月)——复习当"加分项"必然被跳过，
+    // 学再多新词都是漏水。
+    // 份额 = 今天刚到期的(当天清掉，不许滚成新欠账) + 固定日还款额(欠账 ÷ 30)。
+    // ★ 日还款额必须【锚定】：若每天现算 欠账/30，除数不变而欠账递减 → 拖到 45 天才清完。
+    //   所以首次见到欠账时锚定 ceil(初始欠账/30)，之后每天还这么多，正好 30 天清零。
+    var catchupSlice = getReviewCatchupSlice(overdueCount);
+    var reviewTarget = Math.min(
+      toReview.length,
+      dueTodayCount + Math.min(catchupSlice, overdueCount)
+    );
+    var reviewDone = reviewTarget === 0 || quickReviewedToday >= reviewTarget;
+
     var quickDone = quickDoneToday || toReview.length === 0;
     var deepLocked = !quickDone;
     var deepDone = !deepLocked && (deepToday.length === 0 || deepUsedToday >= deepLimit);
-    // 唯一真理源：今日是否完成 = 仅看新词是否达标(复习/攻克永远是 bonus，绝不冒充完成)
+    // 完成 = 新词达标 **且** 复习达标(攻克仍是 bonus)
     var newDone = effectiveDailyTarget > 0 && newLearnedToday >= effectiveDailyTarget;
-    var dayComplete = newDone;
+    var dayComplete = newDone && reviewDone;
 
     return {
       toReview: toReview,
@@ -6616,6 +6683,11 @@ export default function App() {
       quickDone: quickDone,
       deepDone: deepDone,
       newDone: newDone,
+      reviewTarget: reviewTarget,
+      reviewDone: reviewDone,
+      reviewBacklog: toReview.length,
+      overdueCount: overdueCount,
+      dueTodayCount: dueTodayCount,
       dayComplete: dayComplete,
       effectiveDailyTarget: effectiveDailyTarget,
       capReason: capReason,
@@ -6916,6 +6988,14 @@ export default function App() {
       return;
     }
 
+    // 按今日份额截断("due"=每日必做那条路径)：欠账 1200+ 时不截断会显示 1/1222，
+    // 看不到头 = 直接放弃。只给今天该做的那批，做完就是完成。
+    if (mode === "due") {
+      var _plan = getDailyPlan();
+      var _todayQuota = Math.max(0, (_plan.reviewTarget || 0) - (_plan.quickReviewedToday || 0));
+      if (_todayQuota > 0 && queue.length > _todayQuota) queue = queue.slice(0, _todayQuota);
+    }
+
     _meaningStatusRef.current = {}; // 新一轮复习：清释义取数状态，让上轮临时失败的词本轮可重试 (Codex P3)
     setQuickReviewQueue(queue);
     setQuickReviewIdx(0);
@@ -6924,6 +7004,25 @@ export default function App() {
     setQuickReviewStats({ remembered:0, fuzzy:0, forgot:0 });
     setScreen("quick_review");
   };
+
+  // 新词学完但复习没做完 → 醒目弹框提醒(创始人 2026-08-16)。每天最多一次，不反复骚扰。
+  useEffect(function() {
+    if (phase !== "done") return;
+    var todayKey = getLocalDateKey();
+    if (_reviewNagShownRef.current === todayKey) return;
+    var plan = getDailyPlan();
+    if (plan.reviewDone || (plan.reviewTarget || 0) <= 0) return;
+    _reviewNagShownRef.current = todayKey;
+    var remain = Math.max(0, (plan.reviewTarget || 0) - (plan.quickReviewedToday || 0));
+    confirmAsync({
+      title: "⚠️ 今日任务还没全部完成",
+      body: "新词学完了 👏 但【复习】还差 " + remain + " 个" +
+            (plan.reviewBacklog > plan.reviewTarget ? "（一共积压 " + plan.reviewBacklog + " 个到期词）" : "") +
+            "。\n\n新词是「存进去」，复习是「不让它漏出去」——今天只学不复习，等于白学一半。",
+      confirmText: "现在就去复习",
+      cancelText: "待会儿再说",
+    }).then(function(ok) { if (ok) startQuickReview("due"); });
+  }, [phase]);
 
   // 翻转时若 meaning 缺失，懒加载一次中文释义并持久化
   var ensureQuickReviewMeaning = async function(idx) {
@@ -7785,7 +7884,7 @@ export default function App() {
         }
 
         // 计算"当前应该做哪一步"
-        // 新词=今日唯一必做，永远第一优先；复习/攻克是 bonus。完成判定只看 newDone(dayComplete)。
+        // 今日必做 = 新词 + 复习(2026-08-16 起复习也是硬任务)；攻克仍是 bonus。dayComplete = newDone && reviewDone。
         var _newRemain = Math.max(0, (dailyPlan.effectiveDailyTarget || 0) - (dailyPlan.newLearnedToday || 0));
         var stepDef;
         if (dailyPlan.capReason === "noWords" && !dailyPlan.newDone) {
@@ -7803,11 +7902,16 @@ export default function App() {
             cta: (dailyPlan.newLearnedToday > 0 ? "▶ 继续学新词 · 还差 " + _newRemain + " 词" : "▶ 开始学新词 · " + _newRemain + " 词"),
             onClick: function(){ startLearning(0); },
           };
-        } else if (!dailyPlan.quickDone && dailyPlan.toReview.length > 0) {
+        } else if (!dailyPlan.reviewDone) {
+          // 复习=第二个必做项(创始人 2026-08-16)：只要今天份额没做完就一直摆在这里
+          var _revRemain = Math.max(0, (dailyPlan.reviewTarget || 0) - (dailyPlan.quickReviewedToday || 0));
+          var _backlogNote = dailyPlan.overdueCount > 0
+            ? "（欠账 " + dailyPlan.overdueCount + " 个，分批还清，今天这份 " + dailyPlan.reviewTarget + " 个）"
+            : "";
           stepDef = {
-            id:"review", icon:"✍️", title:"默写复习", color:C.teal,
-            sub: "新词已达标👍 顺手默写到期词、巩固记忆 · " + dailyPlan.toReview.length + " 词",
-            cta: "▶ 开始默写 · " + dailyPlan.toReview.length + " 词",
+            id:"review", icon:"✍️", title:"默写复习 · 今日必做", color:C.teal,
+            sub: "学过的词不复习会忘光 · 还差 " + _revRemain + " 个" + _backlogNote,
+            cta: (dailyPlan.quickReviewedToday > 0 ? "▶ 继续默写 · 还差 " + _revRemain + " 词" : "▶ 开始默写 · " + _revRemain + " 词"),
             onClick: function(){ startQuickReview("due"); },
           };
         } else if (!dailyPlan.deepLocked && dailyPlan.deepPoolSize > 0 && !dailyPlan.deepDone) {
@@ -7820,10 +7924,12 @@ export default function App() {
             onClick: startDeepReview,
           };
         } else {
-          // 今日唯一必做(新词)已完成
+          // 两个必做(新词 + 复习)都已完成
           stepDef = {
-            id:"done", icon:"🎉", title:"今日新词完成！", color:C.green,
-            sub: "硬任务搞定～复习/攻克想加练随你，不练也行，明天见",
+            id:"done", icon:"🎉", title:"今日任务完成！", color:C.green,
+            sub: (dailyPlan.reviewBacklog > 0
+              ? "新词 + 复习都搞定👏 还想清积压(" + dailyPlan.reviewBacklog + " 个)就再来点，不练也行"
+              : "新词 + 复习都搞定👏 明天见"),
             cta: "🔄 再练一会（复习）",
             onClick: function(){ startQuickReview("all"); },
             allDone: true,
@@ -10246,10 +10352,22 @@ export default function App() {
         // Mark daily streak on completion — 只有真学了词才累计连续天数
         var _streakInfo = learned.length ? markStudyStreakToday() : getStudyStreak();
         var _streakDisp = getStreakDisplay(_streakInfo.streak);
+        var _donePlan = getDailyPlan();
+        var _revLeft = Math.max(0, (_donePlan.reviewTarget || 0) - (_donePlan.quickReviewedToday || 0));
         return <div style={{...S.card,textAlign:"center",padding:"40px 22px"}}>
-          <div style={{fontSize:56,marginBottom:12,animation:"bounce 0.6s ease-out"}}>🎉</div>
-          <h2 style={{fontSize:24,fontWeight:700,margin:"0 0 4px"}}>全部学完！</h2>
+          <div style={{fontSize:56,marginBottom:12,animation:"bounce 0.6s ease-out"}}>{_revLeft > 0 ? "📖" : "🎉"}</div>
+          {/* 复习没做完就不许说"全部学完"——那是假完成，会让孩子以为今天结束了 */}
+          <h2 style={{fontSize:24,fontWeight:700,margin:"0 0 4px"}}>{_revLeft > 0 ? "新词学完了！" : "今日任务全部完成！"}</h2>
           <p style={{color:C.textSec,marginBottom:4}}>{"今天学了 "+_doneWords.length+" 个词 · "+stats.xp+" XP"}</p>
+          {_revLeft > 0 && (
+            <div style={{margin:"10px 0 4px",padding:"12px 14px",background:C.redLight,border:"1.5px solid "+C.red+"55",borderRadius:12,textAlign:"left"}}>
+              <div style={{fontSize:14,fontWeight:800,color:C.red,marginBottom:4}}>⚠️ 今日任务还差一项：复习</div>
+              <div style={{fontSize:13,color:C.text,lineHeight:1.6,marginBottom:10}}>
+                还有 <strong style={{color:C.red}}>{_revLeft}</strong> 个到期词没复习。只学不复习，学过的会忘光。
+              </div>
+              <button style={{...S.primaryBtn,width:"100%",justifyContent:"center",background:C.red}} onClick={function(){ startQuickReview("due"); }}>✍️ 现在去复习 · {_revLeft} 词</button>
+            </div>
+          )}
           <p style={{color:C.accent,fontSize:13,fontWeight:600,marginBottom:_streakDisp ? 8 : 16}}>{encourageMsg}</p>
           {_streakDisp && (
             <div style={{background:"linear-gradient(135deg, "+C.goldLight+" 0%, "+C.accentLight+" 100%)",borderRadius:12,padding:"12px 16px",marginBottom:16,border:"1px solid "+C.gold+"44"}}>
