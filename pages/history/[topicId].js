@@ -849,7 +849,6 @@ export default function HistoryPage() {
         role: "ai",
         turn: turn.n,
         move: turn.move,
-        sourceRef: turn._sourceRef || null,
         content: injectPlaceholders(prewritten, profileFields),
         timestamp: new Date().toISOString(),
         _prewritten: true,
@@ -954,7 +953,6 @@ export default function HistoryPage() {
         role: "ai",
         turn: turn.n,
         move: turn.move,
-        sourceRef: turn._sourceRef || null,
         content: fullText,
         timestamp: new Date().toISOString(),
       };
@@ -993,7 +991,6 @@ export default function HistoryPage() {
           role: "ai",
           turn: turn.n,
           move: turn.move,
-          sourceRef: turn._sourceRef || null,
           content: injectPlaceholders(fallback, profileFields),
           timestamp: new Date().toISOString(),
           isFallback: true,
@@ -1836,21 +1833,6 @@ export default function HistoryPage() {
         .source-card .src-cn { font-size: 13px; line-height: 1.55; color: ${HC.text}; padding-top: 10px; border-top: 1px dashed ${HC.parchmentLo}; }
         .source-card .src-cn::before { content: "中文释义 · "; font-weight: 700; color: ${HC.pinStroke}; }
         .source-card .key-terms { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
-        /* 史料配图：先给画面，再给文字。说明文字必须如实交代时间地点。 */
-        .source-card .src-figure { margin: 0 0 12px; }
-        .source-card .src-figure img {
-          width: 100%; height: auto; display: block; border-radius: 8px;
-          border: 1px solid ${HC.parchmentLo}; background: ${HC.parchmentHi};
-        }
-        .source-card .src-figure figcaption {
-          font-size: 11.5px; line-height: 1.5; color: ${HC.textSec};
-          margin-top: 6px; padding-left: 2px;
-        }
-        /* 出处标注：国会图书馆要求 credit line；对教育产品本身也是可信度 */
-        .source-card .src-credit {
-          margin-top: 12px; padding-top: 8px; border-top: 1px dashed ${HC.parchmentLo};
-          font-size: 10.5px; line-height: 1.5; color: ${HC.textSec}; opacity: .85;
-        }
         .source-card .term { font-size: 11px; padding: 3px 8px; background: ${HC.parchmentHi}; border: 1px solid ${HC.parchmentLo}; border-radius: 999px; color: ${HC.ink}; cursor: help; }
         .source-card .term:hover { background: ${HC.accent}; color: #fff; }
 
