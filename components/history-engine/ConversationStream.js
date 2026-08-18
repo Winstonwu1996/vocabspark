@@ -581,23 +581,10 @@ function SourceBridgeCard(props) {
 }
 
 // ─── Source Card（史料卡） ─────────────────────────────────────────
-// 原文语言标签——`verbatim.lang` → 给孩子看的中文说明
-var VERBATIM_LANG_LABEL = { en: '英文', fr: '法文', la: '拉丁文', zh: '中文' };
-
 export function SourceCard(props) {
   var src = props.source;
   if (!src || !src.title) return null;   // 数据缺失时静默不渲染，绝不崩课堂
   var isEn = props.englishLevel === 'high';
-  // 逐字原文（可选）。有它才分两层显示：
-  //   ① 原文节选 —— 档案里真正写的那些字，一个都没改
-  //   ② 读得懂的版本 —— 为孩子改写过的
-  // 没有 verbatim 的老卡片保持原样单层显示（不动线上已有内容）。
-  //
-  // 为什么必须分开：孩子买的就是「看见档案真实的样子」。把改写过的句子
-  // 不加标记地摆成引文，孩子会当成原件——那正好毁掉这张卡唯一的价值。
-  var vb = src.verbatim && src.verbatim.text ? src.verbatim : null;
-  var readable = src.enSimplified || src.en;
-  var q = src.closingQuestion;
   return (
     <div className="source-card">
       <div className="src-title">📜 {src.title.cn} · {src.title.en}</div>
@@ -609,27 +596,8 @@ export function SourceCard(props) {
           <figcaption>{isEn ? src.image.captionEn : src.image.captionCn}</figcaption>
         </figure>
       )}
-      {vb && (
-        <div className="src-verbatim">
-          <div className="src-label">原文节选 · {VERBATIM_LANG_LABEL[vb.lang] || vb.lang} · 一个字没改</div>
-          <div className="src-vb-text">{vb.text}</div>
-          {vb.note && <div className="src-vb-note">{vb.note}</div>}
-        </div>
-      )}
-      {readable && (
-        <div className={vb ? "src-en has-verbatim" : "src-en"}>
-          {vb && <div className="src-label">读得懂的版本 · 我们改写过</div>}
-          {readable}
-        </div>
-      )}
-      {/* cnGloss / closingQuestion 里用 **…** 做重点。这里过 renderBilingualText，
-          否则星号会原样打在孩子屏幕上（对话泡泡一直走的是这条路，史料卡漏了）。 */}
-      <div className="src-cn">{renderBilingualText(src.cnGloss, { topic: props.topic })}</div>
-      {q && (q.cn || q.en) && (
-        <div className="src-question">
-          {renderBilingualText(isEn ? (q.en || q.cn) : (q.cn || q.en), { topic: props.topic })}
-        </div>
-      )}
+      <div className="src-en">{src.enSimplified || src.en}</div>
+      <div className="src-cn">{src.cnGloss}</div>
       {src.keyTerms && src.keyTerms.length > 0 && (
         <div className="key-terms">
           {src.keyTerms.map(function(t, i) {
@@ -803,7 +771,7 @@ export function ConversationStream(props) {
             }
           }
           var sourceCard = srcForEntry
-            ? <SourceCard key={"src-" + i} source={srcForEntry} englishLevel={props.englishLevel} topic={topic} />
+            ? <SourceCard key={"src-" + i} source={srcForEntry} englishLevel={props.englishLevel} />
             : null;
 
           if (entry.role === "user") {
