@@ -583,10 +583,19 @@ function SourceBridgeCard(props) {
 // ─── Source Card（史料卡） ─────────────────────────────────────────
 export function SourceCard(props) {
   var src = props.source;
-  if (!src) return null;
+  if (!src || !src.title) return null;   // 数据缺失时静默不渲染，绝不崩课堂
+  var isEn = props.englishLevel === 'high';
   return (
     <div className="source-card">
       <div className="src-title">📜 {src.title.cn} · {src.title.en}</div>
+      {src.image && (
+        <figure className="src-figure">
+          <img src={src.image.src} alt={isEn ? (src.image.altEn || '') : (src.image.altCn || '')} loading="lazy" />
+          {/* 说明文字要如实交代时间地点——摄影术 1839 年才有，1832 年的英国工厂
+              不可能有照片。拿晚 70 年、别国的照片来配图而不说明，就是在教错东西。 */}
+          <figcaption>{isEn ? src.image.captionEn : src.image.captionCn}</figcaption>
+        </figure>
+      )}
       <div className="src-en">{src.enSimplified || src.en}</div>
       <div className="src-cn">{src.cnGloss}</div>
       {src.keyTerms && src.keyTerms.length > 0 && (
@@ -600,6 +609,7 @@ export function SourceCard(props) {
           })}
         </div>
       )}
+      {src.credit && <div className="src-credit">{src.credit}</div>}
     </div>
   );
 }
@@ -748,11 +758,21 @@ export function ConversationStream(props) {
       {!allDone && <ProgressRail turns={turns} turnIndex={turnIndex} />}
       <div className="conv-stream" id="conv-anchor">
         {log.map(function(entry, i) {
-          // 史料卡（C7：source / source-tang-code 都触发）
-          var isSourceTurn = entry.role === "ai" && (entry.move === "source" || entry.move === "source-tang-code");
-          var sourceCard = isSourceTurn ? (
-            <SourceCard key={"src-" + i} source={topic.primarySources[0]} />
-          ) : null;
+          // 史料卡：优先按节点上的 sourceRef 精确取（新写法，可一课挂多份史料）；
+          // 兼容旧的 phase==='source' 触发（取第一份）。
+          // ⚠️ 原来直接写 topic.primarySources[0]，若某课有 source 节点却没配史料就会崩课堂。
+          var allSrc = (topic && topic.primarySources) || [];
+          var srcForEntry = null;
+          if (entry.role === "ai") {
+            if (entry.sourceRef) {
+              srcForEntry = allSrc.filter(function(s) { return s && s.id === entry.sourceRef; })[0] || null;
+            } else if (entry.move === "source" || entry.move === "source-tang-code") {
+              srcForEntry = allSrc[0] || null;
+            }
+          }
+          var sourceCard = srcForEntry
+            ? <SourceCard key={"src-" + i} source={srcForEntry} englishLevel={props.englishLevel} />
+            : null;
 
           if (entry.role === "user") {
             return (
