@@ -1835,6 +1835,18 @@ export default function HistoryPage() {
         .source-card .src-en { font-size: 14.5px; line-height: 1.6; color: ${HC.ink}; margin-bottom: 10px; font-style: italic; }
         .source-card .src-cn { font-size: 13px; line-height: 1.55; color: ${HC.text}; padding-top: 10px; border-top: 1px dashed ${HC.parchmentLo}; }
         .source-card .src-cn::before { content: "中文释义 · "; font-weight: 700; color: ${HC.pinStroke}; }
+        /* 原文 vs 改写：两层必须一眼分得开——原文用手稿感（衬线+浅底+左边线），
+           改写版保持正文体。孩子不该需要读标签才知道哪句是档案里真写的。 */
+        .source-card .src-label { font-size: 10.5px; letter-spacing: 1px; font-weight: 700; color: ${HC.pinStroke}; opacity: .85; margin-bottom: 5px; }
+        .source-card .src-verbatim { margin-bottom: 12px; padding: 10px 12px; background: ${HC.parchmentHi}; border-left: 3px solid ${HC.pinStroke}; border-radius: 4px; }
+        .source-card .src-vb-text { font-family: Georgia, "Times New Roman", serif; font-size: 14px; line-height: 1.72; color: ${HC.ink}; white-space: pre-line; }
+        .source-card .src-vb-note { margin-top: 7px; font-size: 11px; line-height: 1.5; color: ${HC.text}; opacity: .8; }
+        /* 结尾开放问句——史料卡不给结论，只把问题留给孩子 */
+        .source-card .src-question { margin-top: 12px; padding: 10px 12px; background: ${HC.parchmentHi}; border: 1px dashed ${HC.pinStroke}; border-radius: 6px; font-size: 13px; line-height: 1.6; color: ${HC.ink}; font-weight: 600; }
+        .source-card .src-question::before { content: "想一想 · "; color: ${HC.pinStroke}; }
+        /* 斜体是「这是引文」的通用信号 —— 有真原文块时必须把它让给原文，
+           否则孩子会把我们改写的那段当成档案原件。 */
+        .source-card .src-en.has-verbatim { font-style: normal; }
         .source-card .key-terms { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
         /* 史料配图：先给画面，再给文字。说明文字必须如实交代时间地点。 */
         .source-card .src-figure { margin: 0 0 12px; }
