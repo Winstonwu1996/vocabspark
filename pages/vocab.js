@@ -14,6 +14,7 @@ import { backupOnBoot, clearBackups } from '../lib/local-backup'; // sync 重构
 import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeWordsStable } from '../lib/progressMergePolicy';
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, sanitizeResumeSession, getLocalDateKey, isoToLocalDateKey } from '../lib/learnStatus';
 import { shuffleClozeOptions } from '../lib/clozeOptions';
+import { computeReviewProgress } from '../lib/reviewProgress';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
 import { checkMorphFill, checkDuplicateOptions } from '../lib/morphFillSanitize';
 import { hasTypedAnswer, hasUsableMeaning } from '../lib/typedRecall';
@@ -7696,9 +7697,26 @@ export default function App() {
     );
     return (
       <div style={S.root}><div className="vs-desktop-container" style={S.container}>
-        <div style={S.topBar}><button style={S.backBtn} aria-label="退出返回 Vocab 主页" onClick={() => setScreen("setup")}>← 退出</button><div style={{fontSize:13,color:C.textSec}}>快速复习 {quickReviewIdx+1}/{quickReviewQueue.length}</div></div>
+        <div style={S.topBar}><button style={S.backBtn} aria-label="退出返回 Vocab 主页" onClick={() => setScreen("setup")}>← 退出</button><div style={{fontSize:13,color:C.textSec}}>{(() => {
+          // 进度按「去重单词数」显示，重练不顶分母（梧桐反馈：标不熟→总数变多→感觉做不完）
+          var _p = computeReviewProgress(quickReviewQueue, quickReviewIdx);
+          return _p.isRelearn
+            ? "快速复习 " + _p.doneWords + "/" + _p.totalWords + " · 加练"
+            : "快速复习 " + _p.doneWords + "/" + _p.totalWords;
+        })()}</div></div>
         <div style={{...S.card, textAlign:"center", padding:"30px 20px"}}>
           <div style={S.tag}>{quickReviewMode === "triage" ? "⚡ 快速重测（清积压）" : "✍️ 默写复习"}</div>
+          {(() => {
+            // 「加练」明示：这是刚才标不熟的同一个词再练一遍，不是新增的任务。
+            // 不说清楚的话，学生会以为总量在涨（梧桐："似乎永远都做不完"）。
+            var _pp = computeReviewProgress(quickReviewQueue, quickReviewIdx);
+            if (!_pp.isRelearn) return null;
+            return (
+              <div style={{fontSize:12,color:C.gold,fontWeight:600,marginTop:6}}>
+                🔁 加练 · 刚才标了不熟，趁热再练一遍（不增加今天的复习量）
+              </div>
+            );
+          })()}
           <h2 style={{fontSize:34,margin:"8px 0 4px"}}>{qr?.word}</h2>
           {!!qr?.phonetic && <div style={{fontSize:14,color:C.textSec,marginBottom:16}}>{qr.phonetic}</div>}
 
