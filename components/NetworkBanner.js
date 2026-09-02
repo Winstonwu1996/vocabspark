@@ -3,6 +3,12 @@
    U3 慢网络降级：navigator.connection.effectiveType ∈ {slow-2g, 2g, 3g} → 提示加载会变慢
    U4 断网恢复：window online/offline 事件 → 顶部 banner 提示，重连后 3s 自动消失
 
+   ⚠️ navigator.onLine 只是「怀疑信号」，不是判据（Willow 实测：登录 Vocab 时误报
+   「网络已断开」，而服务端一切正常）。该 API 只反映「有没有连上某个网络接口」，
+   切 WiFi / iOS 前后台切换 / 锁屏唤醒 / 省电模式 / VPN 连断 都会虚报 offline；
+   且这些场景常常「只发 offline 不发 online」，原实现进 offline 后毫无自愈 → 红条永久卡住。
+   现在：收到 offline 先探一次服务器，真连不上才报；报了之后持续复检，网好自动消失。
+
    设计原则：
    - 仅做 UI 提示，不降级 prompt 内容（质量不动）
    - SSR 安全（typeof window !== 'undefined' 守护）
@@ -11,6 +17,7 @@
 */
 import { useState, useEffect } from 'react';
 import { C, FONT } from '../lib/theme';
+import { probeConnectivity, shouldReportOffline, recheckDelayMs } from '../lib/connectivity';
 
 // 5-5: 阈值收紧 — Chrome 经常把正常 4G/WiFi 误判成 'effectiveType=3g'
 //      (基于 RTT/带宽综合推算,不等于真的 3G 网络)。3g 误报率太高,顶部全屏
@@ -42,8 +49,11 @@ export default function NetworkBanner() {
 
     // 计算当前应该是什么状态（不含 recovering，那个是过渡态）
     // 5-5: 三层判定 — effectiveType 精确慢档 OR RTT 极高 OR downlink 极低
-    var computeStatus = function () {
-      if (!navigator.onLine) return 'offline';
+    // trustOnline=false 用于「探测已证实能连上」之后的回落：
+    // 此时 navigator.onLine 可能仍谎报 false（切 WiFi / iOS 前后台的已知行为），
+    // 不能让它把状态又打回 offline —— 那会让横幅在自愈后立刻复活并永久卡住。
+    var computeStatus = function (trustOnline) {
+      if (trustOnline !== false && !navigator.onLine) return 'offline';
       if (!conn) return 'ok';
       var effSlow = conn.effectiveType && SLOW_TYPES[conn.effectiveType];
       var rttHigh = typeof conn.rtt === 'number' && conn.rtt > RTT_THRESHOLD_MS;
@@ -53,22 +63,66 @@ export default function NetworkBanner() {
     };
 
     var recoverTimer = null;
+    var recheckTimer = null;
+    var recheckAttempt = 0;
+    var disposed = false;
 
-    var handleOffline = function () {
-      if (recoverTimer) { clearTimeout(recoverTimer); recoverTimer = null; }
-      setStatus('offline');
-      console.warn('[NetworkBanner] 网络已断开');
+    var clearRecheck = function () {
+      if (recheckTimer) { clearTimeout(recheckTimer); recheckTimer = null; }
+      recheckAttempt = 0;
     };
 
-    var handleOnline = function () {
-      // 从 offline 恢复 → 先显示 recovering 3s 再回到正常状态
+    // 断网期间持续复检：网一恢复就自动切 recovering，不需要用户刷新。
+    // （浏览器常常只发 offline 不发 online，光等事件会让红条永久卡住。）
+    var scheduleRecheck = function () {
+      if (disposed || recheckTimer) return;
+      var delay = recheckDelayMs(recheckAttempt);
+      recheckAttempt += 1;
+      recheckTimer = setTimeout(async function () {
+        recheckTimer = null;
+        if (disposed) return;
+        var okNow = await probeConnectivity();
+        console.warn('[NetworkBanner] 复检 #' + recheckAttempt + ' probe=' + okNow + ' onLine=' + navigator.onLine);
+        if (disposed) return;
+        if (okNow || navigator.onLine) {
+          clearRecheck();
+          markRecovered();
+        } else {
+          scheduleRecheck();
+        }
+      }, delay);
+    };
+
+    var markRecovered = function () {
       setStatus('recovering');
       console.warn('[NetworkBanner] 网络已恢复');
       if (recoverTimer) clearTimeout(recoverTimer);
       recoverTimer = setTimeout(function () {
-        setStatus(computeStatus());
+        if (disposed) return;
+        // 探测已证实可达 → 回落时不信 navigator.onLine，否则会被它打回 offline
+        setStatus(computeStatus(false));
         recoverTimer = null;
       }, 3000);
+    };
+
+    var handleOffline = async function () {
+      if (recoverTimer) { clearTimeout(recoverTimer); recoverTimer = null; }
+      // 先验证再报：navigator.onLine 误报率高，直接弹红条会吓到用户
+      var probeOk = await probeConnectivity();
+      if (disposed) return;
+      if (!shouldReportOffline(navigator.onLine, probeOk)) {
+        console.warn('[NetworkBanner] 收到 offline 事件但服务器可达，判定为误报，不提示');
+        return;
+      }
+      setStatus('offline');
+      console.warn('[NetworkBanner] 网络已断开（探测确认）');
+      clearRecheck();
+      scheduleRecheck();
+    };
+
+    var handleOnline = function () {
+      clearRecheck();
+      markRecovered();
     };
 
     var handleConnChange = function () {
@@ -83,10 +137,26 @@ export default function NetworkBanner() {
       });
     };
 
-    // 初始状态
-    setStatus(computeStatus());
-    if (computeStatus() === 'slow') {
-      console.warn('[NetworkBanner] 当前网络较慢：' + (conn && conn.effectiveType));
+    // 初始状态：navigator.onLine 为 false 时同样先探测，避免刚进页面就误报红条
+    var initial = computeStatus();
+    if (initial === 'offline') {
+      probeConnectivity().then(function (probeOk) {
+        if (disposed) return;
+        if (!shouldReportOffline(navigator.onLine, probeOk)) {
+          console.warn('[NetworkBanner] 启动时 onLine=false 但服务器可达，判定为误报');
+          // 同 markRecovered：探测已证实可达，回落时不信 navigator.onLine
+          setStatus(computeStatus(false));
+          return;
+        }
+        setStatus('offline');
+        clearRecheck();
+        scheduleRecheck();
+      });
+    } else {
+      setStatus(initial);
+      if (initial === 'slow') {
+        console.warn('[NetworkBanner] 当前网络较慢：' + (conn && conn.effectiveType));
+      }
     }
 
     window.addEventListener('offline', handleOffline);
@@ -96,12 +166,14 @@ export default function NetworkBanner() {
     }
 
     return function () {
+      disposed = true;
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('online', handleOnline);
       if (conn && typeof conn.removeEventListener === 'function') {
         conn.removeEventListener('change', handleConnChange);
       }
       if (recoverTimer) clearTimeout(recoverTimer);
+      if (recheckTimer) clearTimeout(recheckTimer);
     };
   }, []);
 
