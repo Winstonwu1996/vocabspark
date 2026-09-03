@@ -15,6 +15,7 @@ import { mergeReviewEntry, toTime, detectSyncGate, canonicalizeProgress, dedupeW
 import { decideNewWordStatus, selectUnlearnedWords, REVIEW_RESULT_STATUS, sanitizeResumeSession, getLocalDateKey, isoToLocalDateKey } from '../lib/learnStatus';
 import { shuffleClozeOptions } from '../lib/clozeOptions';
 import { computeReviewProgress } from '../lib/reviewProgress';
+import { readSavedDailyNewWords, isDailyTargetKnown, planNewWordCount, DEFAULT_DAILY_NEW_WORDS } from '../lib/dailyTarget';
 import { sanitizeGuessOptions } from '../lib/guessSanitize';
 import { checkMorphFill, checkDuplicateOptions } from '../lib/morphFillSanitize';
 import { hasTypedAnswer, hasUsableMeaning } from '../lib/typedRecall';
@@ -2965,7 +2966,23 @@ export default function App() {
   var [showTipJar, setShowTipJar] = useState(false);
   var [tipDismissed, setTipDismissed] = useState(false);
   var [showSettings, setShowSettings] = useState(false);
-  var [dailyNewWords, setDailyNewWords] = useState(10);
+  // 首屏【同步】读本机已存设置，消除「本机明明存着 30、却先闪一下 10」的窗口。
+  // （与 userTier 同一惰性初始化模式。读不到时才落到默认值。）
+  var [dailyNewWords, setDailyNewWords] = useState(function() {
+    if (typeof window !== "undefined") {
+      try {
+        var _saved = readSavedDailyNewWords(localStorage.getItem(SKEY));
+        if (_saved) return _saved;
+      } catch (e) {}
+    }
+    return DEFAULT_DAILY_NEW_WORDS;
+  });
+  // 「是否已经知道用户的真实每日目标」。已登录但本机无设置时为 false —— 
+  // 此时必须等云端到位，不能拿默认 10 把这一轮学习锁死（梧桐反馈的根因）。
+  var [cloudSettingsApplied, setCloudSettingsApplied] = useState(false);
+  // ref 镜像：等待循环在 async 函数里跑，读 state 会拿到陈旧闭包值，必须用 ref。
+  var cloudSettingsAppliedRef = useRef(false);
+  var dailyNewWordsRef = useRef(null);
   var [targetDate, setTargetDate] = useState("");
   var [deepReviewDailyCap, setDeepReviewDailyCap] = useState(8);
   var [profile, setProfile] = useState("");
@@ -3392,6 +3409,10 @@ export default function App() {
   }, [phase]);
   useEffect(function() { if (topRef.current) topRef.current.scrollIntoView({ behavior:"smooth", block:"start" }); }, [phase, idx]);
 
+  // 保持 cloudSettingsApplied / dailyNewWords 的 ref 镜像与 state 同步
+  useEffect(function() { cloudSettingsAppliedRef.current = cloudSettingsApplied; }, [cloudSettingsApplied]);
+  useEffect(function() { dailyNewWordsRef.current = dailyNewWords; }, [dailyNewWords]);
+
   // 保持 wordStatusMapRef 与 state 同步（外部来源 load/cloud/reset 设置 state 后兜底刷新 ref）
   useEffect(function() { wordStatusMapRef.current = wordStatusMap; }, [wordStatusMap]);
 
@@ -3548,11 +3569,13 @@ export default function App() {
     } catch(e) { return 0; }
   };
 
+  // 额度一律以 ref 里的最新目标为准：本函数会在 async 流程中被调用，
+  // 读闭包 state 会拿到「设置还没到位」时的旧值（梧桐 10 词 bug 的一环）。
   var getNewWordQuotaState = function() {
     try {
       var today = getLocalDateKey();
       if (typeof window === "undefined") {
-        return { date: today, quota: dailyNewWords || 20, consumed: 0 };
+        return { date: today, quota: (dailyNewWordsRef.current || dailyNewWords || 20), consumed: 0 };
       }
       // 优先从 SKEY 读（跨设备同步），fallback 到独立 key（向后兼容）
       var stored = null;
@@ -3571,13 +3594,13 @@ export default function App() {
         // (Willow 设置 30 却出现 quota:10 的日子)。改为每次现算，设置到位后自动自愈。
         return {
           date: today,
-          quota: dailyNewWords || 20,
+          quota: (dailyNewWordsRef.current || dailyNewWords || 20),
           consumed: Number.isFinite(stored.consumed) ? stored.consumed : 0,
         };
       }
-      return { date: today, quota: dailyNewWords || 20, consumed: 0 };
+      return { date: today, quota: (dailyNewWordsRef.current || dailyNewWords || 20), consumed: 0 };
     } catch (e) {
-      return { date: getLocalDateKey(), quota: dailyNewWords || 20, consumed: 0 };
+      return { date: getLocalDateKey(), quota: (dailyNewWordsRef.current || dailyNewWords || 20), consumed: 0 };
     }
   };
 
@@ -4225,6 +4248,9 @@ export default function App() {
     }
     if (d.settings?.studyGoal) setStudyGoal(d.settings.studyGoal);
     if (d.settings?.dailyNewWords) setDailyNewWords(d.settings.dailyNewWords);
+    // 云端设置已落地 → 每日目标从此「已知」，学习流可以放心定词数了。
+    // 注意：即便云端没有 settings（全新账号）也要置位，否则会永远卡在等待态。
+    setCloudSettingsApplied(true);
     if (d.settings?.deepReviewDailyCap) setDeepReviewDailyCap(d.settings.deepReviewDailyCap);
     // 关键修复：pet.totalFed 单调递增，本地较高时保留本地（防止 sync 没完成就关浏览器，
     // 下次拉云端旧数据覆盖本地新进度的回退 bug）
@@ -4554,11 +4580,15 @@ export default function App() {
           // 云端确认无数据（首次注册用户）→ 解锁 + 首次 push
           if (syncClientRef.current) syncClientRef.current.setCloudReady(true);
           syncToCloud();
+          setCloudSettingsApplied(true); // 确认无云端设置也算「已知」，否则学习流永远等下去
         }
       }
       _loadTier(u.id);
     } finally {
       _authInFlightRef.current = false;
+      // 云端拉取无论成功/失败/异常，都要解除「等设置」态：
+      // 失败时沿用本机已有值即可，绝不能因为等不到就把学习流永久卡住。
+      setCloudSettingsApplied(true);
     }
   };
 
@@ -6005,6 +6035,26 @@ export default function App() {
         setError("没有新词要学了 —— 词表里的词都已学过。可以去复习，或更换/添加词表。");
         return;
       }
+      // ⚠️ 定词数之前，先确认「真实每日目标」已经知道了。
+      // 已登录但本机没有设置（登出会清 SKEY）时，dailyNewWords 还停在默认值，
+      // 此刻切词就会把这一轮锁成 10 个（梧桐："每次登录都自动变成只学 10 个词"）。
+      // 这里等云端设置落地，最多等 4 秒；等不到就沿用现值继续，绝不把人卡死。
+      // （只在「已登录且本机无设置」这一罕见分支触发；云端通常 <1 秒就到。）
+      if (!isDailyTargetKnown({
+        saved: dailyNewWordsRef.current,
+        cloudApplied: cloudSettingsAppliedRef.current,
+        loggedIn: !!userRef.current,
+      })) {
+        setLoadingTip("正在读取你的学习设置…");
+        var _waitStart = Date.now();
+        while (!cloudSettingsAppliedRef.current && Date.now() - _waitStart < 4000) {
+          await new Promise(function(r) { setTimeout(r, 120); });
+        }
+        setLoadingTip("");
+      }
+      // 等待期间 setDailyNewWords 已经把真实值写进来了，但本函数闭包里的
+      // dailyNewWords 还是旧的 —— 必须走 ref 取最新值，否则等于白等。
+      var _dailyTarget = dailyNewWordsRef.current || dailyNewWords || 20;
       var remainingQuota = getRemainingNewWordQuota();
       // P1 硬限额：付费用户允许超额，free/guest 必须等明天或升级
       var _isPaidNow = userTier === "basic" || userTier === "pro";
@@ -6013,18 +6063,18 @@ export default function App() {
       var _dailyCap = _isPaidNow || _tierUnknown ? Infinity
         : (userRef.current ? DAILY_LIMIT_REGISTERED : DAILY_LIMIT_GUEST);
       // 用户可调 dailyNewWords，但 free 不能超过硬上限
-      var _effectiveDaily = Math.min(dailyNewWords || 20, _dailyCap);
+      var _effectiveDaily = Math.min(_dailyTarget, _dailyCap);
       if (remainingQuota <= 0) {
         if (_isPaidNow || _tierUnknown) {
           // 付费用户保留"超额学习"流程
           var goExtra = await confirmAsync({
             title: "今日目标已完成 🎉",
-            body: "今日 " + (dailyNewWords||20) + " 个新词目标已经达成。\n\n想继续超额学习吗？",
+            body: "今日 " + _dailyTarget + " 个新词目标已经达成。\n\n想继续超额学习吗？",
             confirmText: "继续学习",
             cancelText: "今天到这",
           });
           if (!goExtra) return;
-          words = unlearned.slice(0, dailyNewWords || 20);
+          words = unlearned.slice(0, _dailyTarget);
         } else {
           // free / guest 硬限：弹 LimitModal（注册引导 / Pro 引导）
           trackFunnel('daily_limit_hit', { source: 'start_learning', has_user: !!userRef.current, tier: userTier });
