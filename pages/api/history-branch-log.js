@@ -25,6 +25,8 @@
 //   CREATE INDEX idx_branchlog_topic ON history_branch_log(topic_id);
 //   CREATE INDEX idx_branchlog_caution ON history_branch_log(caution_flagged);
 //   CREATE INDEX idx_branchlog_created_at ON history_branch_log(created_at DESC);
+//   ALTER TABLE history_branch_log ENABLE ROW LEVEL SECURITY;
+//   GRANT INSERT ON history_branch_log TO service_role;  -- 2026-10-30 起新表不再自动授权；复盘走 SQL editor；须配 SUPABASE_SERVICE_ROLE_KEY，回退 anon key 会被拒
 //
 // 表存在时本端点会自动写；不存在则只 console.log。
 // ──────────────────────────────────────────────────────────────────────────────

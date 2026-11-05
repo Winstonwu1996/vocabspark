@@ -331,6 +331,10 @@ var doSave = async (d) => {
 6. **Supabase Free tier 没 PITR/backup** → 全靠应用层做快照（已实现 L2）
 7. **Cloudflare proxied DNS 阻挡 Vercel SSL 验证** → 子域必须 DNS only（**当前域在 Namecheap 不涉及，但若未来迁 CF 注意**）
 8. **Namecheap CNAME 末尾要带点** → `cname.vercel-dns.com.` 而非 `cname.vercel-dns.com`（Namecheap UI 会自动补，但手动复制粘贴时容易丢）
+9. **public 下新建的表 / 序列默认零授权**（Supabase 2026-10-30 改规则；本项目 2026-11-04 主动 revoke 了 postgres 的 default privileges——这里所有表属主都是 postgres；supabase_admin 的默认授权改不了，也没变）→ 建表脚本必须同时写 RLS、policy、只给调用方用得着的 GRANT，否则 PostgREST 报 `42501 permission denied`。老表不受影响。
+   - **函数例外**：Postgres 内置默认给新函数 `EXECUTE TO PUBLIC`，按 schema 的 revoke 去不掉（[官方文档](https://www.postgresql.org/docs/17/sql-alterdefaultprivileges.html)明写；Supabase 给的第 4 条命令因此是空操作）。没做全局 revoke，因为会波及所有 schema 以后由 postgres 建的函数（含扩展）。→ 每个新函数自己写 `revoke execute on function ... from public, anon, authenticated;` 再按需 grant，SECURITY DEFINER 函数尤其要。
+   - 核对：`select pg_get_userbyid(defaclrole), defaclobjtype, defaclacl from pg_default_acl where defaclnamespace = 'public'::regnamespace;`（postgres 那三行不该再出现 anon / authenticated / service_role）
+   - 回滚（不建议）：`alter default privileges for role postgres in schema public grant all on tables to anon, authenticated, service_role;`，`on sequences`、`on functions` 各同样跑一遍
 
 ---
 

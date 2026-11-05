@@ -101,6 +101,9 @@ CREATE TABLE parent_email_log (
 );
 
 CREATE INDEX idx_parent_email_log_user ON parent_email_log(user_id, sent_at DESC);
+ALTER TABLE parent_email_log ENABLE ROW LEVEL SECURITY;
+-- 2026-10-30 起新表不再自动授权；只有服务端（service_role）写日志、改投递状态、读失败记录重试（lib/email.js）
+GRANT SELECT, INSERT, UPDATE ON parent_email_log TO service_role;
 ```
 
 ---

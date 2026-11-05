@@ -22,6 +22,8 @@
 //   );
 //   CREATE INDEX idx_feedback_word ON content_feedback(word);
 //   CREATE INDEX idx_feedback_created_at ON content_feedback(created_at DESC);
+//   ALTER TABLE content_feedback ENABLE ROW LEVEL SECURITY;
+//   GRANT SELECT, INSERT, DELETE ON content_feedback TO service_role;  -- 2026-10-30 起新表不再自动授权；export.js 读、delete-account.js 删；须配 SUPABASE_SERVICE_ROLE_KEY，回退 anon key 会被拒
 //
 // 表存在时本端点会自动写；不存在则只 console.log。
 // ──────────────────────────────────────────────────────────────────────────────
