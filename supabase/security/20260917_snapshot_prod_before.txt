@@ -1,0 +1,19 @@
+# 生产权限快照（修复前备份点）· project pzadkflzktvppwkezwxu · 2026-09-17 ~08:05Z · 由 20260917_snapshot.sql 只读生成
+# 与本地仿真库「修复前」快照逐字一致 → 本地测试结论可外推到生产；三个 rollback 脚本的目标状态就是本文件
+# 同时刻生产 postcheck：13 项 fail（= 待修漏洞）、14 项 pass（= 不应被改动的部分）
+function | vocab_integrity_snapshot() | secdef=true config=search_path=public | =X/postgres,anon=X/postgres,authenticated=X/postgres,postgres=X/postgres,service_role=X/postgres
+policy | chat_threads :: Allow all on chat_threads | cmd=* using=true check=true | PUBLIC
+policy | ideas :: Allow all on ideas | cmd=* using=true check=true | PUBLIC
+policy | state_overrides :: Allow all on state_overrides | cmd=* using=true check=true | PUBLIC
+policy | state_snapshots :: Allow all on state_snapshots | cmd=* using=true check=true | PUBLIC
+policy | user_progress :: own_progress | cmd=* using=(auth.uid() = user_id) check=(auth.uid() = user_id) | PUBLIC
+policy | user_subscriptions :: Service role can insert | cmd=a using=- check=true | PUBLIC
+policy | user_subscriptions :: Users can read own subscriptions | cmd=r using=(auth.uid() = user_id) check=- | PUBLIC
+relation | chat_threads | rls=true options={} | anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres
+relation | ideas | rls=true options={} | anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres
+relation | state_overrides | rls=true options={} | anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres
+relation | state_snapshots | rls=true options={} | anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres
+relation | user_progress | rls=true options={} | anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres
+relation | user_subscriptions | rls=true options={} | anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres
+relation | vocab_data_integrity | rls=false options={} | anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres
+relation | vocab_data_integrity_log | rls=false options={} | anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres
