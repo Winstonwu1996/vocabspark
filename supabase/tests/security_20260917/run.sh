@@ -9,9 +9,9 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../../.." && pwd)"
-MIG1="$REPO/supabase/migrations/20260917120000_lockdown_vocab_integrity_monitor.sql"
-MIG2="$REPO/supabase/migrations/20260917120100_close_user_subscriptions_public_insert.sql"
-MIG3="$REPO/supabase/migrations/20260917120200_close_novel_os_allow_all_tables.sql"
+MIG1="$REPO/supabase/migrations/20261105061015_lockdown_vocab_integrity_monitor.sql"
+MIG2="$REPO/supabase/migrations/20261105061024_close_user_subscriptions_public_insert.sql"
+MIG3="$REPO/supabase/migrations/20261105061034_close_novel_os_allow_all_tables.sql"
 RB1="$REPO/supabase/security/20260917_rollback_1_integrity_monitor.sql"
 RB2="$REPO/supabase/security/20260917_rollback_2_user_subscriptions.sql"
 RB3="$REPO/supabase/security/20260917_rollback_3_novel_os_tables.sql"
