@@ -16,7 +16,7 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CLAUDE_MD="$PROJECT_ROOT/CLAUDE.md"
-AGENTS_MD="$PROJECT_ROOT/AGENTS.MD"
+AGENTS_MD="$PROJECT_ROOT/AGENTS.md"
 
 if [[ ! -f "$CLAUDE_MD" ]]; then
   echo "ERROR: $CLAUDE_MD not found" >&2
@@ -24,25 +24,49 @@ if [[ ! -f "$CLAUDE_MD" ]]; then
 fi
 
 # --- Extract shared sections from CLAUDE.md ---
-# Sections to sync: "Project Context", "Coding Conventions", "Available Utilities", "Key Architecture Decisions"
+# Sections to sync: planning, project context, conventions, utilities, architecture, review, and references.
 
 extract_section() {
   local file="$1"
   local header_pattern="$2"
-  # Extract from matching header to next same-level header (##) or EOF
+  # Extract from matching header to the next same-level header outside code fences.
   awk -v pat="$header_pattern" '
-    BEGIN { found=0 }
-    $0 ~ pat { found=1; next }
-    found && /^## / { found=0 }
+    BEGIN { found=0; in_fence=0 }
+    /^```/ {
+      if (found) print
+      in_fence = !in_fence
+      next
+    }
+    !in_fence && $0 ~ pat { found=1; next }
+    found && !in_fence && /^## / { found=0 }
     found { print }
   ' "$file"
 }
 
+SECTION_PLANNING=$(extract_section "$CLAUDE_MD" "^## Task Planning Rules")
 SECTION_CONTEXT=$(extract_section "$CLAUDE_MD" "^## Project Context")
 SECTION_CONVENTIONS=$(extract_section "$CLAUDE_MD" "^## Coding Conventions")
 SECTION_UTILITIES=$(extract_section "$CLAUDE_MD" "^## Available Utilities")
 SECTION_ARCH=$(extract_section "$CLAUDE_MD" "^## Key Architecture Decisions")
+SECTION_REVIEW=$(extract_section "$CLAUDE_MD" "^## Review Protocol")
 SECTION_REFS=$(extract_section "$CLAUDE_MD" "^## Reference Docs")
+
+require_section() {
+  local name="$1"
+  local content="$2"
+  if [[ -z "${content//[[:space:]]/}" ]]; then
+    echo "ERROR: required section '$name' not found or empty in $CLAUDE_MD" >&2
+    exit 1
+  fi
+}
+
+require_section "Task Planning Rules" "$SECTION_PLANNING"
+require_section "Project Context" "$SECTION_CONTEXT"
+require_section "Coding Conventions" "$SECTION_CONVENTIONS"
+require_section "Available Utilities" "$SECTION_UTILITIES"
+require_section "Key Architecture Decisions" "$SECTION_ARCH"
+require_section "Review Protocol" "$SECTION_REVIEW"
+require_section "Reference Docs" "$SECTION_REFS"
 
 # --- Build AGENTS.md ---
 # Preserve Codex-specific header + task rules, replace shared sections
@@ -55,12 +79,16 @@ cat > "$PROJECT_ROOT/AGENTS.md" << 'HEADER'
 ## Task Execution Rules
 
 - Execute one sub-task at a time. Be specific: file path, function name, parameters.
-- Do NOT invent helper functions. Check "Available Utilities" below first.
+- Check "Available Utilities" below before adding a helper. Add one only when no existing utility fits.
 - Run tests after each change if test files exist.
 
 HEADER
 
 {
+  echo "## [SHARED] Task Planning Rules"
+  echo ""
+  echo "$SECTION_PLANNING"
+  echo ""
   echo "## [SHARED] Project Context"
   echo ""
   echo "$SECTION_CONTEXT"
@@ -76,6 +104,10 @@ HEADER
   echo "## [SHARED] Key Architecture Decisions"
   echo ""
   echo "$SECTION_ARCH"
+  echo ""
+  echo "## [SHARED] Review Protocol — When to Escalate"
+  echo ""
+  echo "$SECTION_REVIEW"
   echo ""
   echo "## Reference Docs"
   echo ""

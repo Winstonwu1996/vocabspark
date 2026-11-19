@@ -5,8 +5,15 @@
 ## Task Execution Rules
 
 - Execute one sub-task at a time. Be specific: file path, function name, parameters.
-- Do NOT invent helper functions. Check "Available Utilities" below first.
+- Check "Available Utilities" below before adding a helper. Add one only when no existing utility fits.
 - Run tests after each change if test files exist.
+
+## [SHARED] Task Planning Rules
+
+
+- **MVP first**: break tasks into the simplest path that works. Ship, then refine. Do NOT over-engineer.
+- When planning multi-step work, default to 3-5 concrete sub-tasks. If you produce 8+ steps, you're probably over-designing — simplify.
+- Each sub-task should be completable in 2-10 minutes. If it's longer, split it.
 
 ## [SHARED] Project Context
 
@@ -30,7 +37,7 @@
 ## [SHARED] Available Utilities (lib/)
 
 
-Use ONLY these existing modules. Do NOT invent helper functions that don't exist.
+Use these existing modules first. Add a helper only when none of them fits and the new helper removes real duplication or keeps a clear responsibility boundary.
 
 ### Core Infrastructure
 - `lib/supabase.js` — Supabase client (browser + server)
@@ -83,6 +90,35 @@ Use ONLY these existing modules. Do NOT invent helper functions that don't exist
 - **Soft auth**: `X-User-Id` header for rate limiting, not strict token verify. Strict verify only for payments/account changes.
 - **Storyboard-driven pedagogy**: History lessons are JSON storyboard files in `data/history/`, NOT free-form AI conversations. AI sidekick operates within structured steps.
 - **New `public` tables get NO grants** (Supabase stopped auto-granting on 2026-10-30; on 2026-11-04 this project revoked the default privileges of role `postgres`, which owns every table here — if a table ends up with another owner, check its grants). Every `create table` — migration or SQL Editor — ships in the same script with `enable row level security` and only the grants its callers use (check every `.from('<table>')`, incl. `export.js` / `delete-account.js`). `service_role` bypasses RLS but still needs the GRANT; add policies only where `anon` / `authenticated` need row access. Serial/identity sequences need `grant usage`. Functions are the exception: Postgres still gives new functions EXECUTE to PUBLIC (a per-schema revoke can't remove it), so every new function ships with `revoke execute on function ... from public, anon, authenticated` and then grants only its callers. Missing grant = PostgREST `42501 permission denied`. Older tables keep their grants. Rollback + check query: `docs/INFRA.md` §12. See https://supabase.com/docs/guides/api/securing-your-api
+
+## [SHARED] Review Protocol — When to Escalate
+
+
+When completing any task, check these three conditions before saying "done":
+
+1. **这个改动出错了，用户会丢数据或丢钱吗？** (sync, payment, auth, data migration)
+2. **改动跨 5 个以上文件吗？** (large refactor, new module, cross-cutting change)
+3. **这是第一次做这类事吗？** (new module, new architecture pattern, new integration)
+
+**Any "yes" → proactively suggest**: "这个改动风险较高，建议用 workflow 多维度审查（安全/逻辑/回归/边界条件并行扫描），要跑吗？"
+
+**All "no" → suggest cross-model review or skip**: `/codex-review` for code changes, `/codex-audit` for analysis, or no review for trivial changes.
+
+### High-risk areas in this project (always suggest Workflow review)
+
+- `pages/api/sync.js` and anything touching `lib/syncMerge.js` or `lib/progressMergePolicy.js`
+- `pages/api/stripe-webhook.js` and `lib/stripe-prices.js`
+- `lib/auth-server.js` and any auth flow changes
+- New module scaffolding (Focus, Writing, or future modules)
+- `lib/llm-providers.js` circuit breaker / key rotation logic
+
+### Standard review tiers
+
+| Tier | When | Action |
+|------|------|--------|
+| **No review** | CSS, copy, single storyboard edit | Ship directly |
+| **Cross-model** (`/codex-review`) | Normal feature work, bug fixes, prompt tuning | Codex reviews Claude's work |
+| **Workflow** | Matches any of the 3 conditions above, or touches high-risk areas | Multi-agent parallel scan |
 
 ## Reference Docs
 

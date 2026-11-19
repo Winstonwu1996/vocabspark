@@ -25,7 +25,7 @@
 
 ## Available Utilities (lib/)
 
-Use ONLY these existing modules. Do NOT invent helper functions that don't exist.
+Use these existing modules first. Add a helper only when none of them fits and the new helper removes real duplication or keeps a clear responsibility boundary.
 
 ### Core Infrastructure
 - `lib/supabase.js` — Supabase client (browser + server)
