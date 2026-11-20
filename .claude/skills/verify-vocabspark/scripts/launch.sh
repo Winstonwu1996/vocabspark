@@ -25,11 +25,12 @@ deps_clean() {
   [ -d node_modules ] || return 1
   local l t links
   links="$(find node_modules -type l 2>/dev/null)" || return 1   # 扫不全（有目录读不了）就算不干净
-  while IFS= read -r l; do
+  # 用管道不用 <<<：后者要写临时文件，临时目录写不进去时循环会被整个跳过
+  printf '%s\n' "$links" | while IFS= read -r l; do
     [ -n "$l" ] || continue
     t="$(realpath "$l" 2>/dev/null || true)"
-    case "$t" in "$ROOT"/node_modules/*) ;; *) return 1 ;; esac
-  done <<<"$links"
+    case "$t" in "$ROOT"/node_modules/*) ;; *) exit 1 ;; esac
+  done || return 1
   # 应用和 react-dom 各自解析到的 React 必须是同一份，而且在这个副本里
   run_clean node -e '
     const p = require("path");

@@ -33,8 +33,12 @@ if msg="$(env_check)"; then ok "环境变量只有白名单里的几项（$msg�
 
 for p in $pids; do
   if ! envs="$(ps -E -p "$p" -o command= 2>/dev/null)" || [ -z "$envs" ]; then bad "读不到进程 $p 的环境，没法确认里面没有密钥"; continue; fi
-  if grep -E '(STRIPE|SERVICE_ROLE|UPSTASH|RESEND|SENTRY)' <<<"$envs" >/dev/null; then bad "进程 $p 的环境里有不该带的密钥"
-  else ok "进程 $p 的环境里没有付款/管理员/发信/线上缓存/错误上报的变量"; fi
+  rc=0; printf '%s' "$envs" | grep -E '(STRIPE|SERVICE_ROLE|UPSTASH|RESEND|SENTRY)' >/dev/null || rc=$?
+  case "$rc" in
+    0) bad "进程 $p 的环境里有不该带的密钥" ;;
+    1) ok "进程 $p 的环境里没有付款/管理员/发信/线上缓存/错误上报的变量" ;;
+    *) bad "检查进程 $p 的环境时出错，没法确认里面没有密钥" ;;
+  esac
 done
 
 code="$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/api/version" || true)"

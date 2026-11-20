@@ -54,13 +54,19 @@ our_pids() {
   rc=0; members="$(pgrep -g "$g" 2>/dev/null)" || rc=$?
   [ "$rc" = 0 ] || [ "$rc" = 1 ] || { echo "查进程组 $g 失败" >&2; return 2; }
   [ -n "$members" ] || return 0
+  # 组长（启动时记下的那个进程）必须还在，而且启动时间和记录一致；查不到、没记、对不上都算认不准
   lead_saved="$(cat "$RUN/server.lstart" 2>/dev/null || true)"
-  if lead_now="$(ps -o lstart= -p "$g" 2>/dev/null)" && [ -n "$lead_now" ] && [ "$lead_now" != "$lead_saved" ]; then
-    echo "进程组 $g 的组长启动时间和记录的不一样（$lead_now ≠ ${lead_saved:-没记}），可能是别的进程复用了编号" >&2; return 2
+  lead_now="$(ps -o lstart= -p "$g" 2>/dev/null || true)"
+  if [ -z "$lead_saved" ] || [ -z "$lead_now" ] || [ "$lead_now" != "$lead_saved" ]; then
+    echo "进程组 $g 还有进程，但组长的启动时间对不上（现在：${lead_now:-查不到}；记录：${lead_saved:-没记}），可能是别的进程复用了编号" >&2; return 2
   fi
   for p in $members; do
     cwd="$(lsof -a -p "$p" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1)"
-    if [ -z "$cwd" ]; then kill -0 "$p" 2>/dev/null || continue; echo "读不到进程 $p 的工作目录" >&2; return 2; fi
+    if [ -z "$cwd" ]; then
+      # 只有 ps 明确查无此进程才算它已经退了；没权限、查询出错都算认不准
+      [ -z "$(ps -o pid= -p "$p" 2>/dev/null)" ] && ! ps -p "$p" >/dev/null 2>&1 && continue
+      echo "读不到进程 $p 的工作目录" >&2; return 2
+    fi
     [ "$cwd" = "$ROOT" ] || { echo "进程组 $g 里的进程 $p 工作目录是 $cwd，不是这个副本" >&2; return 2; }
     echo "$p"
   done
