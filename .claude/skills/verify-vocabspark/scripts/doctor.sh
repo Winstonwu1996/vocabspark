@@ -6,8 +6,10 @@ fail=0
 ok()  { echo "✓ $*"; }
 bad() { echo "✗ $*"; fail=1; }
 
-pids="$(server_pids)"
-if [ -n "$pids" ]; then ok "服务在跑（pid $(echo $pids)）"; else bad "服务没在跑：先 launch.sh"; fi
+[ "$ROOT" != "$MAIN" ] && ok "在工作副本里，不是主仓库" || bad "在主仓库里：不能在这里驱动"
+
+pids="$(our_pids)"
+if [ -n "$pids" ]; then ok "服务在跑（$(echo $pids)）"; else bad "服务没在跑：先 launch.sh"; fi
 
 listener="$(lsof -nP -t -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | head -1 || true)"
 if [ -n "$listener" ] && echo "$pids" | grep -qx "$listener"; then ok "端口 $PORT 是我们起的进程占着"
@@ -15,14 +17,22 @@ elif [ -n "$listener" ]; then bad "端口 $PORT 被别的进程（pid $listener�
 else bad "端口 $PORT 没人监听"; fi
 
 if [ "$(cat .next/verify-commit 2>/dev/null)" = "$(git rev-parse HEAD)" ]; then ok "构建的就是当前提交 $(git rev-parse --short HEAD)"
-else bad "构建和当前提交对不上（改了代码没重建？）：launch.sh 重建"; fi
+else bad "构建和当前提交对不上（改了代码没重建？）：cleanup.sh 后 launch.sh"; fi
+
+served="$(served_build_id)"
+if [ -n "$served" ] && [ "$served" = "$(cat .next/BUILD_ID 2>/dev/null)" ] && [ "$served" = "$(cat "$RUN/started-build-id" 2>/dev/null)" ]; then
+  ok "正在服务的就是这份构建（$served）"
+else bad "正在服务的构建（${served:-读不到}）和磁盘上的、启动时记下的对不上"; fi
 
 if [ -n "$(git status --porcelain -- pages components lib styles public next.config.js package.json)" ]; then
   bad "页面代码有没提交的改动，构建里有没有它说不清：先提交或还原，再 launch.sh"
 else ok "页面代码没有未提交的改动"; fi
 
-if bad_f="$(env_files_safe)"; then ok "环境变量文件里没有付款/管理员/发信/线上缓存/错误上报的密钥"
-else bad "$bad_f 里有不该带的密钥"; fi
+if msg="$(env_check)"; then ok "环境变量只有白名单里的几项（$msg）"; else bad "$msg"; fi
+
+for p in $pids; do
+  if ps -E -p "$p" -o command= 2>/dev/null | grep -qE '(STRIPE|SERVICE_ROLE|UPSTASH|RESEND|SENTRY)'; then bad "进程 $p 的环境里有不该带的密钥"; fi
+done
 
 code="$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/api/version" || true)"
 [ "$code" = "200" ] && ok "/api/version 200" || bad "/api/version 返回 $code"

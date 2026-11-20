@@ -41,7 +41,7 @@ window.dispatchEvent(new Event('offline'));
 
 **步骤：**
 
-1. `new-run.sh network-banner` 开证据目录。`preview_start` 打开 `/vocab`，清场成干净游客。干净游客一进来是欢迎弹窗「我知道了，开始设置」，不用关，提示条盖在它上面也看得到。观察脚本返回前先确认页面已水合：`!!document.querySelector('#__next button')` 为真。
+1. `new-run.sh network-banner` 开证据目录。`preview_start` 打开 `/vocab`，清场成干净游客。干净游客一进来是欢迎弹窗「我知道了，开始设置」，不用关，提示条盖在它上面也看得到。先确认页面已水合（服务端渲染出来的按钮不算，那时监听还没装上）：执行 `Object.keys(document.getElementById('__next')).some(k => k.startsWith('__reactContainer'))` 为真，再等 1 秒让组件装好监听。
 2. 执行观察脚本，记初始状态，应为「(无提示条)」。
 3. **误报不报**：执行环境模拟那段。等 3 秒，读 `window.__vbLog`：应仍只有「(无提示条)」一笔。`read_console_messages` 用 `pattern: "NetworkBanner"`，应有「收到 offline 事件但服务器可达，判定为误报，不提示」。`read_network_requests` 用 `urlPattern: "/api/version"`，应有带 `_probe=` 的请求且返回 200。
 4. **真断才报**：`server.sh stop`。再发一次离线事件（`window.dispatchEvent(new Event('offline'))`，`onLine` 已经是假的离线）。等 2 秒，读 `__vbLog`：最后一笔应为「📡网络已断开，重连后将自动继续」。控制台应有「网络已断开（探测确认）」。

@@ -11,7 +11,8 @@ description: 像真用户一样驱动 VocabSpark（Know U. Learning）的网页�
 
 ## 0. 先知道的三条边界
 
-- **只在工作副本里跑，不在主仓库里跑。** 本机服务连的是线上数据库。主仓库的环境变量文件带付款、管理员、发信、线上缓存的密钥，`launch.sh` 会拒绝在主仓库启动。它只从主仓库摘五项（数据库地址、公开 key、两把 DeepSeek、Gemini）写进工作副本自己的 `.env.local`，清理时删掉。
+- **只在工作副本里跑，不在主仓库里跑。** 本机服务连的是线上数据库。主仓库的环境变量文件带付款、管理员、发信、线上缓存的密钥，`launch.sh` 和 `server.sh start` 都拒绝在主仓库启动。`launch.sh` 只从主仓库摘五项（数据库地址、公开 key、两把 DeepSeek、Gemini）写进工作副本自己的 `.env.local`，清理时删掉。
+- **构建和启动在干净环境里跑。** 不继承你终端里的任何变量（里面可能有密钥），`NODE_ENV` 固定为 production。启动前用 Next 自己的加载器把它会读的环境变量文件读一遍，出现白名单以外的键就拒绝启动。
 - **只走游客路径。** 不登录就不会往线上数据库写进度。要登录的功能（`features/` 里标了「要登录」的）现在跑不了：线上没有测试账号，登录要收验证码邮件。要建测试账号，先问 William，不自己建。
 - **会花一点钱。** 学新词、生成阅读理解要调 DeepSeek，一个词几厘钱。网络提示那条不调 AI，零花费。
 
@@ -36,7 +37,7 @@ description: 像真用户一样驱动 VocabSpark（Know U. Learning）的网页�
 .claude/skills/verify-vocabspark/scripts/doctor.sh
 ```
 
-只读。检查服务在不在、端口是不是我们起的进程占着、构建的是不是当前提交、页面代码有没有没提交的改动、环境变量里有没有不该带的密钥、两个地址返回 200。有一项没过就别驱动；任何时候觉得哪里不对，先跑它。
+只读。检查是不是在工作副本里、服务在不在、端口是不是我们起的进程占着、构建的是不是当前提交、正在服务的是不是这份构建、页面代码有没有没提交的改动、环境变量是不是只有白名单那几项、两个地址返回 200。有一项没过就别驱动；任何时候觉得哪里不对，先跑它。
 
 ## 3. 驱动
 
@@ -45,7 +46,8 @@ description: 像真用户一样驱动 VocabSpark（Know U. Learning）的网页�
 1. 开页：`preview_start` 传 `url: "http://127.0.0.1:3100/vocab"`，记下返回的 `tabId`。
 2. 开一个干净的游客：每条流程开始前在页面里执行 `localStorage.clear(); sessionStorage.clear(); location.reload()`，免得上一条留下的进度掺进来。这是清场，不算替应用改状态。
 3. 读页面用 `read_page` / `find` / `get_page_text`；点按钮优先用 `find` 按按钮上的字找 `ref`，不要用坐标。
-4. 每个功能的具体步骤、按钮上的字、判断用的脚本，在 `features/<功能>.md`。
+4. 动手前确认页面已水合：`Object.keys(document.getElementById('__next')).some(k => k.startsWith('__reactContainer'))` 为真。服务端渲染的按钮看得见但点了没反应。
+5. 每个功能的具体步骤、按钮上的字、判断用的脚本，在 `features/<功能>.md`。
 
 ## 4. 证据
 
@@ -71,7 +73,7 @@ description: 像真用户一样驱动 VocabSpark（Know U. Learning）的网页�
 .claude/skills/verify-vocabspark/scripts/cleanup.sh
 ```
 
-停掉这次起的服务（按记下的进程号，不按进程名），删掉 `.verify/run/` 和 `launch.sh` 写的 `.env.local`。证据目录不动，最后打印最近三份证据的位置。失败的尝试之后也要跑，别把进程和端口留着。
+停掉这次起的服务（按记下的进程组，只认工作目录是这个副本的进程，不按进程名；15 秒停不下就强停），删掉 `.verify/run/` 和 `launch.sh` 写的 `.env.local`。服务没停干净时 `.verify/run/` 留着，下次还找得到它。证据目录不动，最后打印最近三份证据的位置。失败的尝试之后也要跑，别把进程和端口留着。
 
 ## 6. 地图要跟着应用改
 
