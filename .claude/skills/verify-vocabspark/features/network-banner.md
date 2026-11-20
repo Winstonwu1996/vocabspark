@@ -41,9 +41,20 @@ window.dispatchEvent(new Event('offline'));
 
 **步骤：**
 
-1. `new-run.sh network-banner` 开证据目录。`preview_start` 打开 `/vocab`，清场成干净游客。干净游客一进来是欢迎弹窗「我知道了，开始设置」，不用关，提示条盖在它上面也看得到。先确认页面已水合（服务端渲染出来的按钮不算，那时监听还没装上）：执行 `Object.keys(document.getElementById('__next')).some(k => k.startsWith('__reactContainer'))` 为真，再等 1 秒让组件装好监听。
+1. `new-run.sh network-banner` 开证据目录。`preview_start` 打开 `/vocab`，清场成干净游客。干净游客一进来是欢迎弹窗「我知道了，开始设置」，不用关，提示条盖在它上面也看得到。这一条不单独判断水合：第 3 步的「等到探测请求出现」就是监听已装好的证明。
 2. 执行观察脚本，记初始状态，应为「(无提示条)」。
-3. **误报不报**：执行环境模拟那段。等 3 秒，读 `window.__vbLog`：应仍只有「(无提示条)」一笔。`read_console_messages` 用 `pattern: "NetworkBanner"`，应有「收到 offline 事件但服务器可达，判定为误报，不提示」。`read_network_requests` 用 `urlPattern: "/api/version"`，应有带 `_probe=` 的请求且返回 200。
+3. **误报不报**：执行环境模拟那段里的 `Object.defineProperty(...)`，然后用下面这段反复发离线事件，直到页面真的去探了一次服务器（监听装好之前发的事件会丢，所以不能只发一次就判）：
+
+   ```js
+   const seen = () => performance.getEntriesByType('resource').filter(e => e.name.includes('/api/version?_probe=')).length;
+   const n0 = seen(), t0 = Date.now();
+   while (seen() === n0 && Date.now() - t0 < 15000) { window.dispatchEvent(new Event('offline')); await new Promise(r => setTimeout(r, 500)); }
+   const probed = seen() > n0;
+   await new Promise(r => setTimeout(r, 3000));
+   ({ probed, waitedMs: Date.now() - t0 - 3000, log: window.__vbLog })
+   ```
+
+   `probed` 为假：15 秒内页面一次都没探，说明监听没装上，这一条判失败，原因写进 `proof.md`。为真时，`__vbLog` 应仍只有「(无提示条)」一笔。`read_console_messages` 用 `pattern: "NetworkBanner"`，应有「收到 offline 事件但服务器可达，判定为误报，不提示」。`read_network_requests` 用 `urlPattern: "/api/version"`，带 `_probe=` 的请求返回 200。
 4. **真断才报**：`server.sh stop`。再发一次离线事件（`window.dispatchEvent(new Event('offline'))`，`onLine` 已经是假的离线）。等 2 秒，读 `__vbLog`：最后一笔应为「📡网络已断开，重连后将自动继续」。控制台应有「网络已断开（探测确认）」。
 5. **网好了自己消失**：等至少 6 秒，让它复检失败两三次（控制台「复检 #n probe=false onLine=false」），证明红条没有因为别的原因自己消失。然后 `server.sh start`，**不要刷新页面**，`onLine` 保持假的离线。等最多 40 秒（复检间隔会拉长），读 `__vbLog`：应依次出现「✅已恢复，正在继续...」和「(无提示条)」，两笔相隔约 3 秒。控制台应有「复检 #n probe=true onLine=false」和「网络已恢复」。
 6. 把三段的 `__vbLog`、控制台原文、网络请求抄进 `proof.md`，写结论：三个子功能各自证明了没有。

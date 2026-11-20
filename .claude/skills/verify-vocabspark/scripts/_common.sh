@@ -45,16 +45,30 @@ preflight() {
   msg="$(env_check)" || die "$msg。删掉那几行，或换一个干净的工作副本"
 }
 
-# 我们起的服务：记下进程组号，只认工作目录是这个副本的成员。不按进程名找。
+# 我们起的服务：启动时记下进程组号和组长的启动时间，只认这一组里工作目录是这个副本的进程。不按进程名找。
+# 打印进程号；返回 0 = 查清楚了（可能一个都没有），返回 2 = 查不清（查询失败、身份对不上），调用方不能当成「已经停了」。
 our_pids() {
   [ -f "$RUN/server.pgid" ] || return 0
-  local g p cwd
+  local g p cwd members rc lead_now lead_saved
   g="$(cat "$RUN/server.pgid")"
-  for p in $(pgrep -g "$g" 2>/dev/null || true); do
+  rc=0; members="$(pgrep -g "$g" 2>/dev/null)" || rc=$?
+  [ "$rc" = 0 ] || [ "$rc" = 1 ] || { echo "查进程组 $g 失败" >&2; return 2; }
+  [ -n "$members" ] || return 0
+  lead_saved="$(cat "$RUN/server.lstart" 2>/dev/null || true)"
+  if lead_now="$(ps -o lstart= -p "$g" 2>/dev/null)" && [ -n "$lead_now" ] && [ "$lead_now" != "$lead_saved" ]; then
+    echo "进程组 $g 的组长启动时间和记录的不一样（$lead_now ≠ ${lead_saved:-没记}），可能是别的进程复用了编号" >&2; return 2
+  fi
+  for p in $members; do
     cwd="$(lsof -a -p "$p" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1)"
-    [ "$cwd" = "$ROOT" ] && echo "$p"
+    if [ -z "$cwd" ]; then kill -0 "$p" 2>/dev/null || continue; echo "读不到进程 $p 的工作目录" >&2; return 2; fi
+    [ "$cwd" = "$ROOT" ] || { echo "进程组 $g 里的进程 $p 工作目录是 $cwd，不是这个副本" >&2; return 2; }
+    echo "$p"
   done
-  return 0
+}
+
+# 查不清就停下：给调用方用
+our_pids_sure() {
+  our_pids || die "认不准是不是我们起的服务，什么都没动。确认那几个进程不是这次验证起的以后，删掉 $RUN/server.pgid 再跑"
 }
 
 served_build_id() {

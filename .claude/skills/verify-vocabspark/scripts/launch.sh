@@ -7,7 +7,7 @@ source "$(dirname "$0")/_common.sh"
 cd "$ROOT"
 
 [ "$ROOT" != "$MAIN" ] || die "不在主仓库里跑：主仓库的环境变量文件带付款和管理员密钥。先建一个工作副本：git worktree add ../vs-verify origin/main"
-[ -z "$(our_pids)" ] || die "上一次的服务还在跑：先 cleanup.sh（不然会构建了新的、驱动的还是旧的）"
+running="$(our_pids_sure)"; [ -z "$running" ] || die "上一次的服务还在跑：先 cleanup.sh（不然会构建了新的、驱动的还是旧的）"
 
 mkdir -p "$RUN" "$EVIDENCE_ROOT"
 
@@ -23,11 +23,13 @@ fi
 # 构建就会混进主仓库那份 React（两份 React 并存，预渲染报 useEffect of null，84 页全挂）
 deps_clean() {
   [ -d node_modules ] || return 1
-  local l t
+  local l t links
+  links="$(find node_modules -type l 2>/dev/null)" || return 1   # 扫不全（有目录读不了）就算不干净
   while IFS= read -r l; do
+    [ -n "$l" ] || continue
     t="$(realpath "$l" 2>/dev/null || true)"
     case "$t" in "$ROOT"/node_modules/*) ;; *) return 1 ;; esac
-  done < <(find node_modules -type l)
+  done <<<"$links"
   # 应用和 react-dom 各自解析到的 React 必须是同一份，而且在这个副本里
   run_clean node -e '
     const p = require("path");

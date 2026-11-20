@@ -46,7 +46,7 @@ description: 像真用户一样驱动 VocabSpark（Know U. Learning）的网页�
 1. 开页：`preview_start` 传 `url: "http://127.0.0.1:3100/vocab"`，记下返回的 `tabId`。
 2. 开一个干净的游客：每条流程开始前在页面里执行 `localStorage.clear(); sessionStorage.clear(); location.reload()`，免得上一条留下的进度掺进来。这是清场，不算替应用改状态。
 3. 读页面用 `read_page` / `find` / `get_page_text`；点按钮优先用 `find` 按按钮上的字找 `ref`，不要用坐标。
-4. 动手前确认页面已水合：`Object.keys(document.getElementById('__next')).some(k => k.startsWith('__reactContainer'))` 为真。服务端渲染的按钮看得见但点了没反应。
+4. 动手前要确认页面已经接管（服务端渲染的按钮看得见，但点了没反应）。别靠 React 的内部属性或固定等几秒：用这个功能自己的可观察反应来判断，比如点一下看页面变没变、发一次事件看它有没有发出请求。每个功能文件写了具体判法。
 5. 每个功能的具体步骤、按钮上的字、判断用的脚本，在 `features/<功能>.md`。
 
 ## 4. 证据

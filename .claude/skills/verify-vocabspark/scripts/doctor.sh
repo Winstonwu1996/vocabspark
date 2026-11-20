@@ -8,8 +8,9 @@ bad() { echo "✗ $*"; fail=1; }
 
 [ "$ROOT" != "$MAIN" ] && ok "在工作副本里，不是主仓库" || bad "在主仓库里：不能在这里驱动"
 
-pids="$(our_pids)"
-if [ -n "$pids" ]; then ok "服务在跑（$(echo $pids)）"; else bad "服务没在跑：先 launch.sh"; fi
+if pids="$(our_pids)"; then
+  if [ -n "$pids" ]; then ok "服务在跑（$(echo $pids)）"; else bad "服务没在跑：先 launch.sh"; fi
+else bad "认不准服务进程是不是我们起的（见上一行）"; pids=""; fi
 
 listener="$(lsof -nP -t -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | head -1 || true)"
 if [ -n "$listener" ] && echo "$pids" | grep -qx "$listener"; then ok "端口 $PORT 是我们起的进程占着"
@@ -31,7 +32,9 @@ else ok "页面代码没有未提交的改动"; fi
 if msg="$(env_check)"; then ok "环境变量只有白名单里的几项（$msg）"; else bad "$msg"; fi
 
 for p in $pids; do
-  if ps -E -p "$p" -o command= 2>/dev/null | grep -qE '(STRIPE|SERVICE_ROLE|UPSTASH|RESEND|SENTRY)'; then bad "进程 $p 的环境里有不该带的密钥"; fi
+  if ! envs="$(ps -E -p "$p" -o command= 2>/dev/null)" || [ -z "$envs" ]; then bad "读不到进程 $p 的环境，没法确认里面没有密钥"; continue; fi
+  if grep -E '(STRIPE|SERVICE_ROLE|UPSTASH|RESEND|SENTRY)' <<<"$envs" >/dev/null; then bad "进程 $p 的环境里有不该带的密钥"
+  else ok "进程 $p 的环境里没有付款/管理员/发信/线上缓存/错误上报的变量"; fi
 done
 
 code="$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/api/version" || true)"
