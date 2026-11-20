@@ -14,7 +14,7 @@
 
 ## 用内置浏览器驱动
 
-**环境模拟（不改应用状态）：** 浏览器的离线信号用下面这段模拟，相当于真用户切 WiFi、手机锁屏唤醒时浏览器报的离线；服务器真断用 `server.sh stop` 真停掉。
+**环境模拟和观察（不改应用状态）：** 下面三样都只动浏览器这一层：改浏览器报的在线状态、发离线事件、给 `fetch` 套一层只计数的外壳（请求原样放行）。 浏览器的离线信号用下面这段模拟，相当于真用户切 WiFi、手机锁屏唤醒时浏览器报的离线；服务器真断用 `server.sh stop` 真停掉。
 
 ```js
 // 让浏览器一直报离线（Willow 那种「只发 offline 不发 online」），再发一次离线事件
@@ -46,12 +46,22 @@ window.dispatchEvent(new Event('offline'));
 3. **误报不报**：执行环境模拟那段里的 `Object.defineProperty(...)`，然后用下面这段反复发离线事件，直到页面真的去探了一次服务器（监听装好之前发的事件会丢，所以不能只发一次就判）：
 
    ```js
-   const seen = () => performance.getEntriesByType('resource').filter(e => e.name.includes('/api/version?_probe=')).length;
-   const n0 = seen(), t0 = Date.now();
-   while (seen() === n0 && Date.now() - t0 < 15000) { window.dispatchEvent(new Event('offline')); await new Promise(r => setTimeout(r, 500)); }
-   const probed = seen() > n0;
+   // 只计数、原样放行的 fetch 外壳：记下页面有没有发出探测请求（这个浏览器的资源计时不记 fetch，不能用 performance 判断）
+   if (!window.__vbProbes) {
+     window.__vbProbes = [];
+     const realFetch = window.fetch;
+     window.fetch = function (input, init) {
+       const url = typeof input === 'string' ? input : (input && input.url) || '';
+       if (url.includes('/api/version?_probe=')) window.__vbProbes.push(new Date().toISOString().slice(11, 23));
+       return realFetch.apply(this, arguments);
+     };
+   }
+   const n0 = window.__vbProbes.length, t0 = Date.now();
+   let sent = 0;
+   while (window.__vbProbes.length === n0 && Date.now() - t0 < 15000) { window.dispatchEvent(new Event('offline')); sent++; await new Promise(r => setTimeout(r, 500)); }
+   const probed = window.__vbProbes.length > n0;
    await new Promise(r => setTimeout(r, 3000));
-   ({ probed, waitedMs: Date.now() - t0 - 3000, log: window.__vbLog })
+   ({ probed, offlineEventsSent: sent, probes: window.__vbProbes, log: window.__vbLog })
    ```
 
    `probed` 为假：15 秒内页面一次都没探，说明监听没装上，这一条判失败，原因写进 `proof.md`。为真时，`__vbLog` 应仍只有「(无提示条)」一笔。`read_console_messages` 用 `pattern: "NetworkBanner"`，应有「收到 offline 事件但服务器可达，判定为误报，不提示」。`read_network_requests` 用 `urlPattern: "/api/version"`，带 `_probe=` 的请求返回 200。
@@ -62,6 +72,7 @@ window.dispatchEvent(new Event('offline'));
 ## 坑
 
 - 第 5 步怎么证明没刷新：`window.__vbLog` 是页面里的变量，一刷新就没了。它从头到尾连续，就说明中途没刷新。别拿 `performance` 里的导航类型判断：第 1 步清场刷新过一次，它一直是 `reload`。
+- 2026-11-20 第三次跑才发现：这个内置浏览器的 `performance.getEntriesByType('resource')` 不记 fetch 请求（连手动发的也不记），用它判断「发没发探测」会一直判没发。所以改用计数外壳。
 - 2026-11-20 第一次跑：服务器停了约 23 秒，复检第 5 次打通，红条 3.0 秒后消失。服务器停得越久，等的时间越长（后面每 30 秒才复检一次）。
 - 第 5 步不能刷新页面：刷新会重新加载组件，就不是「挂着的红条自己消失」了，证明不了 Willow 那个场景。
 - 第 4 步之后服务器停着，浏览器里别的请求会报错（控制台有红字），这是预期的，不算失败。
