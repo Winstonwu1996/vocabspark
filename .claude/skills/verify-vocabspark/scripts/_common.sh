@@ -32,7 +32,7 @@ env_check() {
     const { loadEnvConfig } = require("@next/env");
     const r = loadEnvConfig(process.cwd(), false, { info() {}, error() {} });
     const allow = new Set(process.env.ALLOW.split(" "));
-    const bad = Object.keys(process.env).filter(k => !before.has(k) && !allow.has(k));
+    const bad = Object.keys(process.env).filter(k => !before.has(k) && !allow.has(k) && k !== "__NEXT_PROCESSED_ENV");  // 后者是 Next 自己的标记
     const files = (r.loadedEnvFiles || []).map(f => require("path").basename(f.path));
     if (bad.length) { console.log("文件 " + files.join("、") + " 里有白名单以外的键：" + bad.join("、")); process.exit(1); }
     console.log("读到的文件：" + (files.join("、") || "无"));
